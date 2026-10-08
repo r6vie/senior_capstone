@@ -1,20 +1,19 @@
 # FoundersCircle
 
-A platform in development for discovering and connecting with people in the CWRU
-network. This repository currently contains the backend API.
+A platform for discovering and connecting with people in the CWRU network.
 
 ## Tech stack
 
-- Python, FastAPI, and Pydantic
+- Python, FastAPI, and Pydantic backend
 - MongoDB Atlas with PyMongo
-- React and TypeScript frontend planned
+- React, TypeScript, and Vite frontend
 
 ## Features
 
 - Email/password signup, login, and logout
 - Authenticated profile creation, viewing, editing, and deletion
 - Profile ownership controls and expertise search
-- Pydantic validation and automated tests
+- Responsive landing page, member directory, and profile editor
 
 ## Setup
 
@@ -26,6 +25,7 @@ From the repository root:
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -r backend/requirements.txt
+npm --prefix frontend install
 ```
 
 Create a local `.env` using `.env.example` as a template, unless one already exists.
@@ -35,26 +35,31 @@ Credentials belong only in `.env`, which is ignored by Git.
 
 ## Run
 
+Backend:
+
 ```sh
 .venv/bin/python -m uvicorn main:app --app-dir backend --reload --host 127.0.0.1 --port 8000
 ```
 
-Open [API docs](http://127.0.0.1:8000/docs) to explore the endpoints.
-Sign up through `/auth/signup`, log in through `/auth/login`, then paste the
-returned `access_token` into **Authorize** to use protected endpoints.
-Restart the server after changing `.env`.
+Frontend (in another terminal):
+
+```sh
+npm --prefix frontend run dev
+```
+
+Open [the app](http://127.0.0.1:5173) or the [API docs](http://127.0.0.1:8000/docs).
 
 ## Tests
 
 ```sh
 .venv/bin/python -m pip install -r backend/requirements-dev.txt
 PYTHONPATH=backend .venv/bin/python -m unittest discover -s backend/tests -v
+npm --prefix frontend run build
 ```
 
 Tests run without connecting to Atlas.
 
 ## Project status
 
-The backend runs locally with the existing cloud database. The frontend, AI
-matching, outreach generation, email verification, password reset, and CWRU SSO
-are not implemented yet.
+The core account, profile, and directory flow is implemented. AI matching,
+outreach generation, email verification, password reset, and CWRU SSO are future work.

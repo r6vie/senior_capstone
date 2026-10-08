@@ -6,3 +6,5 @@ __pycache__/
 !.env.example
 .context/
 .DS_Store
+frontend/node_modules/
+frontend/dist/
