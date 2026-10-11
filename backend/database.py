@@ -63,6 +63,11 @@ async def ensure_indexes(database):
         "owner_user_id", unique=True, name="profiles_owner_unique",
         partialFilterExpression={"owner_user_id": {"$type": "string"}},
     )
+    # One request per pair of people, in either direction.
+    await database.connections.create_index("pair_key", unique=True, name="connections_pair_unique")
+    await database.connections.create_index("sender_user_id", name="connections_sender")
+    await database.connections.create_index("recipient_user_id", name="connections_recipient")
+    await database.notifications.create_index("user_id", name="notifications_user")
 
 
 def get_database(request: Request):
