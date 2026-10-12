@@ -67,6 +67,9 @@ async def ensure_indexes(database):
         "owner_user_id", unique=True, name="profiles_owner_unique",
         partialFilterExpression={"owner_user_id": {"$type": "string"}},
     )
+    await database.facts.create_index([("user_id", 1), ("created_at", 1)], name="facts_by_member")
+    await database.facts.create_index("links", name="facts_link_keys")
+    await database.interview_sessions.create_index("user_id", unique=True, name="interviews_one_per_member")
 
 
 def get_database(request: Request):

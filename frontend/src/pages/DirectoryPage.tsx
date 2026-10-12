@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { ApiError, api } from "../api";
 import { useAuth } from "../auth";
 import { ProfileCard } from "../components/ProfileCard";
-import type { Profile } from "../types";
+import type { OnboardingStatus, Profile } from "../types";
 
 export function DirectoryPage() {
   const { token, user } = useAuth();
@@ -13,6 +13,11 @@ export function DirectoryPage() {
   const [activeQuery, setActiveQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
+
+  useEffect(() => {
+    if (token) api.onboardingStatus(token).then(setOnboarding).catch(() => setOnboarding(null));
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
@@ -60,10 +65,22 @@ export function DirectoryPage() {
           <div className="state-card"><SlidersHorizontal /><h3>No matches yet</h3><p>Try a broader expertise term or clear your search.</p><button className="button button--secondary" onClick={() => { setQuery(""); setActiveQuery(""); }}>View everyone</button></div>
         )}
 
-        <aside className="profile-nudge">
-          <div><strong>{user?.name?.split(" ")[0]}, is your profile up to date?</strong><p>Clear expertise and interests help the right people find you.</p></div>
-          <Link className="button button--secondary" to="/app/profile">Review my profile</Link>
-        </aside>
+        {onboarding && !onboarding.basics_done ? (
+          <aside className="profile-nudge">
+            <div><strong>{user?.name?.split(" ")[0]}, tell us what you're looking for.</strong><p>A 30-second form and a short conversation help us find the right people for you.</p></div>
+            <Link className="button button--primary" to="/onboarding">Get started</Link>
+          </aside>
+        ) : onboarding && onboarding.coverage.percent < 75 ? (
+          <aside className="profile-nudge">
+            <div><strong>Your profile is {onboarding.coverage.percent}% complete.</strong><p>A few more answers help the right people find you.</p></div>
+            <Link className="button button--secondary" to="/onboarding/interview">Continue the conversation</Link>
+          </aside>
+        ) : (
+          <aside className="profile-nudge">
+            <div><strong>{user?.name?.split(" ")[0]}, is your profile up to date?</strong><p>Clear expertise and interests help the right people find you.</p></div>
+            <Link className="button button--secondary" to="/app/profile">Review my profile</Link>
+          </aside>
+        )}
       </section>
     </div>
   );

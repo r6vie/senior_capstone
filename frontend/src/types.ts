@@ -22,3 +22,70 @@ export interface LoginResponse {
   token_type: "bearer";
   expires_in: number;
 }
+
+export type Role = "student" | "alum" | "faculty" | "staff" | "other";
+export type Seeking = "get_help" | "give_help" | "both";
+export type FactKind = "need" | "offer" | "experience" | "background" | "goal" | "preference" | "availability" | "other";
+export type Visibility = "public" | "matches_only" | "private";
+
+export interface BasicsForm {
+  role: Role;
+  school: string;
+  grad_year: number | null;
+  majors: string[];
+  seeking: Seeking;
+  location: string;
+}
+
+export interface Fact {
+  id: string;
+  kind: FactKind;
+  topic: string;
+  text: string;
+  detail: { key: string; value: string }[];
+  links: string[];
+  strength: number | null;
+  visibility: Visibility;
+  confirmed: boolean;
+  confidence: number;
+  source: "basics_form" | "interview" | "member_edit" | "resume";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FactEdit {
+  text?: string;
+  visibility?: Visibility;
+  confirmed?: true;
+}
+
+export interface AreaCoverage {
+  area: "needs" | "offers" | "style" | "background" | "goals";
+  label: string;
+  status: "missing" | "started" | "good";
+  important: boolean;
+}
+
+export interface Coverage {
+  percent: number;
+  areas: AreaCoverage[];
+}
+
+export interface ChatMessage {
+  role: "assistant" | "member";
+  text: string;
+  at: string;
+}
+
+export interface InterviewTurn {
+  interview: { session_id: string; status: "active" | "finished"; messages: ChatMessage[] };
+  facts: Fact[];
+  coverage: Coverage;
+}
+
+export interface OnboardingStatus {
+  basics_done: boolean;
+  basics: BasicsForm | null;
+  open_interview_id: string | null;
+  coverage: Coverage;
+}

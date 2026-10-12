@@ -26,7 +26,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
       if (mode === "signup") await signup(name, email, password);
       else await login(email, password);
       const destination = (location.state as { from?: string } | null)?.from;
-      navigate(destination ?? (mode === "signup" ? "/app/profile" : "/app"), { replace: true });
+      navigate(destination ?? (mode === "signup" ? "/onboarding" : "/app"), { replace: true });
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : "We could not complete that request.");
     } finally {
