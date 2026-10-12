@@ -282,3 +282,10 @@ h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 500; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+.button--linkedin { color: white; background: #0a66c2; box-shadow: 0 8px 20px rgba(10, 102, 194, 0.22); }
+.button--linkedin:hover { background: #084d92; }
+.button--linkedin svg { width: 20px; height: 20px; }
+.auth-fineprint { margin: 16px 0 26px; color: var(--muted); font-size: 0.8rem; line-height: 1.6; text-align: center; }
+.auth-divider { display: flex; align-items: center; gap: 14px; margin: 26px 0 22px; color: var(--muted); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; border-top: 1px solid #dde3ea; }

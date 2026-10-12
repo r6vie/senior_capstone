@@ -22,3 +22,7 @@ export interface LoginResponse {
   token_type: "bearer";
   expires_in: number;
 }
+
+export interface LinkedInLoginResponse extends LoginResponse {
+  is_new: boolean;
+}

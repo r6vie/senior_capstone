@@ -56,6 +56,13 @@ async def lifespan(app):
 async def ensure_indexes(database):
     # Unique indexes prevent duplicates even when requests arrive concurrently.
     await database.users.create_index("email", unique=True, name="users_email_unique")
+    # LinkedIn members are looked up by their stable LinkedIn ID; password-only accounts lack one.
+    await database.users.create_index(
+        "linkedin_sub", unique=True, name="users_linkedin_sub_unique",
+        partialFilterExpression={"linkedin_sub": {"$type": "string"}},
+    )
+    await database.oauth_states.create_index("expires_at", expireAfterSeconds=0, name="oauth_states_expiry")
+    await database.login_codes.create_index("expires_at", expireAfterSeconds=0, name="login_codes_expiry")
     await database.sessions.create_index("token_hash", unique=True, name="sessions_token_unique")
     await database.sessions.create_index("expires_at", expireAfterSeconds=0, name="sessions_expiry")
     await database.auth_attempts.create_index("expires_at", expireAfterSeconds=0, name="attempts_expiry")

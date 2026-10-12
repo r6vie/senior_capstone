@@ -43,43 +43,12 @@ class AuthenticationTests(unittest.TestCase):
         self.database.profiles.delete_one = AsyncMock(return_value=SimpleNamespace(deleted_count=0))
         app.dependency_overrides[get_database] = lambda: self.database
         self.headers = {"Authorization": "Bearer test-session-token"}
-        self.signup_data = {"email": "user@example.com", "password": self.password, "name": "Example User"}
         self.profile = {k: v for k, v in profiles[0].items() if k != "_id"}
 
     def tearDown(self):
         app.dependency_overrides.clear()
         self.client.__exit__(None, None, None)
         self.settings.stop()
-
-    def test_signup_hashes_password_and_never_returns_secrets(self):
-        response = self.client.post("/auth/signup", json={**self.signup_data, "email": "USER@example.com"})
-        self.assertEqual(response.status_code, 201)
-        stored = self.database.users.insert_one.call_args.args[0]
-        self.assertEqual(stored["email"], "user@example.com")
-        self.assertTrue(stored["password_hash"].startswith("$argon2id$"))
-        self.assertTrue(password_hasher.verify(self.password, stored["password_hash"]))
-        self.assertNotIn("password", stored)
-        self.assertEqual(set(response.json()), {"id", "name", "email", "created_at"})
-        self.assertNotIn(self.password, response.text)
-        self.assertNotIn(stored["password_hash"], response.text)
-
-    def test_duplicate_signup_returns_409(self):
-        self.database.users.insert_one.side_effect = DuplicateKeyError("duplicate")
-        self.assertEqual(self.client.post("/auth/signup", json=self.signup_data).status_code, 409)
-
-    def test_invalid_signup_and_escalation_fields_are_rejected_without_echoing_password(self):
-        cases = [
-            {"password": "too-short"}, {"password": " " * 12}, {"password": "x" * 129},
-            {"password": 123}, {"email": "not-email"}, {"name": " "},
-            {"is_active": True}, {"role": "admin"}, {"_id": "chosen"},
-        ]
-        for changes in cases:
-            with self.subTest(changes=changes):
-                response = self.client.post("/auth/signup", json={**self.signup_data, **changes})
-                self.assertEqual(response.status_code, 422)
-                self.assertNotIn('"input"', response.text)
-                self.assertNotIn(self.password, response.text)
-        self.database.users.insert_one.assert_not_awaited()
 
     def test_login_issues_token_but_stores_only_its_hash(self):
         response = self.client.post("/auth/login", json={"email": "USER@example.com", "password": self.password})
@@ -96,6 +65,21 @@ class AuthenticationTests(unittest.TestCase):
         self.assertEqual(stored["user_id"], self.user["_id"])
         self.assertGreater(stored["expires_at"], datetime.now(timezone.utc))
         self.database.users.find_one.assert_awaited_once_with({"email": "user@example.com"})
+
+    def test_password_login_is_rejected_for_linkedin_accounts_without_a_password(self):
+        self.database.users.find_one.return_value = {
+            key: value for key, value in self.user.items() if key != "password_hash"
+        }
+        response = self.client.post("/auth/login", json={"email": "user@example.com", "password": self.password})
+        self.assertEqual(response.status_code, 401)
+        self.database.sessions.insert_one.assert_not_awaited()
+
+    def test_password_signup_no_longer_exists(self):
+        response = self.client.post("/auth/signup", json={
+            "email": "new@example.com", "password": self.password, "name": "New Person",
+        })
+        self.assertIn(response.status_code, (404, 405))
+        self.database.users.insert_one.assert_not_awaited()
 
     def test_wrong_password_unknown_email_and_disabled_account_share_error(self):
         responses = []
@@ -214,11 +198,6 @@ class AuthenticationTests(unittest.TestCase):
         self.database.users.find_one.assert_not_awaited()
         self.database.sessions.insert_one.assert_not_awaited()
 
-    def test_throttling_blocks_signup_before_hashing(self):
-        self.database.auth_attempts.find_one_and_update.return_value = {"count": 6}
-        self.assertEqual(self.client.post("/auth/signup", json=self.signup_data).status_code, 429)
-        self.database.users.insert_one.assert_not_awaited()
-
     def test_swagger_marks_every_platform_endpoint_protected(self):
         schema = self.client.get("/openapi.json").json()
         self.assertEqual(schema["components"]["securitySchemes"]["HTTPBearer"]["scheme"], "bearer")
@@ -227,16 +206,27 @@ class AuthenticationTests(unittest.TestCase):
                 if path.startswith("/profiles") or path in ("/health/database", "/auth/me", "/auth/logout"):
                     with self.subTest(path=path, method=method):
                         self.assertEqual(operation["security"], [{"HTTPBearer": []}])
-        self.assertNotIn("security", schema["paths"]["/auth/signup"]["post"])
+        self.assertNotIn("/auth/signup", schema["paths"])
+        for path in schema["paths"]:
+            if path.startswith("/auth/linkedin"):
+                for operation in schema["paths"][path].values():
+                    self.assertNotIn("security", operation)
 
 
 class IndexTests(unittest.IsolatedAsyncioTestCase):
     async def test_indexes_enforce_uniqueness_and_expiry_without_claiming_seed_profiles(self):
         database = MagicMock()
-        for name in ("users", "sessions", "auth_attempts", "profiles"):
+        for name in ("users", "sessions", "auth_attempts", "oauth_states", "login_codes", "profiles"):
             getattr(database, name).create_index = AsyncMock()
         await ensure_indexes(database)
-        database.users.create_index.assert_awaited_once_with("email", unique=True, name="users_email_unique")
+        database.users.create_index.assert_any_await("email", unique=True, name="users_email_unique")
+        database.users.create_index.assert_any_await(
+            "linkedin_sub", unique=True, name="users_linkedin_sub_unique",
+            partialFilterExpression={"linkedin_sub": {"$type": "string"}},
+        )
+        database.login_codes.create_index.assert_awaited_once_with(
+            "expires_at", expireAfterSeconds=0, name="login_codes_expiry",
+        )
         database.sessions.create_index.assert_any_await("expires_at", expireAfterSeconds=0, name="sessions_expiry")
         database.profiles.create_index.assert_awaited_once_with(
             "owner_user_id", unique=True, name="profiles_owner_unique",
