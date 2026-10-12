@@ -1,21 +1,25 @@
-import { CheckCircle2, MessageCircle, RotateCcw, Send, Sparkles } from "lucide-react";
-import { FormEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import { ArrowRight, Check, CheckCircle2, ChevronDown, Sparkles } from "lucide-react";
+import { FormEvent, KeyboardEvent, useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError, api } from "../api";
 import { useAuth } from "../auth";
-import { CoverageMeter, FactList } from "../components/Facts";
-import type { ChatMessage, Fact, FactEdit, InterviewTurn } from "../types";
+import { FactCard, FactList } from "../components/Facts";
+import type { Fact, FactEdit, InterviewTurn, Question } from "../types";
+
+const AREA_LABELS: Record<Question["area"], string> = {
+  needs: "What you need", offers: "What you can offer", style: "How you like to connect",
+  background: "Shared background", goals: "Your goals",
+};
 
 export function InterviewPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [turn, setTurn] = useState<InterviewTurn | null>(null);
-  const [pending, setPending] = useState<ChatMessage | null>(null);
-  const [draft, setDraft] = useState("");
-  const [thinking, setThinking] = useState(false);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [detail, setDetail] = useState("");
+  const [working, setWorking] = useState(false);
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<"chat" | "facts">("chat");
-  const endRef = useRef<HTMLDivElement>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const fail = useCallback((caught: unknown, fallback: string) => {
     if (caught instanceof ApiError && caught.status === 409 && caught.message.includes("basics")) {
@@ -27,57 +31,69 @@ export function InterviewPage() {
 
   const begin = useCallback(async () => {
     if (!token) return;
-    setThinking(true);
+    setWorking(true);
     setError("");
     try { setTurn(await api.startInterview(token)); }
-    catch (caught) { fail(caught, "Unable to start the interview."); }
-    finally { setThinking(false); }
+    catch (caught) { fail(caught, "Unable to start."); }
+    finally { setWorking(false); }
   }, [token, fail]);
 
   useEffect(() => {
     if (!token) return;
     api.currentInterview(token)
-      .then(setTurn)
+      .then((loaded) => (loaded.interview.status === "finished" || !loaded.interview.question ? begin() : setTurn(loaded)))
       .catch((caught) => {
         if (caught instanceof ApiError && caught.status === 404) void begin();
-        else fail(caught, "Unable to load your interview.");
+        else fail(caught, "Unable to load your questions.");
       });
   }, [token, begin, fail]);
 
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [turn?.interview.messages.length, pending, thinking]);
+  const question = turn?.interview.question ?? null;
+  useEffect(() => { setPicked([]); setDetail(""); }, [question?.id]);
 
-  async function send(event?: FormEvent) {
-    event?.preventDefault();
-    const text = draft.trim();
-    if (!token || !turn || !text || thinking) return;
-    setPending({ role: "member", text, at: new Date().toISOString() });
-    setDraft("");
-    setThinking(true);
+  function toggle(choice: string) {
+    if (!question) return;
+    setPicked((current) => {
+      if (current.includes(choice)) return current.filter((item) => item !== choice);
+      return question.multiple ? [...current, choice] : [choice];
+    });
+  }
+
+  async function submit(skipped = false) {
+    if (!token || !turn || !question || working) return;
+    if (!skipped && !picked.length && !detail.trim()) {
+      setError(question.choices.length ? "Pick an answer or add a few words." : "Add a few words, or skip this one.");
+      return;
+    }
+    setWorking(true);
     setError("");
     try {
-      setTurn(await api.answerInterview(token, turn.interview.session_id, text));
+      const answer = skipped ? { question_id: question.id, choices: [], text: "", skipped: true }
+        : { question_id: question.id, choices: picked, text: detail.trim() };
+      setTurn(await api.answerInterview(token, turn.interview.session_id, answer));
     } catch (caught) {
-      setDraft(text);
       fail(caught, "Your answer didn't go through. Try again.");
     } finally {
-      setPending(null);
-      setThinking(false);
+      setWorking(false);
     }
   }
 
+  function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    void submit();
+  }
+
   function keyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
       event.preventDefault();
-      void send();
+      void submit();
     }
   }
 
   async function finish() {
     if (!token || !turn) return;
     try { setTurn(await api.finishInterview(token, turn.interview.session_id)); }
-    catch (caught) { fail(caught, "Unable to finish the interview."); }
+    catch (caught) { fail(caught, "Unable to save your progress."); }
   }
 
   async function refreshCoverage() {
@@ -92,93 +108,132 @@ export function InterviewPage() {
       const updated = await api.editFact(token, fact.id, edit);
       setTurn((current) => current && { ...current, facts: current.facts.map((item) => (item.id === fact.id ? updated : item)) });
       await refreshCoverage();
-    } catch (caught) { fail(caught, "Unable to update that fact."); }
+    } catch (caught) { fail(caught, "Unable to update that."); }
   }
 
   async function deleteFact(fact: Fact) {
     if (!token) return;
     try {
       await api.deleteFact(token, fact.id);
-      setTurn((current) => current && { ...current, facts: current.facts.filter((item) => item.id !== fact.id) });
+      setTurn((current) => current && {
+        ...current,
+        facts: current.facts.filter((item) => item.id !== fact.id),
+        interview: { ...current.interview, added: current.interview.added.filter((id) => id !== fact.id) },
+      });
       await refreshCoverage();
-    } catch (caught) { fail(caught, "Unable to delete that fact."); }
+    } catch (caught) { fail(caught, "Unable to delete that."); }
   }
 
   if (!turn) {
     return (
-      <div className="page-wrap">
-        {error ? <div className="state-card state-card--error">{error}</div> : <div className="loading-panel"><span className="spinner" />Starting your conversation…</div>}
+      <div className="page-wrap question-page">
+        {error ? <div className="state-card state-card--error">{error}</div> : <div className="loading-panel"><span className="spinner" />Getting your first question ready…</div>}
       </div>
     );
   }
 
-  const finished = turn.interview.status === "finished";
-  const messages = pending ? [...turn.interview.messages, pending] : turn.interview.messages;
+  const { interview, coverage } = turn;
   const learned = turn.facts.filter((fact) => fact.source !== "basics_form");
-  const unconfirmed = learned.filter((fact) => !fact.confirmed).length;
+  const added = turn.facts.filter((fact) => interview.added.includes(fact.id));
+
+  if (interview.status === "finished") {
+    return (
+      <div className="page-wrap question-page">
+        <section className="question-card question-card--center">
+          <CheckCircle2 className="question-card__icon" />
+          <h1 className="question-card__prompt">Your answers are saved.</h1>
+          <p className="question-card__lede">Your profile is {coverage.percent}% complete. Pick up where you left off any time.</p>
+          <div className="question-card__footer question-card__footer--center">
+            <button className="button button--secondary" onClick={() => void begin()} disabled={working}>Keep going</button>
+            <Link className="button button--primary" to="/app">Go to the directory</Link>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
-    <div className="page-wrap interview-page">
+    <div className="page-wrap question-page">
       <div className="onboarding-steps" aria-label="Onboarding progress">
         <Link to="/onboarding" className="onboarding-steps__item onboarding-steps__item--done"><CheckCircle2 size={15} /> The basics</Link>
-        <span className="onboarding-steps__item onboarding-steps__item--active">2 · A short conversation</span>
+        <span className="onboarding-steps__item onboarding-steps__item--active">2 · A few questions</span>
       </div>
 
-      <div className="interview-tabs" role="tablist">
-        <button role="tab" aria-selected={tab === "chat"} className={tab === "chat" ? "active" : ""} onClick={() => setTab("chat")}><MessageCircle size={16} /> Conversation</button>
-        <button role="tab" aria-selected={tab === "facts"} className={tab === "facts" ? "active" : ""} onClick={() => setTab("facts")}>
-          <Sparkles size={16} /> Your facts{unconfirmed > 0 && <span className="count-badge">{unconfirmed}</span>}
-        </button>
+      <div className="question-progress">
+        <div className="question-progress__label">
+          <span>Profile strength <strong>{coverage.percent}%</strong></span>
+          <button className="button button--quiet" onClick={finish} disabled={working}>Done for now</button>
+        </div>
+        <div className="coverage__bar" role="progressbar" aria-valuenow={coverage.percent} aria-valuemin={0} aria-valuemax={100} aria-label="Profile strength">
+          <span style={{ width: `${coverage.percent}%` }} />
+        </div>
       </div>
 
-      <div className="interview-layout">
-        <section className={`chat ${tab === "chat" ? "" : "pane--hidden"}`} aria-label="Conversation">
-          <header className="chat__header">
-            <div>
-              <h1>Tell us what you're looking for</h1>
-              <p>Answer in your own words. Stop whenever you like; you can always come back.</p>
-            </div>
-            {!finished && <button className="button button--secondary" onClick={finish} disabled={thinking}>Done for now</button>}
-          </header>
+      {interview.done && (
+        <div className="question-ready" role="status">
+          <Sparkles size={18} />
+          <p><strong>Your profile is ready for matching.</strong> More answers make your matches sharper, or <Link to="/app">head to the directory</Link>.</p>
+        </div>
+      )}
 
-          <div className="chat__messages" aria-live="polite">
-            {messages.map((message, index) => (
-              <div key={`${message.at}-${index}`} className={`bubble bubble--${message.role}`}>{message.text}</div>
-            ))}
-            {thinking && <div className="bubble bubble--assistant bubble--typing" aria-label="Thinking"><span /><span /><span /></div>}
-            <div ref={endRef} />
+      {question && (
+        <form className={`question-card ${working ? "question-card--working" : ""}`} onSubmit={onSubmit} aria-busy={working}>
+          <div className="question-card__meta">
+            <span className="eyebrow eyebrow--blue">{AREA_LABELS[question.area]}</span>
+            <span>Question {interview.answered + 1}</span>
           </div>
+          <h1 className="question-card__prompt" key={question.id}>{question.prompt}</h1>
 
-          {error && <div className="form-error chat__error" role="alert">{error}</div>}
-
-          {finished ? (
-            <div className="chat__finished">
-              <p><CheckCircle2 size={18} /> Thanks! Your answers are saved. Review what we learned, or pick up the conversation any time.</p>
-              <div>
-                <button className="button button--secondary" onClick={() => void begin()} disabled={thinking}><RotateCcw size={16} /> Keep talking</button>
-                <Link className="button button--primary" to="/app">Go to the directory</Link>
-              </div>
+          {question.choices.length > 0 && (
+            <div className="question-card__choices" role="group" aria-label={question.multiple ? "Choose any that apply" : "Choose one"}>
+              {question.choices.map((choice) => (
+                <button
+                  type="button" key={choice} aria-pressed={picked.includes(choice)}
+                  className={`answer-chip ${picked.includes(choice) ? "answer-chip--on" : ""}`}
+                  onClick={() => toggle(choice)} disabled={working}
+                >
+                  {picked.includes(choice) && <Check size={15} aria-hidden="true" />}{choice}
+                </button>
+              ))}
+              {question.multiple && <small>Choose any that apply</small>}
             </div>
-          ) : (
-            <form className="chat__composer" onSubmit={send}>
-              <textarea
-                value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={keyDown}
-                placeholder="Type your answer…" rows={2} maxLength={2000} aria-label="Your answer" disabled={thinking}
-              />
-              <button className="button button--primary" disabled={thinking || !draft.trim()} aria-label="Send"><Send size={17} /></button>
-            </form>
           )}
-        </section>
 
-        <aside className={`learned ${tab === "facts" ? "" : "pane--hidden"}`} aria-label="What we've learned">
-          <CoverageMeter coverage={turn.coverage} />
-          <div className="learned__heading">
-            <h2>What we've learned</h2>
-            <p>Check each one. Choose who can see it; "Only me" still helps your matches.</p>
+          <label className="question-card__detail">
+            <span>{question.choices.length ? "Add detail (optional)" : "Your answer"}</span>
+            <textarea
+              value={detail} onChange={(event) => { setDetail(event.target.value); setError(""); }} onKeyDown={keyDown}
+              placeholder={question.placeholder || "A sentence or two is plenty"} rows={3} maxLength={2000} disabled={working}
+            />
+          </label>
+
+          {(error || interview.notice) && <div className="form-error" role="alert">{error || interview.notice}</div>}
+
+          <div className="question-card__footer">
+            <button type="button" className="button button--quiet" onClick={() => void submit(true)} disabled={working}>Skip</button>
+            <button className="button button--primary button--large" disabled={working}>
+              {working ? "Saving…" : "Next"} {!working && <ArrowRight size={18} />}
+            </button>
           </div>
-          <FactList facts={learned} onEdit={editFact} onDelete={deleteFact} empty="Things you share will appear here as we go." />
-        </aside>
-      </div>
+        </form>
+      )}
+
+      {added.length > 0 && (
+        <section className="just-added" aria-label="Just added to your profile">
+          <h2><Check size={16} /> Added to your profile</h2>
+          <p>Check these and choose who can see them. "Only me" still helps your matches.</p>
+          {added.map((fact) => <FactCard key={`${fact.id}-${fact.updated_at}`} fact={fact} onEdit={editFact} onDelete={deleteFact} />)}
+        </section>
+      )}
+
+      {learned.length > 0 && (
+        <section className="review-all">
+          <button type="button" className="button button--quiet" onClick={() => setShowAll((value) => !value)} aria-expanded={showAll}>
+            <ChevronDown size={16} className={showAll ? "rotate-180" : ""} /> {showAll ? "Hide" : "Review"} everything we've learned ({learned.length})
+          </button>
+          {showAll && <FactList facts={learned} onEdit={editFact} onDelete={deleteFact} empty="" />}
+        </section>
+      )}
     </div>
   );
 }

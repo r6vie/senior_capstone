@@ -1,5 +1,5 @@
 import type {
-  BasicsForm, Fact, FactEdit, InterviewTurn, LoginResponse, OnboardingStatus, Profile, ProfileInput, User,
+  BasicsForm, Fact, FactEdit, InterviewAnswer, InterviewTurn, LoginResponse, OnboardingStatus, Profile, ProfileInput, User,
 } from "./types";
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "/api";
@@ -82,8 +82,8 @@ export const api = {
     request<OnboardingStatus>("/onboarding/basics", { method: "POST", body: JSON.stringify(basics) }, token),
   currentInterview: (token: string) => request<InterviewTurn>("/interview/sessions/current", {}, token),
   startInterview: (token: string) => request<InterviewTurn>("/interview/sessions", { method: "POST" }, token),
-  answerInterview: (token: string, sessionId: string, text: string) =>
-    request<InterviewTurn>(`/interview/sessions/${sessionId}/messages`, { method: "POST", body: JSON.stringify({ text }) }, token),
+  answerInterview: (token: string, sessionId: string, answer: InterviewAnswer) =>
+    request<InterviewTurn>(`/interview/sessions/${sessionId}/answers`, { method: "POST", body: JSON.stringify(answer) }, token),
   finishInterview: (token: string, sessionId: string) =>
     request<InterviewTurn>(`/interview/sessions/${sessionId}/finish`, { method: "POST" }, token),
   myFacts: (token: string) => request<Fact[]>("/me/facts", {}, token),

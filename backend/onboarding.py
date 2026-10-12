@@ -10,21 +10,21 @@ from fastapi.responses import PlainTextResponse
 from auth import get_current_user
 from database import get_database
 from interviewer import (
-    KICKOFF, InterviewRefused, get_claude, opening_note, run_turn, snapshot, turn_note,
+    KICKOFF, InterviewRefused, answer_text, get_claude, opening_note, run_turn, snapshot, turn_note,
 )
 from member_data import (
     compute_coverage, delete_fact, edit_fact, fact_out, member_facts, profile_for,
     render_profile_md, save_basics, shared_fact, visible_facts,
 )
 from member_models import (
-    BasicsForm, ChatMessage, FactEdit, FactOut, InterviewState, InterviewTurn, MemberAnswer,
-    OnboardingStatus, SharedFact,
+    BasicsForm, FactEdit, FactOut, InterviewState, InterviewTurn, MemberAnswer, OnboardingStatus,
+    Question, SharedFact,
 )
 
 router = APIRouter(dependencies=[Depends(get_current_user)], tags=["Onboarding"])
-MAX_TURNS = 120  # member answers per interview; keeps a runaway tab from running up the AI bill
-RETURNING = "(I'm back to continue.)"
-SORRY = "Sorry, I couldn't continue with that. Could you put it another way?"
+MAX_TURNS = 150  # answers per interview; keeps a runaway tab from running up the AI bill
+RETURNING = "(The member came back to continue.)"
+SORRY = "Sorry, that answer didn't go through. Try rewording it, or skip this question."
 
 
 def utcnow() -> datetime:
@@ -41,40 +41,52 @@ async def require_basics(database, user: dict) -> dict:
 async def turn_view(database, user: dict, session: dict) -> InterviewTurn:
     profile = await profile_for(database, user["_id"])
     facts = await member_facts(database, user["_id"])
+    question = session.get("question")
     return InterviewTurn(
         interview=InterviewState(
             session_id=session["_id"], status=session["status"],
-            messages=[ChatMessage.model_validate(message) for message in session["chat"]],
+            question=Question.model_validate(question) if question else None,
+            done=session.get("done", False), answered=session.get("answered", 0),
+            added=session.get("added", []), notice=session.get("notice"),
         ),
         facts=[fact_out(fact) for fact in facts],
         coverage=compute_coverage((profile or {}).get("core"), facts),
     )
 
 
-async def take_turn(database, claude, user: dict, session: dict, member_text: str, note: str, shown: bool) -> dict:
-    """Run one AI turn and save it; `shown` is False for the hidden kickoff and return messages."""
-    chat = list(session["chat"])
-    if shown:
-        chat.append({"role": "member", "text": member_text, "at": utcnow()})
-    changes = {"updated_at": utcnow()}
+def changed_since(before: list[dict], after: list[dict]) -> list[str]:
+    seen = {fact["_id"]: fact["updated_at"] for fact in before}
+    return [fact["_id"] for fact in after if seen.get(fact["_id"]) != fact["updated_at"]]
+
+
+async def take_turn(
+    database, claude, user: dict, profile: dict, session: dict, member_text: str, note: str, answered: bool,
+) -> dict:
+    """Run one AI turn and save it: the facts it learned and the next question."""
+    before = await member_facts(database, user["_id"])
+    changes = {"updated_at": utcnow(), "status": "active", "notice": None}
     try:
-        result = await run_turn(database, claude, user["_id"], session["api_messages"], member_text, note)
+        result = await run_turn(
+            database, claude, user["_id"], session["api_messages"], member_text, note, profile.get("core"),
+        )
     except InterviewRefused:
-        # Nothing goes into the API transcript, so the next turn continues from the last good one.
-        chat.append({"role": "assistant", "text": SORRY, "at": utcnow()})
+        # Nothing goes into the API transcript; the member keeps the same question.
+        changes["notice"] = SORRY
     except anthropic.RateLimitError:
-        raise HTTPException(status_code=429, detail="The AI interviewer is busy. Try again in a minute.") from None
+        raise HTTPException(status_code=429, detail="The interviewer is busy. Try again in a minute.") from None
     except (anthropic.APIConnectionError, anthropic.InternalServerError):
-        raise HTTPException(status_code=503, detail="Couldn't reach the AI interviewer. Try again shortly.") from None
+        raise HTTPException(status_code=503, detail="Couldn't reach the interviewer. Try again shortly.") from None
     except anthropic.APIStatusError:
-        raise HTTPException(status_code=502, detail="The AI interviewer had a problem with that answer.") from None
+        raise HTTPException(status_code=502, detail="The interviewer had a problem with that answer.") from None
     except RuntimeError:
-        raise HTTPException(status_code=502, detail="The AI interviewer got stuck. Try rephrasing.") from None
+        raise HTTPException(status_code=502, detail="The interviewer got stuck. Try rewording your answer.") from None
     else:
-        chat.append({"role": "assistant", "text": result.text, "at": utcnow()})
-        changes["api_messages"] = result.api_messages
-        changes["known"] = snapshot(await member_facts(database, user["_id"]))
-    changes.update(chat=chat, status="active")
+        after = await member_facts(database, user["_id"])
+        changes.update(
+            api_messages=result.api_messages, known=snapshot(after), added=changed_since(before, after),
+            question={"id": f"q-{uuid4().hex[:12]}", **result.question.model_dump(exclude={"done"})},
+            done=result.question.done, answered=session.get("answered", 0) + int(answered),
+        )
     # Only save if no other tab finished a turn meanwhile; transcripts must stay append-only.
     outcome = await database.interview_sessions.update_one(
         {"_id": session["_id"], "turns": session["turns"]},
@@ -130,19 +142,25 @@ async def start_interview(
     """Start your interview, or continue it. Each member has one interview they can return to."""
     profile = await require_basics(database, user)
     session = await database.interview_sessions.find_one({"user_id": user["_id"]})
+    facts = await member_facts(database, user["_id"])
     if session is None:
         now = utcnow()
         session = {
-            "_id": str(uuid4()), "user_id": user["_id"], "status": "active", "turns": 0,
-            "api_messages": [], "chat": [], "known": {}, "created_at": now, "updated_at": now,
+            "_id": str(uuid4()), "user_id": user["_id"], "status": "active", "turns": 0, "answered": 0,
+            "api_messages": [], "known": {}, "question": None, "done": False, "added": [],
+            "created_at": now, "updated_at": now,
         }
         await database.interview_sessions.insert_one(session)
-        facts = await member_facts(database, user["_id"])
-        session = await take_turn(database, claude, user, session, KICKOFF, opening_note(profile, facts), shown=False)
+        session = await take_turn(
+            database, claude, user, profile, session, KICKOFF, opening_note(profile, facts), answered=False,
+        )
+    elif not session.get("question"):
+        note = turn_note(profile, facts, session["known"])
+        session = await take_turn(database, claude, user, profile, session, RETURNING, note, answered=False)
     elif session["status"] == "finished":
-        facts = await member_facts(database, user["_id"])
-        note = turn_note(profile, facts, session["known"]) + "\nThe member came back to continue. Welcome them back briefly."
-        session = await take_turn(database, claude, user, session, RETURNING, note, shown=False)
+        # The question they left on is still waiting; any fact edits reach the AI with their next answer.
+        await database.interview_sessions.update_one({"_id": session["_id"]}, {"$set": {"status": "active"}})
+        session = {**session, "status": "active"}
     return await turn_view(database, user, session)
 
 
@@ -156,20 +174,28 @@ async def current_interview(
     return await turn_view(database, user, session)
 
 
-@router.post("/interview/sessions/{session_id}/messages", response_model=InterviewTurn)
+@router.post("/interview/sessions/{session_id}/answers", response_model=InterviewTurn)
 async def answer(
     session_id: str, body: MemberAnswer, user: dict = Depends(get_current_user),
     database=Depends(get_database), claude=Depends(get_claude),
 ) -> InterviewTurn:
-    """Send your answer; the reply has the next question, your updated facts, and coverage."""
+    """Answer (or skip) the current question; the reply has the next one and what was added."""
     session = await own_session(database, user, session_id)
-    if session["status"] != "active":
-        raise HTTPException(status_code=409, detail="This interview is finished. Start it again to continue.")
+    question = session.get("question")
+    if session["status"] != "active" or question is None:
+        raise HTTPException(status_code=409, detail="This interview is paused. Start it again to continue.")
+    if body.question_id != question["id"]:
+        raise HTTPException(status_code=409, detail="That question has changed. Reload to see the current one.")
     if session["turns"] >= MAX_TURNS:
-        raise HTTPException(status_code=409, detail="This interview is full. Edit your facts directly instead.")
+        raise HTTPException(status_code=409, detail="You've answered a lot already. Edit your facts directly instead.")
+    if question["choices"] and not set(body.choices) <= set(question["choices"]):
+        raise HTTPException(status_code=422, detail="Pick from the suggested answers, or type your own.")
+    if not question["multiple"] and len(body.choices) > 1:
+        raise HTTPException(status_code=422, detail="Pick one suggested answer.")
     profile = await require_basics(database, user)
     note = turn_note(profile, await member_facts(database, user["_id"]), session["known"])
-    session = await take_turn(database, claude, user, session, body.text, note, shown=True)
+    member_text = answer_text(question, body.choices, body.text, body.skipped)
+    session = await take_turn(database, claude, user, profile, session, member_text, note, answered=not body.skipped)
     return await turn_view(database, user, session)
 
 

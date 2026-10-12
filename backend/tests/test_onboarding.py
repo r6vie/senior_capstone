@@ -8,14 +8,14 @@ from fastapi.testclient import TestClient
 
 from auth import get_current_user
 from database import get_database
-from interviewer import KICKOFF, SYSTEM_PROMPT, TOOLS, get_claude
+from interviewer import FALLBACK_QUESTIONS, KICKOFF, QUESTION_FORMAT, SYSTEM_PROMPT, TOOLS, get_claude
 from main import app
 from member_data import (
     add_facts, compute_coverage, matching_context, search_link_keys, shareable_context,
 )
 from member_models import FactDraft
 from onboarding import SORRY, take_turn
-from fakes import FakeDatabase, ScriptedClaude, reply, text, tool
+from fakes import FakeDatabase, ScriptedClaude, question, reply, text, tool
 
 ALEX = {"_id": "user-alex", "name": "Alex Chen", "email": "alex@example.com", "created_at": datetime.now(timezone.utc)}
 SAM = {"_id": "user-sam", "name": "Sam Ortiz", "email": "sam@example.com", "created_at": datetime.now(timezone.utc)}
@@ -61,9 +61,20 @@ class OnboardingApiTests(unittest.TestCase):
         return [fact for fact in self.database.facts.documents.values() if fact["user_id"] == user["_id"]]
 
     def start(self):
-        self.claude.responses = [reply(text("Hi Alex! What would you most like help with right now?"))]
+        self.claude.responses = [reply(question(
+            "What would you most like help with this semester?", choices=["Pitch deck", "Co-founder", "First customers"],
+        ))]
         response = self.client.post("/interview/sessions")
         self.assertEqual(response.status_code, 200, response.text)
+        return response.json()["interview"]
+
+    def answer(self, interview, *responses, expect=200, **body):
+        self.claude.responses = list(responses)
+        response = self.client.post(
+            f"/interview/sessions/{interview['session_id']}/answers",
+            json={"question_id": interview["question"]["id"], **body},
+        )
+        self.assertEqual(response.status_code, expect, response.text)
         return response.json()
 
     # ------------------------------------------------------------ basics
@@ -122,102 +133,124 @@ class OnboardingApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 503)
         self.assertIn("ANTHROPIC_API_KEY", response.json()["detail"])
 
-    def test_start_sends_hidden_kickoff_with_context(self):
+    def test_start_asks_a_structured_first_question(self):
         self.submit_basics()
-        data = self.start()
-        self.assertEqual([m["role"] for m in data["interview"]["messages"]], ["assistant"])
+        interview = self.start()
+        self.assertEqual(interview["question"]["prompt"], "What would you most like help with this semester?")
+        self.assertEqual(interview["question"]["choices"], ["Pitch deck", "Co-founder", "First customers"])
+        self.assertEqual((interview["answered"], interview["added"], interview["done"]), (0, [], False))
         request = self.claude.requests[0]
         self.assertEqual(request["system"], SYSTEM_PROMPT)
         self.assertEqual(request["tools"], TOOLS)
         self.assertEqual(request["fallbacks"], "default")
-        self.assertEqual(request["output_config"], {"effort": "low"})
+        self.assertEqual(request["output_config"], {"effort": "low", "format": QUESTION_FORMAT})
         self.assertEqual(request["messages"][0], {"role": "user", "content": KICKOFF})
         note = request["messages"][1]
         self.assertEqual(note["role"], "system")
-        self.assertIn("Alex Chen", note["content"])
         self.assertIn("Student at CWRU · Case School of Engineering · Class of 2027", note["content"])
-        # Starting again returns the same open interview without calling Claude.
-        self.assertEqual(self.client.post("/interview/sessions").json()["interview"]["session_id"],
-                         data["interview"]["session_id"])
+        # Starting again returns the same open question without calling Claude.
+        self.assertEqual(self.client.post("/interview/sessions").json()["interview"]["question"], interview["question"])
         self.assertEqual(len(self.claude.requests), 1)
 
-    def test_answer_saves_facts_through_tools_and_returns_next_question(self):
+    def test_answer_saves_facts_and_reports_what_was_added(self):
         self.submit_basics()
-        session_id = self.start()["interview"]["session_id"]
-        self.claude.responses = [
+        interview = self.start()
+        data = self.answer(
+            interview,
             reply(tool("save_facts", {"facts": [{**NEED, "links": ["Sport: Swimming"]}]})),
-            reply(text("What stage is the startup at?")),
-        ]
-        response = self.client.post(f"/interview/sessions/{session_id}/messages", json={"text": "I need pitch help."})
-        self.assertEqual(response.status_code, 200, response.text)
-        data = response.json()
-        self.assertEqual([m["text"] for m in data["interview"]["messages"][-2:]],
-                         ["I need pitch help.", "What stage is the startup at?"])
+            reply(question("What's the deadline you're working toward?", placeholder="Demo day in December")),
+            choices=["Pitch deck"], text="Pre-seed, med-device startup",
+        )
         saved = [fact for fact in data["facts"] if fact["source"] == "interview"]
         self.assertEqual(len(saved), 1)
         self.assertEqual(saved[0]["links"], ["sport:swimming"])
         self.assertFalse(saved[0]["confirmed"])
-        self.assertEqual(next(a for a in data["coverage"]["areas"] if a["area"] == "needs")["status"], "started")
-        # The tool result went back to Claude in the same turn, after the assistant's tool call.
-        second = self.claude.requests[-1]["messages"]
-        result = second[-1]["content"][0]
-        self.assertEqual(result["type"], "tool_result")
-        self.assertFalse(result["is_error"])
+        self.assertEqual(data["interview"]["added"], [saved[0]["id"]])
+        self.assertEqual(data["interview"]["answered"], 1)
+        self.assertEqual(data["interview"]["question"]["placeholder"], "Demo day in December")
+        self.assertNotEqual(data["interview"]["question"]["id"], interview["question"]["id"])
+        # The answer reached Claude with the question it was answering.
+        sent = self.claude.requests[1]["messages"][-2]["content"]
+        self.assertIn("What would you most like help with this semester?", sent)
+        self.assertIn("Picked: Pitch deck", sent)
+        self.assertIn("In their own words: Pre-seed, med-device startup", sent)
+        result = self.claude.requests[-1]["messages"][-1]["content"][0]
+        self.assertEqual((result["type"], result["is_error"]), ("tool_result", False))
         self.assertEqual(json.loads(result["content"])[0]["id"], saved[0]["id"])
-        # Interview facts update the directory card's interests.
         profile = next(iter(self.database.profiles.documents.values()))
         self.assertEqual(profile["interests"], ["fundraising"])
 
+    def test_answers_are_validated_against_the_current_question(self):
+        self.submit_basics()
+        interview = self.start()
+        self.answer(interview, expect=422)  # nothing picked, typed or skipped
+        self.answer(interview, expect=422, choices=["Not offered"])
+        self.answer(interview, expect=422, choices=["Pitch deck", "Co-founder"])  # single choice question
+        stale = {**interview, "question": {**interview["question"], "id": "old"}}
+        self.answer(stale, expect=409, text="hi")
+        self.assertEqual(self.claude.requests[1:], [])
+
+    def test_skipping_tells_claude_and_does_not_count_as_answered(self):
+        self.submit_basics()
+        data = self.answer(self.start(), reply(question("What could you help others with?", area="offers")), skipped=True)
+        self.assertIn("skipped", self.claude.requests[-1]["messages"][-2]["content"])
+        self.assertEqual(data["interview"]["answered"], 0)
+        self.assertEqual(data["interview"]["question"]["area"], "offers")
+
+    def test_unreadable_reply_falls_back_to_a_plain_question(self):
+        self.submit_basics()
+        data = self.answer(self.start(), reply(text("not json")), text="Pitch help")
+        self.assertIn(data["interview"]["question"]["prompt"], FALLBACK_QUESTIONS.values())
+        self.assertEqual(data["interview"]["question"]["choices"], [])
+
     def test_transcript_is_append_only_across_turns(self):
         self.submit_basics()
-        session_id = self.start()["interview"]["session_id"]
-        stored = self.database.interview_sessions.documents[session_id]["api_messages"]
-        self.claude.responses = [reply(text("Tell me more."))]
-        self.client.post(f"/interview/sessions/{session_id}/messages", json={"text": "Pitching."})
+        interview = self.start()
+        stored = self.database.interview_sessions.documents[interview["session_id"]]["api_messages"]
+        self.answer(interview, reply(question("Tell me more.")), text="Pitching.")
         sent = self.claude.requests[-1]["messages"]
         self.assertEqual(sent[:len(stored)], stored)
-        self.assertEqual(sent[len(stored)], {"role": "user", "content": "Pitching."})
+        self.assertEqual(sent[len(stored)]["role"], "user")
         self.assertEqual(sent[len(stored) + 1]["role"], "system")
 
-    def test_panel_edits_are_reported_to_claude_next_turn(self):
+    def test_fact_edits_are_reported_to_claude_next_turn(self):
         self.submit_basics()
-        session_id = self.start()["interview"]["session_id"]
-        self.claude.responses = [
-            reply(tool("save_facts", {"facts": [NEED, {**NEED, "kind": "goal", "topic": "career", "text": "Wants to found a company"}]})),
-            reply(text("Got it.")),
-        ]
-        facts = self.client.post(f"/interview/sessions/{session_id}/messages", json={"text": "x"}).json()["facts"]
-        need, goal = [fact for fact in facts if fact["source"] == "interview"]
+        goal = {**NEED, "kind": "goal", "topic": "career", "text": "Wants to found a company"}
+        data = self.answer(
+            self.start(), reply(tool("save_facts", {"facts": [NEED, goal]})), reply(question("Next?")), text="x",
+        )
+        need, saved_goal = [fact for fact in data["facts"] if fact["source"] == "interview"]
         self.client.patch(f"/me/facts/{need['id']}", json={"visibility": "private"})
-        self.client.delete(f"/me/facts/{goal['id']}")
-        self.claude.responses = [reply(text("Next question?"))]
-        self.client.post(f"/interview/sessions/{session_id}/messages", json={"text": "y"})
+        self.client.delete(f"/me/facts/{saved_goal['id']}")
+        self.answer(data["interview"], reply(question("And then?")), text="y")
         note = self.claude.requests[-1]["messages"][-1]["content"]
         self.assertIn(f"Changed {need['id']}", note)
         self.assertIn("(private)", note)
-        self.assertIn(f"Deleted {goal['id']}: Wants to found a company", note)
+        self.assertIn(f"Deleted {saved_goal['id']}: Wants to found a company", note)
 
-    def test_refusal_keeps_transcript_unchanged(self):
+    def test_refusal_keeps_question_and_transcript(self):
         self.submit_basics()
-        session_id = self.start()["interview"]["session_id"]
-        before = self.database.interview_sessions.documents[session_id]["api_messages"]
-        self.claude.responses = [reply(text(""), stop_reason="refusal")]
-        data = self.client.post(f"/interview/sessions/{session_id}/messages", json={"text": "hmm"}).json()
-        self.assertEqual(data["interview"]["messages"][-1]["text"], SORRY)
-        self.assertEqual(self.database.interview_sessions.documents[session_id]["api_messages"], before)
+        interview = self.start()
+        before = self.database.interview_sessions.documents[interview["session_id"]]["api_messages"]
+        data = self.answer(interview, reply(text(""), stop_reason="refusal"), text="hmm")
+        self.assertEqual(data["interview"]["notice"], SORRY)
+        self.assertEqual(data["interview"]["question"], interview["question"])
+        self.assertEqual(self.database.interview_sessions.documents[interview["session_id"]]["api_messages"], before)
+        # The notice clears once an answer goes through.
+        self.assertIsNone(self.answer(data["interview"], reply(question("Ok")), text="again")["interview"]["notice"])
 
     def test_bad_tool_calls_return_errors_to_claude(self):
         self.submit_basics()
-        session_id = self.start()["interview"]["session_id"]
-        self.claude.responses = [
+        self.answer(
+            self.start(),
             reply(
                 tool("update_fact", {"fact_id": "not-mine", "topic": None, "text": "x", "detail": None, "links": None,
                                      "strength": None, "visibility": None, "confidence": None}, "c1"),
                 tool("save_facts", {"facts": [{**NEED, "links": ["no colon"]}]}, "c2"),
             ),
-            reply(text("Sorry, let me ask differently.")),
-        ]
-        self.client.post(f"/interview/sessions/{session_id}/messages", json={"text": "x"})
+            reply(question("Let me ask differently.")),
+            text="x",
+        )
         results = self.claude.requests[-1]["messages"][-1]["content"]
         self.assertEqual([r["tool_use_id"] for r in results], ["c1", "c2"])
         self.assertTrue(all(r["is_error"] for r in results))
@@ -225,44 +258,41 @@ class OnboardingApiTests(unittest.TestCase):
 
     def test_ai_cannot_reshare_a_confirmed_fact(self):
         self.submit_basics()
-        session_id = self.start()["interview"]["session_id"]
-        self.claude.responses = [reply(tool("save_facts", {"facts": [NEED]})), reply(text("ok"))]
-        fact = [f for f in self.client.post(f"/interview/sessions/{session_id}/messages", json={"text": "x"}).json()["facts"]
-                if f["source"] == "interview"][0]
+        data = self.answer(self.start(), reply(tool("save_facts", {"facts": [NEED]})), reply(question("ok")), text="x")
+        fact = [f for f in data["facts"] if f["source"] == "interview"][0]
         self.client.patch(f"/me/facts/{fact['id']}", json={"visibility": "private"})
-        self.claude.responses = [
+        self.answer(
+            data["interview"],
             reply(tool("update_fact", {"fact_id": fact["id"], "topic": None, "text": "Wants pitch coaching",
                                        "detail": None, "links": None, "strength": None, "visibility": "public",
                                        "confidence": None})),
-            reply(text("ok")),
-        ]
-        self.client.post(f"/interview/sessions/{session_id}/messages", json={"text": "y"})
+            reply(question("ok")),
+            text="y",
+        )
         stored = self.database.facts.documents[fact["id"]]
         self.assertEqual(stored["text"], "Wants pitch coaching")
         self.assertEqual(stored["visibility"], "private")
         self.assertFalse(stored["confirmed"])
 
-    def test_finish_and_resume(self):
+    def test_done_flag_and_finish_then_resume_without_a_new_ai_call(self):
         self.submit_basics()
-        session_id = self.start()["interview"]["session_id"]
-        finished = self.client.post(f"/interview/sessions/{session_id}/finish").json()
-        self.assertEqual(finished["interview"]["status"], "finished")
-        self.assertEqual(self.client.post(f"/interview/sessions/{session_id}/messages", json={"text": "x"}).status_code, 409)
-        self.claude.responses = [reply(text("Welcome back! Last time we covered your pitch."))]
-        resumed = self.client.post("/interview/sessions").json()
-        self.assertEqual(resumed["interview"]["session_id"], session_id)
-        self.assertEqual(resumed["interview"]["status"], "active")
-        self.assertEqual([m["role"] for m in resumed["interview"]["messages"]], ["assistant", "assistant"])
-        self.assertIn("came back", self.claude.requests[-1]["messages"][-1]["content"])
+        data = self.answer(self.start(), reply(question("Anything else?", done=True)), text="x")
+        self.assertTrue(data["interview"]["done"])
+        session_id = data["interview"]["session_id"]
+        finished = self.client.post(f"/interview/sessions/{session_id}/finish").json()["interview"]
+        self.assertEqual(finished["status"], "finished")
+        self.answer(finished, expect=409, text="x")
+        calls = len(self.claude.requests)
+        resumed = self.client.post("/interview/sessions").json()["interview"]
+        self.assertEqual((resumed["status"], resumed["question"]), ("active", finished["question"]))
+        self.assertEqual(len(self.claude.requests), calls)
 
     def test_other_members_cannot_use_my_interview_or_facts(self):
         self.submit_basics()
-        session_id = self.start()["interview"]["session_id"]
-        self.claude.responses = [reply(tool("save_facts", {"facts": [NEED]})), reply(text("ok"))]
-        self.client.post(f"/interview/sessions/{session_id}/messages", json={"text": "x"})
+        data = self.answer(self.start(), reply(tool("save_facts", {"facts": [NEED]})), reply(question("ok")), text="x")
         fact_id = next(f["_id"] for f in self.facts() if f["source"] == "interview")
         self.user = SAM
-        self.assertEqual(self.client.post(f"/interview/sessions/{session_id}/messages", json={"text": "x"}).status_code, 404)
+        self.answer(data["interview"], expect=404, text="x")
         self.assertEqual(self.client.patch(f"/me/facts/{fact_id}", json={"confirmed": True}).status_code, 404)
         self.assertEqual(self.client.delete(f"/me/facts/{fact_id}").status_code, 404)
         self.assertEqual(self.client.get("/me/facts").json(), [])
@@ -352,11 +382,12 @@ class MemberDataTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_stale_turn_is_rejected(self):
         session = {"_id": "s", "user_id": "user-alex", "status": "active", "turns": 0, "api_messages": [],
-                   "chat": [], "known": {}}
+                   "known": {}, "question": None}
         await self.database.interview_sessions.insert_one({**session, "turns": 1})
-        claude = ScriptedClaude(reply(text("Hello")))
+        claude = ScriptedClaude(reply(question("Hello")))
+        profile = await self.database.profiles.find_one({"_id": "p-alex"})
         with self.assertRaises(HTTPException) as caught:
-            await take_turn(self.database, claude, ALEX, session, "hi", "note", shown=True)
+            await take_turn(self.database, claude, ALEX, profile, session, "hi", "note", answered=True)
         self.assertEqual(caught.exception.status_code, 409)
 
 

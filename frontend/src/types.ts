@@ -71,14 +71,32 @@ export interface Coverage {
   areas: AreaCoverage[];
 }
 
-export interface ChatMessage {
-  role: "assistant" | "member";
+export interface Question {
+  id: string;
+  area: AreaCoverage["area"];
+  prompt: string;
+  choices: string[];
+  multiple: boolean;
+  placeholder: string;
+}
+
+export interface InterviewAnswer {
+  question_id: string;
+  choices: string[];
   text: string;
-  at: string;
+  skipped?: boolean;
 }
 
 export interface InterviewTurn {
-  interview: { session_id: string; status: "active" | "finished"; messages: ChatMessage[] };
+  interview: {
+    session_id: string;
+    status: "active" | "finished";
+    question: Question | null;
+    done: boolean;
+    answered: number;
+    added: string[];
+    notice: string | null;
+  };
   facts: Fact[];
   coverage: Coverage;
 }

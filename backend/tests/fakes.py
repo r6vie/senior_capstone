@@ -1,5 +1,6 @@
 """In-memory stand-ins for MongoDB and Claude, so onboarding tests need neither Atlas nor an API key."""
 
+import json
 from copy import deepcopy
 from types import SimpleNamespace
 
@@ -97,6 +98,15 @@ class FakeDatabase:
 
 def text(words: str) -> BetaTextBlock:
     return BetaTextBlock(type="text", text=words)
+
+
+def question(prompt: str, area: str = "needs", choices: list[str] | None = None, multiple: bool = False,
+             placeholder: str = "", done: bool = False) -> BetaTextBlock:
+    """The JSON next-question reply the interviewer is asked to end every turn with."""
+    return text(json.dumps({
+        "area": area, "prompt": prompt, "choices": choices or [], "multiple": multiple,
+        "placeholder": placeholder, "done": done,
+    }))
 
 
 def tool(name: str, tool_input: dict, call_id: str = "call-1") -> BetaToolUseBlock:

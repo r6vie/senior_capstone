@@ -21,7 +21,6 @@ FactSource = Literal["basics_form", "interview", "member_edit", "resume"]
 
 ShortText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
 FactText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=400)]
-MemberMessage = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
 
 LINK_KEY = re.compile(r"^[a-z][a-z0-9-]{0,30}:[a-z0-9][a-z0-9-]{0,80}$")
 
@@ -159,6 +158,7 @@ class SharedFact(BaseModel):
 
 AreaStatus = Literal["missing", "started", "good"]
 Area = Literal["needs", "offers", "style", "background", "goals"]
+AREA_ORDER: tuple[Area, ...] = ("needs", "offers", "style", "background", "goals")
 
 
 class AreaCoverage(BaseModel):
@@ -173,20 +173,45 @@ class Coverage(BaseModel):
     areas: list[AreaCoverage]
 
 
-class ChatMessage(BaseModel):
-    role: Literal["assistant", "member"]
-    text: str
-    at: datetime
+class NextQuestion(BaseModel):
+    """The AI's next question, as it writes it (validated before the member sees it)."""
+
+    area: Area
+    prompt: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=300)]
+    choices: list[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]] = Field(
+        default_factory=list,
+    )
+    multiple: bool = False
+    placeholder: Annotated[str, StringConstraints(strip_whitespace=True, max_length=120)] = ""
+    done: bool = False
+
+    @field_validator("choices")
+    @classmethod
+    def at_most_six_distinct(cls, values: list[str]) -> list[str]:
+        return list(dict.fromkeys(values))[:6]
+
+
+class Question(BaseModel):
+    id: str
+    area: Area
+    prompt: str
+    choices: list[str]
+    multiple: bool
+    placeholder: str
 
 
 class InterviewState(BaseModel):
     session_id: str
     status: Literal["active", "finished"]
-    messages: list[ChatMessage]
+    question: Question | None
+    done: bool  # the AI judges the profile ready; the member may keep going
+    answered: int
+    added: list[str]  # ids of facts saved or changed by the last answer
+    notice: str | None = None
 
 
 class InterviewTurn(BaseModel):
-    """Everything the interview screen needs after each turn."""
+    """Everything the interview screen needs after each answer."""
 
     interview: InterviewState
     facts: list[FactOut]
@@ -195,10 +220,21 @@ class InterviewTurn(BaseModel):
 
 class MemberAnswer(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid", json_schema_extra={"examples": [{
-        "text": "I'm trying to figure out how to pitch my med-device idea to investors.",
-    }]})
+        "question_id": "q-3f2a", "choices": ["Pitch deck"], "text": "Demo day is in December.",
+    }, {"question_id": "q-3f2a", "skipped": True}]})
 
-    text: MemberMessage
+    question_id: NonEmptyText
+    choices: list[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]] = Field(
+        default_factory=list, max_length=6,
+    )
+    text: Annotated[str, StringConstraints(strip_whitespace=True, max_length=2000)] = ""
+    skipped: bool = False
+
+    @model_validator(mode="after")
+    def answer_or_skip(self) -> Self:
+        if not self.skipped and not self.choices and not self.text:
+            raise ValueError("Pick an answer, type one, or skip the question.")
+        return self
 
 
 class OnboardingStatus(BaseModel):
