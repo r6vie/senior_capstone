@@ -14,6 +14,9 @@ A platform for discovering and connecting with people in the CWRU network.
 - Authenticated profile creation, viewing, editing, and deletion
 - Profile ownership controls and expertise search
 - Responsive landing page, member directory, and profile editor
+- Onboarding: a short basics form, then an AI interview (Claude) that saves what it
+  learns as open-ended facts, each with its own visibility (everyone, matches only, or
+  only me). Members review, edit, and delete facts as they go.
 
 ## Setup
 
@@ -31,6 +34,9 @@ npm --prefix frontend install
 Create a local `.env` using `.env.example` as a template, unless one already exists.
 Set `MONGODB_URI` to your private connection string and
 `MONGODB_DATABASE=founderscircle`. Ensure your IP is allowed in Atlas.
+For the AI interview, also set `ANTHROPIC_API_KEY` (optionally `ANTHROPIC_MODEL`;
+the default is `claude-opus-5-5`). Without a key, everything else still works and
+the interview reports that it isn't set up.
 Credentials belong only in `.env`, which is ignored by Git.
 
 ## Run
@@ -57,9 +63,12 @@ PYTHONPATH=backend .venv/bin/python -m unittest discover -s backend/tests -v
 npm --prefix frontend run build
 ```
 
-Tests run without connecting to Atlas.
+Tests run without connecting to Atlas or calling Claude.
 
 ## Project status
 
-The core account, profile, and directory flow is implemented. AI matching,
-outreach generation, email verification, password reset, and CWRU SSO are future work.
+The core account, profile, and directory flow is implemented, along with AI-driven
+onboarding (`backend/onboarding.py`, `backend/interviewer.py`). Other features read
+member data only through `backend/member_data.py`, which keeps private facts out of
+anything shown to other members. AI matching, outreach generation, email verification,
+password reset, and CWRU SSO are future work.

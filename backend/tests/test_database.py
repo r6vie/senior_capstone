@@ -3,6 +3,7 @@ from copy import deepcopy
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import certifi
 from fastapi.testclient import TestClient
 from pymongo.errors import ConnectionFailure
 
@@ -79,6 +80,15 @@ class ConnectionAndSeedTests(unittest.IsolatedAsyncioTestCase):
                     async with database_connection():
                         raise ConnectionFailure("private-connection-details")
         client.close.assert_awaited_once()
+
+    async def test_atlas_connections_use_certifi_bundle(self):
+        client = MagicMock()
+        client.close = AsyncMock()
+        with patch("database.database_settings", return_value=("mongodb+srv://cluster.example", "test")):
+            with patch("database.AsyncMongoClient", return_value=client) as client_class:
+                async with database_connection():
+                    pass
+        self.assertEqual(client_class.call_args.kwargs["tlsCAFile"], certifi.where())
 
     async def test_reseeding_preserves_existing_records(self):
         # Simulate $setOnInsert to check seed behavior without an Atlas account.

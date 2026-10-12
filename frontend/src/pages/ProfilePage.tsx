@@ -3,6 +3,7 @@ import { FormEvent, KeyboardEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError, api } from "../api";
 import { useAuth } from "../auth";
+import { MyData } from "../components/MyData";
 import type { Profile, ProfileInput } from "../types";
 
 const emptyProfile: ProfileInput = { name: "", affiliation: "", location: "", expertise: [], interests: [] };
@@ -79,6 +80,8 @@ export function ProfilePage() {
     <div className="page-wrap profile-page">
       <Link className="back-link" to="/app"><ArrowLeft /> Back to directory</Link>
       <div className="profile-page__heading"><div><span className="eyebrow eyebrow--blue">Your place in the network</span><h1>{saved ? "Edit your profile" : "Create your profile"}</h1><p>Help the community understand what you know, what you care about, and where you are.</p></div><span className={`profile-status ${saved ? "profile-status--complete" : ""}`}>{saved && <Check />} {saved ? "Profile active" : "Profile not published"}</span></div>
+
+      <MyData />
 
       <form className="profile-form" onSubmit={submit}>
         {error && <div className="form-error" role="alert">{error}</div>}

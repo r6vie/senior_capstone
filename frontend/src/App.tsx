@@ -4,7 +4,9 @@ import { AppShell } from "./components/AppShell";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AuthPage } from "./pages/AuthPage";
 import { DirectoryPage } from "./pages/DirectoryPage";
+import { InterviewPage } from "./pages/InterviewPage";
 import { LandingPage } from "./pages/LandingPage";
+import { OnboardingBasicsPage } from "./pages/OnboardingBasicsPage";
 import { ProfilePage } from "./pages/ProfilePage";
 
 export default function App() {
@@ -18,6 +20,8 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/app" element={<AppShell><DirectoryPage /></AppShell>} />
             <Route path="/app/profile" element={<AppShell><ProfilePage /></AppShell>} />
+            <Route path="/onboarding" element={<AppShell><OnboardingBasicsPage /></AppShell>} />
+            <Route path="/onboarding/interview" element={<AppShell><InterviewPage /></AppShell>} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -4,6 +4,7 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import certifi
 from dotenv import dotenv_values
 from fastapi import HTTPException, Request
 from pymongo import AsyncMongoClient
@@ -26,7 +27,10 @@ async def database_connection():
         raise RuntimeError("Add MONGODB_URI to the project's .env file first.")
     client = None
     try:
-        client = AsyncMongoClient(uri, timeoutMS=10000, serverSelectionTimeoutMS=5000)
+        # Atlas (mongodb+srv) uses TLS; python.org builds of Python on macOS ship
+        # without root certificates, so verify against certifi's bundle instead.
+        tls = {"tlsCAFile": certifi.where()} if uri.startswith("mongodb+srv://") else {}
+        client = AsyncMongoClient(uri, timeoutMS=10000, serverSelectionTimeoutMS=5000, **tls)
         yield client[name]
     except (PyMongoError, ValueError):
         # Connection errors can contain private connection details; don't print them.
@@ -63,6 +67,9 @@ async def ensure_indexes(database):
         "owner_user_id", unique=True, name="profiles_owner_unique",
         partialFilterExpression={"owner_user_id": {"$type": "string"}},
     )
+    await database.facts.create_index([("user_id", 1), ("created_at", 1)], name="facts_by_member")
+    await database.facts.create_index("links", name="facts_link_keys")
+    await database.interview_sessions.create_index("user_id", unique=True, name="interviews_one_per_member")
 
 
 def get_database(request: Request):

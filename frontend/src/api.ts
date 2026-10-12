@@ -1,4 +1,6 @@
-import type { LoginResponse, Profile, ProfileInput, User } from "./types";
+import type {
+  BasicsForm, Fact, FactEdit, InterviewAnswer, InterviewTurn, LoginResponse, OnboardingStatus, Profile, ProfileInput, User,
+} from "./types";
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "/api";
 
@@ -31,7 +33,7 @@ function errorMessage(payload: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
-async function request<T>(path: string, options: RequestInit = {}, token?: string | null): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}, token?: string | null, as: "json" | "text" = "json"): Promise<T> {
   const headers = new Headers(options.headers);
   if (options.body) headers.set("Content-Type", "application/json");
   if (token) headers.set("Authorization", `Bearer ${token}`);
@@ -55,7 +57,7 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
   }
 
   if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
+  return (as === "text" ? response.text() : response.json()) as Promise<T>;
 }
 
 export const api = {
@@ -74,4 +76,19 @@ export const api = {
     request<Profile>(`/profiles/${id}`, { method: "PATCH", body: JSON.stringify(profile) }, token),
   deleteProfile: (token: string, id: string) =>
     request<void>(`/profiles/${id}`, { method: "DELETE" }, token),
+
+  onboardingStatus: (token: string) => request<OnboardingStatus>("/onboarding/status", {}, token),
+  submitBasics: (token: string, basics: BasicsForm) =>
+    request<OnboardingStatus>("/onboarding/basics", { method: "POST", body: JSON.stringify(basics) }, token),
+  currentInterview: (token: string) => request<InterviewTurn>("/interview/sessions/current", {}, token),
+  startInterview: (token: string) => request<InterviewTurn>("/interview/sessions", { method: "POST" }, token),
+  answerInterview: (token: string, sessionId: string, answer: InterviewAnswer) =>
+    request<InterviewTurn>(`/interview/sessions/${sessionId}/answers`, { method: "POST", body: JSON.stringify(answer) }, token),
+  finishInterview: (token: string, sessionId: string) =>
+    request<InterviewTurn>(`/interview/sessions/${sessionId}/finish`, { method: "POST" }, token),
+  myFacts: (token: string) => request<Fact[]>("/me/facts", {}, token),
+  editFact: (token: string, id: string, edit: FactEdit) =>
+    request<Fact>(`/me/facts/${id}`, { method: "PATCH", body: JSON.stringify(edit) }, token),
+  deleteFact: (token: string, id: string) => request<void>(`/me/facts/${id}`, { method: "DELETE" }, token),
+  myProfileMarkdown: (token: string) => request<string>("/me/profile.md", {}, token, "text"),
 };
