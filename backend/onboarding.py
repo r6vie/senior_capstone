@@ -6,11 +6,13 @@ from uuid import uuid4
 import anthropic
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import PlainTextResponse
+from pymongo.errors import DuplicateKeyError
 
 from auth import get_current_user
 from database import get_database
 from interviewer import (
-    KICKOFF, InterviewRefused, answer_text, get_claude, opening_note, run_turn, snapshot, turn_note,
+    FIRST_QUESTIONS, RETURNING, InterviewRefused, answer_text, get_claude, opening_note, run_turn, snapshot,
+    turn_note,
 )
 from member_data import (
     compute_coverage, delete_fact, edit_fact, fact_out, member_facts, profile_for,
@@ -23,7 +25,6 @@ from member_models import (
 
 router = APIRouter(dependencies=[Depends(get_current_user)], tags=["Onboarding"])
 MAX_TURNS = 150  # answers per interview; keeps a runaway tab from running up the AI bill
-RETURNING = "(The member came back to continue.)"
 SORRY = "Sorry, that answer didn't go through. Try rewording it, or skip this question."
 
 
@@ -52,6 +53,10 @@ async def turn_view(database, user: dict, session: dict) -> InterviewTurn:
         facts=[fact_out(fact) for fact in facts],
         coverage=compute_coverage((profile or {}).get("core"), facts),
     )
+
+
+def first_question(core: dict) -> dict:
+    return {"id": f"q-{uuid4().hex[:12]}", **FIRST_QUESTIONS[core["seeking"]]}
 
 
 def changed_since(before: list[dict], after: list[dict]) -> list[str]:
@@ -142,20 +147,21 @@ async def start_interview(
     """Start your interview, or continue it. Each member has one interview they can return to."""
     profile = await require_basics(database, user)
     session = await database.interview_sessions.find_one({"user_id": user["_id"]})
-    facts = await member_facts(database, user["_id"])
     if session is None:
         now = utcnow()
         session = {
             "_id": str(uuid4()), "user_id": user["_id"], "status": "active", "turns": 0, "answered": 0,
-            "api_messages": [], "known": {}, "question": None, "done": False, "added": [],
-            "created_at": now, "updated_at": now,
+            "api_messages": [], "known": {}, "question": first_question(profile["core"]), "done": False,
+            "added": [], "created_at": now, "updated_at": now,
         }
-        await database.interview_sessions.insert_one(session)
-        session = await take_turn(
-            database, claude, user, profile, session, KICKOFF, opening_note(profile, facts), answered=False,
-        )
+        try:
+            await database.interview_sessions.insert_one(session)
+        except DuplicateKeyError:
+            # Another request (a second tab, or a double-click) started it a moment ago; use that one.
+            session = await database.interview_sessions.find_one({"user_id": user["_id"]})
     elif not session.get("question"):
-        note = turn_note(profile, facts, session["known"])
+        # Only reachable if an earlier AI turn failed after the first answer; ask the AI to pick up again.
+        note = turn_note(profile, await member_facts(database, user["_id"]), session["known"])
         session = await take_turn(database, claude, user, profile, session, RETURNING, note, answered=False)
     elif session["status"] == "finished":
         # The question they left on is still waiting; any fact edits reach the AI with their next answer.
@@ -193,7 +199,9 @@ async def answer(
     if not question["multiple"] and len(body.choices) > 1:
         raise HTTPException(status_code=422, detail="Pick one suggested answer.")
     profile = await require_basics(database, user)
-    note = turn_note(profile, await member_facts(database, user["_id"]), session["known"])
+    facts = await member_facts(database, user["_id"])
+    # The first answer opens the AI conversation, so it carries who the member is.
+    note = turn_note(profile, facts, session["known"]) if session["api_messages"] else opening_note(profile, facts)
     member_text = answer_text(question, body.choices, body.text, body.skipped)
     session = await take_turn(database, claude, user, profile, session, member_text, note, answered=not body.skipped)
     return await turn_view(database, user, session)

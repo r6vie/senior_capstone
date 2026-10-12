@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 from auth import get_current_user
 from database import get_database
-from interviewer import FALLBACK_QUESTIONS, KICKOFF, QUESTION_FORMAT, SYSTEM_PROMPT, TOOLS, get_claude
+from interviewer import FALLBACK_QUESTIONS, FIRST_QUESTIONS, QUESTION_FORMAT, SYSTEM_PROMPT, TOOLS, Claude, get_claude
 from main import app
 from member_data import (
     add_facts, compute_coverage, matching_context, search_link_keys, shareable_context,
@@ -61,9 +61,6 @@ class OnboardingApiTests(unittest.TestCase):
         return [fact for fact in self.database.facts.documents.values() if fact["user_id"] == user["_id"]]
 
     def start(self):
-        self.claude.responses = [reply(question(
-            "What would you most like help with this semester?", choices=["Pitch deck", "Co-founder", "First customers"],
-        ))]
         response = self.client.post("/interview/sessions")
         self.assertEqual(response.status_code, 200, response.text)
         return response.json()["interview"]
@@ -133,24 +130,34 @@ class OnboardingApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 503)
         self.assertIn("ANTHROPIC_API_KEY", response.json()["detail"])
 
-    def test_start_asks_a_structured_first_question(self):
+    def test_first_question_is_ready_without_calling_claude(self):
         self.submit_basics()
         interview = self.start()
-        self.assertEqual(interview["question"]["prompt"], "What would you most like help with this semester?")
-        self.assertEqual(interview["question"]["choices"], ["Pitch deck", "Co-founder", "First customers"])
+        self.assertEqual(self.claude.requests, [])
+        fixed = FIRST_QUESTIONS["both"]
+        self.assertEqual({key: interview["question"][key] for key in fixed}, fixed)
         self.assertEqual((interview["answered"], interview["added"], interview["done"]), (0, [], False))
+        # Starting again (another tab, a double-click) returns the same interview and question.
+        self.assertEqual(self.client.post("/interview/sessions").json()["interview"], interview)
+        self.assertEqual(len(self.database.interview_sessions.documents), 1)
+
+    def test_mentors_get_a_first_question_about_offering_help(self):
+        self.submit_basics(seeking="give_help")
+        self.assertEqual(self.start()["question"]["area"], "offers")
+
+    def test_first_answer_opens_the_ai_conversation_with_context(self):
+        self.submit_basics()
+        self.answer(self.start(), reply(question("Next?")), choices=["Finding a mentor"])
         request = self.claude.requests[0]
         self.assertEqual(request["system"], SYSTEM_PROMPT)
         self.assertEqual(request["tools"], TOOLS)
-        self.assertEqual(request["fallbacks"], "default")
         self.assertEqual(request["output_config"], {"effort": "low", "format": QUESTION_FORMAT})
-        self.assertEqual(request["messages"][0], {"role": "user", "content": KICKOFF})
-        note = request["messages"][1]
+        first, note = request["messages"]
+        self.assertEqual(first["role"], "user")
+        self.assertIn("What would you most like help with right now?", first["content"])
         self.assertEqual(note["role"], "system")
         self.assertIn("Student at CWRU · Case School of Engineering · Class of 2027", note["content"])
-        # Starting again returns the same open question without calling Claude.
-        self.assertEqual(self.client.post("/interview/sessions").json()["interview"]["question"], interview["question"])
-        self.assertEqual(len(self.claude.requests), 1)
+        self.assertIn("standard first question", note["content"])
 
     def test_answer_saves_facts_and_reports_what_was_added(self):
         self.submit_basics()
@@ -159,7 +166,7 @@ class OnboardingApiTests(unittest.TestCase):
             interview,
             reply(tool("save_facts", {"facts": [{**NEED, "links": ["Sport: Swimming"]}]})),
             reply(question("What's the deadline you're working toward?", placeholder="Demo day in December")),
-            choices=["Pitch deck"], text="Pre-seed, med-device startup",
+            choices=["Starting or growing a project"], text="Pre-seed, med-device startup",
         )
         saved = [fact for fact in data["facts"] if fact["source"] == "interview"]
         self.assertEqual(len(saved), 1)
@@ -169,10 +176,8 @@ class OnboardingApiTests(unittest.TestCase):
         self.assertEqual(data["interview"]["answered"], 1)
         self.assertEqual(data["interview"]["question"]["placeholder"], "Demo day in December")
         self.assertNotEqual(data["interview"]["question"]["id"], interview["question"]["id"])
-        # The answer reached Claude with the question it was answering.
-        sent = self.claude.requests[1]["messages"][-2]["content"]
-        self.assertIn("What would you most like help with this semester?", sent)
-        self.assertIn("Picked: Pitch deck", sent)
+        sent = self.claude.requests[0]["messages"][-2]["content"]
+        self.assertIn("Picked: Starting or growing a project", sent)
         self.assertIn("In their own words: Pre-seed, med-device startup", sent)
         result = self.claude.requests[-1]["messages"][-1]["content"][0]
         self.assertEqual((result["type"], result["is_error"]), ("tool_result", False))
@@ -185,10 +190,11 @@ class OnboardingApiTests(unittest.TestCase):
         interview = self.start()
         self.answer(interview, expect=422)  # nothing picked, typed or skipped
         self.answer(interview, expect=422, choices=["Not offered"])
-        self.answer(interview, expect=422, choices=["Pitch deck", "Co-founder"])  # single choice question
         stale = {**interview, "question": {**interview["question"], "id": "old"}}
         self.answer(stale, expect=409, text="hi")
-        self.assertEqual(self.claude.requests[1:], [])
+        self.assertEqual(self.claude.requests, [])
+        single = self.answer(interview, reply(question("Which stage?", choices=["Idea", "Prototype"])), text="x")
+        self.answer(single["interview"], expect=422, choices=["Idea", "Prototype"])
 
     def test_skipping_tells_claude_and_does_not_count_as_answered(self):
         self.submit_basics()
@@ -196,6 +202,18 @@ class OnboardingApiTests(unittest.TestCase):
         self.assertIn("skipped", self.claude.requests[-1]["messages"][-2]["content"])
         self.assertEqual(data["interview"]["answered"], 0)
         self.assertEqual(data["interview"]["question"]["area"], "offers")
+
+    def test_overlong_question_parts_are_shortened_not_rejected(self):
+        self.submit_basics()
+        long_choice = "Getting advice on choosing between graduate school and industry jobs after I graduate"
+        data = self.answer(self.start(), reply(question(
+            "What next?", choices=[long_choice, "Short", "Short"], placeholder="x" * 300,
+        )), text="Pitch help")
+        asked = data["interview"]["question"]
+        self.assertEqual(asked["prompt"], "What next?")
+        self.assertEqual(len(asked["choices"]), 2)
+        self.assertTrue(asked["choices"][0].endswith("…") and len(asked["choices"][0]) == 60)
+        self.assertEqual(len(asked["placeholder"]), 120)
 
     def test_unreadable_reply_falls_back_to_a_plain_question(self):
         self.submit_basics()
@@ -205,9 +223,9 @@ class OnboardingApiTests(unittest.TestCase):
 
     def test_transcript_is_append_only_across_turns(self):
         self.submit_basics()
-        interview = self.start()
+        interview = self.answer(self.start(), reply(question("Tell me more.")), text="Pitching.")["interview"]
         stored = self.database.interview_sessions.documents[interview["session_id"]]["api_messages"]
-        self.answer(interview, reply(question("Tell me more.")), text="Pitching.")
+        self.answer(interview, reply(question("And?")), text="More pitching.")
         sent = self.claude.requests[-1]["messages"]
         self.assertEqual(sent[:len(stored)], stored)
         self.assertEqual(sent[len(stored)]["role"], "user")
@@ -230,7 +248,7 @@ class OnboardingApiTests(unittest.TestCase):
 
     def test_refusal_keeps_question_and_transcript(self):
         self.submit_basics()
-        interview = self.start()
+        interview = self.answer(self.start(), reply(question("Tell me more.")), text="x")["interview"]
         before = self.database.interview_sessions.documents[interview["session_id"]]["api_messages"]
         data = self.answer(interview, reply(text(""), stop_reason="refusal"), text="hmm")
         self.assertEqual(data["interview"]["notice"], SORRY)
@@ -338,6 +356,15 @@ class OnboardingApiTests(unittest.TestCase):
         self.assertTrue(response.headers["content-type"].startswith("text/markdown"))
         self.assertIn("# Alex Chen", response.text)
         self.assertIn("## Needs\n- Has a stammer (priority 3/3; stage: pre-seed) [private]", response.text)
+
+
+class ClaudeClientTests(unittest.TestCase):
+    def test_fallbacks_are_only_sent_to_models_that_support_them(self):
+        opus = Claude("test-key", "claude-opus-5-5").request({"max_tokens": 10})
+        self.assertEqual((opus["model"], opus["fallbacks"], opus["betas"]),
+                         ("claude-opus-5-5", "default", ["server-side-fallback-2026-07-01"]))
+        haiku = Claude("test-key", "claude-haiku-5-5").request({"max_tokens": 10})
+        self.assertEqual(haiku, {"model": "claude-haiku-5-5", "max_tokens": 10})
 
 
 class MemberDataTests(unittest.IsolatedAsyncioTestCase):

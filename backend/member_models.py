@@ -173,22 +173,36 @@ class Coverage(BaseModel):
     areas: list[AreaCoverage]
 
 
+def clip(text: str, limit: int) -> str:
+    text = " ".join(text.split())
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
 class NextQuestion(BaseModel):
-    """The AI's next question, as it writes it (validated before the member sees it)."""
+    """The AI's next question, as it writes it. Overlong parts are shortened, not rejected."""
 
     area: Area
-    prompt: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=300)]
-    choices: list[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]] = Field(
-        default_factory=list,
-    )
+    prompt: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+    choices: list[str] = Field(default_factory=list)
     multiple: bool = False
-    placeholder: Annotated[str, StringConstraints(strip_whitespace=True, max_length=120)] = ""
+    placeholder: str = ""
     done: bool = False
+
+    @field_validator("prompt")
+    @classmethod
+    def short_prompt(cls, value: str) -> str:
+        return clip(value, 300)
 
     @field_validator("choices")
     @classmethod
-    def at_most_six_distinct(cls, values: list[str]) -> list[str]:
-        return list(dict.fromkeys(values))[:6]
+    def tidy_choices(cls, values: list[str]) -> list[str]:
+        cleaned = [clip(value, 60) for value in values if value.strip()]
+        return list(dict.fromkeys(cleaned))[:6]
+
+    @field_validator("placeholder")
+    @classmethod
+    def short_placeholder(cls, value: str) -> str:
+        return clip(value, 120)
 
 
 class Question(BaseModel):

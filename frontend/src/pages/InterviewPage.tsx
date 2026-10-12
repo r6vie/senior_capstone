@@ -1,5 +1,5 @@
 import { ArrowRight, Check, CheckCircle2, ChevronDown, Sparkles } from "lucide-react";
-import { FormEvent, KeyboardEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError, api } from "../api";
 import { useAuth } from "../auth";
@@ -20,6 +20,7 @@ export function InterviewPage() {
   const [working, setWorking] = useState(false);
   const [error, setError] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const loaded = useRef(false);
 
   const fail = useCallback((caught: unknown, fallback: string) => {
     if (caught instanceof ApiError && caught.status === 409 && caught.message.includes("basics")) {
@@ -39,7 +40,9 @@ export function InterviewPage() {
   }, [token, fail]);
 
   useEffect(() => {
-    if (!token) return;
+    // Load once: React's development mode runs effects twice, which would start two interviews.
+    if (!token || loaded.current) return;
+    loaded.current = true;
     api.currentInterview(token)
       .then((loaded) => (loaded.interview.status === "finished" || !loaded.interview.question ? begin() : setTurn(loaded)))
       .catch((caught) => {
