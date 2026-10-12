@@ -303,8 +303,6 @@ button, input, select, textarea { font: inherit; }
 .fact-list h3 { margin: 0; color: var(--muted); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
 .fact-list__empty { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--muted); font-size: 0.85rem; }
 .fact-card { padding: 12px 14px; border: 1px solid #e1e7ee; border-radius: 12px; background: white; }
-.fact-card--new { border-color: #b9d7e8; background: #f6fbfe; }
-.fact-card__badge { display: inline-block; margin-bottom: 6px; padding: 2px 7px; border-radius: 999px; background: var(--warm); color: var(--dark-blue); font-size: 0.64rem; font-weight: 800; }
 .fact-card__text { margin: 0; color: var(--ink); font-size: 0.88rem; line-height: 1.5; }
 .fact-card .tags { margin-top: 8px; }
 .tag--link { background: #eef5ee; color: #2f6b45; }

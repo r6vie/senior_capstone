@@ -221,7 +221,7 @@ export function InterviewPage() {
       {added.length > 0 && (
         <section className="just-added" aria-label="Just added to your profile">
           <h2><Check size={16} /> Added to your profile</h2>
-          <p>Check these and choose who can see them. "Only me" still helps your matches.</p>
+          <p>Choose who can see each one, or edit or remove it. "Only me" still helps your matches.</p>
           {added.map((fact) => <FactCard key={`${fact.id}-${fact.updated_at}`} fact={fact} onEdit={editFact} onDelete={deleteFact} />)}
         </section>
       )}

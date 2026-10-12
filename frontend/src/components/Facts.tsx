@@ -64,8 +64,7 @@ export function FactCard({ fact, onEdit, onDelete }: FactCardProps) {
   }
 
   return (
-    <article className={`fact-card ${fact.confirmed ? "" : "fact-card--new"}`}>
-      {!fact.confirmed && <span className="fact-card__badge">New</span>}
+    <article className="fact-card">
       {editing ? (
         <form className="fact-card__edit" onSubmit={save}>
           <textarea value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={400} rows={3} aria-label="Fact text" autoFocus />
@@ -95,9 +94,6 @@ export function FactCard({ fact, onEdit, onDelete }: FactCardProps) {
             </select>
           </label>
           <div className="fact-card__buttons">
-            {!fact.confirmed && (
-              <button className="icon-button" onClick={() => void run(() => onEdit(fact, { confirmed: true }))} disabled={busy} aria-label="Looks right" title="Looks right"><Check size={17} /></button>
-            )}
             <button className="icon-button" onClick={() => setEditing(true)} disabled={busy} aria-label="Edit" title="Edit"><Pencil size={16} /></button>
             <button className="icon-button icon-button--danger" onClick={() => void run(() => onDelete(fact))} disabled={busy} aria-label="Delete" title="Delete"><Trash2 size={16} /></button>
           </div>
