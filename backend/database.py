@@ -68,6 +68,7 @@ async def ensure_indexes(database):
     await database.connections.create_index("sender_user_id", name="connections_sender")
     await database.connections.create_index("recipient_user_id", name="connections_recipient")
     await database.notifications.create_index("user_id", name="notifications_user")
+    await database.messages.create_index([("connection_id", 1), ("created_at", 1)], name="messages_thread")
 
 
 def get_database(request: Request):

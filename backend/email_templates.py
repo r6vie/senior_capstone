@@ -41,6 +41,7 @@ class Email:
     button_url: str
     quote: str | None = None  # a personal note written by another member
     sections: list[Section] = field(default_factory=list)
+    show_unsubscribe: bool = True  # False for account emails, which every member needs
 
     def render(self, unsubscribe_url: str) -> tuple[str, str, str]:
         """Return (subject, plain_text, html)."""
@@ -56,8 +57,9 @@ class Email:
             lines.append(section.title + (":" if section.items else ""))
             lines += [f"- {item}" for item in section.items]
             lines.append("")
-        lines += [f"{self.button_text}: {self.button_url}", "",
-                  f"Unsubscribe from these emails: {unsubscribe_url}"]
+        lines.append(f"{self.button_text}: {self.button_url}")
+        if self.show_unsubscribe:
+            lines += ["", f"Unsubscribe from these emails: {unsubscribe_url}"]
         return "\n".join(lines)
 
     def _html(self, unsubscribe_url: str) -> str:
@@ -78,9 +80,10 @@ class Email:
             f"<p><a href='{escape(self.button_url)}' style='display:inline-block;background:#0b5c6b;color:#fff;"
             "padding:.7rem 1.2rem;border-radius:6px;text-decoration:none;font-weight:600'>"
             f"{escape(self.button_text)}</a></p>"
-            "<p style='font-size:.8rem;color:#5d6b7c'>You get these emails because you have a FoundersCircle "
-            f"account. <a href='{escape(unsubscribe_url)}'>Unsubscribe</a></p>"
         )
+        if self.show_unsubscribe:
+            parts.append("<p style='font-size:.8rem;color:#5d6b7c'>You get these emails because you have a "
+                         f"FoundersCircle account. <a href='{escape(unsubscribe_url)}'>Unsubscribe</a></p>")
         return ("<div style='font-family:system-ui,Segoe UI,sans-serif;max-width:32rem;margin:auto;color:#1b2430'>"
                 + "".join(parts) + "</div>")
 
@@ -101,6 +104,18 @@ def _optional(*sections: Section | None) -> list[Section]:
     return [section for section in sections if section is not None]
 
 
+def verify_email(name: str, verify_url: str) -> Email:
+    return Email(
+        subject="Confirm your email for FoundersCircle",
+        heading="Confirm your email",
+        paragraphs=[f"Hi {first_name(name)},",
+                    "Press the button to confirm this email address and finish creating your account. "
+                    "The link works for 24 hours.",
+                    "If you didn't sign up for FoundersCircle, you can ignore this email."],
+        button_text="Confirm email", button_url=verify_url, show_unsubscribe=False,
+    )
+
+
 def welcome(name: str, app_url: str) -> Email:
     return Email(
         subject="Welcome to FoundersCircle",
@@ -111,29 +126,70 @@ def welcome(name: str, app_url: str) -> Email:
     )
 
 
-def connection_request(recipient: dict, sender: dict, note: str | None, reasons: list[str], app_url: str) -> Email:
+# Wording for each request type: (subject, heading, "sent you ...", noun for the accepted email).
+# Keep the keys in step with RequestType in connection_models.py (a test checks this).
+REQUEST_WORDING = {
+    "mentorship": ("{name} would like you as a mentor", "{name} is asking for mentorship",
+                   "a mentorship request", "mentorship"),
+    "career_advice": ("{name} is asking for your career advice", "{name} wants career advice",
+                      "a request for career advice", "career advice"),
+    "introduction": ("{name} would like an introduction", "{name} would like an introduction",
+                     "an introduction request", "introduction"),
+    "collaboration": ("{name} would like to collaborate with you", "{name} wants to collaborate",
+                      "a collaboration request", "collaboration"),
+    "other": ("{name} wants to connect with you on FoundersCircle", "{name} wants to connect",
+              "a connection request", "connection"),
+}
+
+
+def _wording(request_type: str) -> tuple[str, str, str, str]:
+    return REQUEST_WORDING.get(request_type, REQUEST_WORDING["other"])
+
+
+def connection_request(
+    recipient: dict, sender: dict, note: str | None, reasons: list[str], app_url: str,
+    request_type: str = "other",
+) -> Email:
     """`recipient` and `sender` are profiles. `reasons` come from the matching code and may be empty."""
     name = first_name(sender["name"])
+    subject, heading, what, _ = _wording(request_type)
     return Email(
-        subject=f"{name} wants to connect with you on FoundersCircle",
-        heading=f"{name} wants to connect",
+        subject=subject.format(name=name),
+        heading=heading.format(name=name),
         paragraphs=[f"Hi {first_name(recipient['name'])},",
-                    f"{sender['name']} ({sender['affiliation']}, {sender['location']}) would like to connect with you."],
+                    f"{sender['name']} ({sender['affiliation']}, {sender['location']}) sent you {what}.",
+                    f"If you accept, you and {name} will be able to see each other's email address."],
         quote=note,
         sections=_optional(Section("Why it could be a good fit", reasons) if reasons else None, about(sender)),
         button_text="View request", button_url=app_url,
     )
 
 
-def connection_accepted(recipient: dict, accepter: dict, reasons: list[str], app_url: str) -> Email:
-    """`recipient` sent the request; `accepter` said yes."""
+def connection_accepted(
+    recipient: dict, accepter: dict, reasons: list[str], app_url: str, request_type: str = "other",
+    contact_email: str | None = None,
+) -> Email:
+    """`recipient` sent the request; `accepter` said yes and agreed to share `contact_email`."""
     name = first_name(accepter["name"])
+    contact = Section(f"How to reach {name}", [contact_email]) if contact_email else None
     return Email(
-        subject=f"{name} accepted your connection request",
+        subject=f"{name} accepted your {_wording(request_type)[3]} request",
         heading=f"You're connected with {name}",
         paragraphs=[f"Hi {first_name(recipient['name'])},", f"You're now connected with {accepter['name']}."],
-        sections=_optional(Section("Conversation starters", reasons) if reasons else None, about(accepter)),
+        sections=_optional(contact, Section("Conversation starters", reasons) if reasons else None, about(accepter)),
         button_text="Say hello", button_url=app_url,
+    )
+
+
+def new_message(recipient: dict, sender: dict, body: str, app_url: str) -> Email:
+    """Someone wrote in a request's conversation. `recipient` and `sender` are profiles."""
+    name = first_name(sender["name"])
+    return Email(
+        subject=f"{name} sent you a message on FoundersCircle",
+        heading=f"New message from {name}",
+        paragraphs=[f"Hi {first_name(recipient['name'])},", f"{sender['name']} wrote:"],
+        quote=body,
+        button_text="Reply", button_url=app_url,
     )
 
 

@@ -4,7 +4,8 @@ import { Link } from "react-router-dom";
 import { ApiError, api } from "../api";
 import { useAuth } from "../auth";
 import { ProfileCard } from "../components/ProfileCard";
-import type { Profile } from "../types";
+import { RequestDialog } from "../components/RequestDialog";
+import type { Connection, Profile } from "../types";
 
 export function DirectoryPage() {
   const { token, user } = useAuth();
@@ -13,6 +14,16 @@ export function DirectoryPage() {
   const [activeQuery, setActiveQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [connectTo, setConnectTo] = useState<Profile | null>(null);
+  // Requests you already sent or received, keyed by the other person's profile id.
+  const [connections, setConnections] = useState<Record<string, Connection>>({});
+
+  useEffect(() => {
+    if (!token) return;
+    api.connections(token)
+      .then((items) => setConnections(Object.fromEntries(items.filter((c) => c.profile).map((c) => [c.profile!.id, c]))))
+      .catch(() => {}); // the directory still works without this
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
@@ -55,7 +66,7 @@ export function DirectoryPage() {
         {loading ? (
           <div className="profile-grid" aria-label="Loading profiles">{[0, 1, 2].map((item) => <div className="profile-card profile-card--skeleton" key={item} />)}</div>
         ) : profiles.length ? (
-          <div className="profile-grid">{profiles.map((profile, index) => <ProfileCard profile={profile} index={index} key={profile.id} />)}</div>
+          <div className="profile-grid">{profiles.map((profile, index) => <ProfileCard profile={profile} index={index} key={profile.id} onConnect={setConnectTo} connection={connections[profile.id]} />)}</div>
         ) : (
           <div className="state-card"><SlidersHorizontal /><h3>No matches yet</h3><p>Try a broader expertise term or clear your search.</p><button className="button button--secondary" onClick={() => { setQuery(""); setActiveQuery(""); }}>View everyone</button></div>
         )}
@@ -65,6 +76,11 @@ export function DirectoryPage() {
           <Link className="button button--secondary" to="/app/profile">Review my profile</Link>
         </aside>
       </section>
+
+      {connectTo && <RequestDialog
+          profile={connectTo} onClose={() => setConnectTo(null)}
+          onSent={(connection) => setConnections((current) => ({ ...current, [connectTo.id]: connection }))}
+        />}
     </div>
   );
 }
