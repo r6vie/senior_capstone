@@ -5,7 +5,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, Security
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
@@ -14,6 +14,7 @@ from starlette.concurrency import run_in_threadpool
 
 from auth_models import LoginRequest, LoginResponse, SignupRequest, UserResponse
 from database import get_database
+from notifications import notify_welcome
 
 router = APIRouter(prefix="/auth", tags=["Accounts"])
 bearer = HTTPBearer(auto_error=False, description="Paste the access_token returned by POST /auth/login.")
@@ -93,7 +94,9 @@ async def limit_attempts(request: Request, database, action: str, limit: int, se
 
 
 @router.post("/signup", response_model=UserResponse, status_code=201)
-async def signup(data: SignupRequest, request: Request, database=Depends(get_database)) -> UserResponse:
+async def signup(
+    data: SignupRequest, request: Request, background_tasks: BackgroundTasks, database=Depends(get_database),
+) -> UserResponse:
     """Create an account with a 12–128 character password, then use /auth/login."""
     await limit_attempts(request, database, "signup", limit=5, seconds=3600)
     password_hash = await run_in_threadpool(password_hasher.hash, data.password.get_secret_value())
@@ -106,6 +109,7 @@ async def signup(data: SignupRequest, request: Request, database=Depends(get_dat
         await database.users.insert_one(user)
     except DuplicateKeyError:
         raise HTTPException(status_code=409, detail="An account with this email already exists.") from None
+    background_tasks.add_task(notify_welcome, database, user["_id"], user["name"])
     return public_user(user)
 
 

@@ -120,6 +120,12 @@ async def ensure_indexes(database):
     await database.facts.create_index([("user_id", 1), ("created_at", 1)], name="facts_by_member")
     await database.facts.create_index("links", name="facts_link_keys")
     await database.interview_sessions.create_index("user_id", unique=True, name="interviews_one_per_member")
+    # One request per pair of people, in either direction.
+    await database.connections.create_index("pair_key", unique=True, name="connections_pair_unique")
+    await database.connections.create_index("sender_user_id", name="connections_sender")
+    await database.connections.create_index("recipient_user_id", name="connections_recipient")
+    await database.notifications.create_index("user_id", name="notifications_user")
+    await database.messages.create_index([("connection_id", 1), ("created_at", 1)], name="messages_thread")
 
 
 def get_database(request: Request):

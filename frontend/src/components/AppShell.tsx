@@ -1,4 +1,4 @@
-import { Compass, LogOut, Menu, Sparkles, UserRound, X } from "lucide-react";
+import { Compass, LogOut, Menu, MessageSquareText, Sparkles, UserRound, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
@@ -27,6 +27,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </NavLink>
           <NavLink to="/app/matches" onClick={() => setOpen(false)}>
             <Sparkles size={18} /> Find a Match
+          </NavLink>
+          <NavLink to="/app/connections" onClick={() => setOpen(false)}>
+            <MessageSquareText size={18} /> Requests
           </NavLink>
           <NavLink to="/app/profile" onClick={() => setOpen(false)}>
             <UserRound size={18} /> My profile

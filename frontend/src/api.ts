@@ -1,6 +1,7 @@
 import type {
   BasicsForm, Fact, FactEdit, InterviewAnswer, InterviewTurn, LoginResponse, MatchResult,
-  MatchSearchInput, OnboardingStatus, Profile, ProfileInput, User,
+  MatchSearchInput, OnboardingStatus, Profile, ProfileInput, User, Connection,
+  RequestType, RequestTypeOption, ThreadMessage,
 } from "./types";
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "/api";
@@ -95,4 +96,18 @@ export const api = {
     request<Fact>(`/me/facts/${id}`, { method: "PATCH", body: JSON.stringify(edit) }, token),
   deleteFact: (token: string, id: string) => request<void>(`/me/facts/${id}`, { method: "DELETE" }, token),
   myProfileMarkdown: (token: string) => request<string>("/me/profile.md", {}, token, "text"),
+  // Connection requests
+  requestTypes: (token: string) => request<RequestTypeOption[]>("/connections/types", {}, token),
+  sendRequest: (token: string, profileId: string, type: RequestType, message: string) =>
+    request<Connection>(
+      "/connections",
+      { method: "POST", body: JSON.stringify({ profile_id: profileId, type, message }) },
+      token,
+    ),
+  connections: (token: string) => request<Connection[]>("/connections", {}, token),
+  respond: (token: string, id: string, status: "accepted" | "declined") =>
+    request<Connection>(`/connections/${id}`, { method: "PATCH", body: JSON.stringify({ status }) }, token),
+  messages: (token: string, id: string) => request<ThreadMessage[]>(`/connections/${id}/messages`, {}, token),
+  sendMessage: (token: string, id: string, body: string) =>
+    request<ThreadMessage>(`/connections/${id}/messages`, { method: "POST", body: JSON.stringify({ body }) }, token),
 };

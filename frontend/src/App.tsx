@@ -3,6 +3,8 @@ import { AuthProvider } from "./auth";
 import { AppShell } from "./components/AppShell";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AuthPage } from "./pages/AuthPage";
+import { ConnectionThreadPage } from "./pages/ConnectionThreadPage";
+import { ConnectionsPage } from "./pages/ConnectionsPage";
 import { DirectoryPage } from "./pages/DirectoryPage";
 import { InterviewPage } from "./pages/InterviewPage";
 import { LandingPage } from "./pages/LandingPage";
@@ -24,6 +26,8 @@ export default function App() {
             <Route path="/app/profile" element={<AppShell><ProfilePage /></AppShell>} />
             <Route path="/onboarding" element={<AppShell><OnboardingBasicsPage /></AppShell>} />
             <Route path="/onboarding/interview" element={<AppShell><InterviewPage /></AppShell>} />
+            <Route path="/app/connections" element={<AppShell><ConnectionsPage /></AppShell>} />
+            <Route path="/app/connections/:id" element={<AppShell><ConnectionThreadPage /></AppShell>} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
