@@ -18,7 +18,7 @@ export function LandingPage() {
           ) : (
             <>
               <Link className="nav-login" to="/login">Log in</Link>
-              <Link className="button button--primary" to="/signup">Join the circle <ArrowRight size={17} /></Link>
+              <Link className="button button--primary" to="/signup">Join FoundersCircle <ArrowRight size={17} /></Link>
             </>
           )}
         </nav>

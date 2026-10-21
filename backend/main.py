@@ -10,6 +10,7 @@ from pymongo.errors import DuplicateKeyError, PyMongoError
 from auth import get_current_user, router as auth_router
 from connections import router as connections_router
 from database import get_database, lifespan
+from linkedin_auth import router as linkedin_router
 from matching import router as matching_router
 from models import Profile, ProfileUpdate, SavedProfile
 from onboarding import router as onboarding_router
@@ -177,6 +178,7 @@ async def database_health(database=Depends(get_database)) -> dict[str, str]:
 
 
 app.include_router(auth_router)
+app.include_router(linkedin_router)
 app.include_router(protected)
 app.include_router(matching_router)
 app.include_router(onboarding_router)

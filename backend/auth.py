@@ -1,4 +1,4 @@
-"""Email/password accounts and revocable, one-hour bearer sessions."""
+"""Email/password and LinkedIn-compatible accounts with revocable bearer sessions."""
 
 import hashlib
 import secrets
@@ -17,7 +17,7 @@ from database import get_database
 from notifications import notify_welcome
 
 router = APIRouter(prefix="/auth", tags=["Accounts"])
-bearer = HTTPBearer(auto_error=False, description="Paste the access_token returned by POST /auth/login.")
+bearer = HTTPBearer(auto_error=False, description="Paste the access_token returned by POST /auth/login or the LinkedIn sign-in exchange.")
 password_hasher = PasswordHash.recommended()
 # Unknown emails still perform password verification, avoiding an obvious timing shortcut.
 DUMMY_HASH = password_hasher.hash("Not a real account password.")
@@ -93,11 +93,22 @@ async def limit_attempts(request: Request, database, action: str, limit: int, se
         )
 
 
+async def create_session(database, user_id: str) -> str:
+    """Store a new session for this user and return the bearer token (only its hash is saved)."""
+    token = secrets.token_urlsafe(32)
+    await database.sessions.insert_one({
+        "token_hash": token_digest(token), "user_id": user_id,
+        "expires_at": datetime.now(timezone.utc) + timedelta(seconds=SESSION_SECONDS),
+    })
+    return token
+
+
 @router.post("/signup", response_model=UserResponse, status_code=201)
 async def signup(
-    data: SignupRequest, request: Request, background_tasks: BackgroundTasks, database=Depends(get_database),
+    data: SignupRequest, request: Request, background_tasks: BackgroundTasks,
+    database=Depends(get_database),
 ) -> UserResponse:
-    """Create an account with a 12–128 character password, then use /auth/login."""
+    """Create an email/password account; LinkedIn sign-up is also available."""
     await limit_attempts(request, database, "signup", limit=5, seconds=3600)
     password_hash = await run_in_threadpool(password_hasher.hash, data.password.get_secret_value())
     user = {
@@ -120,18 +131,15 @@ async def login(
     """Log in and copy access_token into the docs' Authorize button."""
     await limit_attempts(request, database, "login", limit=10, seconds=900)
     user = await database.users.find_one({"email": data.email})
-    password_hash = user["password_hash"] if user else DUMMY_HASH
+    # LinkedIn-created accounts have no password, so they can never pass this check.
+    password_hash = (user or {}).get("password_hash") or DUMMY_HASH
     valid = await run_in_threadpool(password_hasher.verify, data.password.get_secret_value(), password_hash)
     if not valid or user is None or not user.get("is_active", False):
         raise HTTPException(
             status_code=401, detail="Incorrect email or password.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    token = secrets.token_urlsafe(32)
-    await database.sessions.insert_one({
-        "token_hash": token_digest(token), "user_id": user["_id"],
-        "expires_at": datetime.now(timezone.utc) + timedelta(seconds=SESSION_SECONDS),
-    })
+    token = await create_session(database, user["_id"])
     response.headers["Cache-Control"] = "no-store"
     return LoginResponse(access_token=token, expires_in=SESSION_SECONDS)
 

@@ -8,6 +8,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
+  completeLinkedInSignIn: (code: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
 
@@ -50,6 +51,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await login(email, password);
   }
 
+  // Returns true for a brand-new member, who should finish their profile next.
+  async function completeLinkedInSignIn(code: string) {
+    const session = await api.linkedInExchange(code);
+    sessionStorage.setItem(SESSION_KEY, session.access_token);
+    setToken(session.access_token);
+    setUser(await api.me(session.access_token));
+    return session.is_new;
+  }
+
   async function logout() {
     const currentToken = token;
     sessionStorage.removeItem(SESSION_KEY);
@@ -59,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const value = useMemo(
-    () => ({ token, user, loading, login, signup, logout }),
+    () => ({ token, user, loading, login, signup, completeLinkedInSignIn, logout }),
     [token, user, loading],
   );
 

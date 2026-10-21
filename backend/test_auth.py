@@ -250,13 +250,16 @@ class AuthenticationTests(unittest.TestCase):
 class IndexTests(unittest.IsolatedAsyncioTestCase):
     async def test_indexes_enforce_uniqueness_and_expiry_without_claiming_seed_profiles(self):
         database = MagicMock()
-        for name in ("users", "sessions", "auth_attempts", "profiles", "connections", "notifications"):
+        for name in (
+            "users", "sessions", "auth_attempts", "oauth_states", "login_codes", "profiles",
+            "facts", "interview_sessions", "connections", "notifications", "messages",
+        ):
             getattr(database, name).create_index = AsyncMock()
         await ensure_indexes(database)
         database.connections.create_index.assert_any_await(
             "pair_key", unique=True, name="connections_pair_unique",
         )
-        database.users.create_index.assert_awaited_once_with("email", unique=True, name="users_email_unique")
+        database.users.create_index.assert_any_await("email", unique=True, name="users_email_unique")
         database.sessions.create_index.assert_any_await("expires_at", expireAfterSeconds=0, name="sessions_expiry")
         database.profiles.create_index.assert_awaited_once_with(
             "owner_user_id", unique=True, name="profiles_owner_unique",

@@ -156,3 +156,7 @@ export interface ThreadMessage {
   body: string;
   created_at: string;
 }
+
+export interface LinkedInLoginResponse extends LoginResponse {
+  is_new: boolean;
+}

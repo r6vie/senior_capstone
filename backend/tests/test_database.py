@@ -79,10 +79,11 @@ class ConnectionAndSeedTests(unittest.IsolatedAsyncioTestCase):
         application = SimpleNamespace(state=SimpleNamespace(database_ready=False))
         database = MagicMock()
         database.command = AsyncMock(side_effect=[ConnectionFailure("temporary"), {"ok": 1}])
-        database.users.create_index = AsyncMock()
-        database.sessions.create_index = AsyncMock()
-        database.auth_attempts.create_index = AsyncMock()
-        database.profiles.create_index = AsyncMock()
+        for name in (
+            "users", "sessions", "auth_attempts", "oauth_states", "login_codes", "profiles",
+            "facts", "interview_sessions", "connections", "notifications", "messages",
+        ):
+            getattr(database, name).create_index = AsyncMock()
 
         with patch("database.RECONNECT_SECONDS", 0):
             await initialize_database(application, database, asyncio.Event())

@@ -1,10 +1,14 @@
 import type {
-  BasicsForm, Fact, FactEdit, InterviewAnswer, InterviewTurn, LoginResponse, MatchResult,
+  BasicsForm, Fact, FactEdit, InterviewAnswer, InterviewTurn, LinkedInLoginResponse,
+  LoginResponse, MatchResult,
   MatchSearchInput, OnboardingStatus, Profile, ProfileInput, User, Connection,
   RequestType, RequestTypeOption, ThreadMessage,
 } from "./types";
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "/api";
+
+// A normal link (not fetch): the browser leaves for LinkedIn and returns through the backend.
+export const LINKEDIN_START_URL = `${API_URL}/auth/linkedin/start`;
 
 export class ApiError extends Error {
   status: number;
@@ -63,6 +67,8 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
 }
 
 export const api = {
+  linkedInExchange: (code: string) =>
+    request<LinkedInLoginResponse>("/auth/linkedin/exchange", { method: "POST", body: JSON.stringify({ code }) }),
   signup: (name: string, email: string, password: string) =>
     request<User>("/auth/signup", { method: "POST", body: JSON.stringify({ name, email, password }) }),
   login: (email: string, password: string) =>

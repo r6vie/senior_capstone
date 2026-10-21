@@ -50,3 +50,14 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: Literal["bearer"] = "bearer"
     expires_in: int
+
+
+class LinkedInExchangeRequest(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    code: str = Field(min_length=1, max_length=256)
+
+
+class LinkedInLoginResponse(LoginResponse):
+    # New members are sent to finish their profile; returning members go to the directory.
+    is_new: bool

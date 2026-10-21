@@ -544,3 +544,10 @@ button, input, select, textarea { font: inherit; }
 .profile-card__existing { display: flex; align-items: center; justify-content: space-between; gap: .8rem; flex-wrap: wrap; }
 
 .request-card__note { flex-basis: 100%; color: #5d6b7c; }
+
+.button--linkedin { color: white; background: #0a66c2; box-shadow: 0 8px 20px rgba(10, 102, 194, 0.22); }
+.button--linkedin:hover { background: #084d92; }
+.button--linkedin svg { width: 20px; height: 20px; }
+.auth-fineprint { margin: 16px 0 26px; color: var(--muted); font-size: 0.8rem; line-height: 1.6; text-align: center; }
+.auth-divider { display: flex; align-items: center; gap: 14px; margin: 26px 0 22px; color: var(--muted); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; border-top: 1px solid #dde3ea; }
