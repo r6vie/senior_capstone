@@ -11,6 +11,7 @@ from auth import get_current_user, router as auth_router
 from database import get_database, lifespan
 from matching import router as matching_router
 from models import Profile, ProfileUpdate, SavedProfile
+from onboarding import router as onboarding_router
 
 # This is our backend application. FastAPI also creates API documentation for us.
 app = FastAPI(title="FoundersCircle API", lifespan=lifespan)
@@ -49,7 +50,7 @@ async def validation_error(request: Request, error: RequestValidationError):
 @app.middleware("http")
 async def private_responses(request: Request, call_next):
     response = await call_next(request)
-    if request.url.path.startswith(("/auth", "/profiles")):
+    if request.url.path.startswith(("/auth", "/profiles", "/onboarding", "/interview", "/me")):
         response.headers["Cache-Control"] = "no-store"
     return response
 
@@ -173,3 +174,4 @@ async def database_health(database=Depends(get_database)) -> dict[str, str]:
 app.include_router(auth_router)
 app.include_router(protected)
 app.include_router(matching_router)
+app.include_router(onboarding_router)

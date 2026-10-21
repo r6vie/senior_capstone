@@ -235,7 +235,7 @@ class AuthenticationTests(unittest.TestCase):
 class IndexTests(unittest.IsolatedAsyncioTestCase):
     async def test_indexes_enforce_uniqueness_and_expiry_without_claiming_seed_profiles(self):
         database = MagicMock()
-        for name in ("users", "sessions", "auth_attempts", "profiles"):
+        for name in ("users", "sessions", "auth_attempts", "profiles", "facts", "interview_sessions"):
             getattr(database, name).create_index = AsyncMock()
         await ensure_indexes(database)
         database.users.create_index.assert_awaited_once_with("email", unique=True, name="users_email_unique")
@@ -243,6 +243,9 @@ class IndexTests(unittest.IsolatedAsyncioTestCase):
         database.profiles.create_index.assert_awaited_once_with(
             "owner_user_id", unique=True, name="profiles_owner_unique",
             partialFilterExpression={"owner_user_id": {"$type": "string"}},
+        )
+        database.interview_sessions.create_index.assert_awaited_once_with(
+            "user_id", unique=True, name="interviews_one_per_member",
         )
 
     async def test_concurrent_rate_counter_creation_is_retried(self):
