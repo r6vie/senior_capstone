@@ -1,4 +1,4 @@
-import type { LoginResponse, Profile, ProfileInput, User } from "./types";
+import type { LoginResponse, MatchResult, MatchSearchInput, Profile, ProfileInput, User } from "./types";
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "/api";
 
@@ -48,7 +48,7 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
     if (!payload && response.status >= 500) {
       throw new ApiError(
         response.status,
-        "The backend could not reach MongoDB. Check that FastAPI is running and Atlas allows this network.",
+        "The backend is not running. Start FastAPI on port 8000, then try again.",
       );
     }
     throw new ApiError(response.status, errorMessage(payload));
@@ -74,4 +74,8 @@ export const api = {
     request<Profile>(`/profiles/${id}`, { method: "PATCH", body: JSON.stringify(profile) }, token),
   deleteProfile: (token: string, id: string) =>
     request<void>(`/profiles/${id}`, { method: "DELETE" }, token),
+  searchMatches: (token: string, search: MatchSearchInput) =>
+    request<MatchResult[]>("/matches/search", { method: "POST", body: JSON.stringify(search) }, token),
+  recommendedMatches: (token: string, limit = 6) =>
+    request<MatchResult[]>(`/matches/recommended?limit=${limit}`, {}, token),
 };

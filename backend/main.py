@@ -9,6 +9,7 @@ from pymongo.errors import DuplicateKeyError, PyMongoError
 
 from auth import get_current_user, router as auth_router
 from database import get_database, lifespan
+from matching import router as matching_router
 from models import Profile, ProfileUpdate, SavedProfile
 
 # This is our backend application. FastAPI also creates API documentation for us.
@@ -21,10 +22,13 @@ PROFILE_PROJECTION = {"_id": 1, **{field: 1 for field in Profile.model_fields}}
 
 def saved_profile(document: dict) -> SavedProfile:
     """Expose MongoDB's string _id as a regular JSON field named id."""
-    return SavedProfile.model_validate({
+    data = {
         **{field: document[field] for field in Profile.model_fields if field in document},
         "id": str(document["_id"]),
-    })
+    }
+    if "role" not in document:
+        data["role"] = "student" if "student" in document.get("affiliation", "").casefold() else "alumni"
+    return SavedProfile.model_validate(data)
 
 
 @app.exception_handler(PyMongoError)
@@ -168,3 +172,4 @@ async def database_health(database=Depends(get_database)) -> dict[str, str]:
 
 app.include_router(auth_router)
 app.include_router(protected)
+app.include_router(matching_router)

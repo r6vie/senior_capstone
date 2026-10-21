@@ -5,6 +5,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AuthPage } from "./pages/AuthPage";
 import { DirectoryPage } from "./pages/DirectoryPage";
 import { LandingPage } from "./pages/LandingPage";
+import { MatchPage } from "./pages/MatchPage";
 import { ProfilePage } from "./pages/ProfilePage";
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/signup" element={<AuthPage mode="signup" />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/app" element={<AppShell><DirectoryPage /></AppShell>} />
+            <Route path="/app/matches" element={<AppShell><MatchPage /></AppShell>} />
             <Route path="/app/profile" element={<AppShell><ProfilePage /></AppShell>} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

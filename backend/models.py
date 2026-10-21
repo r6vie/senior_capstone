@@ -1,12 +1,16 @@
 """Pydantic defines what a valid profile looks like."""
 
-from typing import Annotated, Self
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 
 # Names and labels must be actual strings and cannot be empty or just spaces.
 NonEmptyText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+OptionalText = Annotated[str, StringConstraints(strip_whitespace=True, max_length=1000)]
+MemberRole = Literal["student", "alumni"]
+Availability = Literal["available", "limited", "unavailable"]
+MeetingPreference = Literal["remote", "in_person", "either"]
 
 
 class Profile(BaseModel):
@@ -20,6 +24,14 @@ class Profile(BaseModel):
                 "location": "Cleveland, Ohio",
                 "expertise": ["Software engineering", "Startup mentoring"],
                 "interests": ["Healthcare technology", "Entrepreneurship"],
+                "role": "alumni",
+                "industry": "Software",
+                "background": "Engineering leader and startup mentor.",
+                "help_offered": ["Technical strategy", "Startup mentoring"],
+                "help_needed": [],
+                "availability": "available",
+                "meeting_preference": "either",
+                "graduation_year": 2012,
             }]
         },
     )
@@ -29,6 +41,15 @@ class Profile(BaseModel):
     location: NonEmptyText
     expertise: list[NonEmptyText]
     interests: list[NonEmptyText]
+    # Defaults keep profiles created before matching was introduced readable.
+    role: MemberRole = "alumni"
+    industry: OptionalText = ""
+    background: OptionalText = ""
+    help_offered: list[NonEmptyText] = Field(default_factory=list)
+    help_needed: list[NonEmptyText] = Field(default_factory=list)
+    availability: Availability = "available"
+    meeting_preference: MeetingPreference = "either"
+    graduation_year: int | None = Field(default=None, ge=1900, le=2100)
 
 
 class SavedProfile(Profile):
@@ -42,6 +63,14 @@ class SavedProfile(Profile):
         "location": "Cleveland, Ohio",
         "expertise": ["Software engineering", "Startup mentoring"],
         "interests": ["Healthcare technology", "Entrepreneurship"],
+        "role": "alumni",
+        "industry": "Software",
+        "background": "Engineering leader and startup mentor.",
+        "help_offered": ["Technical strategy", "Startup mentoring"],
+        "help_needed": [],
+        "availability": "available",
+        "meeting_preference": "either",
+        "graduation_year": 2012,
     }]})
 
 
@@ -58,8 +87,20 @@ class ProfileUpdate(BaseModel):
     location: NonEmptyText | None = None
     expertise: list[NonEmptyText] | None = None
     interests: list[NonEmptyText] | None = None
+    role: MemberRole | None = None
+    industry: OptionalText | None = None
+    background: OptionalText | None = None
+    help_offered: list[NonEmptyText] | None = None
+    help_needed: list[NonEmptyText] | None = None
+    availability: Availability | None = None
+    meeting_preference: MeetingPreference | None = None
+    graduation_year: int | None = Field(default=None, ge=1900, le=2100)
 
-    @field_validator("name", "affiliation", "location", "expertise", "interests")
+    @field_validator(
+        "name", "affiliation", "location", "expertise", "interests", "role",
+        "industry", "background", "help_offered", "help_needed", "availability",
+        "meeting_preference",
+    )
     @classmethod
     def reject_null(cls, value):
         # Validators run for supplied fields; omitted fields are left unchanged.

@@ -5,7 +5,21 @@ import { ApiError, api } from "../api";
 import { useAuth } from "../auth";
 import type { Profile, ProfileInput } from "../types";
 
-const emptyProfile: ProfileInput = { name: "", affiliation: "", location: "", expertise: [], interests: [] };
+const emptyProfile: ProfileInput = {
+  name: "",
+  affiliation: "",
+  location: "",
+  expertise: [],
+  interests: [],
+  role: "student",
+  industry: "",
+  background: "",
+  help_offered: [],
+  help_needed: [],
+  availability: "available",
+  meeting_preference: "either",
+  graduation_year: null,
+};
 
 function TagEditor({ label, values, onChange, placeholder }: { label: string; values: string[]; onChange: (value: string[]) => void; placeholder: string }) {
   const [draft, setDraft] = useState("");
@@ -83,9 +97,36 @@ export function ProfilePage() {
       <form className="profile-form" onSubmit={submit}>
         {error && <div className="form-error" role="alert">{error}</div>}
         {success && <div className="form-success" role="status"><Check /> {success}</div>}
-        <section className="form-section"><div className="form-section__heading"><span>01</span><div><h2>The essentials</h2><p>Start with the information people use to recognize you.</p></div></div><div className="form-grid"><label>Full name<input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="Your name" required /></label><label>Affiliation<input value={form.affiliation} onChange={(event) => update("affiliation", event.target.value)} placeholder="CWRU student, alumni, mentor…" required /></label><label className="form-grid__wide">Location<input value={form.location} onChange={(event) => update("location", event.target.value)} placeholder="City, State" required /></label></div></section>
-        <section className="form-section"><div className="form-section__heading"><span>02</span><div><h2>What you know</h2><p>Add the skills and experiences others can learn from.</p></div></div><TagEditor label="Expertise" values={form.expertise} onChange={(value) => update("expertise", value)} placeholder="e.g. Fundraising" /></section>
-        <section className="form-section"><div className="form-section__heading"><span>03</span><div><h2>What draws you in</h2><p>Share the fields, ideas, and problems that interest you.</p></div></div><TagEditor label="Interests" values={form.interests} onChange={(value) => update("interests", value)} placeholder="e.g. Healthcare technology" /></section>
+        <section className="form-section">
+          <div className="form-section__heading"><span>01</span><div><h2>The essentials</h2><p>Start with the information people use to recognize you.</p></div></div>
+          <div className="form-grid">
+            <label>Full name<input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="Your name" required /></label>
+            <label>Member type<select value={form.role} onChange={(event) => update("role", event.target.value as ProfileInput["role"])}><option value="student">Current student</option><option value="alumni">Alumni</option></select></label>
+            <label>Affiliation<input value={form.affiliation} onChange={(event) => update("affiliation", event.target.value)} placeholder="CWRU program, company, or role" required /></label>
+            <label>Graduation year<input type="number" min="1900" max="2100" value={form.graduation_year ?? ""} onChange={(event) => update("graduation_year", event.target.value ? Number(event.target.value) : null)} placeholder="2027" /></label>
+            <label>Location<input value={form.location} onChange={(event) => update("location", event.target.value)} placeholder="City, State" required /></label>
+            <label>Industry<input value={form.industry} onChange={(event) => update("industry", event.target.value)} placeholder="Healthcare, software, finance…" /></label>
+            <label className="form-grid__wide">Background<textarea value={form.background} onChange={(event) => update("background", event.target.value)} placeholder="A short summary of your experience, goals, or current work." rows={4} /></label>
+          </div>
+        </section>
+        <section className="form-section">
+          <div className="form-section__heading"><span>02</span><div><h2>Knowledge and interests</h2><p>Give the matching system useful context about your experience and goals.</p></div></div>
+          <div className="profile-form__stack">
+            <TagEditor label="Expertise" values={form.expertise} onChange={(value) => update("expertise", value)} placeholder="e.g. Fundraising" />
+            <TagEditor label="Interests" values={form.interests} onChange={(value) => update("interests", value)} placeholder="e.g. Healthcare technology" />
+          </div>
+        </section>
+        <section className="form-section">
+          <div className="form-section__heading"><span>03</span><div><h2>How you want to connect</h2><p>Students can describe what they need; alumni can describe how they can help.</p></div></div>
+          <div className="profile-form__stack">
+            <TagEditor label="I can help with" values={form.help_offered} onChange={(value) => update("help_offered", value)} placeholder="e.g. Pitch feedback" />
+            <TagEditor label="I would like help with" values={form.help_needed} onChange={(value) => update("help_needed", value)} placeholder="e.g. Finding a co-founder" />
+            <div className="form-grid">
+              <label>Availability<select value={form.availability} onChange={(event) => update("availability", event.target.value as ProfileInput["availability"])}><option value="available">Available</option><option value="limited">Limited availability</option><option value="unavailable">Not currently available</option></select></label>
+              <label>Meeting preference<select value={form.meeting_preference} onChange={(event) => update("meeting_preference", event.target.value as ProfileInput["meeting_preference"])}><option value="either">Remote or in person</option><option value="remote">Remote</option><option value="in_person">In person</option></select></label>
+            </div>
+          </div>
+        </section>
         <div className="profile-form__actions">{saved && <button type="button" className="button button--danger" onClick={remove} disabled={saving}><Trash2 /> Delete profile</button>}<button className="button button--primary button--large" disabled={saving}><Save /> {saving ? "Saving…" : saved ? "Save changes" : "Publish profile"}</button></div>
       </form>
     </div>

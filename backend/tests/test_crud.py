@@ -100,7 +100,8 @@ class ProfileCrudTests(unittest.TestCase):
     def test_invalid_patch_never_writes(self):
         invalid = [{}, {"name": " "}, {"expertise": "mentoring"}, {"interests": [123]},
                    {"id": "new"}, {"_id": "new"}, {"$set": {"name": "bad"}}]
-        invalid.extend({field: None} for field in self.payload)
+        # Graduation year is the one nullable field so a member can clear it.
+        invalid.extend({field: None} for field in self.payload if field != "graduation_year")
         for body in invalid:
             with self.subTest(body=body):
                 response = self.client.patch("/profiles/sample-alex", json=body)

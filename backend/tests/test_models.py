@@ -24,7 +24,7 @@ class ProfileModelTests(unittest.TestCase):
                 self.assertEqual(Profile.model_validate(data).model_dump(), data)
 
     def test_each_field_is_required(self):
-        for field in sample():
+        for field in ("name", "affiliation", "location", "expertise", "interests"):
             with self.subTest(field=field):
                 data = sample()
                 del data[field]
@@ -133,7 +133,9 @@ class ProfileApiTests(unittest.TestCase):
 
     def test_api_docs_expose_the_model_for_requests_and_responses(self):
         schema = self.client.get("/openapi.json").json()
-        self.assertEqual(set(schema["components"]["schemas"]["Profile"]["required"]), set(sample()))
+        self.assertEqual(set(schema["components"]["schemas"]["Profile"]["required"]), {
+            "name", "affiliation", "location", "expertise", "interests",
+        })
         operation = schema["paths"]["/profiles/validate"]["post"]
         body = operation["requestBody"]["content"]["application/json"]["schema"]
         self.assertEqual(body["$ref"], "#/components/schemas/Profile")

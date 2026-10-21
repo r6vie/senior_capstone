@@ -1,5 +1,7 @@
-"""Read our private settings and manage the MongoDB connection."""
+"""Read private settings and maintain a recoverable MongoDB connection."""
 
+import asyncio
+import logging
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -8,6 +10,10 @@ from dotenv import dotenv_values
 from fastapi import HTTPException, Request
 from pymongo import AsyncMongoClient
 from pymongo.errors import PyMongoError
+
+
+logger = logging.getLogger(__name__)
+RECONNECT_SECONDS = 5
 
 
 def database_settings() -> tuple[str, str]:
@@ -42,15 +48,58 @@ async def database_connection():
 @asynccontextmanager
 async def lifespan(app):
     app.state.database = None
-    uri, _ = database_settings()
+    app.state.database_ready = False
+    uri, name = database_settings()
     if not uri:
         # Keep the home page and API docs available while Atlas is being set up.
         yield
         return
-    async with database_connection() as database:
-        await ensure_indexes(database)
-        app.state.database = database
+
+    stop_event = asyncio.Event()
+    try:
+        # Creating a client is non-blocking. Connection and index setup happen in
+        # the background so a temporary Atlas outage never terminates FastAPI.
+        client = AsyncMongoClient(uri, timeoutMS=10000, serverSelectionTimeoutMS=5000)
+        database = client[name]
+    except ValueError:
+        logger.warning("MongoDB configuration is invalid; database routes are unavailable.")
         yield
+        return
+
+    app.state.database = database
+    retry_task = asyncio.create_task(
+        initialize_database(app, database, stop_event),
+        name="mongodb-initializer",
+    )
+    try:
+        yield
+    finally:
+        stop_event.set()
+        retry_task.cancel()
+        try:
+            await retry_task
+        except asyncio.CancelledError:
+            pass
+        await client.close()
+
+
+async def initialize_database(app, database, stop_event: asyncio.Event):
+    """Retry Atlas until it is ready, without exposing connection details."""
+    while not stop_event.is_set():
+        try:
+            await database.command("ping")
+            await ensure_indexes(database)
+        except (PyMongoError, ValueError):
+            app.state.database_ready = False
+            logger.warning("MongoDB is unavailable; retrying in %s seconds.", RECONNECT_SECONDS)
+            try:
+                await asyncio.wait_for(stop_event.wait(), timeout=RECONNECT_SECONDS)
+            except TimeoutError:
+                continue
+        else:
+            app.state.database_ready = True
+            logger.info("MongoDB connection is ready.")
+            return
 
 
 async def ensure_indexes(database):
@@ -67,9 +116,9 @@ async def ensure_indexes(database):
 
 def get_database(request: Request):
     database = request.app.state.database
-    if database is None:
+    if database is None or not getattr(request.app.state, "database_ready", False):
         raise HTTPException(
             status_code=503,
-            detail="MongoDB is not configured. Add MONGODB_URI to .env and restart the backend.",
+            detail="MongoDB is temporarily unavailable. The backend will reconnect automatically.",
         )
     return database

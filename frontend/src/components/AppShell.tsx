@@ -1,4 +1,4 @@
-import { Compass, LogOut, Menu, UserRound, X } from "lucide-react";
+import { Compass, LogOut, Menu, Sparkles, UserRound, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
@@ -24,6 +24,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className={`app-nav ${open ? "app-nav--open" : ""}`} aria-label="Application navigation">
           <NavLink to="/app" end onClick={() => setOpen(false)}>
             <Compass size={18} /> Discover
+          </NavLink>
+          <NavLink to="/app/matches" onClick={() => setOpen(false)}>
+            <Sparkles size={18} /> Find a Match
           </NavLink>
           <NavLink to="/app/profile" onClick={() => setOpen(false)}>
             <UserRound size={18} /> My profile

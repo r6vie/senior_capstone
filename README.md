@@ -13,6 +13,7 @@ A platform for discovering and connecting with people in the CWRU network.
 - Email/password signup, login, and logout
 - Authenticated profile creation, viewing, editing, and deletion
 - Profile ownership controls and expertise search
+- Explainable need-based alumni matching and automatic recommendations
 - Responsive landing page, member directory, and profile editor
 
 ## Setup
@@ -35,19 +36,12 @@ Credentials belong only in `.env`, which is ignored by Git.
 
 ## Run
 
-Backend:
-
 ```sh
-.venv/bin/python -m uvicorn main:app --app-dir backend --reload --host 127.0.0.1 --port 8000
-```
-
-Frontend (in another terminal):
-
-```sh
-npm --prefix frontend run dev
+python3 scripts/dev.py
 ```
 
 Open [the app](http://127.0.0.1:5173) or the [API docs](http://127.0.0.1:8000/docs).
+The backend stays online and reconnects automatically after temporary Atlas outages.
 
 ## Tests
 
@@ -61,5 +55,5 @@ Tests run without connecting to Atlas.
 
 ## Project status
 
-The core account, profile, and directory flow is implemented. AI matching,
-outreach generation, email verification, password reset, and CWRU SSO are future work.
+The core account, profile, directory, and explainable matching flows are implemented.
+Semantic AI matching, outreach generation, email verification, password reset, and CWRU SSO are future work.

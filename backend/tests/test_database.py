@@ -1,3 +1,4 @@
+import asyncio
 import unittest
 from copy import deepcopy
 from types import SimpleNamespace
@@ -7,7 +8,7 @@ from fastapi.testclient import TestClient
 from pymongo.errors import ConnectionFailure
 
 from auth import get_current_user
-from database import database_connection, get_database
+from database import database_connection, get_database, initialize_database
 from main import app
 from seed import seed_profiles
 
@@ -65,11 +66,29 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.json(), [])
         self.database.profiles.find.assert_called_once_with(
             {"expertise": {"$regex": r"C\+\+", "$options": "i"}},
-            {"_id": 1, "name": 1, "affiliation": 1, "location": 1, "expertise": 1, "interests": 1},
+            {"_id": 1, "name": 1, "affiliation": 1, "location": 1, "expertise": 1,
+             "interests": 1, "role": 1, "industry": 1, "background": 1,
+             "help_offered": 1, "help_needed": 1, "availability": 1,
+             "meeting_preference": 1, "graduation_year": 1},
         )
 
 
 class ConnectionAndSeedTests(unittest.IsolatedAsyncioTestCase):
+    async def test_database_initializer_recovers_after_temporary_failure(self):
+        application = SimpleNamespace(state=SimpleNamespace(database_ready=False))
+        database = MagicMock()
+        database.command = AsyncMock(side_effect=[ConnectionFailure("temporary"), {"ok": 1}])
+        database.users.create_index = AsyncMock()
+        database.sessions.create_index = AsyncMock()
+        database.auth_attempts.create_index = AsyncMock()
+        database.profiles.create_index = AsyncMock()
+
+        with patch("database.RECONNECT_SECONDS", 0):
+            await initialize_database(application, database, asyncio.Event())
+
+        self.assertTrue(application.state.database_ready)
+        self.assertEqual(database.command.await_count, 2)
+
     async def test_client_is_closed_after_failure(self):
         client = MagicMock()
         client.close = AsyncMock()
