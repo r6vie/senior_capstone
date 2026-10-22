@@ -416,7 +416,7 @@ async def run_turn(
             system=SYSTEM_PROMPT,
             tools=TOOLS,
             messages=messages,
-            output_config={"effort": "low", "format": QUESTION_FORMAT},
+            output_config={"effort": "medium", "format": QUESTION_FORMAT},
             cache_control={"type": "ephemeral"},
         )
         if response.stop_reason == "refusal":

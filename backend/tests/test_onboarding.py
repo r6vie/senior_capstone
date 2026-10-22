@@ -151,7 +151,7 @@ class OnboardingApiTests(unittest.TestCase):
         request = self.claude.requests[0]
         self.assertEqual(request["system"], SYSTEM_PROMPT)
         self.assertEqual(request["tools"], TOOLS)
-        self.assertEqual(request["output_config"], {"effort": "low", "format": QUESTION_FORMAT})
+        self.assertEqual(request["output_config"], {"effort": "medium", "format": QUESTION_FORMAT})
         first, note = request["messages"]
         self.assertEqual(first["role"], "user")
         self.assertIn("What would you most like help with right now?", first["content"])
