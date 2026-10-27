@@ -46,6 +46,36 @@ export interface MatchResult {
   score_breakdown: Record<string, number>;
 }
 
+export interface MeetingEvidence {
+  label: string;
+  value: string;
+}
+
+export interface MeetingBrief {
+  profile: Profile;
+  headline: string;
+  overview: string;
+  timeline: { marker: string; title: string; detail: string; source: string }[];
+  shared_ground: string[];
+  conversation_starters: string[];
+  agenda: string[];
+  evidence: MeetingEvidence[];
+  grounding_notice: string;
+}
+
+export interface ProfileAnswer {
+  answer: string;
+  evidence: MeetingEvidence[];
+  follow_ups: string[];
+}
+
+export interface PracticeFeedback {
+  feedback: string;
+  strengths: string[];
+  suggestions: string[];
+  next_question: string;
+}
+
 export type Role = "student" | "alum" | "faculty" | "staff" | "other";
 export type Seeking = "get_help" | "give_help" | "both";
 export type FactKind = "need" | "offer" | "experience" | "background" | "goal" | "preference" | "availability" | "other";

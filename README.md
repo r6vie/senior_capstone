@@ -14,6 +14,7 @@ A platform for discovering and connecting with people in the CWRU network.
 - Authenticated profile creation, viewing, editing, and deletion
 - Profile ownership controls and expertise search
 - Explainable need-based alumni matching and automatic recommendations
+- Interactive alumni briefs, profile-grounded Q&A, and meeting practice coaching
 - Connection requests, messaging, and optional email notifications
 - Responsive landing page, member directory, and profile editor
 - Onboarding: a short basics form, then an AI interview (Claude) that saves what it

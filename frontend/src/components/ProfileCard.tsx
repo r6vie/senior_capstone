@@ -1,4 +1,4 @@
-import { MapPin, MessageSquareText, MessagesSquare, X } from "lucide-react";
+import { BookOpenText, MapPin, MessageSquareText, MessagesSquare, X } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Link } from "react-router-dom";
 import type { Connection, Profile } from "../types";
@@ -96,6 +96,11 @@ export function ProfileCard({
             </div>
           </div>
           <div className="profile-card__actions">
+            {profile.role === "alumni" && (
+              <Link className="button button--secondary" to={`/app/prepare/${profile.id}`} onClick={(event) => event.stopPropagation()}>
+                <BookOpenText size={17} /> Meeting prep
+              </Link>
+            )}
             {connection ? (
               <div className="profile-card__existing">
                 <span className={`status status--${connection.status}`}>

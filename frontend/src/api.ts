@@ -1,6 +1,6 @@
 import type {
   BasicsForm, Fact, FactEdit, InterviewAnswer, InterviewTurn, LinkedInLoginResponse,
-  LoginResponse, MatchResult,
+  LoginResponse, MatchResult, MeetingBrief, PracticeFeedback, ProfileAnswer,
   MatchSearchInput, OnboardingStatus, Profile, ProfileInput, User, Connection,
   RequestType, RequestTypeOption, ThreadMessage,
 } from "./types";
@@ -88,6 +88,12 @@ export const api = {
     request<MatchResult[]>("/matches/search", { method: "POST", body: JSON.stringify(search) }, token),
   recommendedMatches: (token: string, limit = 6) =>
     request<MatchResult[]>(`/matches/recommended?limit=${limit}`, {}, token),
+  meetingBrief: (token: string, profileId: string, goal: string) =>
+    request<MeetingBrief>(`/meeting-prep/${profileId}`, { method: "POST", body: JSON.stringify({ goal }) }, token),
+  askProfile: (token: string, profileId: string, goal: string, question: string) =>
+    request<ProfileAnswer>(`/meeting-prep/${profileId}/ask`, { method: "POST", body: JSON.stringify({ goal, question }) }, token),
+  practiceMeeting: (token: string, profileId: string, goal: string, answer: string, turn: number) =>
+    request<PracticeFeedback>(`/meeting-prep/${profileId}/practice`, { method: "POST", body: JSON.stringify({ goal, answer, turn }) }, token),
   onboardingStatus: (token: string) => request<OnboardingStatus>("/onboarding/status", {}, token),
   submitBasics: (token: string, basics: BasicsForm) =>
     request<OnboardingStatus>("/onboarding/basics", { method: "POST", body: JSON.stringify(basics) }, token),

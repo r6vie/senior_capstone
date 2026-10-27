@@ -132,6 +132,7 @@ class AuthenticationTests(unittest.TestCase):
             ("GET", "/auth/me", None), ("POST", "/auth/logout", None),
             ("GET", "/connections", None), ("POST", "/connections", {"profile_id": "sample-alex"}),
             ("PATCH", "/connections/some-id", {"status": "accepted"}),
+            ("POST", "/meeting-prep/sample-taylor", {"goal": "career advice"}),
         ]:
             with self.subTest(method=method, path=path):
                 response = self.client.request(method, path, json=data)
@@ -239,7 +240,7 @@ class AuthenticationTests(unittest.TestCase):
         self.assertEqual(schema["components"]["securitySchemes"]["HTTPBearer"]["scheme"], "bearer")
         for path, operations in schema["paths"].items():
             for method, operation in operations.items():
-                if path.startswith(("/profiles", "/connections")) or path in (
+                if path.startswith(("/profiles", "/connections", "/meeting-prep")) or path in (
                     "/health/database", "/auth/me", "/auth/logout",
                 ):
                     with self.subTest(path=path, method=method):

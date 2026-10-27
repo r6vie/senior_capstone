@@ -1,4 +1,4 @@
-import { ArrowRight, BriefcaseBusiness, MapPin, Search, Sparkles, UserRoundCheck } from "lucide-react";
+import { ArrowRight, BookOpenText, BriefcaseBusiness, MapPin, Search, Sparkles, UserRoundCheck } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, api } from "../api";
@@ -41,6 +41,9 @@ function MatchCard({ match }: { match: MatchResult }) {
         <summary>See score breakdown</summary>
         <div>{Object.entries(match.score_breakdown).map(([key, value]) => <p key={key}><span>{breakdownLabels[key] ?? key}</span><strong>{value}</strong></p>)}</div>
       </details>
+      <Link className="button button--primary match-card__prepare" to={`/app/prepare/${profile.id}`}>
+        <BookOpenText size={17} /> Prepare for a meeting
+      </Link>
     </article>
   );
 }

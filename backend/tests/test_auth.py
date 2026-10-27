@@ -105,6 +105,7 @@ class AuthenticationTests(unittest.TestCase):
             ("DELETE", "/profiles/sample-alex", None), ("GET", "/health/database", None),
             ("GET", "/matches/recommended", None),
             ("POST", "/matches/search", {"query": "fundraising advice"}),
+            ("POST", "/meeting-prep/sample-taylor", {"goal": "career advice"}),
             ("GET", "/auth/me", None), ("POST", "/auth/logout", None),
         ]:
             with self.subTest(method=method, path=path):
@@ -208,7 +209,7 @@ class AuthenticationTests(unittest.TestCase):
         self.assertEqual(schema["components"]["securitySchemes"]["HTTPBearer"]["scheme"], "bearer")
         for path, operations in schema["paths"].items():
             for method, operation in operations.items():
-                if path.startswith(("/profiles", "/matches")) or path in ("/health/database", "/auth/me", "/auth/logout"):
+                if path.startswith(("/profiles", "/matches", "/meeting-prep")) or path in ("/health/database", "/auth/me", "/auth/logout"):
                     with self.subTest(path=path, method=method):
                         self.assertEqual(operation["security"], [{"HTTPBearer": []}])
         self.assertNotIn("security", schema["paths"]["/auth/signup"]["post"])

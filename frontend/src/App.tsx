@@ -10,6 +10,7 @@ import { InterviewPage } from "./pages/InterviewPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LinkedInCallbackPage } from "./pages/LinkedInCallbackPage";
 import { MatchPage } from "./pages/MatchPage";
+import { MeetingPrepPage } from "./pages/MeetingPrepPage";
 import { OnboardingBasicsPage } from "./pages/OnboardingBasicsPage";
 import { ProfilePage } from "./pages/ProfilePage";
 
@@ -25,6 +26,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/app" element={<AppShell><DirectoryPage /></AppShell>} />
             <Route path="/app/matches" element={<AppShell><MatchPage /></AppShell>} />
+            <Route path="/app/prepare/:profileId" element={<AppShell><MeetingPrepPage /></AppShell>} />
             <Route path="/app/profile" element={<AppShell><ProfilePage /></AppShell>} />
             <Route path="/onboarding" element={<AppShell><OnboardingBasicsPage /></AppShell>} />
             <Route path="/onboarding/interview" element={<AppShell><InterviewPage /></AppShell>} />

@@ -12,6 +12,7 @@ from connections import router as connections_router
 from database import get_database, lifespan
 from linkedin_auth import router as linkedin_router
 from matching import router as matching_router
+from meeting_prep import router as meeting_prep_router
 from models import Profile, ProfileUpdate, SavedProfile
 from onboarding import router as onboarding_router
 from notifications import router as notifications_router
@@ -55,7 +56,7 @@ async def private_responses(request: Request, call_next):
     response = await call_next(request)
     if request.url.path.startswith((
         "/auth", "/profiles", "/matches", "/onboarding", "/interview", "/me",
-        "/connections", "/notifications",
+        "/connections", "/notifications", "/meeting-prep",
     )):
         response.headers["Cache-Control"] = "no-store"
     return response
@@ -181,6 +182,7 @@ app.include_router(auth_router)
 app.include_router(linkedin_router)
 app.include_router(protected)
 app.include_router(matching_router)
+app.include_router(meeting_prep_router)
 app.include_router(onboarding_router)
 app.include_router(connections_router)
 app.include_router(notifications_router)  # public: the unsubscribe link in each email opens it
