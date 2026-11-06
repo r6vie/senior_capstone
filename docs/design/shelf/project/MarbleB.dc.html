@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Marble shelf, option B</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500&amp;family=Newsreader:opsz,wght@6..72,500..600&amp;display=swap">
+<style>
+body { margin: 0; }
+/* Option B: a niche lined in dark green marble, cut into a warm white wall, lit from above by a picture light.
+   Bone-cloth books with a gilt rule stand out against the stone. */
+.mb {
+  --wall: #F3F0EB; --ink: #1F1D1A; --ink-2: #5E574F; --line: #D6CEC2;
+  --sans: "Jost", "Futura", sans-serif; --serif: "Newsreader", Georgia, serif;
+  width: 1200px; height: 640px; box-sizing: border-box; padding: 64px 64px 0; overflow: hidden;
+  font-family: var(--sans); color: var(--ink); background: var(--wall);
+}
+.mb * { box-sizing: border-box; }
+:where(.mb) :is(h2, p) { margin: 0; }
+.head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; }
+.head h2 { font-weight: 500; font-size: 26px; }
+.head small { font-size: 14px; color: var(--ink-2); margin-left: 12px; }
+.head a { font-size: 15px; font-weight: 500; color: var(--ink); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.niche { position: relative; height: 400px; border-radius: 3px; overflow: hidden; background: #22392F; box-shadow: 0 1px 0 rgba(255,255,255,.9), 0 -1px 0 rgba(60,45,30,.12); }
+.niche > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.glow { position: absolute; inset: 0; z-index: 1; background: radial-gradient(55% 75% at 45% -5%, rgba(255,234,196,.26), rgba(255,234,196,0) 70%); }
+.shade { position: absolute; inset: 0; z-index: 4; pointer-events: none; box-shadow: inset 0 28px 30px -14px rgba(0,0,0,.55), inset 24px 0 28px -18px rgba(0,0,0,.45), inset -10px 0 18px -14px rgba(0,0,0,.3); }
+.row { position: absolute; left: 0; right: 0; bottom: 34px; z-index: 3; display: flex; align-items: flex-end; gap: 46px; padding: 0 72px; }
+.floor { position: absolute; left: 0; right: 0; bottom: 0; height: 48px; z-index: 2; }
+.floor svg { position: absolute; left: 0; width: 100%; display: block; }
+.floor .top { top: 0; height: 20px; }
+.floor .front { top: 20px; height: 28px; }
+.floor::after { content: ""; position: absolute; left: 0; right: 0; top: 19px; height: 29px; background: linear-gradient(180deg, rgba(255,255,255,.45) 0, rgba(255,255,255,0) 2px, rgba(0,0,0,.1) 3px, rgba(0,0,0,.25) 100%); }
+.floor::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 20px; z-index: 1; background: linear-gradient(180deg, rgba(0,0,0,.25), rgba(255,255,255,.08)); }
+.bk {
+  position: relative; flex: none; display: flex; flex-direction: column; width: 148px; height: 222px; padding: 26px 16px 16px 22px;
+  border: 0; border-radius: 2px 4px 4px 2px; font: inherit; text-align: left; cursor: pointer; color: #1E2B24;
+  background-color: #E9E1CF;
+  background-image:
+    linear-gradient(90deg, rgba(0,0,0,.18) 0, rgba(0,0,0,.04) 7px, rgba(255,255,255,.4) 8px, rgba(255,255,255,0) 11px),
+    linear-gradient(160deg, rgba(255,240,210,.45), rgba(255,255,255,0) 45%, rgba(0,0,0,.1)),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 1px, transparent 1px 3px);
+  box-shadow: 0 1px 1px rgba(0,0,0,.3), 20px -4px 26px -8px rgba(0,0,0,.5);
+  transition: transform .2s ease-out;
+}
+.bk:hover { transform: translateY(-6px); }
+.bk-title { font-family: var(--serif); font-weight: 600; font-size: 17px; line-height: 1.18; text-wrap: balance; }
+.bk-rule { display: block; width: 26px; height: 2px; margin-top: 14px; background: #A8854C; }
+.bk-name { margin-top: auto; font-size: 13px; color: #3E4A42; }
+</style>
+</helmet>
+<div class="mb">
+  <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+    <defs>
+      <filter id="verde-back" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.005 0.008" numOctaves="5" seed="4"></feTurbulence>
+        <feComponentTransfer>
+          <feFuncR type="table" tableValues="0.10 0.11 0.13 0.42 0.13 0.11 0.13 0.48 0.13 0.11 0.10"></feFuncR>
+          <feFuncG type="table" tableValues="0.19 0.21 0.24 0.6 0.24 0.21 0.24 0.66 0.24 0.21 0.19"></feFuncG>
+          <feFuncB type="table" tableValues="0.15 0.17 0.19 0.52 0.19 0.17 0.19 0.58 0.19 0.17 0.15"></feFuncB>
+          <feFuncA type="table" tableValues="1 1"></feFuncA>
+        </feComponentTransfer>
+      </filter>
+      <filter id="verde-floor" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.005 0.05" numOctaves="5" seed="9"></feTurbulence>
+        <feComponentTransfer>
+          <feFuncR type="table" tableValues="0.12 0.13 0.15 0.45 0.15 0.13 0.15 0.5 0.15 0.13 0.12"></feFuncR>
+          <feFuncG type="table" tableValues="0.22 0.24 0.27 0.62 0.27 0.24 0.27 0.68 0.27 0.24 0.22"></feFuncG>
+          <feFuncB type="table" tableValues="0.17 0.19 0.21 0.54 0.21 0.19 0.21 0.6 0.21 0.19 0.17"></feFuncB>
+          <feFuncA type="table" tableValues="1 1"></feFuncA>
+        </feComponentTransfer>
+      </filter>
+    </defs>
+  </svg>
+  <div class="head">
+    <h2>Changing course<small>placeholder shelf</small></h2>
+    <a href="#">See the whole shelf</a>
+  </div>
+  <div class="niche">
+    <svg preserveAspectRatio="none" aria-hidden="true"><rect width="100%" height="100%" fill="#22392F" filter="url(#verde-back)"></rect></svg>
+    <div class="glow" aria-hidden="true"></div>
+    <div class="row">
+      <button class="bk" type="button" aria-label="How to Leave a Job Without Burning the Bridge, by Dana"><span class="bk-title">How to Leave a Job Without Burning the Bridge</span><span class="bk-rule"></span><span class="bk-name">Dana</span></button>
+      <button class="bk" type="button" aria-label="Switching Off Pre-Med Before Telling Your Parents, by Marcus"><span class="bk-title">Switching Off Pre-Med Before Telling Your Parents</span><span class="bk-rule"></span><span class="bk-name">Marcus</span></button>
+      <button class="bk" type="button" aria-label="Teaching Yourself to Code at Thirty-Four, by Luis"><span class="bk-title">Teaching Yourself to Code at Thirty-Four</span><span class="bk-rule"></span><span class="bk-name">Luis</span></button>
+      <button class="bk" type="button" aria-label="From Orchestra Pit to Product Manager, by Kiera"><span class="bk-title">From Orchestra Pit to Product Manager</span><span class="bk-rule"></span><span class="bk-name">Kiera</span></button>
+      <button class="bk" type="button" aria-label="Living With an Engineering Degree You Don't Use, by Jamal"><span class="bk-title">Living With an Engineering Degree You Don't Use</span><span class="bk-rule"></span><span class="bk-name">Jamal</span></button>
+    </div>
+    <div class="floor" aria-hidden="true">
+      <svg class="top" preserveAspectRatio="none"><rect width="100%" height="100%" fill="#2A4438" filter="url(#verde-floor)"></rect></svg>
+      <svg class="front" preserveAspectRatio="none"><rect width="100%" height="100%" fill="#2A4438" filter="url(#verde-floor)"></rect></svg>
+    </div>
+    <div class="shade" aria-hidden="true"></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

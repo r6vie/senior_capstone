@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Marble shelf, option A</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500&amp;family=Newsreader:opsz,wght@6..72,500..600&amp;display=swap">
+<style>
+body { margin: 0; }
+/* Option A: a polished white Carrara ledge on a warm white wall. Books in stone-paper tones; the polish shows their reflection. */
+.ma {
+  --wall: #F3F0EB; --ink: #1F1D1A; --ink-2: #5E574F; --line: #D6CEC2; --sh: 58, 46, 34;
+  --sans: "Jost", "Futura", sans-serif; --serif: "Newsreader", Georgia, serif;
+  width: 1200px; height: 640px; box-sizing: border-box; padding: 64px 64px 0; overflow: hidden;
+  font-family: var(--sans); color: var(--ink); background: var(--wall);
+  background-image: radial-gradient(120% 80% at 30% 0%, rgba(255,255,255,.7), rgba(255,255,255,0) 60%);
+}
+.ma * { box-sizing: border-box; }
+:where(.ma) :is(h2, p) { margin: 0; }
+.head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 64px; }
+.head h2 { font-weight: 500; font-size: 26px; }
+.head small { font-size: 14px; color: var(--ink-2); margin-left: 12px; }
+.head a { font-size: 15px; font-weight: 500; color: var(--ink); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.row { position: relative; z-index: 2; display: flex; align-items: flex-end; gap: 46px; padding: 0 64px; margin-bottom: -14px; }
+.bk {
+  position: relative; flex: none; display: flex; flex-direction: column; width: 148px; height: 222px; padding: 26px 16px 16px 22px;
+  border: 0; border-radius: 2px 4px 4px 2px; font: inherit; text-align: left; cursor: pointer;
+  background-color: var(--c); color: var(--t);
+  background-image: linear-gradient(90deg, rgba(0,0,0,.14) 0, rgba(0,0,0,.03) 7px, rgba(255,255,255,.35) 8px, rgba(255,255,255,0) 11px), linear-gradient(120deg, rgba(255,255,255,.35), rgba(255,255,255,0) 40%, rgba(0,0,0,.05));
+  box-shadow: 0 1px 1px rgba(var(--sh), .18), 16px -2px 22px -12px rgba(var(--sh), .32);
+  transition: transform .2s ease-out;
+}
+.bk:hover { transform: translateY(-6px); }
+/* The reflection in the polished top */
+.bk::after { content: ""; position: absolute; left: 2px; right: 2px; top: 100%; height: 16px; background: linear-gradient(180deg, var(--c), rgba(0,0,0,0)); opacity: .3; }
+.bk:hover::after { opacity: 0; }
+.bk-title { font-family: var(--serif); font-weight: 600; font-size: 17px; line-height: 1.18; text-wrap: balance; }
+.bk-rule { display: block; width: 22px; height: 1px; margin-top: 14px; background: currentColor; opacity: .5; }
+.bk-name { margin-top: auto; font-size: 13px; opacity: .8; }
+.slab { position: relative; height: 74px; margin: 0 -8px; filter: drop-shadow(0 22px 22px rgba(var(--sh), .22)); }
+.slab svg { position: absolute; left: 0; width: 100%; display: block; }
+.slab .top { top: 0; height: 24px; }
+.slab .front { top: 24px; height: 50px; }
+/* Light on the polished top, a bright arris where top meets front, the front a touch darker. */
+.slab::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 24px; background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.45)); }
+.slab::after { content: ""; position: absolute; left: 0; right: 0; top: 23px; height: 51px; background: linear-gradient(180deg, rgba(255,255,255,.9) 0, rgba(255,255,255,0) 2px, rgba(var(--sh), .06) 3px, rgba(var(--sh), .12) 100%); }
+.c-bone { --c: #EFE9DE; --t: #1F1D1A; } .c-ash { --c: #CFCAC2; --t: #1F1D1A; } .c-graphite { --c: #3B3936; --t: #F1ECE3; }
+.c-sage { --c: #A9B3A1; --t: #1C211A; } .c-blush { --c: #DDC4B8; --t: #2A1E19; }
+</style>
+</helmet>
+<div class="ma">
+  <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+    <defs>
+      <filter id="carrara-top" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.004 0.07" numOctaves="5" seed="11"></feTurbulence>
+        <feComponentTransfer>
+          <feFuncR type="table" tableValues="0.96 0.96 0.95 0.94 0.92 0.7 0.92 0.94 0.95 0.96 0.96"></feFuncR>
+          <feFuncG type="table" tableValues="0.955 0.955 0.945 0.935 0.915 0.7 0.915 0.935 0.945 0.955 0.955"></feFuncG>
+          <feFuncB type="table" tableValues="0.94 0.94 0.93 0.92 0.9 0.7 0.9 0.92 0.93 0.94 0.94"></feFuncB>
+          <feFuncA type="table" tableValues="1 1"></feFuncA>
+        </feComponentTransfer>
+      </filter>
+      <filter id="carrara-front" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.0045 0.03" numOctaves="5" seed="11"></feTurbulence>
+        <feComponentTransfer>
+          <feFuncR type="table" tableValues="0.95 0.95 0.94 0.93 0.91 0.66 0.91 0.93 0.94 0.95 0.95"></feFuncR>
+          <feFuncG type="table" tableValues="0.945 0.945 0.935 0.925 0.905 0.66 0.905 0.925 0.935 0.945 0.945"></feFuncG>
+          <feFuncB type="table" tableValues="0.93 0.93 0.92 0.91 0.89 0.66 0.89 0.91 0.92 0.93 0.93"></feFuncB>
+          <feFuncA type="table" tableValues="1 1"></feFuncA>
+        </feComponentTransfer>
+      </filter>
+    </defs>
+  </svg>
+  <div class="head">
+    <h2>Changing course<small>placeholder shelf</small></h2>
+    <a href="#">See the whole shelf</a>
+  </div>
+  <div class="row">
+    <button class="bk c-bone" type="button" aria-label="How to Leave a Job Without Burning the Bridge, by Dana"><span class="bk-title">How to Leave a Job Without Burning the Bridge</span><span class="bk-rule"></span><span class="bk-name">Dana</span></button>
+    <button class="bk c-graphite" type="button" aria-label="Switching Off Pre-Med Before Telling Your Parents, by Marcus"><span class="bk-title">Switching Off Pre-Med Before Telling Your Parents</span><span class="bk-rule"></span><span class="bk-name">Marcus</span></button>
+    <button class="bk c-sage" type="button" aria-label="Teaching Yourself to Code at Thirty-Four, by Luis"><span class="bk-title">Teaching Yourself to Code at Thirty-Four</span><span class="bk-rule"></span><span class="bk-name">Luis</span></button>
+    <button class="bk c-blush" type="button" aria-label="From Orchestra Pit to Product Manager, by Kiera"><span class="bk-title">From Orchestra Pit to Product Manager</span><span class="bk-rule"></span><span class="bk-name">Kiera</span></button>
+    <button class="bk c-ash" type="button" aria-label="Living With an Engineering Degree You Don't Use, by Jamal"><span class="bk-title">Living With an Engineering Degree You Don't Use</span><span class="bk-rule"></span><span class="bk-name">Jamal</span></button>
+  </div>
+  <div class="slab" aria-hidden="true">
+    <svg class="top" preserveAspectRatio="none"><rect width="100%" height="100%" fill="#EFECE6" filter="url(#carrara-top)"></rect></svg>
+    <svg class="front" preserveAspectRatio="none"><rect width="100%" height="100%" fill="#E9E5DE" filter="url(#carrara-front)"></rect></svg>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

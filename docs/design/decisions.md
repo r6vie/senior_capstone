@@ -2,6 +2,17 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-05: direction 3 (marble)
+
+- **Search is never the main element of the shelf page.** Making the search bar the hero repeated
+  FoundersCircle, which the team disliked. Search stays available but secondary.
+- **Direction 2 (light and shadow) is not the one** either; it stays on the canvas for reference.
+- **New idea: marble is the material of the shelves.** First step: one shelf with a few books, in
+  three options, before any full page. Third row of the canvas: `MarbleA` (polished Carrara
+  ledge), `MarbleB` (green marble niche), `MarbleC` (honed pink slab with arch and cube bookends).
+
+Pending Josef's pick.
+
 ## 2026-11-05: the shelf page, direction 2 (light and shadow)
 
 - **Direction 1 (cloth and oak) is not the one.** It stays on the canvas for reference.
