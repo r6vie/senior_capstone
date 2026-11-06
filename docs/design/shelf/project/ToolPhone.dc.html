@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Working shelf, phone</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
+<style>
+body { margin: 0; }
+.tp {
+  --line: #E3E3DF; --line-2: #D2D2CC; --ink: #1A1C20; --ink-2: #5A5F68; --ink-3: #8A8F97; --accent: #17406B;
+  --serif: "Newsreader", Georgia, serif; --sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  width: 390px; height: 844px; display: flex; flex-direction: column; overflow: hidden; background: #fff; color: var(--ink);
+  font-family: var(--sans); font-size: 15px; line-height: 1.45;
+}
+.tp * { box-sizing: border-box; }
+:where(.tp) :is(h1, h2, h3, p) { margin: 0; }
+.bar { display: flex; align-items: center; height: 56px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+.brand { margin-right: auto; font-family: var(--serif); font-size: 22px; font-weight: 600; }
+.ib { display: grid; place-items: center; width: 40px; height: 40px; border: 0; background: none; color: var(--ink); }
+.body { flex: 1; min-height: 0; overflow: hidden; padding: 16px; display: grid; gap: 24px; align-content: start; }
+.rec { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: #FAFAF8; }
+.rec .lab { font-size: 12px; font-weight: 600; color: var(--accent); }
+.rec h2 { font-family: var(--serif); font-weight: 500; font-size: 20px; line-height: 1.2; margin: 3px 0 4px; }
+.rec p.why { color: var(--ink-2); font-size: 14px; }
+.btn { height: 40px; padding: 0 16px; margin-top: 12px; border: 0; border-radius: 6px; background: var(--accent); color: #fff; font: 500 14px var(--sans); }
+.shelf-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.shelf-h h3 { font-size: 14px; font-weight: 600; }
+.shelf-h a { font-size: 13px; color: var(--ink-2); text-decoration: none; }
+.row { display: flex; gap: 14px; overflow: hidden; padding: 0 2px; }
+.ledge { height: 6px; border-radius: 0 0 3px 3px; background: linear-gradient(180deg, #D8D8D3, #EBEBE7); box-shadow: 0 6px 10px -6px rgba(20,22,26,.25); }
+.bk { position: relative; flex: none; display: flex; flex-direction: column; width: 124px; height: 182px; padding: 16px 10px 10px 20px; border: 1px solid var(--line-2); border-radius: 2px 4px 4px 2px;
+  background: linear-gradient(90deg, #E9E9E5 0, #F6F6F3 7px, #fff 8px 11px, #F3F3F0 12px, #fff 16px), #fff; box-shadow: 3px 0 0 -1px #D9D9D4, 6px 6px 12px -8px rgba(20,22,26,.4); }
+.bk::before { content: ""; position: absolute; left: 10px; top: 0; bottom: 0; width: 1px; background: rgba(20,22,26,.1); }
+.bk-t { font-family: var(--serif); font-weight: 600; font-size: 14px; line-height: 1.2; }
+.bk-n { margin-top: auto; font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.bk.sm { width: 52px; height: 76px; padding: 7px 4px 5px 9px; }
+.bk.sm::before { left: 5px; }
+.bk.sm .bk-t { font-size: 7.5px; }
+.bk.sm .bk-n { font-size: 5px; }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); height: 64px; border-top: 1px solid var(--line); }
+.tabs a { display: grid; place-items: center; font-size: 12px; font-weight: 500; color: var(--ink-3); text-decoration: none; border-top: 2px solid transparent; margin-top: -1px; }
+.tabs a[aria-current="page"] { color: var(--ink); font-weight: 600; border-top-color: var(--accent); }
+</style>
+</helmet>
+<div class="tp">
+  <header class="bar"><span class="brand">Trove</span><button class="ib" type="button" aria-label="Search by topic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></button></header>
+  <div class="body">
+    <section class="rec" aria-label="The Librarian recommends">
+      <p class="lab">The Librarian recommends</p>
+      <h2>Why I Turned Down Grad School Twice</h2>
+      <p class="why">You're deciding about a PhD. Hana weighed the same choice, twice.</p>
+      <button class="btn" type="button">Open</button>
+    </section>
+    <section>
+      <div class="shelf-h"><h3>Changing course</h3><a href="#">See shelf</a></div>
+      <div class="row">
+        <div class="bk"><span class="bk-t">How to Leave a Job Without Burning the Bridge</span><span class="bk-n">Dana</span></div>
+        <div class="bk"><span class="bk-t">Switching Off Pre-Med Before Telling Your Parents</span><span class="bk-n">Marcus</span></div>
+        <div class="bk"><span class="bk-t">Teaching Yourself to Code at Thirty-Four</span><span class="bk-n">Luis</span></div>
+      </div>
+      <div class="ledge"></div>
+    </section>
+    <section>
+      <div class="shelf-h"><h3>How things really work</h3><a href="#">See shelf</a></div>
+      <div class="row">
+        <div class="bk"><span class="bk-t">What Nineteen-Year-Olds Actually Think of Your App</span><span class="bk-n">Priya</span></div>
+        <div class="bk"><span class="bk-t">How a Hospital Actually Decides What to Buy</span><span class="bk-n">Grace</span></div>
+        <div class="bk"><span class="bk-t">Getting a Grant Reviewer to Keep Reading</span><span class="bk-n">Noor</span></div>
+      </div>
+      <div class="ledge"></div>
+    </section>
+  </div>
+  <nav class="tabs" aria-label="Main"><a href="#" aria-current="page">Shelf</a><a href="#">My book</a><a href="#">Checkouts</a><a href="#">Past meets</a></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

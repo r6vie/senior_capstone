@@ -2,6 +2,20 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-06: direction 5, working tool (a clean break from the material looks)
+
+- **Feedback:** the marble, cloth, shadow and daylight directions all read as games or toys. Trove is
+  professional software and should feel mature and considered. Start over.
+- **Now:** a neutral white and gray interface with one deep blue (#17406B) for the single main action,
+  IBM Plex Sans for the interface and Newsreader only for book titles. Left sidebar (Shelf, My book,
+  Checkouts, Past meets), a small topic search in the top bar, a quiet Librarian recommendation row,
+  shelves as rows of books standing on a thin ledge, and a persistent detail panel on the right
+  (chapters, Ask to check out). No decoration, no texture.
+- **Books are plain white** (spine hinge, page edge, soft shadow) until Josef settles the cover design.
+- New canvas page "Working tool": `ToolShelf` (interactive), `ToolPhone`.
+
+Pending Josef's review.
+
 ## 2026-11-06: direction 4, daylight library (from Josef's photo of a Scandinavian library)
 
 - **Reference:** a pale-wood Scandinavian public library: curved ribs overhead, tall arched windows
