@@ -2,6 +2,19 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-06: the design system (Manga screentone), and the docs enforce it
+
+- **Chosen:** manga B2 (top navigation, B's banner and shelves, the red framed button) is the reference screen.
+  Black ink on white paper, dot tone for shade, one burst, one red for the primary action only.
+- **New canvas page "Design system":** the reference shelf and a sign-in screen, then Foundations, Components
+  (actions and forms; content and structure) and How to use it. Authoritative rulebook: `docs/design/system.md`.
+  Reference CSS: `docs/design/system/tokens.css`.
+- **Red changed to `#D42A27`** so white text passes AA (5.0:1).
+- **Balance:** rules sit in three tiers: fixed (human's yes), defaults (follow or explain), free (design new
+  things, record them under Additions). CLAUDE.md, CONTRIBUTING.md, architecture.md and plan.md now point to it.
+- **Not done:** `web/src/ui/styles.css` still has the old placeholder tokens. UI Implementation ports
+  `tokens.css` into it (the old `--color-*` and `--space-*` names are aliased, so it is a drop-in).
+
 ## 2026-11-06: identities, pick a craft idea before the layout
 
 - **Josef:** C (circulation desk) has a real identity but feels too simple. Decide the material, pattern and

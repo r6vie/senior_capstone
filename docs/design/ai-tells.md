@@ -1,5 +1,7 @@
 # Tells of AI-made UI: what Trove's designs avoid
 
+The chosen look and its rules are in [system.md](system.md); this file is the check against defaults.
+
 Collected 2026-11-05 from design writing on "AI slop" (sources at the end). Most sources are blogs
 and tool vendors, so treat this as a strong guide, not law. Every item is fine as a deliberate,
 reasoned choice; it becomes a tell when it's a default. The test, from pixelslop: **did a person

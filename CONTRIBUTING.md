@@ -78,6 +78,12 @@ Then:
 - Call the API only through `api` in `web/src/api/client.ts`, with types from `schema.ts`.
 - Reusable building blocks (buttons, fields, layout) go in `web/src/ui/`. Check there before
   creating a new one.
+- **Look and feel: follow [docs/design/system.md](docs/design/system.md).** Use the tokens and the component
+  recipes; no raw colors, sizes, fonts or radii. The system has three tiers: *fixed* (palette and the red rule,
+  type, square corners, dot tone, the book object: change only with a human's yes), *defaults* (the recipes and
+  screen pattern: follow, or say why not in the PR) and *free* (screens and parts not designed yet: design them
+  from the tokens, and add any new pattern to the Additions section of `system.md`). Say in the PR description
+  what, if anything, you added or deviated from.
 
 ### Adding a prompt
 
@@ -106,7 +112,8 @@ change minimal, and **say so in the PR description** so reviewers look closely:
 - `api/trove/core/*`
 - `api/tests/conftest.py`, `api/tests/fakes.py`
 - `web/src/app/App.tsx` (add routes, don't restructure)
-- `web/src/ui/*`, including the design tokens in `styles.css`
+- `web/src/ui/*`, including the design tokens in `styles.css`, and `docs/design/system.md` with
+  `docs/design/system/tokens.css` (the design system: changes to Fixed rules need a human's yes)
 - `CLAUDE.md`, `CONTRIBUTING.md`, `scripts/*`, `.github/*`
 
 ## The API contract

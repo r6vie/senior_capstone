@@ -28,6 +28,10 @@
     {
       "id": "manga",
       "name": "Manga screens"
+    },
+    {
+      "id": "system",
+      "name": "Design system"
     }
   ],
   "boards": {
@@ -290,6 +294,54 @@
       "h": 1040,
       "title": "Ask to check out \u00b7 four button options",
       "page": "manga"
+    },
+    "SysShelf.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1100,
+      "title": "Reference screen \u00b7 The shelf",
+      "page": "system"
+    },
+    "SysSignIn.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Reference screen \u00b7 Sign in",
+      "page": "system"
+    },
+    "SysFoundations.dc.html": {
+      "x": 0,
+      "y": 1180,
+      "w": 1440,
+      "h": 2900,
+      "title": "1 \u00b7 Foundations: color, type, space, tone, motion",
+      "page": "system"
+    },
+    "SysComponents1.dc.html": {
+      "x": 1520,
+      "y": 1180,
+      "w": 1440,
+      "h": 2700,
+      "title": "2 \u00b7 Components: actions and forms",
+      "page": "system"
+    },
+    "SysComponents2.dc.html": {
+      "x": 0,
+      "y": 4160,
+      "w": 1440,
+      "h": 3500,
+      "title": "3 \u00b7 Components: content and structure",
+      "page": "system"
+    },
+    "SysRules.dc.html": {
+      "x": 1520,
+      "y": 4160,
+      "w": 1440,
+      "h": 2600,
+      "title": "4 \u00b7 How to use it: fixed, default, free",
+      "page": "system"
     }
   },
   "order": [
@@ -325,7 +377,13 @@
     "MangaB.dc.html",
     "MangaC.dc.html",
     "MangaB2.dc.html",
-    "MangaBtn.dc.html"
+    "MangaBtn.dc.html",
+    "SysShelf.dc.html",
+    "SysSignIn.dc.html",
+    "SysFoundations.dc.html",
+    "SysComponents1.dc.html",
+    "SysComponents2.dc.html",
+    "SysRules.dc.html"
   ],
   "notes": {
     "head": {
@@ -394,6 +452,14 @@
       "kind": "title1",
       "maxW": 4400,
       "page": "manga"
+    },
+    "system": {
+      "x": 0,
+      "y": -300,
+      "text": "Trove design system \u00b7 Manga screentone, v1",
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "system"
     }
   },
   "designSystems": []
