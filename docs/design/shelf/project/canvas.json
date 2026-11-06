@@ -274,6 +274,14 @@
       "h": 1100,
       "title": "C \u00b7 The spread \u00b7 An open book: contents left, shelves right",
       "page": "manga"
+    },
+    "MangaB2.dc.html": {
+      "x": 1520,
+      "y": 1180,
+      "w": 1440,
+      "h": 1100,
+      "title": "B2 \u00b7 The strip, top navigation \u00b7 Navigation across the top like A, banner and shelves from B",
+      "page": "manga"
     }
   },
   "order": [
@@ -307,7 +315,8 @@
     "Ident6.dc.html",
     "MangaA.dc.html",
     "MangaB.dc.html",
-    "MangaC.dc.html"
+    "MangaC.dc.html",
+    "MangaB2.dc.html"
   ],
   "notes": {
     "head": {

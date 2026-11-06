@@ -34,6 +34,12 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   focus lines behind the Librarian pick), `MangaB` the strip (black rail, one dark band, long shelves on
   inked ledges), `MangaC` the spread (open book: pick and contents left, two shelves right, index tabs).
 
+- **Manga B polish and B2 (Josef: polish B, add a version under it with navigation up top like A):** B's banner
+  is now a black band with a slanted lower edge and a double rule, a dotted halo and fanned lines behind the
+  book, a larger title, a ruled reason line and a "thirty-minute video call" note. `MangaB2` keeps B's banner
+  and long shelves but moves the navigation to the top bar, as in A, so the shelves get the full width
+  (nine books a row). B's side rail stays on `MangaB` for comparison.
+
 Pending Josef's pick (one, or a blend).
 
 ## 2026-11-06: direction 5, working tool (a clean break from the material looks)
