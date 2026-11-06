@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Identity 04, Wood-type broadside</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Alfa+Slab+One&amp;family=DM+Serif+Display&amp;family=Space+Mono:wght@400;700&amp;family=IM+Fell+English:ital@0;1&amp;family=Jost:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
+<style>
+
+body{margin:0}
+.mb{width:1200px;height:860px;display:grid;grid-template-columns:600px minmax(0,1fr);font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink);background:var(--info-bg);overflow:hidden}
+.mb *{box-sizing:border-box}
+:where(.mb) :is(h1,h2,h3,p,ul,ol){margin:0;padding:0}
+.plate{position:relative;overflow:hidden}
+.info{padding:34px 40px 30px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.era{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.nm{font-family:var(--head);font-size:40px;line-height:1.02;margin-top:6px}
+.borrow{list-style:none;display:grid;gap:5px;color:var(--ink-2);font-size:13.5px}
+.borrow li{padding-left:14px;position:relative}.borrow li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:2px;background:var(--accent)}
+.lab{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin-bottom:7px}
+.pal{display:flex;gap:6px}.chip{flex:1;height:52px;display:flex;align-items:flex-end;padding:5px 6px;font:500 9.5px var(--mono);letter-spacing:.04em;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.spec{display:grid;gap:3px}
+.ui{margin-top:auto}
+.bk{position:relative;flex:none;width:120px;height:176px;padding:16px 10px 10px 19px;display:flex;flex-direction:column;background:linear-gradient(90deg,#E6E6E1 0,#F6F6F2 7px,#fff 8px 10px,#F2F2EE 11px,#fff 15px);color:#17181C}
+.bk::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:1px;background:rgba(0,0,0,.14)}
+.bk-t{font-family:var(--btitle);font-weight:600;font-size:13.5px;line-height:1.2}.bk-n{margin-top:auto;font:600 9.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+
+
+.s4 .nm{font-size:34px;line-height:1.08}
+.s4 .plate{background:#F2EDE0;border-right:1px solid #1A1612}
+.s4 .grain{position:absolute;inset:0;opacity:.5;mix-blend-mode:multiply}
+.s4 .brd{position:absolute;inset:22px;border:4px solid #1A1612;outline:1px solid #1A1612;outline-offset:5px;padding:26px 30px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.s4 .rough{filter:url(#rough)}
+.s4 .small{font:500 12px 'IBM Plex Mono';letter-spacing:.22em;text-transform:uppercase}
+.s4 .h1{font:98px/.9 'Alfa Slab One';text-transform:uppercase;margin-top:16px;letter-spacing:-.01em}
+.s4 .h2{font:italic 500 34px/1 'Newsreader';margin:12px 0 6px;color:#C8341D}
+.s4 .orn{margin:10px 0;display:flex;align-items:center;gap:14px;width:100%;color:#1A1612;font-size:22px}.s4 .orn::before,.s4 .orn::after{content:"";flex:1;border-top:3px double #1A1612}
+.s4 .bkrow{display:flex;gap:22px;margin-top:auto;margin-bottom:10px;align-items:flex-end}
+.s4 .bk{box-shadow:0 0 0 2px #1A1612;background:#FBF8EF}.s4 .bk::before{background:rgba(26,22,18,.4)}.s4 .bk-t{font-family:'Alfa Slab One';font-weight:400;font-size:12px}
+.s4 .ui{padding:16px 18px;border:3px solid #1A1612;outline:1px solid #1A1612;outline-offset:3px;display:grid;gap:12px;background:#FBF8EF}
+.s4 .uih{font:20px 'Alfa Slab One';text-transform:uppercase;display:flex;align-items:center;gap:10px}.s4 .uih::after{content:"";flex:1;border-top:3px double #1A1612}
+.s4 .btn{width:max-content;padding:10px 18px;background:#1A1612;color:#F2EDE0;font:15px 'Alfa Slab One';text-transform:uppercase;letter-spacing:.03em;box-shadow:4px 4px 0 #C8341D}
+
+</style>
+</helmet>
+<div class="mb s4" style="--ink:#1A1612;--ink-2:#4F463C;--accent:#C8341D;--info-bg:#F2EDE0;--head:'Alfa Slab One',serif;--sans:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;--btitle:'Newsreader',Georgia,serif">
+  <div class="plate"><svg width="0" height="0"><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter></svg><svg class="grain" width="600" height="860"><filter id="g"><feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="3"/><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .42  0 0 0 0 .3  0 0 0 .5 -.05"/></filter><rect width="600" height="860" filter="url(#g)"/></svg><div class="brd rough"><p class="small">To be had at the library</p><p class="h1">Check<br>Out</p><p class="h2">an author</p><div class="orn">❧</div><p class="small">A conversation of thirty minutes · by appointment</p><div class="bkrow"><div class="bk"><span class="bk-t">How to Leave a Job</span><span class="bk-n">Dana</span></div><div class="bk" style="margin-bottom:22px"><span class="bk-t">What a Patent Examiner Looks For</span><span class="bk-n">Owen</span></div><div class="bk"><span class="bk-t">Teaching Yourself to Code</span><span class="bk-n">Luis</span></div></div></div></div>
+  <div class="info">
+    <div><p class="era">04 · 19th-century letterpress posters and handbills</p><h2 class="nm">Wood-type broadside</h2></div>
+    <div><p class="lab">What we borrow</p><ul class="borrow"><li>Heavy slab and condensed wood type in stacked lines, with small italic and caps beneath it.</li><li>Black and vermilion ink on paper with a little roughness at the edges: the feel of a press, not a screen.</li><li>Rules, ornaments and “to be had at” phrasing. A checkout reads like a notice posted on a wall.</li></ul></div>
+    <div><p class="lab">Palette</p><div class="pal"><div class="chip" style="background:#F2EDE0;color:#1A1612">Paper<br>#F2EDE0</div><div class="chip" style="background:#1A1612;color:#fff">Press black<br>#1A1612</div><div class="chip" style="background:#C8341D;color:#fff">Vermilion<br>#C8341D</div><div class="chip" style="background:#4F463C;color:#fff">Worn ink<br>#4F463C</div><div class="chip" style="background:#E4DCC8;color:#1A1612">Stock<br>#E4DCC8</div></div></div>
+    <div><p class="lab">Type</p><div class="spec"><p style="font:28px 'Alfa Slab One';line-height:1.05">Check out an author</p><p style="font:italic 16px 'Newsreader'">A conversation of thirty minutes, by appointment.</p></div></div>
+    <div class="ui"><p class="lab" style="margin:0">In the shelf</p><div class="uih">Changing course</div><div style="display:flex;gap:16px;align-items:center"><div class="bk"><span class="bk-t">Teaching Yourself to Code</span><span class="bk-n">Luis</span></div><div style="display:grid;gap:10px"><p style="font:italic 16px Newsreader">Starting at thirty-four. Nights, a toddler, a used laptop.</p><span class="btn">Ask to check out</span></div></div></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

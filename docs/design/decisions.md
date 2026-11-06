@@ -2,6 +2,18 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-06: identities, pick a craft idea before the layout
+
+- **Josef:** C (circulation desk) has a real identity but feels too simple. Decide the material, pattern and
+  craft idea first, then the layout. Explore printed media across eras and art styles (text, cartography,
+  literature) as small mood boards.
+- **New canvas page "Identities"**, six boards (`Ident1`..`Ident6`), each with a plate, what we borrow,
+  palette, type and a shelf fragment with white books: 01 four-colour pulp (comic halftone), 02 survey
+  chart (nautical cartography), 03 banded paperback (1930s-60s Penguin-style grid), 04 wood-type
+  broadside (letterpress), 05 riso zine (two-ink overprint), 06 engraved plate (natural history).
+
+Pending Josef's pick (one, or a blend).
+
 ## 2026-11-06: direction 5, working tool (a clean break from the material looks)
 
 - **Feedback:** the marble, cloth, shadow and daylight directions all read as games or toys. Trove is

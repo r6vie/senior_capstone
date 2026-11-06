@@ -20,6 +20,10 @@
     {
       "id": "tool",
       "name": "Working tool"
+    },
+    {
+      "id": "identities",
+      "name": "Identities"
     }
   ],
   "boards": {
@@ -194,6 +198,54 @@
       "h": 1300,
       "title": "C \u00b7 Circulation desk: ink, stamp and highlighter",
       "page": "tool"
+    },
+    "Ident1.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1200,
+      "h": 860,
+      "title": "01 \u00b7 Four-colour pulp",
+      "page": "identities"
+    },
+    "Ident2.dc.html": {
+      "x": 1280,
+      "y": 0,
+      "w": 1200,
+      "h": 860,
+      "title": "02 \u00b7 Survey chart",
+      "page": "identities"
+    },
+    "Ident3.dc.html": {
+      "x": 0,
+      "y": 940,
+      "w": 1200,
+      "h": 860,
+      "title": "03 \u00b7 Banded paperback",
+      "page": "identities"
+    },
+    "Ident4.dc.html": {
+      "x": 1280,
+      "y": 940,
+      "w": 1200,
+      "h": 860,
+      "title": "04 \u00b7 Wood-type broadside",
+      "page": "identities"
+    },
+    "Ident5.dc.html": {
+      "x": 0,
+      "y": 1880,
+      "w": 1200,
+      "h": 860,
+      "title": "05 \u00b7 Riso zine",
+      "page": "identities"
+    },
+    "Ident6.dc.html": {
+      "x": 1280,
+      "y": 1880,
+      "w": 1200,
+      "h": 860,
+      "title": "06 \u00b7 Engraved plate",
+      "page": "identities"
     }
   },
   "order": [
@@ -218,7 +270,13 @@
     "ToolShelf.dc.html",
     "ToolPhone.dc.html",
     "ToolDark.dc.html",
-    "ToolCirc.dc.html"
+    "ToolCirc.dc.html",
+    "Ident1.dc.html",
+    "Ident2.dc.html",
+    "Ident3.dc.html",
+    "Ident4.dc.html",
+    "Ident5.dc.html",
+    "Ident6.dc.html"
   ],
   "notes": {
     "head": {
@@ -271,6 +329,14 @@
       "kind": "title1",
       "maxW": 1910,
       "page": "tool"
+    },
+    "ident": {
+      "x": 0,
+      "y": -300,
+      "text": "Identities \u00b7 six printed-media languages to pick from",
+      "kind": "title1",
+      "maxW": 2480,
+      "page": "identities"
     }
   },
   "designSystems": []

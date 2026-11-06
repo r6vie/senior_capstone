@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Identity 06, Engraved plate</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Alfa+Slab+One&amp;family=DM+Serif+Display&amp;family=Space+Mono:wght@400;700&amp;family=IM+Fell+English:ital@0;1&amp;family=Jost:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
+<style>
+
+body{margin:0}
+.mb{width:1200px;height:860px;display:grid;grid-template-columns:600px minmax(0,1fr);font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink);background:var(--info-bg);overflow:hidden}
+.mb *{box-sizing:border-box}
+:where(.mb) :is(h1,h2,h3,p,ul,ol){margin:0;padding:0}
+.plate{position:relative;overflow:hidden}
+.info{padding:34px 40px 30px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.era{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.nm{font-family:var(--head);font-size:40px;line-height:1.02;margin-top:6px}
+.borrow{list-style:none;display:grid;gap:5px;color:var(--ink-2);font-size:13.5px}
+.borrow li{padding-left:14px;position:relative}.borrow li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:2px;background:var(--accent)}
+.lab{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin-bottom:7px}
+.pal{display:flex;gap:6px}.chip{flex:1;height:52px;display:flex;align-items:flex-end;padding:5px 6px;font:500 9.5px var(--mono);letter-spacing:.04em;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.spec{display:grid;gap:3px}
+.ui{margin-top:auto}
+.bk{position:relative;flex:none;width:120px;height:176px;padding:16px 10px 10px 19px;display:flex;flex-direction:column;background:linear-gradient(90deg,#E6E6E1 0,#F6F6F2 7px,#fff 8px 10px,#F2F2EE 11px,#fff 15px);color:#17181C}
+.bk::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:1px;background:rgba(0,0,0,.14)}
+.bk-t{font-family:var(--btitle);font-weight:600;font-size:13.5px;line-height:1.2}.bk-n{margin-top:auto;font:600 9.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+
+
+.s6 .nm{font-style:italic;font-weight:400}
+.s6 .plate{background:#EFE9D8;border-right:1px solid #2B2118}
+.s6 .mark{position:absolute;inset:30px;background:#F4EFE2;border:1px solid rgba(43,33,24,.5);box-shadow:inset 0 0 0 4px #F4EFE2,inset 0 0 0 5px rgba(43,33,24,.7),inset 2px 3px 8px rgba(43,33,24,.22),0 0 0 1px rgba(255,255,255,.7)}
+.s6 .wash{position:absolute;left:150px;top:230px;width:300px;height:300px;border-radius:50% 46% 54% 50%;background:radial-gradient(closest-side,rgba(228,185,96,.75),rgba(228,185,96,.15));filter:blur(3px)}
+.s6 .wash2{position:absolute;left:300px;top:370px;width:200px;height:200px;border-radius:50%;background:radial-gradient(closest-side,rgba(217,140,122,.55),rgba(217,140,122,0))}
+.s6 .ttl{position:absolute;top:60px;left:0;right:0;text-align:center;font:400 13px 'IBM Plex Mono';letter-spacing:.3em}
+.s6 .big{position:absolute;left:222px;top:250px;width:170px;height:250px;padding:24px 14px 14px 26px;background:#F9F5E9;border:1.5px solid #2B2118}
+.s6 .big::before{background:#2B2118}
+.s6 .big .hatch{position:absolute;left:0;top:0;width:15px;bottom:0;background:repeating-linear-gradient(45deg,#2B2118 0 1px,transparent 1px 3px)}
+.s6 .big .hatch2{position:absolute;left:0;right:0;bottom:0;height:34px;background:repeating-linear-gradient(135deg,rgba(43,33,24,.85) 0 1px,transparent 1px 4px),repeating-linear-gradient(45deg,rgba(43,33,24,.85) 0 1px,transparent 1px 4px)}
+.s6 .big .bk-t{font-size:21px;font-weight:400;font-style:italic}.s6 .big .bk-n{margin-bottom:30px}
+.s6 .fig{position:absolute;font:italic 17px 'IM Fell English'}
+.s6 .ln{position:absolute;border-top:1px solid #2B2118}
+.s6 .bk{border:1.5px solid #2B2118;background:#F9F5E9}.s6 .bk::before{background:#2B2118}.s6 .bk-t{font-weight:400;font-style:italic}
+.s6 .ui{padding:16px 18px;border:1px solid #2B2118;box-shadow:inset 0 0 0 4px #F4EFE2,inset 0 0 0 5px #2B2118;display:grid;gap:12px;padding:22px 24px}
+.s6 .uih{font:italic 22px 'IM Fell English';text-align:center}
+.s6 .fl{list-style:none;display:grid;gap:6px;font-size:13.5px}.s6 .fl li{display:grid;grid-template-columns:44px 1fr;gap:8px}.s6 .fl i{font:italic 15px 'IM Fell English';color:#B5562F}
+.s6 .btn{width:max-content;margin:0 auto;padding:8px 22px;border:1px solid #2B2118;box-shadow:0 0 0 3px #F4EFE2,0 0 0 4px #2B2118;font:italic 17px 'IM Fell English'}
+
+</style>
+</helmet>
+<div class="mb s6" style="--ink:#2B2118;--ink-2:#5E5042;--accent:#B5562F;--info-bg:#F4EFE2;--head:'IM Fell English',Georgia,serif;--sans:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;--btitle:'IM Fell English',Georgia,serif">
+  <div class="plate"><div class="mark"></div><div class="ttl">PLATE VII.</div><div class="wash"></div><div class="wash2"></div><div class="bk big"><span class="hatch"></span><span class="hatch2"></span><span class="bk-t">Teaching Yourself to Code at Thirty-Four</span><span class="bk-n">Luis</span></div><span class="ln" style="left:392px;top:300px;width:90px"></span><span class="fig" style="left:490px;top:288px">Fig. 1. Cover.</span><span class="ln" style="left:392px;top:400px;width:90px"></span><span class="fig" style="left:490px;top:388px">Fig. 2. Spine.</span><span class="ln" style="left:130px;top:470px;width:92px"></span><span class="fig" style="left:60px;top:458px">Fig. 3.</span><span class="fig" style="left:0;right:0;bottom:58px;text-align:center;font-size:15px">A book, shown at the size an author would hold it.</span></div>
+  <div class="info">
+    <div><p class="era">06 · 18th–19th-century natural history and encyclopaedia plates</p><h2 class="nm">Engraved plate</h2></div>
+    <div><p class="lab">What we borrow</p><ul class="borrow"><li>Fine hatching and cross-hatching for all shading: depth made from lines, not gradients.</li><li>A plate mark pressed into the paper, “Fig.” labels with leader lines, and Roman-numeral plates. Every book is a specimen.</li><li>Sepia ink with a single transparent watercolour wash for emphasis.</li></ul></div>
+    <div><p class="lab">Palette</p><div class="pal"><div class="chip" style="background:#F4EFE2;color:#2B2118">Plate paper<br>#F4EFE2</div><div class="chip" style="background:#2B2118;color:#fff">Sepia ink<br>#2B2118</div><div class="chip" style="background:#E4B960;color:#2B2118">Ochre wash<br>#E4B960</div><div class="chip" style="background:#D98C7A;color:#2B2118">Rose wash<br>#D98C7A</div><div class="chip" style="background:#8FA7B8;color:#2B2118">Slate wash<br>#8FA7B8</div></div></div>
+    <div><p class="lab">Type</p><div class="spec"><p style="font:italic 30px 'IM Fell English'">Fig. 1. The Author’s Book.</p><p style="font:500 12px 'IBM Plex Mono';letter-spacing:.08em">PLATE VII · ENGRAVED BY HAND</p></div></div>
+    <div class="ui"><p class="lab" style="margin:0">In the shelf</p><div class="uih">Changing course</div><ul class="fl"><li><i>Fig. 1</i><span>Starting at thirty-four. Nights, a toddler, a used laptop.</span></li><li><i>Fig. 2</i><span>The free courses worth finishing.</span></li><li><i>Fig. 3</i><span>A first interview with no degree in it.</span></li></ul><span class="btn">Ask to check out</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Identity 01, Four-colour pulp</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Alfa+Slab+One&amp;family=DM+Serif+Display&amp;family=Space+Mono:wght@400;700&amp;family=IM+Fell+English:ital@0;1&amp;family=Jost:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
+<style>
+
+body{margin:0}
+.mb{width:1200px;height:860px;display:grid;grid-template-columns:600px minmax(0,1fr);font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink);background:var(--info-bg);overflow:hidden}
+.mb *{box-sizing:border-box}
+:where(.mb) :is(h1,h2,h3,p,ul,ol){margin:0;padding:0}
+.plate{position:relative;overflow:hidden}
+.info{padding:34px 40px 30px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.era{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.nm{font-family:var(--head);font-size:40px;line-height:1.02;margin-top:6px}
+.borrow{list-style:none;display:grid;gap:5px;color:var(--ink-2);font-size:13.5px}
+.borrow li{padding-left:14px;position:relative}.borrow li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:2px;background:var(--accent)}
+.lab{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin-bottom:7px}
+.pal{display:flex;gap:6px}.chip{flex:1;height:52px;display:flex;align-items:flex-end;padding:5px 6px;font:500 9.5px var(--mono);letter-spacing:.04em;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.spec{display:grid;gap:3px}
+.ui{margin-top:auto}
+.bk{position:relative;flex:none;width:120px;height:176px;padding:16px 10px 10px 19px;display:flex;flex-direction:column;background:linear-gradient(90deg,#E6E6E1 0,#F6F6F2 7px,#fff 8px 10px,#F2F2EE 11px,#fff 15px);color:#17181C}
+.bk::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:1px;background:rgba(0,0,0,.14)}
+.bk-t{font-family:var(--btitle);font-weight:600;font-size:13.5px;line-height:1.2}.bk-n{margin-top:auto;font:600 9.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+
+
+.s1 .nm{text-transform:uppercase;letter-spacing:.01em}
+.s1 .plate{background:#FFF8E7;border-right:4px solid #14161F}
+.s1 .dots1{position:absolute;inset:0;background:radial-gradient(circle,#E4372B 2.6px,transparent 3.2px) 0 0/13px 13px;-webkit-mask-image:linear-gradient(135deg,#000 0,transparent 62%);mask-image:linear-gradient(135deg,#000 0,transparent 62%)}
+.s1 .dots2{position:absolute;inset:0;background:radial-gradient(circle,#1F3FA6 2.2px,transparent 2.8px) 6px 6px/13px 13px;-webkit-mask-image:linear-gradient(315deg,#000 0,transparent 58%);mask-image:linear-gradient(315deg,#000 0,transparent 58%)}
+.s1 .cap{position:absolute;left:28px;top:28px;padding:8px 14px;background:#FFD23F;border:3px solid #14161F;font:400 17px 'Anton';text-transform:uppercase;letter-spacing:.03em;box-shadow:5px 5px 0 #14161F}
+.s1 .big{position:absolute;left:190px;top:150px;width:230px;height:340px;padding:30px 18px 18px 34px;transform:rotate(-3deg);border:4px solid #14161F;border-radius:3px;box-shadow:14px 14px 0 #1F3FA6}
+.s1 .big .bk-t{font-size:30px;text-transform:uppercase;line-height:1.05}.s1 .big .bk-n{font-size:14px;opacity:1}
+.s1 .bub{position:absolute;right:36px;bottom:90px;padding:14px 22px;background:#fff;border:3px solid #14161F;border-radius:50%/60%;font:400 22px 'Anton';text-transform:uppercase;transform:rotate(2deg)}
+.s1 .bub::after{content:"";position:absolute;left:34px;bottom:-22px;width:22px;height:26px;background:#fff;border-right:3px solid #14161F;transform:skewX(28deg)}
+.s1 .bk{border:3px solid #14161F;border-radius:2px;box-shadow:5px 5px 0 #E4372B}
+.s1 .ui{padding:16px;background:#fff;border:3px solid #14161F;box-shadow:6px 6px 0 #14161F;display:grid;gap:12px}
+.s1 .uih{display:inline-block;width:max-content;padding:4px 10px;background:#FFD23F;border:2px solid #14161F;font:400 15px 'Anton';text-transform:uppercase}
+.s1 .uib{display:flex;gap:14px;align-items:center}.s1 .btn{padding:9px 16px;background:#E4372B;color:#fff;border:3px solid #14161F;font:400 15px 'Anton';text-transform:uppercase;box-shadow:4px 4px 0 #14161F}
+.s1 .ch{font-size:13px;color:#46495A}
+
+</style>
+</helmet>
+<div class="mb s1" style="--ink:#14161F;--ink-2:#46495A;--accent:#E4372B;--info-bg:#FFF8E7;--head:'Anton',Impact,sans-serif;--sans:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;--btitle:'Anton',Impact,sans-serif">
+  <div class="plate"><div class="dots1"></div><div class="dots2"></div><div class="cap">Meanwhile, at the library…</div><div class="bk big"><span class="bk-t">Teaching Yourself to Code at Thirty-Four</span><span class="bk-n">Luis</span></div><div class="bub">Ask the author.</div></div>
+  <div class="info">
+    <div><p class="era">01 · 1960s American comic book · halftone duotone</p><h2 class="nm">Four-colour pulp</h2></div>
+    <div><p class="lab">What we borrow</p><ul class="borrow"><li>Halftone dots in red and blue that fade across the page, so shading is a pattern, not a gradient.</li><li>Thick black outlines and hard offset shadows: every object looks printed, not rendered.</li><li>Caption boxes and speech bubbles as the interface voice: “Meanwhile…”, “Ask the author.”</li></ul></div>
+    <div><p class="lab">Palette</p><div class="pal"><div class="chip" style="background:#FFF8E7;color:#14161F">Newsprint<br>#FFF8E7</div><div class="chip" style="background:#14161F;color:#fff">Ink<br>#14161F</div><div class="chip" style="background:#E4372B;color:#fff">Pulp red<br>#E4372B</div><div class="chip" style="background:#1F3FA6;color:#fff">Process blue<br>#1F3FA6</div><div class="chip" style="background:#FFD23F;color:#14161F">Caption yellow<br>#FFD23F</div></div></div>
+    <div><p class="lab">Type</p><div class="spec"><p style="font-family:'Anton';font-size:30px;text-transform:uppercase;letter-spacing:.01em">Teaching Yourself to Code</p><p style="font-size:14px;color:#46495A">IBM Plex Sans for the working text. Anton only for titles and captions.</p></div></div>
+    <div class="ui"><p class="lab" style="margin:0">In the shelf</p><span class="uih">Changing course</span><div class="uib"><div class="bk"><span class="bk-t">Teaching Yourself to Code</span><span class="bk-n">Luis</span></div><div style="display:grid;gap:10px"><p class="ch"><b>1</b> Starting at thirty-four. Nights, a toddler, a used laptop.</p><span class="btn">Ask to check out</span></div></div></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

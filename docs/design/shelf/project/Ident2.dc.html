@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Identity 02, Survey chart</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Alfa+Slab+One&amp;family=DM+Serif+Display&amp;family=Space+Mono:wght@400;700&amp;family=IM+Fell+English:ital@0;1&amp;family=Jost:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
+<style>
+
+body{margin:0}
+.mb{width:1200px;height:860px;display:grid;grid-template-columns:600px minmax(0,1fr);font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink);background:var(--info-bg);overflow:hidden}
+.mb *{box-sizing:border-box}
+:where(.mb) :is(h1,h2,h3,p,ul,ol){margin:0;padding:0}
+.plate{position:relative;overflow:hidden}
+.info{padding:34px 40px 30px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.era{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.nm{font-family:var(--head);font-size:40px;line-height:1.02;margin-top:6px}
+.borrow{list-style:none;display:grid;gap:5px;color:var(--ink-2);font-size:13.5px}
+.borrow li{padding-left:14px;position:relative}.borrow li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:2px;background:var(--accent)}
+.lab{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin-bottom:7px}
+.pal{display:flex;gap:6px}.chip{flex:1;height:52px;display:flex;align-items:flex-end;padding:5px 6px;font:500 9.5px var(--mono);letter-spacing:.04em;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.spec{display:grid;gap:3px}
+.ui{margin-top:auto}
+.bk{position:relative;flex:none;width:120px;height:176px;padding:16px 10px 10px 19px;display:flex;flex-direction:column;background:linear-gradient(90deg,#E6E6E1 0,#F6F6F2 7px,#fff 8px 10px,#F2F2EE 11px,#fff 15px);color:#17181C}
+.bk::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:1px;background:rgba(0,0,0,.14)}
+.bk-t{font-family:var(--btitle);font-weight:600;font-size:13.5px;line-height:1.2}.bk-n{margin-top:auto;font:600 9.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+
+
+.s2 .nm{font-style:italic;font-weight:500}
+.s2 .plate{background:#E3EEF0;border-right:1px solid #16324B}
+.s2 .grat{position:absolute;inset:0;background:linear-gradient(90deg,rgba(31,78,121,.18) 1px,transparent 1px) 0 0/75px 75px,linear-gradient(180deg,rgba(31,78,121,.18) 1px,transparent 1px) 0 0/75px 75px}
+.s2 .cont1{position:absolute;inset:0;background:repeating-radial-gradient(ellipse 120% 90% at 62% 44%,transparent 0 17px,rgba(31,78,121,.42) 17px 18px)}
+.s2 .cont2{position:absolute;inset:0;background:repeating-radial-gradient(ellipse 90% 130% at 14% 88%,transparent 0 21px,rgba(31,78,121,.3) 21px 22px)}
+.s2 .land{position:absolute;left:150px;top:190px;width:330px;height:300px;border-radius:46% 54% 42% 58%/55% 45% 58% 42%;background:#F2EAD0;border:1.5px solid #16324B;box-shadow:0 0 0 7px rgba(156,195,209,.55)}
+.s2 .frame{position:absolute;inset:18px;border:1px solid #16324B;outline:6px double transparent}
+.s2 .frame::before{content:"";position:absolute;inset:-9px;border:1px solid #16324B}
+.s2 .frame::after{content:"";position:absolute;inset:3px;background:repeating-linear-gradient(90deg,#16324B 0 1px,transparent 1px 15px) top/100% 6px no-repeat,repeating-linear-gradient(90deg,#16324B 0 1px,transparent 1px 15px) bottom/100% 6px no-repeat}
+.s2 .big{position:absolute;left:250px;top:240px;width:150px;height:220px;padding:22px 12px 12px 24px;box-shadow:0 0 0 1.5px #16324B,6px 8px 0 rgba(22,50,75,.28)}
+.s2 .big .bk-t{font-size:18px;font-style:italic}
+.s2 .pin{position:absolute;left:316px;top:206px;width:20px;height:20px;border-radius:50%;border:3px solid #B5195B;background:#fff}
+.s2 .leader{position:absolute;left:330px;top:120px;width:1px;height:90px;background:#B5195B}
+.s2 .lbl{position:absolute;left:340px;top:100px;font:500 11px 'IBM Plex Mono';letter-spacing:.08em;color:#B5195B;white-space:nowrap}
+.s2 .rose{position:absolute;right:44px;bottom:44px}
+.s2 .route{position:absolute;inset:0}
+.s2 .ui{padding:16px 18px;background:#fff;border:1px solid #16324B;display:grid;gap:12px}
+.s2 .uih{display:flex;justify-content:space-between;font:500 11px 'IBM Plex Mono';letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #16324B;padding-bottom:8px}
+.s2 .way{list-style:none;display:grid;gap:10px;position:relative;padding-left:22px}
+.s2 .way::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;border-left:2px dotted #1F4E79}
+.s2 .way li{position:relative;font-size:13px}.s2 .way li::before{content:"";position:absolute;left:-22px;top:4px;width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #1F4E79}
+.s2 .btn{width:max-content;padding:9px 16px;border:1.5px solid #B5195B;color:#B5195B;font:500 13px 'IBM Plex Mono';letter-spacing:.06em;text-transform:uppercase}
+
+</style>
+</helmet>
+<div class="mb s2" style="--ink:#16324B;--ink-2:#4B6578;--accent:#B5195B;--info-bg:#F3F7F6;--head:'Newsreader',Georgia,serif;--sans:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;--btitle:'Newsreader',Georgia,serif">
+  <div class="plate"><div class="grat"></div><div class="cont1"></div><div class="cont2"></div><div class="land"></div><div class="frame"></div><svg class="route" width="600" height="860" viewBox="0 0 600 860"><path d="M330 480 C 330 600, 180 600, 160 720 S 300 800, 420 740" fill="none" stroke="#B5195B" stroke-width="2" stroke-dasharray="2 7" stroke-linecap="round"/><circle cx="420" cy="740" r="8" fill="#fff" stroke="#B5195B" stroke-width="2.5"/></svg><div class="bk big"><span class="bk-t">Teaching Yourself to Code at Thirty-Four</span><span class="bk-n">Luis</span></div><div class="pin"></div><div class="leader"></div><div class="lbl">LUIS · 41°30′N</div><svg class="rose" width="110" height="110" viewBox="-55 -55 110 110"><circle r="44" fill="none" stroke="#16324B"/><circle r="30" fill="none" stroke="#16324B" stroke-dasharray="1 4"/><path d="M0-50 8 0 0 50-8 0Z" fill="#16324B"/><path d="M-50 0 0-8 50 0 0 8Z" fill="#fff" stroke="#16324B"/><path d="M0-50 8 0 0 0Z" fill="#B5195B"/><text y="-56" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#16324B">N</text></svg></div>
+  <div class="info">
+    <div><p class="era">02 · Nautical and survey cartography · 19th century to today</p><h2 class="nm">Survey chart</h2></div>
+    <div><p class="lab">What we borrow</p><ul class="borrow"><li>Contour lines and a graticule as the quiet background texture; books are placed on the chart like landmarks.</li><li>One chart-magenta for everything you can act on, the way charts mark hazards and routes.</li><li>Coordinates, soundings and sheet numbers as labels. A checkout is a route between two people.</li></ul></div>
+    <div><p class="lab">Palette</p><div class="pal"><div class="chip" style="background:#E3EEF0;color:#16324B">Sea<br>#E3EEF0</div><div class="chip" style="background:#1F4E79;color:#fff">Chart blue<br>#1F4E79</div><div class="chip" style="background:#9CC3D1;color:#16324B">Depth<br>#9CC3D1</div><div class="chip" style="background:#F2EAD0;color:#16324B">Land<br>#F2EAD0</div><div class="chip" style="background:#B5195B;color:#fff">Magenta<br>#B5195B</div></div></div>
+    <div><p class="lab">Type</p><div class="spec"><p style="font-family:'Newsreader';font-style:italic;font-size:30px">Cleveland, Ohio</p><p style="font:500 12px 'IBM Plex Mono';letter-spacing:.08em">41°30′N  81°41′W  ·  SHEET 1</p></div></div>
+    <div class="ui"><p class="lab" style="margin:0">In the shelf</p><div class="uih"><span>Sheet 1 · Changing course</span><span>41°30′N</span></div><ol class="way"><li><b>Starting at thirty-four.</b> Nights, a toddler, a used laptop.</li><li><b>The free courses worth finishing.</b></li><li><b>A first interview with no degree in it.</b></li></ol><span class="btn">Plot a checkout</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
