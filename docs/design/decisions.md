@@ -45,6 +45,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   arrow, and red with Plex sentence-case type. No shadows, tilt or texture. Red stays reserved for this one
   action on any screen.
 
+- **Button chosen:** option 2 (red, thin ink frame; white frame on the dark banner) is now on `MangaB2`.
+
 Pending Josef's pick (one, or a blend).
 
 ## 2026-11-06: direction 5, working tool (a clean break from the material looks)
