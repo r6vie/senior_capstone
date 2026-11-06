@@ -96,6 +96,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/books": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Shelf
+         * @description Books on the shelf, newest first.
+         */
+        get: operations["shelf_books_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/books/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Book */
+        get: operations["my_book_books_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/books/{book_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open Book */
+        get: operations["open_book_books__book_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -120,6 +174,47 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AuthorChapter */
+        AuthorChapter: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Summary */
+            summary: string;
+            /** Quotes */
+            quotes: string[];
+        };
+        /**
+         * BookCard
+         * @description A book as it appears on the shelf.
+         */
+        BookCard: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Author Name */
+            author_name: string;
+            /**
+             * Cover Style
+             * @enum {string}
+             */
+            cover_style: "cover-1" | "cover-2" | "cover-3" | "cover-4" | "cover-5" | "cover-6" | "cover-7" | "cover-8";
+            /** Blurb */
+            blurb: string | null;
+            /** Is Sample */
+            is_sample: boolean;
+        };
+        /** Chapter */
+        Chapter: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Summary */
+            summary: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -150,6 +245,76 @@ export interface components {
             token_type: "bearer";
             /** Expires In */
             expires_in: number;
+        };
+        /**
+         * MyBookResponse
+         * @description The signed-in member's own book, as its author sees it.
+         */
+        MyBookResponse: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Author Name */
+            author_name: string;
+            /**
+             * Cover Style
+             * @enum {string}
+             */
+            cover_style: "cover-1" | "cover-2" | "cover-3" | "cover-4" | "cover-5" | "cover-6" | "cover-7" | "cover-8";
+            /** Blurb */
+            blurb: string | null;
+            /** Chapters */
+            chapters: components["schemas"]["AuthorChapter"][];
+            /** Copies */
+            copies: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "on_shelf";
+            /** Published At */
+            published_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * PublicBookResponse
+         * @description A book as readers see it. No last name, contacts, copy counts or grounding quotes.
+         */
+        PublicBookResponse: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Author Name */
+            author_name: string;
+            /**
+             * Cover Style
+             * @enum {string}
+             */
+            cover_style: "cover-1" | "cover-2" | "cover-3" | "cover-4" | "cover-5" | "cover-6" | "cover-7" | "cover-8";
+            /** Blurb */
+            blurb: string | null;
+            /** Is Sample */
+            is_sample: boolean;
+            /** Chapters */
+            chapters: components["schemas"]["Chapter"][];
+        };
+        /** ShelfPage */
+        ShelfPage: {
+            /** Books */
+            books: components["schemas"]["BookCard"][];
+            /** Next */
+            next: string | null;
         };
         /** SignupRequest */
         SignupRequest: {
@@ -358,6 +523,90 @@ export interface operations {
                 };
                 content: {
                     "text/html": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    shelf_books_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description The `next` value from the previous page. */
+                after?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShelfPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_book_books_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+        };
+    };
+    open_book_books__book_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookResponse"];
                 };
             };
             /** @description Validation Error */

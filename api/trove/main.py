@@ -4,13 +4,19 @@ from fastapi import FastAPI, Request
 
 from trove.auth import service as auth_service
 from trove.auth.router import router as auth_router
+from trove.books import service as books_service
+from trove.books.router import router as books_router
 from trove.core.database import make_lifespan
 from trove.core.errors import register_error_handlers
 from trove.notifications import service as notification_service
 from trove.notifications.router import router as notifications_router
 
-INDEX_SETUPS = [auth_service.ensure_indexes, notification_service.ensure_indexes]
-ROUTERS = [auth_router, notifications_router]
+INDEX_SETUPS = [
+    auth_service.ensure_indexes,
+    notification_service.ensure_indexes,
+    books_service.ensure_indexes,
+]
+ROUTERS = [auth_router, notifications_router, books_router]
 
 app = FastAPI(title="Trove API", lifespan=make_lifespan(INDEX_SETUPS))
 register_error_handlers(app)

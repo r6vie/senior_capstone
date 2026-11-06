@@ -218,6 +218,149 @@
         }
       }
     },
+    "/books": {
+      "get": {
+        "tags": [
+          "Books"
+        ],
+        "summary": "Shelf",
+        "description": "Books on the shelf, newest first.",
+        "operationId": "shelf_books_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The `next` value from the previous page.",
+              "title": "After"
+            },
+            "description": "The `next` value from the previous page."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShelfPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/books/me": {
+      "get": {
+        "tags": [
+          "Books"
+        ],
+        "summary": "My Book",
+        "operationId": "my_book_books_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/books/{book_id}": {
+      "get": {
+        "tags": [
+          "Books"
+        ],
+        "summary": "Open Book",
+        "operationId": "open_book_books__book_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "book_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Book Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicBookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -247,6 +390,116 @@
   },
   "components": {
     "schemas": {
+      "AuthorChapter": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "quotes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Quotes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "summary",
+          "quotes"
+        ],
+        "title": "AuthorChapter"
+      },
+      "BookCard": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "author_name": {
+            "type": "string",
+            "title": "Author Name"
+          },
+          "cover_style": {
+            "type": "string",
+            "enum": [
+              "cover-1",
+              "cover-2",
+              "cover-3",
+              "cover-4",
+              "cover-5",
+              "cover-6",
+              "cover-7",
+              "cover-8"
+            ],
+            "title": "Cover Style"
+          },
+          "blurb": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blurb"
+          },
+          "is_sample": {
+            "type": "boolean",
+            "title": "Is Sample"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "author_name",
+          "cover_style",
+          "blurb",
+          "is_sample"
+        ],
+        "title": "BookCard",
+        "description": "A book as it appears on the shelf."
+      },
+      "Chapter": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "summary"
+        ],
+        "title": "Chapter"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -307,6 +560,196 @@
           "expires_in"
         ],
         "title": "LoginResponse"
+      },
+      "MyBookResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "author_name": {
+            "type": "string",
+            "title": "Author Name"
+          },
+          "cover_style": {
+            "type": "string",
+            "enum": [
+              "cover-1",
+              "cover-2",
+              "cover-3",
+              "cover-4",
+              "cover-5",
+              "cover-6",
+              "cover-7",
+              "cover-8"
+            ],
+            "title": "Cover Style"
+          },
+          "blurb": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blurb"
+          },
+          "chapters": {
+            "items": {
+              "$ref": "#/components/schemas/AuthorChapter"
+            },
+            "type": "array",
+            "title": "Chapters"
+          },
+          "copies": {
+            "type": "integer",
+            "title": "Copies"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "on_shelf"
+            ],
+            "title": "Status"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "author_name",
+          "cover_style",
+          "blurb",
+          "chapters",
+          "copies",
+          "status",
+          "published_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "MyBookResponse",
+        "description": "The signed-in member's own book, as its author sees it."
+      },
+      "PublicBookResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "author_name": {
+            "type": "string",
+            "title": "Author Name"
+          },
+          "cover_style": {
+            "type": "string",
+            "enum": [
+              "cover-1",
+              "cover-2",
+              "cover-3",
+              "cover-4",
+              "cover-5",
+              "cover-6",
+              "cover-7",
+              "cover-8"
+            ],
+            "title": "Cover Style"
+          },
+          "blurb": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blurb"
+          },
+          "is_sample": {
+            "type": "boolean",
+            "title": "Is Sample"
+          },
+          "chapters": {
+            "items": {
+              "$ref": "#/components/schemas/Chapter"
+            },
+            "type": "array",
+            "title": "Chapters"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "author_name",
+          "cover_style",
+          "blurb",
+          "is_sample",
+          "chapters"
+        ],
+        "title": "PublicBookResponse",
+        "description": "A book as readers see it. No last name, contacts, copy counts or grounding quotes."
+      },
+      "ShelfPage": {
+        "properties": {
+          "books": {
+            "items": {
+              "$ref": "#/components/schemas/BookCard"
+            },
+            "type": "array",
+            "title": "Books"
+          },
+          "next": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next"
+          }
+        },
+        "type": "object",
+        "required": [
+          "books",
+          "next"
+        ],
+        "title": "ShelfPage"
       },
       "SignupRequest": {
         "properties": {
