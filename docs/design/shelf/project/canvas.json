@@ -24,6 +24,10 @@
     {
       "id": "identities",
       "name": "Identities"
+    },
+    {
+      "id": "manga",
+      "name": "Manga screens"
     }
   ],
   "boards": {
@@ -246,6 +250,30 @@
       "h": 940,
       "title": "06 \u00b7 Engraved plate",
       "page": "identities"
+    },
+    "MangaA.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1100,
+      "title": "A \u00b7 The page \u00b7 Panels on slanted gutters",
+      "page": "manga"
+    },
+    "MangaB.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1100,
+      "title": "B \u00b7 The strip \u00b7 Black rail, one dark band, long shelves",
+      "page": "manga"
+    },
+    "MangaC.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 1100,
+      "title": "C \u00b7 The spread \u00b7 An open book: contents left, shelves right",
+      "page": "manga"
     }
   },
   "order": [
@@ -276,7 +304,10 @@
     "Ident3.dc.html",
     "Ident4.dc.html",
     "Ident5.dc.html",
-    "Ident6.dc.html"
+    "Ident6.dc.html",
+    "MangaA.dc.html",
+    "MangaB.dc.html",
+    "MangaC.dc.html"
   ],
   "notes": {
     "head": {
@@ -337,6 +368,14 @@
       "kind": "title1",
       "maxW": 2480,
       "page": "identities"
+    },
+    "manga": {
+      "x": 0,
+      "y": -300,
+      "text": "Manga screentone \u00b7 three layouts of the shelf page",
+      "kind": "title1",
+      "maxW": 4400,
+      "page": "manga"
     }
   },
   "designSystems": []

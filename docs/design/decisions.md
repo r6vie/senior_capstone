@@ -28,6 +28,12 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   Jost, one diagonal black bar for the call to action, a visible grid). Textures: overprint, concentric arcs,
   quarter tiles, rule and bar. Ligne claire is dropped.
 
+- **Manga screens (Josef: pick manga screentone, no Japanese letters):** new canvas page "Manga screens",
+  three desktop layouts of the shelf page, all Latin type only (Barlow Condensed, Newsreader, Plex), no
+  hanko character, one red square used only for the main action: `MangaA` the page (slanted-gutter panels,
+  focus lines behind the Librarian pick), `MangaB` the strip (black rail, one dark band, long shelves on
+  inked ledges), `MangaC` the spread (open book: pick and contents left, two shelves right, index tabs).
+
 Pending Josef's pick (one, or a blend).
 
 ## 2026-11-06: direction 5, working tool (a clean break from the material looks)
