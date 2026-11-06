@@ -23,6 +23,11 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   (Franco-Belgian: even line, flat colour, brick and roof-tile patterns, flat shadows). Bookcloth and
   cyanotype are dropped.
 
+- **Round 4 (Josef: 04 ligne claire looks like kindergarten):** replaced 04 with Bauhaus primer (1920s German
+  design school: circle, square and triangle in vermilion, ochre and Prussian blue, overprint, lowercase
+  Jost, one diagonal black bar for the call to action, a visible grid). Textures: overprint, concentric arcs,
+  quarter tiles, rule and bar. Ligne claire is dropped.
+
 Pending Josef's pick (one, or a blend).
 
 ## 2026-11-06: direction 5, working tool (a clean break from the material looks)
