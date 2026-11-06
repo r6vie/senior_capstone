@@ -2,63 +2,72 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Identity 04, Wood-type broadside</title>
+<title>Identity 04, Cyanotype blueprint</title>
 <script src="./support.js"></script>
 </head>
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Alfa+Slab+One&amp;family=DM+Serif+Display&amp;family=Space+Mono:wght@400;700&amp;family=IM+Fell+English:ital@0;1&amp;family=Jost:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&amp;family=DM+Serif+Display&amp;family=Space+Mono:wght@400;700&amp;family=IM+Fell+English:ital@0;1&amp;family=Jost:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
 <style>
 
 body{margin:0}
-.mb{width:1200px;height:860px;display:grid;grid-template-columns:600px minmax(0,1fr);font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink);background:var(--info-bg);overflow:hidden}
+.mb{width:1200px;height:940px;display:grid;grid-template-columns:600px minmax(0,1fr);font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink);background:var(--info-bg);overflow:hidden}
 .mb *{box-sizing:border-box}
 :where(.mb) :is(h1,h2,h3,p,ul,ol){margin:0;padding:0}
 .plate{position:relative;overflow:hidden}
-.info{padding:34px 40px 30px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.info{padding:32px 40px 30px;display:flex;flex-direction:column;gap:18px;min-width:0}
 .era{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
 .nm{font-family:var(--head);font-size:40px;line-height:1.02;margin-top:6px}
 .borrow{list-style:none;display:grid;gap:5px;color:var(--ink-2);font-size:13.5px}
 .borrow li{padding-left:14px;position:relative}.borrow li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:2px;background:var(--accent)}
 .lab{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin-bottom:7px}
-.pal{display:flex;gap:6px}.chip{flex:1;height:52px;display:flex;align-items:flex-end;padding:5px 6px;font:500 9.5px var(--mono);letter-spacing:.04em;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.pal{display:flex;gap:6px}.chip{flex:1;height:50px;display:flex;align-items:flex-end;padding:5px 6px;font:500 9.5px var(--mono);letter-spacing:.04em;box-shadow:inset 0 0 0 1px rgba(128,128,128,.25)}
 .spec{display:grid;gap:3px}
+.tex{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tile{height:58px;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(128,128,128,.28)}
+.tcap{margin-top:4px;font:500 9.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .ui{margin-top:auto}
 .bk{position:relative;flex:none;width:120px;height:176px;padding:16px 10px 10px 19px;display:flex;flex-direction:column;background:linear-gradient(90deg,#E6E6E1 0,#F6F6F2 7px,#fff 8px 10px,#F2F2EE 11px,#fff 15px);color:#17181C}
 .bk::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:1px;background:rgba(0,0,0,.14)}
 .bk-t{font-family:var(--btitle);font-weight:600;font-size:13.5px;line-height:1.2}.bk-n{margin-top:auto;font:600 9.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;opacity:.7}
 
 
-.s4 .nm{font-size:34px;line-height:1.08}
-.s4 .plate{background:#F2EDE0;border-right:1px solid #1A1612}
-.s4 .grain{position:absolute;inset:0;opacity:.5;mix-blend-mode:multiply}
-.s4 .brd{position:absolute;inset:22px;border:4px solid #1A1612;outline:1px solid #1A1612;outline-offset:5px;padding:26px 30px;display:flex;flex-direction:column;align-items:center;text-align:center}
-.s4 .rough{filter:url(#rough)}
-.s4 .small{font:500 12px 'IBM Plex Mono';letter-spacing:.22em;text-transform:uppercase}
-.s4 .h1{font:98px/.9 'Alfa Slab One';text-transform:uppercase;margin-top:16px;letter-spacing:-.01em}
-.s4 .h2{font:italic 500 34px/1 'Newsreader';margin:12px 0 6px;color:#C8341D}
-.s4 .orn{margin:10px 0;display:flex;align-items:center;gap:14px;width:100%;color:#1A1612;font-size:22px}.s4 .orn::before,.s4 .orn::after{content:"";flex:1;border-top:3px double #1A1612}
-.s4 .bkrow{display:flex;gap:22px;margin-top:auto;margin-bottom:10px;align-items:flex-end}
-.s4 .bk{box-shadow:0 0 0 2px #1A1612;background:#FBF8EF}.s4 .bk::before{background:rgba(26,22,18,.4)}.s4 .bk-t{font-family:'Alfa Slab One';font-weight:400;font-size:12px}
-.s4 .ui{padding:16px 18px;border:3px solid #1A1612;outline:1px solid #1A1612;outline-offset:3px;display:grid;gap:12px;background:#FBF8EF}
-.s4 .uih{font:20px 'Alfa Slab One';text-transform:uppercase;display:flex;align-items:center;gap:10px}.s4 .uih::after{content:"";flex:1;border-top:3px double #1A1612}
-.s4 .btn{width:max-content;padding:10px 18px;background:#1A1612;color:#F2EDE0;font:15px 'Alfa Slab One';text-transform:uppercase;letter-spacing:.03em;box-shadow:4px 4px 0 #C8341D}
+.s4 .nm{font-weight:600;letter-spacing:-.02em;font-size:38px}
+.s4 .plate{background:#1B5E8C;border-right:1px solid #E8F3FA}
+.s4 .g1{position:absolute;inset:0;background:linear-gradient(90deg,rgba(232,243,250,.12) 1px,transparent 1px) 0 0/24px 24px,linear-gradient(180deg,rgba(232,243,250,.12) 1px,transparent 1px) 0 0/24px 24px}
+.s4 .g2{position:absolute;inset:0;background:linear-gradient(90deg,rgba(232,243,250,.26) 1px,transparent 1px) 0 0/120px 120px,linear-gradient(180deg,rgba(232,243,250,.26) 1px,transparent 1px) 0 0/120px 120px}
+.s4 .wash{position:absolute;inset:0;background:radial-gradient(80% 60% at 45% 38%,rgba(70,150,200,.55),rgba(10,40,70,.45))}
+.s4 .brd{position:absolute;inset:22px;border:2px solid #E8F3FA}
+.s4 .big{position:absolute;left:218px;top:260px;width:182px;height:268px;padding:28px 14px 14px 30px;background-color:#fff;box-shadow:0 0 0 1.5px #E8F3FA,10px 10px 0 rgba(8,32,58,.45)}
+.s4 .big .bk-t{font-size:23px}
+.s4 svg.dim{position:absolute;inset:0}
+.s4 .note{position:absolute;font:500 11px 'IBM Plex Mono';letter-spacing:.1em;color:#E8F3FA;white-space:nowrap}
+.s4 .amb{color:#FFB84D}
+.s4 .tb{position:absolute;right:22px;bottom:22px;width:300px;border:2px solid #E8F3FA;background:rgba(10,45,78,.55);font:500 10.5px 'IBM Plex Mono';letter-spacing:.08em;color:#E8F3FA}
+.s4 .tb div{display:grid;grid-template-columns:96px 1fr;border-top:1px solid #E8F3FA}.s4 .tb div:first-child{border-top:0}.s4 .tb span{padding:5px 8px}.s4 .tb span:first-child{border-right:1px solid #E8F3FA;color:#A9C9DD}
+.s4 .tb .big2{display:block;padding:10px 8px;font:600 19px 'IBM Plex Sans';letter-spacing:0;text-transform:none}
+.s4 .bk{box-shadow:0 0 0 1.5px #E8F3FA}.s4 .bk::before{background:rgba(15,58,95,.3)}
+.s4 .ui{border:1.5px solid #E8F3FA;background:rgba(10,45,78,.5);display:grid}
+.s4 .uih{display:grid;grid-template-columns:96px 1fr;border-bottom:1.5px solid #E8F3FA}.s4 .uih span{padding:8px 10px;font:500 11px 'IBM Plex Mono';letter-spacing:.1em;text-transform:uppercase}.s4 .uih span:first-child{border-right:1.5px solid #E8F3FA;color:#A9C9DD}
+.s4 .row{display:grid;grid-template-columns:96px 1fr;border-bottom:1px solid rgba(232,243,250,.5);font-size:13px}.s4 .row span{padding:8px 10px}.s4 .row span:first-child{font:500 11px 'IBM Plex Mono';color:#FFB84D;border-right:1px solid rgba(232,243,250,.5)}
+.s4 .btn{margin:12px;width:max-content;padding:10px 18px;background:#FFB84D;color:#0F3A5F;font:600 12px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase}
 
 </style>
 </helmet>
-<div class="mb s4" style="--ink:#1A1612;--ink-2:#4F463C;--accent:#C8341D;--info-bg:#F2EDE0;--head:'Alfa Slab One',serif;--sans:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;--btitle:'Newsreader',Georgia,serif">
-  <div class="plate"><svg width="0" height="0"><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter></svg><svg class="grain" width="600" height="860"><filter id="g"><feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="3"/><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .42  0 0 0 0 .3  0 0 0 .5 -.05"/></filter><rect width="600" height="860" filter="url(#g)"/></svg><div class="brd rough"><p class="small">To be had at the library</p><p class="h1">Check<br>Out</p><p class="h2">an author</p><div class="orn">❧</div><p class="small">A conversation of thirty minutes · by appointment</p><div class="bkrow"><div class="bk"><span class="bk-t">How to Leave a Job</span><span class="bk-n">Dana</span></div><div class="bk" style="margin-bottom:22px"><span class="bk-t">What a Patent Examiner Looks For</span><span class="bk-n">Owen</span></div><div class="bk"><span class="bk-t">Teaching Yourself to Code</span><span class="bk-n">Luis</span></div></div></div></div>
+<div class="mb s4" style="--ink:#E8F3FA;--ink-2:#A9C9DD;--accent:#FFB84D;--info-bg:#0F3A5F;--head:'IBM Plex Sans',sans-serif;--sans:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;--btitle:'Newsreader',Georgia,serif">
+  <div class="plate"><div class="g1"></div><div class="g2"></div><div class="wash"></div><div class="brd"></div><svg class="dim" width="600" height="940" viewBox="0 0 600 940" fill="none" stroke="#E8F3FA" stroke-width="1.2"><path d="M218 232H400M218 222V246M400 222V246" /><path d="M218 232l9-4v8zM400 232l-9-4v8z" fill="#E8F3FA"/><path d="M450 260V528M440 260H464M440 528H464"/><path d="M450 260l-4 9h8zM450 528l-4-9h8z" fill="#E8F3FA"/><path d="M309 220V560" stroke-dasharray="14 4 2 4" stroke="#6FA3C4"/><path d="M180 394H440" stroke-dasharray="14 4 2 4" stroke="#6FA3C4"/><path d="M400 300 L470 220 H560" stroke="#FFB84D"/><circle cx="400" cy="300" r="3" fill="#FFB84D" stroke="none"/><path d="M218 560V610M400 560V610M218 596H400"/></svg><span class="note" style="left:292px;top:208px">140</span><span class="note" style="left:462px;top:386px;transform:rotate(90deg);transform-origin:left">206</span><span class="note amb" style="left:474px;top:200px">TITLE · SERIF</span><span class="note" style="left:268px;top:604px">SPINE HINGE 11</span><div class="bk big"><span class="bk-t">Teaching Yourself to Code at Thirty-Four</span><span class="bk-n">Luis</span></div><div class="tb"><div><span>SHEET</span><span>01 · SHELF</span></div><div><span>AUTHOR</span><span>LUIS (FIRST NAME ONLY)</span></div><div><span>SESSION</span><span>30 MIN · VIDEO</span></div><div><span>TITLE</span><span class="big2">The author’s book</span></div></div><span class="note" style="left:44px;bottom:42px;color:#A9C9DD">TROVE · DWG 0001 · REV A</span></div>
   <div class="info">
-    <div><p class="era">04 · 19th-century letterpress posters and handbills</p><h2 class="nm">Wood-type broadside</h2></div>
-    <div><p class="lab">What we borrow</p><ul class="borrow"><li>Heavy slab and condensed wood type in stacked lines, with small italic and caps beneath it.</li><li>Black and vermilion ink on paper with a little roughness at the edges: the feel of a press, not a screen.</li><li>Rules, ornaments and “to be had at” phrasing. A checkout reads like a notice posted on a wall.</li></ul></div>
-    <div><p class="lab">Palette</p><div class="pal"><div class="chip" style="background:#F2EDE0;color:#1A1612">Paper<br>#F2EDE0</div><div class="chip" style="background:#1A1612;color:#fff">Press black<br>#1A1612</div><div class="chip" style="background:#C8341D;color:#fff">Vermilion<br>#C8341D</div><div class="chip" style="background:#4F463C;color:#fff">Worn ink<br>#4F463C</div><div class="chip" style="background:#E4DCC8;color:#1A1612">Stock<br>#E4DCC8</div></div></div>
-    <div><p class="lab">Type</p><div class="spec"><p style="font:28px 'Alfa Slab One';line-height:1.05">Check out an author</p><p style="font:italic 16px 'Newsreader'">A conversation of thirty minutes, by appointment.</p></div></div>
-    <div class="ui"><p class="lab" style="margin:0">In the shelf</p><div class="uih">Changing course</div><div style="display:flex;gap:16px;align-items:center"><div class="bk"><span class="bk-t">Teaching Yourself to Code</span><span class="bk-n">Luis</span></div><div style="display:grid;gap:10px"><p style="font:italic 16px Newsreader">Starting at thirty-four. Nights, a toddler, a used laptop.</p><span class="btn">Ask to check out</span></div></div></div>
+    <div><p class="era">04 · Architects’ and engineers’ drawings · cyanotype, 1840s to 1970s</p><h2 class="nm">Cyanotype blueprint</h2></div>
+    <div><p class="lab">What we borrow</p><ul class="borrow"><li>A cyan-blue ground with white drawn lines and a fine grid: every screen is a drawing sheet with a title block.</li><li>One amber for annotation and the main action; everything else is line weight, dashes and dimensions.</li><li>Books are drawn as objects with dimensions and leaders; chapters sit in a title-block table.</li></ul></div>
+    <div><p class="lab">Palette</p><div class="pal"><div class="chip" style="background:#0F3A5F;color:#fff">Prussian<br>#0F3A5F</div><div class="chip" style="background:#1B5E8C;color:#fff">Cyan sheet<br>#1B5E8C</div><div class="chip" style="background:#E8F3FA;color:#0F3A5F">Chalk line<br>#E8F3FA</div><div class="chip" style="background:#6FA3C4;color:#0F3A5F">Faint line<br>#6FA3C4</div><div class="chip" style="background:#FFB84D;color:#0F3A5F">Amber<br>#FFB84D</div></div></div>
+    <div><p class="lab">Type</p><div class="spec"><p style="font:600 28px 'IBM Plex Sans';letter-spacing:-.01em">Teaching Yourself to Code</p><p style="font:500 11px 'IBM Plex Mono';letter-spacing:.14em">SHEET 01 OF 04 · SCALE 1:1 · REV A</p></div></div>
+    <div><p class="lab">Textures</p><div class="tex"><div><div class="tile" style="background:radial-gradient(90% 90% at 40% 30%,#2A78AC,#0F3A5F)"></div><p class="tcap">Cyanotype wash</p></div><div><div class="tile" style="background:linear-gradient(90deg,rgba(232,243,250,.28) 1px,transparent 1px) 0 0/12px 12px,linear-gradient(180deg,rgba(232,243,250,.28) 1px,transparent 1px) 0 0/12px 12px,#134B75"></div><p class="tcap">Drafting grid</p></div><div><div class="tile" style="background:#134B75 repeating-linear-gradient(45deg,rgba(232,243,250,.7) 0 1px,transparent 1px 6px)"></div><p class="tcap">Section hatch</p></div><div><div class="tile" style="background:#134B75;background-image:repeating-linear-gradient(90deg,#E8F3FA 0 14px,transparent 14px 18px,#E8F3FA 18px 20px,transparent 20px 24px);background-size:100% 1.5px;background-position:center;background-repeat:repeat-x"></div><p class="tcap">Centre line</p></div></div></div>
+    <div class="ui"><p class="lab" style="margin:0;padding:8px 10px 0">In the shelf</p><div class="uih"><span>Shelf</span><span>Changing course</span></div><div class="row"><span>CH. 1</span><span>Starting at thirty-four</span></div><div class="row"><span>CH. 2</span><span>The free courses worth finishing</span></div><div class="row"><span>CH. 3</span><span>A first interview with no degree in it</span></div><span class="btn">Ask to check out</span></div>
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":860}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":940}}'>
 class Component extends DCLogic {
   renderVals() {
     return {};

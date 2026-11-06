@@ -2,64 +2,71 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Identity 03, Banded paperback</title>
+<title>Identity 03, Bookcloth and foil</title>
 <script src="./support.js"></script>
 </head>
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Alfa+Slab+One&amp;family=DM+Serif+Display&amp;family=Space+Mono:wght@400;700&amp;family=IM+Fell+English:ital@0;1&amp;family=Jost:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&amp;family=DM+Serif+Display&amp;family=Space+Mono:wght@400;700&amp;family=IM+Fell+English:ital@0;1&amp;family=Jost:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
 <style>
 
 body{margin:0}
-.mb{width:1200px;height:860px;display:grid;grid-template-columns:600px minmax(0,1fr);font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink);background:var(--info-bg);overflow:hidden}
+.mb{width:1200px;height:940px;display:grid;grid-template-columns:600px minmax(0,1fr);font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink);background:var(--info-bg);overflow:hidden}
 .mb *{box-sizing:border-box}
 :where(.mb) :is(h1,h2,h3,p,ul,ol){margin:0;padding:0}
 .plate{position:relative;overflow:hidden}
-.info{padding:34px 40px 30px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.info{padding:32px 40px 30px;display:flex;flex-direction:column;gap:18px;min-width:0}
 .era{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
 .nm{font-family:var(--head);font-size:40px;line-height:1.02;margin-top:6px}
 .borrow{list-style:none;display:grid;gap:5px;color:var(--ink-2);font-size:13.5px}
 .borrow li{padding-left:14px;position:relative}.borrow li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:2px;background:var(--accent)}
 .lab{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin-bottom:7px}
-.pal{display:flex;gap:6px}.chip{flex:1;height:52px;display:flex;align-items:flex-end;padding:5px 6px;font:500 9.5px var(--mono);letter-spacing:.04em;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.pal{display:flex;gap:6px}.chip{flex:1;height:50px;display:flex;align-items:flex-end;padding:5px 6px;font:500 9.5px var(--mono);letter-spacing:.04em;box-shadow:inset 0 0 0 1px rgba(128,128,128,.25)}
 .spec{display:grid;gap:3px}
+.tex{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tile{height:58px;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(128,128,128,.28)}
+.tcap{margin-top:4px;font:500 9.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .ui{margin-top:auto}
 .bk{position:relative;flex:none;width:120px;height:176px;padding:16px 10px 10px 19px;display:flex;flex-direction:column;background:linear-gradient(90deg,#E6E6E1 0,#F6F6F2 7px,#fff 8px 10px,#F2F2EE 11px,#fff 15px);color:#17181C}
 .bk::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:1px;background:rgba(0,0,0,.14)}
 .bk-t{font-family:var(--btitle);font-weight:600;font-size:13.5px;line-height:1.2}.bk-n{margin-top:auto;font:600 9.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;opacity:.7}
 
 
-.s3 .nm{font-weight:700;letter-spacing:-.02em}
-.s3 .plate{background:#EFEFEB;display:flex;align-items:center;justify-content:center;gap:34px}
-.s3 .pb{width:150px;height:230px;background:#fff;display:flex;flex-direction:column;box-shadow:0 1px 1px rgba(0,0,0,.2),0 10px 18px -8px rgba(0,0,0,.35);position:relative}
-.s3 .pb::before{content:"";position:absolute;left:0;top:0;bottom:0;width:9px;background:linear-gradient(90deg,#DDDDD8,#F5F5F2)}
-.s3 .band{height:50px;background:var(--c)}
-.s3 .mid{flex:1;margin:0 0 0 9px;padding:14px 14px 10px 16px;display:flex;flex-direction:column;border-top:1px solid var(--c);border-bottom:1px solid var(--c);margin-top:6px;margin-bottom:6px}
-.s3 .mid .t{font:600 15px/1.2 'Newsreader'}.s3 .mid .n{margin-top:auto;font:600 10px 'Jost';letter-spacing:.16em;text-transform:uppercase}
-.s3 .pb .band:last-child{height:26px}
-.s3 .pb.b{transform:translateY(-34px)}.s3 .pb.c{transform:translateY(26px)}
-.s3 .tag{position:absolute;left:36px;bottom:34px;font:600 11px 'Jost';letter-spacing:.2em;text-transform:uppercase;color:#55575C}
-.s3 .ui{display:grid;gap:12px}
-.s3 .uih{display:flex;align-items:center;gap:10px;font:700 18px 'Jost'}.s3 .uih i{width:36px;height:12px;background:#EA5B1F}
-.s3 .uib{display:flex;gap:16px;align-items:center}.s3 .btn{padding:10px 18px;background:#1A1A1A;color:#fff;font:600 13px 'Jost';letter-spacing:.14em;text-transform:uppercase}
-.s3 .bk{width:92px;height:136px;padding:10px 6px 6px 14px;background:#fff;box-shadow:0 1px 1px rgba(0,0,0,.25),0 6px 10px -6px rgba(0,0,0,.4)}.s3 .bk::before{display:none}
-.s3 .bk .bar{position:absolute;left:0;right:0;top:0;height:30px;background:#EA5B1F}.s3 .bk-t{margin-top:26px;font-size:11px}
+.s3 .nm{font-weight:600;letter-spacing:-.005em;font-size:44px}
+.s3 .plate{background:#1E2A44;border-right:1px solid #0C1222}
+.s3 .wv1{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,rgba(0,0,0,.24) 0 1px,transparent 1px 3px)}
+.s3 .vig{position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 38%,rgba(70,92,140,.4),rgba(0,0,0,.35))}
+.s3 .stamp{position:absolute;left:70px;right:70px;top:70px;height:360px;border:1px solid rgba(0,0,0,.45);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 1px 0 rgba(255,255,255,.07);display:grid;place-items:center;text-align:center}
+.s3 .stamp::before{content:"";position:absolute;inset:12px;border:1.5px solid transparent;border-image:linear-gradient(115deg,#7A5A22,#F4DE9C 28%,#B8903F 50%,#F6E6AE 72%,#7A5A22) 1}
+.s3 .foil{background:linear-gradient(115deg,#8C6A2B,#F4DE9C 26%,#B8903F 48%,#F6E6AE 70%,#8C6A2B);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.55))}
+.s3 .stamp .t1{font:600 76px/1 'Cormorant Garamond';letter-spacing:.06em}
+.s3 .stamp .t2{margin-top:10px;font:italic 500 22px 'Cormorant Garamond'}
+.s3 .stamp .t3{margin-top:18px;font:500 11px 'IBM Plex Mono';letter-spacing:.3em}
+.s3 .big{position:absolute;left:216px;top:470px;width:168px;height:248px;padding:26px 14px 14px 28px;box-shadow:0 22px 30px -6px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.4);background-color:#FBF9F3}
+.s3 .big .bk-t{font-size:23px;font-weight:600}
+.s3 .rib{position:absolute;left:300px;top:714px;width:16px;height:110px;background:linear-gradient(90deg,#5B1520,#9A2B3A 45%,#5B1520);clip-path:polygon(0 0,100% 0,100% 100%,50% 90%,0 100%);box-shadow:0 8px 8px rgba(0,0,0,.4)}
+.s3 .mini{position:absolute;bottom:48px;left:0;right:0;text-align:center;font:500 10.5px 'IBM Plex Mono';letter-spacing:.24em;color:#8A97B5}
+.s3 .bk{background:linear-gradient(90deg,#E4E1D8 0,#F5F2EA 7px,#fff 8px 10px,#F2EFE7 11px,#fff 15px)}
+.s3 .ui{padding:18px 20px;background:#fff;border:1px solid #D9D3C3;box-shadow:0 1px 0 #fff inset,0 10px 20px -14px rgba(27,35,56,.5);display:grid;gap:12px}
+.s3 .uih{display:flex;align-items:center;gap:12px;font:600 22px 'Cormorant Garamond'}.s3 .uih::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,#B8903F,#F0D98F,#B8903F)}
+.s3 .btn{width:max-content;padding:10px 20px;background:#1E2A44 repeating-linear-gradient(0deg,rgba(255,255,255,.06) 0 1px,transparent 1px 3px);color:#F2DC95;font:500 12px 'IBM Plex Mono';letter-spacing:.16em;text-transform:uppercase;box-shadow:0 0 0 1px #0004,0 0 0 3px #fff,0 0 0 4px #1E2A44}
 
 </style>
 </helmet>
-<div class="mb s3" style="--ink:#1A1A1A;--ink-2:#55575C;--accent:#EA5B1F;--info-bg:#fff;--head:'Jost',sans-serif;--sans:'Jost',sans-serif;--mono:'IBM Plex Mono',monospace;--btitle:'Newsreader',Georgia,serif">
-  <div class="plate"><div class="pb" style="--c:#EA5B1F"><div class="band"></div><div class="mid"><span class="t">How to Leave a Job Without Burning the Bridge</span><span class="n">Dana</span></div><div class="band"></div></div><div class="pb b" style="--c:#1F8A5B"><div class="band"></div><div class="mid"><span class="t">What a Patent Examiner Looks For</span><span class="n">Owen</span></div><div class="band"></div></div><div class="pb c" style="--c:#2457A6"><div class="band"></div><div class="mid"><span class="t">Selling to Your First Ten Customers by Hand</span><span class="n">Theo</span></div><div class="band"></div></div><div class="tag">One colour per shelf</div></div>
+<div class="mb s3" style="--ink:#1B2338;--ink-2:#566079;--accent:#B8903F;--info-bg:#F7F4EC;--head:'Cormorant Garamond',Georgia,serif;--sans:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;--btitle:'Cormorant Garamond',Georgia,serif">
+  <div class="plate"><div class="wv1"></div><div class="vig"></div><div class="stamp"><div><div class="foil t1">TROVE</div><div class="foil t2">The library of what people know</div><div class="foil t3">CLEVELAND · OHIO</div></div></div><div class="bk big"><span class="bk-t">Teaching Yourself to Code at Thirty-Four</span><span class="bk-n">Luis</span></div><div class="rib"></div><div class="mini">SET IN CLOTH · STAMPED IN GOLD</div></div>
   <div class="info">
-    <div><p class="era">03 · 1930s–60s British paperback · Swiss grid</p><h2 class="nm">Banded paperback</h2></div>
-    <div><p class="lab">What we borrow</p><ul class="borrow"><li>A cover system, not a cover design: three horizontal bands, one colour per shelf, the same on every book.</li><li>Flat colour, a strict grid and one grotesque typeface. No texture, no shadow. The series is the identity.</li><li>Every book is a peer: the same band, the same label, whether the author is a student or a VP.</li></ul></div>
-    <div><p class="lab">Palette</p><div class="pal"><div class="chip" style="background:#EA5B1F;color:#fff">Orange<br>#EA5B1F</div><div class="chip" style="background:#1F8A5B;color:#fff">Green<br>#1F8A5B</div><div class="chip" style="background:#2457A6;color:#fff">Blue<br>#2457A6</div><div class="chip" style="background:#D6336C;color:#fff">Cerise<br>#D6336C</div><div class="chip" style="background:#1A1A1A;color:#fff">Ink<br>#1A1A1A</div></div></div>
-    <div><p class="lab">Type</p><div class="spec"><p style="font:700 28px 'Jost';letter-spacing:-.01em">Changing course</p><p style="font:italic 500 17px 'Newsreader'">Teaching Yourself to Code at Thirty-Four</p></div></div>
-    <div class="ui"><p class="lab" style="margin:0">In the shelf</p><div class="uih"><i></i>Changing course</div><div class="uib"><div class="bk"><span class="bar"></span><span class="bk-t">Teaching Yourself to Code</span><span class="bk-n">Luis</span></div><div style="display:grid;gap:10px"><p style="color:#55575C;font-size:14px"><b style="color:#1A1A1A">1</b> Starting at thirty-four. Nights, a toddler, a used laptop.</p><span class="btn">Ask to check out</span></div></div></div>
+    <div><p class="era">03 · Publisher’s cloth bindings · gilt stamping, ribbon markers, marbled endpapers</p><h2 class="nm">Bookcloth and foil</h2></div>
+    <div><p class="lab">What we borrow</p><ul class="borrow"><li>The interface is the binding: a woven navy cloth ground, with gold foil used only for what is stamped, never as decoration.</li><li>Blind-debossed rules and a ribbon marker show state: a ribbon hangs from a book you have asked to check out.</li><li>Marbled endpaper as the one rich pattern, kept to empty states and the edges of the page.</li></ul></div>
+    <div><p class="lab">Palette</p><div class="pal"><div class="chip" style="background:#1E2A44;color:#fff">Cloth navy<br>#1E2A44</div><div class="chip" style="background:#B8903F;color:#fff">Foil gold<br>#B8903F</div><div class="chip" style="background:#7A1F2B;color:#fff">Ribbon<br>#7A1F2B</div><div class="chip" style="background:#2F4A6D;color:#fff">Endpaper<br>#2F4A6D</div><div class="chip" style="background:#F7F4EC;color:#1B2338">Laid paper<br>#F7F4EC</div></div></div>
+    <div><p class="lab">Type</p><div class="spec"><p style="font:600 32px 'Cormorant Garamond';letter-spacing:.01em">Teaching Yourself to Code</p><p style="font:500 11px 'IBM Plex Mono';letter-spacing:.16em">SMALL CAPITALS FOR NAMES · PLEX FOR WORKING TEXT</p></div></div>
+    <div><p class="lab">Textures</p><div class="tex"><div><div class="tile" style="background:repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),#1E2A44"></div><p class="tcap">Cloth weave</p></div><div><div class="tile" style="background:linear-gradient(115deg,#7A5A22,#F4DE9C 28%,#B8903F 50%,#F6E6AE 72%,#7A5A22)"></div><p class="tcap">Gold foil</p></div><div><div class="tile" style="background:#1E2A44;box-shadow:inset 0 0 0 1px #0004;background-image:linear-gradient(#2A3856,#2A3856);background-size:calc(100% - 20px) calc(100% - 20px);background-position:center;background-repeat:no-repeat;outline:1px solid #0006;outline-offset:-10px"></div><p class="tcap">Blind deboss</p></div><div><div class="tile" style=""><svg width="100%" height="100%" preserveAspectRatio="none"><filter id="mb" x="0" y="0" width="100%" height="100%"><feTurbulence type="turbulence" baseFrequency=".02 .07" numOctaves="3" seed="4"/><feColorMatrix values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1"/><feComponentTransfer><feFuncR type="discrete" tableValues=".12 .48 .78 .15"/><feFuncG type="discrete" tableValues=".17 .12 .6 .25"/><feFuncB type="discrete" tableValues=".28 .17 .3 .45"/></feComponentTransfer></filter><rect width="100%" height="100%" filter="url(#mb)"/></svg></div><p class="tcap">Marbled paper</p></div></div></div>
+    <div class="ui"><p class="lab" style="margin:0;padding:0">In the shelf</p><div class="uih">Changing course</div><div style="display:flex;gap:16px;align-items:center"><div class="bk" style="width:92px;height:136px;padding:12px 6px 6px 15px;box-shadow:0 6px 10px -6px rgba(27,35,56,.6),0 0 0 1px #D9D3C3"><span class="bk-t" style="font-size:12px">Teaching Yourself to Code</span><span class="bk-n">Luis</span></div><div style="display:grid;gap:10px"><p style="font-size:14px;color:#566079"><b style="color:#1B2338">1</b> Starting at thirty-four. Nights, a toddler, a used laptop.</p><span class="btn">Ask to check out</span></div></div></div>
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":860}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":940}}'>
 class Component extends DCLogic {
   renderVals() {
     return {};

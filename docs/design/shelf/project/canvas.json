@@ -203,7 +203,7 @@
       "x": 0,
       "y": 0,
       "w": 1200,
-      "h": 860,
+      "h": 940,
       "title": "01 \u00b7 Four-colour pulp",
       "page": "identities"
     },
@@ -211,39 +211,39 @@
       "x": 1280,
       "y": 0,
       "w": 1200,
-      "h": 860,
+      "h": 940,
       "title": "02 \u00b7 Survey chart",
       "page": "identities"
     },
     "Ident3.dc.html": {
       "x": 0,
-      "y": 940,
+      "y": 1020,
       "w": 1200,
-      "h": 860,
-      "title": "03 \u00b7 Banded paperback",
+      "h": 940,
+      "title": "03 \u00b7 Bookcloth and foil",
       "page": "identities"
     },
     "Ident4.dc.html": {
       "x": 1280,
-      "y": 940,
+      "y": 1020,
       "w": 1200,
-      "h": 860,
-      "title": "04 \u00b7 Wood-type broadside",
+      "h": 940,
+      "title": "04 \u00b7 Cyanotype blueprint",
       "page": "identities"
     },
     "Ident5.dc.html": {
       "x": 0,
-      "y": 1880,
+      "y": 2040,
       "w": 1200,
-      "h": 860,
+      "h": 940,
       "title": "05 \u00b7 Riso zine",
       "page": "identities"
     },
     "Ident6.dc.html": {
       "x": 1280,
-      "y": 1880,
+      "y": 2040,
       "w": 1200,
-      "h": 860,
+      "h": 940,
       "title": "06 \u00b7 Engraved plate",
       "page": "identities"
     }

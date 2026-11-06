@@ -12,6 +12,12 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   chart (nautical cartography), 03 banded paperback (1930s-60s Penguin-style grid), 04 wood-type
   broadside (letterpress), 05 riso zine (two-ink overprint), 06 engraved plate (natural history).
 
+- **Round 2 (Josef: 03 too basic, 04 ugly):** replaced 03 with bookcloth and foil (woven navy cloth, gold
+  foil stamping, ribbon marker, marbled endpaper) and 04 with cyanotype blueprint (drawing sheet, dimension
+  lines, title block, one amber). Polished 01 (comic panels and gutters), 02 (soundings, shallows, cartouche,
+  scale bar), 05 (registration marks, test strip, halftone) and 06 (second row of specimens, scale bar).
+  Every board now has a Textures row, a layer to mix and match across identities.
+
 Pending Josef's pick (one, or a blend).
 
 ## 2026-11-06: direction 5, working tool (a clean break from the material looks)
