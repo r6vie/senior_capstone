@@ -282,6 +282,14 @@
       "h": 1100,
       "title": "B2 \u00b7 The strip, top navigation \u00b7 Navigation across the top like A, banner and shelves from B",
       "page": "manga"
+    },
+    "MangaBtn.dc.html": {
+      "x": 3040,
+      "y": 1180,
+      "w": 1440,
+      "h": 1040,
+      "title": "Ask to check out \u00b7 four button options",
+      "page": "manga"
     }
   },
   "order": [
@@ -316,7 +324,8 @@
     "MangaA.dc.html",
     "MangaB.dc.html",
     "MangaC.dc.html",
-    "MangaB2.dc.html"
+    "MangaB2.dc.html",
+    "MangaBtn.dc.html"
   ],
   "notes": {
     "head": {

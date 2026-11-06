@@ -40,6 +40,11 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   and long shelves but moves the navigation to the top bar, as in A, so the shelves get the full width
   (nine books a row). B's side rail stays on `MangaB` for comparison.
 
+- **"Ask to check out" button (Josef: too decorative, red at rest):** `MangaBtn` shows four flat red buttons with
+  rest, hover and pressed on the dark band and on paper: flat red, red with an ink frame, red with a plain
+  arrow, and red with Plex sentence-case type. No shadows, tilt or texture. Red stays reserved for this one
+  action on any screen.
+
 Pending Josef's pick (one, or a blend).
 
 ## 2026-11-06: direction 5, working tool (a clean break from the material looks)

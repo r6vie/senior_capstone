@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ask to check out, four buttons</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+
+body{margin:0}
+.bd{--ink:#111;--paper:#FAFAF7;--red:#E8312F;--cond:'Barlow Condensed','Arial Narrow',sans-serif;--ser:'Newsreader',Georgia,serif;--sans:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;
+ width:1440px;height:1040px;padding:48px 48px;background:#E4E4DF;color:#111;font-family:var(--sans);font-size:14px;line-height:1.45;display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-content:start}
+.bd,.bd *{box-sizing:border-box}
+:where(.bd) a{text-decoration:none;white-space:nowrap;color:inherit}
+:where(.bd) :is(h2,p){margin:0}
+.card{height:214px;background:#FAFAF7;border:3px solid #111;display:grid;grid-template-columns:210px minmax(0,1fr) 300px}
+.ch{padding:22px 20px;display:flex;flex-direction:column;gap:10px;border-right:3px solid #111}
+.ch b{font:800 30px var(--cond);letter-spacing:.04em;text-transform:uppercase}
+.ch span{font-size:13.5px;color:#55554F}
+.strip{position:relative;display:flex;gap:20px;align-items:center;padding:0 24px;height:100%}
+.strip.dk{background:#111}
+.strip.dk::before{content:"";position:absolute;inset:0;background:repeating-conic-gradient(from 0deg at 100% 50%,#fff 0 .8deg,#111 .8deg 3deg,#fff 3deg 3.5deg,#111 3.5deg 8deg);opacity:.16}
+.st{position:relative;display:grid;gap:12px;justify-items:start}
+.st em{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;font-style:normal;color:#55554F}
+.dk .st em{color:#C9C9C6}
+/* all four: red at rest, flat, one height */
+.bt{display:inline-flex;align-items:center;gap:12px;height:48px;padding:0 26px;border:2px solid var(--red);background:var(--red);color:#fff;font:700 17px var(--cond);letter-spacing:.14em;text-transform:uppercase;transition:background .12s,border-color .12s}
+.bt.h{background:#CF2422;border-color:#CF2422}
+.bt.p{background:#B01F1D;border-color:#B01F1D;transform:translateY(1px)}
+/* 2 red with an ink frame */
+.o2{border-color:#111}.dk .o2{border-color:#fff}
+.o2.h,.o2.p{border-color:#111}.dk .o2.h,.dk .o2.p{border-color:#fff}
+/* 3 red with a plain arrow */
+.o3 b{font:700 20px var(--sans);letter-spacing:0;transition:transform .12s;transform:translateX(0)}
+.o3.h b{transform:translateX(5px)}
+/* 4 quieter type: Plex, sentence case */
+.o4{font:600 16px var(--sans);letter-spacing:.01em;text-transform:none}
+
+</style>
+</helmet>
+<div class="bd"><div class="card"><div class="ch"><b>1 · Flat red</b><span>Red bar, condensed caps. Hover and press just darken.</span></div><div class="strip dk"><div class="st"><a class="bt o1 " href="#">Ask to check out</a><em>Rest</em></div><div class="st"><a class="bt o1 h" href="#">Ask to check out</a><em>Hover</em></div><div class="st"><a class="bt o1 p" href="#">Ask to check out</a><em>Pressed</em></div></div><div class="strip" style="border-left:3px solid #111"><div class="st"><a class="bt o1 " href="#">Ask to check out</a><em>Rest, on paper</em></div></div></div><div class="card"><div class="ch"><b>2 · Red, ink frame</b><span>The same red inside a thin ink outline, so it holds on any background.</span></div><div class="strip dk"><div class="st"><a class="bt o2 " href="#">Ask to check out</a><em>Rest</em></div><div class="st"><a class="bt o2 h" href="#">Ask to check out</a><em>Hover</em></div><div class="st"><a class="bt o2 p" href="#">Ask to check out</a><em>Pressed</em></div></div><div class="strip" style="border-left:3px solid #111"><div class="st"><a class="bt o2 " href="#">Ask to check out</a><em>Rest, on paper</em></div></div></div><div class="card"><div class="ch"><b>3 · Red, arrow</b><span>Red with a plain arrow that moves on hover.</span></div><div class="strip dk"><div class="st"><a class="bt o3 " href="#">Ask to check out<b>→</b></a><em>Rest</em></div><div class="st"><a class="bt o3 h" href="#">Ask to check out<b>→</b></a><em>Hover</em></div><div class="st"><a class="bt o3 p" href="#">Ask to check out<b>→</b></a><em>Pressed</em></div></div><div class="strip" style="border-left:3px solid #111"><div class="st"><a class="bt o3 " href="#">Ask to check out<b>→</b></a><em>Rest, on paper</em></div></div></div><div class="card"><div class="ch"><b>4 · Red, quiet type</b><span>Red with Plex sentence case, for a calmer voice.</span></div><div class="strip dk"><div class="st"><a class="bt o4 " href="#">Ask to check out</a><em>Rest</em></div><div class="st"><a class="bt o4 h" href="#">Ask to check out</a><em>Hover</em></div><div class="st"><a class="bt o4 p" href="#">Ask to check out</a><em>Pressed</em></div></div><div class="strip" style="border-left:3px solid #111"><div class="st"><a class="bt o4 " href="#">Ask to check out</a><em>Rest, on paper</em></div></div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
