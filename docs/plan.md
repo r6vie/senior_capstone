@@ -31,14 +31,14 @@ before starting an item.
 
 ## Owners
 
-| Person | Owns | Folders |
-|---|---|---|
-| **Josef** | The book and the interview: the AI heart, prompts, evals, sample books | `api/trove/books`, `api/trove/interview`, `api/trove/ai/prompts`, `api/evals`, `web/src/features/{book,interview}` |
-| **Daniel** | Discovery: shelves, search, "the Librarian recommends", recommending a book | `api/trove/discovery`, `web/src/features/discovery` |
-| **Ellie** | Checkouts and messaging: requests, copies, queue, reveal, threads, "Did you meet?", past meets | `api/trove/checkouts`, `api/trove/messaging`, `web/src/features/{checkouts,messaging}` |
-| **r6vie** | Accounts, meetings and the app shell: account and contact details, settings, CWRU verification, arranging the meeting, navigation | `api/trove/auth`, `api/trove/meetings`, `web/src/features/{auth,account,meetings}`, `web/src/app`, `web/src/ui` |
+| Person | GitHub | Owns | Folders |
+|---|---|---|---|
+| **Josef** | @BrozJosef | The book and the interview: the AI heart, prompts, evals, sample books | `api/trove/books`, `api/trove/interview`, `api/trove/ai/prompts`, `api/evals`, `web/src/features/{book,interview}` |
+| **Alvisa** | @alvisakrasniqi | Discovery: shelves, search, "the Librarian recommends", recommending a book | `api/trove/discovery`, `web/src/features/discovery` |
+| **Ellie** | @ecolvin22 | Checkouts and messaging: requests, copies, queue, reveal, threads, "Did you meet?", past meets | `api/trove/checkouts`, `api/trove/messaging`, `web/src/features/{checkouts,messaging}` |
+| **Daniel** | @r6vie | Accounts, meetings and the app shell: account and contact details, settings, CWRU verification, arranging the meeting, navigation | `api/trove/auth`, `api/trove/meetings`, `web/src/features/{auth,account,meetings}`, `web/src/app`, `web/src/ui` |
 
-`api/trove/notifications` is shared: each owner adds the templates and `notify_*` functions for
+Review requests go to the folder's owner automatically (`.github/CODEOWNERS`). `api/trove/notifications` is shared: each owner adds the templates and `notify_*` functions for
 their own feature's emails.
 
 ## Contracts between features
@@ -52,8 +52,8 @@ local stub with the same signature and swap it out when the real one merges.
 | `books.get_public_book(db, book_id)` | Josef | The book as readers see it: title, author's first name, cover, chapters, copies. **Never** the author's last name or contacts. `None` if not on the shelf | discovery, checkouts |
 | `books.get_book_of(db, user_id)` | Josef | That member's own book, or `None` | checkouts (you need a book to check one out) |
 | `books.list_shelf(db, *, limit, after)` | Josef | Public books on the shelf, newest first | discovery |
-| `auth.first_name_of(db, user_id)` | r6vie | First name | everyone |
-| `auth.contact_details_of(db, user_id)` | r6vie | The contact details the member chose to share on a yes | checkouts (reveal) |
+| `auth.first_name_of(db, user_id)` | Daniel | First name | everyone |
+| `auth.contact_details_of(db, user_id)` | Daniel | The contact details the member chose to share on a yes | checkouts (reveal) |
 | `checkouts.get_checkout_for(db, checkout_id, user_id)` | Ellie | The checkout if this user is its reader or author, else `None` | messaging, meetings |
 | `checkouts.past_meets(db, user_id)` | Ellie | People this member has met: checkout id, other person's first name, book id | discovery (recommend to someone you've met) |
 
@@ -78,7 +78,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
   includes last names.
 - Decide first: the exact chapter fields; what a "cover" is for now (a style id is enough).
 
-**A1 · Account basics and contact details** · r6vie · `todo`
+**A1 · Account basics and contact details** · Daniel · `todo`
 - Ships `auth.first_name_of` and `auth.contact_details_of`.
 - Members choose which contact details are revealed on a yes: email by default, plus optional
   LinkedIn URL and phone.
@@ -87,7 +87,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Done when: contact details are saved, are never visible before a yes, and deleting an account
   removes everything that belongs to it.
 
-**U1 · App shell and navigation** · r6vie · `todo`
+**U1 · App shell and navigation** · Daniel · `todo`
 - A minimal layout with navigation to Shelf, My book, Checkouts, Past meets and Settings, with
   empty pages that the owners fill in.
 - Keep the styling plain. The real visual design comes later (trove.md).
@@ -119,13 +119,13 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Evals: 6–10 varied test personas in `api/evals/`, so prompt changes can be compared.
 - Done when: a real person goes from signing up to a book on the shelf.
 
-**D1 · The shelf and opening a book** · Daniel · `todo`
+**D1 · The shelf and opening a book** · Alvisa · `todo`
 - The home page shows shelves of books (start with "Recently added" until the categories are
   decided), and a book page opens one.
 - Uses only `books.get_public_book` and `books.list_shelf`.
 - Has a "Request this book" button that leads into C1.
 
-**D2 · Smart search** · Daniel · `todo`
+**D2 · Smart search** · Alvisa · `todo`
 - Search by topic, never by name.
 - Decide first: how to search.
   - **Recommended:** at publish time, Claude writes hidden search terms for each book, and a
@@ -141,7 +141,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - A plain thread per checkout. No messages outside a checkout (trove.md §9.8).
 - Email notification for new messages, at most one every 10 minutes per thread.
 
-**M1 · Arranging the meeting** · r6vie · `todo`
+**M1 · Arranging the meeting** · Daniel · `todo`
 - Each person shares a few times that work, and the app suggests overlaps.
 - A field for the video link, a calendar invite (.ics) for both people, and a reminder email on
   the day. In person is optional when both are nearby.
@@ -160,15 +160,15 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Reopen the interview from your book at any time. New material is rewritten into the book
   (not just appended), and the author approves the changes.
 
-**D3 · The Librarian recommends** · Daniel · `todo`
+**D3 · The Librarian recommends** · Alvisa · `todo`
 - One recommended book at a time, each with a one-line reason for why you two should talk.
 - Quietly favors books that are getting fewer requests (trove.md §9.6).
 
-**D4 · Recommend a book to someone** · Daniel · `todo`
+**D4 · Recommend a book to someone** · Alvisa · `todo`
 - Recommend a book to someone in your Past meets, inside the app (uses `checkouts.past_meets`),
   or to anyone else with a share link.
 
-**A2 · CWRU verification and sign-in** · r6vie · `todo`
+**A2 · CWRU verification and sign-in** · Daniel · `todo`
 - Decide first:
   - how students and alumni are verified (trove.md §9.2)
   - whether to keep password sign-in or switch to one-time email codes

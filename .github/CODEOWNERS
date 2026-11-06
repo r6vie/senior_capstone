@@ -1,0 +1,31 @@
+# Each folder's owner is asked to review PRs that touch it. Keep in sync with docs/plan.md "Owners".
+# Shared files (no single owner) fall back to the default below.
+
+*                                   @BrozJosef @r6vie @ecolvin22 @alvisakrasniqi
+
+# Josef: the book and the interview
+/api/trove/books/                   @BrozJosef
+/api/trove/interview/               @BrozJosef
+/api/trove/ai/prompts/              @BrozJosef
+/api/evals/                         @BrozJosef
+/web/src/features/book/             @BrozJosef
+/web/src/features/interview/        @BrozJosef
+
+# Alvisa: discovery
+/api/trove/discovery/               @alvisakrasniqi
+/web/src/features/discovery/        @alvisakrasniqi
+
+# Ellie: checkouts and messaging
+/api/trove/checkouts/               @ecolvin22
+/api/trove/messaging/               @ecolvin22
+/web/src/features/checkouts/        @ecolvin22
+/web/src/features/messaging/        @ecolvin22
+
+# Daniel: accounts, meetings and the app shell
+/api/trove/auth/                    @r6vie
+/api/trove/meetings/                @r6vie
+/web/src/features/auth/             @r6vie
+/web/src/features/account/          @r6vie
+/web/src/features/meetings/         @r6vie
+/web/src/app/                       @r6vie
+/web/src/ui/                        @r6vie
