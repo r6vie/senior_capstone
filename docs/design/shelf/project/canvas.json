@@ -1,0 +1,18 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-05T16:00:00Z" },
+  "title": "Trove Shelf",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 2320, "title": "Shelf · desktop", "expand": "fill", "is_interactive": true },
+    "PhoneShelf.dc.html": { "x": 1520, "y": 0, "w": 390, "h": 844, "title": "Shelf · phone" },
+    "PhoneBook.dc.html": { "x": 1990, "y": 0, "w": 390, "h": 844, "title": "Open book · phone" },
+    "BookObject.dc.html": { "x": 1520, "y": 964, "w": 1200, "h": 1080, "title": "The book object · states and 3D notes" }
+  },
+  "order": ["Main.dc.html", "PhoneShelf.dc.html", "PhoneBook.dc.html", "BookObject.dc.html"],
+  "notes": {
+    "head": { "x": 0, "y": -300, "text": "Trove · the shelf", "kind": "title1", "maxW": 2380 }
+  },
+  "designSystems": []
+}
