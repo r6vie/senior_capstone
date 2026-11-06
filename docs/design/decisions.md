@@ -2,6 +2,20 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-06: cover direction G, watercolor landscapes (from Josef's reference)
+
+- **Josef:** use the reference (red watercolor sun, blue misty ridges, reflection) as the art style for the book
+  covers, three covers, and not only Japanese.
+- **Board `CoverLandscape`** on the Covers page: `Alpine lake` (vermilion sun, blue ridges, pines), `Headland`
+  (amber sun, teal sea, lighthouse, sailboat), `Mesa` (gold moon, terracotta mesas, rain pool, saguaros). No torii,
+  bamboo or characters. Same system for all: title on white at the top, a large sun or moon, three layered ridges
+  that thin into mist, a rippled reflection, a gradient mask to white under the title, paper grain.
+- **Personalization:** the member picks the place and palette, never the topic. The scene set can grow.
+- **Cost note:** SVG filters again; render each cover once to a 244x356 WebP.
+- **Cover art is not UI:** the lake sun is a vermilion (`#E4442E`) close to, but not, the UI red.
+
+Pending Josef's feedback.
+
 ## 2026-11-06: cover direction F, cherry blossom watercolor
 
 - **Josef:** a cherry blossom watercolor cover: paint over the white cover that fades upward with no cut between the

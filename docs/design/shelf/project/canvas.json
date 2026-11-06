@@ -364,6 +364,15 @@
       "title": "F \u00b7 Cherry blossom watercolor",
       "page": "covers",
       "expand": "fill"
+    },
+    "CoverLandscape.dc.html": {
+      "x": 0,
+      "y": 4420,
+      "w": 1440,
+      "h": 1500,
+      "title": "G \u00b7 Watercolor landscapes",
+      "page": "covers",
+      "expand": "fill"
     }
   },
   "order": [
@@ -407,7 +416,8 @@
     "SysComponents2.dc.html",
     "SysRules.dc.html",
     "CoverDirections.dc.html",
-    "CoverWatercolor.dc.html"
+    "CoverWatercolor.dc.html",
+    "CoverLandscape.dc.html"
   ],
   "notes": {
     "head": {
