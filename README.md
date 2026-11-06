@@ -1,80 +1,49 @@
-# FoundersCircle
+# Trove
 
-A platform for discovering and connecting with people in the CWRU network.
+**Everyone has a book in them.** Trove is a networking web app for CWRU students and alumni. An AI
+interview finds the book you could write, and other members check it out, which means a short
+conversation with you.
 
-## Tech stack
+- Product plan: [docs/trove.md](docs/trove.md)
+- Work plan and assignments: [docs/plan.md](docs/plan.md)
+- How the code is organized: [docs/architecture.md](docs/architecture.md)
+- How to contribute (people and AI agents): [CONTRIBUTING.md](CONTRIBUTING.md)
 
-- Python, FastAPI, and Pydantic backend
-- MongoDB Atlas with PyMongo
-- React, TypeScript, and Vite frontend
-
-## Features
-
-- Sign up and log in with LinkedIn or email and password
-- Authenticated profile creation, viewing, editing, and deletion
-- Profile ownership controls and expertise search
-- Explainable need-based alumni matching and automatic recommendations
-- Interactive alumni briefs, profile-grounded Q&A, and meeting practice coaching
-- Connection requests, messaging, and optional email notifications
-- Responsive landing page, member directory, and profile editor
-- Onboarding: a short basics form, then an AI interview (Claude) that saves what it
-  learns as open-ended facts, each with its own visibility (everyone, matches only, or
-  only me). Members review, edit, and delete facts as they go.
+The FoundersCircle code this replaced is preserved at the git tag `founderscircle-v1`.
 
 ## Setup
 
-MongoDB Atlas is already established. New contributors need authorized access to
-the existing database; there is no need to create another cluster.
+You need [uv](https://docs.astral.sh/uv/), Node 22 and Python 3.13.
 
-From the repository root:
-
-```sh
-python3 -m venv .venv
-.venv/bin/python -m pip install -r backend/requirements.txt
-npm --prefix frontend install
+```bash
+uv sync --directory api
+npm --prefix web install
+cp .env.example .env
 ```
 
-Create a local `.env` using `.env.example` as a template, unless one already exists.
-Set `MONGODB_URI` to your private connection string and
-`MONGODB_DATABASE=founderscircle`. Ensure your IP is allowed in Atlas.
-For the AI interview, also set `ANTHROPIC_API_KEY` (optionally `ANTHROPIC_MODEL`;
-the default is `claude-opus-5-5`). Without a key, everything else still works and
-the interview reports that it isn't set up.
-Credentials belong only in `.env`, which is ignored by Git.
+In `.env`, set:
 
-### LinkedIn sign-in
-
-1. Create an app at [linkedin.com/developers](https://www.linkedin.com/developers/apps)
-   and, under **Products**, request **Sign In with LinkedIn using OpenID Connect**.
-2. Under **Auth**, add `http://127.0.0.1:5173/api/auth/linkedin/callback` as an
-   authorized redirect URL (it must match exactly, including `127.0.0.1`).
-3. Copy the Client ID and Client Secret into `LINKEDIN_CLIENT_ID` and
-   `LINKEDIN_CLIENT_SECRET` in `.env`, then restart the backend.
-
-We request the `openid profile email` scopes, which share a member's name, email,
-and photo. Work history and skills need LinkedIn partner-program access.
+- `MONGODB_URI`: ask a teammate for access to the shared Atlas cluster, and make sure your IP is
+  allowed in Atlas.
+- `MONGODB_DATABASE`: `trove_dev_<yourname>`, so your data never collides with a teammate's.
+- `ANTHROPIC_API_KEY`: only needed for the AI features.
 
 ## Run
 
-```sh
+```bash
 python3 scripts/dev.py
 ```
 
-Open [the app](http://127.0.0.1:5173) or the [API docs](http://127.0.0.1:8000/docs).
-The backend stays online and reconnects automatically after temporary Atlas outages.
+The app opens on http://127.0.0.1:5173, with the API docs on http://127.0.0.1:8000/docs.
 
-## Tests
+## Check
 
-```sh
-.venv/bin/python -m pip install -r backend/requirements-dev.txt
-PYTHONPATH=backend .venv/bin/python -m unittest discover -s backend/tests -v
-npm --prefix frontend run build
+```bash
+python3 scripts/check.py
 ```
 
-Tests run without connecting to Atlas or calling Claude.
+This runs the same lint, tests, type-check and build as CI.
 
-## Project status
+## License
 
-The core account, LinkedIn sign-up, profile, directory, explainable matching,
-AI onboarding, connection, messaging, and notification flows are implemented.
-Semantic matching, outreach generation, password reset, and CWRU SSO are future work.
+MIT. See [LICENSE](LICENSE).

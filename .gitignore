@@ -1,10 +1,22 @@
-.venv/
-__pycache__/
-*.py[cod]
+# Secrets: only .env.example is committed.
 .env
 .env.*
 !.env.example
-.context/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+api/evals/out/
+
+# Web
+web/node_modules/
+web/dist/
+
+# Editors and OS
 .DS_Store
-frontend/node_modules/
-frontend/dist/
+.idea/
+.vscode/
+.context/
