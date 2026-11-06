@@ -10,7 +10,20 @@ Canvas: https://claude.ai/artifact/33uQU8UKZ4gtxcv4ZNof1D (private until shared)
 | `PhoneBook.dc.html` | A book opened from the shelf on a phone, as a bottom sheet |
 | `BookObject.dc.html` | The book object: states, cover templates, cloth colors, and notes for the 3D build |
 
-## How the page works for the member
+### Direction 2: light and shadow (second row)
+
+| Artboard | What it shows |
+|---|---|
+| `ShadowShelf.dc.html` | The desktop shelf, fluid and interactive. Books stand in niches cut into the wall; click one and it pulls forward while its chapters open on a sheet laid over the wall. "Suggest another" cycles the Librarian's pick |
+| `ShadowPhone.dc.html` | The same page at 390px |
+| `ShadowSystem.dc.html` | The six depths and what each means, the light, the rules, color and type |
+
+Warm whites only, one light from the upper left, Jost for everything and Libre Caslon italic for
+the Librarian's voice. Book covers are white boards with a title pressed in and one printed
+geometric shape (the only color), assigned by Trove. The Librarian's pick stands in a patch of
+window light. The tells this direction avoids are listed in `docs/design/ai-tells.md`.
+
+## How the page works for the member (direction 1)
 
 1. **Search by topic** first, with a few suggested topics. Never by name.
 2. **The Librarian recommends** one book with the reason; "Not for me" asks for another.

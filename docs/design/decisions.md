@@ -2,6 +2,18 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-05: the shelf page, direction 2 (light and shadow)
+
+- **Direction 1 (cloth and oak) is not the one.** It stays on the canvas for reference.
+- **Avoid the tells of AI-made design.** The list is in `docs/design/ai-tells.md`. It guides
+  choices without banning basic elements.
+- **New direction: shadow is the star.** Very minimal, mostly warm whites; light and shadow
+  carry the structure. Slightly retro, slightly Bauhaus, sparing with color. Functional, not a
+  gimmick: every depth means something (carved, wall, resting, lifted, held, pressed).
+- Built as the second row of the same canvas: `ShadowShelf`, `ShadowPhone`, `ShadowSystem`.
+
+Pending Josef's review.
+
 ## 2026-11-05: the shelf page
 
 - **Rejected:** the three poster-style directions from T1 (flat SVG-like covers, layouts designed to
