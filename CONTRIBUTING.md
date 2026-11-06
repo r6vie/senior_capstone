@@ -15,8 +15,9 @@ Read [CLAUDE.md](CLAUDE.md) first for the stack, commands and code conventions.
    files outside them except under "Shared files" below.
 3. **Never push to `main`.** Every change reaches `main` through a reviewed PR with passing CI.
 4. **Run `python3 scripts/check.py` before every commit.** Don't commit if it fails.
-5. **Don't make product decisions.** If [docs/trove.md](docs/trove.md) doesn't answer a question,
-   stop and ask your human. Don't guess and build it.
+5. **Don't make product decisions.** If [docs/trove.md](docs/trove.md) or the plan item doesn't
+   answer a question, stop and ask your human. Don't guess and build it. This is the most
+   common way agent work goes wrong on this team.
 6. **Never refactor, rename or reformat code you weren't asked to change**, especially another
    person's feature. Note it in your PR description instead.
 7. **Small PRs.** Aim for under about 400 changed lines, not counting generated files. Split anything bigger.
@@ -43,6 +44,13 @@ Read [CLAUDE.md](CLAUDE.md) first for the stack, commands and code conventions.
    uv sync --directory api && npm --prefix web install && python3 scripts/check.py
    ```
    If the baseline fails, stop and tell your human. Don't fix unrelated breakage inside your item.
+6. **List your assumptions before writing code.** Go through the item and write down every
+   product choice it leaves open: the item's "Decide first" questions, plus anything else you
+   would otherwise have to guess (wording, limits, edge cases, what happens on failure).
+   - Give your human each question with your recommendation, and wait for their answers.
+   - Record the answers in `docs/trove.md` as part of your PR.
+
+   Only then start building.
 
 ## Where code goes
 
@@ -148,7 +156,13 @@ reach a question it doesn't answer:
 
 1. Stop. Don't pick an answer and build it.
 2. Ask your human the question, with two or three concrete options and your recommendation.
-3. Once they decide, record the decision in `docs/trove.md` (in your PR) so the next agent doesn't ask again.
+3. **Who decides:**
+   - The owner of the feature decides questions inside that feature (owners are listed in
+     `docs/plan.md`).
+   - If the question affects another person's feature, it waits for the next team sync. Work
+     on something else meanwhile.
+4. Once it's decided, record the decision in `docs/trove.md` (in your PR) so the next agent
+   doesn't ask again.
 
 ## Handing work over
 
