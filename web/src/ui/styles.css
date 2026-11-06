@@ -1,77 +1,674 @@
-/* Design tokens. The real Trove look is still to be designed (docs/trove.md); change tokens here,
-   never hard-code colors or spacing in components. */
+/* Trove design tokens and base components, ported from docs/design/system/tokens.css.
+   The rulebook is docs/design/system.md. Look: "Manga screentone": black ink on white paper,
+   screentone dots for shade, one burst of lines for emphasis, one red for the one thing to do next.
+   Feature code uses only these variables and classes: no raw colors, sizes, fonts or radii.
+   The --color-* and --space-* aliases keep older components working. */
+
 :root {
-  --color-text: #1b2430;
-  --color-muted: #5d6b7c;
-  --color-accent: #0b5c6b;
-  --color-error: #b3261e;
-  --color-border: #d9dee5;
-  --color-background: #fbfaf7;
-  --radius: 8px;
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 1rem;
-  --space-4: 2rem;
-  font-family: system-ui, "Segoe UI", sans-serif;
-  color: var(--color-text);
-  background: var(--color-background);
+  /* Color. Roles, not decoration. Red is the primary action and nothing else. */
+  --paper: #fafaf7;
+  --paper-sunk: #f0f0eb;
+  --white: #ffffff;
+  --ink: #111111;
+  --ink-2: #55554f; /* secondary text: 7.2:1 on paper */
+  --ink-3: #8c8c89; /* borders of disabled things. Never text: 3.2:1 */
+  --rule: #c9c9c6; /* hairlines and disabled fills. Text only on ink: 11.4:1 */
+  --red: #d42a27; /* white text 5.0:1 */
+  --red-hover: #b82220;
+  --red-press: #9e1c1a;
+
+  /* Context. Inside .dark these swap, and every component follows. */
+  --fg: var(--ink);
+  --bg: var(--paper);
+
+  /* Type */
+  --font-display:
+    "Barlow Condensed", "Arial Narrow", sans-serif; /* labels, nav, buttons, shelf names. Caps. */
+  --font-serif: "Newsreader", Georgia, serif; /* book titles, page titles, the Librarian's voice */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif; /* working text */
+
+  /* Space: 4px base. 44px is the page gutter. */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 44px;
+  --s-8: 64px;
+
+  /* Line, radius, size */
+  --line: 2px; /* controls, book outline */
+  --line-heavy: 3px; /* panels, bubbles, dialogs */
+  --radius-pill: 999px; /* search field and avatar only */
+  --radius-bubble: 26px; /* speech bubbles only */
+  --tap: 44px;
+  --control: 48px;
+  --ease: 120ms ease;
+
+  /* Compatibility with the tokens the app already uses */
+  --color-text: var(--ink);
+  --color-muted: var(--ink-2);
+  --color-accent: var(--red);
+  --color-error: var(--ink);
+  --color-border: var(--rule);
+  --color-background: var(--paper);
+  --radius: 0;
+  --space-1: var(--s-1);
+  --space-2: var(--s-2);
+  --space-3: var(--s-4);
+  --space-4: var(--s-6);
+
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.dark {
+  --fg: var(--white);
+  --bg: var(--ink);
+  color: var(--fg);
+  background: var(--bg);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
 }
 
+:focus-visible {
+  outline: var(--line-heavy) solid var(--fg);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* ---------- Layout helpers ---------- */
 .narrow-page {
   max-width: 28rem;
-  margin: var(--space-4) auto;
-  padding: 0 var(--space-3);
+  margin: var(--s-6) auto;
+  padding: 0 var(--s-4);
 }
-
 .stack {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--s-4);
 }
-
-.field {
-  display: grid;
-  gap: var(--space-1);
+.muted {
+  color: var(--ink-2);
 }
-
-.field input {
-  padding: var(--space-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  font: inherit;
-}
-
-.button {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius);
-  border: 1px solid var(--color-accent);
-  font: inherit;
+.error {
+  color: var(--ink);
   font-weight: 600;
+}
+
+/* ---------- Tone: screentone dots. Grounds and shadows, never behind running text. ---------- */
+.tone-fine {
+  background:
+    radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px,
+    var(--paper);
+}
+.tone-mid {
+  background:
+    radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 6px 6px,
+    var(--paper);
+}
+.tone-dense {
+  background:
+    radial-gradient(circle, var(--ink) 1.9px, transparent 2.3px) 0 0 / 6px 6px,
+    var(--paper);
+}
+/* Fade: apply to a tone layer to let it dissolve (add .tone-fade on the element). */
+.tone-fade {
+  -webkit-mask-image: linear-gradient(var(--fade-dir, 180deg), #000, transparent);
+  mask-image: linear-gradient(var(--fade-dir, 180deg), #000, transparent);
+}
+/* Burst: fanned focus lines. Once per screen, behind the Librarian's pick only. Place inside .dark. */
+.burst {
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(
+    from 0deg at var(--fx, 50%) var(--fy, 50%),
+    var(--white) 0 0.8deg,
+    var(--ink) 0.8deg 3deg,
+    var(--white) 3deg 3.5deg,
+    var(--ink) 3.5deg 8deg
+  );
+  -webkit-mask-image: radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), transparent 14%, #000 44%);
+  mask-image: radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), transparent 14%, #000 44%);
+}
+.halo {
+  position: absolute;
+  background: radial-gradient(circle, var(--white) 1.7px, transparent 2.1px) 0 0 / 7px 7px;
+  border-radius: 50%;
+  -webkit-mask-image: radial-gradient(circle, #000 28%, transparent 68%);
+  mask-image: radial-gradient(circle, #000 28%, transparent 68%);
+}
+
+/* ---------- Buttons ---------- */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  min-height: var(--control);
+  padding: 0 26px;
+  white-space: nowrap;
+  border: var(--line) solid var(--fg);
+  border-radius: 0;
+  font: 700 17px / 1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
   cursor: pointer;
+  transition:
+    background var(--ease),
+    color var(--ease),
+    border-color var(--ease);
 }
-
 .button-primary {
-  background: var(--color-accent);
-  color: #fff;
+  background: var(--red);
+  color: var(--white);
 }
-
+.button-primary:is(:hover, .is-hover) {
+  background: var(--red-hover);
+}
+.button-primary:is(:active, .is-press) {
+  background: var(--red-press);
+  transform: translateY(1px);
+}
 .button-secondary {
   background: transparent;
-  color: var(--color-accent);
+  color: var(--fg);
+}
+.button-secondary:is(:hover, .is-hover) {
+  background: var(--fg);
+  color: var(--bg);
+}
+.button-secondary:is(:active, .is-press) {
+  background: var(--fg);
+  color: var(--bg);
+  transform: translateY(1px);
+}
+.button-quiet {
+  min-height: var(--tap);
+  padding: 0 var(--s-3);
+  border-color: transparent;
+  background: transparent;
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+.button-quiet:is(:hover, .is-hover) {
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.button:is(:disabled, [aria-disabled="true"]) {
+  background: var(--rule);
+  border-color: var(--ink-3);
+  color: var(--ink-2);
+  cursor: not-allowed;
+  transform: none;
+}
+.button[aria-busy="true"] {
+  cursor: progress;
+  pointer-events: none;
 }
 
-.button:disabled {
-  opacity: 0.6;
-  cursor: default;
+/* ---------- Fields ---------- */
+.field {
+  display: grid;
+  gap: var(--s-2);
+}
+.field > label {
+  font: 600 14px / 1.3 var(--font-sans);
+}
+.field :is(input, textarea, select) {
+  min-height: var(--control);
+  padding: 0 14px;
+  border: var(--line) solid var(--ink);
+  border-radius: 0;
+  background: var(--white);
+  color: var(--ink);
+  font: 400 16px / 1.4 var(--font-sans);
+}
+.field textarea {
+  min-height: 112px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+.field select {
+  appearance: none;
+  padding-right: 44px;
+  background:
+    var(--white)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10' viewBox='0 0 16 10' fill='none' stroke='%23111' stroke-width='2.4'%3E%3Cpath d='M2 2l6 6 6-6'/%3E%3C/svg%3E")
+    right 16px center / 16px 10px no-repeat;
+}
+.field :is(input, textarea, select)::placeholder {
+  color: var(--ink-2);
+}
+.field :is(input, textarea, select):is(:focus, .is-focus) {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 2px;
+}
+.field .hint {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.field[data-invalid="true"] :is(input, textarea, select) {
+  border-width: var(--line-heavy);
+}
+.field[data-invalid="true"] .hint {
+  display: flex;
+  gap: var(--s-2);
+  color: var(--ink);
+  font-weight: 600;
+}
+.field[data-invalid="true"] .hint::before {
+  content: "!";
+  flex: none;
+  width: 20px;
+  height: 20px;
+  background: var(--ink);
+  color: var(--white);
+  font: 800 14px / 20px var(--font-display);
+  text-align: center;
+}
+.field :is(input, textarea, select):disabled {
+  border-color: var(--ink-3);
+  background: var(--paper-sunk);
+  color: var(--ink-2);
+}
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--tap);
+  font-size: 16px;
+}
+.choice input {
+  appearance: none;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+}
+.choice input[type="radio"] {
+  border-radius: 50%;
+}
+.choice input:checked {
+  background: var(--ink);
+  box-shadow: inset 0 0 0 4px var(--white);
+}
+.choice input[type="checkbox"]:checked {
+  background:
+    var(--ink)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.4'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E")
+    center / 18px no-repeat;
+  box-shadow: none;
 }
 
-.muted {
-  color: var(--color-muted);
+/* ---------- Navigation ---------- */
+.nav {
+  display: flex;
+  gap: 6px;
+  font: 600 17px / 1 var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 12px;
+  border-bottom: var(--line-heavy) solid transparent;
+  color: var(--fg);
+  text-decoration: none;
+}
+.nav a:hover {
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.nav a[aria-current="page"] {
+  border-bottom-color: var(--fg);
+}
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 800 28px / 1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.wordmark::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: var(--ink);
+  transform: rotate(-6deg);
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 40px;
+  width: 230px;
+  padding: 0 14px;
+  border: var(--line) solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: var(--line) solid var(--fg);
+  border-radius: 50%;
+  font: 700 14px / 1 var(--font-display);
 }
 
-.error {
-  color: var(--color-error);
+/* ---------- Labels, voice, lists ---------- */
+.caption {
+  display: inline-block;
+  padding: 5px 12px;
+  background: var(--fg);
+  color: var(--bg);
+  font: 600 14px / 1.2 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.shelf-name {
+  margin: 0;
+  font: 800 30px / 1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.page-title {
+  margin: 0;
+  font: 600 48px / 1.02 var(--font-serif);
+  letter-spacing: -0.015em;
+}
+.voice {
+  font: italic 400 20px / 1.3 var(--font-serif);
+}
+.bubble {
+  position: relative;
+  padding: 14px 20px;
+  border: var(--line-heavy) solid var(--ink);
+  border-radius: var(--radius-bubble);
+  background: var(--white);
+  color: var(--ink);
+  font: italic 400 19px / 1.3 var(--font-serif);
+}
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 44px;
+  bottom: -14px;
+  width: 22px;
+  height: 22px;
+  background: var(--white);
+  border-right: var(--line-heavy) solid var(--ink);
+  border-bottom: var(--line-heavy) solid var(--ink);
+  transform: rotate(45deg) skew(8deg, 8deg);
+}
+.contents {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.contents li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+}
+.contents li::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  border-bottom: 2.5px dotted currentColor;
+  transform: translateY(-4px);
+}
+.contents b {
+  font: 700 18px / 1 var(--font-display);
+  letter-spacing: 0.06em;
+}
+
+/* ---------- Surfaces ---------- */
+.panel {
+  padding: 22px 24px;
+  border: var(--line-heavy) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.panel > h2,
+.panel > h3 {
+  margin: 0 0 var(--s-4);
+  font: 800 24px / 1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.message {
+  display: flex;
+  gap: var(--s-3);
+  padding: 14px 18px;
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.message-error {
+  border-width: var(--line-heavy);
+  background:
+    radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px,
+    var(--white);
+}
+.message-error > :last-child {
+  padding: 2px 8px;
+  margin: -2px 0;
+  background: var(--white);
+  font-weight: 600;
+}
+.empty {
+  padding: var(--s-6);
+  border: var(--line-heavy) dotted var(--ink);
+  color: var(--fg);
+}
+.empty h3 {
+  margin: 0 0 var(--s-2);
+  font: 600 26px / 1.1 var(--font-serif);
+}
+.dialog {
+  position: relative;
+  padding: 26px 28px;
+  border: var(--line-heavy) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.dialog::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 8px -8px -8px 8px;
+  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+}
+.scrim {
+  background:
+    radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 6px 6px,
+    var(--paper);
+}
+.skeleton {
+  background:
+    radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px,
+    var(--paper);
+  border: var(--line) solid var(--ink);
+}
+
+/* ---------- Book, shelf, band ---------- */
+.book {
+  position: relative;
+  flex: none;
+  display: block;
+  width: 122px;
+  height: 178px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform var(--ease);
+}
+.book::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  right: -8px;
+  bottom: -8px;
+  background: radial-gradient(circle, var(--fg) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+}
+.book-cover {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 16px 10px 10px 21px;
+  border: var(--line) solid var(--ink);
+  background: linear-gradient(
+    90deg,
+    #e4e4df 0,
+    #f5f5f1 7px,
+    var(--white) 8px 11px,
+    #f2f2ee 12px,
+    var(--white) 16px
+  );
+  overflow: hidden;
+}
+.book-cover::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--ink);
+}
+.book-title {
+  font: 600 13.5px / 1.18 var(--font-serif);
+}
+.book-author {
+  margin-top: auto;
+  font: 600 9.5px / 1 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.book:is(:hover, .is-hover) {
+  transform: translateY(-4px);
+}
+.book-lg {
+  width: 236px;
+  height: 344px;
+}
+.book-lg::before {
+  left: 14px;
+  top: 14px;
+  right: -14px;
+  bottom: -14px;
+  background-size: 7px 7px;
+  background-image: radial-gradient(circle, var(--fg) 1.8px, transparent 2.3px);
+}
+.book-lg .book-cover {
+  padding: 30px 18px 18px 40px;
+  border-width: var(--line-heavy);
+}
+.book-lg .book-cover::before {
+  left: 24px;
+  width: 2px;
+}
+.book-lg .book-title {
+  font-size: 27px;
+  line-height: 1.12;
+}
+.book-lg .book-author {
+  font-size: 12px;
+}
+.book-sm {
+  width: 92px;
+  height: 136px;
+}
+.book-sm .book-cover {
+  padding: 12px 6px 6px 16px;
+}
+.book-sm .book-cover::before {
+  left: 9px;
+}
+.book-sm .book-title {
+  font-size: 11.5px;
+}
+.book-sm .book-author {
+  font-size: 8.5px;
+}
+
+.shelf-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-bottom: 18px;
+}
+.shelf-head::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  border-top: 2.5px solid var(--fg);
+}
+.shelf-head a {
+  order: 2;
+  border-bottom: 2.5px solid var(--fg);
+  color: var(--fg);
+  font: 700 15px / 1.2 var(--font-display);
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.shelf-books {
+  display: flex;
+  gap: 28px;
+  padding: 0 var(--s-1);
+}
+.ledge {
+  position: relative;
+  height: 14px;
+  background: var(--ink);
+}
+.ledge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 14px;
+  height: 22px;
+  background: radial-gradient(circle, var(--ink) 1.4px, transparent 1.8px) 0 0 / 5px 5px;
+  -webkit-mask-image: linear-gradient(#000, transparent);
+  mask-image: linear-gradient(#000, transparent);
+}
+.band {
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 28px), 0 100%);
 }

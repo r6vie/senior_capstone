@@ -1,0 +1,355 @@
+/* The shelf page: manga B2 (docs/design/system.md, "Handoff: build the shelf page").
+   Components come from ui/styles.css; this file only lays them out. Measurements are the handoff's. */
+
+.shelf-page {
+  --gutter: var(--s-7);
+  --band-height: 384px;
+  --band-slant: 28px;
+  --feature-book-left: calc(100% - 374px);
+  /* The band's rule runs parallel to the slant, 12px below it. */
+  --rule-gap: var(--s-3);
+
+  min-height: 100vh;
+  padding-bottom: calc(var(--s-6) + var(--s-1));
+  overflow-x: hidden;
+}
+
+/* ---------- Top bar ---------- */
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--s-6) + var(--s-1));
+  height: 80px;
+  padding: var(--s-4) calc(var(--s-6) + var(--s-1));
+}
+.top-bar-end {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto;
+}
+.top-bar .avatar {
+  background: var(--white);
+}
+.top-bar .search {
+  position: relative;
+}
+.search svg {
+  flex: none;
+  stroke: var(--ink);
+  stroke-width: 2.4;
+}
+.search input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+.search input::placeholder {
+  color: var(--ink-2);
+}
+.search:focus-within {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* ---------- The Librarian's band ---------- */
+.feature {
+  position: relative;
+}
+.feature .band {
+  height: var(--band-height);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--band-slant)), 0 100%);
+}
+.feature .burst {
+  --fx: 82%;
+  --fy: 46%;
+  opacity: 0.55;
+}
+/* Keeps the burst's lines from crossing the text column. */
+.feature-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--ink) 0, var(--ink) 44%, transparent 70%);
+}
+.feature-rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% - var(--band-slant) + var(--rule-gap));
+  height: calc(var(--band-slant) + var(--line-heavy));
+  background: var(--ink);
+  clip-path: polygon(
+    0 var(--band-slant),
+    100% 0,
+    100% var(--line-heavy),
+    0 calc(var(--band-slant) + var(--line-heavy))
+  );
+}
+.feature-text {
+  position: absolute;
+  left: var(--gutter);
+  top: 34px;
+  max-width: min(760px, calc(var(--feature-book-left) - var(--gutter) - var(--s-6)));
+}
+.feature-text .page-title {
+  max-width: 10.5em;
+  margin-top: 18px;
+}
+.feature-author {
+  margin: var(--s-4) 0 0;
+  color: var(--rule);
+  font: 600 13px / 1.45 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.feature-reason {
+  max-width: 640px;
+  margin: 18px 0 0;
+  padding-left: 18px;
+  border-left: var(--s-1) solid var(--white);
+  font-size: 22px;
+}
+.feature-action {
+  position: absolute;
+  left: var(--gutter);
+  bottom: var(--control);
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.feature-note {
+  color: var(--rule);
+  font: 600 14px / 1 var(--font-display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.feature-book {
+  position: absolute;
+  left: var(--feature-book-left);
+  top: 18px;
+}
+.feature-book .book {
+  transform: rotate(3deg);
+}
+.feature-book .book:hover {
+  transform: rotate(3deg) translateY(-4px);
+}
+/* The halo is centred on the book, so it follows the book at every width. */
+.feature-book .halo {
+  left: 50%;
+  top: 50%;
+  width: 476px;
+  height: 476px;
+  transform: translate(-50%, -50%);
+}
+
+/* ---------- Books are buttons; drop the browser's button look ---------- */
+button.book {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+}
+
+/* ---------- Shelf rows ---------- */
+.shelf-row {
+  margin-top: calc(var(--s-6) + var(--s-1));
+}
+.shelf-row + .shelf-row {
+  margin-top: 40px;
+}
+.shelf-row .shelf-head {
+  padding: 0 var(--gutter);
+}
+.shelf-row .shelf-books {
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: var(--gutter);
+  scrollbar-width: none;
+  /* Room for the hover lift and the dot shadow inside the scroller; the ledge covers the bottom. */
+  margin: calc(-1 * var(--s-2)) 0 calc(-1 * var(--s-2));
+  padding: var(--s-2) calc(var(--gutter) + var(--s-1));
+}
+.shelf-row .book {
+  scroll-snap-align: start;
+}
+.shelf-row .ledge {
+  margin-left: calc(var(--gutter) - var(--s-2));
+}
+
+/* ---------- Tablet ---------- */
+@media (max-width: 1099px) {
+  .shelf-page {
+    --gutter: var(--s-5);
+    --feature-book-left: calc(100% - 300px);
+  }
+  .top-bar {
+    padding-inline: var(--s-5);
+    gap: var(--s-5);
+  }
+  .top-bar .search {
+    width: 180px;
+  }
+  .feature-text .page-title {
+    font-size: 40px;
+  }
+  .feature-reason {
+    font-size: 19px;
+  }
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 719px) {
+  .shelf-page {
+    --gutter: var(--s-4);
+    --band-slant: 20px;
+    padding-bottom: calc(var(--s-8) + var(--s-6));
+  }
+  .top-bar {
+    height: 56px;
+    padding: 0 var(--gutter);
+  }
+  .top-bar .wordmark {
+    font-size: 22px;
+  }
+  .top-bar .search {
+    justify-content: center;
+    width: var(--tap);
+    height: var(--tap);
+    padding: 0;
+  }
+  /* The field collapses to its icon; the input stays in the accessibility tree. */
+  .top-bar .search input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  /* The nav becomes a bottom tab bar. */
+  .top-bar .nav {
+    position: fixed;
+    z-index: 10;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    gap: 0;
+    height: var(--s-8);
+    border-top: var(--line-heavy) solid var(--ink);
+    background: var(--paper);
+    font-size: 14px;
+  }
+  .top-bar .nav a {
+    flex: 1;
+    justify-content: center;
+    padding: 0 var(--s-1);
+    border-top: var(--line-heavy) solid transparent;
+    border-bottom: 0;
+    text-align: center;
+  }
+  .top-bar .nav a[aria-current="page"] {
+    border-top-color: var(--ink);
+  }
+
+  .shelf-row .shelf-name {
+    font-size: 24px;
+  }
+  .shelf-row .shelf-books {
+    gap: 20px;
+    scroll-snap-type: x mandatory;
+  }
+  .shelf-row .book {
+    width: 104px;
+    height: 152px;
+  }
+  .shelf-row .book-cover {
+    padding: 13px 7px 7px 18px;
+  }
+  .shelf-row .book-cover::before {
+    left: 10px;
+  }
+  .shelf-row .book-title {
+    font-size: 12px;
+  }
+  .shelf-row .book-author {
+    font-size: 9px;
+  }
+  .shelf-row .ledge {
+    margin-left: 0;
+  }
+  .feature .band {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+    padding: var(--s-6) var(--gutter) calc(var(--band-slant) + var(--s-6));
+  }
+  .feature .burst {
+    --fx: 30%;
+    --fy: 78%;
+    opacity: 0.45;
+  }
+  /* Stacked, the text sits above the book, so the fade runs top to bottom instead. */
+  .feature-fade {
+    background: linear-gradient(180deg, var(--ink) 0, var(--ink) 52%, transparent 68%);
+  }
+  .feature-text,
+  .feature-action,
+  .feature-book {
+    position: relative;
+    left: auto;
+    top: auto;
+    bottom: auto;
+  }
+  .feature-text {
+    max-width: none;
+  }
+  .feature-text .page-title {
+    font-size: 34px;
+  }
+  .feature-reason {
+    font-size: 18px;
+  }
+  .feature-action {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--s-3);
+    align-self: stretch;
+    margin-top: var(--s-5);
+  }
+  .feature-action .button {
+    width: 100%;
+  }
+  .feature-book {
+    order: 1;
+    margin-top: var(--s-6);
+  }
+  .feature-book .book,
+  .feature-book .book:hover {
+    transform: none;
+  }
+  .feature-book .book-lg {
+    width: 168px;
+    height: 244px;
+  }
+  .feature-book .book-lg .book-cover {
+    padding: 22px 12px 12px 30px;
+  }
+  .feature-book .book-lg .book-cover::before {
+    left: 18px;
+  }
+  .feature-book .book-lg .book-title {
+    font-size: 19px;
+  }
+  .feature-book .halo {
+    width: 340px;
+    height: 340px;
+  }
+}

@@ -2,7 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthPage } from "../features/auth/AuthPage";
 import { AuthProvider } from "../features/auth/AuthProvider";
 import { RequireAuth } from "../features/auth/RequireAuth";
-import { HomePage } from "../features/home/HomePage";
+import { ShelfPage } from "../features/discovery/ShelfPage";
 
 // Every page is registered here. Feature folders own their pages; this file only wires URLs.
 export function App() {
@@ -16,7 +16,7 @@ export function App() {
             path="/"
             element={
               <RequireAuth>
-                <HomePage />
+                <ShelfPage />
               </RequireAuth>
             }
           />
