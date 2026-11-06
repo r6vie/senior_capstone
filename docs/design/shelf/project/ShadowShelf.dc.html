@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trove shelf, light and shadow</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&amp;family=Libre+Caslon+Text:ital@1&amp;display=swap">
+<style>
+body { margin: 0; background: #EEEAE3; }
+a { color: #1F1D1A; } a:hover { color: #5A544C; }
+
+/* Light and shadow. One low sun from the upper left. Warm whites only; shadow carries the structure:
+   carved = a place you put something, raised = something you can pick up, held = what you're handling now. */
+.ls {
+  --wall: #EEEAE3; --wall-deep: #E5DFD5; --paper: #F9F7F3; --paper-lit: #FCFBF8;
+  --ink: #1F1D1A; --ink-2: #5A544C; --line: #D7CFC3;
+  --ochre: #C29A45; --blue: #3F5C8C; --red: #9C3A30;
+  --sun: rgba(255, 245, 218, .78);
+  --sh: 74, 56, 36;
+  --carved: inset 2px 3px 5px rgba(var(--sh), .2), inset 1px 1px 1px rgba(var(--sh), .12), 0 1px 0 rgba(255,255,255,.75);
+  --rest: 1px 1px 0 rgba(var(--sh), .08), 3px 4px 6px rgba(var(--sh), .1), 10px 14px 20px -8px rgba(var(--sh), .16);
+  --lift: 1px 1px 0 rgba(var(--sh), .06), 8px 11px 16px rgba(var(--sh), .12), 22px 30px 42px -14px rgba(var(--sh), .22);
+  --held: 2px 2px 0 rgba(var(--sh), .05), 14px 20px 28px rgba(var(--sh), .12), 40px 56px 72px -24px rgba(var(--sh), .26);
+  --pressed: inset 2px 2px 4px rgba(0,0,0,.35);
+  --sans: "Jost", "Futura", "Century Gothic", sans-serif;
+  --voice: "Libre Caslon Text", Georgia, serif;
+  font-family: var(--sans); color: var(--ink); background: var(--wall); font-size: 16px; line-height: 1.5; min-height: 100vh;
+}
+.ls * { box-sizing: border-box; }
+:where(.ls) :is(h1, h2, h3, p, ol, ul) { margin: 0; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+.ls button:focus-visible, .ls a:focus-visible, .ls input:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+/* Header. The nav is a carved track; the current page is the tile sitting in it. */
+.top { display: flex; align-items: center; gap: 40px; padding: 22px 0; }
+.brand { display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 600; letter-spacing: .01em; color: var(--ink); text-decoration: none; }
+.logo { position: relative; width: 26px; height: 26px; border: 2px solid var(--ink); }
+.logo::after { content: ""; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--ochre); right: -7px; bottom: -7px; }
+.track { display: flex; gap: 4px; padding: 4px; border-radius: 10px; background: var(--wall-deep); box-shadow: var(--carved); }
+.track a { display: grid; place-items: center; height: 40px; padding: 0 18px; border-radius: 7px; font-size: 15px; font-weight: 500; color: var(--ink-2); text-decoration: none; }
+.track a[aria-current="page"] { color: var(--ink); background: var(--paper); box-shadow: var(--rest); }
+.me { margin-left: auto; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--paper); box-shadow: var(--rest); font: inherit; font-weight: 600; color: var(--ink); cursor: pointer; }
+
+/* Search, left; the Librarian's pick in the window light, right. */
+.hero { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 64px; padding: 64px 0 80px; align-items: end; }
+.ask { display: block; font-weight: 500; font-size: 50px; line-height: 1.04; letter-spacing: -0.012em; margin-bottom: 30px; max-width: 13ch; }
+.field { display: flex; align-items: center; gap: 12px; height: 66px; padding: 0 9px 0 22px; border-radius: 12px; background: var(--wall-deep); box-shadow: var(--carved); color: var(--ink-2); }
+.field input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font: inherit; font-size: 18px; color: var(--ink); outline: none; }
+.field input::placeholder { color: #6E675D; }
+.field:focus-within { box-shadow: var(--carved), 0 0 0 2px var(--ink); }
+.btn-ink { height: 48px; padding: 0 24px; border: 0; border-radius: 9px; background: var(--ink); color: var(--paper); font: inherit; font-weight: 500; font-size: 16px; cursor: pointer; box-shadow: var(--rest); transition: transform .12s ease-out, box-shadow .12s ease-out; }
+.btn-ink:hover { box-shadow: var(--lift); transform: translate(-1px, -1px); }
+.btn-ink:active { box-shadow: var(--pressed); transform: translate(1px, 1px); }
+.try { margin-top: 18px; font-size: 15px; color: var(--ink-2); }
+.try a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.try a:hover { text-decoration-color: var(--ink); }
+
+.window { position: relative; padding: 36px 36px 0; min-height: 380px; display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 28px; align-items: end; }
+/* The light: a four-pane window falling across the wall. The mullions are the shadow. */
+.window::before {
+  content: ""; position: absolute; inset: 0 -40px 30px 10px; pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 5px), rgba(var(--sh), .07) calc(50% - 5px) calc(50% + 5px), transparent calc(50% + 5px)),
+    linear-gradient(180deg, transparent calc(46% - 5px), rgba(var(--sh), .07) calc(46% - 5px) calc(46% + 5px), transparent calc(46% + 5px)),
+    var(--sun);
+  clip-path: polygon(14% 0, 100% 0, 86% 100%, 0 100%);
+  filter: blur(3px);
+}
+.sill { position: absolute; left: 0; right: 0; bottom: 0; height: 14px; border-radius: 2px; background: var(--paper); box-shadow: var(--rest); }
+.window .bk { margin-bottom: 14px; }
+/* In direct light a book's shadow is sharper and longer. */
+.window .bk { box-shadow: 1px 1px 0 rgba(var(--sh), .1), 22px 6px 6px -3px rgba(var(--sh), .22), 40px 10px 22px -6px rgba(var(--sh), .14); }
+.pick { position: relative; padding-bottom: 46px; }
+.pick-who { font-size: 15px; font-weight: 500; color: var(--ink-2); }
+.pick h2 { font-weight: 500; font-size: 27px; line-height: 1.12; margin: 8px 0 2px; text-wrap: balance; }
+.pick .by { font-size: 15px; color: var(--ink-2); }
+.pick .why { font-family: var(--voice); font-style: italic; font-size: 16.5px; line-height: 1.5; margin: 14px 0 20px; }
+.pick-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.btn-paper { height: 46px; padding: 0 20px; border: 0; border-radius: 9px; background: var(--paper); color: var(--ink); font: inherit; font-weight: 500; font-size: 15px; cursor: pointer; box-shadow: var(--rest); transition: transform .12s ease-out, box-shadow .12s ease-out; }
+.btn-paper:hover { box-shadow: var(--lift); transform: translate(-1px, -1px); }
+.btn-paper:active { box-shadow: var(--carved); transform: translate(1px, 1px); }
+.btn-text { height: 44px; padding: 0 4px; border: 0; background: none; font: inherit; font-size: 15px; font-weight: 500; color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; text-decoration-thickness: 2px; cursor: pointer; }
+.btn-text:hover { color: var(--ink); text-decoration-color: var(--ink); }
+
+/* Shelves: niches cut into the wall. The top lip and left wall throw shade into the niche. */
+.shelves { display: grid; gap: 72px; padding-bottom: 120px; }
+.shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.shelf-head h2 { font-weight: 500; font-size: 26px; line-height: 1.15; }
+.shelf-head h2 small { font-size: 14px; font-weight: 400; color: var(--ink-2); margin-left: 10px; }
+.shelf-head a { font-size: 15px; font-weight: 500; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.niche {
+  position: relative; display: flex; align-items: flex-end; gap: 36px; padding: 34px 96px 22px 40px; border-radius: 4px;
+  background: linear-gradient(180deg, var(--wall-deep) 0, var(--wall-deep) 80%, #EAE5DC 100%);
+  box-shadow: inset 0 18px 22px -14px rgba(var(--sh), .34), inset 16px 0 20px -16px rgba(var(--sh), .24), inset 0 -2px 0 rgba(255,255,255,.5), 0 1px 0 rgba(255,255,255,.85);
+}
+.next { position: absolute; right: 24px; top: calc(50% - 22px); display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--paper); color: var(--ink); box-shadow: var(--rest); cursor: pointer; }
+.next:hover { box-shadow: var(--lift); }
+.next:active { box-shadow: var(--carved); }
+
+/* The closed book: a warm-white board, title pressed into it, one printed shape assigned by Trove. */
+.bk {
+  position: relative; flex: none; display: flex; flex-direction: column; width: 138px; height: 200px; padding: 22px 16px 16px 22px;
+  border: 0; border-radius: 2px 4px 4px 2px; font: inherit; text-align: left; color: var(--ink); cursor: pointer; overflow: hidden;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(90deg, transparent 7px, rgba(var(--sh), .13) 7px 8px, rgba(255,255,255,.9) 8px 9px, transparent 9px),
+    linear-gradient(125deg, rgba(255,255,255,.7), rgba(255,255,255,0) 45%, rgba(var(--sh), .045));
+  box-shadow: 1px 1px 0 rgba(var(--sh), .1), 8px 4px 10px -3px rgba(var(--sh), .2), 18px 8px 22px -8px rgba(var(--sh), .12);
+  transition: transform .2s cubic-bezier(.2,.7,.2,1), box-shadow .2s cubic-bezier(.2,.7,.2,1);
+}
+.bk:hover { transform: translate(-2px, -5px); box-shadow: 1px 1px 0 rgba(var(--sh), .08), 12px 10px 14px -4px rgba(var(--sh), .18), 26px 18px 30px -10px rgba(var(--sh), .14); }
+.bk.is-sel { transform: translate(-4px, -12px); box-shadow: 2px 2px 0 rgba(var(--sh), .06), 18px 18px 22px -6px rgba(var(--sh), .2), 36px 32px 44px -14px rgba(var(--sh), .18); }
+.bk-title { position: relative; z-index: 1; font-weight: 500; font-size: 15.5px; line-height: 1.2; text-wrap: balance; text-shadow: 0 1px 0 rgba(255,255,255,.95); }
+.bk-name { position: relative; z-index: 1; margin-top: auto; font-size: 13px; color: var(--ink-2); }
+.sel-mark { position: absolute; left: calc(50% - 5px); bottom: -14px; width: 10px; height: 10px; background: var(--ink); }
+.slot { position: relative; flex: none; }
+/* Printed shapes */
+.mk { position: absolute; z-index: 0; }
+.m-circle { width: 34px; height: 34px; border-radius: 50%; right: 14px; bottom: 34px; }
+.m-half { width: 64px; height: 32px; border-radius: 64px 64px 0 0; right: -10px; bottom: 0; }
+.m-square { width: 22px; height: 22px; right: 16px; bottom: 38px; }
+.m-bar { width: 6px; height: 64px; bottom: 0; right: 22px; }
+.m-tri { width: 38px; height: 33px; right: 14px; bottom: 34px; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.k-ochre { background: var(--ochre); } .k-blue { background: var(--blue); } .k-red { background: var(--red); } .k-ink { background: var(--ink); }
+.bk.lg { width: 172px; height: 250px; cursor: default; padding: 28px 20px 20px 26px; }
+.bk.lg:hover { transform: none; }
+.bk.lg .bk-title { font-size: 19px; }
+.bk.md { width: 128px; height: 186px; }
+
+/* The open book, laid on the wall in front of its niche */
+.sheet { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 56px; margin-top: 30px; padding: 36px 40px 40px; border-radius: 6px; background: var(--paper-lit); box-shadow: var(--held); }
+.close { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--ink-2); cursor: pointer; }
+.close:hover { color: var(--ink); box-shadow: var(--carved); }
+.sheet-who { font-size: 15px; font-weight: 500; color: var(--ink-2); }
+.sheet h3 { font-weight: 500; font-size: 34px; line-height: 1.08; letter-spacing: -0.01em; margin: 6px 0 4px; text-wrap: balance; }
+.sheet .by { font-size: 16px; color: var(--ink-2); margin-bottom: 26px; }
+.chapters { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 40px; }
+.chapters li { display: grid; grid-template-columns: 34px minmax(0, 1fr); }
+.chapters .n { display: grid; place-items: center; width: 24px; height: 24px; margin-top: 2px; border-radius: 50%; box-shadow: var(--carved); font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.chapters strong { display: block; font-weight: 500; font-size: 18px; line-height: 1.3; }
+.chapters span { font-size: 14.5px; color: var(--ink-2); }
+.act { display: flex; flex-direction: column; gap: 14px; align-self: start; padding-top: 6px; }
+.act .btn-ink { height: 54px; }
+.facts { list-style: none; padding: 14px 0 0; display: grid; gap: 12px; font-size: 14px; color: var(--ink-2); }
+.facts li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 12px; }
+.facts i { display: block; width: 8px; height: 8px; margin-top: 7px; background: var(--ink-2); }
+.facts li:nth-child(2) i { border-radius: 50%; }
+.facts li:nth-child(3) i { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+
+@media (prefers-reduced-motion: reduce) { .bk, .btn-ink, .btn-paper { transition: none; } }
+@media (max-width: 960px) {
+  .top { flex-wrap: wrap; gap: 14px 20px; }
+  .track { order: 3; width: 100%; overflow-x: auto; }
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 40px; padding: 36px 0 48px; }
+  .ask { font-size: 36px; }
+  .niche { overflow-x: auto; padding: 30px 24px 22px; gap: 24px; }
+  .next { display: none; }
+  .sheet { grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 28px 22px; }
+  .chapters { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+</helmet>
+<div class="ls">
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="#"><span class="logo" aria-hidden="true"></span>Trove</a>
+      <nav class="track" aria-label="Main">
+        <a href="#" aria-current="page">Shelf</a>
+        <a href="#">My book</a>
+        <a href="#">Checkouts</a>
+        <a href="#">Past meets</a>
+      </nav>
+      <button class="me" type="button" aria-label="Your account, Sam">S</button>
+    </header>
+
+    <section class="hero">
+      <div>
+        <label class="ask" for="ls-topic">What do you want to talk about?</label>
+        <form class="field" role="search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <input id="ls-topic" type="search" placeholder="A topic, a question, something you're stuck on">
+          <button class="btn-ink" type="button">Search</button>
+        </form>
+        <p class="try">Try <a href="#">leaving a PhD</a>, <a href="#">a first salary</a>, <a href="#">moving home to Cleveland</a> or <a href="#">changing majors</a>.</p>
+      </div>
+
+      <aside class="window" aria-label="The Librarian recommends">
+        <button class="bk md" type="button" onClick="{{pick.open}}" aria-label="{{pick.aria}}">
+          <span class="mk {{pick.mk}}" aria-hidden="true"></span>
+          <span class="bk-title">{{pick.title}}</span><span class="bk-name">{{pick.name}}</span>
+        </button>
+        <div class="pick">
+          <p class="pick-who">The Librarian recommends</p>
+          <h2>{{pick.title}}</h2>
+          <p class="by">by {{pick.name}}</p>
+          <p class="why">{{pick.why}}</p>
+          <div class="pick-actions">
+            <button class="btn-paper" type="button" onClick="{{pick.open}}">Open the book</button>
+            <button class="btn-text" type="button" onClick="{{nextPick}}">Suggest another</button>
+          </div>
+        </div>
+        <div class="sill" aria-hidden="true"></div>
+      </aside>
+    </section>
+
+    <sc-if value="{{pickOpen}}" hint-placeholder-val="{{ false }}">
+      <section class="sheet" aria-label="Book preview" style="margin: -40px 0 72px">
+        <button class="close" type="button" onClick="{{close}}" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+        <div>
+          <p class="sheet-who">What you could talk about</p>
+          <h3>{{sel.title}}</h3>
+          <p class="by">by {{sel.name}}</p>
+          <ol class="chapters">
+            <sc-for list="{{sel.chapters}}" as="ch" hint-placeholder-count="4">
+              <li><span class="n">{{ch.n}}</span><div><strong>{{ch.title}}</strong><span>{{ch.line}}</span></div></li>
+            </sc-for>
+          </ol>
+        </div>
+        <div class="act">
+          <button class="btn-ink" type="button">Ask to check out</button>
+          <button class="btn-paper" type="button">Read the whole book</button>
+          <ul class="facts">
+            <li><i></i><span>A video call, about 30 minutes. In person if you're both nearby.</span></li>
+            <li><i></i><span>You'll add a short note about what you'd like to ask.</span></li>
+            <li><i></i><span>Last names and contact details are shared only if you both say yes.</span></li>
+          </ul>
+        </div>
+      </section>
+    </sc-if>
+
+    <main class="shelves">
+      <sc-for list="{{shelves}}" as="shelf" hint-placeholder-count="3">
+        <section aria-label="{{shelf.name}}">
+          <div class="shelf-head">
+            <h2>{{shelf.name}}<small>placeholder shelf</small></h2>
+            <a href="#">See the whole shelf</a>
+          </div>
+          <div class="niche">
+            <sc-for list="{{shelf.books}}" as="item" hint-placeholder-count="6">
+              <div class="slot">
+                <button class="bk {{item.cls}}" type="button" onClick="{{item.pick}}" aria-label="{{item.aria}}" aria-pressed="{{item.pressed}}">
+                  <span class="mk {{item.mk}}" aria-hidden="true"></span>
+                  <span class="bk-title">{{item.title}}</span><span class="bk-name">{{item.name}}</span>
+                </button>
+                <sc-if value="{{item.isSel}}" hint-placeholder-val="{{ false }}"><span class="sel-mark" aria-hidden="true"></span></sc-if>
+              </div>
+            </sc-for>
+            <button class="next" type="button" aria-label="More books on this shelf"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+          </div>
+
+          <sc-if value="{{shelf.open}}" hint-placeholder-val="{{ false }}">
+            <div class="sheet" role="region" aria-label="Book preview">
+              <button class="close" type="button" onClick="{{close}}" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+              <div>
+                <p class="sheet-who">What you could talk about</p>
+                <h3>{{sel.title}}</h3>
+                <p class="by">by {{sel.name}}</p>
+                <ol class="chapters">
+                  <sc-for list="{{sel.chapters}}" as="ch" hint-placeholder-count="4">
+                    <li><span class="n">{{ch.n}}</span><div><strong>{{ch.title}}</strong><span>{{ch.line}}</span></div></li>
+                  </sc-for>
+                </ol>
+              </div>
+              <div class="act">
+                <button class="btn-ink" type="button">Ask to check out</button>
+                <button class="btn-paper" type="button">Read the whole book</button>
+                <ul class="facts">
+                  <li><i></i><span>A video call, about 30 minutes. In person if you're both nearby.</span></li>
+                  <li><i></i><span>You'll add a short note about what you'd like to ask.</span></li>
+                  <li><i></i><span>Last names and contact details are shared only if you both say yes.</span></li>
+                </ul>
+              </div>
+            </div>
+          </sc-if>
+        </section>
+      </sc-for>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // Sample books: title, first name, printed shape, shape color. Shapes are assigned by Trove.
+    const B = {
+      dana: ['How to Leave a Job Without Burning the Bridge', 'Dana', 'circle', 'ochre'],
+      marcus: ['Switching Off Pre-Med Before Telling Your Parents', 'Marcus', 'bar', 'red'],
+      luis: ['Teaching Yourself to Code at Thirty-Four', 'Luis', 'half', 'blue'],
+      kiera: ['From Orchestra Pit to Product Manager', 'Kiera', 'tri', 'ink'],
+      jamal: ['Living With an Engineering Degree You Don’t Use', 'Jamal', 'square', 'ochre'],
+      sam: ['Moving Home to Cleveland on Purpose', 'Sam', 'circle', 'blue'],
+      priya: ['What Nineteen-Year-Olds Actually Think of Your App', 'Priya', 'half', 'red'],
+      grace: ['How a Hospital Actually Decides What to Buy', 'Grace', 'square', 'blue'],
+      noor: ['Getting a Grant Reviewer to Keep Reading', 'Noor', 'circle', 'ink'],
+      ben: ['Negotiating a First Offer With No Leverage', 'Ben', 'tri', 'ochre'],
+      owen: ['What a Patent Examiner Looks For', 'Owen', 'bar', 'blue'],
+      lena: ['Inside a Museum’s Buying Meeting', 'Lena', 'half', 'ochre'],
+      aisha: ['Running a Student Org When Nobody Shows Up', 'Aisha', 'tri', 'blue'],
+      elena: ['The First Ninety Days of Running a Lab', 'Elena', 'circle', 'red'],
+      ray: ['What Cleveland Taught Me About Starting Small', 'Ray', 'half', 'ink'],
+      rosa: ['Being the First in Your Family to Do Any of This', 'Rosa', 'square', 'red'],
+      theo: ['Selling to Your First Ten Customers by Hand', 'Theo', 'bar', 'ochre'],
+      mei: ['Starting Research Before You Have an Advisor', 'Mei', 'tri', 'red'],
+      hana: ['Why I Turned Down Grad School Twice', 'Hana', 'half', 'blue'],
+    };
+    const CH = {
+      dana: [['Deciding it’s time', 'How I knew, and the month I waited too long.'], ['Telling your manager first', 'The script I used and what I’d change.'], ['The last two weeks', 'Handing off so nobody has to call you.'], ['Staying in touch after', 'The coffee that got me rehired as a contractor.']],
+      marcus: [['The semester it stopped fitting', 'Grades were fine. Something else wasn’t.'], ['What I switched to, and why', 'Picking a direction without a plan B.'], ['The conversation at Thanksgiving', 'What I said, and what I wish I’d said.'], ['Keeping the science you liked', 'It doesn’t have to go away.']],
+      luis: [['Starting at thirty-four', 'Nights, a toddler, and a used laptop.'], ['The free courses worth finishing', 'And the ones I’d skip.'], ['A first interview with no degree in it', 'What I showed instead.'], ['The oldest junior on the team', 'Why it turned out to help.']],
+      kiera: [['What an orchestra teaches about teams', 'Listening is most of the job.'], ['Rehearsals into roadmaps', 'The overlap nobody expects.'], ['The first product job that said yes', 'How I explained the jump.'], ['Keeping music after', 'Without it becoming a hobby you feel guilty about.']],
+      jamal: [['What the degree still gives me', 'Mostly a way of breaking problems down.'], ['Explaining the switch in interviews', 'One sentence that works.'], ['Jobs where engineers are rare', 'And valued for it.'], ['When it stops being a detour', 'Letting go of the other path.']],
+      sam: [['Why I came back', 'It wasn’t only rent.'], ['Finding work here that isn’t remote', 'Where to look, who to ask.'], ['The small-world advantage', 'Two introductions and you know everyone.'], ['What I miss, and what I don’t', 'An honest list.']],
+      priya: [['What we open first', 'The order of apps on a Monday morning.'], ['Why we delete your app', 'It’s usually the second week.'], ['Notifications that don’t get muted', 'There are about two kinds.'], ['Testing cheaply on campus', 'Ten students, one afternoon.']],
+      grace: [['Who is really in the room', 'It’s rarely the person who signs.'], ['Why the cheaper product loses', 'Training time costs more than price.'], ['The pilot that becomes a contract', 'What has to be true by week six.'], ['Selling to nurses, not buyers', 'They decide what gets used.']],
+      noor: [['The first page decides', 'Reviewers skim; write for that.'], ['Aims a tired reviewer remembers', 'Three, plainly worded.'], ['Turning a no into a resubmission', 'Reading the summary statement.'], ['Asking for help without looking lost', 'Who to send drafts to.']],
+      ben: [['The leverage you do have', 'Even with one offer.'], ['Asking for time to decide', 'The exact words.'], ['More than salary', 'Start dates, titles, learning budgets.'], ['The email I sent', 'Line by line.']],
+      owen: [['What an examiner reads first', 'It isn’t the abstract.'], ['Claims that survive a first rejection', 'Narrow, then narrower.'], ['Calling the examiner', 'Most people never do.'], ['When a patent isn’t worth it', 'Cost against what it protects.']],
+      lena: [['How a museum decides what to buy', 'Committees, budgets and taste.'], ['The curator’s case', 'And who argues against it.'], ['Donors, deals and timing', 'Why some pieces wait years.'], ['Getting into museum work sideways', 'Most of us did.']],
+      aisha: [['The first meeting nobody came to', 'What I changed for the second.'], ['Why people come back', 'It’s the job you give them.'], ['Handing it off before you graduate', 'Start a year early.'], ['Money from student government', 'How the budget process really works.']],
+      elena: [['Hiring before you have a lab', 'Your first student sets the tone.'], ['The first grant you write alone', 'Nobody reads it before you submit.'], ['Setting the rules early', 'Meetings, credit, and weekends.'], ['Mentoring while still learning', 'Saying “I don’t know” out loud.']],
+      ray: [['Opening with three tables', 'Small on purpose.'], ['Landlords and leases', 'What I’d sign again, and what I wouldn’t.'], ['Regulars are the business', 'Names, orders, birthdays.'], ['Knowing when to grow', 'And when not to.']],
+      rosa: [['Nobody to ask at home', 'Finding the people who know.'], ['Office hours and other unwritten rules', 'Nobody tells you they’re for you.'], ['Money talk no one explains', 'Aid, loans and work-study.'], ['Bringing your family along', 'Explaining what you do.']],
+      theo: [['Finding the first ten by name', 'A list on paper, not a funnel.'], ['The pitch that worked in a hallway', 'Two sentences.'], ['Pricing before you’re sure', 'Charge something on day one.'], ['Turning ten into the next ten', 'Ask each one who else.']],
+      mei: [['Picking a question first', 'Before anyone signs off on it.'], ['Emailing professors who don’t know you', 'Short, specific, with a draft.'], ['Doing the work before the credit', 'What it bought me.'], ['When to ask for an advisor', 'And how to make it easy to say yes.']],
+      hana: [['Saying no to a funded offer', 'The week I almost said yes.'], ['What I did with the two years', 'Work that answered the question.'], ['Saying no again, more sure', 'What had changed.'], ['How to know if a PhD is for you', 'Three questions I’d ask now.']],
+    };
+    const SHELVES = [
+      ['Changing course', ['dana', 'marcus', 'luis', 'kiera', 'jamal', 'sam']],
+      ['How things really work', ['priya', 'grace', 'noor', 'ben', 'owen', 'lena']],
+      ['Starting from zero', ['aisha', 'elena', 'ray', 'rosa', 'theo', 'mei']],
+    ];
+    const PICKS = [
+      ['hana', 'You told the Librarian you’re deciding about a PhD. Hana weighed the same choice, twice.'],
+      ['elena', 'Your book says you’d like to lead research someday. Elena just finished her first year running a lab.'],
+      ['theo', 'You mentioned a side business you keep putting off. Theo found his first customers one conversation at a time.'],
+    ];
+
+    const st = this.state || {};
+    const sel = st.sel || 'luis';
+    const pi = st.pick || 0;
+    const book = (id) => {
+      const [title, name, shape, color] = B[id];
+      return {
+        title, name,
+        aria: title + ', by ' + name,
+        mk: 'm-' + shape + ' k-' + color,
+        cls: id === sel ? 'is-sel' : '',
+        isSel: id === sel,
+        pressed: id === sel ? 'true' : 'false',
+        pick: () => this.setState({ sel: id === sel ? 'none' : id }),
+      };
+    };
+    const onShelf = SHELVES.some(([, ids]) => ids.includes(sel));
+    const selBook = B[sel]
+      ? { ...book(sel), chapters: CH[sel].map(([t, l], i) => ({ n: String(i + 1), title: t, line: l })) }
+      : { title: '', name: '', chapters: [] };
+    const [pickId, why] = PICKS[pi % PICKS.length];
+    return {
+      shelves: SHELVES.map(([name, ids]) => ({ name, open: ids.includes(sel), books: ids.map(book) })),
+      sel: selBook,
+      pick: { ...book(pickId), why, open: () => this.setState({ sel: pickId }) },
+      pickOpen: !!B[sel] && !onShelf,
+      nextPick: () => this.setState({ pick: pi + 1 }),
+      close: () => this.setState({ sel: 'none' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

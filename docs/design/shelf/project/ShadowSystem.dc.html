@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Light and shadow, the system</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&amp;family=Libre+Caslon+Text:ital@1&amp;display=swap">
+<style>
+body { margin: 0; }
+.sy {
+  --wall: #EEEAE3; --wall-deep: #E5DFD5; --paper: #F9F7F3; --paper-lit: #FCFBF8; --ink: #1F1D1A; --ink-2: #5A544C; --line: #D7CFC3;
+  --ochre: #C29A45; --blue: #3F5C8C; --red: #9C3A30; --sun: rgba(255, 245, 218, .78); --sh: 74, 56, 36;
+  --carved: inset 2px 3px 5px rgba(var(--sh), .2), inset 1px 1px 1px rgba(var(--sh), .12), 0 1px 0 rgba(255,255,255,.75);
+  --rest: 1px 1px 0 rgba(var(--sh), .08), 3px 4px 6px rgba(var(--sh), .1), 10px 14px 20px -8px rgba(var(--sh), .16);
+  --lift: 1px 1px 0 rgba(var(--sh), .06), 8px 11px 16px rgba(var(--sh), .12), 22px 30px 42px -14px rgba(var(--sh), .22);
+  --held: 2px 2px 0 rgba(var(--sh), .05), 14px 20px 28px rgba(var(--sh), .12), 40px 56px 72px -24px rgba(var(--sh), .26);
+  --pressed: inset 2px 2px 4px rgba(var(--sh), .3);
+  --sans: "Jost", "Futura", "Century Gothic", sans-serif; --voice: "Libre Caslon Text", Georgia, serif;
+  width: 1200px; height: 1240px; box-sizing: border-box; padding: 60px 64px;
+  display: flex; flex-direction: column; gap: 52px;
+  font-family: var(--sans); color: var(--ink); background: var(--wall); font-size: 15px; line-height: 1.5;
+}
+.sy * { box-sizing: border-box; }
+:where(.sy) :is(h1, h2, h3, p, ul, ol) { margin: 0; }
+.sy h1 { font-weight: 500; font-size: 42px; line-height: 1.05; }
+.sy .sub { margin-top: 10px; max-width: 64ch; font-size: 17px; color: var(--ink-2); }
+.sy h2 { font-weight: 500; font-size: 22px; margin-bottom: 20px; }
+.depths { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px; }
+.depth { display: grid; gap: 14px; align-content: start; }
+.spec { position: relative; height: 120px; border-radius: 6px; }
+.spec.carved { background: var(--wall-deep); box-shadow: var(--carved); }
+.spec.wall { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+.spec.rest { background: var(--paper); box-shadow: var(--rest); }
+.spec.lift { background: var(--paper); box-shadow: var(--lift); transform: translate(-2px, -4px); }
+.spec.held { background: var(--paper-lit); box-shadow: var(--held); transform: translate(-4px, -10px); }
+.spec.pressed { background: var(--ink); box-shadow: var(--pressed); }
+.depth strong { display: block; font-weight: 500; font-size: 17px; }
+.depth span { display: block; font-size: 14px; color: var(--ink-2); }
+.depth code { display: block; margin-top: 6px; font-family: var(--sans); font-size: 13px; color: var(--ink); }
+.cols { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 64px; }
+.rules { list-style: none; padding: 0; display: grid; gap: 18px; }
+.rules li { display: grid; grid-template-columns: 30px minmax(0, 1fr); }
+.rules i { display: block; width: 10px; height: 10px; margin-top: 8px; background: var(--ink); }
+.rules strong { font-weight: 500; }
+.rules span { color: var(--ink-2); }
+.light { position: relative; height: 170px; margin-bottom: 28px; border-radius: 4px; overflow: hidden; background: var(--wall); box-shadow: inset 0 0 0 1px var(--line); }
+.light::before { content: ""; position: absolute; left: 30px; top: -10px; width: 280px; height: 200px; filter: blur(3px); clip-path: polygon(14% 0, 100% 0, 86% 100%, 0 100%);
+  background: linear-gradient(90deg, transparent calc(50% - 5px), rgba(var(--sh), .07) calc(50% - 5px) calc(50% + 5px), transparent calc(50% + 5px)), linear-gradient(180deg, transparent calc(46% - 5px), rgba(var(--sh), .07) calc(46% - 5px) calc(46% + 5px), transparent calc(46% + 5px)), var(--sun); }
+.light .sun { position: absolute; left: 22px; top: 18px; width: 22px; height: 22px; border-radius: 50%; background: var(--ochre); }
+.light .ray { position: absolute; left: 44px; top: 40px; width: 120px; height: 2px; background: var(--ink); transform: rotate(35deg); transform-origin: left center; }
+.light .ray::after { content: ""; position: absolute; right: -2px; top: -4px; border-left: 9px solid var(--ink); border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+.light .obj { position: absolute; left: 190px; top: 70px; width: 60px; height: 76px; border-radius: 2px; background: var(--paper); box-shadow: 1px 1px 0 rgba(var(--sh), .1), 22px 6px 6px -3px rgba(var(--sh), .22), 40px 10px 22px -6px rgba(var(--sh), .14); }
+.light .obj2 { left: 360px; box-shadow: var(--rest); }
+.light p { position: absolute; right: 18px; bottom: 14px; width: 220px; font-size: 13px; color: var(--ink-2); }
+.palette { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+.sw { height: 64px; border-radius: 4px; display: flex; align-items: flex-end; padding: 6px 8px; font-size: 12px; font-weight: 500; }
+.marks { display: flex; gap: 14px; align-items: center; margin-bottom: 30px; font-size: 13px; color: var(--ink-2); }
+.marks i { display: block; width: 26px; height: 26px; }
+.type p { font-size: 14px; color: var(--ink-2); margin-top: 4px; }
+.type .s1 { font-weight: 500; font-size: 34px; line-height: 1.1; color: var(--ink); margin: 0; }
+.type .s2 { font-family: var(--voice); font-style: italic; font-size: 19px; color: var(--ink); margin: 14px 0 0; }
+</style>
+</helmet>
+<div class="sy">
+  <header>
+    <h1>Light and shadow</h1>
+    <p class="sub">Everything is warm white. What separates one thing from another is how high it sits and the shadow it throws. Height always means the same thing.</p>
+  </header>
+
+  <section>
+    <h2>Six depths, and what each one means</h2>
+    <div class="depths">
+      <div class="depth"><div class="spec carved"></div><div><strong>Carved</strong><span>A place to put something.</span><code>Search, the nav track, shelf niches</code></div></div>
+      <div class="depth"><div class="spec wall"></div><div><strong>Wall</strong><span>Things printed on the page.</span><code>Headings, shelf names, text</code></div></div>
+      <div class="depth"><div class="spec rest"></div><div><strong>Resting</strong><span>Something you can pick up or press.</span><code>Books, buttons, the current tab</code></div></div>
+      <div class="depth"><div class="spec lift"></div><div><strong>Lifted</strong><span>Under your pointer.</span><code>Hover on a book or button</code></div></div>
+      <div class="depth"><div class="spec held"></div><div><strong>Held</strong><span>What you're handling now. One at a time.</span><code>The open book</code></div></div>
+      <div class="depth"><div class="spec pressed"></div><div><strong>Pressed</strong><span>The moment of the click.</span><code>Any button while pressed</code></div></div>
+    </div>
+  </section>
+
+  <section class="cols">
+    <div>
+      <h2>The light</h2>
+      <div class="light" aria-hidden="true">
+        <span class="sun"></span><span class="ray"></span>
+        <span class="obj"></span><span class="obj obj2"></span>
+        <p>Left: a book in the window light throws a sharper, longer shadow. Right: the same book in room light.</p>
+      </div>
+      <h2>Rules</h2>
+      <ul class="rules">
+        <li><i></i><div><strong>One light, upper left.</strong> <span>Every shadow falls down and to the right, on every screen.</span></div></li>
+        <li><i></i><div><strong>No shadow without a reason.</strong> <span>Sections and groups are separated by space, never by a box with a shadow.</span></div></li>
+        <li><i></i><div><strong>Higher means longer and softer.</strong> <span>A shadow's length tells you how far something sits off the wall.</span></div></li>
+        <li><i></i><div><strong>Light means attention.</strong> <span>Only the Librarian's pick stands in the window light. Nothing else glows.</span></div></li>
+        <li><i></i><div><strong>Shadow is never the only signal.</strong> <span>The selected book also gets an ink square, keyboard focus an ink outline, and the current tab darker text.</span></div></li>
+        <li><i></i><div><strong>Warm shadows only.</strong> <span>Brown, low opacity. No black, no colored glows, no blurred glass.</span></div></li>
+      </ul>
+    </div>
+    <div>
+      <h2>Color</h2>
+      <div class="palette">
+        <div class="sw" style="background: #EEEAE3; box-shadow: inset 0 0 0 1px #D7CFC3; color: #1F1D1A">Wall</div>
+        <div class="sw" style="background: #E5DFD5; color: #1F1D1A">Carved</div>
+        <div class="sw" style="background: #F9F7F3; box-shadow: inset 0 0 0 1px #D7CFC3; color: #1F1D1A">Paper</div>
+        <div class="sw" style="background: #1F1D1A; color: #F9F7F3">Ink</div>
+      </div>
+      <div class="marks">
+        <i style="background: #C29A45; border-radius: 50%"></i>
+        <i style="background: #3F5C8C"></i>
+        <i style="background: #9C3A30; clip-path: polygon(50% 0, 100% 100%, 0 100%)"></i>
+        <span>Printed shapes. Only on covers, assigned by Trove.</span>
+      </div>
+      <h2>Type</h2>
+      <div class="type">
+        <p class="s1">Jost, for everything</p>
+        <p>A geometric sans with 1920s roots. Medium for titles, regular for text.</p>
+        <p class="s2">Libre Caslon italic, only for the Librarian.</p>
+        <p>The one human voice on the page.</p>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

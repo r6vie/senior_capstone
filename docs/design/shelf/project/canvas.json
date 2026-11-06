@@ -1,0 +1,466 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-05T16:00:00Z"
+  },
+  "title": "Trove Shelf",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [
+    {
+      "id": "designs",
+      "name": "Designs"
+    },
+    {
+      "id": "wireframes",
+      "name": "Wireframes"
+    },
+    {
+      "id": "tool",
+      "name": "Working tool"
+    },
+    {
+      "id": "identities",
+      "name": "Identities"
+    },
+    {
+      "id": "manga",
+      "name": "Manga screens"
+    },
+    {
+      "id": "system",
+      "name": "Design system"
+    }
+  ],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 2320,
+      "title": "Shelf \u00b7 desktop",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "PhoneShelf.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Shelf \u00b7 phone"
+    },
+    "PhoneBook.dc.html": {
+      "x": 1990,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Open book \u00b7 phone"
+    },
+    "BookObject.dc.html": {
+      "x": 1520,
+      "y": 964,
+      "w": 1200,
+      "h": 1080,
+      "title": "The book object \u00b7 states and 3D notes"
+    },
+    "ShadowShelf.dc.html": {
+      "x": 0,
+      "y": 2920,
+      "w": 1440,
+      "h": 2240,
+      "title": "Light and shadow \u00b7 shelf, desktop",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ShadowPhone.dc.html": {
+      "x": 1520,
+      "y": 2920,
+      "w": 390,
+      "h": 844,
+      "title": "Light and shadow \u00b7 shelf, phone"
+    },
+    "ShadowSystem.dc.html": {
+      "x": 1990,
+      "y": 2920,
+      "w": 1200,
+      "h": 1240,
+      "title": "Light and shadow \u00b7 the system"
+    },
+    "MarbleA.dc.html": {
+      "x": 0,
+      "y": 5760,
+      "w": 1200,
+      "h": 640,
+      "title": "Marble A \u00b7 polished Carrara ledge"
+    },
+    "MarbleB.dc.html": {
+      "x": 1280,
+      "y": 5760,
+      "w": 1200,
+      "h": 640,
+      "title": "Marble B \u00b7 green marble niche"
+    },
+    "MarbleC.dc.html": {
+      "x": 2560,
+      "y": 5760,
+      "w": 1200,
+      "h": 640,
+      "title": "Marble C \u00b7 honed pink slab, block bookends"
+    },
+    "MarblePage.dc.html": {
+      "x": 0,
+      "y": 7000,
+      "w": 1440,
+      "h": 2760,
+      "title": "Carrara \u00b7 shelf page, desktop",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ScandiPage.dc.html": {
+      "x": 0,
+      "y": 10360,
+      "w": 1440,
+      "h": 1800,
+      "title": "Daylight library \u00b7 shelf page, desktop",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "ScandiPhone.dc.html": {
+      "x": 1520,
+      "y": 10360,
+      "w": 390,
+      "h": 844,
+      "title": "Daylight library \u00b7 shelf, phone"
+    },
+    "ScandiNotes.dc.html": {
+      "x": 1990,
+      "y": 10360,
+      "w": 1200,
+      "h": 920,
+      "title": "Daylight library \u00b7 the system"
+    },
+    "WireA.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1100,
+      "title": "A \u00b7 feature, then shelves",
+      "page": "wireframes"
+    },
+    "WireB.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1100,
+      "title": "B \u00b7 side rail",
+      "page": "wireframes"
+    },
+    "WireC.dc.html": {
+      "x": 0,
+      "y": 1220,
+      "w": 1440,
+      "h": 1100,
+      "title": "C \u00b7 bookcase",
+      "page": "wireframes"
+    },
+    "WireD.dc.html": {
+      "x": 1520,
+      "y": 1220,
+      "w": 1440,
+      "h": 1100,
+      "title": "D \u00b7 black split",
+      "page": "wireframes"
+    },
+    "ToolShelf.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1120,
+      "title": "A \u00b7 Neutral, shelf desktop",
+      "expand": "fill",
+      "is_interactive": true,
+      "page": "tool"
+    },
+    "ToolPhone.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Shelf \u00b7 phone",
+      "page": "tool"
+    },
+    "ToolDark.dc.html": {
+      "x": 0,
+      "y": 1240,
+      "w": 1440,
+      "h": 1300,
+      "title": "B \u00b7 After hours: lamplight on white books",
+      "page": "tool"
+    },
+    "ToolCirc.dc.html": {
+      "x": 1520,
+      "y": 1240,
+      "w": 1440,
+      "h": 1300,
+      "title": "C \u00b7 Circulation desk: ink, stamp and highlighter",
+      "page": "tool"
+    },
+    "Ident1.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1200,
+      "h": 940,
+      "title": "01 \u00b7 Four-colour pulp",
+      "page": "identities"
+    },
+    "Ident2.dc.html": {
+      "x": 1280,
+      "y": 0,
+      "w": 1200,
+      "h": 940,
+      "title": "02 \u00b7 Survey chart",
+      "page": "identities"
+    },
+    "Ident3.dc.html": {
+      "x": 0,
+      "y": 1020,
+      "w": 1200,
+      "h": 940,
+      "title": "03 \u00b7 Manga screentone",
+      "page": "identities"
+    },
+    "Ident4.dc.html": {
+      "x": 1280,
+      "y": 1020,
+      "w": 1200,
+      "h": 940,
+      "title": "04 \u00b7 Bauhaus primer",
+      "page": "identities"
+    },
+    "Ident5.dc.html": {
+      "x": 0,
+      "y": 2040,
+      "w": 1200,
+      "h": 940,
+      "title": "05 \u00b7 Riso zine",
+      "page": "identities"
+    },
+    "Ident6.dc.html": {
+      "x": 1280,
+      "y": 2040,
+      "w": 1200,
+      "h": 940,
+      "title": "06 \u00b7 Engraved plate",
+      "page": "identities"
+    },
+    "MangaA.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1100,
+      "title": "A \u00b7 The page \u00b7 Panels on slanted gutters",
+      "page": "manga"
+    },
+    "MangaB.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1100,
+      "title": "B \u00b7 The strip \u00b7 Black rail, one dark band, long shelves",
+      "page": "manga"
+    },
+    "MangaC.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 1100,
+      "title": "C \u00b7 The spread \u00b7 An open book: contents left, shelves right",
+      "page": "manga"
+    },
+    "MangaB2.dc.html": {
+      "x": 1520,
+      "y": 1180,
+      "w": 1440,
+      "h": 1100,
+      "title": "B2 \u00b7 The strip, top navigation \u00b7 Navigation across the top like A, banner and shelves from B",
+      "page": "manga"
+    },
+    "MangaBtn.dc.html": {
+      "x": 3040,
+      "y": 1180,
+      "w": 1440,
+      "h": 1040,
+      "title": "Ask to check out \u00b7 four button options",
+      "page": "manga"
+    },
+    "SysShelf.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1100,
+      "title": "Reference screen \u00b7 The shelf",
+      "page": "system"
+    },
+    "SysSignIn.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Reference screen \u00b7 Sign in",
+      "page": "system"
+    },
+    "SysFoundations.dc.html": {
+      "x": 0,
+      "y": 1180,
+      "w": 1440,
+      "h": 2900,
+      "title": "1 \u00b7 Foundations: color, type, space, tone, motion",
+      "page": "system"
+    },
+    "SysComponents1.dc.html": {
+      "x": 1520,
+      "y": 1180,
+      "w": 1440,
+      "h": 2700,
+      "title": "2 \u00b7 Components: actions and forms",
+      "page": "system"
+    },
+    "SysComponents2.dc.html": {
+      "x": 0,
+      "y": 4160,
+      "w": 1440,
+      "h": 3500,
+      "title": "3 \u00b7 Components: content and structure",
+      "page": "system"
+    },
+    "SysRules.dc.html": {
+      "x": 1520,
+      "y": 4160,
+      "w": 1440,
+      "h": 2600,
+      "title": "4 \u00b7 How to use it: fixed, default, free",
+      "page": "system"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "PhoneShelf.dc.html",
+    "PhoneBook.dc.html",
+    "BookObject.dc.html",
+    "ShadowShelf.dc.html",
+    "ShadowPhone.dc.html",
+    "ShadowSystem.dc.html",
+    "MarbleA.dc.html",
+    "MarbleB.dc.html",
+    "MarbleC.dc.html",
+    "MarblePage.dc.html",
+    "ScandiPage.dc.html",
+    "ScandiPhone.dc.html",
+    "ScandiNotes.dc.html",
+    "WireA.dc.html",
+    "WireB.dc.html",
+    "WireC.dc.html",
+    "WireD.dc.html",
+    "ToolShelf.dc.html",
+    "ToolPhone.dc.html",
+    "ToolDark.dc.html",
+    "ToolCirc.dc.html",
+    "Ident1.dc.html",
+    "Ident2.dc.html",
+    "Ident3.dc.html",
+    "Ident4.dc.html",
+    "Ident5.dc.html",
+    "Ident6.dc.html",
+    "MangaA.dc.html",
+    "MangaB.dc.html",
+    "MangaC.dc.html",
+    "MangaB2.dc.html",
+    "MangaBtn.dc.html",
+    "SysShelf.dc.html",
+    "SysSignIn.dc.html",
+    "SysFoundations.dc.html",
+    "SysComponents1.dc.html",
+    "SysComponents2.dc.html",
+    "SysRules.dc.html"
+  ],
+  "notes": {
+    "head": {
+      "x": 0,
+      "y": -300,
+      "text": "Direction 1 \u00b7 Cloth and oak",
+      "kind": "title1",
+      "maxW": 2380
+    },
+    "head2": {
+      "x": 0,
+      "y": 2620,
+      "text": "Direction 2 \u00b7 Light and shadow",
+      "kind": "title1",
+      "maxW": 3190
+    },
+    "head3": {
+      "x": 0,
+      "y": 5460,
+      "text": "Direction 3 \u00b7 Marble: three shelf options",
+      "kind": "title1",
+      "maxW": 3760
+    },
+    "head4": {
+      "x": 0,
+      "y": 6700,
+      "text": "Direction 3 \u00b7 The Carrara shelf page",
+      "kind": "title1",
+      "maxW": 1440
+    },
+    "head5": {
+      "x": 0,
+      "y": 10060,
+      "text": "Direction 4 \u00b7 Daylight library",
+      "kind": "title1",
+      "maxW": 3190
+    },
+    "wire": {
+      "x": 0,
+      "y": -300,
+      "text": "Shell homepage \u00b7 four layouts in black and white",
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "wireframes"
+    },
+    "tool": {
+      "x": 0,
+      "y": -300,
+      "text": "Direction 5 \u00b7 Working tool: neutral, dense, white books",
+      "kind": "title1",
+      "maxW": 1910,
+      "page": "tool"
+    },
+    "ident": {
+      "x": 0,
+      "y": -300,
+      "text": "Identities \u00b7 six printed-media languages to pick from",
+      "kind": "title1",
+      "maxW": 2480,
+      "page": "identities"
+    },
+    "manga": {
+      "x": 0,
+      "y": -300,
+      "text": "Manga screentone \u00b7 three layouts of the shelf page",
+      "kind": "title1",
+      "maxW": 4400,
+      "page": "manga"
+    },
+    "system": {
+      "x": 0,
+      "y": -300,
+      "text": "Trove design system \u00b7 Manga screentone, v1",
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "system"
+    }
+  },
+  "designSystems": []
+}

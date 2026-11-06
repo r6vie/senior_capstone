@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The book object</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
+<style>
+body { margin: 0; }
+.bo {
+  --paper: #F4EEE4; --card: #FBF7F0; --wall: #EAE0D1; --wall-2: #DFD1BD; --ink: #2A1F18; --ink-2: #5C4D40; --line: #DCCFBC;
+  --oak-hi: #DDB283; --oak: #B98351; --oak-lo: #8E5F35; --ox: #7A2C25; --amber: #C4862A;
+  --serif: "Newsreader", Georgia, serif; --sans: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  width: 1200px; height: 1080px; box-sizing: border-box; padding: 56px 64px;
+  display: flex; flex-direction: column; gap: 44px;
+  font-family: var(--sans); color: var(--ink); background: var(--paper); font-size: 15px; line-height: 1.5;
+}
+.bo * { box-sizing: border-box; }
+.bo h1, .bo h2, .bo h3, .bo p { margin: 0; }
+.bo h1 { font-family: var(--serif); font-weight: 500; font-size: 40px; letter-spacing: -0.015em; }
+.bo .sub { color: var(--ink-2); max-width: 60ch; margin-top: 8px; }
+.bo h2 { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 18px; }
+.case { padding: 40px 48px 0; border-radius: 10px 10px 4px 4px; background: linear-gradient(180deg, var(--wall-2) 0, var(--wall) 46px); box-shadow: inset 0 16px 20px -14px rgba(60,38,20,.3); }
+.row { display: flex; align-items: flex-end; gap: 0; justify-content: space-between; margin-bottom: -4px; position: relative; z-index: 1; padding: 0 30px; }
+.ledge { position: relative; height: 20px; margin: 0 -48px; border-radius: 0 0 4px 4px; background: linear-gradient(180deg, var(--oak-hi) 0 5px, var(--oak) 6px, var(--oak-lo) 100%); box-shadow: 0 14px 20px -12px rgba(70,40,15,.45); }
+.labels { display: flex; justify-content: space-between; padding: 22px 30px 0; }
+.labels div { width: 150px; }
+.labels strong { display: block; font-weight: 600; }
+.labels span { font-size: 13px; color: var(--ink-2); }
+.yours { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 999px; background: var(--ink); color: var(--paper); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+
+.bk { position: relative; display: block; flex: none; width: 150px; height: 225px; }
+.bk.hover { transform: translateY(-6px); }
+.bk.sel { transform: translateY(-14px); }
+.bk.sel::after { content: ""; position: absolute; left: 28%; right: 28%; bottom: -27px; height: 3px; border-radius: 2px; background: var(--amber); }
+.bk.sel .ring { position: absolute; inset: -8px; border: 2px solid var(--amber); border-radius: 6px; z-index: 2; }
+.bk-shadow { position: absolute; left: 12px; right: -34px; bottom: -5px; height: 16px; border-radius: 50%; background: radial-gradient(closest-side, rgba(48,26,8,.5), rgba(48,26,8,0)); transform: skewX(-40deg); transform-origin: left bottom; }
+.bk.hover .bk-shadow { transform: translateY(6px) skewX(-40deg); opacity: .7; }
+.bk.sel .bk-shadow { transform: translateY(14px) skewX(-40deg) scaleX(1.08); opacity: .5; }
+.bk-pages { position: absolute; top: 5px; bottom: 2px; right: -9px; width: 10px; background: repeating-linear-gradient(90deg, #F5ECDC 0 1px, #DFCFB3 1px 2px); clip-path: polygon(0 0, 100% 6px, 100% calc(100% - 2px), 0 100%); }
+.bk-cover {
+  position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; padding: 28px 16px 16px 22px;
+  border-radius: 2px 5px 5px 2px; color: var(--foil); background-color: var(--cl);
+  background-image:
+    linear-gradient(100deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 24%, rgba(0,0,0,0) 68%, rgba(0,0,0,.16) 100%),
+    linear-gradient(90deg, rgba(0,0,0,.32) 0, rgba(0,0,0,.08) 8px, rgba(255,255,255,.16) 9px, rgba(255,255,255,0) 13px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.045) 0 1px, transparent 1px 3px);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.14), 0 1px 1px rgba(0,0,0,.2);
+}
+.bk-title { font-family: var(--serif); font-weight: 600; font-size: 16.5px; line-height: 1.17; text-wrap: balance; text-shadow: 0 1px 0 rgba(0,0,0,.35); }
+.bk-mark { display: block; width: 20px; height: 1px; margin-top: 12px; background: currentColor; opacity: .6; }
+.bk-name { margin-top: auto; font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; }
+.t1 .bk-cover::before { content: ""; position: absolute; inset: 9px 9px 9px 15px; border: 1px solid currentColor; opacity: .42; }
+.t2 .bk-mark { display: none; }
+.t2 .bk-name { align-self: stretch; padding: 7px 6px; background: #F2E7D0; color: #33251A; text-align: center; letter-spacing: .16em; box-shadow: inset 0 0 0 1px rgba(60,40,20,.16), 0 1px 0 rgba(0,0,0,.22); }
+.t3 .bk-cover { padding-top: 40px; }
+.t3 .bk-cover::before { content: ""; position: absolute; left: 0; right: 0; top: 18px; height: 5px; border-top: 1px solid currentColor; border-bottom: 1px solid currentColor; opacity: .5; }
+.t3 .bk-mark { width: 6px; height: 6px; border-radius: 50%; }
+.c1 { --cl: #2F4E3D; --foil: #E9D29F; } .c2 { --cl: #6E2A2A; --foil: #EED5A4; } .c3 { --cl: #263A5A; --foil: #E6CF9E; }
+.c6 { --cl: #2C5A5A; --foil: #EBD6A8; } .c9 { --cl: #A65E4E; --foil: #FBEBD0; }
+
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; }
+.swatches { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.sw { height: 52px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); display: flex; align-items: flex-end; padding: 6px 8px; font-size: 11px; font-weight: 600; }
+.tpl { display: flex; gap: 36px; align-items: flex-end; }
+.tpl .bk { width: 110px; height: 165px; }
+.tpl .bk-cover { padding: 20px 12px 12px 16px; }
+.tpl .t3 .bk-cover { padding-top: 30px; }
+.tpl .bk-title { font-size: 12.5px; }
+.tpl .bk-name { font-size: 8px; }
+.tpl figcaption { margin-top: 12px; font-size: 13px; color: var(--ink-2); }
+.tpl figure { margin: 0; }
+.notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.note { padding: 18px 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.note h3 { font-family: var(--serif); font-weight: 600; font-size: 18px; margin-bottom: 6px; }
+.note p { font-size: 14px; color: var(--ink-2); }
+</style>
+</helmet>
+<div class="bo">
+  <header>
+    <h1>The closed book</h1>
+    <p class="sub">One object, used everywhere a book appears. Drawn here in 2.5D with CSS; the 3D build should match these proportions, light and states, and fall back to this version.</p>
+  </header>
+
+  <section>
+    <h2>States</h2>
+    <div class="case">
+      <div class="row">
+        <div class="bk c1 t1"><span class="bk-shadow"></span><span class="bk-pages"></span><span class="bk-cover"><span class="bk-title">How to Leave a Job Without Burning the Bridge</span><span class="bk-mark"></span><span class="bk-name">Dana</span></span></div>
+        <div class="bk hover c9 t2"><span class="bk-shadow"></span><span class="bk-pages"></span><span class="bk-cover"><span class="bk-title">Switching Off Pre-Med Before Telling Your Parents</span><span class="bk-mark"></span><span class="bk-name">Marcus</span></span></div>
+        <div class="bk sel c3 t3"><span class="ring"></span><span class="bk-shadow"></span><span class="bk-pages"></span><span class="bk-cover"><span class="bk-title">Teaching Yourself to Code at Thirty-Four</span><span class="bk-mark"></span><span class="bk-name">Luis</span></span></div>
+        <div class="bk c6 t1"><span class="bk-shadow"></span><span class="bk-pages"></span><span class="bk-cover"><span class="bk-title">Moving Home to Cleveland on Purpose</span><span class="bk-mark"></span><span class="bk-name">Sam</span></span></div>
+      </div>
+      <div class="ledge"></div>
+    </div>
+    <div class="labels">
+      <div><strong>Resting</strong><span>Stands on the ledge, shadow cast back and right.</span></div>
+      <div><strong>Hover</strong><span>Lifts 6px. Shadow stays on the ledge and softens.</span></div>
+      <div><strong>Selected and focused</strong><span>Lifts 14px, amber mark on the ledge, preview opens below.</span></div>
+      <div><strong>Your own book</strong><span>Same frame as every other book.</span><br><span class="yours">Yours</span></div>
+    </div>
+  </section>
+
+  <section class="split">
+    <div>
+      <h2>Cover templates, assigned by Trove</h2>
+      <div class="tpl">
+        <figure><div class="bk c2 t1"><span class="bk-shadow"></span><span class="bk-pages"></span><span class="bk-cover"><span class="bk-title">Negotiating a First Offer With No Leverage</span><span class="bk-mark"></span><span class="bk-name">Ben</span></span></div><figcaption>Foil frame</figcaption></figure>
+        <figure><div class="bk c6 t2"><span class="bk-shadow"></span><span class="bk-pages"></span><span class="bk-cover"><span class="bk-title">Running a Student Org When Nobody Shows Up</span><span class="bk-mark"></span><span class="bk-name">Aisha</span></span></div><figcaption>Library label</figcaption></figure>
+        <figure><div class="bk c1 t3"><span class="bk-shadow"></span><span class="bk-pages"></span><span class="bk-cover"><span class="bk-title">What Cleveland Taught Me About Starting Small</span><span class="bk-mark"></span><span class="bk-name">Ray</span></span></div><figcaption>Foil bands</figcaption></figure>
+      </div>
+    </div>
+    <div>
+      <h2>Cloth colors, assigned by Trove</h2>
+      <div class="swatches">
+        <div class="sw" style="background: #2F4E3D; color: #E9D29F">Forest</div>
+        <div class="sw" style="background: #6E2A2A; color: #EED5A4">Oxblood</div>
+        <div class="sw" style="background: #263A5A; color: #E6CF9E">Navy</div>
+        <div class="sw" style="background: #C39337; color: #2B1E12">Mustard</div>
+        <div class="sw" style="background: #4E3A5C; color: #EAD3A6">Plum</div>
+        <div class="sw" style="background: #2C5A5A; color: #EBD6A8">Teal</div>
+        <div class="sw" style="background: #7A5134; color: #F0DDB5">Tobacco</div>
+        <div class="sw" style="background: #3F4A52; color: #E7D2A3">Slate</div>
+        <div class="sw" style="background: #A65E4E; color: #FBEBD0">Clay</div>
+        <div class="sw" style="background: #93A07D; color: #1F271A">Sage</div>
+      </div>
+      <p style="margin-top: 14px; font-size: 14px; color: var(--ink-2)">Light cloths take dark ink stamping instead of foil. Neighbors on a shelf never share a color.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>For the 3D build</h2>
+    <div class="notes">
+      <div class="note"><h3>Proportions</h3><p>2:3 cover. Thickness about 6.5% of the width (10px at 150px). Every book is the same size, whatever its length.</p></div>
+      <div class="note"><h3>Light</h3><p>One warm key light from the upper left. Page edges show on the right, the cloth hinge on the left.</p></div>
+      <div class="note"><h3>Shadow</h3><p>A soft contact shadow cast back and to the right. It stays on the ledge when the book lifts.</p></div>
+      <div class="note"><h3>Motion</h3><p>Lift on hover 6px, on select 14px, 220ms ease-out. With reduced motion: no lift, the amber mark only.</p></div>
+      <div class="note"><h3>Text stays live</h3><p>Title and name are real text over the cover, never baked into a texture, so they stay sharp, searchable and readable by screen readers.</p></div>
+      <div class="note"><h3>Cost</h3><p>Shared cloth texture and geometry, colors as parameters. No per-book images. If WebGL is unavailable or slow, render this CSS version.</p></div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

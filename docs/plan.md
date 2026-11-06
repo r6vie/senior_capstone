@@ -90,7 +90,8 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 **U1 · App shell and navigation** · Daniel · `todo`
 - A minimal layout with navigation to Shelf, My book, Checkouts, Past meets and Settings, with
   empty pages that the owners fill in.
-- Keep the styling plain. The real visual design comes later (trove.md).
+- Style it with the design system (`docs/design/system.md`, `docs/design/system/tokens.css`). Use the top bar
+  from the Reference screen · The shelf.
 - Done when: every owner has a route and an empty page in their own feature folder to work in.
 
 **C1 · Requesting a book** · Ellie · `todo`
@@ -186,4 +187,4 @@ Cross-feature questions to settle at the next sync:
 
 - Shelf categories (trove.md §5).
 - Whether books show a seniority or stage marker (trove.md §3).
-- The visual design and the Librarian's tone.
+- The Librarian's tone. (The visual design is decided: `docs/design/system.md`.)

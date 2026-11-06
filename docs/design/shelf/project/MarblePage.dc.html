@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trove shelf, Carrara</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..500&amp;display=swap">
+<style>
+body { margin: 0; background: #F3F0EB; }
+a { color: #1F1D1A; } a:hover { color: #5E574F; }
+
+/* Carrara. Warm white walls, polished white marble ledges, one light from the upper left.
+   Depth keeps its meaning from direction 2: carved = put something in, resting = pick it up, held = handling it now. */
+.mp {
+  --wall: #F3F0EB; --wall-deep: #E8E3DA; --paper: #FAF8F4; --ink: #1F1D1A; --ink-2: #5E574F; --line: #D6CEC2;
+  --sh: 58, 46, 34; --sun: rgba(255, 246, 222, .72);
+  --top: 42px; --front: 42px; --ro: .62; --rk: .36;
+  --carved: inset 2px 3px 5px rgba(var(--sh), .18), inset 1px 1px 1px rgba(var(--sh), .1), 0 1px 0 rgba(255,255,255,.8);
+  --rest: 1px 1px 0 rgba(var(--sh), .08), 3px 4px 6px rgba(var(--sh), .1), 10px 14px 20px -8px rgba(var(--sh), .16);
+  --lift: 1px 1px 0 rgba(var(--sh), .06), 8px 11px 16px rgba(var(--sh), .12), 22px 30px 42px -14px rgba(var(--sh), .22);
+  --held: 2px 2px 0 rgba(var(--sh), .05), 14px 20px 28px rgba(var(--sh), .12), 40px 56px 72px -24px rgba(var(--sh), .26);
+  --sans: "Jost", "Futura", "Century Gothic", sans-serif; --serif: "Newsreader", Georgia, serif;
+  font-family: var(--sans); color: var(--ink); font-size: 16px; line-height: 1.5; min-height: 100vh;
+  background: radial-gradient(90% 60% at 10% 0%, rgba(255,255,255,.75), rgba(255,255,255,0) 60%), var(--wall);
+}
+.slab-slim { --front: 34px; } .slab-regular { --front: 42px; } .slab-thick { --front: 52px; }
+.refl-off { --ro: 0; } .refl-soft { --ro: .62; --rk: .36; } .refl-mirror { --ro: .9; --rk: .46; }
+.mp * { box-sizing: border-box; }
+:where(.mp) :is(h1, h2, h3, p, ol, ul) { margin: 0; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mp button:focus-visible, .mp a:focus-visible, .mp input:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+/* Header: search is here, small and carved, never the hero. */
+.top { display: flex; align-items: center; gap: 36px; padding: 22px 0; }
+.brand { font-family: var(--serif); font-size: 30px; font-weight: 500; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; }
+.track { display: flex; gap: 4px; padding: 4px; border-radius: 10px; background: var(--wall-deep); box-shadow: var(--carved); }
+.track a { display: grid; place-items: center; height: 40px; padding: 0 18px; border-radius: 7px; font-size: 15px; font-weight: 500; color: var(--ink-2); text-decoration: none; }
+.track a[aria-current="page"] { color: var(--ink); background: var(--paper); box-shadow: var(--rest); }
+.hsearch { margin-left: auto; display: flex; align-items: center; gap: 10px; width: 260px; height: 44px; padding: 0 14px; border-radius: 10px; background: var(--wall-deep); box-shadow: var(--carved); color: var(--ink-2); }
+.hsearch input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: 15px; color: var(--ink); outline: none; }
+.hsearch input::placeholder { color: #6E675D; }
+.hsearch:focus-within { box-shadow: var(--carved), 0 0 0 2px var(--ink); }
+.me { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--paper); box-shadow: var(--rest); font: inherit; font-weight: 600; color: var(--ink); cursor: pointer; }
+
+/* Opening: the Librarian's pick, standing in the window light on its own piece of marble. */
+.intro { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 48px; align-items: center; padding: 40px 0 72px; }
+.scene { position: relative; height: 470px; }
+.light {
+  position: absolute; left: 30px; top: 0; width: 470px; height: 430px; pointer-events: none; filter: blur(3px);
+  clip-path: polygon(0 0, 60% 0, 100% 100%, 40% 100%);
+  background:
+    linear-gradient(90deg, transparent calc(50% - 6px), rgba(var(--sh), .06) calc(50% - 6px) calc(50% + 6px), transparent calc(50% + 6px)),
+    linear-gradient(180deg, transparent calc(45% - 6px), rgba(var(--sh), .06) calc(45% - 6px) calc(45% + 6px), transparent calc(45% + 6px)),
+    var(--sun);
+}
+.plinth { position: absolute; left: 120px; bottom: 40px; width: 380px; }
+.plinth .row { padding: 0 0 0 96px; }
+.plinth .bk { box-shadow: 0 1px 1px rgba(var(--sh), .2), 28px 8px 8px -4px rgba(var(--sh), .22), 52px 14px 26px -8px rgba(var(--sh), .12); }
+.pick { display: grid; gap: 0; }
+.hello { font-size: 15px; color: var(--ink-2); margin-bottom: 28px; }
+.who { font-size: 15px; font-weight: 500; color: var(--ink-2); }
+.pick h1 { font-family: var(--serif); font-weight: 500; font-size: 44px; line-height: 1.06; letter-spacing: -0.015em; margin: 10px 0 6px; text-wrap: balance; }
+.pick .by { font-size: 16px; color: var(--ink-2); }
+.pick .why { font-family: var(--serif); font-style: italic; font-size: 19px; line-height: 1.5; margin: 18px 0 26px; max-width: 30ch; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+.btn-ink { height: 50px; padding: 0 24px; border: 0; border-radius: 10px; background: var(--ink); color: var(--paper); font: inherit; font-weight: 500; font-size: 16px; cursor: pointer; box-shadow: var(--rest); transition: transform .12s ease-out, box-shadow .12s ease-out; }
+.btn-ink:hover { box-shadow: var(--lift); transform: translate(-1px, -1px); }
+.btn-ink:active { box-shadow: inset 2px 2px 4px rgba(0,0,0,.35); transform: translate(1px, 1px); }
+.btn-paper { height: 48px; padding: 0 20px; border: 0; border-radius: 10px; background: var(--paper); color: var(--ink); font: inherit; font-weight: 500; font-size: 15px; cursor: pointer; box-shadow: var(--rest); }
+.btn-paper:hover { box-shadow: var(--lift); }
+.btn-text { height: 44px; padding: 0 2px; border: 0; background: none; font: inherit; font-size: 15px; font-weight: 500; color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; text-decoration-thickness: 2px; cursor: pointer; }
+.btn-text:hover { color: var(--ink); text-decoration-color: var(--ink); }
+
+/* Shelves */
+.shelves { display: grid; gap: 96px; padding-bottom: 140px; }
+.sh-intro { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-top: 40px; margin-bottom: -40px; }
+.sh-intro h2 { font-family: var(--serif); font-weight: 500; font-size: 32px; letter-spacing: -0.01em; }
+.sh-intro p { font-size: 14px; color: var(--ink-2); }
+.shelf-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 40px; }
+.shelf-head h3 { font-weight: 500; font-size: 23px; }
+.shelf-head small { font-size: 14px; font-weight: 400; color: var(--ink-2); margin-left: 10px; }
+.shelf-head a, .more-link { font-size: 15px; font-weight: 500; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.row { position: relative; z-index: 2; display: flex; align-items: flex-end; gap: 40px; padding: 0 48px; margin-bottom: calc(6px - var(--top)); }
+.slot { position: relative; flex: none; }
+
+/* The marble: a polished top you look down onto, a thick front edge, a bright arris between them. */
+.slab { position: relative; height: calc(var(--top) + var(--front)); margin: 0 -12px; filter: drop-shadow(0 26px 22px rgba(var(--sh), .2)); }
+.slab svg { position: absolute; left: 0; width: 100%; display: block; }
+.slab .s-top { top: 0; height: var(--top); }
+.slab .s-front { top: var(--top); height: var(--front); }
+.slab::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: var(--top); pointer-events: none;
+  background: linear-gradient(180deg, rgba(var(--sh), .1), rgba(255,255,255,.3) 65%, rgba(255,255,255,.55)), linear-gradient(90deg, rgba(255,255,255,.3), rgba(255,255,255,0) 55%); }
+.slab::after { content: ""; position: absolute; left: 0; right: 0; top: calc(var(--top) - 1px); height: calc(var(--front) + 1px); pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.95) 0, rgba(255,255,255,0) 2px),
+    linear-gradient(100deg, rgba(255,255,255,0) 12%, rgba(255,255,255,.5) 16%, rgba(255,255,255,0) 21%, rgba(255,255,255,0) 62%, rgba(255,255,255,.28) 65%, rgba(255,255,255,0) 68%),
+    linear-gradient(180deg, rgba(var(--sh), .02), rgba(var(--sh), .13)); }
+
+/* The closed book */
+.bk {
+  position: relative; z-index: 2; flex: none; display: flex; flex-direction: column; width: 150px; height: 225px; padding: 26px 16px 16px 22px;
+  border: 0; border-radius: 2px 4px 4px 2px; font: inherit; text-align: left; cursor: pointer;
+  background-color: var(--c); color: var(--t);
+  background-image: linear-gradient(90deg, rgba(0,0,0,.14) 0, rgba(0,0,0,.03) 7px, rgba(255,255,255,.35) 8px, rgba(255,255,255,0) 11px), linear-gradient(120deg, rgba(255,255,255,.35), rgba(255,255,255,0) 40%, rgba(0,0,0,.05));
+  box-shadow: 0 1px 1px rgba(var(--sh), .18), 18px -4px 24px -12px rgba(var(--sh), .32);
+  transition: transform .22s cubic-bezier(.2,.7,.2,1), box-shadow .22s cubic-bezier(.2,.7,.2,1);
+}
+.bk::before { content: ""; position: absolute; z-index: -1; left: 2px; right: -8px; bottom: -4px; height: 9px; border-radius: 50%; background: radial-gradient(closest-side, rgba(var(--sh), .4), rgba(var(--sh), 0)); transition: opacity .22s; }
+.bk:hover { transform: translateY(-6px); }
+.bk:hover::before { opacity: .4; }
+.bk.is-sel { transform: translateY(-14px); box-shadow: 0 1px 1px rgba(var(--sh), .14), 26px 4px 30px -12px rgba(var(--sh), .3); }
+.bk.is-sel::before { opacity: .2; }
+.bk-title { font-family: var(--serif); font-weight: 600; font-size: 17px; line-height: 1.18; text-wrap: balance; }
+.bk-rule { display: block; width: 22px; height: 1px; margin-top: 14px; background: currentColor; opacity: .5; }
+.bk-name { margin-top: auto; font-size: 13px; opacity: .8; }
+.bk.lg { width: 176px; height: 264px; padding: 30px 20px 20px 26px; cursor: default; }
+.bk.lg:hover { transform: none; }
+.bk.lg .bk-title { font-size: 20px; }
+/* The reflection in the polished top: the cover's foot, mirrored and foreshortened, fading away from the book. */
+.refl { position: absolute; left: 0; right: 0; top: 100%; height: calc(var(--top) - 8px); overflow: hidden; pointer-events: none; opacity: var(--ro);
+  -webkit-mask-image: linear-gradient(180deg, #000 0, rgba(0,0,0,.75) 55%, transparent); mask-image: linear-gradient(180deg, #000 0, rgba(0,0,0,.75) 55%, transparent); transition: opacity .22s, transform .22s; }
+.refl-in { position: absolute; left: 0; right: 0; bottom: 100%; height: 225px; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 16px 16px 22px;
+  background-color: var(--c); color: var(--t); font-size: 13px; transform-origin: bottom; transform: scaleY(calc(-1 * var(--rk))); }
+.bk.lg .refl-in { height: 264px; padding: 0 20px 20px 26px; }
+.bk:hover .refl { transform: translateY(calc(6px + 6px * var(--rk))); }
+.bk.is-sel .refl { transform: translateY(calc(14px + 14px * var(--rk))); opacity: calc(var(--ro) * .55); }
+.sel-mark { position: absolute; left: calc(50% - 4px); bottom: calc(-1 * var(--top) - var(--front) / 2 + 2px); z-index: 3; width: 8px; height: 8px; background: var(--ink); }
+.c-bone { --c: #EFE9DE; --t: #1F1D1A; } .c-ash { --c: #CFCAC2; --t: #1F1D1A; } .c-graphite { --c: #3B3936; --t: #F1ECE3; }
+.c-sage { --c: #A9B3A1; --t: #1C211A; } .c-blush { --c: #DDC4B8; --t: #2A1E19; } .c-oat { --c: #E3D7C1; --t: #1F1D1A; }
+.c-mist { --c: #B9C3CB; --t: #1B2229; } .c-umber { --c: #6E5A4B; --t: #F3ECE2; } .c-ink { --c: #2A2E35; --t: #EDE8DF; }
+
+/* The open book: a sheet laid over the wall, the one thing held. */
+.sheet { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 56px; margin-top: 44px; padding: 38px 40px 40px; border-radius: 6px; background: var(--paper); box-shadow: var(--held); }
+.close { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--ink-2); cursor: pointer; }
+.close:hover { color: var(--ink); box-shadow: var(--carved); }
+.sheet-who { font-size: 15px; font-weight: 500; color: var(--ink-2); }
+.sheet h3 { font-family: var(--serif); font-weight: 500; font-size: 34px; line-height: 1.1; letter-spacing: -0.01em; margin: 6px 0 4px; text-wrap: balance; }
+.sheet .by { font-size: 16px; color: var(--ink-2); margin-bottom: 26px; }
+.chapters { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 40px; }
+.chapters li { display: grid; grid-template-columns: 34px minmax(0, 1fr); }
+.chapters .n { display: grid; place-items: center; width: 24px; height: 24px; margin-top: 3px; border-radius: 50%; box-shadow: var(--carved); font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.chapters strong { display: block; font-family: var(--serif); font-weight: 600; font-size: 18.5px; line-height: 1.3; }
+.chapters span { font-size: 14.5px; color: var(--ink-2); }
+.act { display: flex; flex-direction: column; gap: 14px; align-self: start; padding-top: 6px; }
+.act .btn-ink { height: 54px; }
+.facts { list-style: none; padding: 14px 0 0; display: grid; gap: 12px; font-size: 14px; color: var(--ink-2); }
+
+@media (prefers-reduced-motion: reduce) { .bk, .refl, .btn-ink { transition: none; } }
+@media (max-width: 1000px) {
+  .top { flex-wrap: wrap; gap: 14px 20px; }
+  .track { order: 3; width: 100%; overflow-x: auto; }
+  .hsearch { width: auto; flex: 1; }
+  .intro { grid-template-columns: minmax(0, 1fr); }
+  .scene { height: 400px; }
+  .plinth { left: 0; }
+  .unit { overflow-x: auto; overflow-y: hidden; padding-top: 20px; margin-top: -20px; }
+  .unit .row, .unit .slab { width: max-content; min-width: 100%; }
+  .sheet { grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 28px 22px; }
+  .chapters { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+</helmet>
+<div class="mp refl-{{refl}} slab-{{slab}}">
+  <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+    <defs>
+      <filter id="cp-top" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.004 0.06" numOctaves="5" seed="11"></feTurbulence>
+        <feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1"></feColorMatrix>
+        <feComponentTransfer>
+          <feFuncR type="table" tableValues="0.880 0.884 0.889 0.893 0.897 0.901 0.906 0.870 0.914 0.918 0.923 0.927 0.851 0.700 0.854 0.944 0.948 0.952 0.957 0.961 0.965"></feFuncR>
+          <feFuncG type="table" tableValues="0.875 0.879 0.884 0.888 0.892 0.896 0.901 0.865 0.909 0.913 0.918 0.922 0.848 0.700 0.851 0.939 0.943 0.947 0.952 0.956 0.960"></feFuncG>
+          <feFuncB type="table" tableValues="0.865 0.869 0.874 0.878 0.882 0.886 0.891 0.855 0.899 0.903 0.908 0.912 0.841 0.700 0.844 0.929 0.933 0.937 0.942 0.946 0.950"></feFuncB>
+          <feFuncA type="table" tableValues="1 1"></feFuncA>
+        </feComponentTransfer>
+      </filter>
+      <filter id="cp-front" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.0045 0.03" numOctaves="5" seed="11"></feTurbulence>
+        <feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1"></feColorMatrix>
+        <feComponentTransfer>
+          <feFuncR type="table" tableValues="0.870 0.874 0.879 0.883 0.887 0.891 0.896 0.860 0.904 0.908 0.913 0.917 0.844 0.680 0.847 0.934 0.938 0.942 0.947 0.951 0.955"></feFuncR>
+          <feFuncG type="table" tableValues="0.865 0.869 0.874 0.878 0.882 0.886 0.891 0.855 0.899 0.903 0.908 0.912 0.841 0.680 0.844 0.929 0.933 0.937 0.942 0.946 0.950"></feFuncG>
+          <feFuncB type="table" tableValues="0.855 0.859 0.864 0.868 0.872 0.876 0.881 0.845 0.889 0.893 0.898 0.902 0.834 0.680 0.837 0.919 0.923 0.927 0.932 0.936 0.940"></feFuncB>
+          <feFuncA type="table" tableValues="1 1"></feFuncA>
+        </feComponentTransfer>
+      </filter>
+    </defs>
+  </svg>
+
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="#">Trove</a>
+      <nav class="track" aria-label="Main">
+        <a href="#" aria-current="page">Shelf</a>
+        <a href="#">My book</a>
+        <a href="#">Checkouts</a>
+        <a href="#">Past meets</a>
+      </nav>
+      <form class="hsearch" role="search">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <label class="sr" for="mp-q">Search books by topic</label>
+        <input id="mp-q" type="search" placeholder="Search by topic">
+      </form>
+      <button class="me" type="button" aria-label="Your account, Sam">S</button>
+    </header>
+
+    <section class="intro" aria-label="The Librarian recommends">
+      <div class="scene">
+        <div class="light" aria-hidden="true"></div>
+        <div class="plinth">
+          <div class="row">
+            <div class="slot">
+              <button class="bk lg {{pick.c}}" type="button" onClick="{{pick.open}}" aria-label="{{pick.aria}}">
+                <span class="bk-title">{{pick.title}}</span><span class="bk-rule"></span><span class="bk-name">{{pick.name}}</span>
+                <span class="refl" aria-hidden="true"><span class="refl-in"><span>{{pick.name}}</span></span></span>
+              </button>
+            </div>
+          </div>
+          <div class="slab" aria-hidden="true">
+            <svg class="s-top" preserveAspectRatio="none"><rect width="100%" height="100%" fill="#EFECE6" filter="url(#cp-top)"></rect></svg>
+            <svg class="s-front" preserveAspectRatio="none"><rect width="100%" height="100%" fill="#E9E5DE" filter="url(#cp-front)"></rect></svg>
+          </div>
+        </div>
+      </div>
+      <div class="pick">
+        <p class="hello">Good afternoon, Sam.</p>
+        <p class="who">The Librarian recommends</p>
+        <h1>{{pick.title}}</h1>
+        <p class="by">by {{pick.name}}</p>
+        <p class="why">{{pick.why}}</p>
+        <div class="actions">
+          <button class="btn-ink" type="button" onClick="{{pick.open}}">Open the book</button>
+          <button class="btn-text" type="button" onClick="{{nextPick}}">Suggest another</button>
+        </div>
+      </div>
+    </section>
+
+    <sc-if value="{{pickOpen}}" hint-placeholder-val="{{ false }}">
+      <section class="sheet" aria-label="Book preview" style="margin: -24px 0 40px">
+        <button class="close" type="button" onClick="{{close}}" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+        <div>
+          <p class="sheet-who">What you could talk about</p>
+          <h3>{{sel.title}}</h3>
+          <p class="by">by {{sel.name}}</p>
+          <ol class="chapters">
+            <sc-for list="{{sel.chapters}}" as="ch" hint-placeholder-count="4">
+              <li><span class="n">{{ch.n}}</span><div><strong>{{ch.title}}</strong><span>{{ch.line}}</span></div></li>
+            </sc-for>
+          </ol>
+        </div>
+        <div class="act">
+          <button class="btn-ink" type="button">Ask to check out</button>
+          <button class="btn-paper" type="button">Read the whole book</button>
+          <ul class="facts">
+            <li>A video call, about 30 minutes. In person if you're both nearby.</li>
+            <li>You'll add a short note about what you'd like to ask.</li>
+            <li>Last names and contact details are shared only if you both say yes.</li>
+          </ul>
+        </div>
+      </section>
+    </sc-if>
+
+    <main class="shelves">
+      <div class="sh-intro">
+        <h2>On the shelves</h2>
+        <p>Arranged by the Librarian. Shelf names are placeholders.</p>
+      </div>
+      <sc-for list="{{shelves}}" as="shelf" hint-placeholder-count="3">
+        <section aria-label="{{shelf.name}}">
+          <div class="shelf-head">
+            <h3>{{shelf.name}}<small>placeholder shelf</small></h3>
+            <a href="#">See the whole shelf</a>
+          </div>
+          <div class="unit">
+            <div class="row">
+              <sc-for list="{{shelf.books}}" as="item" hint-placeholder-count="6">
+                <div class="slot">
+                  <button class="bk {{item.cls}}" type="button" onClick="{{item.pick}}" aria-label="{{item.aria}}" aria-pressed="{{item.pressed}}">
+                    <span class="bk-title">{{item.title}}</span><span class="bk-rule"></span><span class="bk-name">{{item.name}}</span>
+                    <span class="refl" aria-hidden="true"><span class="refl-in"><span>{{item.name}}</span></span></span>
+                  </button>
+                  <sc-if value="{{item.isSel}}" hint-placeholder-val="{{ false }}"><span class="sel-mark" aria-hidden="true"></span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div class="slab" aria-hidden="true">
+              <svg class="s-top" preserveAspectRatio="none"><rect width="100%" height="100%" fill="#EFECE6" filter="url(#cp-top)"></rect></svg>
+              <svg class="s-front" preserveAspectRatio="none"><rect width="100%" height="100%" fill="#E9E5DE" filter="url(#cp-front)"></rect></svg>
+            </div>
+          </div>
+
+          <sc-if value="{{shelf.open}}" hint-placeholder-val="{{ false }}">
+            <div class="sheet" role="region" aria-label="Book preview">
+              <button class="close" type="button" onClick="{{close}}" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+              <div>
+                <p class="sheet-who">What you could talk about</p>
+                <h3>{{sel.title}}</h3>
+                <p class="by">by {{sel.name}}</p>
+                <ol class="chapters">
+                  <sc-for list="{{sel.chapters}}" as="ch" hint-placeholder-count="4">
+                    <li><span class="n">{{ch.n}}</span><div><strong>{{ch.title}}</strong><span>{{ch.line}}</span></div></li>
+                  </sc-for>
+                </ol>
+              </div>
+              <div class="act">
+                <button class="btn-ink" type="button">Ask to check out</button>
+                <button class="btn-paper" type="button">Read the whole book</button>
+                <ul class="facts">
+                  <li>A video call, about 30 minutes. In person if you're both nearby.</li>
+                  <li>You'll add a short note about what you'd like to ask.</li>
+                  <li>Last names and contact details are shared only if you both say yes.</li>
+                </ul>
+              </div>
+            </div>
+          </sc-if>
+        </section>
+      </sc-for>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"reflection":{"editor":"enum","options":["off","soft","mirror"],"default":"soft","section":"Marble"},"slab":{"editor":"enum","options":["slim","regular","thick"],"default":"regular","section":"Marble"},"$preview":{"width":1440,"height":2760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // Sample books: title, first name, cover tone. Tones are assigned by Trove, never by the author.
+    const B = {
+      dana: ['How to Leave a Job Without Burning the Bridge', 'Dana', 'bone'],
+      marcus: ['Switching Off Pre-Med Before Telling Your Parents', 'Marcus', 'graphite'],
+      luis: ['Teaching Yourself to Code at Thirty-Four', 'Luis', 'sage'],
+      kiera: ['From Orchestra Pit to Product Manager', 'Kiera', 'blush'],
+      jamal: ['Living With an Engineering Degree You Don’t Use', 'Jamal', 'ash'],
+      sam: ['Moving Home to Cleveland on Purpose', 'Sam', 'mist'],
+      priya: ['What Nineteen-Year-Olds Actually Think of Your App', 'Priya', 'umber'],
+      grace: ['How a Hospital Actually Decides What to Buy', 'Grace', 'oat'],
+      noor: ['Getting a Grant Reviewer to Keep Reading', 'Noor', 'ink'],
+      ben: ['Negotiating a First Offer With No Leverage', 'Ben', 'sage'],
+      owen: ['What a Patent Examiner Looks For', 'Owen', 'blush'],
+      lena: ['Inside a Museum’s Buying Meeting', 'Lena', 'bone'],
+      aisha: ['Running a Student Org When Nobody Shows Up', 'Aisha', 'mist'],
+      elena: ['The First Ninety Days of Running a Lab', 'Elena', 'graphite'],
+      ray: ['What Cleveland Taught Me About Starting Small', 'Ray', 'oat'],
+      rosa: ['Being the First in Your Family to Do Any of This', 'Rosa', 'blush'],
+      theo: ['Selling to Your First Ten Customers by Hand', 'Theo', 'ash'],
+      mei: ['Starting Research Before You Have an Advisor', 'Mei', 'umber'],
+      hana: ['Why I Turned Down Grad School Twice', 'Hana', 'bone'],
+    };
+    const CH = {
+      dana: [['Deciding it’s time', 'How I knew, and the month I waited too long.'], ['Telling your manager first', 'The script I used and what I’d change.'], ['The last two weeks', 'Handing off so nobody has to call you.'], ['Staying in touch after', 'The coffee that got me rehired as a contractor.']],
+      marcus: [['The semester it stopped fitting', 'Grades were fine. Something else wasn’t.'], ['What I switched to, and why', 'Picking a direction without a plan B.'], ['The conversation at Thanksgiving', 'What I said, and what I wish I’d said.'], ['Keeping the science you liked', 'It doesn’t have to go away.']],
+      luis: [['Starting at thirty-four', 'Nights, a toddler, and a used laptop.'], ['The free courses worth finishing', 'And the ones I’d skip.'], ['A first interview with no degree in it', 'What I showed instead.'], ['The oldest junior on the team', 'Why it turned out to help.']],
+      kiera: [['What an orchestra teaches about teams', 'Listening is most of the job.'], ['Rehearsals into roadmaps', 'The overlap nobody expects.'], ['The first product job that said yes', 'How I explained the jump.'], ['Keeping music after', 'Without it becoming a hobby you feel guilty about.']],
+      jamal: [['What the degree still gives me', 'Mostly a way of breaking problems down.'], ['Explaining the switch in interviews', 'One sentence that works.'], ['Jobs where engineers are rare', 'And valued for it.'], ['When it stops being a detour', 'Letting go of the other path.']],
+      sam: [['Why I came back', 'It wasn’t only rent.'], ['Finding work here that isn’t remote', 'Where to look, who to ask.'], ['The small-world advantage', 'Two introductions and you know everyone.'], ['What I miss, and what I don’t', 'An honest list.']],
+      priya: [['What we open first', 'The order of apps on a Monday morning.'], ['Why we delete your app', 'It’s usually the second week.'], ['Notifications that don’t get muted', 'There are about two kinds.'], ['Testing cheaply on campus', 'Ten students, one afternoon.']],
+      grace: [['Who is really in the room', 'It’s rarely the person who signs.'], ['Why the cheaper product loses', 'Training time costs more than price.'], ['The pilot that becomes a contract', 'What has to be true by week six.'], ['Selling to nurses, not buyers', 'They decide what gets used.']],
+      noor: [['The first page decides', 'Reviewers skim; write for that.'], ['Aims a tired reviewer remembers', 'Three, plainly worded.'], ['Turning a no into a resubmission', 'Reading the summary statement.'], ['Asking for help without looking lost', 'Who to send drafts to.']],
+      ben: [['The leverage you do have', 'Even with one offer.'], ['Asking for time to decide', 'The exact words.'], ['More than salary', 'Start dates, titles, learning budgets.'], ['The email I sent', 'Line by line.']],
+      owen: [['What an examiner reads first', 'It isn’t the abstract.'], ['Claims that survive a first rejection', 'Narrow, then narrower.'], ['Calling the examiner', 'Most people never do.'], ['When a patent isn’t worth it', 'Cost against what it protects.']],
+      lena: [['How a museum decides what to buy', 'Committees, budgets and taste.'], ['The curator’s case', 'And who argues against it.'], ['Donors, deals and timing', 'Why some pieces wait years.'], ['Getting into museum work sideways', 'Most of us did.']],
+      aisha: [['The first meeting nobody came to', 'What I changed for the second.'], ['Why people come back', 'It’s the job you give them.'], ['Handing it off before you graduate', 'Start a year early.'], ['Money from student government', 'How the budget process really works.']],
+      elena: [['Hiring before you have a lab', 'Your first student sets the tone.'], ['The first grant you write alone', 'Nobody reads it before you submit.'], ['Setting the rules early', 'Meetings, credit, and weekends.'], ['Mentoring while still learning', 'Saying “I don’t know” out loud.']],
+      ray: [['Opening with three tables', 'Small on purpose.'], ['Landlords and leases', 'What I’d sign again, and what I wouldn’t.'], ['Regulars are the business', 'Names, orders, birthdays.'], ['Knowing when to grow', 'And when not to.']],
+      rosa: [['Nobody to ask at home', 'Finding the people who know.'], ['Office hours and other unwritten rules', 'Nobody tells you they’re for you.'], ['Money talk no one explains', 'Aid, loans and work-study.'], ['Bringing your family along', 'Explaining what you do.']],
+      theo: [['Finding the first ten by name', 'A list on paper, not a funnel.'], ['The pitch that worked in a hallway', 'Two sentences.'], ['Pricing before you’re sure', 'Charge something on day one.'], ['Turning ten into the next ten', 'Ask each one who else.']],
+      mei: [['Picking a question first', 'Before anyone signs off on it.'], ['Emailing professors who don’t know you', 'Short, specific, with a draft.'], ['Doing the work before the credit', 'What it bought me.'], ['When to ask for an advisor', 'And how to make it easy to say yes.']],
+      hana: [['Saying no to a funded offer', 'The week I almost said yes.'], ['What I did with the two years', 'Work that answered the question.'], ['Saying no again, more sure', 'What had changed.'], ['How to know if a PhD is for you', 'Three questions I’d ask now.']],
+    };
+    const SHELVES = [
+      ['Changing course', ['dana', 'marcus', 'luis', 'kiera', 'jamal', 'sam']],
+      ['How things really work', ['priya', 'grace', 'noor', 'ben', 'owen', 'lena']],
+      ['Starting from zero', ['aisha', 'elena', 'ray', 'rosa', 'theo', 'mei']],
+    ];
+    const PICKS = [
+      ['hana', 'You told the Librarian you’re deciding about a PhD. Hana weighed the same choice, twice.'],
+      ['elena', 'Your book says you’d like to lead research someday. Elena just finished her first year running a lab.'],
+      ['theo', 'You mentioned a side business you keep putting off. Theo found his first customers one conversation at a time.'],
+    ];
+
+    const st = this.state || {};
+    const sel = st.sel || 'luis';
+    const pi = st.pick || 0;
+    const book = (id) => {
+      const [title, name, tone] = B[id];
+      return {
+        title, name,
+        c: 'c-' + tone,
+        aria: title + ', by ' + name,
+        cls: 'c-' + tone + (id === sel ? ' is-sel' : ''),
+        isSel: id === sel,
+        pressed: id === sel ? 'true' : 'false',
+        pick: () => this.setState({ sel: id === sel ? 'none' : id }),
+      };
+    };
+    const onShelf = SHELVES.some(([, ids]) => ids.includes(sel));
+    const selBook = B[sel]
+      ? { ...book(sel), chapters: CH[sel].map(([t, l], i) => ({ n: String(i + 1), title: t, line: l })) }
+      : { title: '', name: '', chapters: [] };
+    const [pickId, why] = PICKS[pi % PICKS.length];
+    return {
+      refl: this.props.reflection ?? 'soft',
+      slab: this.props.slab ?? 'regular',
+      shelves: SHELVES.map(([name, ids]) => ({ name, open: ids.includes(sel), books: ids.map(book) })),
+      sel: selBook,
+      pick: { ...book(pickId), why, open: () => this.setState({ sel: pickId }) },
+      pickOpen: !!B[sel] && !onShelf,
+      nextPick: () => this.setState({ pick: pi + 1 }),
+      close: () => this.setState({ sel: 'none' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

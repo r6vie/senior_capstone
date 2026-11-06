@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trove shelf, desktop</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
+<style>
+body { margin: 0; background: #F4EEE4; }
+a { color: #7A2C25; } a:hover { color: #5E1F19; }
+
+/* Tokens. Warm paper, oak shelving, a green reading-lamp corner for the Librarian. */
+.tv {
+  --paper: #F4EEE4; --card: #FBF7F0; --wall: #EAE0D1; --wall-2: #DFD1BD;
+  --ink: #2A1F18; --ink-2: #5C4D40; --line: #DCCFBC; --line-2: #CDBDA6;
+  --oak-hi: #DDB283; --oak: #B98351; --oak-lo: #8E5F35;
+  --ox: #7A2C25; --ox-hover: #65221C; --ox-ink: #FBF3E8;
+  --amber: #C4862A;
+  --lamp: #2D4A3D; --lamp-ink: #F2E9D8; --lamp-gold: #E3BC6E;
+  --serif: "Newsreader", Georgia, serif;
+  --sans: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--sans); color: var(--ink); background: var(--paper);
+  font-size: 16px; line-height: 1.5; min-height: 100vh;
+}
+.tv * { box-sizing: border-box; }
+:where(.tv) :is(h1, h2, h3, p) { margin: 0; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+
+/* Top bar */
+.top { display: flex; align-items: center; gap: 40px; min-height: 76px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 12px; font-family: var(--serif); font-size: 30px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; }
+.brand i { width: 6px; height: 24px; border-radius: 1px; background: var(--ox); box-shadow: 8px -3px 0 var(--lamp), 16px 1px 0 var(--amber); margin-right: 16px; }
+.nav { display: flex; gap: 4px; flex-wrap: wrap; }
+.nav a { padding: 12px 14px; font-weight: 500; font-size: 15px; color: var(--ink-2); text-decoration: none; border-radius: 8px; }
+.nav a:hover { color: var(--ink); background: var(--wall); }
+.nav a[aria-current="page"] { color: var(--ink); border-radius: 0; box-shadow: inset 0 -2px 0 var(--amber); }
+.me { margin-left: auto; display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px 0 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); font: inherit; font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; }
+.me i { width: 20px; height: 28px; border-radius: 1px 3px 3px 1px; background: #2C5A5A; box-shadow: inset 3px 0 0 rgba(0,0,0,.25), 2px 0 0 #E8DCC6; }
+
+/* Search and the Librarian */
+.hero { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 56px; padding: 56px 0 64px; align-items: stretch; }
+.hello { font-size: 15px; color: var(--ink-2); margin-bottom: 12px; }
+.ask { font-family: var(--serif); font-weight: 500; font-size: 56px; line-height: 1.03; letter-spacing: -0.02em; margin-bottom: 28px; text-wrap: balance; }
+.search { display: flex; align-items: center; gap: 12px; height: 64px; padding: 0 8px 0 20px; background: #FFFCF7; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 0 rgba(42,31,24,.04), 0 12px 30px -20px rgba(42,31,24,.4); color: var(--ink-2); }
+.search:focus-within { border-color: var(--amber); box-shadow: 0 0 0 4px rgba(196,134,42,.2); }
+.search input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: 17px; color: var(--ink); outline: none; }
+.search input::placeholder { color: #75655A; }
+.search button { height: 48px; padding: 0 22px; border: 0; border-radius: 10px; background: var(--ink); color: var(--paper); font: inherit; font-weight: 600; cursor: pointer; }
+.topics { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+.topics span { font-size: 14px; color: var(--ink-2); margin-right: 4px; }
+.chip { height: 36px; padding: 0 14px; border: 1px solid var(--line-2); border-radius: 999px; background: transparent; font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; }
+.chip:hover { background: var(--card); }
+
+.lib { position: relative; display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 28px; padding: 28px 30px 0; border-radius: 16px; background: var(--lamp); color: var(--lamp-ink); overflow: hidden; }
+.lib::before { content: ""; position: absolute; top: -60%; left: 10%; width: 110%; height: 140%; background: radial-gradient(closest-side, rgba(227,188,110,.22), rgba(227,188,110,0)); pointer-events: none; }
+.lib-book { position: relative; align-self: end; margin-bottom: 12px; z-index: 1; }
+.lib-ledge { position: absolute; left: 0; right: 0; bottom: 0; height: 16px; background: linear-gradient(180deg, var(--oak-hi) 0 4px, var(--oak) 5px, var(--oak-lo) 100%); }
+.lib-text { position: relative; padding-bottom: 40px; }
+.lib-label { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--lamp-gold); }
+.lib h2 { font-family: var(--serif); font-weight: 500; font-size: 27px; line-height: 1.13; margin: 10px 0 4px; text-wrap: balance; }
+.lib .by { font-size: 14px; opacity: .85; }
+.lib .why { font-family: var(--serif); font-style: italic; font-size: 17px; line-height: 1.45; margin: 14px 0 20px; }
+.lib-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn-lamp { height: 44px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--lamp-ink); color: var(--lamp); font: inherit; font-weight: 600; cursor: pointer; }
+.btn-lamp-ghost { height: 44px; padding: 0 16px; border: 1px solid rgba(242,233,216,.4); border-radius: 10px; background: transparent; color: var(--lamp-ink); font: inherit; font-weight: 500; cursor: pointer; }
+.btn-lamp-ghost:hover { background: rgba(242,233,216,.08); }
+
+/* Shelves */
+.shelves { display: grid; gap: 56px; padding-bottom: 96px; }
+.sh-intro { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; border-top: 1px solid var(--line); padding-top: 36px; }
+.sh-intro h2 { font-family: var(--serif); font-weight: 500; font-size: 34px; letter-spacing: -0.01em; }
+.sh-intro p { font-size: 14px; color: var(--ink-2); }
+.shelf-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.shelf-head h3 { font-family: var(--serif); font-weight: 500; font-size: 25px; line-height: 1.15; margin-top: 6px; }
+.ph { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); border: 1px dashed var(--line-2); border-radius: 4px; padding: 2px 6px; }
+.more { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; font-weight: 600; text-decoration: none; }
+.case { position: relative; padding: 36px 40px 0; border-radius: 10px 10px 4px 4px; background: linear-gradient(180deg, var(--wall-2) 0, var(--wall) 46px, var(--wall) 100%); box-shadow: inset 0 16px 20px -14px rgba(60,38,20,.3), inset 12px 0 16px -14px rgba(60,38,20,.25), inset -12px 0 16px -14px rgba(60,38,20,.25); }
+.row { position: relative; z-index: 1; display: flex; align-items: flex-end; gap: 34px; margin-bottom: -4px; }
+.ledge { position: relative; height: 20px; margin: 0 -40px; border-radius: 0 0 4px 4px; background: linear-gradient(180deg, var(--oak-hi) 0 5px, var(--oak) 6px, var(--oak-lo) 100%); box-shadow: 0 14px 20px -12px rgba(70,40,15,.45); }
+.ledge::after { content: ""; position: absolute; left: 0; right: 0; top: 5px; height: 1px; background: rgba(255,255,255,.28); }
+.next { position: absolute; right: 12px; top: calc(50% - 22px); z-index: 2; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: var(--card); color: var(--ink); cursor: pointer; box-shadow: 0 6px 16px -8px rgba(42,31,24,.45); }
+
+/* The closed book. 2.5D: cloth front, page block on the right, a soft shadow cast on the ledge. */
+.bk { position: relative; display: block; flex: none; width: 150px; height: 225px; padding: 0; border: 0; background: none; font: inherit; text-align: left; cursor: pointer; transition: transform .22s cubic-bezier(.2,.7,.2,1); }
+.bk:hover { transform: translateY(-6px); }
+.bk.is-sel { transform: translateY(-14px); }
+.bk:focus-visible { outline: 2px solid var(--amber); outline-offset: 8px; border-radius: 6px; }
+.bk-shadow { position: absolute; left: 12px; right: -34px; bottom: -5px; height: 16px; border-radius: 50%; background: radial-gradient(closest-side, rgba(48,26,8,.5), rgba(48,26,8,0)); transform: skewX(-40deg); transform-origin: left bottom; transition: transform .22s cubic-bezier(.2,.7,.2,1), opacity .22s; }
+.bk:hover .bk-shadow { transform: translateY(6px) skewX(-40deg); opacity: .7; }
+.bk.is-sel .bk-shadow { transform: translateY(14px) skewX(-40deg) scaleX(1.08); opacity: .5; }
+.bk.is-sel::after { content: ""; position: absolute; left: 28%; right: 28%; bottom: -27px; height: 3px; border-radius: 2px; background: var(--amber); }
+.bk-pages { position: absolute; top: 5px; bottom: 2px; right: -9px; width: 10px; background: repeating-linear-gradient(90deg, #F5ECDC 0 1px, #DFCFB3 1px 2px); clip-path: polygon(0 0, 100% 6px, 100% calc(100% - 2px), 0 100%); }
+.bk-cover {
+  position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column;
+  padding: 28px 16px 16px 22px; border-radius: 2px 5px 5px 2px; color: var(--foil); background-color: var(--cl);
+  background-image:
+    linear-gradient(100deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 24%, rgba(0,0,0,0) 68%, rgba(0,0,0,.16) 100%),
+    linear-gradient(90deg, rgba(0,0,0,.32) 0, rgba(0,0,0,.08) 8px, rgba(255,255,255,.16) 9px, rgba(255,255,255,0) 13px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.045) 0 1px, transparent 1px 3px);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.14), 0 1px 1px rgba(0,0,0,.2);
+}
+.bk-title { font-family: var(--serif); font-weight: 600; font-size: 16.5px; line-height: 1.17; text-wrap: balance; text-shadow: 0 1px 0 rgba(0,0,0,.35); }
+.bk-mark { display: block; width: 20px; height: 1px; margin-top: 12px; background: currentColor; opacity: .6; }
+.bk-name { margin-top: auto; font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; }
+/* Cover templates, assigned by Trove: t1 foil frame, t2 library label, t3 foil bands. */
+.t1 .bk-cover::before { content: ""; position: absolute; inset: 9px 9px 9px 15px; border: 1px solid currentColor; border-radius: 1px; opacity: .42; pointer-events: none; }
+.t2 .bk-mark { display: none; }
+.t2 .bk-name { align-self: stretch; padding: 7px 6px; border-radius: 1px; background: #F2E7D0; color: #33251A; text-align: center; letter-spacing: .16em; box-shadow: inset 0 0 0 1px rgba(60,40,20,.16), 0 1px 0 rgba(0,0,0,.22); }
+.t3 .bk-cover { padding-top: 40px; }
+.t3 .bk-cover::before { content: ""; position: absolute; left: 0; right: 0; top: 18px; height: 5px; border-top: 1px solid currentColor; border-bottom: 1px solid currentColor; opacity: .5; }
+.t3 .bk-mark { width: 6px; height: 6px; border-radius: 50%; }
+/* Cloth colors, assigned by Trove */
+.c1 { --cl: #2F4E3D; --foil: #E9D29F; } .c2 { --cl: #6E2A2A; --foil: #EED5A4; }
+.c3 { --cl: #263A5A; --foil: #E6CF9E; } .c4 { --cl: #C39337; --foil: #2B1E12; }
+.c5 { --cl: #4E3A5C; --foil: #EAD3A6; } .c6 { --cl: #2C5A5A; --foil: #EBD6A8; }
+.c7 { --cl: #7A5134; --foil: #F0DDB5; } .c8 { --cl: #3F4A52; --foil: #E7D2A3; }
+.c9 { --cl: #A65E4E; --foil: #FBEBD0; } .c10 { --cl: #93A07D; --foil: #1F271A; }
+.c4 .bk-title, .c10 .bk-title { text-shadow: 0 1px 0 rgba(255,255,255,.28); }
+.bk.md { width: 132px; height: 198px; }
+.bk.md .bk-cover { padding: 24px 14px 14px 19px; }
+.bk.md .bk-title { font-size: 15px; }
+.bk.lg { width: 176px; height: 264px; cursor: default; }
+.bk.lg:hover { transform: none; }
+.bk.lg .bk-cover { padding: 34px 20px 20px 26px; }
+.bk.lg .bk-title { font-size: 20px; }
+
+/* The open preview under a shelf */
+.peek { position: relative; display: grid; grid-template-columns: 196px minmax(0, 1fr) 300px; gap: 40px; margin-top: 26px; padding: 32px 36px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); box-shadow: 0 24px 48px -36px rgba(42,31,24,.5); }
+.peek-close { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--ink-2); cursor: pointer; }
+.peek-close:hover { background: var(--wall); color: var(--ink); }
+.peek-book { padding-top: 6px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.peek h3 { font-family: var(--serif); font-weight: 500; font-size: 34px; line-height: 1.1; letter-spacing: -0.01em; margin: 8px 0 6px; text-wrap: balance; }
+.peek .by { font-size: 15px; color: var(--ink-2); margin-bottom: 22px; }
+.chapters { list-style: none; margin: 0; padding: 20px 0 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 32px; }
+.chapters li { display: grid; grid-template-columns: 26px minmax(0, 1fr); column-gap: 8px; }
+.chapters .n { font-family: var(--serif); font-size: 16px; color: var(--ox); line-height: 1.5; }
+.chapters strong { display: block; font-family: var(--serif); font-weight: 600; font-size: 18px; line-height: 1.3; }
+.chapters span { font-size: 14px; color: var(--ink-2); }
+.act { display: flex; flex-direction: column; gap: 12px; padding-left: 32px; border-left: 1px solid var(--line); }
+.btn-primary { height: 52px; border: 0; border-radius: 12px; background: var(--ox); color: var(--ox-ink); font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--ox-hover); }
+.btn-secondary { height: 48px; border: 1px solid var(--line-2); border-radius: 12px; background: transparent; color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+.btn-secondary:hover { background: var(--wall); }
+.facts { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 12px; font-size: 14px; color: var(--ink-2); }
+.facts li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; }
+.facts svg { margin-top: 2px; color: var(--ink); }
+
+.tv button:focus-visible, .tv a:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .bk, .bk-shadow { transition: none; } }
+@media (max-width: 960px) {
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 32px; padding: 32px 0 40px; }
+  .ask { font-size: 40px; }
+  .top { flex-wrap: wrap; gap: 8px 24px; padding: 12px 0; }
+  .case { overflow: hidden; padding: 30px 20px 0; }
+  .row { overflow-x: auto; padding: 16px 20px 4px 0; margin-top: -16px; }
+  .ledge { margin: 0 -20px; }
+  .next { display: none; }
+  .peek { grid-template-columns: minmax(0, 1fr); padding: 24px; gap: 24px; }
+  .chapters { grid-template-columns: minmax(0, 1fr); }
+  .act { padding-left: 0; border-left: 0; }
+}
+</style>
+</helmet>
+<div class="tv">
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="#"><i aria-hidden="true"></i>Trove</a>
+      <nav class="nav" aria-label="Main">
+        <a href="#" aria-current="page">Shelf</a>
+        <a href="#">My book</a>
+        <a href="#">Checkouts</a>
+        <a href="#">Past meets</a>
+      </nav>
+      <button class="me" type="button" aria-label="Your account, Sam"><i aria-hidden="true"></i>Sam</button>
+    </header>
+
+    <section class="hero">
+      <div>
+        <p class="hello">Good afternoon, Sam.</p>
+        <label class="ask" for="topic" style="display: block">What do you want to talk about?</label>
+        <form class="search" role="search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <input id="topic" type="search" placeholder="A topic, a question, something you're stuck on">
+          <button type="button">Search</button>
+        </form>
+        <div class="topics">
+          <span>Try:</span>
+          <button class="chip" type="button">Leaving a PhD</button>
+          <button class="chip" type="button">A first salary</button>
+          <button class="chip" type="button">Moving home to Cleveland</button>
+          <button class="chip" type="button">Changing majors</button>
+        </div>
+      </div>
+
+      <aside class="lib" aria-label="The Librarian recommends">
+        <div class="lib-book">
+          <button class="bk md {{pick.cls}}" type="button" onClick="{{pick.open}}" aria-label="{{pick.aria}}">
+            <span class="bk-shadow"></span><span class="bk-pages"></span>
+            <span class="bk-cover"><span class="bk-title">{{pick.title}}</span><span class="bk-mark"></span><span class="bk-name">{{pick.name}}</span></span>
+          </button>
+        </div>
+        <div class="lib-text">
+          <p class="lib-label">The Librarian recommends</p>
+          <h2>{{pick.title}}</h2>
+          <p class="by">by {{pick.name}}</p>
+          <p class="why">{{pick.why}}</p>
+          <div class="lib-actions">
+            <button class="btn-lamp" type="button" onClick="{{pick.open}}">Open the book</button>
+            <button class="btn-lamp-ghost" type="button" onClick="{{nextPick}}">Not for me</button>
+          </div>
+        </div>
+        <div class="lib-ledge" aria-hidden="true"></div>
+      </aside>
+    </section>
+
+    <sc-if value="{{pickOpen}}" hint-placeholder-val="{{ false }}">
+      <section class="peek" aria-label="Book preview" style="margin: -32px 0 56px">
+        <button class="peek-close" type="button" onClick="{{close}}" aria-label="Close preview"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+        <div class="peek-book"><div class="bk lg {{sel.cls}}"><span class="bk-shadow"></span><span class="bk-pages"></span><span class="bk-cover"><span class="bk-title">{{sel.title}}</span><span class="bk-mark"></span><span class="bk-name">{{sel.name}}</span></span></div></div>
+        <div>
+          <p class="eyebrow">What you could talk about</p>
+          <h3>{{sel.title}}</h3>
+          <p class="by">by {{sel.name}}</p>
+          <ol class="chapters">
+            <sc-for list="{{sel.chapters}}" as="ch" hint-placeholder-count="4">
+              <li><span class="n">{{ch.n}}</span><div><strong>{{ch.title}}</strong><span>{{ch.line}}</span></div></li>
+            </sc-for>
+          </ol>
+        </div>
+        <div class="act">
+          <button class="btn-primary" type="button">Ask to check out</button>
+          <button class="btn-secondary" type="button">Open the whole book</button>
+          <ul class="facts">
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"></rect><path d="m16 10 5-3v10l-5-3"></path></svg><span>A video call, about 30 minutes. In person if you're both nearby.</span></li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path></svg><span>You'll add a short note about what you'd like to ask.</span></li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg><span>Last names and contact details are shared only if you both say yes.</span></li>
+          </ul>
+        </div>
+      </section>
+    </sc-if>
+
+    <main class="shelves">
+      <div class="sh-intro">
+        <h2>On the shelves</h2>
+        <p>Arranged by the Librarian. Shelf names are placeholders until categories are decided.</p>
+      </div>
+
+      <sc-for list="{{shelves}}" as="shelf" hint-placeholder-count="3">
+        <section aria-label="{{shelf.name}}">
+          <div class="shelf-head">
+            <div><span class="ph">Placeholder shelf</span><h3>{{shelf.name}}</h3></div>
+            <a class="more" href="#">See the whole shelf <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+          </div>
+          <div class="case">
+            <div class="row">
+              <sc-for list="{{shelf.books}}" as="item" hint-placeholder-count="6">
+                <button class="bk {{item.cls}}" type="button" onClick="{{item.pick}}" aria-label="{{item.aria}}" aria-pressed="{{item.pressed}}">
+                  <span class="bk-shadow"></span><span class="bk-pages"></span>
+                  <span class="bk-cover"><span class="bk-title">{{item.title}}</span><span class="bk-mark"></span><span class="bk-name">{{item.name}}</span></span>
+                </button>
+              </sc-for>
+            </div>
+            <div class="ledge" aria-hidden="true"></div>
+            <button class="next" type="button" aria-label="More books on this shelf"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+          </div>
+
+          <sc-if value="{{shelf.open}}" hint-placeholder-val="{{ false }}">
+            <div class="peek" role="region" aria-label="Book preview">
+              <button class="peek-close" type="button" onClick="{{close}}" aria-label="Close preview"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+              <div class="peek-book"><div class="bk lg {{sel.cls}}"><span class="bk-shadow"></span><span class="bk-pages"></span><span class="bk-cover"><span class="bk-title">{{sel.title}}</span><span class="bk-mark"></span><span class="bk-name">{{sel.name}}</span></span></div></div>
+              <div>
+                <p class="eyebrow">What you could talk about</p>
+                <h3>{{sel.title}}</h3>
+                <p class="by">by {{sel.name}}</p>
+                <ol class="chapters">
+                  <sc-for list="{{sel.chapters}}" as="ch" hint-placeholder-count="4">
+                    <li><span class="n">{{ch.n}}</span><div><strong>{{ch.title}}</strong><span>{{ch.line}}</span></div></li>
+                  </sc-for>
+                </ol>
+              </div>
+              <div class="act">
+                <button class="btn-primary" type="button">Ask to check out</button>
+                <button class="btn-secondary" type="button">Open the whole book</button>
+                <ul class="facts">
+                  <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"></rect><path d="m16 10 5-3v10l-5-3"></path></svg><span>A video call, about 30 minutes. In person if you're both nearby.</span></li>
+                  <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path></svg><span>You'll add a short note about what you'd like to ask.</span></li>
+                  <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg><span>Last names and contact details are shared only if you both say yes.</span></li>
+                </ul>
+              </div>
+            </div>
+          </sc-if>
+        </section>
+      </sc-for>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2320}}'>
+class Component extends DCLogic {
+  renderVals() {
+    // Sample books. Cloth (c1-c10) and cover template (t1-t3) are assigned by Trove, never by the author.
+    const B = {
+      dana: ['How to Leave a Job Without Burning the Bridge', 'Dana', 1, 1],
+      marcus: ['Switching Off Pre-Med Before Telling Your Parents', 'Marcus', 9, 2],
+      luis: ['Teaching Yourself to Code at Thirty-Four', 'Luis', 3, 3],
+      kiera: ['From Orchestra Pit to Product Manager', 'Kiera', 5, 1],
+      jamal: ['Living With an Engineering Degree You Don’t Use', 'Jamal', 4, 2],
+      sam: ['Moving Home to Cleveland on Purpose', 'Sam', 6, 3],
+      priya: ['What Nineteen-Year-Olds Actually Think of Your App', 'Priya', 2, 3],
+      grace: ['How a Hospital Actually Decides What to Buy', 'Grace', 10, 1],
+      noor: ['Getting a Grant Reviewer to Keep Reading', 'Noor', 8, 2],
+      ben: ['Negotiating a First Offer With No Leverage', 'Ben', 7, 1],
+      owen: ['What a Patent Examiner Looks For', 'Owen', 3, 2],
+      lena: ['Inside a Museum’s Buying Meeting', 'Lena', 9, 3],
+      aisha: ['Running a Student Org When Nobody Shows Up', 'Aisha', 6, 2],
+      elena: ['The First Ninety Days of Running a Lab', 'Elena', 4, 1],
+      ray: ['What Cleveland Taught Me About Starting Small', 'Ray', 1, 3],
+      rosa: ['Being the First in Your Family to Do Any of This', 'Rosa', 5, 2],
+      theo: ['Selling to Your First Ten Customers by Hand', 'Theo', 2, 1],
+      mei: ['Starting Research Before You Have an Advisor', 'Mei', 8, 3],
+      hana: ['Why I Turned Down Grad School Twice', 'Hana', 7, 2],
+    };
+    const CH = {
+      dana: [['Deciding it’s time', 'How I knew, and the month I waited too long.'], ['Telling your manager first', 'The script I used and what I’d change.'], ['The last two weeks', 'Handing off so nobody has to call you.'], ['Staying in touch after', 'The coffee that got me rehired as a contractor.']],
+      marcus: [['The semester it stopped fitting', 'Grades were fine. Something else wasn’t.'], ['What I switched to, and why', 'Picking a direction without a plan B.'], ['The conversation at Thanksgiving', 'What I said, and what I wish I’d said.'], ['Keeping the science you liked', 'It doesn’t have to go away.']],
+      luis: [['Starting at thirty-four', 'Nights, a toddler, and a used laptop.'], ['The free courses worth finishing', 'And the ones I’d skip.'], ['A first interview with no degree in it', 'What I showed instead.'], ['The oldest junior on the team', 'Why it turned out to help.']],
+      kiera: [['What an orchestra teaches about teams', 'Listening is most of the job.'], ['Rehearsals into roadmaps', 'The overlap nobody expects.'], ['The first product job that said yes', 'How I explained the jump.'], ['Keeping music after', 'Without it becoming a hobby you feel guilty about.']],
+      jamal: [['What the degree still gives me', 'Mostly a way of breaking problems down.'], ['Explaining the switch in interviews', 'One sentence that works.'], ['Jobs where engineers are rare', 'And valued for it.'], ['When it stops being a detour', 'Letting go of the other path.']],
+      sam: [['Why I came back', 'It wasn’t only rent.'], ['Finding work here that isn’t remote', 'Where to look, who to ask.'], ['The small-world advantage', 'Two introductions and you know everyone.'], ['What I miss, and what I don’t', 'An honest list.']],
+      priya: [['What we open first', 'The order of apps on a Monday morning.'], ['Why we delete your app', 'It’s usually the second week.'], ['Notifications that don’t get muted', 'There are about two kinds.'], ['Testing cheaply on campus', 'Ten students, one afternoon.']],
+      grace: [['Who is really in the room', 'It’s rarely the person who signs.'], ['Why the cheaper product loses', 'Training time costs more than price.'], ['The pilot that becomes a contract', 'What has to be true by week six.'], ['Selling to nurses, not buyers', 'They decide what gets used.']],
+      noor: [['The first page decides', 'Reviewers skim; write for that.'], ['Aims a tired reviewer remembers', 'Three, plainly worded.'], ['Turning a no into a resubmission', 'Reading the summary statement.'], ['Asking for help without looking lost', 'Who to send drafts to.']],
+      ben: [['The leverage you do have', 'Even with one offer.'], ['Asking for time to decide', 'The exact words.'], ['More than salary', 'Start dates, titles, learning budgets.'], ['The email I sent', 'Line by line.']],
+      owen: [['What an examiner reads first', 'It isn’t the abstract.'], ['Claims that survive a first rejection', 'Narrow, then narrower.'], ['Calling the examiner', 'Most people never do.'], ['When a patent isn’t worth it', 'Cost against what it protects.']],
+      lena: [['How a museum decides what to buy', 'Committees, budgets and taste.'], ['The curator’s case', 'And who argues against it.'], ['Donors, deals and timing', 'Why some pieces wait years.'], ['Getting into museum work sideways', 'Most of us did.']],
+      aisha: [['The first meeting nobody came to', 'What I changed for the second.'], ['Why people come back', 'It’s the job you give them.'], ['Handing it off before you graduate', 'Start a year early.'], ['Money from student government', 'How the budget process really works.']],
+      elena: [['Hiring before you have a lab', 'Your first student sets the tone.'], ['The first grant you write alone', 'Nobody reads it before you submit.'], ['Setting the rules early', 'Meetings, credit, and weekends.'], ['Mentoring while still learning', 'Saying “I don’t know” out loud.']],
+      ray: [['Opening with three tables', 'Small on purpose.'], ['Landlords and leases', 'What I’d sign again, and what I wouldn’t.'], ['Regulars are the business', 'Names, orders, birthdays.'], ['Knowing when to grow', 'And when not to.']],
+      rosa: [['Nobody to ask at home', 'Finding the people who know.'], ['Office hours and other unwritten rules', 'Nobody tells you they’re for you.'], ['Money talk no one explains', 'Aid, loans and work-study.'], ['Bringing your family along', 'Explaining what you do.']],
+      theo: [['Finding the first ten by name', 'A list on paper, not a funnel.'], ['The pitch that worked in a hallway', 'Two sentences.'], ['Pricing before you’re sure', 'Charge something on day one.'], ['Turning ten into the next ten', 'Ask each one who else.']],
+      mei: [['Picking a question first', 'Before anyone signs off on it.'], ['Emailing professors who don’t know you', 'Short, specific, with a draft.'], ['Doing the work before the credit', 'What it bought me.'], ['When to ask for an advisor', 'And how to make it easy to say yes.']],
+      hana: [['Saying no to a funded offer', 'The week I almost said yes.'], ['What I did with the two years', 'Work that answered the question.'], ['Saying no again, more sure', 'What had changed.'], ['How to know if a PhD is for you', 'Three questions I’d ask now.']],
+    };
+    const SHELVES = [
+      ['Changing course', ['dana', 'marcus', 'luis', 'kiera', 'jamal', 'sam']],
+      ['How things really work', ['priya', 'grace', 'noor', 'ben', 'owen', 'lena']],
+      ['Starting from zero', ['aisha', 'elena', 'ray', 'rosa', 'theo', 'mei']],
+    ];
+    const PICKS = [
+      ['hana', 'You told the Librarian you’re deciding about a PhD. Hana weighed the same choice, twice.'],
+      ['elena', 'Your book says you’d like to lead research someday. Elena just finished her first year running a lab.'],
+      ['theo', 'You mentioned a side business you keep putting off. Theo found his first customers one conversation at a time.'],
+    ];
+
+    const st = this.state || {};
+    const sel = st.sel || 'kiera';
+    const pi = st.pick || 0;
+    const book = (id) => {
+      const [title, name, cl, tpl] = B[id];
+      return {
+        id, title, name,
+        aria: title + ', by ' + name,
+        cls: 'c' + cl + ' t' + tpl + (id === sel ? ' is-sel' : ''),
+        pressed: id === sel ? 'true' : 'false',
+        pick: () => this.setState({ sel: id === sel ? 'none' : id }),
+      };
+    };
+    const onShelf = SHELVES.some(([, ids]) => ids.includes(sel));
+    const selBook = B[sel]
+      ? { ...book(sel), chapters: CH[sel].map(([t, l], i) => ({ n: String(i + 1), title: t, line: l })) }
+      : { title: '', name: '', cls: '', chapters: [] };
+    const [pickId, why] = PICKS[pi % PICKS.length];
+    return {
+      shelves: SHELVES.map(([name, ids]) => ({ name, open: ids.includes(sel), books: ids.map(book) })),
+      sel: selBook,
+      pick: { ...book(pickId), why, open: () => this.setState({ sel: pickId }) },
+      pickOpen: !!B[sel] && !onShelf,
+      nextPick: () => this.setState({ pick: pi + 1 }),
+      close: () => this.setState({ sel: 'none' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

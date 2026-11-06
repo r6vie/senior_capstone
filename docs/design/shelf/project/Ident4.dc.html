@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Identity 04, Bauhaus primer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&amp;family=DM+Serif+Display&amp;family=Space+Mono:wght@400;700&amp;family=IM+Fell+English:ital@0;1&amp;family=Jost:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Zen+Kaku+Gothic+New:wght@500;700&amp;family=Shippori+Mincho:wght@500;700&amp;family=Fredoka:wght@500;600&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
+<style>
+
+body{margin:0}
+.mb{width:1200px;height:940px;display:grid;grid-template-columns:600px minmax(0,1fr);font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink);background:var(--info-bg);overflow:hidden}
+.mb *{box-sizing:border-box}
+:where(.mb) :is(h1,h2,h3,p,ul,ol){margin:0;padding:0}
+.plate{position:relative;overflow:hidden}
+.info{padding:32px 40px 30px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.era{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.nm{font-family:var(--head);font-size:40px;line-height:1.02;margin-top:6px}
+.borrow{list-style:none;display:grid;gap:5px;color:var(--ink-2);font-size:13.5px}
+.borrow li{padding-left:14px;position:relative}.borrow li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:2px;background:var(--accent)}
+.lab{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin-bottom:7px}
+.pal{display:flex;gap:6px}.chip{flex:1;height:50px;display:flex;align-items:flex-end;padding:5px 6px;font:500 9.5px var(--mono);letter-spacing:.04em;box-shadow:inset 0 0 0 1px rgba(128,128,128,.25)}
+.spec{display:grid;gap:3px}
+.tex{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tile{height:58px;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(128,128,128,.28)}
+.tcap{margin-top:4px;font:500 9.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.ui{margin-top:auto}
+.bk{position:relative;flex:none;width:120px;height:176px;padding:16px 10px 10px 19px;display:flex;flex-direction:column;background:linear-gradient(90deg,#E6E6E1 0,#F6F6F2 7px,#fff 8px 10px,#F2F2EE 11px,#fff 15px);color:#17181C}
+.bk::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:1px;background:rgba(0,0,0,.14)}
+.bk-t{font-family:var(--btitle);font-weight:600;font-size:13.5px;line-height:1.2}.bk-n{margin-top:auto;font:600 9.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+
+
+.s4 .nm{font-weight:700;letter-spacing:-.015em;text-transform:lowercase}
+.s4 .plate{background:#EDE6D3;border-right:1px solid #17171A}
+.s4 svg.pg{position:absolute;inset:0}
+.s4 .big{position:absolute;left:212px;top:196px;width:176px;height:262px;padding:28px 14px 14px 30px;background:#fff;border:2px solid #17171A;box-shadow:12px 12px 0 #17171A}
+.s4 .big .bk-t{font-size:25px;font-weight:700;letter-spacing:-.01em;line-height:1.08;text-transform:lowercase}
+.s4 .big .bk-n{font-size:10.5px}
+.s4 .bk{border:2px solid #17171A;box-shadow:5px 5px 0 #17171A}.s4 .bk::before{background:#17171A;opacity:.25}.s4 .bk-t{font-weight:700;letter-spacing:-.005em}
+.s4 .ui{padding:16px 18px;border:2px solid #17171A;background:#fff;display:grid;gap:12px;box-shadow:6px 6px 0 #E3A82B}
+.s4 .uih{display:flex;align-items:center;gap:9px;font:700 18px 'Jost';letter-spacing:-.005em;text-transform:lowercase}
+.s4 .uih::before{content:"";width:14px;height:14px;border-radius:50%;background:#D9432B}
+.s4 .btn{width:max-content;padding:9px 20px;background:#17171A;color:#fff;font:600 14px 'Jost';letter-spacing:.04em;text-transform:lowercase;border-left:10px solid #D9432B}
+
+</style>
+</helmet>
+<div class="mb s4" style="--ink:#17171A;--ink-2:#55524A;--accent:#D9432B;--info-bg:#F6F1E4;--head:'Jost',sans-serif;--sans:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;--btitle:'Jost',sans-serif">
+  <div class="plate"><svg class="pg" width="600" height="940" viewBox="0 0 600 940"><defs><clipPath id="fr"><rect x="28" y="28" width="544" height="884"/></clipPath></defs><g clip-path="url(#fr)"><g stroke="#17171A" stroke-width="1" opacity=".35"><path d="M28 120H572M28 640H572M110 28V912M490 28V912M300 28V912" fill="none"/></g><rect x="28" y="28" width="544" height="884" fill="none"/><circle cx="300" cy="330" r="190" fill="#D9432B"/><circle cx="300" cy="330" r="214" fill="none" stroke="#17171A" stroke-width="1.5"/><circle cx="300" cy="330" r="232" fill="none" stroke="#17171A" stroke-width="1.5"/><rect x="340" y="330" width="170" height="170" fill="#26408B" style="mix-blend-mode:multiply"/><polygon points="470,28 572,28 572,130" fill="#17171A"/><path d="M28 912V662A250 250 0 0 1 278 912Z" fill="#E3A82B"/><g transform="rotate(-9 300 566)"><rect x="-20" y="540" width="640" height="52" fill="#17171A"/><text x="48" y="574" fill="#fff" font-family="Jost" font-weight="600" font-size="22" letter-spacing="3">ask the author · 30 min video call</text></g><path d="M318 640H548M318 646H548" stroke="#17171A" stroke-width="1.5"/><text font-family="Jost" font-weight="700" font-size="50" letter-spacing="-1" fill="#17171A"><tspan x="316" y="712">every</tspan><tspan x="316" y="762">member</tspan><tspan x="316" y="812">is an</tspan><tspan x="316" y="862">author.</tspan></text></g><rect x="28" y="28" width="544" height="884" fill="none" stroke="#17171A" stroke-width="1.5"/><text x="48" y="78" font-family="Jost" font-weight="700" font-size="34" letter-spacing="-1" fill="#17171A">trove</text><text x="48" y="100" font-family="IBM Plex Mono" font-size="10.5" letter-spacing="1.6" fill="#17171A">CWRU · CLEVELAND</text></svg><div class="bk big"><span class="bk-t">teaching yourself to code at thirty-four</span><span class="bk-n">Luis</span></div></div>
+  <div class="info">
+    <div><p class="era">04 · 1920s German design school · geometry and primary ink</p><h2 class="nm">Bauhaus primer</h2></div>
+    <div><p class="lab">What we borrow</p><ul class="borrow"><li>Everything is built from three shapes (circle, square, triangle) and three inks, so the page reads as composition, not decoration.</li><li>Lowercase geometric type set tight, one diagonal black bar for the call to action, thin rules on a visible grid.</li><li>Shapes overprint, so every colour pair makes a third; the paper stays warm and unbleached.</li></ul></div>
+    <div><p class="lab">Palette</p><div class="pal"><div class="chip" style="background:#EDE6D3;color:#17171A">Paper<br>#EDE6D3</div><div class="chip" style="background:#17171A;color:#fff">Black<br>#17171A</div><div class="chip" style="background:#D9432B;color:#fff">Vermilion<br>#D9432B</div><div class="chip" style="background:#E3A82B;color:#17171A">Ochre<br>#E3A82B</div><div class="chip" style="background:#26408B;color:#fff">Prussian<br>#26408B</div></div></div>
+    <div><p class="lab">Type</p><div class="spec"><p style="font:700 32px/1 'Jost';letter-spacing:-.01em">every member is an author.</p><p style="font:500 12px 'IBM Plex Mono';letter-spacing:.1em">JOST FOR TITLES · PLEX FOR WORKING TEXT</p></div></div>
+    <div><p class="lab">Textures</p><div class="tex"><div><div class="tile" style="background-color:#EDE6D3;background-image:radial-gradient(circle at 38% 50%,#D9432B 0 19px,transparent 20px),linear-gradient(#26408B,#26408B);background-size:auto,38px 38px;background-position:0 0,56% 10px;background-repeat:no-repeat;background-blend-mode:multiply"></div><p class="tcap">Overprint</p></div><div><div class="tile" style="background:repeating-radial-gradient(circle at 0 100%,#17171A 0 1.5px,#EDE6D3 1.5px 7px)"></div><p class="tcap">Concentric arcs</p></div><div><div class="tile" style="background:radial-gradient(circle at 0 0,#E3A82B 0 14px,transparent 14.5px) 0 0/28px 28px,radial-gradient(circle at 100% 100%,#26408B 0 14px,transparent 14.5px) 0 0/28px 28px,#EDE6D3"></div><p class="tcap">Quarter tiles</p></div><div><div class="tile" style="background:linear-gradient(#D9432B,#D9432B) 0 50%/100% 14px no-repeat,repeating-linear-gradient(0deg,#17171A 0 1px,transparent 1px 6px),#EDE6D3"></div><p class="tcap">Rule and bar</p></div></div></div>
+    <div class="ui"><p class="lab" style="margin:0;padding:0">In the shelf</p><span class="uih">Changing course</span><div style="display:flex;gap:16px;align-items:center"><div class="bk" style="width:92px;height:136px;padding:12px 6px 6px 15px"><span class="bk-t" style="font-size:12.5px;text-transform:lowercase">Teaching Yourself to Code</span><span class="bk-n">Luis</span></div><div style="display:grid;gap:10px"><p style="font-size:14px;color:#55524A"><b style="color:#17171A">1</b> Starting at thirty-four. Nights, a toddler, a used laptop.</p><span class="btn">Ask to check out</span></div></div></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":940}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

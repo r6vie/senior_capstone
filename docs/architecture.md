@@ -55,7 +55,8 @@ Each new feature adds its rows here in the PR that creates its collections.
   middleware adds the bearer token from `sessionStorage`.
 - `src/features/auth/AuthProvider.tsx` holds the signed-in member. `RequireAuth` guards pages that
   need a session.
-- Design tokens are CSS variables in `src/ui/styles.css`. The visual design is still to be decided.
+- Design tokens are CSS variables in `src/ui/styles.css`. The look is the Manga screentone design system:
+  rules in `docs/design/system.md`, reference CSS in `docs/design/system/tokens.css`.
 
 ## Testing
 

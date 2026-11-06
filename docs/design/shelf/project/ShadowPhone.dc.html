@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trove shelf, light and shadow, phone</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&amp;family=Libre+Caslon+Text:ital@1&amp;display=swap">
+<style>
+body { margin: 0; }
+.lp {
+  --wall: #EEEAE3; --wall-deep: #E5DFD5; --paper: #F9F7F3; --ink: #1F1D1A; --ink-2: #5A544C; --line: #D7CFC3;
+  --ochre: #C29A45; --blue: #3F5C8C; --red: #9C3A30; --sun: rgba(255, 245, 218, .78); --sh: 74, 56, 36;
+  --carved: inset 2px 3px 5px rgba(var(--sh), .2), inset 1px 1px 1px rgba(var(--sh), .12), 0 1px 0 rgba(255,255,255,.75);
+  --rest: 1px 1px 0 rgba(var(--sh), .08), 3px 4px 6px rgba(var(--sh), .1), 10px 14px 20px -8px rgba(var(--sh), .16);
+  --sans: "Jost", "Futura", "Century Gothic", sans-serif; --voice: "Libre Caslon Text", Georgia, serif;
+  width: 390px; height: 844px; display: flex; flex-direction: column; overflow: hidden;
+  font-family: var(--sans); color: var(--ink); background: var(--wall); font-size: 15px; line-height: 1.45;
+}
+.lp * { box-sizing: border-box; }
+:where(.lp) :is(h1, h2, h3, p) { margin: 0; }
+.bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px 20px; }
+.brand { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 600; color: var(--ink); text-decoration: none; }
+.logo { position: relative; width: 20px; height: 20px; border: 2px solid var(--ink); }
+.logo::after { content: ""; position: absolute; width: 11px; height: 11px; border-radius: 50%; background: var(--ochre); right: -6px; bottom: -6px; }
+.me { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--paper); box-shadow: var(--rest); font: inherit; font-weight: 600; color: var(--ink); }
+.body { flex: 1; min-height: 0; overflow: hidden; padding: 14px 20px 0; display: flex; flex-direction: column; gap: 24px; }
+.ask { display: block; font-weight: 500; font-size: 30px; line-height: 1.06; margin-bottom: 14px; }
+.field { display: flex; align-items: center; gap: 10px; height: 54px; padding: 0 16px; border-radius: 11px; background: var(--wall-deep); box-shadow: var(--carved); color: var(--ink-2); }
+.field input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: 16px; color: var(--ink); outline: none; }
+.field input::placeholder { color: #6E675D; }
+.window { position: relative; display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 16px; align-items: end; padding: 18px 14px 0; text-decoration: none; color: var(--ink); }
+.window::before { content: ""; position: absolute; inset: 0 -10px 10px 0; pointer-events: none; filter: blur(2px); clip-path: polygon(12% 0, 100% 0, 88% 100%, 0 100%);
+  background: linear-gradient(90deg, transparent calc(50% - 4px), rgba(var(--sh), .07) calc(50% - 4px) calc(50% + 4px), transparent calc(50% + 4px)), var(--sun); }
+.sill { position: absolute; left: 0; right: 0; bottom: 0; height: 10px; border-radius: 2px; background: var(--paper); box-shadow: var(--rest); }
+.pick { position: relative; padding-bottom: 26px; min-width: 0; }
+.pick-who { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.pick h2 { font-weight: 500; font-size: 19px; line-height: 1.15; margin: 4px 0 6px; }
+.pick .why { font-family: var(--voice); font-style: italic; font-size: 13.5px; line-height: 1.45; }
+.shelf-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+.shelf-head h2 { font-weight: 500; font-size: 21px; }
+.shelf-head small { display: block; font-size: 12.5px; color: var(--ink-2); }
+.shelf-head a { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 500; color: var(--ink); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.niche { display: flex; align-items: flex-end; gap: 22px; margin-right: -20px; padding: 24px 0 18px 20px; border-radius: 4px 0 0 4px; overflow: hidden;
+  background: var(--wall-deep); box-shadow: inset 0 16px 20px -12px rgba(var(--sh), .34), inset 14px 0 18px -14px rgba(var(--sh), .24), 0 1px 0 rgba(255,255,255,.85); }
+.bk { position: relative; flex: none; display: flex; flex-direction: column; width: 112px; height: 164px; padding: 17px 12px 12px 18px; border-radius: 2px 3px 3px 2px; color: var(--ink); text-decoration: none; overflow: hidden;
+  background-color: var(--paper);
+  background-image: linear-gradient(90deg, transparent 6px, rgba(var(--sh), .13) 6px 7px, rgba(255,255,255,.9) 7px 8px, transparent 8px), linear-gradient(125deg, rgba(255,255,255,.7), rgba(255,255,255,0) 45%, rgba(var(--sh), .045));
+  box-shadow: 1px 1px 0 rgba(var(--sh), .1), 7px 3px 8px -3px rgba(var(--sh), .2), 14px 6px 18px -8px rgba(var(--sh), .12); }
+.bk.sm { width: 84px; height: 124px; padding: 13px 9px 9px 14px; box-shadow: 1px 1px 0 rgba(var(--sh), .1), 16px 5px 5px -3px rgba(var(--sh), .22), 28px 8px 16px -6px rgba(var(--sh), .14); margin-bottom: 10px; }
+.bk-title { position: relative; z-index: 1; font-weight: 500; font-size: 13px; line-height: 1.2; text-shadow: 0 1px 0 rgba(255,255,255,.95); }
+.bk.sm .bk-title { font-size: 10px; }
+.bk-name { position: relative; z-index: 1; margin-top: auto; font-size: 11px; color: var(--ink-2); }
+.bk.sm .bk-name { font-size: 8.5px; }
+.mk { position: absolute; z-index: 0; }
+.m-circle { width: 28px; height: 28px; border-radius: 50%; right: 11px; bottom: 28px; }
+.m-half { width: 52px; height: 26px; border-radius: 52px 52px 0 0; right: -8px; bottom: 0; }
+.m-tri { width: 30px; height: 26px; right: 11px; bottom: 28px; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.m-bar { width: 5px; height: 52px; bottom: 0; right: 18px; }
+.k-ochre { background: var(--ochre); } .k-blue { background: var(--blue); } .k-red { background: var(--red); } .k-ink { background: var(--ink); }
+.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 0 12px 14px; padding: 4px; border-radius: 14px; background: var(--wall-deep); box-shadow: var(--carved); }
+.tabs a { display: grid; place-items: center; height: 48px; border-radius: 10px; font-size: 13px; font-weight: 500; color: var(--ink-2); text-decoration: none; }
+.tabs a[aria-current="page"] { background: var(--paper); color: var(--ink); box-shadow: var(--rest); }
+</style>
+</helmet>
+<div class="lp">
+  <header class="bar">
+    <a class="brand" href="#"><span class="logo" aria-hidden="true"></span>Trove</a>
+    <button class="me" type="button" aria-label="Your account, Sam">S</button>
+  </header>
+  <div class="body">
+    <div>
+      <label class="ask" for="lp-topic">What do you want to talk about?</label>
+      <form class="field" role="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <input id="lp-topic" type="search" placeholder="A topic, not a name">
+      </form>
+    </div>
+    <a class="window" href="#" aria-label="The Librarian recommends Why I Turned Down Grad School Twice, by Hana">
+      <span class="bk sm"><span class="mk m-half k-blue"></span><span class="bk-title">Why I Turned Down Grad School Twice</span><span class="bk-name">Hana</span></span>
+      <span class="pick">
+        <span class="pick-who" style="display: block">The Librarian recommends</span>
+        <span style="display: block; font-weight: 500; font-size: 19px; line-height: 1.15; margin: 4px 0 6px">Why I Turned Down Grad School Twice</span>
+        <span class="why" style="display: block">You're deciding about a PhD. Hana weighed the same choice, twice.</span>
+      </span>
+      <span class="sill" aria-hidden="true"></span>
+    </a>
+    <section aria-label="Changing course">
+      <div class="shelf-head">
+        <div><h2>Changing course</h2><small>placeholder shelf</small></div>
+        <a href="#">See all</a>
+      </div>
+      <div class="niche">
+        <a class="bk" href="#" aria-label="How to Leave a Job Without Burning the Bridge, by Dana"><span class="mk m-circle k-ochre"></span><span class="bk-title">How to Leave a Job Without Burning the Bridge</span><span class="bk-name">Dana</span></a>
+        <a class="bk" href="#" aria-label="Switching Off Pre-Med Before Telling Your Parents, by Marcus"><span class="mk m-bar k-red"></span><span class="bk-title">Switching Off Pre-Med Before Telling Your Parents</span><span class="bk-name">Marcus</span></a>
+        <a class="bk" href="#" aria-label="Teaching Yourself to Code at Thirty-Four, by Luis"><span class="mk m-half k-blue"></span><span class="bk-title">Teaching Yourself to Code at Thirty-Four</span><span class="bk-name">Luis</span></a>
+        <a class="bk" href="#" aria-label="From Orchestra Pit to Product Manager, by Kiera"><span class="mk m-tri k-ink"></span><span class="bk-title">From Orchestra Pit to Product Manager</span><span class="bk-name">Kiera</span></a>
+      </div>
+    </section>
+  </div>
+  <nav class="tabs" aria-label="Main">
+    <a href="#" aria-current="page">Shelf</a>
+    <a href="#">My book</a>
+    <a href="#">Checkouts</a>
+    <a href="#">Past meets</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

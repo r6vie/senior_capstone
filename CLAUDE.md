@@ -42,6 +42,7 @@ web/src/ui/              shared components and design tokens (styles.css)
 web/src/api/             client.ts, errors.ts, and schema.ts (generated, never edit by hand)
 web/src/app/App.tsx      the route table
 docs/                    trove.md (product), plan.md (work plan), architecture.md
+docs/design/            system.md (the design system rulebook), system/tokens.css, decisions.md, the design canvas
 ```
 
 Features: `auth`, `notifications`, `books`, `interview`, `discovery`, `checkouts`, `messaging`, `meetings`.
@@ -64,7 +65,9 @@ Each backend feature's `__init__.py` says what it covers and which collections i
   `notifications/service.py`, and call it as a background task.
 - **Frontend API calls** go through `api` from `web/src/api/client.ts`. Types come from the generated
   `schema.ts`. Don't write request or response types by hand.
-- **Styling:** use the CSS variables in `web/src/ui/styles.css`. No hard-coded colors.
+- **Styling:** use the CSS variables (the design tokens) and components of the design system. No hard-coded
+  colors, sizes, fonts or radii. **Read [docs/design/system.md](docs/design/system.md) before building or
+  changing any UI.** It says what is fixed, what is a default and where you are free to design new things.
 - **Comments** explain *why*, not *what*. Match the density of the surrounding code.
 
 ## Product rules that code must respect
@@ -76,6 +79,9 @@ Each backend feature's `__init__.py` says what it covers and which collections i
 - **No performance features:** no follower counts, likes, view counts, public request counts,
   "fully booked" badges, or feeds.
 - **No cold messages:** messages exist only inside a checkout request.
+- **Follow the design system.** Red is the primary action and nothing else; one focal point per screen; dot
+  tone for shade, never blur. New patterns are welcome when no recipe fits, and get recorded in
+  `docs/design/system.md` (Additions).
 - **Don't decide product questions in code.** If the plan doesn't say, stop and ask the human
   (see CONTRIBUTING.md, "Product questions").
 
