@@ -2,6 +2,19 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-06: cover directions, round 1
+
+- **Josef:** explore the book cover. White ground for contrast, title at the top, titles can carry color, art
+  from Japanese art forms, personalized by choice (not by what the book says), designed for the size it shows at.
+- **New canvas page "Covers"**, board `CoverDirections`: five directions, each shown at 236x344, 122x178 (five
+  variants) and 92x136: A seigaiha waves, B sumi-e bamboo wash, C sashiko stitched cloth (asanoha, shippo, kikko,
+  yabane, uroko), D kamon crest, E ukiyo-e Fuji with bokashi sky.
+- **Cover rules in the exploration:** title top in Newsreader 600 in the cover color (all cover colors have AA
+  contrast on white and avoid the UI red); art in the lower 36%; first name at the foot; vector art so it is sharp
+  at 2x (244x356); no Japanese characters. Cover art needs a Fixed-tier decision before joining system.md.
+
+Pending Josef's pick (one, or a mix).
+
 ## 2026-11-06: the design system (Manga screentone), and the docs enforce it
 
 - **Chosen:** manga B2 (top navigation, B's banner and shelves, the red framed button) is the reference screen.

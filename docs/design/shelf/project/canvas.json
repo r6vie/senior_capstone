@@ -32,6 +32,10 @@
     {
       "id": "system",
       "name": "Design system"
+    },
+    {
+      "id": "covers",
+      "name": "Covers"
     }
   ],
   "boards": {
@@ -342,6 +346,15 @@
       "h": 2600,
       "title": "4 \u00b7 How to use it: fixed, default, free",
       "page": "system"
+    },
+    "CoverDirections.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 3000,
+      "title": "Cover directions \u00b7 round 1",
+      "page": "covers",
+      "expand": "fill"
     }
   },
   "order": [
@@ -383,7 +396,8 @@
     "SysFoundations.dc.html",
     "SysComponents1.dc.html",
     "SysComponents2.dc.html",
-    "SysRules.dc.html"
+    "SysRules.dc.html",
+    "CoverDirections.dc.html"
   ],
   "notes": {
     "head": {
@@ -460,6 +474,14 @@
       "kind": "title1",
       "maxW": 2960,
       "page": "system"
+    },
+    "covers": {
+      "x": 0,
+      "y": -300,
+      "text": "Covers \u00b7 five directions on white, inspired by Japanese art forms",
+      "kind": "title1",
+      "maxW": 1440,
+      "page": "covers"
     }
   },
   "designSystems": []
