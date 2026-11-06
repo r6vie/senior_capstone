@@ -2,6 +2,21 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-06: direction 4, daylight library (from Josef's photo of a Scandinavian library)
+
+- **Reference:** a pale-wood Scandinavian public library: curved ribs overhead, tall arched windows
+  with slender slats, low slanted display units with books face out, sun striping the room.
+- **Feedback on the first attempt:** it copied nothing of the photo (stepped blocky units, huge empty
+  areas), had no real light, and the brown read greenish. Rebuilt.
+- **Now:** honey and peach birch (never beige or olive), gold-white daylight, a vault of diagonal
+  ribs as the header, two arched windows (the Librarian's pick stands in the first), full-width
+  slanted shelf units with six books each, and diagonal stripes of sun across the whole page. Dense
+  by default: no staggered empty steps.
+- **Search is a small field in the ceiling.**
+- Artboards on the Designs page, row 5: `ScandiPage` (interactive), `ScandiPhone`, `ScandiNotes`.
+
+Pending Josef's review.
+
 ## 2026-11-05: back to layout, in black and white
 
 - **None of the Carrara, light-and-shadow or cloth-and-oak looks is the one.** They stay on the
