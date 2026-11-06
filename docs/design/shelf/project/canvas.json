@@ -166,7 +166,7 @@
       "y": 0,
       "w": 1440,
       "h": 1120,
-      "title": "Shelf \u00b7 desktop",
+      "title": "A \u00b7 Neutral, shelf desktop",
       "expand": "fill",
       "is_interactive": true,
       "page": "tool"
@@ -177,6 +177,22 @@
       "w": 390,
       "h": 844,
       "title": "Shelf \u00b7 phone",
+      "page": "tool"
+    },
+    "ToolDark.dc.html": {
+      "x": 0,
+      "y": 1240,
+      "w": 1440,
+      "h": 1300,
+      "title": "B \u00b7 After hours: lamplight on white books",
+      "page": "tool"
+    },
+    "ToolCirc.dc.html": {
+      "x": 1520,
+      "y": 1240,
+      "w": 1440,
+      "h": 1300,
+      "title": "C \u00b7 Circulation desk: ink, stamp and highlighter",
       "page": "tool"
     }
   },
@@ -200,7 +216,9 @@
     "WireC.dc.html",
     "WireD.dc.html",
     "ToolShelf.dc.html",
-    "ToolPhone.dc.html"
+    "ToolPhone.dc.html",
+    "ToolDark.dc.html",
+    "ToolCirc.dc.html"
   ],
   "notes": {
     "head": {

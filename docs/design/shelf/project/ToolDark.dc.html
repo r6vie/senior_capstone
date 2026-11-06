@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Working shelf, after hours</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
+<style>
+body { margin: 0; }
+
+.tb { --bg:#14181F; --side:#0E1116; --panel:#191E26; --line:#262C36; --ink:#F3EFE7; --ink-2:#A9ADB4; --ink-3:#757A83; --amber:#F4B23E; --amber-d:#C98A1C;
+  --serif:"Newsreader",Georgia,serif; --sans:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  display:grid; grid-template-columns:224px minmax(0,1fr) 380px; width:1440px; min-height:1120px; background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:14px; line-height:1.5; }
+.tb * { box-sizing:border-box; } :where(.tb) :is(h1,h2,h3,p,ul,ol){margin:0;padding:0;} .tb button{font:inherit;color:inherit;}
+.side{display:flex;flex-direction:column;padding:22px 12px;background:var(--side);border-right:1px solid var(--line);}
+.brand{display:flex;align-items:center;gap:9px;padding:0 10px 26px;font-family:var(--serif);font-size:24px;font-weight:600;}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--amber);box-shadow:0 0 14px 3px rgba(244,178,62,.55);}
+.nav{display:grid;gap:2px}.nav a{display:block;padding:8px 10px;border-radius:6px;color:var(--ink-2);text-decoration:none;font-weight:500;}
+.nav a[aria-current="page"]{background:#1C222B;color:var(--ink);box-shadow:inset 2px 0 0 var(--amber);}
+.me{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px;border-top:1px solid var(--line);}
+.me i{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--amber);color:#14181F;font-style:normal;font-weight:600;font-size:12px;}
+.main{min-width:0;padding:0 36px 44px;display:grid;gap:30px;align-content:start;}
+.top{display:flex;align-items:center;gap:16px;height:84px;}
+.top h1{margin-right:auto;font-family:var(--serif);font-weight:500;font-size:30px;letter-spacing:-.01em;}
+.find{display:flex;align-items:center;gap:8px;width:280px;height:34px;padding:0 10px;border:1px solid #2E3541;border-radius:6px;color:var(--ink-3);background:#10141A;}
+.find kbd{margin-left:auto;font:500 11px var(--sans);padding:1px 5px;border:1px solid #2E3541;border-radius:4px;}
+.rec{position:relative;display:grid;grid-template-columns:230px minmax(0,1fr);gap:36px;align-items:center;padding:28px 36px;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  background:radial-gradient(60% 120% at 12% 40%, rgba(244,178,62,.28), rgba(244,178,62,0) 70%), linear-gradient(180deg,#1C222B,#171B22);}
+.rec .stage{perspective:900px;display:grid;place-items:center;}
+.rec .big{width:168px;aspect-ratio:140/206;transform:rotateY(-18deg) rotateX(2deg);transform-style:preserve-3d;box-shadow:-2px 0 0 #fff inset,10px 18px 30px -8px rgba(0,0,0,.65),0 0 60px 8px rgba(244,178,62,.18);}
+.lab{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);}
+.rec h2{font-family:var(--serif);font-weight:500;font-size:38px;line-height:1.1;letter-spacing:-.015em;margin:8px 0 10px;max-width:20ch;}
+.rec .why{color:var(--ink-2);font-size:16px;max-width:52ch;}
+.act{display:flex;gap:10px;margin-top:20px}
+.btn{height:38px;padding:0 16px;border-radius:6px;border:1px solid #394150;background:transparent;font-weight:500;}
+.btn.pri{background:var(--amber);border-color:var(--amber);color:#14181F;font-weight:600;}
+.btn.lg{height:42px;width:100%}
+.shelf{position:relative}
+.shelf::before{content:"";position:absolute;left:-12px;right:-12px;top:-6px;height:260px;background:radial-gradient(60% 100% at 50% 0,rgba(255,236,200,.09),rgba(255,236,200,0) 75%);pointer-events:none;}
+.shelf-h{position:relative;display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;}
+.shelf-h h3{font-family:var(--serif);font-weight:500;font-size:21px;}
+.shelf-h a{font-size:13px;color:var(--ink-2);text-decoration:none}
+.row{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:22px;align-items:end;padding:0 6px;}
+.ledge{position:relative;height:7px;border-radius:0 0 3px 3px;background:linear-gradient(180deg,#3A414D,#232932);box-shadow:0 10px 14px -6px rgba(0,0,0,.6);}
+.bk{position:relative;display:flex;flex-direction:column;width:100%;aspect-ratio:140/206;padding:18px 12px 12px 22px;text-align:left;border:0;border-radius:2px 4px 4px 2px;color:#1A1C20;
+  background:linear-gradient(90deg,#DCD8CF 0,#F1EEE7 7px,#fff 8px 11px,#F1EEE7 12px,#FFFEFB 16px),#fff;box-shadow:3px 0 0 -1px #BEBAB1,8px 10px 16px -6px rgba(0,0,0,.65);}
+.bk::before{content:"";position:absolute;left:11px;top:0;bottom:0;width:1px;background:rgba(20,22,26,.12)}
+.bk.sel{transform:translateY(-8px);box-shadow:0 0 0 2px var(--amber),0 0 28px 2px rgba(244,178,62,.35),8px 16px 20px -8px rgba(0,0,0,.7);}
+.tb .bk{color:#1A1C20}
+.bk-t{font-family:var(--serif);font-weight:600;font-size:15px;line-height:1.2;} .bk-n{margin-top:auto;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#5A5F68;}
+.panel{border-left:1px solid var(--line);background:var(--panel);padding:30px 28px;display:flex;flex-direction:column;gap:22px;}
+.p-head{display:grid;grid-template-columns:96px minmax(0,1fr);gap:18px;align-items:end;}
+.p-head .bk{width:96px;padding:12px 8px 8px 14px}.p-head .bk-t{font-size:11px}.p-head .bk-n{font-size:8px}
+.p-head h2{font-family:var(--serif);font-weight:500;font-size:24px;line-height:1.15}.by{margin-top:4px;color:var(--ink-2)}
+.ch-h{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+.ch{list-style:none}.ch li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:8px;padding:12px 0;border-top:1px solid var(--line)}.ch li:last-child{border-bottom:1px solid var(--line)}
+.ch .n{font-family:var(--serif);font-size:18px;color:var(--amber)}.ch strong{display:block;font-weight:600}.ch .l{color:var(--ink-2);font-size:13px}
+.p-act{display:grid;gap:8px}.facts{display:grid;gap:4px;font-size:13px;color:var(--ink-2)}
+
+</style>
+</helmet>
+<div class="tb">
+<aside class="side"><div class="brand"><i></i>Trove</div><nav class="nav" aria-label="Main"><a href="#" aria-current="page">Shelf</a><a href="#">My book</a><a href="#">Checkouts</a><a href="#">Past meets</a></nav><div class="me"><i>S</i><span>Sam</span></div></aside>
+<div class="main">
+<header class="top"><h1>Good evening, Sam.</h1><label class="find"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search by topic</span><kbd>/</kbd></label></header>
+<section class="rec" aria-label="The Librarian recommends"><div class="stage"><div class="bk big"><span class="bk-t" style="font-size:19px">Why I Turned Down Grad School Twice</span><span class="bk-n">Hana</span></div></div>
+<div><p class="lab">The Librarian recommends</p><h2>Why I Turned Down Grad School Twice</h2><p class="why">You told the Librarian you’re deciding about a PhD. Hana weighed the same choice, twice.</p><div class="act"><button class="btn pri" type="button">Open the book</button><button class="btn" type="button">Another suggestion</button></div></div></section>
+<section class="shelf" aria-label="Changing course"><div class="shelf-h"><h3>Changing course</h3><a href="#">See shelf</a></div><div class="row"><button class="bk" type="button"><span class="bk-t">How to Leave a Job Without Burning the Bridge</span><span class="bk-n">Dana</span></button><button class="bk" type="button"><span class="bk-t">Switching Off Pre-Med Before Telling Your Parents</span><span class="bk-n">Marcus</span></button><button class="bk sel" type="button"><span class="bk-t">Teaching Yourself to Code at Thirty-Four</span><span class="bk-n">Luis</span></button><button class="bk" type="button"><span class="bk-t">From Orchestra Pit to Product Manager</span><span class="bk-n">Kiera</span></button><button class="bk" type="button"><span class="bk-t">Living With an Engineering Degree You Don’t Use</span><span class="bk-n">Jamal</span></button></div><div class="ledge"></div></section><section class="shelf" aria-label="How things really work"><div class="shelf-h"><h3>How things really work</h3><a href="#">See shelf</a></div><div class="row"><button class="bk" type="button"><span class="bk-t">What Nineteen-Year-Olds Actually Think of Your App</span><span class="bk-n">Priya</span></button><button class="bk" type="button"><span class="bk-t">How a Hospital Actually Decides What to Buy</span><span class="bk-n">Grace</span></button><button class="bk" type="button"><span class="bk-t">Getting a Grant Reviewer to Keep Reading</span><span class="bk-n">Noor</span></button><button class="bk" type="button"><span class="bk-t">Negotiating a First Offer With No Leverage</span><span class="bk-n">Ben</span></button><button class="bk" type="button"><span class="bk-t">What a Patent Examiner Looks For</span><span class="bk-n">Owen</span></button></div><div class="ledge"></div></section><section class="shelf" aria-label="Starting from zero"><div class="shelf-h"><h3>Starting from zero</h3><a href="#">See shelf</a></div><div class="row"><button class="bk" type="button"><span class="bk-t">Running a Student Org When Nobody Shows Up</span><span class="bk-n">Aisha</span></button><button class="bk" type="button"><span class="bk-t">The First Ninety Days of Running a Lab</span><span class="bk-n">Elena</span></button><button class="bk" type="button"><span class="bk-t">What Cleveland Taught Me About Starting Small</span><span class="bk-n">Ray</span></button><button class="bk" type="button"><span class="bk-t">Being the First in Your Family to Do Any of This</span><span class="bk-n">Rosa</span></button><button class="bk" type="button"><span class="bk-t">Selling to Your First Ten Customers by Hand</span><span class="bk-n">Theo</span></button></div><div class="ledge"></div></section>
+</div>
+<aside class="panel"><div class="p-head"><div class="bk"><span class="bk-t">Teaching Yourself to Code at Thirty-Four</span><span class="bk-n">Luis</span></div><div><h2>Teaching Yourself to Code at Thirty-Four</h2><p class="by">by Luis</p></div></div>
+<div><p class="ch-h">Chapters</p><ol class="ch"><li><span class="n">1</span><div><strong>Starting at thirty-four</strong><span class="l">Nights, a toddler, and a used laptop.</span></div></li><li><span class="n">2</span><div><strong>The free courses worth finishing</strong><span class="l">And the ones I’d skip.</span></div></li><li><span class="n">3</span><div><strong>A first interview with no degree in it</strong><span class="l">What I showed instead.</span></div></li><li><span class="n">4</span><div><strong>The oldest junior on the team</strong><span class="l">Why it turned out to help.</span></div></li></ol></div>
+<div class="p-act"><button class="btn pri lg" type="button">Ask to check out</button><button class="btn lg" type="button">Read the whole book</button></div>
+<div class="facts"><p>A video call of about 30 minutes, if Luis says yes.</p><p>Last names and contact details are shared only after a yes.</p></div></aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1120}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

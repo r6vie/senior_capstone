@@ -13,6 +13,10 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   (chapters, Ask to check out). No decoration, no texture.
 - **Books are plain white** (spine hinge, page edge, soft shadow) until Josef settles the cover design.
 - New canvas page "Working tool": `ToolShelf` (interactive), `ToolPhone`.
+- Josef: "structure and layout are right, but boring and basic." Two static desktop options added to the
+  page for character, energy and warmth: `ToolDark` (B, after hours: dark ink room, amber lamplight on
+  white books, a 3D-tilted Librarian pick) and `ToolCirc` (C, circulation desk: ink rules, highlighter
+  yellow, stamp blue, mono labels, index-card recommendation).
 
 Pending Josef's review.
 
