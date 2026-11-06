@@ -2,6 +2,16 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-06: cover direction F, cherry blossom watercolor
+
+- **Josef:** a cherry blossom watercolor cover: paint over the white cover that fades upward with no cut between the
+  title area and the picture. Polished and beautiful.
+- **Board `CoverWatercolor`** on the Covers page. A pastel two-color wash, a plum branch, layered blossoms and
+  drifting petals, masked to white by the title; five palettes (sakura, wisteria, apricot, rain, matcha), mirrored
+  branches and a seed per cover. Build steps are shown. Titles take each palette's dark color (AA on white).
+- **Cost note:** the art uses SVG filters, so render each cover once to a 244x356 WebP instead of live on the shelf.
+
+
 ## 2026-11-06: cover directions, round 1
 
 - **Josef:** explore the book cover. White ground for contrast, title at the top, titles can carry color, art

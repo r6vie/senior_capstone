@@ -355,6 +355,15 @@
       "title": "Cover directions \u00b7 round 1",
       "page": "covers",
       "expand": "fill"
+    },
+    "CoverWatercolor.dc.html": {
+      "x": 0,
+      "y": 3120,
+      "w": 1440,
+      "h": 1180,
+      "title": "F \u00b7 Cherry blossom watercolor",
+      "page": "covers",
+      "expand": "fill"
     }
   },
   "order": [
@@ -397,7 +406,8 @@
     "SysComponents1.dc.html",
     "SysComponents2.dc.html",
     "SysRules.dc.html",
-    "CoverDirections.dc.html"
+    "CoverDirections.dc.html",
+    "CoverWatercolor.dc.html"
   ],
   "notes": {
     "head": {
