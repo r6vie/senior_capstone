@@ -18,6 +18,11 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   scale bar), 05 (registration marks, test strip, halftone) and 06 (second row of specimens, scale bar).
   Every board now has a Textures row, a layer to mix and match across identities.
 
+- **Round 3 (Josef: not 03 and 04):** replaced them with other countries' comic textures: 03 manga
+  screentone (Japan: dot tones, focus lines, slanted gutters, one red hanko seal) and 04 ligne claire
+  (Franco-Belgian: even line, flat colour, brick and roof-tile patterns, flat shadows). Bookcloth and
+  cyanotype are dropped.
+
 Pending Josef's pick (one, or a blend).
 
 ## 2026-11-06: direction 5, working tool (a clean break from the material looks)
