@@ -203,8 +203,6 @@ export interface components {
             cover_style: "cover-1" | "cover-2" | "cover-3" | "cover-4" | "cover-5" | "cover-6" | "cover-7" | "cover-8";
             /** Blurb */
             blurb: string | null;
-            /** Is Sample */
-            is_sample: boolean;
         };
         /** Chapter */
         Chapter: {
@@ -304,8 +302,6 @@ export interface components {
             cover_style: "cover-1" | "cover-2" | "cover-3" | "cover-4" | "cover-5" | "cover-6" | "cover-7" | "cover-8";
             /** Blurb */
             blurb: string | null;
-            /** Is Sample */
-            is_sample: boolean;
             /** Chapters */
             chapters: components["schemas"]["Chapter"][];
         };

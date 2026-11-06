@@ -62,9 +62,17 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **No genres anywhere in the book.** A book's chapters can cover very different things, so no single genre fits a whole book.
 - **Chapters:** the inside of the book is a set of chapters. Each one is something the author could talk about, and each is grounded in the author's own words.
 - **Names:** books show the author's **first name**. Last name, employer, title and contact details are revealed only on a mutual yes (§9.1).
-  - An optional pen name is available for anyone who needs more discretion. The Librarian suggests one, and the author can change it.
+  - There are no pen names: members are known by their first name.
   - The book's text stays vague on identifying details, as in Overdue.
 - **Adding to the book:** the author can reopen the interview from their book at any time to add detail or chapters (as in Overdue's author interview).
+- **What a book holds** (B1):
+  - A title, the author's first name, a cover style, an optional blurb, and the chapters in reading order.
+  - Each chapter has a title, a short summary and the quotes from the interview it's grounded in. Readers see the title and summary; only the author sees the quotes.
+  - Copies default to 3 (1–10). Readers never see the number.
+  - A book is a draft or on the shelf. Only books on the shelf are visible to readers, newest first.
+  - Covers are plain white for now. Each book stores a cover style so covers can differ later.
+  - Every book page and the shelf need sign-in.
+- **Sample books** (B1): about 20 invented books, seeded only into a developer's own database. They're marked as samples in the database so the seed can remove them, but readers don't see a "sample" label for now.
 
 ### Open
 
@@ -168,7 +176,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 
 - **Last names are what make someone searchable.** A last name lets you look a person up on LinkedIn or Google, and that lookup is where performance and status sneak back in. A first name alone does neither.
 - **Full anonymity costs trust.** Professionals, alumni especially, are wary of requests from someone with no name. A first name makes a book feel like it was written by a person, and makes a request feel like it came from one.
-- **Pen names would mostly end up as first names anyway**, so making everyone choose one would add a step without gaining anything. The optional pen name covers people who need discretion.
+- **Pen names would mostly end up as first names anyway**, so there are none: everyone is known by their first name.
 - **One caution:** in a small community, a first name plus specific details can still identify someone. The book's text should stay vague on identifying details.
 
 ### 9.2 Branches and affiliation (decided: none for now)
@@ -273,3 +281,6 @@ Membership verification is still open:
 - **2026-11-05, repo setup:**
   - Stay on MongoDB (low traffic expected; Postgres considered and declined).
   - Rebuild Trove from scratch in the same repo. FoundersCircle is tagged `founderscircle-v1`; only sign-in, email and the Claude client were carried over.
+- **2026-11-06, the book model (B1):**
+  - No pen names; books show the first name only.
+  - Settled what a book holds, who sees what, and how sample books work (§3).

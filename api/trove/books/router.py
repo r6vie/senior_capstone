@@ -10,7 +10,7 @@ router = APIRouter(prefix="/books", tags=["Books"])
 
 
 def _card(book: dict) -> dict:
-    return {**book, "id": book["_id"], "blurb": book.get("blurb"), "is_sample": book.get("is_sample", False)}
+    return {**book, "id": book["_id"], "blurb": book.get("blurb")}
 
 
 @router.get("", response_model=ShelfPage)

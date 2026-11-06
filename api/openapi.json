@@ -459,10 +459,6 @@
               }
             ],
             "title": "Blurb"
-          },
-          "is_sample": {
-            "type": "boolean",
-            "title": "Is Sample"
           }
         },
         "type": "object",
@@ -471,8 +467,7 @@
           "title",
           "author_name",
           "cover_style",
-          "blurb",
-          "is_sample"
+          "blurb"
         ],
         "title": "BookCard",
         "description": "A book as it appears on the shelf."
@@ -698,10 +693,6 @@
             ],
             "title": "Blurb"
           },
-          "is_sample": {
-            "type": "boolean",
-            "title": "Is Sample"
-          },
           "chapters": {
             "items": {
               "$ref": "#/components/schemas/Chapter"
@@ -717,7 +708,6 @@
           "author_name",
           "cover_style",
           "blurb",
-          "is_sample",
           "chapters"
         ],
         "title": "PublicBookResponse",

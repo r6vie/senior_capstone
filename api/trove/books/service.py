@@ -21,7 +21,6 @@ PUBLIC_FIELDS = {
     "chapters.title": 1,
     "chapters.summary": 1,
     "copies": 1,
-    "is_sample": 1,
     "published_at": 1,
 }
 SHELF_SORT = [("published_at", DESCENDING), ("_id", DESCENDING)]

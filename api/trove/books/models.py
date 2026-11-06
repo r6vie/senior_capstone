@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-# What each cover looks like is a design decision; the API only carries which one a book uses.
+# Books are plain white for now; the style is stored so covers can differ later without a migration.
 CoverStyle = Literal["cover-1", "cover-2", "cover-3", "cover-4", "cover-5", "cover-6", "cover-7", "cover-8"]
 BookStatus = Literal["draft", "on_shelf"]
 DEFAULT_COPIES = 3
@@ -28,7 +28,6 @@ class BookCard(BaseModel):
     author_name: str
     cover_style: CoverStyle
     blurb: str | None
-    is_sample: bool
 
 
 class PublicBookResponse(BookCard):

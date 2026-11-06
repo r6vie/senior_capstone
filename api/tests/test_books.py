@@ -50,7 +50,6 @@ async def test_open_a_book(client, database):
         "author_name": "Jordan",
         "cover_style": "cover-1",
         "blurb": "A blurb.",
-        "is_sample": False,
         "chapters": [{"id": "c1", "title": "One thing", "summary": "About it."}],
     }
 
@@ -135,10 +134,11 @@ async def test_seed_is_repeatable_and_removes_only_samples(client, database):
 
     _, headers = await sign_in(client)
     shelf = (await client.get("/books", params={"limit": 50}, headers=headers)).json()["books"]
-    samples = [b for b in shelf if b["is_sample"]]
+    samples = [b for b in shelf if b["id"] != "book-1"]
     assert len(samples) == len(SAMPLES)
     opened = await client.get(f"/books/{samples[0]['id']}", headers=headers)
     assert opened.status_code == 200
+    assert "is_sample" not in opened.text  # samples aren't labelled for readers (yet)
 
     assert await remove_samples(database) == len(SAMPLES)
     assert await database.books.count_documents({}) == 1
