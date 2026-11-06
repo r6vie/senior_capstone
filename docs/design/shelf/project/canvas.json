@@ -14,13 +14,15 @@
     "ShadowSystem.dc.html": { "x": 1990, "y": 2920, "w": 1200, "h": 1240, "title": "Light and shadow · the system" },
     "MarbleA.dc.html": { "x": 0, "y": 5760, "w": 1200, "h": 640, "title": "Marble A · polished Carrara ledge" },
     "MarbleB.dc.html": { "x": 1280, "y": 5760, "w": 1200, "h": 640, "title": "Marble B · green marble niche" },
-    "MarbleC.dc.html": { "x": 2560, "y": 5760, "w": 1200, "h": 640, "title": "Marble C · honed pink slab, block bookends" }
+    "MarbleC.dc.html": { "x": 2560, "y": 5760, "w": 1200, "h": 640, "title": "Marble C · honed pink slab, block bookends" },
+    "MarblePage.dc.html": { "x": 0, "y": 7000, "w": 1440, "h": 2760, "title": "Carrara · shelf page, desktop", "expand": "fill", "is_interactive": true }
   },
-  "order": ["Main.dc.html", "PhoneShelf.dc.html", "PhoneBook.dc.html", "BookObject.dc.html", "ShadowShelf.dc.html", "ShadowPhone.dc.html", "ShadowSystem.dc.html", "MarbleA.dc.html", "MarbleB.dc.html", "MarbleC.dc.html"],
+  "order": ["Main.dc.html", "PhoneShelf.dc.html", "PhoneBook.dc.html", "BookObject.dc.html", "ShadowShelf.dc.html", "ShadowPhone.dc.html", "ShadowSystem.dc.html", "MarbleA.dc.html", "MarbleB.dc.html", "MarbleC.dc.html", "MarblePage.dc.html"],
   "notes": {
     "head": { "x": 0, "y": -300, "text": "Direction 1 · Cloth and oak", "kind": "title1", "maxW": 2380 },
     "head2": { "x": 0, "y": 2620, "text": "Direction 2 · Light and shadow", "kind": "title1", "maxW": 3190 },
-    "head3": { "x": 0, "y": 5460, "text": "Direction 3 · Marble: three shelf options", "kind": "title1", "maxW": 3760 }
+    "head3": { "x": 0, "y": 5460, "text": "Direction 3 · Marble: three shelf options", "kind": "title1", "maxW": 3760 },
+    "head4": { "x": 0, "y": 6700, "text": "Direction 3 · The Carrara shelf page", "kind": "title1", "maxW": 1440 }
   },
   "designSystems": []
 }

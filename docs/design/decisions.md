@@ -2,6 +2,21 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-05: direction 3, the Carrara page
+
+- **Chosen: option A, the polished white Carrara ledge.** B and C stay on the canvas for reference.
+- **Keep the marble shiny and thick,** a little thinner than the study (front edge 50px down to
+  42px). Thickness is a tweak on the artboard (slim, regular, thick) for Josef to try.
+- **Experiment with reflections:** the books mirror into the polished top, and a lifted book's
+  reflection drops away from it. Strength is a tweak (off, soft, mirror).
+- **Bring in the light and shadow work from direction 2:** one light from the upper left, depth
+  with meaning (carved nav and search, raised buttons, the open book held over the wall), and
+  window light only on the Librarian's pick.
+- **Search lives in the header,** small. The page opens on the Librarian's pick.
+- Artboard: `MarblePage.dc.html`, row 4 of the canvas.
+
+Pending Josef's review.
+
 ## 2026-11-05: direction 3 (marble)
 
 - **Search is never the main element of the shelf page.** Making the search bar the hero repeated
