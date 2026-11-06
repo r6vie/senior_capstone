@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        # MongoDB 8 refuses to start on the runners' Linux 6.19+ kernel (SERVER-121912), so CI uses 7.0.
+        image: mongo:7.0
+        ports: ["27017:27017"]
+        # Wait until MongoDB accepts connections before the tests start.
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      TROVE_TEST_MONGODB_URI: mongodb://localhost:27017
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest -q
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+        working-directory: web
+      - name: API client is up to date
+        run: |
+          python3 scripts/generate_api_client.py
+          git diff --exit-code -- api/openapi.json web/src/api/schema.ts || (echo "Run python3 scripts/generate_api_client.py and commit the result." && exit 1)
+      - run: npm run lint
+        working-directory: web
+      - run: npm run typecheck
+        working-directory: web
+      - run: npm test
+        working-directory: web
+      - run: npm run build
+        working-directory: web

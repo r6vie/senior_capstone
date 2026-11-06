@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Daylight library, phone</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
+<style>
+body { margin: 0; }
+.sp {
+  --wall: #F6E7CB; --floor: #EBCB9C; --skirt: #D9AE76; --wood: #EDCF9E; --wood-mid: #E0B880; --wood-lo: #C79A62; --recess: #DDB077;
+  --ink: #33261A; --ink-2: #6A5844; --line: #DDBC86; --btn: #3A2B1E; --light: #FFF7E0; --engr: #6B4724;
+  --serif: "Newsreader", Georgia, serif; --sans: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  position: relative; width: 390px; height: 844px; overflow: hidden; display: flex; flex-direction: column;
+  font-family: var(--sans); color: var(--ink); font-size: 15px; line-height: 1.45;
+  background: radial-gradient(80% 50% at 10% 0%, #FFF4D8, rgba(255,244,216,0) 70%), var(--wall);
+}
+.sp * { box-sizing: border-box; }
+:where(.sp) :is(h1, h2, h3, p) { margin: 0; }
+.ceil { position: relative; z-index: 3; height: 70px; border-radius: 0 0 50% 50% / 0 0 20px 20px; filter: drop-shadow(0 8px 8px rgba(140,85,25,.28)); }
+.ceil::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, rgba(255,249,230,.75), rgba(255,249,230,0) 60%), repeating-linear-gradient(108deg, #F7E3BC 0 26px, #E2BA82 26px 28px, #FAEACB 28px 31px, #F3DCB0 31px 56px); }
+.bar { position: relative; display: flex; align-items: center; gap: 10px; height: 100%; padding: 0 16px 6px 20px; }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; font-family: var(--serif); font-size: 26px; font-weight: 600; color: var(--ink); text-decoration: none; }
+.brand i { display: block; width: 14px; height: 21px; border-radius: 7px 7px 0 0; background: var(--btn); }
+.ib { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 22px 22px 0 22px; background: var(--light); font: inherit; font-weight: 600; color: var(--ink); }
+.body { flex: 1; min-height: 0; overflow: hidden; }
+.scene { position: relative; height: 240px; margin: 22px 56px 0; }
+.win { position: absolute; inset: 0; overflow: hidden; border: 10px solid var(--wood); border-radius: 130px 130px 3px 3px; outline: 1px solid var(--wood-lo); outline-offset: -1px;
+  background: radial-gradient(34% 24% at 24% 88%, rgba(150,175,110,.3), rgba(150,175,110,0)), linear-gradient(180deg, #FFFAE4 0%, #FCF2CE 55%, #F4EEC4 100%); box-shadow: inset 0 0 50px rgba(255,255,240,.9), 0 12px 20px -16px rgba(140,85,25,.55); }
+.slats { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, #F6DCAA 0 5px, #D8AE77 5px 6px, rgba(0,0,0,0) 6px 30px); }
+.bk { --bg: #4C6E82; --ink: #F6F1E6; --mo: #A9C2D0; position: relative; display: flex; flex-direction: column; flex: none; width: 132px; height: 198px; padding: 17px 12px 12px 17px; border-radius: 2px 3px 3px 2px; overflow: hidden; color: var(--ink); text-decoration: none;
+  background-color: var(--bg); background-image: linear-gradient(90deg, rgba(0,0,0,.2) 0, rgba(0,0,0,.05) 6px, rgba(255,255,255,.18) 7px, rgba(255,255,255,0) 11px), linear-gradient(160deg, rgba(255,255,255,.16), rgba(255,255,255,0) 45%, rgba(0,0,0,.07));
+  box-shadow: 0 1px 1px rgba(100,60,15,.3), 8px 10px 14px -8px rgba(100,60,15,.5); }
+.bk-title { position: relative; z-index: 1; font-family: var(--serif); font-weight: 600; font-size: 15.5px; line-height: 1.16; }
+.bk-name { position: relative; z-index: 1; margin-top: auto; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; opacity: .9; }
+.mo { position: absolute; right: 12px; bottom: 36px; background: var(--mo); }
+.m-arch { width: 36px; height: 52px; border-radius: 18px 18px 0 0; }
+.m-slats { width: 39px; height: 52px; background: repeating-linear-gradient(90deg, var(--mo) 0 6px, transparent 6px 11px); }
+.m-half { width: 50px; height: 25px; border-radius: 25px 25px 0 0; right: 0; bottom: 36px; }
+.heroB { position: absolute; left: calc(50% - 66px); bottom: -10px; z-index: 3; }
+.pick { position: relative; z-index: 2; padding: 22px 20px 0; }
+.who { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.pick h1 { font-family: var(--serif); font-weight: 500; font-size: 28px; line-height: 1.08; letter-spacing: -0.01em; margin: 6px 0 4px; }
+.pick .by { font-size: 14px; color: var(--ink-2); }
+.pick .why { font-family: var(--serif); font-style: italic; font-size: 16px; line-height: 1.4; margin: 8px 0 14px; }
+.btn { display: grid; place-items: center; width: max-content; height: 50px; padding: 0 24px; border-radius: 25px 25px 0 25px; background: var(--btn); color: #FBF1DC; font-weight: 600; font-size: 16px; text-decoration: none; }
+.floor { position: relative; margin-top: 20px; padding: 18px 0 0; height: 300px; border-top: 10px solid var(--skirt); background: repeating-linear-gradient(90deg, rgba(160,100,40,.08) 0 1px, transparent 1px 120px), linear-gradient(180deg, #F0D4A6, var(--floor)); }
+.unit { filter: drop-shadow(0 12px 8px rgba(130,80,25,.26)); margin: 0 12px; }
+.tray { position: relative; clip-path: polygon(28px 0, 100% 0, calc(100% - 28px) 100%, 0 100%); background: repeating-linear-gradient(0deg, rgba(190,130,60,.09) 0 1px, transparent 1px 6px), linear-gradient(90deg, #F8E4BC, var(--wood) 60%, #E9C795); }
+.rail { display: flex; align-items: baseline; justify-content: space-between; padding: 12px 36px 10px 44px; }
+.rail h3 { font-family: var(--serif); font-weight: 500; font-size: 20px; color: var(--engr); text-shadow: 0 1px 0 rgba(255,255,255,.7); }
+.rail a { font-size: 14px; font-weight: 500; color: var(--ink); text-decoration: underline; text-decoration-color: #C79A62; text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.bay { display: flex; gap: 20px; align-items: flex-end; padding: 18px 0 0 44px; overflow: hidden; background: var(--recess); box-shadow: inset 0 14px 16px -10px rgba(120,70,20,.5); }
+.bay .bk { margin-bottom: -8px; }
+.lip { position: relative; z-index: 3; height: 32px; background: linear-gradient(180deg, #FFF6DC 0 10px, rgba(0,0,0,0) 10px), repeating-linear-gradient(180deg, #E9C795 0 3px, #F1D6A6 3px 6px); }
+.tabs { position: relative; z-index: 3; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; padding: 0 8px 14px; height: 76px; border-top: 1px solid var(--line); background: #F9EBCD; }
+.tabs a { display: grid; place-items: center; height: 50px; border-radius: 14px 14px 0 0; font-size: 13px; font-weight: 500; color: #5A4833; text-decoration: none; }
+.tabs a[aria-current="page"] { background: var(--light); color: var(--ink); font-weight: 600; }
+.k-moss { --bg: #55633F; --ink: #F4F0DE; --mo: #BCC995; } .k-lingon { --bg: #B24A30; --ink: #FDF0DD; --mo: #E69A78; } .k-ochre { --bg: #E0AC4C; --ink: #2A2014; --mo: #B7802A; }
+</style>
+</helmet>
+<div class="sp">
+  <header class="ceil"><div class="bar">
+    <a class="brand" href="#"><i aria-hidden="true"></i>Trove</a>
+    <button class="ib" type="button" aria-label="Search by topic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></button>
+    <button class="ib" type="button" aria-label="Your account, Sam">S</button>
+  </div></header>
+  <div class="body">
+    <div class="scene" aria-hidden="true">
+      <div class="win"><div class="slats"></div></div>
+      <a class="bk heroB" href="#"><span class="mo m-arch"></span><span class="bk-title">Why I Turned Down Grad School Twice</span><span class="bk-name">Hana</span></a>
+    </div>
+    <section class="pick" aria-label="The Librarian recommends">
+      <p class="who">The Librarian recommends</p>
+      <h1>Why I Turned Down Grad School Twice</h1>
+      <p class="by">by Hana</p>
+      <p class="why">You're deciding about a PhD. Hana weighed the same choice, twice.</p>
+      <a class="btn" href="#">Open the book</a>
+    </section>
+    <section class="floor" aria-label="Changing course">
+      <div class="unit"><div class="tray">
+        <div class="rail"><h3>Changing course</h3><a href="#">See all</a></div>
+        <div class="bay">
+          <a class="bk k-moss" href="#" aria-label="How to Leave a Job Without Burning the Bridge, by Dana"><span class="mo m-arch"></span><span class="bk-title">How to Leave a Job Without Burning the Bridge</span><span class="bk-name">Dana</span></a>
+          <a class="bk k-lingon" href="#" aria-label="Switching Off Pre-Med Before Telling Your Parents, by Marcus"><span class="mo m-slats"></span><span class="bk-title">Switching Off Pre-Med Before Telling Your Parents</span><span class="bk-name">Marcus</span></a>
+          <a class="bk k-ochre" href="#" aria-label="From Orchestra Pit to Product Manager, by Kiera"><span class="mo m-half"></span><span class="bk-title">From Orchestra Pit to Product Manager</span><span class="bk-name">Kiera</span></a>
+        </div>
+        <div class="lip"></div>
+      </div></div>
+    </section>
+  </div>
+  <nav class="tabs" aria-label="Main">
+    <a href="#" aria-current="page">Shelf</a><a href="#">My book</a><a href="#">Checkouts</a><a href="#">Past meets</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

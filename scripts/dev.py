@@ -1,40 +1,37 @@
 #!/usr/bin/env python3
-"""Run the FoundersCircle backend and frontend together for local development."""
+"""Run the API and the web app together for local development: python3 scripts/dev.py"""
 
+import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parent.parent
-PYTHON = ROOT / ".venv" / "bin" / "python"
 
 
 def main() -> int:
-    if not PYTHON.exists():
-        print("Missing .venv. Follow the README setup steps first.", file=sys.stderr)
+    if shutil.which("uv") is None:
+        print("Install uv first: https://docs.astral.sh/uv/", file=sys.stderr)
+        return 1
+    if not (ROOT / "web" / "node_modules").exists():
+        print("Run `npm --prefix web install` first.", file=sys.stderr)
         return 1
 
     commands = [
-        [str(PYTHON), "-m", "uvicorn", "main:app", "--app-dir", "backend", "--reload", "--reload-dir", "backend", "--host", "127.0.0.1", "--port", "8000"],
-        ["npm", "--prefix", "frontend", "run", "dev", "--", "--host", "127.0.0.1"],
+        (["uv", "run", "uvicorn", "trove.main:app", "--reload", "--host", "127.0.0.1", "--port", "8000"], ROOT / "api"),
+        (["npm", "run", "dev"], ROOT / "web"),
     ]
-    processes: list[subprocess.Popen] = []
+    processes = [subprocess.Popen(command, cwd=cwd) for command, cwd in commands]
+    print("\nTrove is starting:")
+    print("  App:      http://127.0.0.1:5173")
+    print("  API docs: http://127.0.0.1:8000/docs")
+    print("Press Ctrl+C to stop both.\n")
     try:
-        for command in commands:
-            processes.append(subprocess.Popen(command, cwd=ROOT))
-
-        print("\nFoundersCircle is starting:")
-        print("  App:      http://127.0.0.1:5173")
-        print("  API docs: http://127.0.0.1:8000/docs")
-        print("Press Ctrl+C to stop both.\n")
-
         while True:
             for process in processes:
-                return_code = process.poll()
-                if return_code is not None:
-                    return return_code
+                if (code := process.poll()) is not None:
+                    return code
             time.sleep(0.5)
     except KeyboardInterrupt:
         return 0
@@ -50,4 +47,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())

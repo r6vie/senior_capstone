@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Daylight library, the system</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;display=swap">
+<style>
+body { margin: 0; }
+.sn {
+  --wall: #F6E7CB; --wood: #EDCF9E; --recess: #DDB077; --ink: #33261A; --ink-2: #6A5844; --line: #DDBC86; --btn: #3A2B1E;
+  --serif: "Newsreader", Georgia, serif; --sans: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  width: 1200px; height: 920px; padding: 56px 64px; display: flex; flex-direction: column; gap: 40px;
+  font-family: var(--sans); color: var(--ink); font-size: 15px; line-height: 1.5;
+  background: radial-gradient(70% 60% at 14% 0%, #FFF4D8, rgba(255,244,216,0) 70%), var(--wall);
+}
+.sn * { box-sizing: border-box; }
+:where(.sn) :is(h1, h2, p, ul) { margin: 0; }
+.sn h1 { font-family: var(--serif); font-weight: 500; font-size: 42px; line-height: 1.05; letter-spacing: -0.015em; }
+.sn .sub { margin-top: 8px; max-width: 64ch; font-size: 17px; color: var(--ink-2); }
+.sn h2 { font-family: var(--serif); font-weight: 500; font-size: 21px; margin: 14px 0 6px; }
+.cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; }
+.cols > * { min-width: 0; }
+.cols p, .rules li { font-size: 14.5px; color: var(--ink-2); }
+.demo { height: 110px; display: flex; align-items: flex-end; gap: 8px; }
+.sw { flex: 1; height: 70px; border-radius: 3px; padding: 5px 6px; display: flex; align-items: flex-end; font-size: 11px; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(100,60,15,.12); }
+.ribs { width: 100%; height: 84px; border-radius: 0 0 50% 50% / 0 0 22px 22px; background: repeating-linear-gradient(108deg, #F7E3BC 0 26px, #E2BA82 26px 28px, #FAEACB 28px 31px, #F3DCB0 31px 56px); filter: drop-shadow(0 6px 6px rgba(140,85,25,.28)); }
+.arch { width: 100%; height: 104px; border: 8px solid var(--wood); border-radius: 60px 60px 3px 3px; background: repeating-linear-gradient(90deg, #F6DCAA 0 4px, #D8AE77 4px 5px, transparent 5px 22px), linear-gradient(180deg, #FFFAE4, #F4EEC4); box-shadow: inset 0 0 30px rgba(255,255,240,.9); }
+.tray { width: 100%; height: 100px; clip-path: polygon(28px 0, 100% 0, calc(100% - 28px) 100%, 0 100%); background: linear-gradient(90deg, #F8E4BC, var(--wood) 60%, #E9C795); position: relative; }
+.tray::after { content: ""; position: absolute; left: 0; right: 0; top: 24px; bottom: 26px; background: var(--recess); box-shadow: inset 0 8px 10px -6px rgba(120,70,20,.5); }
+.tray::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26px; background: #F9EACB; border-top: 1px solid #E2BF86; z-index: 1; }
+.mini { flex: none; width: 54px; height: 80px; border-radius: 2px 3px 3px 2px; background: var(--bg); position: relative; box-shadow: 0 1px 1px rgba(100,60,15,.3), 4px 5px 7px -4px rgba(100,60,15,.5); }
+.mini i { position: absolute; right: 7px; bottom: 12px; background: var(--mo); }
+.rules { list-style: none; padding: 0; display: grid; gap: 10px; }
+.rules li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 10px; }
+.rules li::before { content: ""; width: 9px; height: 13px; margin-top: 5px; border-radius: 5px 5px 0 0; background: var(--btn); opacity: .75; }
+.rules strong { color: var(--ink); font-weight: 600; }
+.type .s1 { font-family: var(--serif); font-weight: 500; font-size: 30px; line-height: 1.1; }
+.type .s2 { font-family: var(--serif); font-style: italic; font-size: 18px; margin-top: 8px; }
+.type .s3 { font-size: 15px; font-weight: 500; margin-top: 8px; }
+</style>
+</helmet>
+<div class="sn">
+  <header>
+    <h1>Daylight library</h1>
+    <p class="sub">A high-key room of honey birch, taken from a Scandinavian public library: ribs overhead, tall arched windows with slender slats, and slanted display units packed with face-out books. Sun through the slats stripes everything.</p>
+  </header>
+
+  <section class="cols">
+    <div>
+      <div class="demo"><div class="ribs"></div></div>
+      <h2>The vault</h2>
+      <p>The header is the ceiling: diagonal birch ribs with a shallow curve. Navigation sits in it, and the current section is a lit tab.</p>
+    </div>
+    <div>
+      <div class="demo"><div class="arch"></div></div>
+      <h2>Arched windows</h2>
+      <p>Slender slats, glowing gold-white with only a trace of green outside. The Librarian's pick stands in the first window. The arch is also the shape of tabs, buttons and the avatar.</p>
+    </div>
+    <div>
+      <div class="demo"><div class="tray"></div></div>
+      <h2>Slanted units</h2>
+      <p>Each shelf is a full-width unit with slanted ends, a recessed back and a bright lip. Books face out and are packed close, six to a unit, so the page is dense and still readable.</p>
+    </div>
+    <div>
+      <div class="demo">
+        <div class="mini" style="--bg: #55633F; --mo: #BCC995"><i style="width: 15px; height: 22px; border-radius: 8px 8px 0 0"></i></div>
+        <div class="mini" style="--bg: #B24A30; --mo: #E69A78"><i style="width: 16px; height: 22px; background: repeating-linear-gradient(90deg, #E69A78 0 3px, transparent 3px 5px)"></i></div>
+        <div class="mini" style="--bg: #4C6E82; --mo: #A9C2D0"><i style="width: 18px; height: 18px; border-radius: 50%"></i></div>
+      </div>
+      <h2>Books, face out</h2>
+      <p>A cloth color, a serif title, the first name in small capitals and one printed shape. Trove assigns color and shape, so no book is louder than another.</p>
+    </div>
+  </section>
+
+  <section class="cols">
+    <div>
+      <div class="demo" style="height: 70px">
+        <div class="sw" style="background: #F6E7CB">Wall</div>
+        <div class="sw" style="background: #EDCF9E">Birch</div>
+        <div class="sw" style="background: #DDB077">Recess</div>
+        <div class="sw" style="background: #EBCB9C">Floor</div>
+        <div class="sw" style="background: #3A2B1E; color: #FBF1DC">Walnut</div>
+      </div>
+      <h2>Color</h2>
+      <p>Peach and honey wood, never beige or olive. Walnut brown is the only dark, used for the main button and the logo.</p>
+    </div>
+    <div class="type">
+      <p class="s1">Newsreader</p>
+      <p class="s2">The Librarian's voice, in italic.</p>
+      <p class="s3">Schibsted Grotesk for the interface.</p>
+    </div>
+    <ul class="rules" style="grid-column: span 2">
+      <li><span><strong>Light is the decoration.</strong> Stripes of sun through the slats cross the shelves. Nothing else glows.</span></li>
+      <li><span><strong>Search is small.</strong> A field in the ceiling, never the hero.</span></li>
+      <li><span><strong>No counts, genres or last names</strong> anywhere on the shelf.</span></li>
+      <li><span><strong>Dense by default.</strong> No empty steps or stagger; every unit uses the full width.</span></li>
+    </ul>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":920}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wireframe A, feature then shelves</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin: 0; }
+/* Wireframe A: top bar, one large featured book with the Librarian's note, then three full-width shelves. Black and white, shapes only. */
+.w { width: 1440px; height: 1100px; box-sizing: border-box; background: #fff; color: #000; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.4; overflow: hidden; }
+.w * { box-sizing: border-box; }
+:where(.w) :is(h1, h2, p) { margin: 0; }
+.hdr { display: flex; align-items: center; gap: 48px; height: 72px; padding: 0 40px; border-bottom: 2px solid #000; }
+.logo { font-weight: 700; font-size: 26px; }
+.nav { display: flex; gap: 28px; }
+.nav .on { font-weight: 700; border-bottom: 3px solid #000; padding-bottom: 3px; }
+.srch { margin-left: auto; display: flex; align-items: center; gap: 10px; width: 200px; height: 40px; padding: 0 12px; border: 2px solid #000; }
+.srch .c { width: 14px; height: 14px; border: 2px solid #000; border-radius: 50%; }
+.me { width: 40px; height: 40px; border: 2px solid #000; border-radius: 50%; }
+.hero { display: flex; align-items: center; gap: 48px; height: 342px; padding: 28px 40px; border-bottom: 2px solid #000; }
+.lab { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.txt { flex: 1; max-width: 560px; display: flex; flex-direction: column; gap: 14px; }
+.bar { height: 12px; background: #000; }
+.bar.h { height: 28px; }
+.btn { display: flex; align-items: center; justify-content: center; width: max-content; height: 48px; padding: 0 24px; border: 2px solid #000; font-weight: 700; }
+.book { flex: none; width: 100px; height: 150px; padding: 14px 12px; display: flex; flex-direction: column; gap: 7px; border: 2px solid #000; background: #fff; }
+.book i { display: block; height: 6px; background: #000; }
+.book .nm { display: block; margin-top: auto; width: 36%; height: 5px; background: #000; }
+.book.big { width: 190px; height: 285px; padding: 24px 20px; gap: 12px; }
+.book.big i { height: 10px; }
+.book.big .nm { height: 8px; }
+.book.pick { background: #000; }
+.book.pick i, .book.pick .nm { background: #fff; }
+.shelves { display: flex; flex-direction: column; gap: 22px; padding: 24px 40px; }
+.sh-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; font-weight: 700; font-size: 18px; }
+.sh-h span { font-weight: 400; font-size: 14px; }
+.row { display: flex; align-items: flex-end; gap: 22px; padding: 0 8px; }
+.ledge { height: 8px; background: #000; }
+</style>
+</helmet>
+<div class="w">
+  <header class="hdr">
+    <span class="logo">Trove</span>
+    <nav class="nav"><span class="on">Shelf</span><span>My book</span><span>Checkouts</span><span>Past meets</span></nav>
+    <div class="srch"><span class="c"></span><span>Search by topic</span></div>
+    <div class="me"></div>
+  </header>
+  <section class="hero">
+    <div class="book big pick"><i></i><i style="width: 70%"></i><i style="width: 55%"></i><span class="nm"></span></div>
+    <div class="txt">
+      <p class="lab">The Librarian recommends</p>
+      <div class="bar h" style="width: 78%"></div>
+      <div class="bar" style="width: 100%"></div>
+      <div class="bar" style="width: 70%"></div>
+      <div class="btn">Open the book</div>
+    </div>
+  </section>
+  <main class="shelves">
+    <sc-for list="{{shelves}}" as="shelf" hint-placeholder-count="3">
+      <section>
+        <div class="sh-h"><span style="font-weight: 700; font-size: 18px">{{shelf.name}}</span><span>See the whole shelf</span></div>
+        <div class="row">
+          <sc-for list="{{shelf.books}}" as="b" hint-placeholder-count="9">
+            <div class="book"><i></i><i style="width: {{b.w}}"></i><i class="s" style="width: 45%"></i><span class="nm"></span></div>
+          </sc-for>
+        </div>
+        <div class="ledge"></div>
+      </section>
+    </sc-for>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const ws = [78, 60, 84, 52, 70, 58, 80, 48, 66];
+    const mk = (n) => Array.from({ length: n }, (_, i) => ({ w: ws[i % ws.length] + '%' }));
+    return { shelves: [{ name: 'Placeholder shelf one', books: mk(9) }, { name: 'Placeholder shelf two', books: mk(9) }, { name: 'Placeholder shelf three', books: mk(9) }] };
+  }
+}
+</script>
+</body>
+</html>
