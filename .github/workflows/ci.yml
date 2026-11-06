@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mongo:
-        image: mongo:8
+        # MongoDB 8 refuses to start on the runners' Linux 6.19+ kernel (SERVER-121912); 7.0 runs fine.
+        image: mongo:7.0
         ports: ["27017:27017"]
         # Wait until MongoDB accepts connections before the tests start.
         options: >-
