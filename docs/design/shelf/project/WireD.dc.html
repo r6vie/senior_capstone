@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wireframe D, black split</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin: 0; }
+/* Wireframe D: the page is cut in two. A solid black half holds the logo, the sections and the Librarian's pick; the white half holds the shelves. */
+.w { display: grid; grid-template-columns: 600px minmax(0, 1fr); width: 1440px; height: 1100px; box-sizing: border-box; background: #fff; color: #000; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.4; overflow: hidden; }
+.w * { box-sizing: border-box; }
+:where(.w) :is(h1, h2, p) { margin: 0; }
+.dark { display: flex; flex-direction: column; gap: 30px; padding: 36px 48px 40px; background: #000; color: #fff; }
+.top { display: flex; align-items: baseline; gap: 36px; }
+.logo { font-weight: 700; font-size: 28px; }
+.nav { display: flex; gap: 22px; font-size: 14px; }
+.nav .on { font-weight: 700; border-bottom: 3px solid #fff; padding-bottom: 3px; }
+.stage { flex: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 18px; }
+.lab { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.bar { height: 12px; background: #fff; }
+.bar.h { height: 28px; }
+.btn { display: flex; align-items: center; justify-content: center; height: 48px; padding: 0 24px; border: 2px solid #fff; font-weight: 700; }
+.srch { display: flex; align-items: center; gap: 10px; width: 240px; height: 44px; padding: 0 12px; border: 2px solid #fff; }
+.srch .c { width: 14px; height: 14px; border: 2px solid #fff; border-radius: 50%; }
+.light { display: flex; flex-direction: column; gap: 30px; padding: 24px 48px 40px; }
+.me-row { display: flex; justify-content: flex-end; }
+.me { width: 40px; height: 40px; border: 2px solid #000; border-radius: 50%; }
+.shelves { display: flex; flex-direction: column; gap: 30px; }
+.sh-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.sh-h b { font-size: 18px; }
+.row { display: flex; align-items: flex-end; gap: 22px; padding: 0 8px; }
+.ledge { height: 8px; background: #000; }
+.book { flex: none; width: 130px; height: 195px; padding: 16px 14px; display: flex; flex-direction: column; gap: 8px; border: 2px solid #000; background: #fff; }
+.book i { display: block; height: 7px; background: #000; }
+.book .nm { display: block; margin-top: auto; width: 36%; height: 5px; background: #000; }
+.book.big { width: 210px; height: 315px; padding: 26px 22px; gap: 12px; border-color: #fff; }
+.book.big i { height: 11px; }
+.book.big .nm { height: 8px; }
+</style>
+</helmet>
+<div class="w">
+  <section class="dark">
+    <div class="top">
+      <span class="logo">Trove</span>
+      <nav class="nav"><span class="on">Shelf</span><span>My book</span><span>Checkouts</span><span>Past meets</span></nav>
+    </div>
+    <div class="stage">
+      <p class="lab">The Librarian recommends</p>
+      <div class="book big"><i></i><i style="width: 70%"></i><i style="width: 55%"></i><span class="nm"></span></div>
+      <div class="bar h" style="width: 80%"></div>
+      <div class="bar" style="width: 95%"></div>
+      <div class="bar" style="width: 65%"></div>
+      <div class="btn">Open the book</div>
+    </div>
+    <div class="srch"><span class="c"></span><span>Search by topic</span></div>
+  </section>
+  <section class="light">
+    <div class="me-row"><div class="me"></div></div>
+    <div class="shelves">
+      <sc-for list="{{shelves}}" as="shelf" hint-placeholder-count="3">
+        <section>
+          <div class="sh-h"><b>{{shelf.name}}</b><span>See the whole shelf</span></div>
+          <div class="row">
+            <sc-for list="{{shelf.books}}" as="b" hint-placeholder-count="5">
+              <div class="book"><i></i><i style="width: {{b.w}}"></i><i style="width: 45%"></i><span class="nm"></span></div>
+            </sc-for>
+          </div>
+          <div class="ledge"></div>
+        </section>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const ws = [78, 60, 84, 52, 70];
+    const mk = (n) => Array.from({ length: n }, (_, i) => ({ w: ws[i % ws.length] + '%' }));
+    return { shelves: [{ name: 'Placeholder shelf one', books: mk(5) }, { name: 'Placeholder shelf two', books: mk(5) }, { name: 'Placeholder shelf three', books: mk(5) }] };
+  }
+}
+</script>
+</body>
+</html>

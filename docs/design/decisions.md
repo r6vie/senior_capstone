@@ -2,6 +2,16 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-05: back to layout, in black and white
+
+- **None of the Carrara, light-and-shadow or cloth-and-oak looks is the one.** They stay on the
+  canvas's first page ("Designs") for reference.
+- **Start from form only.** New canvas page "Wireframes": four black-and-white layouts of the shell
+  homepage, plain shapes, no material or color: `WireA` (feature, then shelves), `WireB` (side
+  rail), `WireC` (bookcase), `WireD` (black split).
+
+Pending Josef's pick.
+
 ## 2026-11-05: direction 3, the Carrara page
 
 - **Chosen: option A, the polished white Carrara ledge.** B and C stay on the canvas for reference.
