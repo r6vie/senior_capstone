@@ -2,6 +2,19 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-06: interview screens (T5), three directions
+
+- **Orchestrator T5:** static desktop screens for the interview in the manga system, three directions, nothing on hold
+  drawn (no margin notes, bursts, card drawer, bookmark tabs, pencil-to-ink spine, stamp or live filler cleanup).
+- **New canvas page "Interview"**, boards `InterviewA`, `InterviewB`, `InterviewC`. Each shows nine frames: start,
+  question (typing, recording, transcript, later in the Dig with the exit link), shape moment, reveal (three white-cover
+  titles), book review, coming back. A: the question on a black band. B: two pages, Librarian left on dark, member
+  right on ruled paper. C: speech bubble on a screentone ground, phase as a top rail.
+- **Rules kept:** first names only, no counts or percentages, phase as a label (Sweep, Dig, Shape), "Saved" tiny and
+  silent, one red action per screen (Stop while recording), halo dots never behind running text.
+
+Pending Josef's pick. "T5 approved" goes to the orchestrator only after that.
+
 ## 2026-11-06: cover direction G, watercolor landscapes (from Josef's reference)
 
 - **Josef:** use the reference (red watercolor sun, blue misty ridges, reflection) as the art style for the book

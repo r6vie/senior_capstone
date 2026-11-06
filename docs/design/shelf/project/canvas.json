@@ -36,6 +36,10 @@
     {
       "id": "covers",
       "name": "Covers"
+    },
+    {
+      "id": "interview",
+      "name": "Interview"
     }
   ],
   "boards": {
@@ -373,6 +377,33 @@
       "title": "G \u00b7 Watercolor landscapes",
       "page": "covers",
       "expand": "fill"
+    },
+    "InterviewA.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1700,
+      "h": 2900,
+      "title": "A \u00b7 The question band",
+      "page": "interview",
+      "expand": "fill"
+    },
+    "InterviewB.dc.html": {
+      "x": 1820,
+      "y": 0,
+      "w": 1700,
+      "h": 2900,
+      "title": "B \u00b7 Two pages",
+      "page": "interview",
+      "expand": "fill"
+    },
+    "InterviewC.dc.html": {
+      "x": 3640,
+      "y": 0,
+      "w": 1700,
+      "h": 2900,
+      "title": "C \u00b7 Speech bubble",
+      "page": "interview",
+      "expand": "fill"
     }
   },
   "order": [
@@ -417,7 +448,10 @@
     "SysRules.dc.html",
     "CoverDirections.dc.html",
     "CoverWatercolor.dc.html",
-    "CoverLandscape.dc.html"
+    "CoverLandscape.dc.html",
+    "InterviewA.dc.html",
+    "InterviewB.dc.html",
+    "InterviewC.dc.html"
   ],
   "notes": {
     "head": {
