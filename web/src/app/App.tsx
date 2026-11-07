@@ -3,6 +3,7 @@ import { AuthPage } from "../features/auth/AuthPage";
 import { AuthProvider } from "../features/auth/AuthProvider";
 import { RequireAuth } from "../features/auth/RequireAuth";
 import { ShelfPage } from "../features/discovery/ShelfPage";
+import { InterviewPage } from "../features/interview/InterviewPage";
 
 // Every page is registered here. Feature folders own their pages; this file only wires URLs.
 export function App() {
@@ -17,6 +18,14 @@ export function App() {
             element={
               <RequireAuth>
                 <ShelfPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/interview"
+            element={
+              <RequireAuth>
+                <InterviewPage />
               </RequireAuth>
             }
           />
