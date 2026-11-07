@@ -218,18 +218,11 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             >
               <ErrorMessage message={error} />
               <div className="iv-row">
-                <Button onClick={() => setWelcomedBack(false)}>Pick up where we left off</Button>
-                {/* The waiting question is saved as asked; starting again only clears the unsent draft. */}
-                <button
-                  type="button"
-                  className="button button-quiet"
-                  onClick={() => {
-                    clearDraft(draftKey);
-                    setWelcomedBack(false);
-                  }}
-                >
-                  Start that part again
-                </button>
+                <Button onClick={() => setWelcomedBack(false)}>Continue</Button>
+                {/* Leaves the same way "Leave for now" does: everything is already saved. */}
+                <Link to="/" className="button button-quiet">
+                  Continue later
+                </Link>
               </div>
               <p className="iv-note">Everything you've said so far is saved.</p>
             </Frame>

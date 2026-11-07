@@ -75,4 +75,22 @@ describe("InterviewPage", () => {
     expect(answer).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
   });
+
+  it("welcomes a returning member back with Continue and Continue later", async () => {
+    const client = createFakeInterviewClient("Hana", 0);
+    const started = await client.start(null);
+    await client.answer(started.id, "An answer");
+    render(
+      <AuthProvider>
+        <MemoryRouter>
+          <InterviewPage client={client} />
+        </MemoryRouter>
+      </AuthProvider>,
+    );
+    expect(await screen.findByText(/Welcome back. Last time you were telling me about/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Start that part again" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Continue later" }).getAttribute("href")).toBe("/");
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(await screen.findByText(/What do people come to you for/)).toBeTruthy();
+  });
 });
