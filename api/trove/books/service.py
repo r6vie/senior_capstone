@@ -2,12 +2,21 @@
 
 import base64
 import binascii
-from datetime import datetime
+from datetime import UTC, datetime
+from uuid import uuid4
 
-from pymongo import DESCENDING
+from pymongo import DESCENDING, ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
+from pymongo.errors import DuplicateKeyError
+
+from trove.books.models import DEFAULT_COPIES, MyBookResponse
 
 ON_SHELF = "on_shelf"
+DRAFT = "draft"
+# Books have 3 to 5 chapters (docs/trove.md §4), so removing one stops at three.
+MIN_CHAPTERS = 3
+# Covers are plain white until a cover direction is chosen.
+WHITE_COVER = "cover-1"
 # Everything a reader-facing caller may receive. Anything else on the document (and anything added
 # to it later) stays private unless it is listed here.
 PUBLIC_FIELDS = {
@@ -73,3 +82,73 @@ def _decode_cursor(cursor: str) -> tuple[datetime, str]:
         return datetime.fromisoformat(published_at), book_id
     except (binascii.Error, UnicodeDecodeError, ValueError):
         raise ValueError("Invalid shelf cursor.") from None
+
+
+class BookExists(Exception):
+    """The member already has a book; there is one per member."""
+
+
+def my_book_view(book: dict) -> MyBookResponse:
+    """A member's own book as its author sees it, including the grounding quotes and copies."""
+    return MyBookResponse.model_validate({**book, "id": book["_id"], "blurb": book.get("blurb")})
+
+
+async def create_draft_book(
+    database: AsyncDatabase, *, author_id: str, author_name: str, title: str, chapters: list[dict]
+) -> dict:
+    """Save a finished interview's book as a draft only its author sees. Raises BookExists."""
+    now = datetime.now(UTC)
+    book = {
+        "_id": str(uuid4()),
+        "author_id": author_id,
+        "author_name": author_name,
+        "title": title,
+        "cover_style": WHITE_COVER,
+        "blurb": None,
+        "chapters": chapters,
+        "copies": DEFAULT_COPIES,
+        "status": DRAFT,
+        "is_sample": False,
+        "published_at": None,
+        "created_at": now,
+        "updated_at": now,
+    }
+    try:
+        await database.books.insert_one(book)
+    except DuplicateKeyError:
+        raise BookExists() from None
+    return book
+
+
+async def remove_chapter(database: AsyncDatabase, author_id: str, chapter_id: str) -> dict | None:
+    """Remove a chapter from the author's draft, if more than MIN_CHAPTERS remain. None if it can't."""
+    return await database.books.find_one_and_update(
+        {
+            "author_id": author_id,
+            "status": DRAFT,
+            "chapters.id": chapter_id,
+            # Checked in the same update, so two quick removals can't go below the minimum.
+            f"chapters.{MIN_CHAPTERS}": {"$exists": True},
+        },
+        {"$pull": {"chapters": {"id": chapter_id}}, "$set": {"updated_at": datetime.now(UTC)}},
+        return_document=ReturnDocument.AFTER,
+    )
+
+
+async def replace_chapter(database: AsyncDatabase, author_id: str, chapter: dict) -> dict | None:
+    """Swap in a rewritten chapter with the same id, in the author's draft. None if there is none."""
+    return await database.books.find_one_and_update(
+        {"author_id": author_id, "status": DRAFT, "chapters.id": chapter["id"]},
+        {"$set": {"chapters.$": chapter, "updated_at": datetime.now(UTC)}},
+        return_document=ReturnDocument.AFTER,
+    )
+
+
+async def put_on_shelf(database: AsyncDatabase, author_id: str) -> dict | None:
+    """Publish the author's draft. None if they have no draft."""
+    now = datetime.now(UTC)
+    return await database.books.find_one_and_update(
+        {"author_id": author_id, "status": DRAFT},
+        {"$set": {"status": ON_SHELF, "published_at": now, "updated_at": now}},
+        return_document=ReturnDocument.AFTER,
+    )

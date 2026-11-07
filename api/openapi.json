@@ -361,6 +361,394 @@
         }
       }
     },
+    "/interview": {
+      "get": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Current",
+        "description": "The member's interview, for resuming where they left off.",
+        "operationId": "current_interview_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Start",
+        "description": "Start the interview and get the first question. A member with a book can't start again (409).",
+        "operationId": "start_interview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/question": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Ask Again",
+        "description": "Write the waiting question again after a failed attempt (a 502, or `question` is null).",
+        "operationId": "ask_again_interview_question_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/answers": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Answer",
+        "description": "Answer the waiting question. The answer is saved first, then the next question is written.",
+        "operationId": "answer_interview_answers_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/shape": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Shape",
+        "description": "Confirm the Librarian's playback (\"Yes, that's me\"), or correct it.",
+        "operationId": "shape_interview_shape_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShapeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/finish": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Finish",
+        "description": "End the interview and get three titles, each with why it's you.",
+        "operationId": "finish_interview_finish_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/title": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Choose Title",
+        "description": "Choose one of the three titles. The book is finished to match and saved as a draft.",
+        "operationId": "choose_title_interview_title_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TitleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/book/chapters/{chapter_id}": {
+      "delete": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Remove Chapter",
+        "operationId": "remove_chapter_interview_book_chapters__chapter_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "chapter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Chapter Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interview/book/chapters/{chapter_id}/rewrite": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Rewrite Chapter",
+        "operationId": "rewrite_chapter_interview_book_chapters__chapter_id__rewrite_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "chapter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Chapter Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interview/book/shelve": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Put On Shelf",
+        "description": "Put the finished book on the shelf. The interview is then done.",
+        "operationId": "put_on_shelf_interview_book_shelve_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -390,6 +778,22 @@
   },
   "components": {
     "schemas": {
+      "AnswerRequest": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Answer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "answer"
+        ],
+        "title": "AnswerRequest"
+      },
       "AuthorChapter": {
         "properties": {
           "id": {
@@ -507,6 +911,73 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "InterviewResponse": {
+        "properties": {
+          "stage": {
+            "type": "string",
+            "enum": [
+              "interviewing",
+              "choosing",
+              "reviewing",
+              "done"
+            ],
+            "title": "Stage"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Question"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          },
+          "can_finish": {
+            "type": "boolean",
+            "title": "Can Finish"
+          },
+          "ready_for_reveal": {
+            "type": "boolean",
+            "title": "Ready For Reveal"
+          },
+          "titles": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TitleOption"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Titles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage",
+          "question",
+          "topic",
+          "can_finish",
+          "ready_for_reveal",
+          "titles"
+        ],
+        "title": "InterviewResponse"
       },
       "LoginRequest": {
         "properties": {
@@ -713,6 +1184,62 @@
         "title": "PublicBookResponse",
         "description": "A book as readers see it. No last name, contacts, copy counts or grounding quotes."
       },
+      "Question": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "sweep",
+              "dig",
+              "shape"
+            ],
+            "title": "Phase"
+          },
+          "playback": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playback"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "phase",
+          "playback"
+        ],
+        "title": "Question"
+      },
+      "ShapeRequest": {
+        "properties": {
+          "correction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correction",
+            "description": "What's different. Leave out to confirm: \"Yes, that's me\"."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ShapeRequest"
+      },
       "ShelfPage": {
         "properties": {
           "books": {
@@ -771,6 +1298,61 @@
           "first_name"
         ],
         "title": "SignupRequest"
+      },
+      "StartRequest": {
+        "properties": {
+          "resume_pdf": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 7000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resume Pdf",
+            "description": "An optional r\u00e9sum\u00e9 PDF, base64-encoded. Never stored."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "StartRequest"
+      },
+      "TitleOption": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "why": {
+            "type": "string",
+            "title": "Why"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "why"
+        ],
+        "title": "TitleOption"
+      },
+      "TitleRequest": {
+        "properties": {
+          "title": {
+            "type": "integer",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Title",
+            "description": "Which of the three titles, by position."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "TitleRequest"
       },
       "UserResponse": {
         "properties": {
