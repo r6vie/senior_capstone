@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft } from "./AnswerPanel";
-import { createFakeInterviewClient } from "./fakeInterviewClient";
+import { apiInterviewClient } from "./apiInterviewClient";
 import type { DraftBook, InterviewClient, InterviewState, Phase } from "./interviewClient";
 import "./InterviewPage.css";
 
@@ -98,10 +98,9 @@ function SmallBook({ title, author }: { title: string; author: string }) {
   );
 }
 
-export function InterviewPage({ client: given }: { client?: InterviewClient }) {
+export function InterviewPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
   const { user } = useAuth();
   const firstName = user?.first_name ?? "";
-  const client = useMemo(() => given ?? createFakeInterviewClient(firstName), [given, firstName]);
 
   const [state, setState] = useState<InterviewState | null>(null);
   const [loaded, setLoaded] = useState(false);

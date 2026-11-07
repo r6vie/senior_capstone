@@ -1,7 +1,7 @@
 import type { DraftBook, InterviewClient, InterviewState, Phase } from "./interviewClient";
 
-// A local stand-in for the interview API (T7) until its routes are on main. It plays a fixed script,
-// waits like a Claude call would, and keeps its state in localStorage so leaving and coming back works.
+// A stand-in for the interview API in tests: it plays a fixed script, can wait like a Claude call
+// would, and keeps its state in localStorage so leaving and coming back works.
 
 const STORAGE_KEY = "trove_fake_interview";
 const CAN_FINISH_AFTER = 10;
