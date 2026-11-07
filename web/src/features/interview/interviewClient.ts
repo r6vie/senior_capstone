@@ -19,6 +19,8 @@ export interface DraftChapter {
 export interface DraftBook {
   title: string;
   authorName: string;
+  /** The back-cover blurb, in the member's own voice. Null on books written before blurbs. */
+  blurb: string | null;
   chapters: DraftChapter[];
 }
 

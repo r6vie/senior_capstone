@@ -3,7 +3,27 @@ import { MemoryRouter } from "react-router-dom";
 import { AuthProvider } from "../auth/AuthProvider";
 import { createFakeInterviewClient, resetFakeInterview } from "./fakeInterviewClient";
 import { InterviewPage } from "./InterviewPage";
-import { InterviewError } from "./interviewClient";
+import { type DraftBook, type InterviewClient, InterviewError } from "./interviewClient";
+
+function renderWith(client: InterviewClient) {
+  render(
+    <AuthProvider>
+      <MemoryRouter>
+        <InterviewPage client={client} />
+      </MemoryRouter>
+    </AuthProvider>,
+  );
+}
+
+function bookAt(stage: "reviewing" | "done", blurb: string | null): InterviewClient {
+  const book: DraftBook = {
+    title: "Finding the Step That Went Wrong",
+    authorName: "Hana Okafor",
+    blurb,
+    chapters: [{ id: "1", title: "The morning after", summary: "What I check first." }],
+  };
+  return { ...createFakeInterviewClient("Hana", 0), current: async () => ({ id: "me", stage, book }) };
+}
 
 function renderPage() {
   render(
@@ -92,5 +112,17 @@ describe("InterviewPage", () => {
     expect(screen.getByRole("link", { name: "Continue later" }).getAttribute("href")).toBe("/");
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByText(/What do people come to you for/)).toBeTruthy();
+  });
+
+  it.each(["reviewing", "done"] as const)("shows the blurb under the title while %s", async (stage) => {
+    renderWith(bookAt(stage, "I fix schedules that slipped."));
+    expect(await screen.findByText("I fix schedules that slipped.")).toBeTruthy();
+    expect(screen.getAllByText("Finding the Step That Went Wrong").length).toBeGreaterThan(0);
+  });
+
+  it("shows no blurb for a book written before blurbs", async () => {
+    renderWith(bookAt("reviewing", null));
+    await screen.findByRole("heading", { name: "Finding the Step That Went Wrong" });
+    expect(document.querySelector(".iv-blurb")).toBeNull();
   });
 });

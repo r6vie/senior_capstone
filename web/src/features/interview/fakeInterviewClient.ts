@@ -173,8 +173,11 @@ function view(stored: Stored, firstName: string): InterviewState {
 }
 
 function emptyBook(firstName: string): DraftBook {
-  return { title: "", authorName: firstName, chapters: [] };
+  return { title: "", authorName: firstName, blurb: null, chapters: [] };
 }
+
+const BLURB =
+  "I've spent years being the person people call when the timeline slips. This book is how I find the one step that went wrong, and what I do the morning after.";
 
 export function createFakeInterviewClient(firstName: string, delay = 1200): InterviewClient {
   function mutate(id: string, change: (stored: Stored) => void): Promise<InterviewState> {
@@ -231,6 +234,7 @@ export function createFakeInterviewClient(firstName: string, delay = 1200): Inte
         stored.book = {
           title: title.title,
           authorName: firstName,
+          blurb: BLURB,
           chapters: CHAPTERS.map((ch) => ({ ...ch })),
         };
         stored.stage = "reviewing";

@@ -600,6 +600,7 @@ function ReviewScreen({
         <div>
           <h2>{book.title}</h2>
           <p>by {book.authorName}</p>
+          {book.blurb && <p className="iv-blurb">{book.blurb}</p>}
         </div>
       </div>
       <ol className="iv-chapters">
@@ -654,6 +655,7 @@ function DoneScreen({ book }: { book: DraftBook }) {
           </span>
         </span>
         <div className="iv-done-text">
+          {book.blurb && <p className="iv-blurb">{book.blurb}</p>}
           <p>Other members can find it now and ask to check it out.</p>
           <div className="iv-row">
             <Link to="/" className="button button-primary">
