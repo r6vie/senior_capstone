@@ -115,12 +115,14 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   - **The reveal:** three titles appear one at a time, each with one line on why it's you. Covers stay white until a cover direction is chosen. The member picks one, and the book is finished to match.
   - **Review before the shelf:** the member can remove a chapter or ask for one to be rewritten, then "Put it on the shelf". Free-text editing comes later.
   - **Model:** Opus 5.5 for questions and book writing.
+  - **Limits** (T7): one interview per member; a member who already has a book can't start another (adding to your book is I3). A book keeps at least 3 chapters, so removing stops there. A résumé must be a readable PDF up to 5 MB; only the first 20 pages are read. If it can't be read, the member starts without it.
 - **On hold until the interview works:** the Librarian reacting in the margins, bursts on strong lines, the card drawer for the sweep, bookmark tabs, the pencil-to-ink spine, the shelf stamp and live cleanup of spoken answers. A practical "how-to" chapter is welcome but not enforced.
 
 ### Open
 
 - The Librarian's more playful voice (on hold with the interactive layer).
 - Free-text editing of the book by the author.
+- Whether an abandoned interview's résumé text should expire (recommended: after 30 days).
 
 ## 5. Discovery
 
