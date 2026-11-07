@@ -18,7 +18,10 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   tag in the page header, the reveal is three cover panels, chapters are panels.
 
 **Chosen: direction A (the question band).** B (comic page) and C (speech bubble) stay on the canvas for reference.
-Build spec: `docs/design/shelf/project/InterviewA.dc.html`, nine frames at 1280x800.
+Build spec: `docs/design/shelf/project/InterviewA.dc.html`, ten frames at 1280x800.
+- **Done frame approved as drawn** ("Your book is on the shelf.", "Go to the shelf", quiet "See my book").
+- **Resume frame:** "Start that part again" is removed. It now has "Continue" (red) and a quiet "Continue later", which
+  leaves the interview.
 
 ## 2026-11-06: cover direction G, watercolor landscapes (from Josef's reference)
 
