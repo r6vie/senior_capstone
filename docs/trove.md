@@ -90,7 +90,6 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   - "What's something about your work outsiders always get wrong?"
   - "What did you figure out the hard way?"
   - "What would you argue about for an hour?"
-- **The interview will be more capable than Overdue's quick cards.** The exact format will be redesigned later.
 - **Résumé and file upload** (§9.3):
   - Uploading is optional.
   - The résumé tells the AI where to dig, never what to say. It is used only to personalize the interview, never as book content.
@@ -101,11 +100,27 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   - Each of the three titles draws on that pool from a different angle.
   - The inside is finished to match whichever title is picked. All three can be prepared in the background so the pick feels instant.
 
+- **The interview, first version** (decided 2026-11-06; screens: interview direction A, "The question band", in `docs/design/shelf/project/InterviewA.dc.html`):
+  - **Format:** a conversation, one question at a time. The member types or speaks each answer. The Librarian speaks only through its questions: calm, curious and plain.
+  - **Asks for moments, not summaries.** Questions ask for a specific time or scene, then climb from what happened, to what you decided, to what you know now, to what you'd tell someone facing it. There are no "tell me about yourself", "what is the importance of", "how do you balance", yes/no or leading questions.
+  - **Contrast questions** surface knowledge people take for granted: what people get wrong, what you learned the hard way, what people come to you for.
+  - **Three phases:** Sweep (wide and light across school, work, turning points, side pursuits), Dig (the 2–3 strongest threads, in depth), Shape (the Librarian plays back what it heard: "Is this you?"). Internally the interviewer keeps a light ranking of threads to decide where to dig. It is not shown.
+  - **Reader lens, built into the question generator:** every next question is chosen with "what would a CWRU reader give 30 minutes for?" in mind. There is no separate critic pass.
+  - **Length:** about 20–25 minutes, roughly 15–25 questions. The Librarian decides when it has enough. After about 10 answers, the member may also say "I've said enough. Show me my book."
+  - **Saved after every answer, silently.** The member can leave and resume at any time ("Last time you were telling me about…").
+  - **Voice:** the browser's built-in speech recognition (no new service). An editable transcript before sending. Where it isn't supported, the member types.
+  - **Résumé:** optional PDF at the start. Its text is extracted, used only to shape questions, and deleted when the interview ends. The file is never stored.
+  - **Grounding, kept light:** each chapter keeps the quotes it came from (B1). Nothing more elaborate for now.
+  - **Chapters:** 3–5 per book.
+  - **The reveal:** three titles appear one at a time, each with one line on why it's you. Covers stay white until a cover direction is chosen. The member picks one, and the book is finished to match.
+  - **Review before the shelf:** the member can remove a chapter or ask for one to be rewritten, then "Put it on the shelf". Free-text editing comes later.
+  - **Model:** Opus 5.5 for questions and book writing.
+- **On hold until the interview works:** the Librarian reacting in the margins, bursts on strong lines, the card drawer for the sweep, bookmark tabs, the pencil-to-ink spine, the shelf stamp and live cleanup of spoken answers. A practical "how-to" chapter is welcome but not enforced.
+
 ### Open
 
-- The interview's format (cards, conversation, voice?), its length, and how the person knows when they're done.
-- The Librarian's tone for this audience.
-- Whether, and how, the author edits the book by hand after it's made.
+- The Librarian's more playful voice (on hold with the interactive layer).
+- Free-text editing of the book by the author.
 
 ## 5. Discovery
 
@@ -284,3 +299,7 @@ Membership verification is still open:
 - **2026-11-06, the book model (B1):**
   - No pen names; books show the first name only.
   - Settled what a book holds, who sees what, and how sample books work (§3).
+- **2026-11-06, the interview (I1, I2):**
+  - First version settled (§4): conversation, moments-first questions, three phases, reader lens in the generator, voice, autosave, the reveal and review.
+  - Interactive layer (margin notes, bursts and the rest) on hold until the interview works.
+  - Screens: interview direction A, "The question band".
