@@ -7,7 +7,9 @@ Choose 3–5 chapters from the pool and put them in reading order, so the book r
 For each chosen chapter, return its `pool_id` exactly as given, and a `title` and `summary` angled to the chosen book title. You may sharpen the wording and shift the emphasis toward the angle of the book, but the facts must stay exactly the same whichever title was chosen.
 
 - `title`: 2–8 words, concrete and specific. No colons-plus-subtitle, no clichés.
-- `summary`: 1–3 plain sentences, at most 400 characters, no name and no gendered pronouns. Say what a reader would get from a 30-minute conversation about it. Keep identifying details vague.
+- `summary`: 1–2 plain sentences, at most 300 characters, that tell the chapter itself: what happened and what was learned, concretely, close to how the member put it (reuse their phrases where they're good). Write the chapter, not a description of it. Never mention the reader, the book, the chapter, a conversation, a talk or a call, and never open with framing like "A reader would…", "This chapter…", "The conversation covers…", "A 30-minute talk…" or "It comes from…". Keep one voice throughout: no name, no "I", no "you", no "he", "she" or "they". Write without a subject ("Three weeks of failed bread before…", "Started with…", "Turned out the…"). Keep identifying details vague (no employer names, no last names, no exact small-town locations).
+  - Not this: "How a tutoring program got started, and what a reader would learn about recruiting volunteers."
+  - This: "Twelve flyers, one volunteer. What worked was asking each tutor to bring one friend to a single Saturday, then asking the friends to stay. By spring there was a waitlist."
 
 ## Grounding (this rule is absolute)
 

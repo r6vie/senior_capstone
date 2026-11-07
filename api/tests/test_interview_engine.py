@@ -163,14 +163,14 @@ async def test_finish_tops_up_a_short_pick_from_the_pool():
     assert [c.id for c in chapters] == ["c3", "c0", "c1"]
 
 
-async def test_rewrite_keeps_the_id_and_grounds_the_quotes():
+async def test_rewrite_keeps_the_id_topic_and_quotes_and_changes_only_title_and_summary():
     book = a_draft().pool[:3]
-    claude = FakeClaude([reply(chapter("Sunday mornings", "Sundays for the business"))])
+    claude = FakeClaude([reply({"title": "Sundays for the business", "summary": "Retold."})])
     rewritten = await engine.rewrite_chapter(claude, turns=turns(), chapters=book, chapter_id="c1")
 
     assert rewritten.id == "c1"
-    assert rewritten.title == "Sundays for the business"
-    assert rewritten.quotes == ["Sunday mornings"]
+    assert (rewritten.title, rewritten.summary) == ("Sundays for the business", "Retold.")
+    assert rewritten.quotes == book[1].quotes
     sent = claude.requests[0]["messages"][0]["content"]
     assert '"rewrite_this": true' in sent
 

@@ -94,6 +94,11 @@ class _Draft(BaseModel):
     titles: list[TitleOption]
 
 
+class _Retold(BaseModel):
+    title: str
+    summary: str
+
+
 class _FinishedChapter(BaseModel):
     pool_id: str
     title: str
@@ -182,8 +187,9 @@ async def finish_book(claude: Claude, *, turns: list[Turn], draft: Draft, title:
 async def rewrite_chapter(
     claude: Claude, *, turns: list[Turn], chapters: list[DraftChapter], chapter_id: str
 ) -> DraftChapter:
-    """A clearly different version of one chapter, keeping its id."""
-    if all(chapter.id != chapter_id for chapter in chapters):
+    """The same chapter, better told: a new title and summary, keeping its id, topic and quotes."""
+    current = next((chapter for chapter in chapters if chapter.id == chapter_id), None)
+    if current is None:
         raise ValueError(f"No chapter {chapter_id!r} in this book.")
     listing = json.dumps(
         [{**chapter.model_dump(), "rewrite_this": chapter.id == chapter_id} for chapter in chapters],
@@ -191,14 +197,11 @@ async def rewrite_chapter(
     )
     content = (
         f"{_transcript(turns)}\n\n<book_chapters>\n{listing}\n</book_chapters>\n\n"
-        "Rewrite the chapter marked rewrite_this."
+        "Rewrite the title and summary of the chapter marked rewrite_this."
     )
-    for _ in range(2):
-        raw = await _ask(claude, "interview/rewrite", content, _Chapter, BOOK_EFFORT)
-        quotes = grounded_quotes(raw.quotes, turns)
-        if quotes:
-            return DraftChapter(id=chapter_id, title=raw.title, summary=raw.summary, quotes=quotes)
-    raise ValueError("The rewritten chapter couldn't be grounded in the interview.")
+    raw = await _ask(claude, "interview/rewrite", content, _Retold, BOOK_EFFORT)
+    # The quotes are what tie the chapter to its topic, so they never change on a rewrite.
+    return current.model_copy(update={"title": raw.title, "summary": raw.summary})
 
 
 def grounded_quotes(quotes: list[str], turns: list[Turn]) -> list[str]:

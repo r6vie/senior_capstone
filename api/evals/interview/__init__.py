@@ -34,6 +34,10 @@ BANNED = {
 }
 
 
+# Summaries must be the chapter, not a description of it.
+META = r"\b(reader|readers|this chapter|the chapter|conversation|30-minute|talk would|it comes from|covers)\b"
+
+
 class CountingClaude(Claude):
     """Passes calls through and adds up tokens, so each case reports what it cost."""
 
@@ -109,8 +113,11 @@ async def run_case(claude: Claude, case: dict) -> str:
         "### Titles\n\n" + "\n".join(f"{n}. **{t.title}**: {t.why}" for n, t in enumerate(draft.titles, 1)),
         "### Pool\n\n" + "\n\n".join(_chapter(c) for c in draft.pool),
         f"### Finished book: {title}\n\n" + "\n\n".join(_chapter(c) for c in book),
-        f"### Rewrite of the last chapter\n\n{_chapter(rewritten)}",
+        f"### Rewrite of the last chapter\n\nBefore:\n{_chapter(book[-1])}\n\nAfter:\n{_chapter(rewritten)}",
     ]
+    summaries = [c.summary for c in [*draft.pool, *book, rewritten]]
+    meta = [m for summary in summaries for m in re.findall(META, summary, re.I)]
+    sections.insert(1, f"**Meta phrasing in summaries:** {len(meta)} ({', '.join(meta) or 'none'})")
     return "\n\n".join(sections)
 
 
