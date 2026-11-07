@@ -186,7 +186,7 @@ Page ground `--paper`. Four stacked parts:
 
 **Book** (`.book` 122×178, `.book-lg` 236×344, `.book-sm` 92×136): white cover, 2px ink outline (3px on lg), hinge line at
 left 12px, dot shadow offset 8px right and down, title Newsreader 600 13.5px (27px on lg) at top, full name Plex 600
-9.5px caps at bottom. A long name wraps (also at a hyphen) and stops at 3 lines with an ellipsis; "ALEXANDRA OKONKWO-BRENNAN" takes 2 lines on `.book`, 3 on `.book-sm`, 1 on `.book-lg`. Title and full name only; never a headline, employer, genre, count or badge. Make the book an `<a>`
+9.5px caps at bottom. A long name wraps (also at a hyphen) and stops at 3 lines with an ellipsis; "ALEXANDRA OKONKWO-BRENNAN" takes 3 lines on `.book` and `.book-sm`, 2 on `.book-lg` (measured in the app with the real fonts). Title and full name only; never a headline, employer, genre, count or badge. Make the book an `<a>`
 (or `<button>`) with `aria-label="<Title>, by <Full name>"`, a focus ring and the hover lift (`translateY(-4px)`).
 
 **Nav, shelf row and band** have no other states in this slice. Search is a text input styled as `.search`.
