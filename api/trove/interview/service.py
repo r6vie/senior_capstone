@@ -53,6 +53,7 @@ def interview_view(interview: dict) -> InterviewResponse:
         if current
         else None,
         topic=interview.get("topic"),
+        has_answers=bool(interview["turns"]),
         can_finish=stage == "interviewing" and (ready or len(interview["turns"]) >= EXIT_AFTER_ANSWERS),
         ready_for_reveal=ready,
         titles=interview["draft"]["titles"] if stage == "choosing" else None,

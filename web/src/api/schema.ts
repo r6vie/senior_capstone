@@ -411,6 +411,8 @@ export interface components {
             question: components["schemas"]["Question"] | null;
             /** Topic */
             topic: string | null;
+            /** Has Answers */
+            has_answers: boolean;
             /** Can Finish */
             can_finish: boolean;
             /** Ready For Reveal */

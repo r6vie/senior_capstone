@@ -122,8 +122,10 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
     assert state["stage"] == "interviewing"
     assert state["question"] == {"text": "Question 1?", "phase": "sweep", "playback": None}
     assert state["can_finish"] is False
+    assert state["has_answers"] is False
 
     state = await answer_questions(client, headers, 9)
+    assert state["has_answers"] is True
     assert state["question"]["text"] == "Question 10?"
     assert state["can_finish"] is False
     # Too early to say "I've said enough".

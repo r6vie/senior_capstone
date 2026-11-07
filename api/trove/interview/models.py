@@ -47,6 +47,8 @@ class InterviewResponse(BaseModel):
     question: Question | None
     # What the member was last talking about, for "Last time you were telling me about…".
     topic: str | None
+    # Whether any answer is saved yet: "Welcome back" instead of the start screen. Never a count.
+    has_answers: bool
     # "I've said enough. Show me my book" may be offered. No count is ever shown.
     can_finish: bool
     # The Librarian has enough; the client can go straight to POST /interview/finish.

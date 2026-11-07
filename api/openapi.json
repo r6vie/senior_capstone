@@ -945,6 +945,10 @@
             ],
             "title": "Topic"
           },
+          "has_answers": {
+            "type": "boolean",
+            "title": "Has Answers"
+          },
           "can_finish": {
             "type": "boolean",
             "title": "Can Finish"
@@ -973,6 +977,7 @@
           "stage",
           "question",
           "topic",
+          "has_answers",
           "can_finish",
           "ready_for_reveal",
           "titles"
