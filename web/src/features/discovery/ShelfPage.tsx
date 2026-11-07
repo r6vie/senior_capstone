@@ -19,11 +19,11 @@ function Book({ book, size }: { book: SampleBook; size?: "lg" }) {
     <button
       type="button"
       className={size === "lg" ? "book book-lg" : "book"}
-      aria-label={`${book.title}, by ${book.firstName}`}
+      aria-label={`${book.title}, by ${book.authorName}`}
     >
       <span className="book-cover">
         <span className="book-title">{book.title}</span>
-        <span className="book-author">{book.firstName}</span>
+        <span className="book-author">{book.authorName}</span>
       </span>
     </button>
   );
@@ -71,7 +71,7 @@ export function ShelfPage() {
               <h1 id="feature-title" className="page-title">
                 {featured.title}
               </h1>
-              <p className="feature-author">by {featured.firstName}</p>
+              <p className="feature-author">by {featured.authorName}</p>
               <p className="voice feature-reason">{sampleFeatured.reason}</p>
             </div>
             <div className="feature-book">

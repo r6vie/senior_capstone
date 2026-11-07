@@ -19,9 +19,11 @@ describe("ShelfPage", () => {
     }
   });
 
-  it("names each author by first name only", () => {
-    for (const book of sampleBooks) expect(book.firstName).toMatch(/^\S+$/);
+  it("names each author by full name", () => {
+    for (const book of sampleBooks) expect(book.authorName).toMatch(/^\S+ \S+/);
     renderPage();
-    expect(screen.getByRole("button", { name: "Raising Money Without a Network, by Amara" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Raising Money Without a Network, by Amara Eze" }),
+    ).toBeTruthy();
   });
 });
