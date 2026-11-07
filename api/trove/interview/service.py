@@ -12,7 +12,6 @@ from uuid import uuid4
 
 import anthropic
 from fastapi import HTTPException
-from pydantic import ValidationError
 from pymongo import ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
@@ -93,7 +92,7 @@ async def ask_engine(call):
     """Run one engine call; a failure becomes a 502 the member can retry. Nothing saved is lost."""
     try:
         return await call
-    except (ClaudeRefused, anthropic.APIError, ValidationError):
+    except (ClaudeRefused, anthropic.APIError, ValueError):  # ValueError covers pydantic ValidationError
         raise HTTPException(
             status_code=502, detail="The Librarian couldn't answer just now. Please try again."
         ) from None
