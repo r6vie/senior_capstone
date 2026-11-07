@@ -32,7 +32,7 @@ A system is a set of decisions, not a cage. Each rule below belongs to one of th
 - The three faces and their jobs; caps only on short display-face labels.
 - Square corners; pill and bubble exceptions as above.
 - Dot tone for shade; no blur, gradient or glow.
-- The book object: white, outlined, a dot shadow, title and first name only.
+- The book object: white, outlined, a dot shadow, title and full name only.
 - Every product rule in `CLAUDE.md` (names, no counts or ratings, no cold messages, no performance features).
 
 **Defaults. Follow them, or say why not in the PR.** Good answers we already found.
@@ -82,7 +82,7 @@ ink 18:1; rule on ink 11.4:1.
 | Nav, buttons | Barlow Condensed 600–700, +0.10–0.14em | 17 / 1 | CAPS |
 | Caption chip | Barlow Condensed 600, +0.14em | 14 | CAPS |
 | Book title | Newsreader 600 | 13.5 shelf, 27 feature | Sentence |
-| Book author (first name) | Plex Sans 600, +0.12em | 9.5 | CAPS |
+| Book author (full name) | Plex Sans 600, +0.12em, line-height 1.3 | 9.5 | CAPS, wraps to 3 lines |
 | The Librarian's voice | Newsreader italic | 19–22 / 1.3 | Sentence |
 | Body, labels | Plex Sans 400/600 | 15–16 / 1.5 | Sentence |
 | Hint, secondary | Plex Sans 400, `--ink-2` | 14 | Sentence |
@@ -114,7 +114,7 @@ All in `tokens.css`; see the canvas for every state. Markup is in the boards' so
 ## Rules that are easy to break
 
 - Buttons say what happens ("Ask to check out", "Save contact details"), never "Submit" or "Continue".
-- A book shows its title and a first name. Never a last name, genre, count, rating, badge or "popular" mark.
+- A book shows its title and the author's full name. Never a headline, employer, genre, count, rating, badge or "popular" mark.
   A student's book and a VP's book are identical.
 - Search is small and secondary. It is never the hero.
 - Empty states are left-aligned with a dotted frame and one next step. No illustrations.
@@ -153,7 +153,7 @@ the tokens, this file stays the rulebook and `styles.css` the implementation.
 `docs/design/shelf/project/SysShelf.dc.html` (identical to `MangaB2.dc.html`); live at the canvas link above, page
 "Design system", board "Reference screen · The shelf". Static for now: no click behavior, "Ask to check out" is
 shown but inert (`aria-disabled` is not needed; just don't wire it). Books are white (cover art is undecided).
-Seed 18+ sample books (title + first name only; titles are in the board) and let the shelves scroll.
+Seed 18+ sample books (title + full name only; titles are in the board) and let the shelves scroll.
 
 **Setup.** Copy `docs/design/system/tokens.css` into `web/src/ui/styles.css` (the old `--color-*`/`--space-*` names are
 aliased). Add to `index.html`:
@@ -185,9 +185,9 @@ Page ground `--paper`. Four stacked parts:
    nine 122px books fit per row). Add 36px of space below the last ledge for its dot shadow.
 
 **Book** (`.book` 122×178, `.book-lg` 236×344, `.book-sm` 92×136): white cover, 2px ink outline (3px on lg), hinge line at
-left 12px, dot shadow offset 8px right and down, title Newsreader 600 13.5px (27px on lg) at top, first name Plex 600
-9.5px caps at bottom. Title and first name only; never a last name, genre, count or badge. Make the book an `<a>`
-(or `<button>`) with `aria-label="<Title>, by <First name>"`, a focus ring and the hover lift (`translateY(-4px)`).
+left 12px, dot shadow offset 8px right and down, title Newsreader 600 13.5px (27px on lg) at top, full name Plex 600
+9.5px caps at bottom. A long name wraps (also at a hyphen) and stops at 3 lines with an ellipsis; "ALEXANDRA OKONKWO-BRENNAN" takes 2 lines on `.book`, 3 on `.book-sm`, 1 on `.book-lg`. Title and full name only; never a headline, employer, genre, count or badge. Make the book an `<a>`
+(or `<button>`) with `aria-label="<Title>, by <Full name>"`, a focus ring and the hover lift (`translateY(-4px)`).
 
 **Nav, shelf row and band** have no other states in this slice. Search is a text input styled as `.search`.
 

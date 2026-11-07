@@ -2,6 +2,14 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-07: books show the full name
+
+- **Orchestrator, after Josef talked to the advisor (ce8f005, trove.md §3 and §9.1):** a book shows the author's full name,
+  not just the first name. Nothing else from the résumé (no headline, employer, genre or count).
+- **Fit:** the name stays Plex 600, 9.5px, caps, +0.12em, now at line-height 1.3. It wraps (also at a hyphen) and stops at
+  3 lines with an ellipsis. "ALEXANDRA OKONKWO-BRENNAN" takes 2 lines on the shelf book, 3 on the small book, 1 on the
+  large one. The aria-label carries the whole name. Updated in system.md, tokens.css and the design-system boards.
+
 ## 2026-11-06: interview screens (T5), three directions
 
 - **Orchestrator T5:** static desktop screens for the interview in the manga system, three directions, nothing on hold

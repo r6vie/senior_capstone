@@ -532,7 +532,12 @@ body {
 }
 .book-author {
   margin-top: auto;
-  font: 600 9.5px/1 var(--font-sans);
+  /* Full names wrap (at the hyphen too) and stop at 3 lines; the aria-label carries the whole name. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font: 600 9.5px/1.3 var(--font-sans);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink-2);
