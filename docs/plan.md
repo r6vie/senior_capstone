@@ -9,7 +9,7 @@ before starting an item.
 1. Sign up.
 2. Find your book in the interview and pick one of three titles.
 3. Browse and search the shelf.
-4. Request a book, and the author accepts.
+4. Check out a book, and the author accepts.
 5. Names and contacts are revealed, and you arrange the meeting.
 6. "Did you meet?"
 7. Past meets.
@@ -35,7 +35,7 @@ before starting an item.
 |---|---|---|---|
 | **Josef** | @BrozJosef | The book and the interview: the AI heart, prompts, evals, sample books | `api/trove/books`, `api/trove/interview`, `api/trove/ai/prompts`, `api/evals`, `web/src/features/{book,interview}` |
 | **Alvisa** | @alvisakrasniqi | Discovery: shelves, search, "the Librarian recommends", recommending a book | `api/trove/discovery`, `web/src/features/discovery` |
-| **Ellie** | @ecolvin22 | Checkouts and messaging: requests, copies, queue, reveal, threads, "Did you meet?", past meets | `api/trove/checkouts`, `api/trove/messaging`, `web/src/features/{checkouts,messaging}` |
+| **Ellie** | @ecolvin22 | Checkouts and messaging: checkouts, copies, reveal, threads, "Did you meet?", past meets | `api/trove/checkouts`, `api/trove/messaging`, `web/src/features/{checkouts,messaging}` |
 | **Daniel** | @r6vie | Accounts, meetings and the app shell: account and contact details, settings, CWRU verification, arranging the meeting, navigation | `api/trove/auth`, `api/trove/meetings`, `web/src/features/{auth,account,meetings}`, `web/src/app`, `web/src/ui` |
 
 Review requests go to the folder's owner automatically (`.github/CODEOWNERS`). `api/trove/notifications` is shared: each owner adds the templates and `notify_*` functions for
@@ -49,13 +49,13 @@ local stub with the same signature and swap it out when the real one merges.
 
 | Function (in `<feature>/service.py`) | Owner | Returns | Used by |
 |---|---|---|---|
-| `books.get_public_book(db, book_id)` | Josef | The book as readers see it: title, author's first name, cover, chapters, copies. **Never** the author's last name or contacts. `None` if not on the shelf | discovery, checkouts |
+| `books.get_public_book(db, book_id)` | Josef | The book as readers see it: title, author's full name, cover, chapters, copies. **Never** the author's contacts, employer or title. `None` if not on the shelf | discovery, checkouts |
 | `books.get_book_of(db, user_id)` | Josef | That member's own book, or `None` | checkouts (you need a book to check one out) |
 | `books.list_shelf(db, *, limit, after)` | Josef | Public books on the shelf, newest first | discovery |
-| `auth.first_name_of(db, user_id)` | Daniel | First name | everyone |
+| `auth.first_name_of(db, user_id)` | Daniel | First name (for greetings; books show the full name, trove.md §9.1) | everyone |
 | `auth.contact_details_of(db, user_id)` | Daniel | The contact details the member chose to share on a yes | checkouts (reveal) |
 | `checkouts.get_checkout_for(db, checkout_id, user_id)` | Ellie | The checkout if this user is its reader or author, else `None` | messaging, meetings |
-| `checkouts.past_meets(db, user_id)` | Ellie | People this member has met: checkout id, other person's first name, book id | discovery (recommend to someone you've met) |
+| `checkouts.past_meets(db, user_id)` | Ellie | People this member has met: checkout id, other person's full name, book id | discovery (recommend to someone you've met) |
 
 When you change one of these, tell the people in the "Used by" column.
 
@@ -94,16 +94,17 @@ the owner answers them. Each item's "Decide first" lists the known ones.
   from the Reference screen · The shelf.
 - Done when: every owner has a route and an empty page in their own feature folder to work in.
 
-**C1 · Requesting a book** · Ellie · `todo`
-- A reader requests a book with a message. They must have a book of their own (`books.get_book_of`).
-- The author sees their queue and chooses who gets a copy. Unpicked requests wait about 2
-  weeks, then expire. The author can decline. A declined or expired request shows "this book
-  isn't available right now".
-- Requests are accepted even when every copy is out. Readers never see copy or request counts.
+**C1 · Checking out a book** · Ellie · `todo`
+- One step (trove.md §6, §9.6): a reader presses "Check out" and writes a short message. They must
+  have a book of their own (`books.get_book_of`). The author accepts or declines.
+- An unanswered checkout closes quietly after a set time. A declined or expired checkout shows
+  "this book isn't available right now".
+- Copies are private: when every copy is out, the book leaves the shelf until one is returned.
+  No queue. Readers never see copy or checkout counts.
 - Ships `checkouts.get_checkout_for`.
 - Builds against the seeded books from B1.
-- Decide first: pending-request limit per reader; the exact expiry period; whether a reader can
-  request the same book again after an expiry.
+- Decide first: open-checkout limit per reader; the exact expiry period; whether a reader can
+  check out the same book again after an expiry.
 
 ### Wave 2: the core experience
 
@@ -124,7 +125,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - The home page shows shelves of books (start with "Recently added" until the categories are
   decided), and a book page opens one.
 - Uses only `books.get_public_book` and `books.list_shelf`.
-- Has a "Request this book" button that leads into C1.
+- Has a "Check out" button that leads into C1.
 
 **D2 · Smart search** · Alvisa · `todo`
 - Search by topic, never by name.
@@ -163,7 +164,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 **D3 · The Librarian recommends** · Alvisa · `todo`
 - One recommended book at a time, each with a one-line reason for why you two should talk.
-- Quietly favors books that are getting fewer requests (trove.md §9.6).
+- Quietly favors books that are checked out less (trove.md §9.6).
 
 **D4 · Recommend a book to someone** · Alvisa · `todo`
 - Recommend a book to someone in your Past meets, inside the app (uses `checkouts.past_meets`),

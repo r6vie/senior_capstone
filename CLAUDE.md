@@ -72,13 +72,13 @@ Each backend feature's `__init__.py` says what it covers and which collections i
 
 ## Product rules that code must respect
 
-- **Names:** only first names appear before a mutual yes. Last names, email and contact details
-  are revealed only on an accepted checkout.
+- **Names:** books show the author's full name, and nothing else from their résumé (no employer,
+  title or links). Email and contact details are revealed only on an accepted checkout.
 - **Grounding:** everything the AI writes into a book must trace back to the member's own interview
   answers. A résumé guides questions only; nothing from it goes into the book.
 - **No performance features:** no follower counts, likes, view counts, public request counts,
   "fully booked" badges, or feeds.
-- **No cold messages:** messages exist only inside a checkout request.
+- **No cold messages:** messages exist only inside a checkout.
 - **Follow the design system.** Red is the primary action and nothing else; one focal point per screen; dot
   tone for shade, never blur. New patterns are welcome when no recipe fits, and get recorded in
   `docs/design/system.md` (Additions).

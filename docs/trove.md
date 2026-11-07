@@ -40,7 +40,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   1. **No audience, no performance.** No feed, no followers, no likes or view counts, no posts.
   2. **Find the trove in yourself, then let others find it.** The AI interviews, organizes and recommends. It never invents anything; every part of a book traces back to the author's own answers.
   3. **Meet first; opportunities follow.** Trove creates weak ties, and doors open between people who were curious about each other.
-  4. **Discreet until yes.** First names only. Full identity and contact details are shared only on a mutual yes.
+  4. **Real names, private contact.** Books show the author's full name. Contact details are shared only when the author says yes.
   5. **Generous, not extractive.** Authors control how many copies they lend out.
   6. **Face to face.** Video by default, in person when nearby.
 
@@ -61,12 +61,12 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **The cover shows the title.** No genre on the cover.
 - **No genres anywhere in the book.** A book's chapters can cover very different things, so no single genre fits a whole book.
 - **Chapters:** the inside of the book is a set of chapters. Each one is something the author could talk about, and each is grounded in the author's own words.
-- **Names:** books show the author's **first name**. Last name, employer, title and contact details are revealed only on a mutual yes (§9.1).
-  - There are no pen names: members are known by their first name.
-  - The book's text stays vague on identifying details, as in Overdue.
+- **Names:** books show the author's **full name** (§9.1). Employer, title, links and contact details stay off the book; contact details are revealed only when the author accepts a checkout.
+  - There are no pen names.
+  - The book stays the focus of the page, not the person's résumé.
 - **Adding to the book:** the author can reopen the interview from their book at any time to add detail or chapters (as in Overdue's author interview).
 - **What a book holds** (B1):
-  - A title, the author's first name, a cover style, an optional blurb, and the chapters in reading order.
+  - A title, the author's full name, a cover style, an optional blurb, and the chapters in reading order.
   - Each chapter has a title, a short summary and the quotes from the interview it's grounded in. Readers see the title and summary; only the author sees the quotes.
   - Copies default to 3 (1–10). Readers never see the number.
   - A book is a draft or on the shelf. Only books on the shelf are visible to readers, newest first.
@@ -138,37 +138,37 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 
 - What the categories are and how the home screen is laid out.
 
-## 6. Requests, copies and messaging
+## 6. Checkouts, copies and messaging
 
 ### Decided
 
 - **You need a book of your own to check one out.**
-- **A request is for the whole book, with a message.** It isn't tied to a chapter, because a reader may be interested in several.
+- **Checking out is one step** (§9.6): the reader presses "Check out" and writes a short message. The author accepts or declines. On accept, contact details are revealed and the two arrange the reading.
+- **A checkout is for the whole book.** It isn't tied to a chapter, because a reader may be interested in several.
+- **A checkout ends.** It is one reading; afterwards the book is returned. Nothing stays behind as a permanent connection, only a Past meet.
 - **No rule or check blocks asking for a job or a referral.** It isn't the ideal use of Trove, but we won't police it.
-- **Copies:** each author sets how many copies of their book can be checked out at once (e.g. 3). When requests come in, the author chooses who gets them.
-- **The queue** (§9.6):
-  - Requests the author doesn't pick stay in a queue for about 2 weeks instead of being declined right away.
-  - The author can still decline manually. A declined or expired request shows the reader "this book isn't available right now".
-  - Requests are still accepted when every copy is out; they wait in the same queue.
-  - Readers never see how many copies are out or how many requests a book has.
-- **Messaging lives in the app.** The thread is where you request a book, coordinate the meeting and share the video link. A member can choose to get communications by email instead.
+- **Copies are private and automatic:** each author sets how many checkouts they'll have open at once (default 3, 1–10).
+  - When every copy is out, the book quietly leaves the shelf, and comes back when a copy is returned. There is no queue and no "fully booked" label.
+  - Readers never see copy counts or how many checkouts a book has.
+- **A checkout the author doesn't answer closes quietly** after a set time. A declined or expired checkout shows the reader "this book isn't available right now".
+- **Messaging lives in the app.** The thread is where you check out a book, coordinate the meeting and share the video link. A member can choose to get communications by email instead.
 - **"Did you meet?" matters:** answering it returns the copy, which frees it for the next reader.
-- **Messaging is a small thread inside each request** (§9.8). Messages exist only inside a request, so there are no cold DMs.
+- **Messaging is a small thread inside each checkout** (§9.8). Messages exist only inside a checkout, so there are no cold DMs.
 
 ### Leaning
 
-- **A limit on pending requests per reader** keeps requests deliberate.
+- **A limit on open checkouts per reader** keeps checkouts deliberate.
 
 ### Open
 
-- The exact numbers: copies per author, pending requests per reader, how long a request stays in the queue, and how soon a copy returns if nobody confirms a meeting.
+- The exact numbers: open checkouts per reader, how long an unanswered checkout stays open, and how soon a copy returns if nobody confirms a meeting.
 
 ## 7. The reading
 
 ### Decided
 
 - **A video call by default, or in person when both people are nearby.**
-- **Names and contact details are revealed on a mutual yes.**
+- **Contact details are revealed when the author accepts.**
 - **The meeting is arranged in the app, and kept light** (§9.7):
   - Each side shares a few times that work, and the app suggests overlaps.
   - A calendar invite with one click, a field for the video link, a reminder on the day, and "Did you meet?" afterwards.
@@ -189,12 +189,12 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 
 ## 9. Reasoning behind decisions
 
-### 9.1 First names, not full anonymity (decided)
+### 9.1 Full names, contact on a yes (decided 2026-11-07, replacing first names only)
 
-- **Last names are what make someone searchable.** A last name lets you look a person up on LinkedIn or Google, and that lookup is where performance and status sneak back in. A first name alone does neither.
-- **Full anonymity costs trust.** Professionals, alumni especially, are wary of requests from someone with no name. A first name makes a book feel like it was written by a person, and makes a request feel like it came from one.
-- **Pen names would mostly end up as first names anyway**, so there are none: everyone is known by their first name.
-- **One caution:** in a small community, a first name plus specific details can still identify someone. The book's text should stay vague on identifying details.
+- **Full names build trust.** Talking it through with our advisor: alumni are wary of a checkout from someone they can't place, and a real name makes both the book and the checkout feel like they come from a person.
+- **The cost is the lookup.** A full name makes a LinkedIn search one click away, and that's where status sneaks back in. So the book carries the name and nothing else of the résumé: no employer, title or links. A reader picks a book for what's in it.
+- **Contact details still wait for a yes.** Nobody can reach an author outside Trove until the author accepts, which keeps "no cold messages" meaningful.
+- **Pen names would mostly end up as real names anyway**, so there are none.
 
 ### 9.2 Branches and affiliation (decided: none for now)
 
@@ -227,12 +227,15 @@ Membership verification is still open:
 - **Friends lists bring back what we're avoiding:** counts, performing for an audience, and finding people you already know.
 - **Recommending to "anyone on the platform" doesn't fit.** It would mean searching for people by name, and names are hidden.
 
-### 9.6 Keep the queue, hide the scarcity (decided)
+### 9.6 One-step checkout, library rules kept (decided 2026-11-07, replacing the queue)
 
-- **Requests are always open,** even when every copy is out. That's how a library's holds list works, and nothing ever looks shut.
-- **A visible "always checked out" turns into a popularity score**, and that's the performative status we're trying to avoid. So readers never see copy counts or request counts.
-- **The motivation still works.** When a copy returns, through "Did you meet?", the author is nudged to choose the next reader. That gives everyone a reason to meet and close the loop.
-- **Popular authors:** the Librarian's recommendations can quietly steer readers toward books that are getting fewer requests.
+- **The holds queue felt like a game.** The author picking winners from a waiting list is the gamified part, and it was the hardest part to build. A checkout is now a request the author accepts or declines.
+- **The identity is in the library rules, not the queue.** What keeps Trove from being a regular networking app:
+  - You borrow a book, not a person: readers choose by what someone knows.
+  - A checkout ends. It is one reading and then the book is returned; there's no connection count.
+  - You need a book of your own to check one out.
+- **Copies stay, privately.** They protect popular authors from being flooded ("I'll get flooded"). When every copy is out the book quietly leaves the shelf, so nothing ever shows as fully booked or popular.
+- **Popular authors:** the Librarian's recommendations can quietly steer readers toward books that are checked out less.
 
 ### 9.7 Arranging the meeting in the app (decided)
 
@@ -244,7 +247,7 @@ Membership verification is still open:
 
 **Why build it:**
 
-- **There's no other channel before the yes.** Names and contact details are hidden until both people agree, so the request message and early back-and-forth have to go through Trove. The only alternative is relaying emails between people without exposing their addresses. That's more fragile, not less: incoming email has to be parsed, spam filtered, and delivery kept reliable.
+- **There's no other channel before the yes.** Contact details are hidden until the author accepts, so the checkout message and early back-and-forth have to go through Trove. The only alternative is relaying emails between people without exposing their addresses. That's more fragile, not less: incoming email has to be parsed, spam filtered, and delivery kept reliable.
 - **Scheduling needs a home.** Shared times, the meeting slot, the video link and "Did you meet?" all belong in the same place as the conversation.
 - **Most of it already exists.** `backend/connections.py` already has requests, accept/decline, a message thread per request, and email notifications (`backend/notifications.py`). Building messaging mostly means repurposing that code, not starting over.
 
@@ -266,7 +269,9 @@ Membership verification is still open:
 | Dinner tables, letters, time bank, passport, radio | Explored; none fit |
 | Genres, on the cover or as shelves | Chapters vary too much for one genre per book |
 | Several books per person | One book at a time keeps people from showing off range |
-| Pen names as the default | Most people would pick their first name anyway |
+| Pen names as the default | Most people would pick their real name anyway |
+| First names only until a mutual yes | Cost trust with alumni; full names with contact on a yes instead (§9.1) |
+| A holds queue where the author picks who gets each copy | Felt like picking winners, and added a step (§9.6) |
 | Friends lists and follows | They bring back counts and performing |
 | Requests tied to one chapter, written as "margin notes" | Too complicated; a reader may want several chapters |
 | Blocking job or referral asks | We won't police how people use requests |
@@ -305,3 +310,6 @@ Membership verification is still open:
   - First version settled (§4): conversation, moments-first questions, three phases, reader lens in the generator, voice, autosave, the reveal and review.
   - Interactive layer (margin notes, bursts and the rest) on hold until the interview works.
   - Screens: interview direction A, "The question band".
+- **2026-11-07, names and checkout (after talking with our advisor):**
+  - Books show full names; employer, title and links stay off the book; contact details only when the author accepts (§9.1).
+  - Checkout is one step: check out with a message, the author accepts or declines, the reading, the return. The holds queue is gone; copies stay private and a fully lent book quietly leaves the shelf (§6, §9.6).
