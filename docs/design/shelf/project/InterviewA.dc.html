@@ -724,6 +724,45 @@ body {
 .B .act.review{padding:34px 40px;gap:10px}
 .B .act.review .booktitle h2{font-size:28px}
 .B .act.review .chs li{padding:8px 14px}
+
+/* B: a literal comic page. Heavy panel borders, white gutters, caption boxes, balloons. */
+.Bc .top{display:flex;align-items:center;justify-content:space-between;height:70px;padding:0 28px}
+.tags{display:flex;gap:0;border:var(--line-heavy) solid var(--ink);font:700 16px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.tags span{padding:10px 20px;background:var(--white);color:var(--ink-2)}.tags span+span{border-left:var(--line) solid var(--ink)}
+.tags .on{background:var(--ink);color:var(--white)}
+.pg{height:716px;padding:0 28px 28px;display:grid;gap:14px}
+.pn{position:relative;border:4px solid var(--ink);background:var(--white);overflow:hidden;display:flex;flex-direction:column;justify-content:center}
+.pn.tone{background:radial-gradient(circle,var(--ink) 1.3px,transparent 1.7px) 0 0/6px 6px,var(--paper);justify-content:center;padding:36px 48px}
+.cap{position:absolute;z-index:2;padding:5px 12px;border:var(--line) solid var(--ink);background:var(--white);font:700 13px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.cap.tl{left:-2px;top:-2px}
+.bal{position:relative;margin:0;max-width:860px;padding:22px 30px;border:var(--line-heavy) solid var(--ink);border-radius:34px;background:var(--white);font:italic 500 30px/1.25 var(--font-serif)}
+.bal::after{content:"";position:absolute;left:56px;bottom:-17px;width:26px;height:26px;background:var(--white);border-right:var(--line-heavy) solid var(--ink);border-bottom:var(--line-heavy) solid var(--ink);transform:rotate(45deg) skew(8deg,8deg)}
+.pn.tone .bal{margin-top:6px}
+.pad{padding:26px 28px}.pad2{padding:0 28px 18px}.pad.col{display:grid;gap:14px;justify-items:start}
+.pn .you{margin:44px 28px 12px;padding:16px 20px;border:var(--line-heavy) solid var(--ink);border-radius:26px;background:var(--white);font:400 19px/1.5 var(--font-sans);min-height:130px}
+.pn .note{margin:0}
+.pn .recb{display:flex;gap:30px;align-items:center;justify-content:center;padding-top:44px}
+.pn .recb .note{max-width:300px}
+.pn .exit{margin-top:6px;padding-top:6px}
+.pg.g-start{grid-template-columns:1.5fr 1fr;grid-template-rows:1fr 120px}
+.pg.g-start .big{grid-row:1}.pg.g-start .foot{grid-column:1/3}
+.pg.g-start .big .bal{font-size:36px}
+.pg.g-resume{grid-template-rows:1fr 130px}.pg.g-resume .big .bal{font-size:36px}
+.pg.g-ask,.pg.g-rec,.pg.g-tr,.pg.g-later,.pg.g-shape{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1.2fr}
+.pg .q{grid-column:1/3}
+.pg.g-reveal{grid-template-rows:150px 1fr 100px}
+.pg.g-review{grid-template-rows:150px 1fr 96px}
+.pn.slim{padding:20px 40px;flex-direction:row;align-items:center;gap:28px;justify-content:flex-start}
+.pn.slim .bal{font-size:26px;padding:16px 24px}
+.bt2{font:600 28px/1.1 var(--font-serif);margin-left:auto;text-align:right}.bt2 small{display:block;font:600 14px var(--font-sans);color:var(--ink-2);margin-top:4px}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.pick{align-items:flex-start;justify-content:flex-start;padding:22px;gap:10px}
+.pick.on{border-width:7px;padding:19px}
+.pick b{font:600 24px/1.15 var(--font-serif);margin-top:6px}
+.quad{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.chp{justify-content:flex-start;padding-bottom:14px}.chp .pad{padding:40px 18px 10px}.chp b{display:block;font:600 22px/1.2 var(--font-serif);margin-bottom:10px}.chp span{font-size:14.5px;color:var(--ink-2)}
+.chp .ch-act{margin-top:auto;padding:0 14px;flex-direction:column;align-items:flex-start;gap:4px}
+.pn.foot{justify-content:center}
 /* C: bubble on a tone ground, phase rail across the top */
 .C .top{display:flex;align-items:center;justify-content:space-between;height:78px;padding:0 48px}
 .rail,.rail-gap{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 48px;height:44px}

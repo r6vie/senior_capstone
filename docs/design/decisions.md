@@ -8,10 +8,14 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   drawn (no margin notes, bursts, card drawer, bookmark tabs, pencil-to-ink spine, stamp or live filler cleanup).
 - **New canvas page "Interview"**, boards `InterviewA`, `InterviewB`, `InterviewC`. Each shows nine frames: start,
   question (typing, recording, transcript, later in the Dig with the exit link), shape moment, reveal (three white-cover
-  titles), book review, coming back. A: the question on a black band. B: two pages, Librarian left on dark, member
-  right on ruled paper. C: speech bubble on a screentone ground, phase as a top rail.
+  titles), book review, coming back. A: the question on a black band. B: a literal comic page (see below). C: speech bubble on a screentone ground, phase as a top rail.
 - **Rules kept:** first names only, no counts or percentages, phase as a label (Sweep, Dig, Shape), "Saved" tiny and
   silent, one red action per screen (Stop while recording), halo dots never behind running text.
+
+- **Josef: replace B with something more literally comic.** B is now "Comic page": every screen is a page of
+  heavy-bordered panels on white gutters, narration caption boxes (The Librarian, You, What I heard, Previously), the
+  Librarian's question in a speech balloon on a screentone panel, the member answering from a balloon. Phase is a
+  tag in the page header, the reveal is three cover panels, chapters are panels.
 
 Pending Josef's pick. "T5 approved" goes to the orchestrator only after that.
 
