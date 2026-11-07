@@ -210,6 +210,7 @@ export function createFakeInterviewClient(firstName: string, delay = 1200): Inte
         stored.answers.push(text);
         if (stored.answers.length >= QUESTIONS.length) stored.stage = "shaping";
       }),
+    askAgain: (id) => mutate(id, () => {}),
     finish: (id) =>
       mutate(id, (stored) => {
         if (stored.answers.length < CAN_FINISH_AFTER) throw new Error("Answer a few more questions first.");

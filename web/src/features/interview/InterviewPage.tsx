@@ -1,10 +1,26 @@
-import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
-import type { DraftBook, InterviewClient, InterviewState, Phase } from "./interviewClient";
+import {
+  type DraftBook,
+  type InterviewClient,
+  InterviewError,
+  type InterviewState,
+  type Phase,
+} from "./interviewClient";
 import "./InterviewPage.css";
 
 // The interview, direction A "The question band" (docs/design/shelf/project/InterviewA.dc.html,
@@ -78,11 +94,22 @@ function Waiting({ children, holding }: { children: ReactNode; holding?: ReactNo
   );
 }
 
+// Set when the last call failed in a way that is safe to repeat (the Librarian couldn't answer).
+const RetryContext = createContext<(() => void) | null>(null);
+
 function ErrorMessage({ message }: { message: string | null }) {
+  const retry = useContext(RetryContext);
   if (!message) return null;
   return (
-    <div className="message message-error" role="alert">
-      <span>{message}</span>
+    <div className="iv-error">
+      <div className="message message-error" role="alert">
+        <span>{message}</span>
+      </div>
+      {retry && (
+        <Button variant="secondary" className="iv-sm" onClick={retry}>
+          Try again
+        </Button>
+      )}
     </div>
   );
 }
@@ -124,141 +151,184 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     };
   }, [client]);
 
+  const [retry, setRetry] = useState<(() => void) | null>(null);
+
   // Runs one call with a calm waiting line on the band; the screen stays put until it answers.
-  const run = useCallback(async (waiting: string, call: () => Promise<InterviewState>) => {
-    setBusy(waiting);
-    setError(null);
-    try {
-      setState(await call());
-      return true;
-    } catch (reason) {
-      setError(messageOf(reason));
-      return false;
-    } finally {
-      setBusy(null);
-    }
-  }, []);
-
-  if (!loaded) return <Frame say={<Waiting>The Librarian is finding your place…</Waiting>} />;
-
-  if (!state) {
-    return (
-      <StartScreen
-        busy={busy}
-        error={error}
-        onStart={(resume) =>
-          run(resume ? "The Librarian is reading your résumé…" : "The Librarian is getting ready…", () =>
-            client.start(resume),
-          )
+  // `retryWith` is what to repeat if the Librarian fails: after a saved answer, ask for the question
+  // again rather than sending the answer twice.
+  const run = useCallback(
+    async (
+      waiting: string,
+      call: () => Promise<InterviewState>,
+      retryWith?: () => Promise<InterviewState>,
+    ) => {
+      setBusy(waiting);
+      setError(null);
+      setRetry(null);
+      try {
+        setState(await call());
+        return true;
+      } catch (reason) {
+        setError(messageOf(reason));
+        if (reason instanceof InterviewError && reason.retryable) {
+          const again = retryWith ?? call;
+          setRetry(() => () => {
+            run(waiting, again, again);
+          });
         }
-      />
-    );
-  }
-
-  const say = (text: string) => (busy ? <Waiting holding={text}>{busy}</Waiting> : text);
-
-  switch (state.stage) {
-    case "asking": {
-      const draftKey = `trove_interview_draft:${state.id}:${state.question}`;
-      if (welcomedBack && state.lastTopic) {
-        return (
-          <Frame
-            phase={state.phase}
-            busy={Boolean(busy)}
-            say={say(`Welcome back. Last time you were telling me about ${state.lastTopic}.`)}
-          >
-            <ErrorMessage message={error} />
-            <div className="iv-row">
-              <Button onClick={() => setWelcomedBack(false)}>Pick up where we left off</Button>
-              {/* The waiting question is saved as asked; starting again only clears the unsent draft. */}
-              <button
-                type="button"
-                className="button button-quiet"
-                onClick={() => {
-                  clearDraft(draftKey);
-                  setWelcomedBack(false);
-                }}
-              >
-                Start that part again
-              </button>
-            </div>
-            <p className="iv-note">Everything you've said so far is saved.</p>
-          </Frame>
-        );
+        return false;
+      } finally {
+        setBusy(null);
       }
+    },
+    [],
+  );
+
+  const screen = (() => {
+    if (!loaded) return <Frame say={<Waiting>The Librarian is finding your place…</Waiting>} />;
+
+    if (!state) {
       return (
-        <Frame phase={state.phase} say={say(state.question)} busy={Boolean(busy)}>
-          <ErrorMessage message={error} />
-          <AnswerPanel
-            key={draftKey}
-            draftKey={draftKey}
-            busy={Boolean(busy)}
-            hasSavedAnswers={state.hasAnswers}
-            onSend={async (text) => {
-              if (await run("The Librarian is reading…", () => client.answer(state.id, text)))
-                clearDraft(draftKey);
-            }}
-          >
-            {state.canFinish && (
-              <div className="iv-exit">
+        <StartScreen
+          busy={busy}
+          error={error}
+          onStart={(resume) =>
+            run(
+              resume ? "The Librarian is reading your résumé…" : "The Librarian is getting ready…",
+              () => client.start(resume),
+              // A 502 here means the interview exists but its first question failed.
+              () => client.askAgain(""),
+            )
+          }
+        />
+      );
+    }
+
+    const say = (text: string) => (busy ? <Waiting holding={text}>{busy}</Waiting> : text);
+
+    switch (state.stage) {
+      case "asking": {
+        const draftKey = `trove_interview_draft:${state.id}:${state.question}`;
+        if (welcomedBack && state.lastTopic) {
+          return (
+            <Frame
+              phase={state.phase}
+              busy={Boolean(busy)}
+              say={say(`Welcome back. Last time you were telling me about ${state.lastTopic}.`)}
+            >
+              <ErrorMessage message={error} />
+              <div className="iv-row">
+                <Button onClick={() => setWelcomedBack(false)}>Pick up where we left off</Button>
+                {/* The waiting question is saved as asked; starting again only clears the unsent draft. */}
                 <button
                   type="button"
                   className="button button-quiet"
-                  onClick={() =>
-                    run("The Librarian is gathering what you said…", () => client.finish(state.id))
-                  }
+                  onClick={() => {
+                    clearDraft(draftKey);
+                    setWelcomedBack(false);
+                  }}
                 >
-                  I've said enough. Show me my book
+                  Start that part again
                 </button>
               </div>
-            )}
-          </AnswerPanel>
-        </Frame>
-      );
+              <p className="iv-note">Everything you've said so far is saved.</p>
+            </Frame>
+          );
+        }
+        return (
+          <Frame phase={state.phase} say={say(state.question)} busy={Boolean(busy)}>
+            <ErrorMessage message={error} />
+            <AnswerPanel
+              key={draftKey}
+              draftKey={draftKey}
+              busy={Boolean(busy)}
+              hasSavedAnswers={state.hasAnswers}
+              onSend={async (text) => {
+                if (
+                  await run(
+                    "The Librarian is reading…",
+                    () => client.answer(state.id, text),
+                    () => client.askAgain(state.id),
+                  )
+                )
+                  clearDraft(draftKey);
+              }}
+            >
+              {state.canFinish && (
+                <div className="iv-exit">
+                  <button
+                    type="button"
+                    className="button button-quiet"
+                    onClick={() =>
+                      run("The Librarian is gathering what you said…", () => client.finish(state.id))
+                    }
+                  >
+                    I've said enough. Show me my book
+                  </button>
+                </div>
+              )}
+            </AnswerPanel>
+          </Frame>
+        );
+      }
+      case "shaping":
+        return (
+          <ShapeScreen
+            playback={say(state.playback)}
+            busy={busy}
+            error={error}
+            onConfirm={() =>
+              run(
+                "The Librarian is finding your titles…",
+                () => client.confirmShape(state.id),
+                () => client.askAgain(state.id),
+              )
+            }
+            onCorrect={(correction) =>
+              run(
+                "The Librarian is listening again…",
+                () => client.correctShape(state.id, correction),
+                () => client.askAgain(state.id),
+              )
+            }
+          />
+        );
+      case "choosing":
+        return (
+          <RevealScreen
+            key={state.id}
+            titles={state.titles}
+            author={firstName}
+            busy={busy}
+            error={error}
+            onChoose={(titleId) =>
+              run("The Librarian is writing your book…", () => client.chooseTitle(state.id, titleId))
+            }
+          />
+        );
+      case "reviewing":
+        return (
+          <ReviewScreen
+            book={state.book}
+            busy={busy}
+            error={error}
+            onRewrite={(chapterId) =>
+              run("The Librarian is rewriting that chapter…", () =>
+                client.rewriteChapter(state.id, chapterId),
+              )
+            }
+            onRemove={(chapterId) =>
+              run("Removing that chapter…", () => client.removeChapter(state.id, chapterId))
+            }
+            onShelve={() => run("Putting your book on the shelf…", () => client.putOnShelf(state.id))}
+          />
+        );
+      case "done":
+        return <DoneScreen book={state.book} />;
     }
-    case "shaping":
-      return (
-        <ShapeScreen
-          playback={say(state.playback)}
-          busy={busy}
-          error={error}
-          onConfirm={() => run("The Librarian is finding your titles…", () => client.confirmShape(state.id))}
-          onCorrect={(correction) =>
-            run("The Librarian is listening again…", () => client.correctShape(state.id, correction))
-          }
-        />
-      );
-    case "choosing":
-      return (
-        <RevealScreen
-          key={state.id}
-          titles={state.titles}
-          author={firstName}
-          busy={busy}
-          error={error}
-          onChoose={(titleId) =>
-            run("The Librarian is writing your book…", () => client.chooseTitle(state.id, titleId))
-          }
-        />
-      );
-    case "reviewing":
-      return (
-        <ReviewScreen
-          book={state.book}
-          busy={busy}
-          error={error}
-          onRewrite={(chapterId) =>
-            run("The Librarian is rewriting that chapter…", () => client.rewriteChapter(state.id, chapterId))
-          }
-          onRemove={(chapterId) =>
-            run("Removing that chapter…", () => client.removeChapter(state.id, chapterId))
-          }
-          onShelve={() => run("Putting your book on the shelf…", () => client.putOnShelf(state.id))}
-        />
-      );
-    case "done":
-      return <DoneScreen book={state.book} />;
-  }
+  })();
+
+  return <RetryContext.Provider value={retry}>{screen}</RetryContext.Provider>;
 }
 
 function messageOf(reason: unknown): string {
@@ -580,19 +650,24 @@ function ReviewScreen({
 // ---------- Done ----------
 
 function DoneScreen({ book }: { book: DraftBook }) {
+  // "See my book" from the frame waits for a book page to link to.
   return (
     <Frame say="Your book is on the shelf." canLeave={false}>
-      <div className="iv-booktitle">
-        <SmallBook title={book.title} author={book.authorName} />
-        <div>
-          <h2>{book.title}</h2>
-          <p>by {book.authorName}</p>
+      <div className="panel iv-done">
+        <span className="book">
+          <span className="book-cover">
+            <span className="book-title">{book.title}</span>
+            <span className="book-author">{book.authorName}</span>
+          </span>
+        </span>
+        <div className="iv-done-text">
+          <p>Other members can find it now and ask to check it out.</p>
+          <div className="iv-row">
+            <Link to="/" className="button button-primary">
+              Go to the shelf
+            </Link>
+          </div>
         </div>
-      </div>
-      <div className="iv-row">
-        <Link to="/" className="button button-primary">
-          Go to the shelf
-        </Link>
       </div>
     </Frame>
   );

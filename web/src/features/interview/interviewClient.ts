@@ -40,11 +40,23 @@ export type InterviewState =
   | { id: string; stage: "reviewing"; book: DraftBook }
   | { id: string; stage: "done"; book: DraftBook };
 
+/** A failed call. Retryable when the Librarian (Claude) failed and nothing the member said was lost. */
+export class InterviewError extends Error {
+  constructor(
+    message: string,
+    readonly retryable = false,
+  ) {
+    super(message);
+  }
+}
+
 export interface InterviewClient {
   /** The member's interview in progress, or null if they haven't started one. */
   current(): Promise<InterviewState | null>;
   start(resume: File | null): Promise<InterviewState>;
   answer(id: string, text: string): Promise<InterviewState>;
+  /** Write the waiting question again, after an answer was saved but the next question failed. */
+  askAgain(id: string): Promise<InterviewState>;
   /** "I've said enough. Show me my book." */
   finish(id: string): Promise<InterviewState>;
   confirmShape(id: string): Promise<InterviewState>;

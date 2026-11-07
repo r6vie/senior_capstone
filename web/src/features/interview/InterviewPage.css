@@ -135,6 +135,16 @@
   border-top: var(--line) dotted var(--ink);
 }
 
+.iv-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+.iv-error .message {
+  flex: 1;
+}
+
 /* Recording: a dotted ring around the mic, level bars that move only while the member speaks. */
 .iv-rec {
   display: grid;
@@ -328,6 +338,23 @@
   gap: 6px;
 }
 
+/* ---------- Done ---------- */
+.iv-done {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  padding: 30px 36px;
+}
+.iv-done-text {
+  display: grid;
+  gap: 22px;
+}
+.iv-done-text p {
+  max-width: 34ch;
+  margin: 0;
+  font: italic 400 24px / 1.3 var(--font-serif);
+}
+
 /* ---------- Phone ---------- */
 @media (max-width: 719px) {
   .interview {
@@ -391,6 +418,11 @@
   }
   .iv-booktitle h2 {
     font-size: 26px;
+  }
+  .iv-done {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--s-5);
   }
   .iv-chapters li {
     grid-template-columns: 28px minmax(0, 1fr);

@@ -1,7 +1,7 @@
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
-import type { DraftBook, InterviewClient, InterviewState } from "./interviewClient";
+import { type DraftBook, type InterviewClient, InterviewError, type InterviewState } from "./interviewClient";
 
 // The real interview API (api/trove/interview), mapped onto the shape the screens use.
 // The API keeps one interview per member, so there is no id to pass; the screens' id is a constant.
@@ -14,10 +14,12 @@ const ID = "me";
 interface Result<T> {
   data?: T;
   error?: unknown;
+  response?: Response;
 }
 
-function unwrap<T>({ data, error }: Result<T>): T {
-  if (data === undefined) throw new Error(errorMessage(error));
+function unwrap<T>({ data, error, response }: Result<T>): T {
+  // 502 is the API's "the Librarian couldn't answer just now": safe to try again.
+  if (data === undefined) throw new InterviewError(errorMessage(error), response?.status === 502);
   return data;
 }
 
@@ -54,7 +56,8 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
       const { question } = response;
       if (!question) {
         if (response.ready_for_reveal) return toState(unwrap(await api.POST("/interview/finish")));
-        if (retried) throw new Error("The Librarian couldn't answer just now. Please try again.");
+        if (retried)
+          throw new InterviewError("The Librarian couldn't answer just now. Please try again.", true);
         return toState(unwrap(await api.POST("/interview/question")), true);
       }
       if (question.phase === "shape") {
@@ -88,7 +91,7 @@ export const apiInterviewClient: InterviewClient = {
   async current() {
     const { data, error, response } = await api.GET("/interview");
     if (response.status === 404) return null;
-    return toState(unwrap({ data, error }));
+    return toState(unwrap({ data, error, response }));
   },
   async start(resume) {
     const body = resume ? { resume_pdf: await readBase64(resume) } : {};
@@ -96,6 +99,9 @@ export const apiInterviewClient: InterviewClient = {
   },
   async answer(_id, text) {
     return toState(unwrap(await api.POST("/interview/answers", { body: { answer: text } })));
+  },
+  async askAgain() {
+    return toState(unwrap(await api.POST("/interview/question")));
   },
   async finish() {
     return toState(unwrap(await api.POST("/interview/finish")));

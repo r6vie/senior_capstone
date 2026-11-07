@@ -71,6 +71,15 @@ describe("apiInterviewClient", () => {
     expect(state).toMatchObject({ stage: "asking", question: "What do people come to you for?" });
   });
 
+  it("marks the Librarian's failures as safe to try again", async () => {
+    vi.spyOn(api, "POST").mockResolvedValue({
+      data: undefined,
+      error: { detail: "The Librarian couldn't answer just now. Please try again." },
+      response: new Response(null, { status: 502 }),
+    } as never);
+    await expect(apiInterviewClient.answer("me", "An answer")).rejects.toMatchObject({ retryable: true });
+  });
+
   it("shows the API's sentence when a call fails", async () => {
     vi.spyOn(api, "POST").mockResolvedValue({
       data: undefined,
