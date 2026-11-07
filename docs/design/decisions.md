@@ -17,7 +17,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   Librarian's question in a speech balloon on a screentone panel, the member answering from a balloon. Phase is a
   tag in the page header, the reveal is three cover panels, chapters are panels.
 
-Pending Josef's pick. "T5 approved" goes to the orchestrator only after that.
+**Chosen: direction A (the question band).** B (comic page) and C (speech bubble) stay on the canvas for reference.
+Build spec: `docs/design/shelf/project/InterviewA.dc.html`, nine frames at 1280x800.
 
 ## 2026-11-06: cover direction G, watercolor landscapes (from Josef's reference)
 
