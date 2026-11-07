@@ -4,6 +4,7 @@ import pytest
 
 from tests.fakes import FakeClaude, text_message
 from trove.ai.client import ClaudeRefused
+from trove.ai.prompts import load_prompt
 from trove.interview import engine
 from trove.interview.engine import Draft, DraftChapter, TitleOption, Turn
 
@@ -46,6 +47,7 @@ def chapter(quote: str, title: str = "Thick without gums") -> dict:
 
 
 TITLES = [{"title": f"Title {n}", "why": "You kept coming back to it."} for n in range(3)]
+BLURB = "I make lassi thick with nothing but time. I learned it the slow way, one split batch at a time."
 
 
 async def test_next_turn_sends_the_transcript_with_structured_output_and_adaptive_thinking():
@@ -116,19 +118,29 @@ async def test_draft_keeps_only_verbatim_quotes_and_assigns_ids():
         chapter("walked in with cold samples", "The Friday sample"),
         chapter("I invented this sentence", "Made up"),
     ]
-    claude = FakeClaude([reply({"pool": pool, "titles": TITLES})])
+    claude = FakeClaude([reply({"pool": pool, "titles": TITLES, "blurb": BLURB})])
     draft = await engine.draft_book(claude, turns=turns())
 
     assert [c.title for c in draft.pool] == ["Why gums feel wrong", "Eighteen hours", "The Friday sample"]
     assert len({c.id for c in draft.pool}) == 3
     assert len(draft.titles) == 3
+    assert draft.blurb == BLURB
 
 
 async def test_draft_retries_once_when_too_little_is_grounded_then_gives_up():
-    ungrounded = reply({"pool": [chapter("not something they said")], "titles": TITLES})
+    ungrounded = reply({"pool": [chapter("not something they said")], "titles": TITLES, "blurb": BLURB})
     claude = FakeClaude([ungrounded, ungrounded])
     with pytest.raises(ValueError):
         await engine.draft_book(claude, turns=turns())
+    assert len(claude.requests) == 2
+
+
+async def test_draft_retries_when_the_blurb_is_too_long():
+    pool = [chapter(ANSWERS[n][:40]) for n in range(3)]
+    too_long = reply({"pool": pool, "titles": TITLES, "blurb": "I " + "know " * 200})
+    claude = FakeClaude([too_long, reply({"pool": pool, "titles": TITLES, "blurb": f"  {BLURB} "})])
+    draft = await engine.draft_book(claude, turns=turns())
+    assert draft.blurb == BLURB
     assert len(claude.requests) == 2
 
 
@@ -138,6 +150,7 @@ def a_draft() -> Draft:
             DraftChapter(id=f"c{n}", title=f"Pool {n}", summary="S.", quotes=[ANSWERS[n]]) for n in range(4)
         ],
         titles=[TitleOption(**t) for t in TITLES],
+        blurb="I know the pool.",
     )
 
 
@@ -149,18 +162,35 @@ async def test_finish_uses_pool_ids_and_quotes_and_ignores_unknown_or_repeated_i
         {"pool_id": "c2", "title": "Again", "summary": "?"},
         {"pool_id": "c1", "title": "Third", "summary": "Angled."},
     ]
-    claude = FakeClaude([reply({"chapters": picked})])
-    chapters = await engine.finish_book(claude, turns=turns(), draft=a_draft(), title="Title 1")
+    claude = FakeClaude([reply({"chapters": picked, "blurb": BLURB})])
+    finished = await engine.finish_book(claude, turns=turns(), draft=a_draft(), title="Title 1")
+    chapters = finished.chapters
 
     assert [(c.id, c.title) for c in chapters] == [("c2", "First"), ("c0", "Second"), ("c1", "Third")]
     assert chapters[0].quotes == [ANSWERS[2]]
     assert "<chosen_title>Title 1</chosen_title>" in claude.requests[0]["messages"][0]["content"]
+    assert finished.blurb == BLURB
 
 
 async def test_finish_tops_up_a_short_pick_from_the_pool():
-    claude = FakeClaude([reply({"chapters": [{"pool_id": "c3", "title": "Only", "summary": "S."}]})])
-    chapters = await engine.finish_book(claude, turns=turns(), draft=a_draft(), title="Title 0")
-    assert [c.id for c in chapters] == ["c3", "c0", "c1"]
+    picked = [{"pool_id": "c3", "title": "Only", "summary": "S."}]
+    claude = FakeClaude([reply({"chapters": picked, "blurb": ""})])
+    finished = await engine.finish_book(claude, turns=turns(), draft=a_draft(), title="Title 0")
+    assert [c.id for c in finished.chapters] == ["c3", "c0", "c1"]
+    # An unusable blurb falls back to the draft's.
+    assert finished.blurb == "I know the pool."
+
+
+async def test_write_blurb_sees_only_the_chapters_left_and_retries_once():
+    book = a_draft().pool[:3]
+    claude = FakeClaude([reply({"blurb": "x" * 601}), reply({"blurb": BLURB})])
+    assert await engine.write_blurb(claude, turns=turns(), chapters=book) == BLURB
+    assert "Pool 2" in sent(claude) and "Pool 3" not in sent(claude)
+    assert claude.requests[0]["system"] == load_prompt("interview/blurb")
+
+    claude = FakeClaude([reply({"blurb": " "}), reply({"blurb": "I " + "know " * 200 + "a lot."})])
+    with pytest.raises(ValueError):
+        await engine.write_blurb(claude, turns=turns(), chapters=book)
 
 
 async def test_rewrite_keeps_the_id_topic_and_quotes_and_changes_only_title_and_summary():
@@ -183,7 +213,12 @@ async def test_rewrite_rejects_an_unknown_chapter_without_calling_claude():
 
 
 def test_prompts_state_the_grounding_rule():
-    from trove.ai.prompts import load_prompt
-
-    for name in ("draft", "finish", "rewrite"):
+    for name in ("draft", "finish", "rewrite", "blurb"):
         assert "Grounding" in load_prompt(f"interview/{name}")
+
+
+def test_a_long_blurb_is_cut_back_to_whole_sentences():
+    sentence = "I learned this one the slow way. "
+    assert engine._usable_blurb(sentence * 30) == (sentence * 18).strip()
+    assert len((sentence * 18).strip()) <= engine.MAX_BLURB
+    assert engine._usable_blurb("I " + "know " * 200 + ". Short.") is None

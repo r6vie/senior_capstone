@@ -4,7 +4,7 @@ import anthropic
 import pytest
 
 from trove.interview import engine
-from trove.interview.engine import Draft, DraftChapter, NextTurn, TitleOption
+from trove.interview.engine import Draft, DraftChapter, FinishedBook, NextTurn, TitleOption
 
 SIGNUP = {"first_name": "Hana", "email": "hana@example.com", "password": "a long test passphrase"}
 
@@ -46,6 +46,7 @@ class FakeEngine:
         self.shape_next = False
         self.ready_next = False
         self.fail_next = False
+        self.fail_blurb = False
 
     async def next_turn(self, claude, *, turns, resume_text):
         self.calls.append(("next_turn", {"turns": turns, "resume_text": resume_text}))
@@ -71,11 +72,18 @@ class FakeEngine:
 
     async def draft_book(self, claude, *, turns):
         self.calls.append(("draft_book", {"turns": turns}))
-        return Draft(pool=POOL, titles=TITLES)
+        return Draft(pool=POOL, titles=TITLES, blurb="I know the pool.")
 
     async def finish_book(self, claude, *, turns, draft, title):
         self.calls.append(("finish_book", {"title": title}))
-        return POOL[:4]
+        return FinishedBook(chapters=POOL[:4], blurb=f"I know {title}.")
+
+    async def write_blurb(self, claude, *, turns, chapters):
+        self.calls.append(("write_blurb", {"chapters": [c.id for c in chapters]}))
+        if self.fail_blurb:
+            self.fail_blurb = False
+            raise ValueError("unusable")
+        return "I know " + ", ".join(c.id for c in chapters) + "."
 
     async def rewrite_chapter(self, claude, *, turns, chapters, chapter_id):
         self.calls.append(("rewrite_chapter", {"chapter_id": chapter_id}))
@@ -85,7 +93,7 @@ class FakeEngine:
 @pytest.fixture
 def fake_engine(monkeypatch, fake_claude):
     fake = FakeEngine()
-    for name in ("next_turn", "draft_book", "finish_book", "rewrite_chapter"):
+    for name in ("next_turn", "draft_book", "finish_book", "write_blurb", "rewrite_chapter"):
         monkeypatch.setattr(engine, name, getattr(fake, name))
     return fake
 
@@ -160,6 +168,7 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
     assert state["stage"] == "choosing"
     assert state["question"] is None
     assert state["titles"] == [{"title": f"Title {n}", "why": f"Because {n}."} for n in range(3)]
+    assert state["blurb"] == "I know the pool."
 
     book = await client.post("/interview/title", json={"title": 1}, headers=headers)
     assert book.status_code == 200
@@ -168,12 +177,18 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
     assert book["author_name"] == "Hana"
     assert book["status"] == "draft"
     assert [c["id"] for c in book["chapters"]] == ["c1", "c2", "c3", "c4"]
+    assert book["blurb"] == "I know Title 1."
+    reviewing = (await client.get("/interview", headers=headers)).json()
+    assert (reviewing["stage"], reviewing["blurb"]) == ("reviewing", "I know Title 1.")
     assert ("finish_book", {"title": "Title 1"}) in fake_engine.calls
     # A draft isn't on the shelf yet.
     assert (await client.get(f"/books/{book['id']}", headers=headers)).status_code == 404
 
     book = (await client.delete("/interview/book/chapters/c2", headers=headers)).json()
     assert [c["id"] for c in book["chapters"]] == ["c1", "c3", "c4"]
+    # The back cover is rewritten for what's left.
+    assert book["blurb"] == "I know c1, c3, c4."
+    assert (await client.get("/interview", headers=headers)).json()["blurb"] == "I know c1, c3, c4."
     # Three chapters is the minimum.
     assert (await client.delete("/interview/book/chapters/c1", headers=headers)).status_code == 409
     assert (await client.delete("/interview/book/chapters/nope", headers=headers)).status_code == 404
@@ -185,11 +200,17 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
         "summary": "Better.",
         "quotes": ["Quote 1."],
     }
+    # A rewrite keeps the chapter's topic, so the blurb stays.
+    assert book["blurb"] == "I know c1, c3, c4."
 
     shelved = await client.post("/interview/book/shelve", headers=headers)
     assert shelved.status_code == 200
     assert shelved.json()["status"] == "on_shelf"
-    assert (await client.get(f"/books/{book['id']}", headers=headers)).status_code == 200
+    shelved_book = await client.get(f"/books/{book['id']}", headers=headers)
+    assert shelved_book.status_code == 200
+    assert shelved_book.json()["blurb"] == "I know c1, c3, c4."
+    shelf = (await client.get("/books", headers=headers)).json()["books"]
+    assert next(b for b in shelf if b["id"] == book["id"])["blurb"] == "I know c1, c3, c4."
     assert (await client.get("/interview", headers=headers)).json()["stage"] == "done"
     assert (await client.post("/interview/book/shelve", headers=headers)).status_code == 409
 
@@ -263,3 +284,16 @@ async def test_unreadable_resume_is_422(client, headers, fake_engine):
     assert (await client.post("/interview", json={"resume_pdf": "%%%"}, headers=headers)).status_code == 422
     broken = base64.b64encode(b"%PDF-1.4 broken").decode()
     assert (await client.post("/interview", json={"resume_pdf": broken}, headers=headers)).status_code == 422
+
+
+async def test_a_removal_whose_blurb_fails_removes_nothing(client, database, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, 10)
+    await client.post("/interview/finish", headers=headers)
+    await client.post("/interview/title", json={"title": 0}, headers=headers)
+
+    fake_engine.fail_blurb = True
+    assert (await client.delete("/interview/book/chapters/c2", headers=headers)).status_code == 502
+    book = await database.books.find_one({})
+    assert [c["id"] for c in book["chapters"]] == ["c1", "c2", "c3", "c4"]
+    assert book["blurb"] == "I know Title 0."

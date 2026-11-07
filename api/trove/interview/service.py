@@ -42,7 +42,8 @@ def conflict(detail: str) -> HTTPException:
     return HTTPException(status_code=409, detail=detail)
 
 
-def interview_view(interview: dict) -> InterviewResponse:
+def interview_view(interview: dict, book: dict | None = None) -> InterviewResponse:
+    """`book` is the member's book, if the interview has made one; its blurb is the current one."""
     current = interview.get("current")
     stage = interview["stage"]
     ready = interview.get("ready_for_reveal", False)
@@ -56,7 +57,18 @@ def interview_view(interview: dict) -> InterviewResponse:
         can_finish=stage == "interviewing" and (ready or len(interview["turns"]) >= EXIT_AFTER_ANSWERS),
         ready_for_reveal=ready,
         titles=interview["draft"]["titles"] if stage == "choosing" else None,
+        blurb=book.get("blurb") if book else (interview.get("draft") or {}).get("blurb"),
     )
+
+
+async def current_view(database: AsyncDatabase, user: dict) -> InterviewResponse:
+    interview = await get_interview(database, user["_id"])
+    book = (
+        await books.get_book_of(database, user["_id"])
+        if interview["stage"] in ("reviewing", "done")
+        else None
+    )
+    return interview_view(interview, book)
 
 
 async def get_interview(database: AsyncDatabase, user_id: str) -> dict:
@@ -221,7 +233,7 @@ async def choose_title(database: AsyncDatabase, claude: Claude, user: dict, inde
         raise conflict("There are no titles to choose from.")
     draft = Draft.model_validate(interview["draft"])
     title = draft.titles[index].title
-    chapters = await ask_engine(
+    finished = await ask_engine(
         engine.finish_book(claude, turns=turns_of(interview), draft=draft, title=title)
     )
     try:
@@ -230,7 +242,8 @@ async def choose_title(database: AsyncDatabase, claude: Claude, user: dict, inde
             author_id=user["_id"],
             author_name=user["first_name"],
             title=title,
-            chapters=[chapter.model_dump() for chapter in chapters],
+            chapters=[chapter.model_dump() for chapter in finished.chapters],
+            blurb=finished.blurb,
         )
     except books.BookExists:
         raise conflict("You already have a book.") from None
@@ -247,10 +260,18 @@ async def own_draft(database: AsyncDatabase, user: dict, chapter_id: str) -> dic
     return book
 
 
-async def remove_chapter(database: AsyncDatabase, user: dict, chapter_id: str) -> MyBookResponse:
-    await reviewing_interview(database, user)
-    await own_draft(database, user, chapter_id)
-    book = await books.remove_chapter(database, user["_id"], chapter_id)
+async def remove_chapter(
+    database: AsyncDatabase, claude: Claude, user: dict, chapter_id: str
+) -> MyBookResponse:
+    interview = await reviewing_interview(database, user)
+    book = await own_draft(database, user, chapter_id)
+    remaining = [DraftChapter.model_validate(c) for c in book["chapters"] if c["id"] != chapter_id]
+    if len(remaining) < books.MIN_CHAPTERS:
+        raise conflict(f"A book needs at least {books.MIN_CHAPTERS} chapters.")
+    # The book no longer covers what it did, so the back cover is rewritten for what's left. A rewrite
+    # keeps each chapter's topic, so it leaves the blurb alone.
+    blurb = await ask_engine(engine.write_blurb(claude, turns=turns_of(interview), chapters=remaining))
+    book = await books.remove_chapter(database, user["_id"], chapter_id, blurb=blurb)
     if book is None:
         raise conflict(f"A book needs at least {books.MIN_CHAPTERS} chapters.")
     return books.my_book_view(book)

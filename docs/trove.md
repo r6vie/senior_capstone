@@ -113,6 +113,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   - **Grounding, kept light:** each chapter keeps the quotes it came from (B1). Nothing more elaborate for now.
   - **Chapters:** 3–5 per book.
   - **The reveal:** three titles appear one at a time, each with one line on why it's you. Covers stay white until a cover direction is chosen. The member picks one, and the book is finished to match.
+  - **Blurb:** 2–4 sentences, first person, written with the draft, shown in review and on the book. Grounded like the chapters: only the member's own answers, never the résumé. Rewritten when a chapter is removed; a chapter rewrite keeps its topic, so the blurb stays.
   - **Review before the shelf:** the member can remove a chapter or ask for one to be rewritten, then "Put it on the shelf". Free-text editing comes later.
   - **Model:** Opus 5.5 for questions and book writing.
   - **Limits** (T7): one interview per member; a member who already has a book can't start another (adding to your book is I3). A book keeps at least 3 chapters, so removing stops there. A résumé must be a readable PDF up to 5 MB; only the first 20 pages are read. If it can't be read, the member starts without it.
@@ -313,3 +314,5 @@ Membership verification is still open:
 - **2026-11-07, names and checkout (after talking with our advisor):**
   - Books show full names; employer, title and links stay off the book; contact details only when the author accepts (§9.1).
   - Checkout is one step: check out with a message, the author accepts or declines, the reading, the return. The holds queue is gone; copies stay private and a fully lent book quietly leaves the shelf (§6, §9.6).
+- **2026-11-07, the blurb (T13):**
+  - Blurb: 2–4 sentences, first person, written with the draft, shown in review and on the book.

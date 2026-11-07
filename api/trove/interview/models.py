@@ -55,3 +55,5 @@ class InterviewResponse(BaseModel):
     ready_for_reveal: bool
     # The three titles while choosing.
     titles: list[TitleOption] | None
+    # The back-cover blurb, first person, 2-4 sentences: the draft's while choosing, then the book's.
+    blurb: str | None

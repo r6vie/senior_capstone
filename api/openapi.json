@@ -634,6 +634,7 @@
           "Interview"
         ],
         "summary": "Remove Chapter",
+        "description": "Remove a chapter from the draft. The blurb is rewritten for the chapters that are left.",
         "operationId": "remove_chapter_interview_book_chapters__chapter_id__delete",
         "security": [
           {
@@ -970,6 +971,17 @@
               }
             ],
             "title": "Titles"
+          },
+          "blurb": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blurb"
           }
         },
         "type": "object",
@@ -980,7 +992,8 @@
           "has_answers",
           "can_finish",
           "ready_for_reveal",
-          "titles"
+          "titles",
+          "blurb"
         ],
         "title": "InterviewResponse"
       },

@@ -13,6 +13,7 @@ function interview(overrides: Partial<InterviewResponse>): InterviewResponse {
     can_finish: false,
     ready_for_reveal: false,
     titles: null,
+    blurb: null,
     ...overrides,
   };
 }

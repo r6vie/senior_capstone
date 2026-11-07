@@ -26,6 +26,8 @@ MIN_ANSWERS = 8
 SHAPE_BY = 21
 MAX_QUESTIONS = 25
 MIN_CHAPTERS, MAX_CHAPTERS = 3, 5
+# The back-cover blurb fits the book's `blurb` field (B1).
+MAX_BLURB = 600
 
 # Questions are on the member's critical path, so they think less than the one-off book steps.
 QUESTION_EFFORT = "medium"
@@ -64,6 +66,13 @@ class TitleOption(BaseModel):
 class Draft(BaseModel):
     pool: list[DraftChapter]
     titles: list[TitleOption]
+    # The back cover for the pool as a whole. None only on drafts saved before blurbs existed.
+    blurb: str | None = None
+
+
+class FinishedBook(BaseModel):
+    chapters: list[DraftChapter]
+    blurb: str | None
 
 
 # What Claude returns. Ids and quote checks are added in code, never trusted to the model.
@@ -92,6 +101,7 @@ class _Chapter(BaseModel):
 class _Draft(BaseModel):
     pool: list[_Chapter]
     titles: list[TitleOption]
+    blurb: str
 
 
 class _Retold(BaseModel):
@@ -107,6 +117,11 @@ class _FinishedChapter(BaseModel):
 
 class _Finished(BaseModel):
     chapters: list[_FinishedChapter]
+    blurb: str
+
+
+class _Blurb(BaseModel):
+    blurb: str
 
 
 async def next_turn(claude: Claude, *, turns: list[Turn], resume_text: str | None) -> NextTurn:
@@ -140,8 +155,9 @@ async def plan_turn(claude: Claude, *, turns: list[Turn], resume_text: str | Non
 
 
 async def draft_book(claude: Claude, *, turns: list[Turn]) -> Draft:
-    """One shared pool of grounded chapters and three titles that read it differently (§9.4)."""
-    content = f"{_transcript(turns)}\n\nDraft the pool of chapters and the three titles."
+    """One shared pool of grounded chapters, three titles that read it differently (§9.4), and a
+    back-cover blurb."""
+    content = f"{_transcript(turns)}\n\nDraft the pool of chapters, the three titles and the blurb."
     for _ in range(2):
         raw = await _ask(claude, "interview/draft", content, _Draft, BOOK_EFFORT)
         pool = []
@@ -151,13 +167,15 @@ async def draft_book(claude: Claude, *, turns: list[Turn]) -> Draft:
                 pool.append(
                     DraftChapter(id=str(uuid4()), title=chapter.title, summary=chapter.summary, quotes=quotes)
                 )
-        if len(pool) >= MIN_CHAPTERS and len(raw.titles) >= 3:
-            return Draft(pool=pool, titles=raw.titles[:3])
-    raise ValueError("The draft didn't have enough grounded chapters or three titles.")
+        blurb = _usable_blurb(raw.blurb)
+        if len(pool) >= MIN_CHAPTERS and len(raw.titles) >= 3 and blurb:
+            return Draft(pool=pool, titles=raw.titles[:3], blurb=blurb)
+    raise ValueError("The draft didn't have enough grounded chapters, three titles and a blurb.")
 
 
-async def finish_book(claude: Claude, *, turns: list[Turn], draft: Draft, title: str) -> list[DraftChapter]:
-    """3 to 5 chapters from the pool, in reading order, angled to the chosen title."""
+async def finish_book(claude: Claude, *, turns: list[Turn], draft: Draft, title: str) -> FinishedBook:
+    """3 to 5 chapters from the pool, in reading order, angled to the chosen title, and the blurb
+    rewritten for them."""
     pool = {chapter.id: chapter for chapter in draft.pool}
     listing = json.dumps(
         [{"pool_id": c.id, "title": c.title, "summary": c.summary} for c in draft.pool], indent=1
@@ -181,7 +199,24 @@ async def finish_book(claude: Claude, *, turns: list[Turn], draft: Draft, title:
             break
         if all(c.id != source.id for c in chapters):
             chapters.append(source)
-    return chapters[:MAX_CHAPTERS]
+    # An unusable blurb falls back to the draft's, which is grounded in the same interview.
+    blurb = _usable_blurb(raw.blurb) or draft.blurb
+    return FinishedBook(chapters=chapters[:MAX_CHAPTERS], blurb=blurb)
+
+
+async def write_blurb(claude: Claude, *, turns: list[Turn], chapters: list[DraftChapter]) -> str:
+    """A fresh back-cover blurb for these chapters, after a change to what the book covers."""
+    listing = json.dumps([{"title": c.title, "summary": c.summary} for c in chapters], indent=1)
+    content = (
+        f"{_transcript(turns)}\n\n<book_chapters>\n{listing}\n</book_chapters>\n\n"
+        "Write the back-cover blurb for this book."
+    )
+    for _ in range(2):
+        raw = await _ask(claude, "interview/blurb", content, _Blurb, BOOK_EFFORT)
+        blurb = _usable_blurb(raw.blurb)
+        if blurb:
+            return blurb
+    raise ValueError("The blurb was empty or too long.")
 
 
 async def rewrite_chapter(
@@ -202,6 +237,16 @@ async def rewrite_chapter(
     raw = await _ask(claude, "interview/rewrite", content, _Retold, BOOK_EFFORT)
     # The quotes are what tie the chapter to its topic, so they never change on a rewrite.
     return current.model_copy(update={"title": raw.title, "summary": raw.summary})
+
+
+def _usable_blurb(blurb: str) -> str | None:
+    """The blurb if it fits. One that runs long is cut back to its last whole sentence that fits,
+    as long as two sentences remain; cutting can't add anything ungrounded."""
+    blurb = blurb.strip()
+    if len(blurb) > MAX_BLURB:
+        ends = [m.end() for m in re.finditer(r"[.!?](?=\s|$)", blurb[: MAX_BLURB + 1])]
+        blurb = blurb[: ends[-1]] if len(ends) >= 2 else ""
+    return blurb or None
 
 
 def grounded_quotes(quotes: list[str], turns: list[Turn]) -> list[str]:

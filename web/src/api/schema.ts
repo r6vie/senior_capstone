@@ -284,7 +284,10 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Remove Chapter */
+        /**
+         * Remove Chapter
+         * @description Remove a chapter from the draft. The blurb is rewritten for the chapters that are left.
+         */
         delete: operations["remove_chapter_interview_book_chapters__chapter_id__delete"];
         options?: never;
         head?: never;
@@ -419,6 +422,8 @@ export interface components {
             ready_for_reveal: boolean;
             /** Titles */
             titles: components["schemas"]["TitleOption"][] | null;
+            /** Blurb */
+            blurb: string | null;
         };
         /** LoginRequest */
         LoginRequest: {

@@ -94,7 +94,13 @@ def my_book_view(book: dict) -> MyBookResponse:
 
 
 async def create_draft_book(
-    database: AsyncDatabase, *, author_id: str, author_name: str, title: str, chapters: list[dict]
+    database: AsyncDatabase,
+    *,
+    author_id: str,
+    author_name: str,
+    title: str,
+    chapters: list[dict],
+    blurb: str | None = None,
 ) -> dict:
     """Save a finished interview's book as a draft only its author sees. Raises BookExists."""
     now = datetime.now(UTC)
@@ -104,7 +110,7 @@ async def create_draft_book(
         "author_name": author_name,
         "title": title,
         "cover_style": WHITE_COVER,
-        "blurb": None,
+        "blurb": blurb,
         "chapters": chapters,
         "copies": DEFAULT_COPIES,
         "status": DRAFT,
@@ -120,8 +126,16 @@ async def create_draft_book(
     return book
 
 
-async def remove_chapter(database: AsyncDatabase, author_id: str, chapter_id: str) -> dict | None:
-    """Remove a chapter from the author's draft, if more than MIN_CHAPTERS remain. None if it can't."""
+async def remove_chapter(
+    database: AsyncDatabase, author_id: str, chapter_id: str, *, blurb: str | None = None
+) -> dict | None:
+    """Remove a chapter from the author's draft, if more than MIN_CHAPTERS remain. None if it can't.
+
+    `blurb`, if given, replaces the blurb in the same update, since it should match what's left.
+    """
+    changes: dict = {"updated_at": datetime.now(UTC)}
+    if blurb is not None:
+        changes["blurb"] = blurb
     return await database.books.find_one_and_update(
         {
             "author_id": author_id,
@@ -130,7 +144,7 @@ async def remove_chapter(database: AsyncDatabase, author_id: str, chapter_id: st
             # Checked in the same update, so two quick removals can't go below the minimum.
             f"chapters.{MIN_CHAPTERS}": {"$exists": True},
         },
-        {"$pull": {"chapters": {"id": chapter_id}}, "$set": {"updated_at": datetime.now(UTC)}},
+        {"$pull": {"chapters": {"id": chapter_id}}, "$set": changes},
         return_document=ReturnDocument.AFTER,
     )
 

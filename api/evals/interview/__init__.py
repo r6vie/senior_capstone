@@ -4,7 +4,8 @@
     uv run python -m evals.interview [names...]   # personas in parallel, one file each
 
 Each case runs the whole interview until the Librarian is ready for the reveal, then drafts the
-book, finishes it with the first title and rewrites its last chapter. The output is Markdown for a
+book, finishes it with the first title, rewrites its last chapter and rewrites the blurb as if the
+first chapter were removed. The output is Markdown for a
 human to read: the transcript with the private thread ranking, the book, quote checks, flags for
 banned question types, and what the persona should have surfaced. Costs money: a few dollars a
 persona.
@@ -36,6 +37,9 @@ BANNED = {
 
 # Summaries must be the chapter, not a description of it.
 META = r"\b(reader|readers|this chapter|the chapter|conversation|30-minute|talk would|it comes from|covers)\b"
+# The blurb is a back cover: framing about the book, and hype, are both banned.
+BLURB_META = r"\b(this book|in this book|the book|chapters?|readers?|here i share|my story)\b"
+HYPE = r"\b(passionate|passion|journey|unique|incredible|amazing|everything you need|game[- ]chang\w*|unlock\w*)\b"
 
 
 class CountingClaude(Claude):
@@ -100,8 +104,12 @@ async def run_case(claude: Claude, case: dict) -> str:
 
     draft = await engine.draft_book(counting, turns=turns)
     title = draft.titles[0].title
-    book = await engine.finish_book(counting, turns=turns, draft=draft, title=title)
-    rewritten = await engine.rewrite_chapter(counting, turns=turns, chapters=book, chapter_id=book[-1].id)
+    finished = await engine.finish_book(counting, turns=turns, draft=draft, title=title)
+    book = finished.chapters
+    rewritten = await engine.rewrite_chapter(
+        counting, turns=turns, chapters=finished.chapters, chapter_id=finished.chapters[-1].id
+    )
+    after_removal = await engine.write_blurb(counting, turns=turns, chapters=finished.chapters[1:])
 
     phases = [t.phase for t in turns]
     sections = [
@@ -113,12 +121,36 @@ async def run_case(claude: Claude, case: dict) -> str:
         "### Titles\n\n" + "\n".join(f"{n}. **{t.title}**: {t.why}" for n, t in enumerate(draft.titles, 1)),
         "### Pool\n\n" + "\n\n".join(_chapter(c) for c in draft.pool),
         f"### Finished book: {title}\n\n" + "\n\n".join(_chapter(c) for c in book),
+        "### Blurbs\n\n"
+        + "\n\n".join(
+            f"**{label}** ({_blurb_check(text)}):\n> {text}"
+            for label, text in [
+                ("Draft", draft.blurb or ""),
+                (f"Finished: {title}", finished.blurb or ""),
+                ("After removing the first chapter", after_removal),
+            ]
+        ),
         f"### Rewrite of the last chapter\n\nBefore:\n{_chapter(book[-1])}\n\nAfter:\n{_chapter(rewritten)}",
     ]
     summaries = [c.summary for c in [*draft.pool, *book, rewritten]]
     meta = [m for summary in summaries for m in re.findall(META, summary, re.I)]
     sections.insert(1, f"**Meta phrasing in summaries:** {len(meta)} ({', '.join(meta) or 'none'})")
     return "\n\n".join(sections)
+
+
+def _blurb_check(blurb: str) -> str:
+    sentences = len(re.findall(r"[.!?](\s|$)", blurb.strip()))
+    first_person = bool(re.search(r"\b(I|my|me)\b", blurb))
+    flags = [
+        f"{name}: {', '.join(found)}"
+        for name, pattern in [("meta", BLURB_META), ("hype", HYPE)]
+        if (found := re.findall(pattern, blurb, re.I))
+    ]
+    if not 2 <= sentences <= 4:
+        flags.append(f"{sentences} sentences")
+    if not first_person:
+        flags.append("not first person")
+    return f"{len(blurb)} chars" + (f", ⚠️ {'; '.join(flags)}" if flags else ", ok")
 
 
 def _chapter(chapter: engine.DraftChapter) -> str:

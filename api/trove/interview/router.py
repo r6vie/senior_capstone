@@ -29,7 +29,7 @@ async def current(
     database: AsyncDatabase = Depends(get_database),
 ) -> InterviewResponse:
     """The member's interview, for resuming where they left off."""
-    return interview_view(await service.get_interview(database, user["_id"]))
+    return await service.current_view(database, user)
 
 
 @router.post("/question", response_model=InterviewResponse)
@@ -91,8 +91,10 @@ async def remove_chapter(
     chapter_id: str,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
+    claude: Claude = Depends(get_claude),
 ) -> MyBookResponse:
-    return await service.remove_chapter(database, user, chapter_id)
+    """Remove a chapter from the draft. The blurb is rewritten for the chapters that are left."""
+    return await service.remove_chapter(database, claude, user, chapter_id)
 
 
 @router.post("/book/chapters/{chapter_id}/rewrite", response_model=MyBookResponse)
