@@ -493,7 +493,7 @@ export interface components {
         };
         /**
          * PublicBookResponse
-         * @description A book as readers see it. No last name, contacts, copy counts or grounding quotes.
+         * @description A book as readers see it: the author's full name, but no contacts, copy counts or grounding quotes.
          */
         PublicBookResponse: {
             /** Id */

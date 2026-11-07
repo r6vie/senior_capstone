@@ -120,6 +120,19 @@ async def limit_attempts(request: Request, database: AsyncDatabase, action: str,
         )
 
 
+def full_name(user: dict) -> str:
+    """First and last name. Accounts made before last names were collected have only a first name."""
+    return " ".join(part for part in (user.get("first_name"), user.get("last_name")) if part)
+
+
+async def full_names_of(database: AsyncDatabase, user_ids: list[str]) -> dict[str, str]:
+    """The full name of each active account among `user_ids`, by id. Books show these (trove.md §3)."""
+    users = database.users.find(
+        {"_id": {"$in": user_ids}, "is_active": True}, {"first_name": 1, "last_name": 1}
+    )
+    return {user["_id"]: full_name(user) async for user in users}
+
+
 async def email_recipient(database: AsyncDatabase, user_id: str) -> dict | None:
     """The active account's email address and email preference, for the notifications feature."""
     return await database.users.find_one(

@@ -170,11 +170,12 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
     assert state["titles"] == [{"title": f"Title {n}", "why": f"Because {n}."} for n in range(3)]
     assert state["blurb"] == "I know the pool."
 
+    await database.users.update_one({}, {"$set": {"last_name": "Sato"}})
     book = await client.post("/interview/title", json={"title": 1}, headers=headers)
     assert book.status_code == 200
     book = book.json()
     assert book["title"] == "Title 1"
-    assert book["author_name"] == "Hana"
+    assert book["author_name"] == "Hana Sato"
     assert book["status"] == "draft"
     assert [c["id"] for c in book["chapters"]] == ["c1", "c2", "c3", "c4"]
     assert book["blurb"] == "I know Title 1."

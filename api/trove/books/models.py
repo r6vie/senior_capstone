@@ -31,7 +31,7 @@ class BookCard(BaseModel):
 
 
 class PublicBookResponse(BookCard):
-    """A book as readers see it. No last name, contacts, copy counts or grounding quotes."""
+    """A book as readers see it: the author's full name, but no contacts, copy counts or grounding quotes."""
 
     chapters: list[Chapter]
 

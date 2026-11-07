@@ -54,18 +54,32 @@ async def test_open_a_book(client, database):
     }
 
 
-async def test_reader_view_never_has_a_last_name_contacts_or_counts(client, database):
+async def test_books_show_the_authors_full_name_from_their_account(client, database):
+    account, headers = await sign_in(client)
+    await database.users.update_one({"_id": account["id"]}, {"$set": {"last_name": "Okafor"}})
+    await database.books.insert_one(book(1, author_id=account["id"], author_name="Maya"))
+
+    opened = await client.get("/books/book-1", headers=headers)
+    assert opened.json()["author_name"] == "Maya Okafor"
+    shelf = (await client.get("/books", headers=headers)).json()
+    assert shelf["books"][0]["author_name"] == "Maya Okafor"
+    assert (await client.get("/books/me", headers=headers)).json()["author_name"] == "Maya Okafor"
+    # The account's email never comes with the name.
+    assert "maya@example.com" not in opened.text + str(shelf)
+
+
+async def test_reader_view_never_has_employer_contacts_or_counts(client, database):
     # Even if private details end up on the document, they never reach a reader.
     await database.books.insert_one(
-        book(1, author_last_name="Okafor", email="jordan@example.com", phone="216-555-0100")
+        book(1, employer="Acme Corp", job_title="CTO", email="jordan@example.com", phone="216-555-0100")
     )
     _, headers = await sign_in(client)
 
     for path in ("/books/book-1", "/books"):
         text = (await client.get(path, headers=headers)).text
         for private in (
-            "Okafor",
-            "last_name",
+            "Acme Corp",
+            "CTO",
             "jordan@example.com",
             "216-555-0100",
             "author-1",
@@ -144,6 +158,7 @@ async def test_seed_is_repeatable_and_removes_only_samples(client, database):
     assert await database.books.count_documents({}) == 1
 
 
-def test_samples_use_first_names_only():
+def test_samples_have_invented_full_names():
     for author_name, *_ in SAMPLES:
-        assert author_name.isalpha(), author_name
+        first, last = author_name.split(" ")
+        assert first.isalpha() and last.isalpha(), author_name

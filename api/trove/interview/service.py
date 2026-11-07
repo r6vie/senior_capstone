@@ -240,7 +240,6 @@ async def choose_title(database: AsyncDatabase, claude: Claude, user: dict, inde
         book = await books.create_draft_book(
             database,
             author_id=user["_id"],
-            author_name=user["first_name"],
             title=title,
             chapters=[chapter.model_dump() for chapter in finished.chapters],
             blurb=finished.blurb,

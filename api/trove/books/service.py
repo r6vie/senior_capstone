@@ -9,6 +9,7 @@ from pymongo import DESCENDING, ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
 
+from trove.auth.service import full_names_of
 from trove.books.models import DEFAULT_COPIES, MyBookResponse
 
 ON_SHELF = "on_shelf"
@@ -44,14 +45,17 @@ async def ensure_indexes(database: AsyncDatabase) -> None:
 async def get_public_book(database: AsyncDatabase, book_id: str) -> dict | None:
     """The book as readers see it, or None if it isn't on the shelf.
 
-    Includes `author_id` and `copies` for other features' own logic. Neither may be shown to a reader.
+    `author_name` is the author's full name. Includes `author_id` and `copies` for other features' own
+    logic; neither may be shown to a reader. Never includes employer, title, links or contact details.
     """
-    return await database.books.find_one({"_id": book_id, "status": ON_SHELF}, PUBLIC_FIELDS)
+    return await _named(
+        database, await database.books.find_one({"_id": book_id, "status": ON_SHELF}, PUBLIC_FIELDS)
+    )
 
 
 async def get_book_of(database: AsyncDatabase, user_id: str) -> dict | None:
     """That member's own book, whatever its status, or None if they don't have one yet."""
-    return await database.books.find_one({"author_id": user_id})
+    return await _named(database, await database.books.find_one({"author_id": user_id}))
 
 
 async def list_shelf(database: AsyncDatabase, *, limit: int, after: str | None = None) -> list[dict]:
@@ -67,7 +71,18 @@ async def list_shelf(database: AsyncDatabase, *, limit: int, after: str | None =
             {"published_at": published_at, "_id": {"$lt": book_id}},
         ]
     cursor = database.books.find(query, PUBLIC_FIELDS).sort(SHELF_SORT).limit(limit)
-    return await cursor.to_list()
+    return await with_author_names(database, await cursor.to_list())
+
+
+async def with_author_names(database: AsyncDatabase, books: list[dict]) -> list[dict]:
+    """Set each book's `author_name` to its author's current full name from their account.
+
+    The name stored on the book is kept only where there's no account behind it (sample books).
+    """
+    names = await full_names_of(database, list({book["author_id"] for book in books}))
+    for book in books:
+        book["author_name"] = names.get(book["author_id"]) or book.get("author_name", "")
+    return books
 
 
 def shelf_cursor(book: dict) -> str:
@@ -97,7 +112,6 @@ async def create_draft_book(
     database: AsyncDatabase,
     *,
     author_id: str,
-    author_name: str,
     title: str,
     chapters: list[dict],
     blurb: str | None = None,
@@ -107,7 +121,8 @@ async def create_draft_book(
     book = {
         "_id": str(uuid4()),
         "author_id": author_id,
-        "author_name": author_name,
+        # Shown from the account when the book is read; stored as a fallback.
+        "author_name": (await full_names_of(database, [author_id])).get(author_id, ""),
         "title": title,
         "cover_style": WHITE_COVER,
         "blurb": blurb,
@@ -126,6 +141,10 @@ async def create_draft_book(
     return book
 
 
+async def _named(database: AsyncDatabase, book: dict | None) -> dict | None:
+    return (await with_author_names(database, [book]))[0] if book else None
+
+
 async def remove_chapter(
     database: AsyncDatabase, author_id: str, chapter_id: str, *, blurb: str | None = None
 ) -> dict | None:
@@ -136,7 +155,7 @@ async def remove_chapter(
     changes: dict = {"updated_at": datetime.now(UTC)}
     if blurb is not None:
         changes["blurb"] = blurb
-    return await database.books.find_one_and_update(
+    book = await database.books.find_one_and_update(
         {
             "author_id": author_id,
             "status": DRAFT,
@@ -147,22 +166,25 @@ async def remove_chapter(
         {"$pull": {"chapters": {"id": chapter_id}}, "$set": changes},
         return_document=ReturnDocument.AFTER,
     )
+    return await _named(database, book)
 
 
 async def replace_chapter(database: AsyncDatabase, author_id: str, chapter: dict) -> dict | None:
     """Swap in a rewritten chapter with the same id, in the author's draft. None if there is none."""
-    return await database.books.find_one_and_update(
+    book = await database.books.find_one_and_update(
         {"author_id": author_id, "status": DRAFT, "chapters.id": chapter["id"]},
         {"$set": {"chapters.$": chapter, "updated_at": datetime.now(UTC)}},
         return_document=ReturnDocument.AFTER,
     )
+    return await _named(database, book)
 
 
 async def put_on_shelf(database: AsyncDatabase, author_id: str) -> dict | None:
     """Publish the author's draft. None if they have no draft."""
     now = datetime.now(UTC)
-    return await database.books.find_one_and_update(
+    book = await database.books.find_one_and_update(
         {"author_id": author_id, "status": DRAFT},
         {"$set": {"status": ON_SHELF, "published_at": now, "updated_at": now}},
         return_document=ReturnDocument.AFTER,
     )
+    return await _named(database, book)
