@@ -127,7 +127,8 @@ function SmallBook({ title, author }: { title: string; author: string }) {
 
 export function InterviewPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
   const { user } = useAuth();
-  const firstName = user?.first_name ?? "";
+  // Books carry the full name; it falls back to the first name for accounts made before last names.
+  const authorName = user?.full_name ?? "";
 
   const [state, setState] = useState<InterviewState | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -291,7 +292,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           <RevealScreen
             key={state.id}
             titles={state.titles}
-            author={firstName}
+            author={authorName}
             busy={busy}
             error={error}
             onChoose={(titleId) =>

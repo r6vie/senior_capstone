@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { api, session } from "../../api/client";
 import { AuthProvider } from "../auth/AuthProvider";
 import { createFakeInterviewClient, resetFakeInterview } from "./fakeInterviewClient";
 import { InterviewPage } from "./InterviewPage";
@@ -124,5 +125,28 @@ describe("InterviewPage", () => {
     renderWith(bookAt("reviewing", null));
     await screen.findByRole("heading", { name: "Finding the Step That Went Wrong" });
     expect(document.querySelector(".iv-blurb")).toBeNull();
+  });
+
+  it("signs the title choices with the member's full name", async () => {
+    session.set("token");
+    vi.spyOn(api, "GET").mockResolvedValue({
+      data: {
+        id: "u1",
+        first_name: "Alexandra",
+        last_name: "Okonkwo-Brennan",
+        full_name: "Alexandra Okonkwo-Brennan",
+        email: "a@example.com",
+        created_at: "2026-11-07T00:00:00Z",
+      },
+      response: new Response(null, { status: 200 }),
+    } as never);
+    const titles = [{ id: "0", title: "Finding the Step That Went Wrong", why: "You fix schedules." }];
+    renderWith({
+      ...createFakeInterviewClient("Hana", 0),
+      current: async () => ({ id: "me", stage: "choosing", titles }),
+    });
+    expect(await screen.findByText("Alexandra Okonkwo-Brennan")).toBeTruthy();
+    session.clear();
+    vi.restoreAllMocks();
   });
 });

@@ -140,7 +140,7 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function view(stored: Stored, firstName: string): InterviewState {
+function view(stored: Stored, authorName: string): InterviewState {
   const { id } = stored;
   switch (stored.stage) {
     case "asking": {
@@ -168,25 +168,25 @@ function view(stored: Stored, firstName: string): InterviewState {
     case "choosing":
       return { id, stage: "choosing", titles: TITLES };
     default:
-      return { id, stage: stored.stage, book: stored.book ?? emptyBook(firstName) };
+      return { id, stage: stored.stage, book: stored.book ?? emptyBook(authorName) };
   }
 }
 
-function emptyBook(firstName: string): DraftBook {
-  return { title: "", authorName: firstName, blurb: null, chapters: [] };
+function emptyBook(authorName: string): DraftBook {
+  return { title: "", authorName: authorName, blurb: null, chapters: [] };
 }
 
 const BLURB =
   "I've spent years being the person people call when the timeline slips. This book is how I find the one step that went wrong, and what I do the morning after.";
 
-export function createFakeInterviewClient(firstName: string, delay = 1200): InterviewClient {
+export function createFakeInterviewClient(authorName: string, delay = 1200): InterviewClient {
   function mutate(id: string, change: (stored: Stored) => void): Promise<InterviewState> {
     return wait(delay).then(() => {
       const stored = load();
       if (!stored || stored.id !== id) throw new Error("This interview has ended. Please start again.");
       change(stored);
       save(stored);
-      return view(stored, firstName);
+      return view(stored, authorName);
     });
   }
 
@@ -194,7 +194,7 @@ export function createFakeInterviewClient(firstName: string, delay = 1200): Inte
     async current() {
       await wait(delay / 3);
       const stored = load();
-      return stored ? view(stored, firstName) : null;
+      return stored ? view(stored, authorName) : null;
     },
     async start() {
       await wait(delay);
@@ -206,7 +206,7 @@ export function createFakeInterviewClient(firstName: string, delay = 1200): Inte
         book: null,
       };
       save(stored);
-      return view(stored, firstName);
+      return view(stored, authorName);
     },
     answer: (id, text) =>
       mutate(id, (stored) => {
@@ -233,7 +233,7 @@ export function createFakeInterviewClient(firstName: string, delay = 1200): Inte
         if (!title) throw new Error("That title isn't one of the three.");
         stored.book = {
           title: title.title,
-          authorName: firstName,
+          authorName: authorName,
           blurb: BLURB,
           chapters: CHAPTERS.map((ch) => ({ ...ch })),
         };
