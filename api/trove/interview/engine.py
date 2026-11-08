@@ -25,6 +25,15 @@ Phase = Literal["sweep", "dig", "shape"]
 MIN_ANSWERS = 8
 SHAPE_BY = 21
 MAX_QUESTIONS = 25
+# Skipped questions don't count toward MAX_QUESTIONS (skips are never counted, §4), so a hard
+# limit on all questions keeps an interview from running forever.
+MAX_TURNS = 40
+# Sweep covers at least this many questions before Dig, whatever the first answer offers.
+MIN_SWEEP = 4
+# Answers run thin (docs/trove.md §4, §9.9) when this many of the last few are short or unsure.
+# The signal is internal: it changes the angle of the next question and is never shown.
+THIN_WINDOW, THIN_SWITCH = 3, 2
+SHORT_ANSWER_WORDS, UNSURE_ANSWER_WORDS = 6, 15
 MIN_CHAPTERS, MAX_CHAPTERS = 3, 5
 # The back-cover blurb fits the book's `blurb` field (B1).
 MAX_BLURB = 600
@@ -37,6 +46,7 @@ MAX_TOKENS = 16000
 
 class Turn(BaseModel):
     question: str
+    # Empty when the member skipped the question.
     answer: str
     phase: Phase
 
@@ -80,6 +90,7 @@ class FinishedBook(BaseModel):
 
 class Thread(BaseModel):
     thread: str = Field(description="A few words naming the thread.")
+    has_moment: bool = Field(description="Whether the member gave a specific moment or method for it.")
     missing: str = Field(description="One line on what this thread still needs.")
 
 
@@ -147,7 +158,7 @@ async def plan_turn(claude: Claude, *, turns: list[Turn], resume_text: str | Non
         plan.phase = "sweep"
     if answered < MIN_ANSWERS:
         plan.ready_for_reveal = False
-    if len(turns) >= MAX_QUESTIONS:
+    if _questions_asked(turns) >= MAX_QUESTIONS or len(turns) >= MAX_TURNS:
         plan.ready_for_reveal = True
     if plan.phase != "shape":
         plan.playback = None
@@ -281,6 +292,34 @@ def _render(number: int, turn: Turn) -> str:
     return f"Q{number} [{turn.phase}]: {turn.question}\nA{number}: {answer}\n"
 
 
+# Short or unsure answers are the main sign a question didn't land. A long answer that says
+# "I don't know" on the way to a story isn't one.
+_UNSURE = re.compile(
+    r"\b(i don'?t know|idk|not sure|no idea|not really|nothing (really|much|special|interesting)"
+    r"|can'?t think|nothing comes to mind|i don'?t have (anything|much|a story|one))\b",
+    re.IGNORECASE,
+)
+
+
+def _thin(turn: Turn) -> bool:
+    words = len(turn.answer.split())
+    return words < SHORT_ANSWER_WORDS or (words < UNSURE_ANSWER_WORDS and bool(_UNSURE.search(turn.answer)))
+
+
+def _running_thin(turns: list[Turn]) -> bool:
+    # A skip says "not this ground", not "I'm unsure", so it isn't a thin answer.
+    recent = [turn for turn in turns if not _skipped(turn)][-THIN_WINDOW:]
+    return sum(map(_thin, recent)) >= THIN_SWITCH
+
+
+def _skipped(turn: Turn) -> bool:
+    return not turn.answer.strip()
+
+
+def _questions_asked(turns: list[Turn]) -> int:
+    return sum(1 for turn in turns if not _skipped(turn))
+
+
 def _turn_blocks(turns: list[Turn], resume_text: str | None) -> list[dict]:
     """The transcript as one content block per turn, with a cache breakpoint on the newest turn.
     Each request then extends the previous one's prefix, so the interview so far is read from
@@ -296,18 +335,31 @@ def _turn_blocks(turns: list[Turn], resume_text: str | None) -> list[dict]:
 
 
 def _status(turns: list[Turn]) -> str:
-    asked = len(turns)
+    asked = _questions_asked(turns)
     answered = sum(1 for turn in turns if turn.answer.strip())
     if not turns:
         return "The interview is starting. Ask the first question."
-    note = f"Questions asked so far: {asked}. Answered: {answered}."
-    if asked >= MAX_QUESTIONS:
-        return f"{note} That is the limit: set ready_for_reveal to true and close."
-    if asked >= SHAPE_BY:
-        return f"{note} Move to Shape now if you aren't there already."
-    if answered < MIN_ANSWERS:
-        return f"{note} It's too early for the reveal."
-    return note
+    notes = [f"Questions asked so far: {asked}. Answered: {answered}."]
+    if _skipped(turns[-1]):
+        notes.append(
+            "The member skipped the last question. Move to other ground: don't rephrase it, don't come "
+            "back to it, and don't mention the skip."
+        )
+    elif _running_thin(turns):
+        notes.append('Answers are running thin. Change the angle now (see "When answers run thin").')
+    swept = sum(1 for turn in turns if turn.phase == "sweep")
+    if swept < MIN_SWEEP and all(turn.phase == "sweep" for turn in turns):
+        notes.append(
+            f"Sweep questions so far: {swept}. Stay in Sweep and open a different area of their life "
+            "before you dig, however promising the last answer was."
+        )
+    if asked >= MAX_QUESTIONS or len(turns) >= MAX_TURNS:
+        notes.append("That is the limit: set ready_for_reveal to true and close.")
+    elif asked >= SHAPE_BY:
+        notes.append("Move to Shape now if you aren't there already.")
+    elif answered < MIN_ANSWERS:
+        notes.append("It's too early for the reveal.")
+    return " ".join(notes)
 
 
 async def _ask[T: BaseModel](

@@ -100,6 +100,8 @@ Only if asked specifically:
   between the math and the printers at first, but if pushed she'd say debugging a printer is like
   finding the one wrong step in a proof.
 - She is thinking about switching to engineering but hasn't told anyone.
+- When a question is big or vague and she has nothing to say to it, she sometimes presses
+  Skip instead of answering.
 """,
         "should_surface": [
             "fixing the broken printers by herself and the laminated settings card",
@@ -311,6 +313,39 @@ Only if asked specifically:
             "planning Paczki Day and the backup notebook",
             "cash flow vs profit in a small business",
             "taking over from a parent (giving him the rye)",
+        ],
+    },
+    {
+        "name": "Theo (first-year, says they have nothing interesting)",
+        "resume": None,
+        "profile": """
+Theo, a first-year at CWRU, probably biology. Grew up in a small town in Ohio. No campus job yet.
+
+Voice: polite and unsure. To any open or big question: "Honestly I don't have anything
+interesting, I'm just a freshman." One or two short sentences. Thinks everything they've done is
+normal. Answers properly when a question names a real project, class, team or job and asks what
+they decided, what went wrong or what they figured out.
+
+Only if asked specifically:
+- High school AP Environmental Science project: a year measuring the creek behind the school. The
+  first two months of nitrate data were useless because they sampled at different times of day
+  and after rain. They redesigned it: same spot, 7am every Tuesday, a rain log, and a blank sample
+  each time. Their data was later used by the county's watershed group, which surprised them.
+- Ran the auditorium sound board for every play and assembly; the only student who knew how. The
+  retired teacher who set it up taught them the basics. Their method: tape a label on every
+  channel before rehearsal, and ring out feedback with the room empty. Trained two sophomores
+  before graduating so the school wasn't stuck.
+- Summers at the family fry stand at the county fair. At 16 they changed how the line ran: one
+  person takes orders and money walking down the line, writing the order on the paper boat, so the
+  fryer only cooks. Waits went from about 25 minutes to under 10.
+- In the dorm they're the one who fixes wobbly bed frames and printers. They mention this first
+  because it's recent, but it's small.
+- When a question doesn't land, or feels too personal, they sometimes press Skip.
+""",
+        "should_surface": [
+            "the creek-sampling redesign (same time, rain log, blanks) and the county using it",
+            "being the only one who could run the sound board, and training replacements",
+            "redesigning the fry stand line at the fair",
         ],
     },
 ]

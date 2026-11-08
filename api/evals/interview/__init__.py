@@ -32,6 +32,11 @@ BANNED = {
     "how do you balance": r"\bbalanc(e|ing)\b",
     "yes/no opener": r"^(do|did|are|were|is|was|have|has|can|could|would|will) you\b",
     "two questions": r"\?.+\?",
+    # §4, §9.9: thin answers get sharper questions, never small talk or reassurance.
+    "small talk": r"last (saturday|sunday|weekend|week)\b|for fun\b|hobb(y|ies)|how('s| is| was) your (day|week)"
+    r"|what did you do (today|yesterday|this week)",
+    "reassurance": r"anything counts|that'?s (okay|ok|fine|totally fine|great|amazing)|no (wrong|bad) answers?"
+    r"|don'?t worry|no pressure|it'?s (okay|ok|fine)|even (a )?small|great (answer|question)|love that",
 }
 
 
@@ -64,6 +69,7 @@ async def answer(
     claude: Claude, persona: dict, turns: list[Turn], question: str, playback: str | None
 ) -> str:
     asked = f"{playback}\n\n{question}" if playback else question
+    asked += '\n\n(A quiet "Skip" button is always on screen.)'
     content = (
         f"<profile>\n{persona['profile'].strip()}\n</profile>\n\n"
         f"{engine._transcript(turns)}\n\n<newest_question>\n{asked}\n</newest_question>"
@@ -97,10 +103,13 @@ async def run_case(claude: Claude, case: dict) -> str:
         if plan.ready_for_reveal:
             log.append("\n\n".join([*entry, "*(ready for reveal)*"]))
             break
-        reply = await answer(counting, case, turns, plan.question, plan.playback)
-        entry.append(f"**A:** {reply}")
+        if engine._running_thin(turns):
+            entry.insert(1, "<sub>↻ answers running thin: sharper angle asked for</sub>")
+        reply = (await answer(counting, case, turns, plan.question, plan.playback)).strip()
+        skipped = reply == "SKIP"
+        entry.append("**A:** *(skips)*" if skipped else f"**A:** {reply}")
         log.append("\n\n".join(entry))
-        turns.append(Turn(question=plan.question, answer=reply, phase=plan.phase))
+        turns.append(Turn(question=plan.question, answer="" if skipped else reply, phase=plan.phase))
 
     draft = await engine.draft_book(counting, turns=turns)
     title = draft.titles[0].title
@@ -112,11 +121,16 @@ async def run_case(claude: Claude, case: dict) -> str:
     after_removal = await engine.write_blurb(counting, turns=turns, chapters=finished.chapters[1:])
 
     phases = [t.phase for t in turns]
+    asked = engine._questions_asked(turns)
+    all_flags = sum(entry.count("⚠️ flags") for entry in log)
     sections = [
-        f"**{len(turns)} answers** (sweep {phases.count('sweep')}, dig {phases.count('dig')}, "
-        f"shape {phases.count('shape')}). {counting.calls} calls, {counting.input_tokens:,} input "
+        f"**{asked} questions** (sweep {phases.count('sweep')}, dig {phases.count('dig')}, "
+        f"shape {phases.count('shape')}); hit the cap: {'⚠️ yes' if asked >= engine.MAX_QUESTIONS else 'no'}; "
+        f"skips {sum(not t.answer.strip() for t in turns)}; questions flagged {all_flags}; "
+        f"grounded pool {len(draft.pool)}, finished {len(book)} chapters. {counting.calls} calls, {counting.input_tokens:,} input "
         f"+ {counting.cached_tokens:,} cached, {counting.output_tokens:,} output tokens.",
         "**Should surface:**\n" + "\n".join(f"- {item}" for item in case["should_surface"]),
+        "**Repeated after a skip:** " + (", ".join(_repeated_after_skip(turns)) or "none"),
         "### Transcript\n\n" + "\n\n---\n\n".join(log),
         "### Titles\n\n" + "\n".join(f"{n}. **{t.title}**: {t.why}" for n, t in enumerate(draft.titles, 1)),
         "### Pool\n\n" + "\n\n".join(_chapter(c) for c in draft.pool),
@@ -151,6 +165,22 @@ def _blurb_check(blurb: str) -> str:
     if not first_person:
         flags.append("not first person")
     return f"{len(blurb)} chars" + (f", ⚠️ {'; '.join(flags)}" if flags else ", ok")
+
+
+def _repeated_after_skip(turns: list[Turn]) -> list[str]:
+    """Skipped questions the interviewer came back to: a later question sharing most of its words."""
+
+    def words(text: str) -> set[str]:
+        return {w for w in re.findall(r"[a-z']+", text.lower()) if len(w) > 3}
+
+    repeats = []
+    for n, turn in enumerate(turns):
+        skipped = words(turn.question)
+        if turn.answer.strip() or not skipped:
+            continue
+        if any(len(skipped & words(later.question)) / len(skipped) > 0.6 for later in turns[n + 1 :]):
+            repeats.append(f"Q{n + 1}")
+    return repeats
 
 
 def _chapter(chapter: engine.DraftChapter) -> str:

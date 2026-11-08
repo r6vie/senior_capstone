@@ -33,7 +33,7 @@ def reply(data: dict):
 
 def plan(**overrides) -> dict:
     return {
-        "threads": [{"thread": "texture without gums", "missing": "the exact steps"}],
+        "threads": [{"thread": "texture without gums", "has_moment": True, "missing": "the exact steps"}],
         "phase": "dig",
         "question": "What did the first batch that worked look like?",
         "playback": None,
@@ -222,3 +222,64 @@ def test_a_long_blurb_is_cut_back_to_whole_sentences():
     assert engine._usable_blurb(sentence * 30) == (sentence * 18).strip()
     assert len((sentence * 18).strip()) <= engine.MAX_BLURB
     assert engine._usable_blurb("I " + "know " * 200 + ". Short.") is None
+
+
+# When answers run thin (docs/trove.md §4, §9.9).
+
+
+def answered(*answers: str, phase: str = "dig") -> list[Turn]:
+    return [Turn(question=f"Question {n}?", answer=a, phase=phase) for n, a in enumerate(answers)]
+
+
+async def test_thin_answers_ask_for_a_sharper_angle_but_a_long_unsure_story_does_not():
+    claude = FakeClaude([reply(plan())])
+    await engine.next_turn(
+        claude, turns=answered(ANSWERS[0], "Not really.", "Math, I guess."), resume_text=None
+    )
+    assert "Answers are running thin" in sent(claude)
+
+    story = "I don't know, I guess it started when the printers broke and nobody would touch them, so I watched videos."
+    claude = FakeClaude([reply(plan())])
+    await engine.next_turn(claude, turns=answered(story, ANSWERS[1], "Fine."), resume_text=None)
+    assert "Answers are running thin" not in sent(claude)
+
+
+async def test_a_skip_moves_to_other_ground_and_isnt_counted_or_thin():
+    skip = Turn(question="What do people get wrong?", answer="", phase="dig")
+    claude = FakeClaude([reply(plan())])
+    await engine.next_turn(claude, turns=[*turns(4), skip], resume_text=None)
+    assert "A5: (skipped)" in sent(claude)
+    assert "Move to other ground: don't rephrase it" in sent(claude)
+    assert "Questions asked so far: 4." in sent(claude)
+    # Skips say "not this", not "I'm unsure", so they never make answers look thin.
+    claude = FakeClaude([reply(plan())])
+    await engine.next_turn(
+        claude,
+        turns=[*turns(2), skip, skip, Turn(question="Q?", answer=ANSWERS[2], phase="dig")],
+        resume_text=None,
+    )
+    assert "running thin" not in sent(claude)
+
+    claude = FakeClaude([reply(plan())])
+    history = [*turns(engine.MAX_QUESTIONS - 1), *[skip] * 5]
+    assert (await engine.next_turn(claude, turns=history, resume_text=None)).ready_for_reveal is False
+
+    claude = FakeClaude([reply(plan())])
+    history = [*turns(10), *[skip] * (engine.MAX_TURNS - 10)]
+    assert (await engine.next_turn(claude, turns=history, resume_text=None)).ready_for_reveal is True
+
+
+async def test_the_status_keeps_the_sweep_wide_until_enough_areas_are_covered():
+    claude = FakeClaude([reply(plan())])
+    await engine.next_turn(claude, turns=turns(2, phase="sweep"), resume_text=None)
+    assert "Stay in Sweep" in sent(claude)
+
+    claude = FakeClaude([reply(plan())])
+    await engine.next_turn(claude, turns=turns(engine.MIN_SWEEP, phase="sweep"), resume_text=None)
+    assert "Stay in Sweep" not in sent(claude)
+
+
+def test_the_interviewer_bans_small_talk_and_reassurance():
+    prompt = load_prompt("interview/interviewer")
+    assert "When answers run thin" in prompt
+    assert "no reassurance" in prompt and "No small talk" in prompt
