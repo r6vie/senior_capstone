@@ -125,12 +125,11 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Done when: a real person goes from signing up to a book on the shelf.
 
 **I4 · The interview adapts** · Josef · `todo`
-- For members who don't know their story yet (trove.md §4, §9.9). One pipeline: the interview
-  notices thin answers and switches to prompted mode (smaller questions, situation cards),
-  plays back a mirror partway through, and always offers "Help me find it".
+- When answers run thin (trove.md §4, §9.9), the interviewer changes angle: sharper questions
+  anchored in the member's real projects, classes and work, in a professional tone. A quiet
+  "Ask me another way" is always available. No mirror, cards or reassurance copy.
 - Screens first, approved by Josef, then the engine, API and UI.
 - Evals: the quiet personas (e.g. Dana) should reach a full book without hitting the cap.
-- Decide first: whether the mirror appears for everyone or only when a member struggles.
 
 **D1 · The shelf and opening a book** · Alvisa · `todo`
 - The home page shows shelves of books (start with "Recently added" until the categories are

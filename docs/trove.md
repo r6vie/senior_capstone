@@ -117,15 +117,13 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   - **Review before the shelf:** the member can remove a chapter or ask for one to be rewritten, then "Put it on the shelf". Free-text editing comes later.
   - **Model:** Opus 5.5 for questions and book writing.
   - **Limits** (T7): one interview per member; a member who already has a book can't start another (adding to your book is I3). A book keeps at least 3 chapters, so removing stops there. A résumé must be a readable PDF up to 5 MB; only the first 20 pages are read. If it can't be read, the member starts without it.
-- **The interview adapts to members who don't know their story yet** (decided 2026-11-07, I4; §9.9):
-  - **One pipeline, no fork.** Nobody is asked "do you already have a story?". The interview notices when someone is struggling and changes how it asks.
-  - **Signals:** short or vague answers, "I don't know", no concrete moments, and a thin pool of chapters. Never shown to the member, and never a score.
-  - **Open mode** (the default): moments-first questions, as above.
-  - **Prompted mode** (for recall): smaller, concrete questions ("What did you do last Saturday?", "What's something you fixed recently?") and, when someone is stuck, a few situation cards to pick from ("taught someone something", "got lost", "quit something", "was the only one who knew how").
-  - **The mirror** (for recognition and confidence): partway through, the Librarian plays back one or two things from the member's own answers that most people here couldn't tell you.
-  - **"Help me find it"** is always available. Pressing it switches to prompted mode at once.
-  - The interview switches approach early instead of reaching the question cap with a thin pool.
-  - Grounding is unchanged: cards and prompts only shape questions; the book comes from the member's answers.
+- **The interview adapts when answers run thin** (decided 2026-11-07, revised the same day; I4; §9.9):
+  - **One pipeline, no fork.** Nobody is asked "do you already have a story?". When answers are short, vague or have no concrete moments, the interviewer asks better questions, not easier ones.
+  - **Better questions means a sharper angle:** anchored in the member's real contexts (a class, a research project, a job, a team, a club, a high school project) and asking for the specific decision, problem or thing they figured out. Never small talk ("What did you do last Saturday?").
+  - **The tone stays professional.** Members are treated as people with something worth telling. No reassurance copy ("anything counts", "that's okay"), no praise, no hand-holding.
+  - **"Ask me another way"** is always available, quiet. It asks the interviewer for a different angle on the same ground.
+  - The interview changes angle early instead of reaching the question cap with a thin pool.
+  - Signals are internal: never shown, never a score. Grounding is unchanged.
 - **Planned for after the whole loop works, not now** (§9.9):
   - **Sparks from other books:** while reading someone's book, a member taps "I have one like this" on a chapter. It saves a private prompt for their own next interview, never content.
   - **Each reading grows the book:** after "Did you meet?", the author answers one quick question, "What did they ask you about that surprised you?". The answer can become a new chapter or improve one, with the author's approval (through I3).
@@ -136,7 +134,6 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - The Librarian's more playful voice (on hold with the interactive layer).
 - Free-text editing of the book by the author.
 - Whether an abandoned interview's résumé text should expire (recommended: after 30 days).
-- Whether the mirror appears for everyone, or only when the interview sees a member struggling.
 - Later ideas, not planned: asking someone who knows you (answers shape questions only; needs a privacy decision), chapters in progress for members early on, a free-talk "ramble" mode, and a private timeline sketch.
 
 ## 5. Discovery
@@ -276,8 +273,9 @@ Membership verification is still open:
 
 ### 9.9 Helping members who don't know their story (decided 2026-11-07)
 
-- **"I don't have a story" is rarely true.** It usually means one of four things: they can't recall on demand, what's normal to them doesn't feel interesting, they don't think it counts, or (rarely, e.g. a freshman) they have less lived experience yet.
-- **A fork at the start would sort people badly.** Those who most need help would answer "I have a story" or "I don't" wrongly. So the interview adapts by itself, and "Help me find it" lets the member ask without answering a question about themselves.
+- **"I don't have a story" is rarely true.** Members are professionals and students who've done real work: even a freshman can talk about a high school project. When answers run thin, the usual cause is a question that didn't land.
+- **So the fix is better questions, not a softer app.** The first draft (situation cards, small everyday questions, a "mirror" playing back what's unusual) was dropped: the mirror read as flattery, and the rest treated members as more lost than they are.
+- **A fork at the start would sort people badly**, so the interview adapts by itself, and "Ask me another way" lets the member ask for a new angle.
 - **This is a first-class part of the interview**, and it fixes a known weak spot: quiet members reaching the question cap with too little material.
 - **Sparks and growing the book come later** because they need the shelf, checkouts and "Did you meet?" to exist first. Together they make building your story continue after the first interview.
 
@@ -339,4 +337,5 @@ Membership verification is still open:
   - Blurb: 2–4 sentences, first person, written with the draft, shown in review and on the book.
 - **2026-11-07, members who don't know their story:**
   - Approved the adaptive interview (§4, §9.9, I4): one pipeline, prompted mode, the mirror and "Help me find it".
+  - Revised after seeing the screens: no mirror, no situation cards, no small-talk questions or reassurance copy. Thin answers get sharper, professional questions, and "Ask me another way" replaces "Help me find it".
   - Sparks from other books and each reading growing the book are planned for after the whole loop works (I5, I6).
