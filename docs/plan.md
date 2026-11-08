@@ -127,7 +127,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 **I4 · The interview adapts** · Josef · `todo`
 - When answers run thin (trove.md §4, §9.9), the interviewer changes angle: sharper questions
   anchored in the member's real projects, classes and work, in a professional tone. A quiet
-  "Ask me another way" is always available. No mirror, cards or reassurance copy.
+  "Skip" is always available and moves to the next question. No mirror, cards or reassurance copy.
 - Screens first, approved by Josef, then the engine, API and UI.
 - Evals: the quiet personas (e.g. Dana) should reach a full book without hitting the cap.
 

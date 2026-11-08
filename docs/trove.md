@@ -121,7 +121,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   - **One pipeline, no fork.** Nobody is asked "do you already have a story?". When answers are short, vague or have no concrete moments, the interviewer asks better questions, not easier ones.
   - **Better questions means a sharper angle:** anchored in the member's real contexts (a class, a research project, a job, a team, a club, a high school project) and asking for the specific decision, problem or thing they figured out. Never small talk ("What did you do last Saturday?").
   - **The tone stays professional.** Members are treated as people with something worth telling. No reassurance copy ("anything counts", "that's okay"), no praise, no hand-holding.
-  - **"Ask me another way"** is always available, quiet. It asks the interviewer for a different angle on the same ground.
+  - **"Skip"** is always available, quiet. The member can skip a question they'd rather not answer or have nothing to say to, and the interviewer moves on to the next question. A skip is never shown or counted; the interviewer just takes it as a cue to try other ground.
   - The interview changes angle early instead of reaching the question cap with a thin pool.
   - Signals are internal: never shown, never a score. Grounding is unchanged.
 - **Planned for after the whole loop works, not now** (§9.9):
@@ -275,7 +275,7 @@ Membership verification is still open:
 
 - **"I don't have a story" is rarely true.** Members are professionals and students who've done real work: even a freshman can talk about a high school project. When answers run thin, the usual cause is a question that didn't land.
 - **So the fix is better questions, not a softer app.** The first draft (situation cards, small everyday questions, a "mirror" playing back what's unusual) was dropped: the mirror read as flattery, and the rest treated members as more lost than they are.
-- **A fork at the start would sort people badly**, so the interview adapts by itself, and "Ask me another way" lets the member ask for a new angle.
+- **A fork at the start would sort people badly**, so the interview adapts by itself, and "Skip" lets the member move past any question.
 - **This is a first-class part of the interview**, and it fixes a known weak spot: quiet members reaching the question cap with too little material.
 - **Sparks and growing the book come later** because they need the shelf, checkouts and "Did you meet?" to exist first. Together they make building your story continue after the first interview.
 
@@ -337,5 +337,5 @@ Membership verification is still open:
   - Blurb: 2–4 sentences, first person, written with the draft, shown in review and on the book.
 - **2026-11-07, members who don't know their story:**
   - Approved the adaptive interview (§4, §9.9, I4): one pipeline, prompted mode, the mirror and "Help me find it".
-  - Revised after seeing the screens: no mirror, no situation cards, no small-talk questions or reassurance copy. Thin answers get sharper, professional questions, and "Ask me another way" replaces "Help me find it".
+  - Revised after seeing the screens: no mirror, no situation cards, no small-talk questions or reassurance copy. Thin answers get sharper, professional questions, and a quiet "Skip" replaces "Help me find it" (an "Ask me another way" button was tried and dropped).
   - Sparks from other books and each reading growing the book are planned for after the whole loop works (I5, I6).
