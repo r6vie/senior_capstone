@@ -2,18 +2,18 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
-## 2026-11-07: the interview adapts (I4), direction A, six frames (not yet approved)
+## 2026-11-07: the interview adapts (I4), revised after Josef's review
 
-- **Orchestrator I4 (trove.md §4, §9.9):** new board `InterviewA2` on the Interview page. Same black band and answer panel as A.
-- **"Help me find it":** a quiet button beside Speak on every question. Red stays on "Send answer". It switches the next question
-  to prompted mode.
-- **Prompted mode:** a smaller concrete question ("What did you do last Saturday?"), with a quiet "Show me some ideas". The
-  situation cards (four) appear only then. Cards or typing, and no red until there is something to send. After a pick the
-  Librarian asks one small question and the pick can be changed.
-- **The mirror:** one frame, two quotes from the member's own answers, each with what most people here couldn't tell you. One
-  button, "Keep going". No yes/no, no correction (that is what makes it differ from Shape's "Is this you?"), no score or count.
-- **Open question (mirror for everyone or only strugglers):** the design says everyone, once. The same screen works after
-  prompted mode, so it is never a consolation that marks someone as having struggled.
+- **First draft dropped (e46fe34, six frames):** the mirror ("feels like flattery"), the situation cards and "Help me find
+  it" with its "last Saturday" question. Josef: don't design for scared people; these are professionals; help them with
+  better questions, not easier ones. Spec: trove.md §4 and §9.9 (7289adb).
+- **Now three frames on `InterviewA2`:** "Ask me another way" (quiet, beside Speak, on every question; red stays on Send
+  answer), and two frames of the change of angle: a sharper question on the band anchored in a real context ("In your CHEM
+  223 project, what did you have to figure out that the lab manual didn't tell you?"), then the same pattern in another
+  context (a student org). The screen is identical whether the member pressed the button or the answers ran thin, so
+  nothing marks them as struggling. No reassurance or praise anywhere.
+- **Copy check of direction A:** removed "Take a moment with each" (reveal) and "as you would to a friend" (recording).
+  Everything else is plain and direct. Not approved yet.
 
 ## 2026-11-07: books show the full name
 
