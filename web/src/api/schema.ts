@@ -335,6 +335,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/checkouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Checkouts
+         * @description Books you've checked out, and open checkouts of your book.
+         */
+        get: operations["my_checkouts_checkouts_get"];
+        put?: never;
+        /**
+         * Check Out
+         * @description Check out a book with a short message to its author.
+         */
+        post: operations["check_out_checkouts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/checkouts/{checkout_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel
+         * @description Withdraw a checkout the author hasn't answered yet.
+         */
+        post: operations["cancel_checkouts__checkout_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/checkouts/{checkout_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept
+         * @description Say yes to a checkout of your book.
+         */
+        post: operations["accept_checkouts__checkout_id__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/checkouts/{checkout_id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Decline
+         * @description Say no to a checkout of your book. The reader sees "this book isn't available right now".
+         */
+        post: operations["decline_checkouts__checkout_id__decline_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -403,6 +487,13 @@ export interface components {
             /** Summary */
             summary: string;
         };
+        /** CheckoutRequest */
+        CheckoutRequest: {
+            /** Book Id */
+            book_id: string;
+            /** Message */
+            message: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -428,6 +519,35 @@ export interface components {
             titles: components["schemas"]["TitleOption"][] | null;
             /** Blurb */
             blurb: string | null;
+        };
+        /**
+         * LendingCheckout
+         * @description A checkout of your book, as its author sees it.
+         */
+        LendingCheckout: {
+            /** Id */
+            id: string;
+            /** Book Id */
+            book_id: string;
+            /** Book Title */
+            book_title: string;
+            /** Reader Name */
+            reader_name: string;
+            reader_book: components["schemas"]["ReaderBook"] | null;
+            /** Message */
+            message: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "waiting" | "accepted";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Expires At */
+            expires_at: string | null;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -495,6 +615,13 @@ export interface components {
              */
             updated_at: string;
         };
+        /** MyCheckouts */
+        MyCheckouts: {
+            /** Reading */
+            reading: components["schemas"]["ReadingCheckout"][];
+            /** Lending */
+            lending: components["schemas"]["LendingCheckout"][];
+        };
         /**
          * NameUpdate
          * @description Change the name on the account. Leave out a field to keep it.
@@ -537,6 +664,41 @@ export interface components {
             phase: "sweep" | "dig" | "shape";
             /** Playback */
             playback: string | null;
+        };
+        /** ReaderBook */
+        ReaderBook: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+        };
+        /**
+         * ReadingCheckout
+         * @description A checkout as its reader sees it.
+         */
+        ReadingCheckout: {
+            /** Id */
+            id: string;
+            /** Book Id */
+            book_id: string;
+            /** Book Title */
+            book_title: string;
+            /** Author Name */
+            author_name: string;
+            /** Message */
+            message: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "waiting" | "accepted" | "cancelled" | "unavailable";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Expires At */
+            expires_at: string | null;
         };
         /** ShapeRequest */
         ShapeRequest: {
@@ -1189,6 +1351,150 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+        };
+    };
+    my_checkouts_checkouts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyCheckouts"];
+                };
+            };
+        };
+    };
+    check_out_checkouts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadingCheckout"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_checkouts__checkout_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadingCheckout"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_checkouts__checkout_id__accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LendingCheckout"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decline_checkouts__checkout_id__decline_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

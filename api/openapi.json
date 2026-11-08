@@ -795,6 +795,215 @@
         ]
       }
     },
+    "/checkouts": {
+      "get": {
+        "tags": [
+          "Checkouts"
+        ],
+        "summary": "My Checkouts",
+        "description": "Books you've checked out, and open checkouts of your book.",
+        "operationId": "my_checkouts_checkouts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyCheckouts"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Checkouts"
+        ],
+        "summary": "Check Out",
+        "description": "Check out a book with a short message to its author.",
+        "operationId": "check_out_checkouts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadingCheckout"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/checkouts/{checkout_id}/cancel": {
+      "post": {
+        "tags": [
+          "Checkouts"
+        ],
+        "summary": "Cancel",
+        "description": "Withdraw a checkout the author hasn't answered yet.",
+        "operationId": "cancel_checkouts__checkout_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadingCheckout"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/checkouts/{checkout_id}/accept": {
+      "post": {
+        "tags": [
+          "Checkouts"
+        ],
+        "summary": "Accept",
+        "description": "Say yes to a checkout of your book.",
+        "operationId": "accept_checkouts__checkout_id__accept_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LendingCheckout"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/checkouts/{checkout_id}/decline": {
+      "post": {
+        "tags": [
+          "Checkouts"
+        ],
+        "summary": "Decline",
+        "description": "Say no to a checkout of your book. The reader sees \"this book isn't available right now\".",
+        "operationId": "decline_checkouts__checkout_id__decline_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -945,6 +1154,29 @@
         ],
         "title": "Chapter"
       },
+      "CheckoutRequest": {
+        "properties": {
+          "book_id": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Book Id"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "book_id",
+          "message"
+        ],
+        "title": "CheckoutRequest"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1041,6 +1273,79 @@
           "blurb"
         ],
         "title": "InterviewResponse"
+      },
+      "LendingCheckout": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "book_id": {
+            "type": "string",
+            "title": "Book Id"
+          },
+          "book_title": {
+            "type": "string",
+            "title": "Book Title"
+          },
+          "reader_name": {
+            "type": "string",
+            "title": "Reader Name"
+          },
+          "reader_book": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReaderBook"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "accepted"
+            ],
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "book_id",
+          "book_title",
+          "reader_name",
+          "reader_book",
+          "message",
+          "status",
+          "created_at",
+          "expires_at"
+        ],
+        "title": "LendingCheckout",
+        "description": "A checkout of your book, as its author sees it."
       },
       "LoginRequest": {
         "properties": {
@@ -1188,6 +1493,30 @@
         "title": "MyBookResponse",
         "description": "The signed-in member's own book, as its author sees it."
       },
+      "MyCheckouts": {
+        "properties": {
+          "reading": {
+            "items": {
+              "$ref": "#/components/schemas/ReadingCheckout"
+            },
+            "type": "array",
+            "title": "Reading"
+          },
+          "lending": {
+            "items": {
+              "$ref": "#/components/schemas/LendingCheckout"
+            },
+            "type": "array",
+            "title": "Lending"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reading",
+          "lending"
+        ],
+        "title": "MyCheckouts"
+      },
       "NameUpdate": {
         "properties": {
           "first_name": {
@@ -1315,6 +1644,88 @@
           "playback"
         ],
         "title": "Question"
+      },
+      "ReaderBook": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "ReaderBook"
+      },
+      "ReadingCheckout": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "book_id": {
+            "type": "string",
+            "title": "Book Id"
+          },
+          "book_title": {
+            "type": "string",
+            "title": "Book Title"
+          },
+          "author_name": {
+            "type": "string",
+            "title": "Author Name"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "accepted",
+              "cancelled",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "book_id",
+          "book_title",
+          "author_name",
+          "message",
+          "status",
+          "created_at",
+          "expires_at"
+        ],
+        "title": "ReadingCheckout",
+        "description": "A checkout as its reader sees it."
       },
       "ShapeRequest": {
         "properties": {
