@@ -90,6 +90,25 @@ async def notify_once(
     return status
 
 
+async def notify_checkout_requested(
+    database: AsyncDatabase,
+    *,
+    checkout_id: str,
+    author_id: str,
+    reader_name: str,
+    book_title: str,
+    message: str,
+) -> str:
+    """Tell an author someone checked out their book. Sample books have no account, so nothing is sent."""
+    checkouts_url = f"{get_settings().frontend_url.rstrip('/')}/checkouts"
+    return await notify_once(
+        database,
+        f"checkout-requested:{checkout_id}",
+        author_id,
+        templates.checkout_requested(reader_name, book_title, message, checkouts_url).render,
+    )
+
+
 async def notify_welcome(database: AsyncDatabase, user_id: str, first_name: str) -> str:
     app_url = get_settings().frontend_url
     return await notify_once(

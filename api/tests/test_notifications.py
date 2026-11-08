@@ -40,3 +40,15 @@ async def test_unsubscribe_link_turns_off_email(client, database):
     done = await client.post("/notifications/unsubscribe", params={"token": token})
     assert done.status_code == 200
     assert (await database.users.find_one({"_id": "user-1"}))["email_notifications"] is False
+
+
+def test_new_checkout_email_quotes_the_readers_note():
+    from trove.notifications.templates import checkout_requested
+
+    subject, text, html = checkout_requested(
+        "Sam Lee", "My book", "<b>Hello</b>", "http://app/checkouts"
+    ).render("http://unsubscribe")
+    assert subject == "Sam Lee would like to check out your book"
+    assert '"<b>Hello</b>"' in text
+    assert "<b>Hello</b>" not in html
+    assert "http://app/checkouts" in text
