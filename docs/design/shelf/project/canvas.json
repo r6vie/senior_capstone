@@ -404,6 +404,15 @@
       "title": "C \u00b7 Speech bubble",
       "page": "interview",
       "expand": "fill"
+    },
+    "InterviewA2.dc.html": {
+      "x": 5460,
+      "y": 0,
+      "w": 1700,
+      "h": 1950,
+      "title": "A \u00b7 The interview adapts",
+      "page": "interview",
+      "expand": "fill"
     }
   },
   "order": [
@@ -451,7 +460,8 @@
     "CoverLandscape.dc.html",
     "InterviewA.dc.html",
     "InterviewB.dc.html",
-    "InterviewC.dc.html"
+    "InterviewC.dc.html",
+    "InterviewA2.dc.html"
   ],
   "notes": {
     "head": {

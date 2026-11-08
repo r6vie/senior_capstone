@@ -2,6 +2,19 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-07: the interview adapts (I4), direction A, six frames (not yet approved)
+
+- **Orchestrator I4 (trove.md §4, §9.9):** new board `InterviewA2` on the Interview page. Same black band and answer panel as A.
+- **"Help me find it":** a quiet button beside Speak on every question. Red stays on "Send answer". It switches the next question
+  to prompted mode.
+- **Prompted mode:** a smaller concrete question ("What did you do last Saturday?"), with a quiet "Show me some ideas". The
+  situation cards (four) appear only then. Cards or typing, and no red until there is something to send. After a pick the
+  Librarian asks one small question and the pick can be changed.
+- **The mirror:** one frame, two quotes from the member's own answers, each with what most people here couldn't tell you. One
+  button, "Keep going". No yes/no, no correction (that is what makes it differ from Shape's "Is this you?"), no score or count.
+- **Open question (mirror for everyone or only strugglers):** the design says everyone, once. The same screen works after
+  prompted mode, so it is never a consolation that marks someone as having struggled.
+
 ## 2026-11-07: books show the full name
 
 - **Orchestrator, after Josef talked to the advisor (ce8f005, trove.md §3 and §9.1):** a book shows the author's full name,
