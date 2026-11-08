@@ -124,6 +124,14 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Evals: 6–10 varied test personas in `api/evals/`, so prompt changes can be compared.
 - Done when: a real person goes from signing up to a book on the shelf.
 
+**I4 · The interview adapts** · Josef · `todo`
+- For members who don't know their story yet (trove.md §4, §9.9). One pipeline: the interview
+  notices thin answers and switches to prompted mode (smaller questions, situation cards),
+  plays back a mirror partway through, and always offers "Help me find it".
+- Screens first, approved by Josef, then the engine, API and UI.
+- Evals: the quiet personas (e.g. Dana) should reach a full book without hitting the cap.
+- Decide first: whether the mirror appears for everyone or only when a member struggles.
+
 **D1 · The shelf and opening a book** · Alvisa · `todo`
 - The home page shows shelves of books (start with "Recently added" until the categories are
   decided), and a book page opens one.
@@ -155,8 +163,8 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 ### Wave 3: closing the loop
 
 **C4 · "Did you meet?" and past meets** · Ellie · `todo`
-- After the meeting time, both people are asked "Did you meet?". The answer returns the copy and
-  the author is nudged to pick the next reader.
+- After the meeting time, both people are asked "Did you meet?". The answer returns the copy, and
+  the book comes back on the shelf if it was fully lent.
 - The answer is also stored as a private no-show signal.
 - A "Past meets" page lists books whose authors you've met, with contacts still visible.
 - Ships `checkouts.past_meets`.
@@ -177,6 +185,18 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Decide first:
   - how students and alumni are verified (trove.md §9.2)
   - whether to keep password sign-in or switch to one-time email codes
+
+### Later: after the whole loop works
+
+Planned, not started. Begin only once Q1 passes (trove.md §4, §9.9).
+
+**I5 · Sparks from other books** · Josef · `later`
+- On a chapter of someone else's book, "I have one like this" saves a private prompt for the
+  reader's own next interview (I3). Never content, never visible to the other author.
+
+**I6 · Each reading grows the book** · Josef · `later`
+- After "Did you meet?" (C4), the author answers one question: "What did they ask you about that
+  surprised you?". The answer can become or improve a chapter, with the author's approval (I3).
 
 ### Wave 4: demo readiness
 
