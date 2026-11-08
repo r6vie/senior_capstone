@@ -186,6 +186,13 @@ the owner answers them. Each item's "Decide first" lists the known ones.
   - how students and alumni are verified (trove.md §9.2)
   - whether to keep password sign-in or switch to one-time email codes
 
+### Wave 4: demo readiness
+
+**Q1 · End-to-end pass** · everyone
+- Run the whole loop with two real accounts.
+- Fix what breaks, in the owner's feature.
+- Write a short demo script in `docs/demo.md`.
+
 ### Later: after the whole loop works
 
 Planned, not started. Begin only once Q1 passes (trove.md §4, §9.9).
@@ -197,13 +204,6 @@ Planned, not started. Begin only once Q1 passes (trove.md §4, §9.9).
 **I6 · Each reading grows the book** · Josef · `later`
 - After "Did you meet?" (C4), the author answers one question: "What did they ask you about that
   surprised you?". The answer can become or improve a chapter, with the author's approval (I3).
-
-### Wave 4: demo readiness
-
-**Q1 · End-to-end pass** · everyone
-- Run the whole loop with two real accounts.
-- Fix what breaks, in the owner's feature.
-- Write a short demo script in `docs/demo.md`.
 
 ## Open questions waiting on the team
 
