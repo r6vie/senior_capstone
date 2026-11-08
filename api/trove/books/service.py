@@ -61,17 +61,30 @@ async def get_book_of(database: AsyncDatabase, user_id: str) -> dict | None:
 async def list_shelf(database: AsyncDatabase, *, limit: int, after: str | None = None) -> list[dict]:
     """Books on the shelf, newest first, in the same shape as `get_public_book`.
 
-    `after` is `shelf_cursor(...)` of the last book of the previous page. Raises ValueError if it is malformed.
+    A book whose copies are all out quietly leaves the shelf until one comes back (docs/trove.md §6).
+    It still opens from a direct link. `after` is `shelf_cursor(...)` of the last book of the
+    previous page. Raises ValueError if it is malformed.
     """
-    query: dict = {"status": ON_SHELF}
-    if after is not None:
-        published_at, book_id = _decode_cursor(after)
-        query["$or"] = [
-            {"published_at": {"$lt": published_at}},
-            {"published_at": published_at, "_id": {"$lt": book_id}},
-        ]
-    cursor = database.books.find(query, PUBLIC_FIELDS).sort(SHELF_SORT).limit(limit)
-    return await with_author_names(database, await cursor.to_list())
+    # Imported here because checkouts already imports this module.
+    from trove.checkouts.service import fully_checked_out
+
+    shelf: list[dict] = []
+    # Hidden books would leave a page short, so keep reading until it's full or the shelf runs out.
+    while len(shelf) < limit:
+        query: dict = {"status": ON_SHELF}
+        if after is not None:
+            published_at, book_id = _decode_cursor(after)
+            query["$or"] = [
+                {"published_at": {"$lt": published_at}},
+                {"published_at": published_at, "_id": {"$lt": book_id}},
+            ]
+        batch = await database.books.find(query, PUBLIC_FIELDS).sort(SHELF_SORT).limit(limit).to_list()
+        if not batch:
+            break
+        lent = await fully_checked_out(database, batch)
+        shelf.extend(book for book in batch if book["_id"] not in lent)
+        after = shelf_cursor(batch[-1])
+    return await with_author_names(database, shelf[:limit])
 
 
 async def with_author_names(database: AsyncDatabase, books: list[dict]) -> list[dict]:
