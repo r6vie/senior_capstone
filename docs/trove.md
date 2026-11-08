@@ -162,18 +162,23 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **Copies are private and automatic:** each author sets how many checkouts they'll have open at once (default 3, 1–10).
   - When every copy is out, the book quietly leaves the shelf, and comes back when a copy is returned. There is no queue and no "fully booked" label.
   - Readers never see copy counts or how many checkouts a book has.
-- **A checkout the author doesn't answer closes quietly** after a set time. A declined or expired checkout shows the reader "this book isn't available right now".
+- **A checkout the author doesn't answer closes quietly** after 7 days. A declined or expired checkout shows the reader "this book isn't available right now".
+- **Checkout limits** (decided 2026-11-07, C1):
+  - A reader can have at most **3 open checkouts** at once. Open means waiting for an answer or accepted, and not yet returned.
+  - Both kinds of open checkout use one of the author's copies. A copy is taken the moment someone checks the book out, so an author never has more open checkouts than copies.
+  - After a checkout is declined or expires, the same reader can check out that book again after **30 days**. Declines and expiries are treated the same, so the reader can't tell which it was.
+  - A reader can **cancel** a checkout the author hasn't answered yet, which frees the copy and the reader's slot right away.
+  - The checkout message is required, up to 1,000 characters.
+  - The author gets an email for each new checkout (unless they turned email off), with the reader's full name and message.
+  - The reader's own book must be **on the shelf**; a draft doesn't count.
+  - The author sees the reader's full name, their message and their book, to decide.
 - **Messaging lives in the app.** The thread is where you check out a book, coordinate the meeting and share the video link. A member can choose to get communications by email instead.
 - **"Did you meet?" matters:** answering it returns the copy, which frees it for the next reader.
 - **Messaging is a small thread inside each checkout** (§9.8). Messages exist only inside a checkout, so there are no cold DMs.
 
-### Leaning
-
-- **A limit on open checkouts per reader** keeps checkouts deliberate.
-
 ### Open
 
-- The exact numbers: open checkouts per reader, how long an unanswered checkout stays open, and how soon a copy returns if nobody confirms a meeting.
+- How soon a copy returns if nobody confirms a meeting.
 
 ## 7. The reading
 
@@ -339,3 +344,7 @@ Membership verification is still open:
   - Approved the adaptive interview (§4, §9.9, I4): one pipeline, prompted mode, the mirror and "Help me find it".
   - Revised after seeing the screens: no mirror, no situation cards, no small-talk questions or reassurance copy. Thin answers get sharper, professional questions, and a quiet "Skip" replaces "Help me find it" (an "Ask me another way" button was tried and dropped).
   - Sparks from other books and each reading growing the book are planned for after the whole loop works (I5, I6).
+- **2026-11-07, checkout limits (C1, Ellie):**
+  - 3 open checkouts per reader; pending and accepted checkouts both use a copy; unanswered checkouts close after 7 days.
+  - After a decline or expiry, the same book can be checked out again after 30 days; readers can cancel an unanswered checkout; authors get an email for each new checkout (§6).
+  - Your own book must be on the shelf before you check one out; authors see the reader's book when deciding.
