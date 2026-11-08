@@ -2,6 +2,12 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-07: "Skip" replaces "Ask me another way"
+
+- **Josef (spec b0aa08d):** the button is "Skip". It goes straight to the next question, for one the member would rather not
+  answer or has nothing to say to. Quiet, beside Speak, never red. Skips are never shown or counted: no "skipped" state and
+  no tally. Frame 1 of `InterviewA2` shows it; the change-of-angle frames stay, with Skip in the action row.
+
 ## 2026-11-07: the interview adapts (I4), revised after Josef's review
 
 - **First draft dropped (e46fe34, six frames):** the mirror ("feels like flattery"), the situation cards and "Help me find
