@@ -3,7 +3,12 @@ from datetime import UTC, datetime, timedelta
 from trove.books.samples import SAMPLES, remove_samples, seed_samples
 from trove.books.service import get_book_of, get_public_book, list_shelf
 
-SIGNUP = {"first_name": "Maya", "email": "maya@example.com", "password": "a long test passphrase"}
+SIGNUP = {
+    "first_name": "Maya",
+    "last_name": "Okafor",
+    "email": "maya@example.com",
+    "password": "a long test passphrase",
+}
 NOW = datetime.now(UTC).replace(microsecond=0)
 
 
@@ -54,9 +59,8 @@ async def test_open_a_book(client, database):
     }
 
 
-async def test_books_show_the_authors_full_name_from_their_account(client, database):
+async def test_books_show_the_authors_full_name_from_signup(client, database):
     account, headers = await sign_in(client)
-    await database.users.update_one({"_id": account["id"]}, {"$set": {"last_name": "Okafor"}})
     await database.books.insert_one(book(1, author_id=account["id"], author_name="Maya"))
 
     opened = await client.get("/books/book-1", headers=headers)

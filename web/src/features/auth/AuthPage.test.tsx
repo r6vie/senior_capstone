@@ -14,13 +14,15 @@ function renderPage(mode: "sign-in" | "sign-up") {
 }
 
 describe("AuthPage", () => {
-  it("asks only for a first name when signing up", () => {
+  it("asks for a first and last name when signing up", () => {
     renderPage("sign-up");
     expect(screen.getByLabelText("First name")).toBeTruthy();
+    expect(screen.getByLabelText("Last name")).toBeTruthy();
   });
 
   it("doesn't ask for a name when signing in", () => {
     renderPage("sign-in");
     expect(screen.queryByLabelText("First name")).toBeNull();
+    expect(screen.queryByLabelText("Last name")).toBeNull();
   });
 });

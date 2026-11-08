@@ -6,7 +6,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
 from starlette.concurrency import run_in_threadpool
 
-from trove.auth.models import LoginRequest, LoginResponse, SignupRequest, UserResponse
+from trove.auth.models import LoginRequest, LoginResponse, NameUpdate, SignupRequest, UserResponse
 from trove.auth.service import (
     DUMMY_HASH,
     SESSION_SECONDS,
@@ -37,6 +37,7 @@ async def signup(
     user = {
         "_id": str(uuid4()),
         "first_name": data.first_name,
+        "last_name": data.last_name,
         "email": data.email,
         "password_hash": password_hash,
         "is_active": True,
@@ -73,6 +74,18 @@ async def login(
 @router.get("/me", response_model=UserResponse)
 async def me(user: dict = Depends(get_current_user)) -> UserResponse:
     return public_user(user)
+
+
+@router.patch("/me", response_model=UserResponse)
+async def update_me(
+    data: NameUpdate,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> UserResponse:
+    """Set or change the member's first or last name. Their book shows the new name straight away."""
+    changes = data.model_dump(exclude_none=True)
+    await database.users.update_one({"_id": user["_id"]}, {"$set": changes})
+    return public_user({**user, **changes})
 
 
 @router.post("/logout", status_code=204, response_class=Response)

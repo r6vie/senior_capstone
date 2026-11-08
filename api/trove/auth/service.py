@@ -19,7 +19,7 @@ bearer = HTTPBearer(auto_error=False, description="The access_token returned by 
 password_hasher = PasswordHash.recommended()
 # Unknown emails still run a password check, so response timing doesn't reveal which accounts exist.
 DUMMY_HASH = password_hasher.hash("Not a real account password.")
-USER_FIELDS = {"_id": 1, "first_name": 1, "email": 1, "created_at": 1}
+USER_FIELDS = {"_id": 1, "first_name": 1, "last_name": 1, "email": 1, "created_at": 1}
 
 
 async def ensure_indexes(database: AsyncDatabase) -> None:
@@ -46,6 +46,8 @@ def public_user(user: dict) -> UserResponse:
     return UserResponse(
         id=user["_id"],
         first_name=user["first_name"],
+        last_name=user.get("last_name"),
+        full_name=full_name(user),
         email=user["email"],
         created_at=user["created_at"],
     )

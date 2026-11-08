@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, EmailStr, Field, SecretStr, field_validator
+from pydantic import BaseModel, EmailStr, Field, SecretStr, field_validator, model_validator
 
 from trove.core.models import NonEmptyText, RequestBody
 
@@ -17,8 +17,12 @@ class LoginRequest(RequestBody):
         return value.casefold()
 
 
+Name = Annotated[NonEmptyText, Field(max_length=60)]
+
+
 class SignupRequest(LoginRequest):
-    first_name: NonEmptyText = Field(max_length=60)
+    first_name: Name
+    last_name: Name
     password: SecretStr = Field(min_length=12, max_length=128)
 
     @field_validator("password")
@@ -29,9 +33,26 @@ class SignupRequest(LoginRequest):
         return value
 
 
+class NameUpdate(RequestBody):
+    """Change the name on the account. Leave out a field to keep it."""
+
+    first_name: Name | None = None
+    last_name: Name | None = None
+
+    @model_validator(mode="after")
+    def require_a_change(self) -> "NameUpdate":
+        if self.first_name is None and self.last_name is None:
+            raise ValueError("Send a first_name, a last_name or both.")
+        return self
+
+
 class UserResponse(BaseModel):
     id: str
     first_name: str
+    # Null for accounts made before last names were collected, until the member sets one.
+    last_name: str | None
+    # What books show (trove.md §3): first and last name, or the first name alone.
+    full_name: str
     email: EmailStr
     created_at: datetime
 

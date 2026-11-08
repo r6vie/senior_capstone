@@ -8,6 +8,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +20,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
     setBusy(true);
     setError(null);
     try {
-      if (signingUp) await signUp(firstName, email, password);
+      if (signingUp) await signUp(firstName, lastName, email, password);
       else await signIn(email, password);
       navigate("/");
     } catch (caught) {
@@ -34,7 +35,15 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
       <h1>{signingUp ? "Join Trove" : "Sign in to Trove"}</h1>
       <form onSubmit={submit} className="stack">
         {signingUp && (
-          <TextField label="First name" value={firstName} onChange={setFirstName} autoComplete="given-name" />
+          <>
+            <TextField
+              label="First name"
+              value={firstName}
+              onChange={setFirstName}
+              autoComplete="given-name"
+            />
+            <TextField label="Last name" value={lastName} onChange={setLastName} autoComplete="family-name" />
+          </>
         )}
         <TextField label="Email" type="email" value={email} onChange={setEmail} autoComplete="email" />
         <TextField

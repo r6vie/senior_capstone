@@ -55,7 +55,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update Me
+         * @description Set or change the member's first or last name. Their book shows the new name straight away.
+         */
+        patch: operations["update_me_auth_me_patch"];
         trace?: never;
     };
     "/auth/logout": {
@@ -492,6 +496,16 @@ export interface components {
             updated_at: string;
         };
         /**
+         * NameUpdate
+         * @description Change the name on the account. Leave out a field to keep it.
+         */
+        NameUpdate: {
+            /** First Name */
+            first_name?: string | null;
+            /** Last Name */
+            last_name?: string | null;
+        };
+        /**
          * PublicBookResponse
          * @description A book as readers see it: the author's full name, but no contacts, copy counts or grounding quotes.
          */
@@ -553,6 +567,8 @@ export interface components {
             password: string;
             /** First Name */
             first_name: string;
+            /** Last Name */
+            last_name: string;
         };
         /** StartRequest */
         StartRequest: {
@@ -583,6 +599,10 @@ export interface components {
             id: string;
             /** First Name */
             first_name: string;
+            /** Last Name */
+            last_name: string | null;
+            /** Full Name */
+            full_name: string;
             /**
              * Email
              * Format: email
@@ -698,6 +718,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+        };
+    };
+    update_me_auth_me_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NameUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

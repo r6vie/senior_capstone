@@ -9,7 +9,7 @@ interface AuthValue {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (firstName: string, email: string, password: string) => Promise<void>;
+  signUp: (firstName: string, lastName: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -41,8 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signUp = useCallback(
-    async (firstName: string, email: string, password: string) => {
-      const { error } = await api.POST("/auth/signup", { body: { first_name: firstName, email, password } });
+    async (firstName: string, lastName: string, email: string, password: string) => {
+      const { error } = await api.POST("/auth/signup", {
+        body: { first_name: firstName, last_name: lastName, email, password },
+      });
       if (error) throw new Error(errorMessage(error));
       await signIn(email, password);
     },

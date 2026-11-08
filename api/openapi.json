@@ -112,6 +112,51 @@
             "HTTPBearer": []
           }
         ]
+      },
+      "patch": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Update Me",
+        "description": "Set or change the member's first or last name. Their book shows the new name straight away.",
+        "operationId": "update_me_auth_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NameUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/auth/logout": {
@@ -1143,6 +1188,40 @@
         "title": "MyBookResponse",
         "description": "The signed-in member's own book, as its author sees it."
       },
+      "NameUpdate": {
+        "properties": {
+          "first_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "NameUpdate",
+        "description": "Change the name on the account. Leave out a field to keep it."
+      },
       "PublicBookResponse": {
         "properties": {
           "id": {
@@ -1306,6 +1385,12 @@
             "maxLength": 60,
             "minLength": 1,
             "title": "First Name"
+          },
+          "last_name": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Last Name"
           }
         },
         "additionalProperties": false,
@@ -1313,7 +1398,8 @@
         "required": [
           "email",
           "password",
-          "first_name"
+          "first_name",
+          "last_name"
         ],
         "title": "SignupRequest"
       },
@@ -1382,6 +1468,21 @@
             "type": "string",
             "title": "First Name"
           },
+          "last_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
           "email": {
             "type": "string",
             "format": "email",
@@ -1397,6 +1498,8 @@
         "required": [
           "id",
           "first_name",
+          "last_name",
+          "full_name",
           "email",
           "created_at"
         ],

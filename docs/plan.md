@@ -80,6 +80,9 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 **A1 · Account basics and contact details** · Daniel · `todo`
 - Ships `auth.first_name_of` and `auth.contact_details_of`.
+- Already done (Josef, 2026-11-07, for full names on books): signup asks for a required last name;
+  the account has `last_name` and `full_name` (`auth.full_name`, `auth.full_names_of`); and
+  `PATCH /auth/me` sets or changes the first and last name.
 - Members choose which contact details are revealed on a yes: email by default, plus optional
   LinkedIn URL and phone.
 - Settings page: contact details, email notifications on/off, delete account (which also removes

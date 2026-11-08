@@ -6,7 +6,12 @@ import pytest
 from trove.interview import engine
 from trove.interview.engine import Draft, DraftChapter, FinishedBook, NextTurn, TitleOption
 
-SIGNUP = {"first_name": "Hana", "email": "hana@example.com", "password": "a long test passphrase"}
+SIGNUP = {
+    "first_name": "Hana",
+    "last_name": "Sato",
+    "email": "hana@example.com",
+    "password": "a long test passphrase",
+}
 
 
 def minimal_pdf(text: str) -> bytes:
@@ -170,7 +175,6 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
     assert state["titles"] == [{"title": f"Title {n}", "why": f"Because {n}."} for n in range(3)]
     assert state["blurb"] == "I know the pool."
 
-    await database.users.update_one({}, {"$set": {"last_name": "Sato"}})
     book = await client.post("/interview/title", json={"title": 1}, headers=headers)
     assert book.status_code == 200
     book = book.json()
