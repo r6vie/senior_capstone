@@ -35,6 +35,7 @@ removing the `/api` prefix. The frontend never talks to MongoDB or Claude direct
 | `sessions` | auth | Token hash, expiry via TTL index |
 | `auth_attempts` | auth | Rate-limit counters, TTL index |
 | `notifications` | notifications | One document per email sent, `_id` = dedupe key |
+| `checkouts` | checkouts | One per checkout. `open` is true while requested or accepted; unique on reader + book while open. Unanswered ones expire on read, no background job |
 
 Each new feature adds its rows here in the PR that creates its collections.
 

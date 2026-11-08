@@ -55,6 +55,7 @@ local stub with the same signature and swap it out when the real one merges.
 | `auth.first_name_of(db, user_id)` | Daniel | First name (for greetings; books show the full name, trove.md §9.1) | everyone |
 | `auth.contact_details_of(db, user_id)` | Daniel | The contact details the member chose to share on a yes | checkouts (reveal) |
 | `checkouts.get_checkout_for(db, checkout_id, user_id)` | Ellie | The checkout if this user is its reader or author, else `None` | messaging, meetings |
+| `checkouts.fully_checked_out(db, books)` | Ellie | The ids of the books (each with `_id` and `copies`) whose copies are all out, so the shelf can hide them. Never shown to readers as a label or count | books, discovery (the shelf) |
 | `checkouts.past_meets(db, user_id)` | Ellie | People this member has met: checkout id, other person's full name, book id | discovery (recommend to someone you've met) |
 
 When you change one of these, tell the people in the "Used by" column.
@@ -97,7 +98,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
   from the Reference screen · The shelf.
 - Done when: every owner has a route and an empty page in their own feature folder to work in.
 
-**C1 · Checking out a book** · Ellie · `todo`
+**C1 · Checking out a book** · Ellie · `doing`
 - One step (trove.md §6, §9.6): a reader presses "Check out" and writes a short message. They must
   have a book of their own (`books.get_book_of`). The author accepts or declines.
 - An unanswered checkout closes quietly after a set time. A declined or expired checkout shows
