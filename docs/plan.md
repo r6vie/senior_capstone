@@ -90,7 +90,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Done when: contact details are saved, are never visible before a yes, and deleting an account
   removes everything that belongs to it.
 
-**U1 · App shell and navigation** · Daniel · `todo`
+**U1 · App shell and navigation** · Daniel · `review`
 - A minimal layout with navigation to Shelf, My book, Checkouts, Past meets and Settings, with
   empty pages that the owners fill in.
 - Style it with the design system (`docs/design/system.md`, `docs/design/system/tokens.css`). Use the top bar
