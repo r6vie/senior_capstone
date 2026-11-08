@@ -2,6 +2,11 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-07: I4, Skip idea approved; frames under review
+
+- **Josef approved the Skip idea only.** The `InterviewA2` frames (Skip, CHEM 223 angle, student-org angle) are drafts under
+  his review and are not approved yet.
+
 ## 2026-11-07: "Skip" replaces "Ask me another way"
 
 - **Josef (spec b0aa08d):** the button is "Skip". It goes straight to the next question, for one the member would rather not
