@@ -53,6 +53,16 @@ async def answer(
     return interview_view(await service.answer(database, claude, user, data.answer, shape=False))
 
 
+@router.post("/skip", response_model=InterviewResponse)
+async def skip(
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+    claude: Claude = Depends(get_claude),
+) -> InterviewResponse:
+    """Skip the waiting question and get the next one. Not on the Shape step (409)."""
+    return interview_view(await service.skip(database, claude, user))
+
+
 @router.post("/shape", response_model=InterviewResponse)
 async def shape(
     data: ShapeRequest,

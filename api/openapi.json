@@ -552,6 +552,33 @@
         ]
       }
     },
+    "/interview/skip": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Skip",
+        "description": "Skip the waiting question and get the next one. Not on the Shape step (409).",
+        "operationId": "skip_interview_skip_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/interview/shape": {
       "post": {
         "tags": [

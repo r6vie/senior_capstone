@@ -3,7 +3,7 @@ import base64
 import anthropic
 import pytest
 
-from trove.interview import engine
+from trove.interview import engine, service
 from trove.interview.engine import Draft, DraftChapter, FinishedBook, NextTurn, TitleOption
 
 SIGNUP = {
@@ -302,3 +302,40 @@ async def test_a_removal_whose_blurb_fails_removes_nothing(client, database, hea
     book = await database.books.find_one({})
     assert [c["id"] for c in book["chapters"]] == ["c1", "c2", "c3", "c4"]
     assert book["blurb"] == "I know Title 0."
+
+
+async def test_skip_saves_an_empty_answer_and_moves_on(client, database, headers, fake_engine):
+    first = (await client.post("/interview", json={}, headers=headers)).json()
+    state = (await client.post("/interview/skip", headers=headers)).json()
+    assert state["question"]["text"] != first["question"]["text"]
+
+    saved = await database.interviews.find_one({})
+    assert saved["turns"] == [
+        {"question": first["question"]["text"], "answer": "", "phase": first["question"]["phase"]}
+    ]
+
+
+async def test_skips_unlock_nothing(client, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    for _ in range(service.EXIT_AFTER_ANSWERS + 1):
+        state = (await client.post("/interview/skip", headers=headers)).json()
+    assert state["has_answers"] is False
+    assert state["can_finish"] is False
+    assert (await client.post("/interview/finish", headers=headers)).status_code == 409
+
+
+async def test_skips_are_never_in_the_response(client, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    state = (await client.post("/interview/skip", headers=headers)).json()
+    assert not [key for key in state if "skip" in key]
+
+
+async def test_skip_is_409_without_a_question_and_on_the_shape_step(client, database, headers, fake_engine):
+    assert (await client.post("/interview/skip", headers=headers)).status_code == 404
+    await client.post("/interview", json={}, headers=headers)
+    await database.interviews.update_one(
+        {}, {"$set": {"current": {"question": "Is this you?", "phase": "shape", "playback": "You."}}}
+    )
+    assert (await client.post("/interview/skip", headers=headers)).status_code == 409
+    await database.interviews.update_one({}, {"$set": {"current": None}})
+    assert (await client.post("/interview/skip", headers=headers)).status_code == 409

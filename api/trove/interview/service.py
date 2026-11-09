@@ -47,14 +47,16 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
     current = interview.get("current")
     stage = interview["stage"]
     ready = interview.get("ready_for_reveal", False)
+    # A skip is saved as a turn with no answer. It unlocks nothing, and it's never counted or shown.
+    answered = sum(1 for turn in interview["turns"] if turn["answer"].strip())
     return InterviewResponse(
         stage=stage,
         question=Question(text=current["question"], phase=current["phase"], playback=current.get("playback"))
         if current
         else None,
         topic=interview.get("topic"),
-        has_answers=bool(interview["turns"]),
-        can_finish=stage == "interviewing" and (ready or len(interview["turns"]) >= EXIT_AFTER_ANSWERS),
+        has_answers=answered > 0,
+        can_finish=stage == "interviewing" and (ready or answered >= EXIT_AFTER_ANSWERS),
         ready_for_reveal=ready,
         titles=interview["draft"]["titles"] if stage == "choosing" else None,
         blurb=book.get("blurb") if book else (interview.get("draft") or {}).get("blurb"),
@@ -190,6 +192,12 @@ async def answer(database: AsyncDatabase, claude: Claude, user: dict, text: str,
     if saved is None:
         raise conflict("That question was already answered.")
     return await ask_next_question(database, claude, saved)
+
+
+async def skip(database: AsyncDatabase, claude: Claude, user: dict) -> dict:
+    """Move past the waiting question, saved with an empty answer. Not on the Shape step, which
+    needs a confirmation or a correction (docs/review/decisions.md, row 6)."""
+    return await answer(database, claude, user, "", shape=False)
 
 
 async def finish(database: AsyncDatabase, claude: Claude, user: dict) -> dict:
