@@ -118,7 +118,14 @@ class BookExists(Exception):
 
 def my_book_view(book: dict) -> MyBookResponse:
     """A member's own book as its author sees it, including the grounding quotes and copies."""
-    return MyBookResponse.model_validate({**book, "id": book["_id"], "blurb": book.get("blurb")})
+    return MyBookResponse.model_validate(
+        {
+            **book,
+            "id": book["_id"],
+            "blurb": book.get("blurb"),
+            "can_undo": bool(book.get("previous_version")),
+        }
+    )
 
 
 async def create_draft_book(
@@ -192,20 +199,48 @@ async def replace_chapter(database: AsyncDatabase, author_id: str, chapter: dict
     return await _named(database, book)
 
 
+def revised_chapters(
+    chapters: list[dict], *, improved: list[dict], added: list[dict], removed: list[str]
+) -> list[dict]:
+    """The chapters after a revision. `improved` replace the ones with their ids, in place. `added`
+    each go where their `position` says (1 is first), or at the end without one."""
+    replacements = {chapter["id"]: chapter for chapter in improved}
+    result = [
+        replacements.get(chapter["id"], chapter) for chapter in chapters if chapter["id"] not in removed
+    ]
+    for chapter in added:
+        position = chapter.get("position")
+        index = len(result) if position is None else max(0, min(position - 1, len(result)))
+        result.insert(index, {key: value for key, value in chapter.items() if key != "position"})
+    return result
+
+
 async def apply_revision(
-    database: AsyncDatabase, author_id: str, *, improved: list[dict], added: list[dict], blurb: str | None
+    database: AsyncDatabase,
+    author_id: str,
+    *,
+    improved: list[dict],
+    added: list[dict],
+    removed: list[str],
+    blurb: str | None,
 ) -> dict | None:
-    """Apply approved changes to the author's book on the shelf, in one update. `improved` chapters
-    replace the ones with their ids, in place; `added` ones go at the end. None if there's no such book.
+    """Apply approved changes to the author's book on the shelf, in one update, keeping what was
+    there so it can be undone. `blurb` None keeps the old one. None if there's no such book, it
+    changed meanwhile, or it would fall below MIN_CHAPTERS.
 
     `published_at` doesn't change: the shelf isn't a feed, and a revision doesn't bump a book.
     """
     book = await database.books.find_one({"author_id": author_id, "status": ON_SHELF})
     if book is None:
         return None
-    replacements = {chapter["id"]: chapter for chapter in improved}
-    chapters = [replacements.get(chapter["id"], chapter) for chapter in book["chapters"]] + added
-    changes: dict = {"chapters": chapters, "updated_at": datetime.now(UTC)}
+    chapters = revised_chapters(book["chapters"], improved=improved, added=added, removed=removed)
+    if len(chapters) < MIN_CHAPTERS:
+        return None
+    changes: dict = {
+        "chapters": chapters,
+        "previous_version": {"chapters": book["chapters"], "blurb": book.get("blurb")},
+        "updated_at": datetime.now(UTC),
+    }
     if blurb is not None:
         changes["blurb"] = blurb
     updated = await database.books.find_one_and_update(
@@ -215,6 +250,28 @@ async def apply_revision(
         return_document=ReturnDocument.AFTER,
     )
     return await _named(database, updated)
+
+
+async def undo_revision(database: AsyncDatabase, author_id: str) -> dict | None:
+    """Put back the chapters and blurb from before the last revision, in one update. None if there's
+    nothing to undo. Never reader-facing: `previous_version` isn't in PUBLIC_FIELDS."""
+    book = await database.books.find_one({"author_id": author_id, "status": ON_SHELF})
+    previous = book.get("previous_version") if book else None
+    if not previous:
+        return None
+    restored = await database.books.find_one_and_update(
+        {"_id": book["_id"], "updated_at": book["updated_at"]},
+        {
+            "$set": {
+                "chapters": previous["chapters"],
+                "blurb": previous["blurb"],
+                "updated_at": datetime.now(UTC),
+            },
+            "$unset": {"previous_version": ""},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    return await _named(database, restored)
 
 
 async def put_on_shelf(database: AsyncDatabase, author_id: str) -> dict | None:

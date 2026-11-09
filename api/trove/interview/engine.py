@@ -9,6 +9,7 @@ Errors: ClaudeRefused when Claude declines, Anthropic SDK errors as they come, a
 
 import json
 import re
+from difflib import SequenceMatcher
 from typing import Literal
 from uuid import uuid4
 
@@ -41,6 +42,136 @@ MIN_CHAPTERS, MAX_CHAPTERS = 3, 5
 MAX_BOOK_CHAPTERS = 8
 # A round of adding is short. Skips count only toward the second limit, so skipping can't run forever.
 MAX_ADDING_ANSWERS, MAX_ADDING_TURNS = 8, 14
+# A proposed chapter title this close to a spark's title is someone else's title, so it's rejected.
+SPARK_TITLE_TOO_CLOSE = 0.8
+# Capitalized words that aren't names, for checking reading answers. Anything else capitalized is
+# treated as a name: at worst a quote is dropped, which the member never sees as a loss of their words.
+NOT_NAMES = frozenset(
+    [
+        "a",
+        "about",
+        "after",
+        "again",
+        "all",
+        "also",
+        "although",
+        "an",
+        "and",
+        "another",
+        "any",
+        "are",
+        "as",
+        "at",
+        "because",
+        "been",
+        "before",
+        "being",
+        "both",
+        "but",
+        "by",
+        "can",
+        "could",
+        "did",
+        "do",
+        "does",
+        "during",
+        "each",
+        "even",
+        "every",
+        "few",
+        "first",
+        "for",
+        "from",
+        "had",
+        "has",
+        "have",
+        "he",
+        "her",
+        "here",
+        "his",
+        "how",
+        "i",
+        "i'd",
+        "i'll",
+        "i'm",
+        "i've",
+        "if",
+        "in",
+        "into",
+        "is",
+        "it",
+        "it's",
+        "its",
+        "just",
+        "last",
+        "later",
+        "like",
+        "maybe",
+        "more",
+        "most",
+        "much",
+        "my",
+        "next",
+        "no",
+        "not",
+        "now",
+        "of",
+        "on",
+        "once",
+        "one",
+        "only",
+        "or",
+        "other",
+        "our",
+        "out",
+        "over",
+        "really",
+        "she",
+        "since",
+        "so",
+        "some",
+        "someone",
+        "still",
+        "such",
+        "than",
+        "that",
+        "that's",
+        "the",
+        "their",
+        "them",
+        "then",
+        "there",
+        "these",
+        "they",
+        "they'd",
+        "this",
+        "those",
+        "though",
+        "to",
+        "two",
+        "until",
+        "usually",
+        "very",
+        "was",
+        "we",
+        "we'd",
+        "were",
+        "what",
+        "when",
+        "where",
+        "which",
+        "while",
+        "who",
+        "why",
+        "will",
+        "with",
+        "would",
+        "yes",
+        "you",
+        "your",
+        "honestly",
+    ]
+)
 # The back-cover blurb fits the book's `blurb` field (B1).
 MAX_BLURB = 600
 
@@ -65,6 +196,8 @@ class NextTurn(BaseModel):
     ready_for_reveal: bool
     # A few words for "Last time you were telling me about {topic}." Display only, never the book.
     topic: str
+    # The spark this question works from, if any.
+    spark_id: str | None = None
 
 
 class AddingTurn(BaseModel):
@@ -73,6 +206,7 @@ class AddingTurn(BaseModel):
     question: str
     topic: str
     done: bool
+    spark_id: str | None = Field(None, description="The id of the spark this question works from, if any.")
 
 
 class DraftChapter(BaseModel):
@@ -108,8 +242,8 @@ class Change(BaseModel):
     """One proposed change to a book on the shelf, which the member approves or declines."""
 
     id: str
-    kind: Literal["new", "improve"]
-    # The chapter an `improve` replaces. Null for a new chapter.
+    kind: Literal["new", "improve", "remove"]
+    # The chapter an `improve` replaces or a `remove` takes out. Null for a new chapter.
     chapter_id: str | None
     title: str
     summary: str
@@ -118,11 +252,13 @@ class Change(BaseModel):
     note: str
     # What's there now, so the member can compare. Null for a new chapter.
     current: CurrentChapter | None
+    # Where a new chapter goes, 1 being first. Null means last.
+    position: int | None = None
 
 
 class Revision(BaseModel):
     changes: list[Change]
-    # The back cover if every change is approved.
+    # The back cover if every change is approved. Null means it has to be written first.
     blurb: str | None
 
 
@@ -142,6 +278,7 @@ class TurnPlan(BaseModel):
     playback: str | None
     topic: str
     ready_for_reveal: bool
+    spark_id: str | None = Field(None, description="The id of the spark this question works from, if any.")
 
 
 class _Chapter(BaseModel):
@@ -183,6 +320,9 @@ class _Change(BaseModel):
     summary: str
     quotes: list[str]
     note: str
+    position: int | None = Field(
+        None, description="Where a new chapter goes, 1 being first. Null means last."
+    )
 
 
 class _Revision(BaseModel):
@@ -191,7 +331,7 @@ class _Revision(BaseModel):
 
 
 async def next_turn(
-    claude: Claude, *, turns: list[Turn], resume_text: str | None, sparks: list[str] | None = None
+    claude: Claude, *, turns: list[Turn], resume_text: str | None, sparks: list[dict] | None = None
 ) -> NextTurn:
     """The Librarian's next question, given every turn so far."""
     plan = await plan_turn(claude, turns=turns, resume_text=resume_text, sparks=sparks)
@@ -201,11 +341,12 @@ async def next_turn(
         playback=plan.playback,
         ready_for_reveal=plan.ready_for_reveal,
         topic=plan.topic,
+        spark_id=plan.spark_id,
     )
 
 
 async def plan_turn(
-    claude: Claude, *, turns: list[Turn], resume_text: str | None, sparks: list[str] | None = None
+    claude: Claude, *, turns: list[Turn], resume_text: str | None, sparks: list[dict] | None = None
 ) -> TurnPlan:
     """next_turn plus the private thread ranking, which the evals read."""
     plan = await _ask(
@@ -310,7 +451,13 @@ async def rewrite_chapter(
 
 
 async def next_adding_turn(
-    claude: Claude, *, turns: list[Turn], round_start: int, chapters: list[DraftChapter], sparks: list[str]
+    claude: Claude,
+    *,
+    turns: list[Turn],
+    round_start: int,
+    chapters: list[DraftChapter],
+    sparks: list[dict],
+    off_limits: list[dict] | None = None,
 ) -> AddingTurn:
     """The next question of a round of adding to a book on the shelf, or the end of the round."""
     new = turns[round_start:]
@@ -321,7 +468,7 @@ async def next_adding_turn(
     plan = await _ask(
         claude,
         "interview/adding",
-        _adding_blocks(turns, round_start, chapters, sparks),
+        _adding_blocks(turns, round_start, chapters, sparks, off_limits),
         AddingTurn,
         QUESTION_EFFORT,
     )
@@ -333,26 +480,44 @@ async def next_adding_turn(
 
 
 async def revise_book(
-    claude: Claude, *, turns: list[Turn], round_start: int, chapters: list[DraftChapter], blurb: str | None
+    claude: Claude,
+    *,
+    turns: list[Turn],
+    round_start: int,
+    chapters: list[DraftChapter],
+    blurb: str | None,
+    off_limits: list[dict] | None = None,
+    member_names: list[str] | None = None,
+    spark_titles: list[str] | None = None,
 ) -> Revision:
     """Proposed changes to the book from the round's answers. Grounding is checked here: a change
     must quote the member verbatim, and at least once from this round. An empty list is a real
-    result: a thin answer can earn nothing."""
+    result: a thin answer can earn nothing. `member_names` never reach the prompt: they're how the
+    check on reading answers tells the member's name from someone else's."""
     room = max(0, MAX_BOOK_CHAPTERS - len(chapters))
     listing = json.dumps([chapter.model_dump() for chapter in chapters], indent=1)
     content = (
         f"{_transcript(turns[:round_start])}\n\n{_new_round(turns, round_start)}\n\n"
         f"<book_chapters>\n{listing}\n</book_chapters>\n\n"
-        f"<current_blurb>{blurb or ''}</current_blurb>\n\n<room>{room}</room>\n\n"
+        f"<current_blurb>{blurb or ''}</current_blurb>\n\n<room>{room}</room>{_off_limits_block(off_limits)}\n\n"
         "Propose the changes these new answers earn."
     )
     raw = await _ask(claude, "interview/revise", content, _Revision, BOOK_EFFORT)
     by_id = {chapter.id: chapter for chapter in chapters}
     new_turns = turns[round_start:]
+    others = _other_people(new_turns, member_names or [])
     changes: list[Change] = []
     for change in raw.changes:
-        quotes = grounded_quotes(change.quotes, turns)
-        if not grounded_quotes(quotes, new_turns):
+        quotes = [
+            q for q in grounded_quotes(change.quotes, turns) if not _names_someone(q, new_turns, others)
+        ]
+        new_quotes = grounded_quotes(quotes, new_turns)
+        public = f"{change.title} {change.summary}"
+        if (
+            not new_quotes
+            or _mentions_any(public, others)
+            or _too_close_to_a_spark(change.title, spark_titles)
+        ):
             continue
         current = None
         if change.kind == "improve":
@@ -360,10 +525,12 @@ async def revise_book(
             if chapter is None or any(c.chapter_id == chapter.id for c in changes):
                 continue
             current = CurrentChapter(title=chapter.title, summary=chapter.summary)
-        elif room == 0:
-            continue
-        else:
+            # The chapter keeps the words it stands on, plus what was added.
+            quotes = [*chapter.quotes, *(q for q in new_quotes if q not in chapter.quotes)]
+        elif change.kind == "new" and room > 0:
             room -= 1
+        else:
+            continue
         changes.append(
             Change(
                 id=str(uuid4()),
@@ -374,9 +541,50 @@ async def revise_book(
                 quotes=quotes,
                 note=change.note,
                 current=current,
+                position=change.position if change.kind == "new" else None,
             )
         )
-    return Revision(changes=changes, blurb=_usable_blurb(raw.blurb) if changes else None)
+    proposed = _usable_blurb(raw.blurb) if changes else None
+    if proposed and _mentions_any(proposed, others):
+        proposed = None
+    return Revision(changes=changes, blurb=proposed)
+
+
+def _capitalized_words(text: str) -> set[str]:
+    return set(re.findall(r"\b[A-Z][A-Za-z-]+", text))
+
+
+def _other_people(new_turns: list[Turn], member_names: list[str]) -> set[str]:
+    """Capitalized words in reading answers that may name someone. The member's own names don't count."""
+    own = {part.casefold() for name in member_names for part in name.split()}
+    words: set[str] = set()
+    for turn in new_turns:
+        if turn.phase == "reading":
+            words |= _capitalized_words(turn.answer)
+    return {w for w in words if w.casefold() not in NOT_NAMES and w.casefold() not in own}
+
+
+def _names_someone(quote: str, new_turns: list[Turn], others: set[str]) -> bool:
+    """Whether a quote from a reading answer has a possible name in it."""
+    from_reading = bool(grounded_quotes([quote], [t for t in new_turns if t.phase == "reading"]))
+    return from_reading and _mentions_any(quote, others)
+
+
+def _mentions_any(text: str, words: set[str]) -> bool:
+    return bool(_capitalized_words(text) & words)
+
+
+def _too_close_to_a_spark(title: str, spark_titles: list[str] | None) -> bool:
+    return any(
+        SequenceMatcher(None, title.casefold(), spark.casefold()).ratio() >= SPARK_TITLE_TOO_CLOSE
+        for spark in spark_titles or []
+    )
+
+
+def _off_limits_block(off_limits: list[dict] | None) -> str:
+    if not off_limits:
+        return ""
+    return f"\n\n<off_limits>\n{json.dumps(off_limits, indent=1)}\n</off_limits>"
 
 
 def _new_round(turns: list[Turn], round_start: int) -> str:
@@ -384,16 +592,20 @@ def _new_round(turns: list[Turn], round_start: int) -> str:
     return "\n".join(["<new_round>", *rendered, "</new_round>"])
 
 
-def _sparks_block(sparks: list[str] | None) -> str:
+def _sparks_block(sparks: list[dict] | None) -> str:
     """Only titles of other people's chapters, as a cue. The prompts say none of it is about the member."""
     if not sparks:
         return ""
-    listed = "\n".join(f"- {title}" for title in sparks)
+    listed = "\n".join(f"- [{spark['id']}] {spark['title']}" for spark in sparks)
     return f"\n\n<sparks>\n{listed}\n</sparks>"
 
 
 def _adding_blocks(
-    turns: list[Turn], round_start: int, chapters: list[DraftChapter], sparks: list[str]
+    turns: list[Turn],
+    round_start: int,
+    chapters: list[DraftChapter],
+    sparks: list[dict],
+    off_limits: list[dict] | None = None,
 ) -> list[dict]:
     """The book and the earlier interview, then one block per new turn with a cache breakpoint on
     the newest, so each question of the round reads what came before from the cache."""
@@ -414,7 +626,12 @@ def _adding_blocks(
     status = f"Questions answered this round: {answered}."
     if new and _skipped(new[-1]):
         status += " The member skipped the last question. Move to other ground."
-    blocks.append({"type": "text", "text": f"</new_round>\n\n{status}{_sparks_block(sparks)}"})
+    if len(chapters) >= MAX_BOOK_CHAPTERS:
+        status += (
+            " The book is at its limit of chapters. Only improve: hunt for what's thin, not for new chapters."
+        )
+    tail = f"{status}{_sparks_block(sparks)}{_off_limits_block(off_limits)}"
+    blocks.append({"type": "text", "text": f"</new_round>\n\n{tail}"})
     return blocks
 
 
@@ -488,7 +705,7 @@ def _questions_asked(turns: list[Turn]) -> int:
     return sum(1 for turn in turns if not _skipped(turn))
 
 
-def _turn_blocks(turns: list[Turn], resume_text: str | None, sparks: list[str] | None = None) -> list[dict]:
+def _turn_blocks(turns: list[Turn], resume_text: str | None, sparks: list[dict] | None = None) -> list[dict]:
     """The transcript as one content block per turn, with a cache breakpoint on the newest turn.
     Each request then extends the previous one's prefix, so the interview so far is read from
     the cache instead of being paid for again on every question."""

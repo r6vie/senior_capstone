@@ -2,7 +2,7 @@
 
 from anthropic import AsyncAnthropic
 from anthropic.types.beta import BetaMessage
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 
 from trove.ai import usage
 from trove.ai.prompts import prompt_name
@@ -64,3 +64,13 @@ def get_claude() -> Claude | ScriptedClaude:
     if _claude is None or _claude.model != settings.anthropic_model:
         _claude = Claude(settings.anthropic_api_key, settings.anthropic_model)
     return _claude
+
+
+def optional_claude(request: Request) -> Claude | ScriptedClaude | None:
+    """For a route that works without AI and only sometimes uses it. A test's override of get_claude
+    still applies here, so a test can never reach the real client through this."""
+    provider = request.app.dependency_overrides.get(get_claude, get_claude)
+    try:
+        return provider()
+    except HTTPException:
+        return None

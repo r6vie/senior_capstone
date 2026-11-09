@@ -163,7 +163,8 @@ export interface paths {
         };
         /**
          * Current
-         * @description The member's interview, for resuming where they left off.
+         * @description The member's interview, for resuming where they left off. If writing proposed changes failed,
+         *     a return tries once more on its own.
          */
         get: operations["current_interview_get"];
         put?: never;
@@ -270,7 +271,8 @@ export interface paths {
         /**
          * Finish
          * @description End the interview and get three titles, each with why it's you. In a round of adding, end
-         *     the round and get proposed changes. While revising with `changes` null, write them again.
+         *     the round: the proposed changes are written in the background (`revision_status`). After a
+         *     failed write, try again.
          *     `answer` is saved first as the answer to the waiting question, with no question after it.
          */
         post: operations["finish_interview_finish_post"];
@@ -377,6 +379,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/interview/revision/blurb": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revision Blurb
+         * @description The back cover for this selection of changes, to read before confirming. Nothing is applied.
+         */
+        post: operations["revision_blurb_interview_revision_blurb_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/interview/revision": {
         parameters: {
             query?: never;
@@ -388,9 +410,50 @@ export interface paths {
         put?: never;
         /**
          * Apply Revision
-         * @description Apply the approved changes to the book on the shelf. The rest are dropped.
+         * @description Apply the approved changes to the book on the shelf. The rest are dropped and not proposed
+         *     again. A reading answer saved meanwhile then gets its own proposal.
          */
         post: operations["apply_revision_interview_revision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/removal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Propose Removal
+         * @description Propose taking a chapter out of a book on the shelf. Confirmed like any change. 409 at three chapters.
+         */
+        post: operations["propose_removal_interview_removal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/book/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Undo Revision
+         * @description Take back the last applied revision (`can_undo`), until the next one is applied.
+         */
+        post: operations["undo_revision_interview_book_undo_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -469,7 +532,8 @@ export interface paths {
         put?: never;
         /**
          * Answer Reading Question
-         * @description Answer it, and get proposed changes to the book (or `nothing_new`).
+         * @description Answer it. From `done`, changes are written in the background (`revision_status`). During a
+         *     round it joins the round. While changes are waiting, it runs after the member decides.
          */
         post: operations["answer_reading_question_interview_reading_questions__question_id__answer_post"];
         delete?: never;
@@ -652,7 +716,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "new" | "improve";
+            kind: "new" | "improve" | "remove";
             /** Chapter Id */
             chapter_id: string | null;
             /** Title */
@@ -664,6 +728,8 @@ export interface components {
             /** Note */
             note: string;
             current: components["schemas"]["CurrentChapter"] | null;
+            /** Position */
+            position?: number | null;
         };
         /** Chapter */
         Chapter: {
@@ -721,6 +787,8 @@ export interface components {
             titles: components["schemas"]["TitleOption"][] | null;
             /** Blurb */
             blurb: string | null;
+            /** Revision Status */
+            revision_status: ("writing" | "ready" | "failed") | null;
             /** Changes */
             changes: components["schemas"]["Change"][] | null;
             /** Proposed Blurb */
@@ -822,6 +890,11 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /**
+             * Can Undo
+             * @default false
+             */
+            can_undo: boolean;
         };
         /** MyCheckouts */
         MyCheckouts: {
@@ -915,7 +988,7 @@ export interface components {
         };
         /**
          * ReadingQuestionResponse
-         * @description The question after a reading. Nothing here says who the reader was.
+         * @description The question after a reading, for its author only.
          */
         ReadingQuestionResponse: {
             /** Id */
@@ -927,6 +1000,29 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Reader Name */
+            reader_name: string | null;
+        };
+        /** RemovalRequest */
+        RemovalRequest: {
+            /** Chapter Id */
+            chapter_id: string;
+        };
+        /** RevisionBlurbRequest */
+        RevisionBlurbRequest: {
+            /**
+             * Approved
+             * @description The ids of the changes the member has selected.
+             */
+            approved: string[];
+        };
+        /**
+         * RevisionBlurbResponse
+         * @description The back cover for that selection, for the member to read before confirming.
+         */
+        RevisionBlurbResponse: {
+            /** Blurb */
+            blurb: string | null;
         };
         /** RevisionRequest */
         RevisionRequest: {
@@ -935,6 +1031,13 @@ export interface components {
              * @description The ids of the changes to apply. The rest are dropped.
              */
             approved: string[];
+            /**
+             * Blurb
+             * @description "use" applies the back cover last shown for exactly this selection, from `proposed_blurb` or POST /interview/revision/blurb. "keep" leaves the old one.
+             * @default keep
+             * @enum {string}
+             */
+            blurb: "keep" | "use";
         };
         /** ShapeRequest */
         ShapeRequest: {
@@ -1670,6 +1773,39 @@ export interface operations {
             };
         };
     };
+    revision_blurb_interview_revision_blurb_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisionBlurbRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevisionBlurbResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     apply_revision_interview_revision_post: {
         parameters: {
             query?: never;
@@ -1699,6 +1835,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    propose_removal_interview_removal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemovalRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    undo_revision_interview_book_undo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
                 };
             };
         };

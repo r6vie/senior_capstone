@@ -457,13 +457,14 @@ def _adding(text: str) -> dict:
     if len(answered) >= ADDING_ROUND_ANSWERS:
         return {"question": "", "topic": "what you've just added", "done": True}
     asked = {turn.question for turn in new}
-    # A spark stands in for the first question, asked as the member's own version and never quoted.
-    if "<sparks>" in text and not new:
+    # A spark stands in for the next question, asked as the member's own version.
+    spark = re.search(r"^- \[(.+?)\] (.+)$", text, re.MULTILINE)
+    if spark:
         return {
-            "question": "You've seen something in someone else's book that felt like yours. Tell me about "
-            "one specific time it happened to you.",
+            "question": f"You saved {spark[2]!r}. What's your own version? Tell me about one specific time.",
             "topic": "the one you said you have",
             "done": False,
+            "spark_id": spark[1],
         }
     question, topic = next((q for q in ADDING_QUESTIONS if q.question not in asked), LAST_RESORT)
     return {"question": question, "topic": topic, "done": False}
@@ -484,7 +485,8 @@ def _revise(text: str) -> dict:
                 "title": NEW_CHAPTER_TITLE,
                 "summary": answers[0][:300],
                 "quotes": [quote],
-                "note": "A new chapter, from what you just told me.",
+                "note": "Adds a chapter from what you just told me.",
+                "position": None,
             }
         )
     remaining = answers[1:] if room else answers
@@ -497,8 +499,9 @@ def _revise(text: str) -> dict:
                 "chapter_id": chapter["id"],
                 "title": chapter["title"],
                 "summary": f"{chapter['summary']} {quote}"[:300],
-                "quotes": [*chapter["quotes"], quote],
+                "quotes": [quote],
                 "note": "Adds what you just said to this chapter.",
+                "position": None,
             }
         )
     return {"changes": changes, "blurb": FINISHED_BLURB}

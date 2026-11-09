@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends
 from pymongo.asynchronous.database import AsyncDatabase
 
-from trove.ai.client import Claude, get_claude
+from trove.ai.client import Claude, get_claude, optional_claude
 from trove.auth.service import get_current_user
 from trove.books.models import MyBookResponse
 from trove.core.database import get_database
@@ -12,6 +12,9 @@ from trove.interview.models import (
     InterviewResponse,
     ReadingAnswerRequest,
     ReadingQuestionResponse,
+    RemovalRequest,
+    RevisionBlurbRequest,
+    RevisionBlurbResponse,
     RevisionRequest,
     ShapeRequest,
     SparkRequest,
@@ -37,11 +40,14 @@ async def start(
 
 @router.get("", response_model=InterviewResponse)
 async def current(
+    background: BackgroundTasks,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
+    claude: Claude | None = Depends(optional_claude),
 ) -> InterviewResponse:
-    """The member's interview, for resuming where they left off."""
-    return await service.current_view(database, user)
+    """The member's interview, for resuming where they left off. If writing proposed changes failed,
+    a return tries once more on its own."""
+    return await service.current_view(database, user, claude, background)
 
 
 @router.post("/question", response_model=InterviewResponse)
@@ -89,15 +95,19 @@ async def shape(
 
 @router.post("/finish", response_model=InterviewResponse)
 async def finish(
+    background: BackgroundTasks,
     data: FinishRequest | None = None,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
     claude: Claude = Depends(get_claude),
 ) -> InterviewResponse:
     """End the interview and get three titles, each with why it's you. In a round of adding, end
-    the round and get proposed changes. While revising with `changes` null, write them again.
+    the round: the proposed changes are written in the background (`revision_status`). After a
+    failed write, try again.
     `answer` is saved first as the answer to the waiting question, with no question after it."""
-    return interview_view(await service.finish(database, claude, user, data.answer if data else None))
+    return interview_view(
+        await service.finish(database, claude, user, background, data.answer if data else None)
+    )
 
 
 @router.post("/title", response_model=MyBookResponse)
@@ -151,15 +161,47 @@ async def reopen(
     return interview_view(await service.reopen(database, claude, user))
 
 
+@router.post("/revision/blurb", response_model=RevisionBlurbResponse)
+async def revision_blurb(
+    data: RevisionBlurbRequest,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+    claude: Claude = Depends(get_claude),
+) -> RevisionBlurbResponse:
+    """The back cover for this selection of changes, to read before confirming. Nothing is applied."""
+    return RevisionBlurbResponse(blurb=await service.revision_blurb(database, claude, user, data.approved))
+
+
 @router.post("/revision", response_model=MyBookResponse)
 async def apply_revision(
     data: RevisionRequest,
+    background: BackgroundTasks,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
     claude: Claude = Depends(get_claude),
 ) -> MyBookResponse:
-    """Apply the approved changes to the book on the shelf. The rest are dropped."""
-    return await service.apply_revision(database, claude, user, data.approved)
+    """Apply the approved changes to the book on the shelf. The rest are dropped and not proposed
+    again. A reading answer saved meanwhile then gets its own proposal."""
+    return await service.apply_revision(database, claude, user, data.approved, data.blurb, background)
+
+
+@router.post("/removal", response_model=InterviewResponse)
+async def propose_removal(
+    data: RemovalRequest,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> InterviewResponse:
+    """Propose taking a chapter out of a book on the shelf. Confirmed like any change. 409 at three chapters."""
+    return interview_view(await service.propose_removal(database, user, data.chapter_id))
+
+
+@router.post("/book/undo", response_model=MyBookResponse)
+async def undo_revision(
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> MyBookResponse:
+    """Take back the last applied revision (`can_undo`), until the next one is applied."""
+    return await service.undo_revision(database, user)
 
 
 @router.post("/sparks", response_model=SparkResponse)
@@ -203,13 +245,15 @@ async def list_reading_questions(
 async def answer_reading_question(
     question_id: str,
     data: ReadingAnswerRequest,
+    background: BackgroundTasks,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
     claude: Claude = Depends(get_claude),
 ) -> InterviewResponse:
-    """Answer it, and get proposed changes to the book (or `nothing_new`)."""
+    """Answer it. From `done`, changes are written in the background (`revision_status`). During a
+    round it joins the round. While changes are waiting, it runs after the member decides."""
     return interview_view(
-        await service.answer_reading_question(database, claude, user, question_id, data.answer)
+        await service.answer_reading_question(database, claude, user, question_id, data.answer, background)
     )
 
 

@@ -56,3 +56,5 @@ class MyBookResponse(BaseModel):
     published_at: datetime | None
     created_at: datetime
     updated_at: datetime
+    # The last applied revision can still be taken back (POST /interview/book/undo).
+    can_undo: bool = False

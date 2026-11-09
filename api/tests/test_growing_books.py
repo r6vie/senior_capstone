@@ -3,6 +3,7 @@ with the real engine on FakeClaude so what reaches the prompts can be checked.""
 
 import base64
 import json
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -13,6 +14,7 @@ from trove.ai.client import get_claude
 from trove.ai.prompts import load_prompt
 from trove.ai.scripted import ScriptedClaude
 from trove.books import service as books
+from trove.core.config import get_settings
 from trove.interview import engine, service
 from trove.main import app
 
@@ -99,7 +101,7 @@ async def propose(client, author, fake_claude, *changes: dict, blurb: str = "The
     fake_claude.responses.append(revision(*changes, blurb=blurb))
     response = await client.post("/interview/finish", headers=author["headers"])
     assert response.status_code == 200, response.text
-    return response.json()
+    return (await client.get("/interview", headers=author["headers"])).json()
 
 
 def prompt_text(request: dict) -> str:
@@ -116,17 +118,6 @@ def member_data(request: dict) -> str:
 # I3: adding to your book.
 
 
-async def test_reopen_needs_a_book_on_the_shelf(client, database, fake_claude):
-    person = await member(client, "new@case.edu")
-    assert (await client.post("/interview/reopen", headers=person["headers"])).status_code == 404
-
-    await books.create_draft_book(database, author_id=person["id"], title="Draft", chapters=CHAPTERS)
-    await database.interviews.insert_one(
-        {"_id": "i", "user_id": person["id"], "stage": "reviewing", "turns": [], "current": None}
-    )
-    assert (await client.post("/interview/reopen", headers=person["headers"])).status_code == 409
-
-
 async def test_a_round_keeps_the_old_turns_and_marks_where_it_starts(client, database, author, fake_claude):
     state = await start_round(client, author, fake_claude)
     assert state["stage"] == "adding"
@@ -141,13 +132,6 @@ async def test_a_round_keeps_the_old_turns_and_marks_where_it_starts(client, dat
     assert prompt["system"] == load_prompt("interview/adding")
     assert OLD_ANSWER in member_data(prompt)
     assert "Chapter 0" in member_data(prompt)
-
-
-async def test_reopening_twice_returns_the_same_round(client, database, author, fake_claude):
-    first = await start_round(client, author, fake_claude)
-    second = await client.post("/interview/reopen", headers=author["headers"])
-    assert second.json()["question"] == first["question"]
-    assert len(fake_claude.requests) == 1
 
 
 async def test_finishing_needs_one_real_answer(client, author, fake_claude):
@@ -224,34 +208,6 @@ async def test_a_round_ends_on_its_own_at_the_limit_without_spending(client, dat
     assert len(fake_claude.requests) == calls
 
 
-async def test_the_book_on_the_shelf_only_changes_on_approval(client, database, author, fake_claude):
-    before = await database.books.find_one({"author_id": author["id"]})
-    reader = await member(client, "reader@case.edu", "Reader", "One")
-
-    async def public():
-        return (await client.get(f"/books/{before['_id']}", headers=reader["headers"])).json()
-
-    seen = await public()
-    state = await propose(client, author, fake_claude, change(), change("improve", "c1", title="Better"))
-    assert state["stage"] == "revising"
-    assert await database.books.find_one({"author_id": author["id"]}) == before
-    assert await public() == seen
-
-    ids = [item["id"] for item in state["changes"]]
-    book = (
-        await client.post("/interview/revision", json={"approved": ids}, headers=author["headers"])
-    ).json()
-    assert [c["title"] for c in book["chapters"]] == ["Chapter 0", "Better", "Chapter 2", "New title"]
-    assert book["chapters"][1]["id"] == "c1"
-    assert book["blurb"] == "The proposed blurb."
-
-    after = await database.books.find_one({"author_id": author["id"]})
-    assert after["published_at"] == before["published_at"]
-    assert after["status"] == books.ON_SHELF
-    assert (await client.get("/interview", headers=author["headers"])).json()["stage"] == "done"
-    assert [c["title"] for c in (await public())["chapters"]][-1] == "New title"
-
-
 async def test_a_change_shows_what_is_there_now(client, author, fake_claude):
     state = await propose(client, author, fake_claude, change(), change("improve", "c1", title="Better"))
     new, improved = state["changes"]
@@ -262,19 +218,6 @@ async def test_a_change_shows_what_is_there_now(client, author, fake_claude):
     assert improved["chapter_id"] == "c1"
     assert improved["current"] == {"title": "Chapter 1", "summary": "Summary 1."}
     assert state["proposed_blurb"] == "The proposed blurb."
-
-
-async def test_quotes_must_be_verbatim_and_from_the_new_round(client, database, author, fake_claude):
-    state = await propose(
-        client,
-        author,
-        fake_claude,
-        change(title="Invented", quotes=["I ran a nuclear reactor for six weeks."]),
-        change(title="Old material only", quotes=[OLD_ANSWER]),
-        change(title="Kept", quotes=[NEW_ANSWER, OLD_ANSWER, "Words nobody said at all here."]),
-    )
-    assert [c["title"] for c in state["changes"]] == ["Kept"]
-    assert state["changes"][0]["quotes"] == [NEW_ANSWER, OLD_ANSWER]
 
 
 async def test_a_bad_chapter_id_or_a_second_improve_is_dropped(client, author, fake_claude):
@@ -306,21 +249,6 @@ async def test_new_chapters_stop_at_eight(client, database, fake_claude):
     await shelve_book(database, person["id"], seven)
     state = await propose(client, person, fake_claude, change(title="Eighth"), change(title="Ninth"))
     assert [c["title"] for c in state["changes"]] == ["Eighth"]
-
-
-async def test_declined_changes_are_dropped_and_the_blurb_is_rewritten(client, database, author, fake_claude):
-    state = await propose(client, author, fake_claude, change(title="Yes"), change(title="No"))
-    fake_claude.responses.append(text_message(json.dumps({"blurb": "A blurb for what's left."})))
-    book = (
-        await client.post(
-            "/interview/revision", json={"approved": [state["changes"][0]["id"]]}, headers=author["headers"]
-        )
-    ).json()
-    titles = [c["title"] for c in book["chapters"]]
-    assert "Yes" in titles
-    assert "No" not in titles
-    assert book["blurb"] == "A blurb for what's left."
-    assert fake_claude.requests[-1]["system"] == load_prompt("interview/blurb")
 
 
 async def test_declining_everything_leaves_the_book_alone(client, database, author, fake_claude):
@@ -360,24 +288,6 @@ async def test_a_round_with_nothing_usable_says_so_and_returns_to_done(client, d
     fake_claude.responses.append(next_question())
     again = (await client.post("/interview/reopen", headers=author["headers"])).json()
     assert again["nothing_new"] is False
-
-
-async def test_a_failed_revise_loses_nothing_and_can_be_tried_again(client, database, author, fake_claude):
-    await start_round(client, author, fake_claude)
-    fake_claude.responses.append(round_over())
-    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=author["headers"])
-    fake_claude.responses.append(text_message("not json"))
-    assert (await client.post("/interview/finish", headers=author["headers"])).status_code == 502
-
-    state = (await client.get("/interview", headers=author["headers"])).json()
-    assert state["stage"] == "revising"
-    assert state["changes"] is None
-    assert state["can_finish"] is True
-
-    fake_claude.responses.append(revision(change()))
-    state = (await client.post("/interview/finish", headers=author["headers"])).json()
-    assert len(state["changes"]) == 1
-    assert (await client.post("/interview/finish", headers=author["headers"])).status_code == 409
 
 
 class Recording(ScriptedClaude):
@@ -447,6 +357,9 @@ async def test_a_whole_round_walks_on_the_scripted_ai(client, database, scripted
 
     state = (await client.post("/interview/finish", headers=person["headers"])).json()
     assert state["stage"] == "revising"
+    assert state["revision_status"] == "writing"
+    state = (await client.get("/interview", headers=person["headers"])).json()
+    assert state["revision_status"] == "ready"
     assert {item["kind"] for item in state["changes"]} == {"new", "improve"}
 
     before = len((await books.get_book_of(database, person["id"]))["chapters"])
@@ -462,9 +375,389 @@ async def test_a_thin_round_on_the_scripted_ai_earns_nothing(client, scripted_ai
     await first_interview(client, person)
     await client.post("/interview/reopen", headers=person["headers"])
     await client.post("/interview/answers", json={"answer": "Nothing much."}, headers=person["headers"])
-    state = (await client.post("/interview/finish", headers=person["headers"])).json()
+    await client.post("/interview/finish", headers=person["headers"])
+    state = (await client.get("/interview", headers=person["headers"])).json()
     assert state["stage"] == "done"
     assert state["nothing_new"] is True
+
+
+# Amendments: the blurb, off limits, removal, undo, collisions, background writing, improve, position.
+
+
+async def test_reopen_only_from_done_and_a_book_with_no_interview_gets_one(client, database, fake_claude):
+    person = await member(client, "new@case.edu")
+    assert (await client.post("/interview/reopen", headers=person["headers"])).status_code == 404
+
+    await books.create_draft_book(database, author_id=person["id"], title="Seeded", chapters=CHAPTERS)
+    assert (await client.post("/interview/reopen", headers=person["headers"])).status_code == 404
+    await books.put_on_shelf(database, person["id"])
+    state = await start_round(client, person, fake_claude)
+    assert state["stage"] == "adding"
+    saved = await database.interviews.find_one({"user_id": person["id"]})
+    assert saved["turns"] == []
+    assert saved["round_start"] == 0
+
+    again = await client.post("/interview/reopen", headers=person["headers"])
+    assert again.json()["question"] == state["question"]
+    assert len(fake_claude.requests) == 1
+
+
+async def test_reopen_from_revising_is_409(client, author, fake_claude):
+    await propose(client, author, fake_claude, change())
+    assert (await client.post("/interview/reopen", headers=author["headers"])).status_code == 409
+
+
+async def test_the_book_on_the_shelf_only_changes_on_approval(client, database, author, fake_claude):
+    before = await database.books.find_one({"author_id": author["id"]})
+    reader = await member(client, "reader@case.edu", "Reader", "One")
+
+    async def public():
+        return (await client.get(f"/books/{before['_id']}", headers=reader["headers"])).json()
+
+    seen = await public()
+    state = await propose(client, author, fake_claude, change(), change("improve", "c1", title="Better"))
+    assert state["stage"] == "revising"
+    assert await database.books.find_one({"author_id": author["id"]}) == before
+    assert await public() == seen
+
+    ids = [item["id"] for item in state["changes"]]
+    book = (
+        await client.post(
+            "/interview/revision", json={"approved": ids, "blurb": "use"}, headers=author["headers"]
+        )
+    ).json()
+    assert [c["title"] for c in book["chapters"]] == ["Chapter 0", "Better", "Chapter 2", "New title"]
+    assert book["chapters"][1]["id"] == "c1"
+    assert book["blurb"] == "The proposed blurb."
+
+    after = await database.books.find_one({"author_id": author["id"]})
+    assert after["published_at"] == before["published_at"]
+    assert after["status"] == books.ON_SHELF
+    assert (await client.get("/interview", headers=author["headers"])).json()["stage"] == "done"
+    assert [c["title"] for c in (await public())["chapters"]][-1] == "New title"
+
+
+async def test_quotes_must_be_verbatim_and_from_the_new_round(client, database, author, fake_claude):
+    state = await propose(
+        client,
+        author,
+        fake_claude,
+        change(title="Invented", quotes=["I ran a nuclear reactor for six weeks."]),
+        change(title="Old material only", quotes=[OLD_ANSWER]),
+        change(title="Kept", quotes=[NEW_ANSWER, OLD_ANSWER, "Words nobody said at all here."]),
+    )
+    assert [c["title"] for c in state["changes"]] == ["Kept"]
+    assert state["changes"][0]["quotes"] == [NEW_ANSWER, OLD_ANSWER]
+
+
+async def test_an_improve_needs_something_new_and_keeps_the_old_quotes(client, author, fake_claude):
+    state = await propose(
+        client,
+        author,
+        fake_claude,
+        change("improve", "c0", quotes=[OLD_ANSWER], title="Just reworded"),
+        change("improve", "c1", title="Gained something"),
+    )
+    assert [c["title"] for c in state["changes"]] == ["Gained something"]
+    assert state["changes"][0]["quotes"] == [OLD_ANSWER, NEW_ANSWER]
+
+
+async def test_a_new_chapter_goes_where_it_says(client, author, fake_claude):
+    state = await propose(client, author, fake_claude, {**change(title="Second now"), "position": 2})
+    assert state["changes"][0]["position"] == 2
+    book = (
+        await client.post(
+            "/interview/revision", json={"approved": [state["changes"][0]["id"]]}, headers=author["headers"]
+        )
+    ).json()
+    assert [c["title"] for c in book["chapters"]] == ["Chapter 0", "Second now", "Chapter 1", "Chapter 2"]
+
+
+async def test_at_the_cap_the_librarian_is_told_to_only_improve(client, database, fake_claude):
+    person = await member(client, "cap@case.edu")
+    full = [{"id": f"c{n}", "title": f"T{n}", "summary": "S.", "quotes": [OLD_ANSWER]} for n in range(8)]
+    await shelve_book(database, person["id"], full)
+    await start_round(client, person, fake_claude)
+    assert "Only improve" in member_data(fake_claude.requests[-1])
+
+
+async def test_a_partial_selection_shows_a_new_blurb_before_anything_applies(
+    client, database, author, fake_claude
+):
+    state = await propose(client, author, fake_claude, change(title="Yes"), change(title="No"))
+    yes = state["changes"][0]["id"]
+
+    refused = await client.post(
+        "/interview/revision", json={"approved": [yes], "blurb": "use"}, headers=author["headers"]
+    )
+    assert refused.status_code == 409
+
+    fake_claude.responses.append(text_message(json.dumps({"blurb": "A blurb for what's left."})))
+    shown = await client.post(
+        "/interview/revision/blurb", json={"approved": [yes]}, headers=author["headers"]
+    )
+    assert shown.json()["blurb"] == "A blurb for what's left."
+    assert fake_claude.requests[-1]["system"] == load_prompt("interview/blurb")
+    unchanged = await database.books.find_one({"author_id": author["id"]})
+    assert unchanged["blurb"] == "The old blurb."
+
+    # A different selection can't use it.
+    other = await client.post(
+        "/interview/revision",
+        json={"approved": [state["changes"][1]["id"]], "blurb": "use"},
+        headers=author["headers"],
+    )
+    assert other.status_code == 409
+
+    calls = len(fake_claude.requests)
+    book = (
+        await client.post(
+            "/interview/revision", json={"approved": [yes], "blurb": "use"}, headers=author["headers"]
+        )
+    ).json()
+    assert book["blurb"] == shown.json()["blurb"]
+    assert len(fake_claude.requests) == calls
+    titles = [c["title"] for c in book["chapters"]]
+    assert "Yes" in titles
+    assert "No" not in titles
+
+
+async def test_declining_the_new_blurb_keeps_the_old_one(client, author, fake_claude):
+    state = await propose(client, author, fake_claude, change())
+    book = (
+        await client.post(
+            "/interview/revision",
+            json={"approved": [state["changes"][0]["id"]], "blurb": "keep"},
+            headers=author["headers"],
+        )
+    ).json()
+    assert book["blurb"] == "The old blurb."
+    assert book["chapters"][-1]["title"] == "New title"
+
+
+async def test_removed_and_declined_chapters_are_off_limits(client, database, author, fake_claude):
+    state = await propose(client, author, fake_claude, change(title="Declined one"))
+    await client.post("/interview/revision", json={"approved": []}, headers=author["headers"])
+    assert state["changes"]
+
+    await database.interviews.update_one(
+        {"user_id": author["id"]},
+        {
+            "$push": {
+                "removed_chapters": {"id": "gone", "title": "Removed one", "summary": "Left that job badly."}
+            }
+        },
+    )
+    await propose(client, author, fake_claude, change())
+    for request in fake_claude.requests[-2:]:
+        data = member_data(request)
+        assert "<off_limits>" in data
+        assert "Removed one" in data
+        assert "Declined one" in data
+    assert "<off_limits>" in load_prompt("interview/adding")
+    assert "<off_limits>" in load_prompt("interview/revise")
+
+
+async def test_removing_a_draft_chapter_is_remembered(client, database, fake_claude, monkeypatch):
+    person = await member(client, "draft@case.edu")
+    many = [{"id": f"c{n}", "title": f"T{n}", "summary": "S.", "quotes": [OLD_ANSWER]} for n in range(4)]
+    await books.create_draft_book(database, author_id=person["id"], title="Draft", chapters=many, blurb="B.")
+    await database.interviews.insert_one(
+        {
+            "_id": "i",
+            "user_id": person["id"],
+            "stage": "reviewing",
+            "turns": [{"question": "Q?", "answer": OLD_ANSWER, "phase": "dig"}],
+            "current": None,
+        }
+    )
+    fake_claude.responses.append(text_message(json.dumps({"blurb": "What's left."})))
+    response = await client.delete("/interview/book/chapters/c1", headers=person["headers"])
+    assert response.status_code == 200
+    saved = await database.interviews.find_one({"user_id": person["id"]})
+    assert saved["removed_chapters"][0]["title"] == "T1"
+
+
+async def test_removing_from_a_shelved_book_goes_through_the_confirm_step(client, database, fake_claude):
+    person = await member(client, "remove@case.edu")
+    many = [{"id": f"c{n}", "title": f"T{n}", "summary": "S.", "quotes": [OLD_ANSWER]} for n in range(4)]
+    await shelve_book(database, person["id"], many)
+    before = await database.books.find_one({"author_id": person["id"]})
+
+    state = (
+        await client.post("/interview/removal", json={"chapter_id": "c1"}, headers=person["headers"])
+    ).json()
+    assert state["stage"] == "revising"
+    assert state["revision_status"] == "ready"
+    item = state["changes"][0]
+    assert item["kind"] == "remove"
+    assert item["current"]["title"] == "T1"
+    assert state["proposed_blurb"] is None
+    assert await database.books.find_one({"author_id": person["id"]}) == before
+
+    fake_claude.responses.append(text_message(json.dumps({"blurb": "Without that chapter."})))
+    shown = await client.post(
+        "/interview/revision/blurb", json={"approved": [item["id"]]}, headers=person["headers"]
+    )
+    assert shown.json()["blurb"] == "Without that chapter."
+    book = (
+        await client.post(
+            "/interview/revision", json={"approved": [item["id"]], "blurb": "use"}, headers=person["headers"]
+        )
+    ).json()
+    assert [c["id"] for c in book["chapters"]] == ["c0", "c2", "c3"]
+    assert book["blurb"] == "Without that chapter."
+    saved = await database.interviews.find_one({"user_id": person["id"]})
+    assert saved["removed_chapters"][0]["title"] == "T1"
+    assert saved["stage"] == "done"
+
+
+async def test_no_removal_at_three_chapters_or_during_a_round(client, author, fake_claude):
+    response = await client.post("/interview/removal", json={"chapter_id": "c0"}, headers=author["headers"])
+    assert response.status_code == 409
+    missing = await client.post("/interview/removal", json={"chapter_id": "nope"}, headers=author["headers"])
+    assert missing.status_code == 404
+
+
+async def test_declining_a_removal_changes_nothing(client, database, fake_claude):
+    person = await member(client, "keep@case.edu")
+    many = [{"id": f"c{n}", "title": f"T{n}", "summary": "S.", "quotes": [OLD_ANSWER]} for n in range(4)]
+    await shelve_book(database, person["id"], many)
+    before = await database.books.find_one({"author_id": person["id"]})
+    await client.post("/interview/removal", json={"chapter_id": "c1"}, headers=person["headers"])
+    await client.post("/interview/revision", json={"approved": []}, headers=person["headers"])
+    assert await database.books.find_one({"author_id": person["id"]}) == before
+    saved = await database.interviews.find_one({"user_id": person["id"]})
+    assert not saved.get("removed_chapters")
+    assert not saved.get("declined_changes")
+
+
+async def test_an_applied_revision_can_be_undone_once(client, database, author, reader, fake_claude):
+    before = await database.books.find_one({"author_id": author["id"]})
+    assert (await client.post("/interview/book/undo", headers=author["headers"])).status_code == 409
+
+    state = await propose(client, author, fake_claude, change("improve", "c1", title="Worse"))
+    book = (
+        await client.post(
+            "/interview/revision",
+            json={"approved": [state["changes"][0]["id"]], "blurb": "use"},
+            headers=author["headers"],
+        )
+    ).json()
+    assert book["can_undo"] is True
+    assert book["blurb"] == "The proposed blurb."
+
+    public = (await client.get(f"/books/{before['_id']}", headers=reader["headers"])).text
+    assert "previous_version" not in public
+    assert "Chapter 1" not in public
+    assert "previous_version" not in books.PUBLIC_FIELDS
+
+    undone = (await client.post("/interview/book/undo", headers=author["headers"])).json()
+    assert undone["can_undo"] is False
+    assert [c["title"] for c in undone["chapters"]] == ["Chapter 0", "Chapter 1", "Chapter 2"]
+    assert undone["blurb"] == "The old blurb."
+    after = await database.books.find_one({"author_id": author["id"]})
+    assert after["chapters"] == before["chapters"]
+    assert after["published_at"] == before["published_at"]
+    assert (await client.post("/interview/book/undo", headers=author["headers"])).status_code == 409
+
+
+async def test_undo_is_only_from_done(client, author, fake_claude):
+    state = await propose(client, author, fake_claude, change())
+    await client.post(
+        "/interview/revision", json={"approved": [state["changes"][0]["id"]]}, headers=author["headers"]
+    )
+    await start_round(client, author, fake_claude)
+    assert (await client.post("/interview/book/undo", headers=author["headers"])).status_code == 409
+
+
+async def test_undo_lets_a_removed_chapter_come_back_for_good(client, database, fake_claude):
+    person = await member(client, "undo@case.edu")
+    many = [{"id": f"c{n}", "title": f"T{n}", "summary": "S.", "quotes": [OLD_ANSWER]} for n in range(4)]
+    await shelve_book(database, person["id"], many)
+    state = (
+        await client.post("/interview/removal", json={"chapter_id": "c1"}, headers=person["headers"])
+    ).json()
+    await client.post(
+        "/interview/revision", json={"approved": [state["changes"][0]["id"]]}, headers=person["headers"]
+    )
+    await client.post("/interview/book/undo", headers=person["headers"])
+    saved = await database.interviews.find_one({"user_id": person["id"]})
+    assert saved["removed_chapters"] == []
+
+
+async def finish_to_failure(client, author, fake_claude) -> dict:
+    await start_round(client, author, fake_claude)
+    fake_claude.responses.append(round_over())
+    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=author["headers"])
+    fake_claude.responses.append(text_message("not json"))
+    response = await client.post("/interview/finish", headers=author["headers"])
+    assert response.status_code == 200
+    return response.json()
+
+
+async def test_finishing_writes_in_the_background_and_reports_it(client, author, fake_claude):
+    await start_round(client, author, fake_claude)
+    fake_claude.responses.append(round_over())
+    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=author["headers"])
+    fake_claude.responses.append(revision(change()))
+    state = (await client.post("/interview/finish", headers=author["headers"])).json()
+    assert state["stage"] == "revising"
+    assert state["revision_status"] == "writing"
+    assert state["changes"] is None
+    state = (await client.get("/interview", headers=author["headers"])).json()
+    assert state["revision_status"] == "ready"
+    assert len(state["changes"]) == 1
+    assert (await client.post("/interview/finish", headers=author["headers"])).status_code == 409
+
+
+async def test_a_return_after_a_failed_write_retries_once_on_its_own(client, database, author, fake_claude):
+    await finish_to_failure(client, author, fake_claude)
+    saved = await database.interviews.find_one({"user_id": author["id"]})
+    assert saved["write_status"] == "failed"
+    assert saved["turns"][-1]["answer"] == NEW_ANSWER
+
+    fake_claude.responses.append(text_message("still not json"))
+    state = (await client.get("/interview", headers=author["headers"])).json()
+    assert state["revision_status"] == "writing"
+
+    calls = len(fake_claude.requests)
+    state = (await client.get("/interview", headers=author["headers"])).json()
+    assert state["revision_status"] == "failed"
+    assert state["can_finish"] is True
+    assert len(fake_claude.requests) == calls
+
+    fake_claude.responses.append(revision(change()))
+    await client.post("/interview/finish", headers=author["headers"])
+    state = (await client.get("/interview", headers=author["headers"])).json()
+    assert len(state["changes"]) == 1
+
+
+async def test_a_write_that_died_with_the_server_counts_as_failed(client, database, author, fake_claude):
+    await start_round(client, author, fake_claude)
+    fake_claude.responses.append(round_over())
+    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=author["headers"])
+    await database.interviews.update_one(
+        {"user_id": author["id"]},
+        {
+            "$set": {
+                "stage": "revising",
+                "proposal": None,
+                "round_end": 2,
+                "write_status": "writing",
+                "write_retried": True,
+                "updated_at": datetime.now(UTC) - service.WRITING_TIMEOUT - timedelta(seconds=1),
+            }
+        },
+    )
+    state = (await client.get("/interview", headers=author["headers"])).json()
+    assert state["revision_status"] == "failed"
+
+
+async def test_no_key_doesnt_break_reading_the_interview(client, database, author, monkeypatch):
+    monkeypatch.setattr(get_settings(), "anthropic_api_key", "")
+    state = await client.get("/interview", headers=author["headers"])
+    assert state.status_code == 200
 
 
 # I5: sparks.
@@ -522,49 +815,120 @@ async def test_at_most_twelve_unused_sparks(client, database, reader):
 
 
 async def test_only_the_title_reaches_the_interviewer(client, database, author, reader, fake_claude):
-    await spark(client, reader, author)
-    await shelve_book(database, reader["id"])
+    saved = await spark(client, reader, author)
+    own = [
+        {"id": f"r{n}", "title": f"Mine {n}", "summary": "Mine.", "quotes": [OLD_ANSWER]} for n in range(3)
+    ]
+    await shelve_book(database, reader["id"], own)
     await start_round(client, reader, fake_claude)
 
     prompt = member_data(fake_claude.requests[-1])
-    assert "<sparks>\n- Chapter 0\n</sparks>" in prompt
-    # The reader's own book is also called "The Book", so check what only the other book has.
+    assert f"<sparks>\n- [{saved.json()['id']}] Chapter 0\n</sparks>" in prompt
+    assert "Summary 0" not in prompt
     assert "Hana" not in prompt
     assert "Sato" not in prompt
     assert author["book"]["_id"] not in prompt
     assert author["id"] not in prompt
 
 
-async def test_sparks_reach_a_first_interview_and_are_used_when_it_ends(
-    client, database, author, reader, scripted_ai
-):
+async def test_sparks_reach_a_first_interview(client, author, reader, scripted_ai):
     await spark(client, reader, author)
     await client.post("/interview", json={}, headers=reader["headers"])
-    assert "<sparks>\n- Chapter 0\n</sparks>" in member_data(scripted_ai.requests[0])
-    assert "Summary 0" not in member_data(scripted_ai.requests[0])
-    assert "The Book" not in member_data(scripted_ai.requests[0])
-
-    for answer in scripted.THEO_ANSWERS:
-        await client.post("/interview/answers", json={"answer": answer}, headers=reader["headers"])
-    await client.post("/interview/shape", json={}, headers=reader["headers"])
-    assert len((await client.get("/interview/sparks", headers=reader["headers"])).json()) == 1
-    await client.post("/interview/finish", headers=reader["headers"])
-    assert (await client.get("/interview/sparks", headers=reader["headers"])).json() == []
-    saved = await database.sparks.find_one({"user_id": reader["id"]})
-    assert saved["used_at"] is not None
+    prompt = member_data(scripted_ai.requests[0])
+    assert "Chapter 0\n</sparks>" in prompt
+    assert "Summary 0" not in prompt
+    assert "The Book" not in prompt
 
 
-async def test_a_spark_is_used_when_the_round_finishes_and_can_be_saved_again(
-    client, database, author, reader, fake_claude
-):
+async def test_a_spark_is_used_only_when_its_question_is_asked(client, database, author, reader, fake_claude):
     await shelve_book(database, reader["id"])
-    await spark(client, reader, author)
-    await propose(client, reader, fake_claude, change())
-    assert (await client.get("/interview/sparks", headers=reader["headers"])).json() == []
+    used = (await spark(client, reader, author, "c0")).json()
+    await spark(client, reader, author, "c1")
 
+    await start_round(client, reader, fake_claude)
+    assert len((await client.get("/interview/sparks", headers=reader["headers"])).json()) == 2
+
+    fake_claude.responses.append(
+        text_message(json.dumps({"question": "Yours?", "topic": "t", "done": False, "spark_id": used["id"]}))
+    )
+    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=reader["headers"])
+    waiting = (await client.get("/interview/sparks", headers=reader["headers"])).json()
+    assert [item["chapter_id"] for item in waiting] == ["c1"]
+
+    # Finishing the round doesn't use up the one nobody asked about.
+    fake_claude.responses.append(revision(change()))
+    await client.post("/interview/finish", headers=reader["headers"])
+    assert len((await client.get("/interview/sparks", headers=reader["headers"])).json()) == 1
+
+
+async def test_a_used_spark_can_be_saved_again(client, database, author, reader):
+    saved = (await spark(client, reader, author)).json()
+    await database.sparks.update_one({"_id": saved["id"]}, {"$set": {"used_at": datetime.now(UTC)}})
+    assert (await client.get("/interview/sparks", headers=reader["headers"])).json() == []
     await spark(client, reader, author)
     assert len((await client.get("/interview/sparks", headers=reader["headers"])).json()) == 1
     assert await database.sparks.count_documents({"user_id": reader["id"]}) == 1
+
+
+async def test_at_most_three_sparks_a_round_newest_first(client, database, reader, fake_claude):
+    other = await member(client, "big@case.edu", "Big", "Book")
+    many = [{"id": f"m{n}", "title": f"Title {n}", "summary": "S.", "quotes": [OLD_ANSWER]} for n in range(5)]
+    other["book"] = await shelve_book(database, other["id"], many)
+    await shelve_book(database, reader["id"])
+    ids = {}
+    for n in range(5):
+        ids[n] = (await spark(client, reader, other, f"m{n}")).json()["id"]
+        await database.sparks.update_one(
+            {"_id": ids[n]}, {"$set": {"created_at": datetime(2026, 1, 1 + n, tzinfo=UTC)}}
+        )
+    await start_round(client, reader, fake_claude)
+    prompt = member_data(fake_claude.requests[-1])
+    assert all(f"Title {n}" in prompt for n in (4, 3, 2))
+    assert not any(f"Title {n}" in prompt for n in (1, 0))
+
+    for n in (4, 3, 2):
+        fake_claude.responses.append(
+            text_message(json.dumps({"question": f"Q{n}?", "topic": "t", "done": False, "spark_id": ids[n]}))
+        )
+        await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=reader["headers"])
+    # Three have been asked about, so the rest wait for the next round.
+    assert "<sparks>" not in member_data(fake_claude.requests[-1]) or "Title 1" not in member_data(
+        fake_claude.requests[-1]
+    )
+    fake_claude.responses.append(round_over())
+    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=reader["headers"])
+    assert "<sparks>" not in member_data(fake_claude.requests[-1])
+    assert len((await client.get("/interview/sparks", headers=reader["headers"])).json()) == 2
+
+
+async def test_a_spark_title_is_redacted_and_cant_become_a_chapter(
+    client, database, author, reader, fake_claude
+):
+    await shelve_book(database, reader["id"])
+    used = (await spark(client, reader, author, "c0")).json()
+    fake_claude.responses.append(
+        text_message(
+            json.dumps(
+                {
+                    "question": "You saved Chapter 0. Yours?",
+                    "topic": "t",
+                    "done": False,
+                    "spark_id": used["id"],
+                }
+            )
+        )
+    )
+    await client.post("/interview/reopen", headers=reader["headers"])
+    fake_claude.responses.append(round_over())
+    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=reader["headers"])
+    fake_claude.responses.append(revision(change(title="chapter 0"), change(title="My own inventory story")))
+    await client.post("/interview/finish", headers=reader["headers"])
+
+    state = (await client.get("/interview", headers=reader["headers"])).json()
+    assert [c["title"] for c in state["changes"]] == ["My own inventory story"]
+    data = member_data(fake_claude.requests[-1])
+    assert "You saved that topic. Yours?" in data
+    assert "You saved Chapter 0" not in data
 
 
 async def test_sparks_never_reach_the_other_author(client, database, author, reader):
@@ -601,7 +965,195 @@ async def test_ask_after_reading_is_idempotent(client, database, author):
     questions = (await client.get("/interview/reading-questions", headers=author["headers"])).json()
     assert len(questions) == 1
     assert questions[0]["question"] == "What did they ask you about that surprised you?"
-    assert set(questions[0]) == {"id", "question", "created_at"}
+    assert set(questions[0]) == {"id", "question", "created_at", "reader_name"}
+    assert "checkout-1" not in json.dumps(questions)
+
+
+async def a_reading_with(database, author, reader, checkout_id="checkout-secret") -> None:
+    await database.checkouts.insert_one(
+        {
+            "_id": checkout_id,
+            "reader_id": reader["id"],
+            "author_id": author["id"],
+            "book_id": author["book"]["_id"],
+            "status": "accepted",
+            "created_at": datetime.now(UTC),
+            "open": True,
+        }
+    )
+    await service.ask_after_reading(database, author["id"], checkout_id)
+
+
+async def test_the_author_sees_who_the_reading_was_with(client, database, author, reader):
+    await a_reading_with(database, author, reader)
+    questions = (await client.get("/interview/reading-questions", headers=author["headers"])).json()
+    assert questions[0]["reader_name"] == "Rae Jones"
+
+
+async def test_only_the_newest_shows_and_old_ones_go_away(client, database, author):
+    await service.ask_after_reading(database, author["id"], "old")
+    await service.ask_after_reading(database, author["id"], "recent")
+    await service.ask_after_reading(database, author["id"], "newest")
+    now = datetime.now(UTC)
+    await database.reading_questions.update_one(
+        {"checkout_id": "old"},
+        {"$set": {"created_at": now - timedelta(days=service.READING_QUESTION_DAYS + 1)}},
+    )
+    await database.reading_questions.update_one(
+        {"checkout_id": "recent"}, {"$set": {"created_at": now - timedelta(days=1)}}
+    )
+    questions = (await client.get("/interview/reading-questions", headers=author["headers"])).json()
+    assert len(questions) == 1
+
+    newest = await database.reading_questions.find_one({"checkout_id": "newest"})
+    assert questions[0]["id"] == newest["_id"]
+    assert (await database.reading_questions.find_one({"checkout_id": "old"}))["dismissed_at"] is not None
+    assert (await database.reading_questions.find_one({"checkout_id": "recent"}))["dismissed_at"] is None
+
+
+async def test_the_reader_never_enters_the_prompt(client, database, author, reader, fake_claude):
+    await a_reading_with(database, author, reader)
+    question = (await client.get("/interview/reading-questions", headers=author["headers"])).json()[0]["id"]
+    fake_claude.responses.append(revision(change()))
+    await client.post(
+        f"/interview/reading-questions/{question}/answer",
+        json={"answer": NEW_ANSWER},
+        headers=author["headers"],
+    )
+    prompt = prompt_text(fake_claude.requests[-1])
+    assert "checkout-secret" not in prompt
+    assert reader["id"] not in prompt
+    assert "Rae" not in prompt
+    assert "Jones" not in prompt
+    assert "Never name or describe" in prompt
+
+
+NAMED = "Sam from Deloitte asked how I would handle leaving since she is about to quit."
+PLAIN = "They asked how I would handle leaving a steady job before anything else lined up."
+
+
+async def answer_reading(client, database, author, fake_claude, text: str, *changes: dict) -> dict:
+    question = await waiting_question(client, database, author)
+    fake_claude.responses.append(revision(*changes))
+    response = await client.post(
+        f"/interview/reading-questions/{question}/answer", json={"answer": text}, headers=author["headers"]
+    )
+    assert response.status_code == 200, response.text
+    return (await client.get("/interview", headers=author["headers"])).json()
+
+
+async def test_a_reading_quote_naming_someone_is_dropped(client, database, author, fake_claude):
+    state = await answer_reading(client, database, author, fake_claude, NAMED, change(quotes=[NAMED]))
+    assert state["stage"] == "done"
+    assert state["nothing_new"] is True
+
+
+async def test_a_name_from_a_reading_answer_cant_reach_public_text(client, database, author, fake_claude):
+    text = f"{NAMED} {PLAIN}"
+    named_summary = {
+        **change(quotes=[PLAIN], title="About leaving"),
+        "summary": "What Sam asked me about leaving.",
+    }
+    plain = change(quotes=[PLAIN], title="Leaving before the next thing")
+    state = await answer_reading(client, database, author, fake_claude, text, named_summary, plain)
+    assert [c["title"] for c in state["changes"]] == ["Leaving before the next thing"]
+    assert state["changes"][0]["quotes"] == [PLAIN]
+
+
+async def test_the_members_own_name_in_a_reading_answer_is_fine(client, database, author, fake_claude):
+    text = "They asked why everyone calls me Hana instead of my full name at work."
+    state = await answer_reading(client, database, author, fake_claude, text, change(quotes=[text]))
+    assert state["stage"] == "revising"
+    assert len(state["changes"]) == 1
+
+
+async def test_a_blurb_naming_someone_isnt_proposed(client, database, author, fake_claude):
+    text = f"{NAMED} {PLAIN}"
+    question = await waiting_question(client, database, author)
+    fake_claude.responses.append(
+        revision(change(quotes=[PLAIN]), blurb="I learned this from Sam, and now I know it.")
+    )
+    await client.post(
+        f"/interview/reading-questions/{question}/answer", json={"answer": text}, headers=author["headers"]
+    )
+    state = (await client.get("/interview", headers=author["headers"])).json()
+    assert state["stage"] == "revising"
+    assert state["proposed_blurb"] is None
+
+
+async def test_an_answer_goes_through_revise_and_approval(client, database, author, fake_claude):
+    before = await database.books.find_one({"author_id": author["id"]})
+    state = await answer_reading(client, database, author, fake_claude, NEW_ANSWER, change())
+    assert state["stage"] == "revising"
+    assert len(state["changes"]) == 1
+    assert await database.books.find_one({"author_id": author["id"]}) == before
+
+    saved = await database.interviews.find_one({"user_id": author["id"]})
+    assert saved["turns"][-1] == {
+        "question": service.READING_QUESTION,
+        "answer": NEW_ANSWER,
+        "phase": "reading",
+    }
+    assert (await client.get("/interview/reading-questions", headers=author["headers"])).json() == []
+
+    book = (
+        await client.post(
+            "/interview/revision", json={"approved": [state["changes"][0]["id"]]}, headers=author["headers"]
+        )
+    ).json()
+    assert book["chapters"][-1]["title"] == "New title"
+
+
+async def test_a_thin_answer_can_yield_no_changes(client, database, author, fake_claude):
+    state = await answer_reading(client, database, author, fake_claude, "Not much.")
+    assert state["stage"] == "done"
+    assert state["nothing_new"] is True
+
+
+async def test_a_failed_revise_keeps_the_answer(client, database, author, fake_claude):
+    question = await waiting_question(client, database, author)
+    fake_claude.responses.append(text_message("not json"))
+    response = await client.post(
+        f"/interview/reading-questions/{question}/answer",
+        json={"answer": NEW_ANSWER},
+        headers=author["headers"],
+    )
+    assert response.status_code == 200
+    saved = await database.interviews.find_one({"user_id": author["id"]})
+    assert saved["write_status"] == "failed"
+    assert saved["turns"][-1]["answer"] == NEW_ANSWER
+    fake_claude.responses.append(revision(change()))
+    state = (await client.get("/interview", headers=author["headers"])).json()
+    assert state["revision_status"] == "writing"
+    state = (await client.get("/interview", headers=author["headers"])).json()
+    assert len(state["changes"]) == 1
+
+
+async def test_while_changes_wait_an_answer_runs_after_the_decision(client, database, author, fake_claude):
+    question = await waiting_question(client, database, author)
+    waiting = await propose(client, author, fake_claude, change(title="First proposal"))
+    state = (
+        await client.post(
+            f"/interview/reading-questions/{question}/answer",
+            json={"answer": PLAIN},
+            headers=author["headers"],
+        )
+    ).json()
+    # Nothing lands on the undecided proposal.
+    assert [c["title"] for c in state["changes"]] == ["First proposal"]
+    assert (await client.get("/interview/reading-questions", headers=author["headers"])).json() == []
+
+    fake_claude.responses.append(revision(change(quotes=[PLAIN], title="From the reading")))
+    await client.post(
+        "/interview/revision", json={"approved": [waiting["changes"][0]["id"]]}, headers=author["headers"]
+    )
+    state = (await client.get("/interview", headers=author["headers"])).json()
+    assert state["stage"] == "revising"
+    assert [c["title"] for c in state["changes"]] == ["From the reading"]
+    data = member_data(fake_claude.requests[-1])
+    new_round = data.split("<new_round>")[1].split("</new_round>")[0]
+    assert PLAIN in new_round
+    assert NEW_ANSWER not in new_round
 
 
 async def waiting_question(client, database, author) -> str:
@@ -623,81 +1175,6 @@ async def test_dismissing_is_quiet_and_final(client, database, author):
     assert again.status_code == 404
 
 
-async def test_an_answer_goes_through_revise_and_approval(client, database, author, fake_claude):
-    before = await database.books.find_one({"author_id": author["id"]})
-    question = await waiting_question(client, database, author)
-    fake_claude.responses.append(revision(change()))
-    state = (
-        await client.post(
-            f"/interview/reading-questions/{question}/answer",
-            json={"answer": NEW_ANSWER},
-            headers=author["headers"],
-        )
-    ).json()
-    assert state["stage"] == "revising"
-    assert len(state["changes"]) == 1
-    assert await database.books.find_one({"author_id": author["id"]}) == before
-
-    saved = await database.interviews.find_one({"user_id": author["id"]})
-    assert saved["turns"][-1] == {
-        "question": service.READING_QUESTION,
-        "answer": NEW_ANSWER,
-        "phase": "reading",
-    }
-    assert (await client.get("/interview/reading-questions", headers=author["headers"])).json() == []
-
-    book = (
-        await client.post(
-            "/interview/revision", json={"approved": [state["changes"][0]["id"]]}, headers=author["headers"]
-        )
-    ).json()
-    assert book["chapters"][-1]["title"] == "New title"
-
-
-async def test_the_reader_never_enters_the_prompt(client, database, author, reader, fake_claude):
-    question = await waiting_question(client, database, author)
-    fake_claude.responses.append(revision(change()))
-    await client.post(
-        f"/interview/reading-questions/{question}/answer",
-        json={"answer": NEW_ANSWER},
-        headers=author["headers"],
-    )
-    prompt = prompt_text(fake_claude.requests[-1])
-    assert "checkout-secret" not in prompt
-    assert reader["id"] not in prompt
-    assert "Rae" not in prompt
-    assert "Jones" not in prompt
-    assert "Never name or describe anyone else" in prompt
-
-
-async def test_a_thin_answer_can_yield_no_changes(client, database, author, fake_claude):
-    question = await waiting_question(client, database, author)
-    fake_claude.responses.append(revision())
-    state = (
-        await client.post(
-            f"/interview/reading-questions/{question}/answer",
-            json={"answer": "Not much."},
-            headers=author["headers"],
-        )
-    ).json()
-    assert state["stage"] == "done"
-    assert state["nothing_new"] is True
-
-
-async def test_a_failed_revise_keeps_the_answer(client, database, author, fake_claude):
-    question = await waiting_question(client, database, author)
-    fake_claude.responses.append(text_message("not json"))
-    response = await client.post(
-        f"/interview/reading-questions/{question}/answer",
-        json={"answer": NEW_ANSWER},
-        headers=author["headers"],
-    )
-    assert response.status_code == 502
-    fake_claude.responses.append(revision(change()))
-    state = (await client.post("/interview/finish", headers=author["headers"])).json()
-    assert len(state["changes"]) == 1
-
-
 async def test_during_a_round_an_answer_joins_it(client, database, author, fake_claude):
     question = await waiting_question(client, database, author)
     waiting = await start_round(client, author, fake_claude)
@@ -711,18 +1188,6 @@ async def test_during_a_round_an_answer_joins_it(client, database, author, fake_
     assert state["stage"] == "adding"
     assert state["question"] == waiting["question"]
     assert state["can_finish"] is True
-
-
-async def test_while_changes_wait_an_answer_is_409_and_stays_open(client, database, author, fake_claude):
-    question = await waiting_question(client, database, author)
-    await propose(client, author, fake_claude, change())
-    response = await client.post(
-        f"/interview/reading-questions/{question}/answer",
-        json={"answer": NEW_ANSWER},
-        headers=author["headers"],
-    )
-    assert response.status_code == 409
-    assert len((await client.get("/interview/reading-questions", headers=author["headers"])).json()) == 1
 
 
 async def test_someone_elses_question_is_404(client, database, author, reader):

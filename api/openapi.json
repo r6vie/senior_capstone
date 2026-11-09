@@ -412,7 +412,7 @@
           "Interview"
         ],
         "summary": "Current",
-        "description": "The member's interview, for resuming where they left off.",
+        "description": "The member's interview, for resuming where they left off. If writing proposed changes failed,\na return tries once more on its own.",
         "operationId": "current_interview_get",
         "responses": {
           "200": {
@@ -632,7 +632,7 @@
           "Interview"
         ],
         "summary": "Finish",
-        "description": "End the interview and get three titles, each with why it's you. In a round of adding, end\nthe round and get proposed changes. While revising with `changes` null, write them again.\n`answer` is saved first as the answer to the waiting question, with no question after it.",
+        "description": "End the interview and get three titles, each with why it's you. In a round of adding, end\nthe round: the proposed changes are written in the background (`revision_status`). After a\nfailed write, try again.\n`answer` is saved first as the answer to the waiting question, with no question after it.",
         "operationId": "finish_interview_finish_post",
         "requestBody": {
           "content": {
@@ -876,13 +876,60 @@
         ]
       }
     },
+    "/interview/revision/blurb": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Revision Blurb",
+        "description": "The back cover for this selection of changes, to read before confirming. Nothing is applied.",
+        "operationId": "revision_blurb_interview_revision_blurb_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevisionBlurbRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevisionBlurbResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/interview/revision": {
       "post": {
         "tags": [
           "Interview"
         ],
         "summary": "Apply Revision",
-        "description": "Apply the approved changes to the book on the shelf. The rest are dropped.",
+        "description": "Apply the approved changes to the book on the shelf. The rest are dropped and not proposed\nagain. A reading answer saved meanwhile then gets its own proposal.",
         "operationId": "apply_revision_interview_revision_post",
         "requestBody": {
           "content": {
@@ -911,6 +958,80 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/removal": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Propose Removal",
+        "description": "Propose taking a chapter out of a book on the shelf. Confirmed like any change. 409 at three chapters.",
+        "operationId": "propose_removal_interview_removal_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/book/undo": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Undo Revision",
+        "description": "Take back the last applied revision (`can_undo`), until the next one is applied.",
+        "operationId": "undo_revision_interview_book_undo_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
                 }
               }
             }
@@ -1076,7 +1197,7 @@
           "Interview"
         ],
         "summary": "Answer Reading Question",
-        "description": "Answer it, and get proposed changes to the book (or `nothing_new`).",
+        "description": "Answer it. From `done`, changes are written in the background (`revision_status`). During a\nround it joins the round. While changes are waiting, it runs after the member decides.",
         "operationId": "answer_reading_question_interview_reading_questions__question_id__answer_post",
         "security": [
           {
@@ -1515,7 +1636,8 @@
             "type": "string",
             "enum": [
               "new",
-              "improve"
+              "improve",
+              "remove"
             ],
             "title": "Kind"
           },
@@ -1558,6 +1680,17 @@
                 "type": "null"
               }
             ]
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
           }
         },
         "type": "object",
@@ -1744,6 +1877,22 @@
             ],
             "title": "Blurb"
           },
+          "revision_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "writing",
+                  "ready",
+                  "failed"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision Status"
+          },
           "changes": {
             "anyOf": [
               {
@@ -1784,6 +1933,7 @@
           "ready_for_reveal",
           "titles",
           "blurb",
+          "revision_status",
           "changes",
           "proposed_blurb",
           "nothing_new"
@@ -1990,6 +2140,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "can_undo": {
+            "type": "boolean",
+            "title": "Can Undo",
+            "default": false
           }
         },
         "type": "object",
@@ -2275,16 +2430,81 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "reader_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reader Name"
           }
         },
         "type": "object",
         "required": [
           "id",
           "question",
-          "created_at"
+          "created_at",
+          "reader_name"
         ],
         "title": "ReadingQuestionResponse",
-        "description": "The question after a reading. Nothing here says who the reader was."
+        "description": "The question after a reading, for its author only."
+      },
+      "RemovalRequest": {
+        "properties": {
+          "chapter_id": {
+            "type": "string",
+            "title": "Chapter Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "chapter_id"
+        ],
+        "title": "RemovalRequest"
+      },
+      "RevisionBlurbRequest": {
+        "properties": {
+          "approved": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Approved",
+            "description": "The ids of the changes the member has selected."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approved"
+        ],
+        "title": "RevisionBlurbRequest"
+      },
+      "RevisionBlurbResponse": {
+        "properties": {
+          "blurb": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blurb"
+          }
+        },
+        "type": "object",
+        "required": [
+          "blurb"
+        ],
+        "title": "RevisionBlurbResponse",
+        "description": "The back cover for that selection, for the member to read before confirming."
       },
       "RevisionRequest": {
         "properties": {
@@ -2295,6 +2515,16 @@
             "type": "array",
             "title": "Approved",
             "description": "The ids of the changes to apply. The rest are dropped."
+          },
+          "blurb": {
+            "type": "string",
+            "enum": [
+              "keep",
+              "use"
+            ],
+            "title": "Blurb",
+            "description": "\"use\" applies the back cover last shown for exactly this selection, from `proposed_blurb` or POST /interview/revision/blurb. \"keep\" leaves the old one.",
+            "default": "keep"
           }
         },
         "additionalProperties": false,

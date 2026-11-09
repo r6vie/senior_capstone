@@ -8,12 +8,14 @@ import base64
 import binascii
 import contextlib
 import io
-from datetime import UTC, datetime
+import logging
+import re
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import anthropic
-from fastapi import HTTPException
-from pymongo import ASCENDING, ReturnDocument
+from fastapi import BackgroundTasks, HTTPException
+from pymongo import ASCENDING, DESCENDING, ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
 from pypdf import PdfReader
@@ -21,10 +23,12 @@ from starlette.concurrency import run_in_threadpool
 
 from trove.ai.client import Claude, ClaudeRefused
 from trove.ai.usage import BudgetExceeded
+from trove.auth.service import full_names_of
 from trove.books import service as books
 from trove.books.models import MyBookResponse
+from trove.checkouts import service as checkouts
 from trove.interview import engine
-from trove.interview.engine import Change, Draft, DraftChapter, Revision, Turn
+from trove.interview.engine import Change, Draft, DraftChapter, Turn
 from trove.interview.models import (
     InterviewResponse,
     Question,
@@ -42,7 +46,16 @@ MAX_RESUME_PAGES = 20
 MAX_RESUME_CHARS = 20_000
 # Unused sparks a member may keep (docs/review/decisions.md, row 5).
 MAX_UNUSED_SPARKS = 12
+# Sparks a round can work from, so it never turns into a list of other people's titles.
+MAX_SPARKS_PER_ROUND = 3
 READING_QUESTION = "What did they ask you about that surprised you?"
+# Older reading questions go away on their own, as quietly as a dismissal.
+READING_QUESTION_DAYS = 14
+# Writing changes that hasn't finished by now died with the server, so it counts as failed.
+WRITING_TIMEOUT = timedelta(minutes=5)
+SPARK_REDACTED = "that topic"
+
+logger = logging.getLogger(__name__)
 
 
 async def ensure_indexes(database: AsyncDatabase) -> None:
@@ -74,7 +87,7 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
         new = interview["turns"][interview["round_start"] :]
         can_finish = any(turn["answer"].strip() for turn in new)
     elif stage == "revising":
-        can_finish = proposal is None
+        can_finish = revision_status(interview) == "failed"
     else:
         can_finish = stage == "interviewing" and (ready or answered >= EXIT_AFTER_ANSWERS)
     return InterviewResponse(
@@ -88,14 +101,37 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
         ready_for_reveal=ready,
         titles=interview["draft"]["titles"] if stage == "choosing" else None,
         blurb=book.get("blurb") if book else (interview.get("draft") or {}).get("blurb"),
+        revision_status=revision_status(interview) if stage == "revising" else None,
         changes=[Change.model_validate(change) for change in proposal["changes"]] if proposal else None,
         proposed_blurb=proposal["blurb"] if proposal else None,
         nothing_new=interview.get("nothing_new", False),
     )
 
 
-async def current_view(database: AsyncDatabase, user: dict) -> InterviewResponse:
+def revision_status(interview: dict) -> str:
+    if interview.get("proposal"):
+        return "ready"
+    status = interview.get("write_status", "failed")
+    if status == "writing":
+        updated_at = interview["updated_at"]
+        started = updated_at if updated_at.tzinfo else updated_at.replace(tzinfo=UTC)
+        if datetime.now(UTC) - started > WRITING_TIMEOUT:
+            return "failed"
+    return status
+
+
+async def current_view(
+    database: AsyncDatabase, user: dict, claude: Claude | None, background: BackgroundTasks
+) -> InterviewResponse:
     interview = await get_interview(database, user["_id"])
+    if (
+        claude
+        and interview["stage"] == "revising"
+        and revision_status(interview) == "failed"
+        and not interview.get("write_retried")
+    ):
+        # The member came back to a failed write: try once more without asking them to.
+        interview = await restart_writing(database, claude, interview, background, retried=True)
     book = (
         await books.get_book_of(database, user["_id"])
         if interview["stage"] in ("reviewing", "done", "adding", "revising")
@@ -148,11 +184,42 @@ def turns_of(interview: dict) -> list[Turn]:
     return [Turn.model_validate(turn) for turn in interview["turns"]]
 
 
+def book_turns(interview: dict) -> list[Turn]:
+    """The transcript the book-writing steps read. Questions that worked from a spark lose its title,
+    so someone else's words can't come through as this member's."""
+    turns = turns_of(interview)
+    for title in interview.get("asked_spark_titles", []):
+        pattern = re.compile(re.escape(title), re.IGNORECASE)
+        for turn in turns:
+            turn.question = pattern.sub(SPARK_REDACTED, turn.question)
+    return turns
+
+
+def off_limits_of(interview: dict) -> list[dict]:
+    """What the member removed or declined. The Librarian doesn't ask about it or propose it again."""
+    return [
+        {"title": item["title"], "summary": item["summary"]}
+        for item in [*interview.get("removed_chapters", []), *interview.get("declined_changes", [])]
+    ]
+
+
+async def remember_removed(database: AsyncDatabase, interview_id: str, chapters: list[dict]) -> None:
+    await database.interviews.update_one(
+        {"_id": interview_id},
+        {"$push": {"removed_chapters": {"$each": [_remembered(chapter) for chapter in chapters]}}},
+    )
+
+
+def _remembered(chapter: dict) -> dict:
+    return {"id": chapter.get("id"), "title": chapter["title"], "summary": chapter["summary"]}
+
+
 async def write_question(
     database: AsyncDatabase, claude: Claude, interview: dict
-) -> tuple[dict | None, str, bool]:
-    """The next question to save, what the member was last talking about, and whether that's enough."""
-    sparks = await unused_spark_titles(database, interview["user_id"])
+) -> tuple[dict | None, str, bool, str | None]:
+    """The next question to save, what the member was last talking about, whether that's enough, and
+    the spark the question works from."""
+    sparks = await spark_cues(database, interview)
     if interview["stage"] == "adding":
         book = await books.get_book_of(database, interview["user_id"])
         turn = await ask_engine(
@@ -162,22 +229,24 @@ async def write_question(
                 round_start=interview["round_start"],
                 chapters=[DraftChapter.model_validate(chapter) for chapter in book["chapters"]],
                 sparks=sparks,
+                off_limits=off_limits_of(interview),
             )
         )
         question = {"question": turn.question, "phase": "adding", "playback": None}
-        return None if turn.done else question, turn.topic, turn.done
+        return None if turn.done else question, turn.topic, turn.done, turn.spark_id
     turn = await ask_engine(
         engine.next_turn(
             claude, turns=turns_of(interview), resume_text=interview.get("resume_text"), sparks=sparks
         )
     )
     ready = turn.ready_for_reveal
-    return None if ready else turn.model_dump(include={"question", "phase", "playback"}), turn.topic, ready
+    question = None if ready else turn.model_dump(include={"question", "phase", "playback"})
+    return question, turn.topic, ready, turn.spark_id
 
 
 async def ask_next_question(database: AsyncDatabase, claude: Claude, interview: dict) -> dict:
     """Write the next question for an interview that is waiting for one, and save it."""
-    question, topic, ready = await write_question(database, claude, interview)
+    question, topic, ready, spark_id = await write_question(database, claude, interview)
     updated = await database.interviews.find_one_and_update(
         # Only if no other request has written the question in the meantime.
         {"_id": interview["_id"], "stage": interview["stage"], "current": None},
@@ -191,6 +260,8 @@ async def ask_next_question(database: AsyncDatabase, claude: Claude, interview: 
         },
         return_document=ReturnDocument.AFTER,
     )
+    if updated and spark_id and question:
+        updated = await use_spark(database, updated, spark_id)
     return updated or await get_interview(database, interview["user_id"])
 
 
@@ -275,14 +346,20 @@ async def save_last_answer(database: AsyncDatabase, interview: dict, text: str) 
     return saved
 
 
-async def finish(database: AsyncDatabase, claude: Claude, user: dict, answer_text: str | None = None) -> dict:
+async def finish(
+    database: AsyncDatabase,
+    claude: Claude,
+    user: dict,
+    background: BackgroundTasks,
+    answer_text: str | None = None,
+) -> dict:
     """End the interview and write the pool of chapters and the three titles. `answer_text` is
     saved first, so words in the field are never dropped."""
     interview = await get_interview(database, user["_id"])
     if answer_text is not None:
         interview = await save_last_answer(database, interview, answer_text)
     if interview["stage"] in ("adding", "revising"):
-        return await finish_round(database, claude, interview)
+        return await finish_round(database, claude, interview, background)
     if interview["stage"] != "interviewing":
         raise conflict("The interview is already over.")
     if not interview_view(interview).can_finish:
@@ -304,7 +381,6 @@ async def finish(database: AsyncDatabase, claude: Claude, user: dict, answer_tex
     )
     if updated is None:
         raise conflict("The interview is already over.")
-    await mark_sparks_used(database, user["_id"])
     return updated
 
 
@@ -359,9 +435,11 @@ async def remove_chapter(
     # The book no longer covers what it did, so the back cover is rewritten for what's left. A rewrite
     # keeps each chapter's topic, so it leaves the blurb alone.
     blurb = await ask_engine(engine.write_blurb(claude, turns=turns_of(interview), chapters=remaining))
+    gone = next(chapter for chapter in book["chapters"] if chapter["id"] == chapter_id)
     book = await books.remove_chapter(database, user["_id"], chapter_id, blurb=blurb)
     if book is None:
         raise conflict(f"A book needs at least {books.MIN_CHAPTERS} chapters.")
+    await remember_removed(database, interview["_id"], [gone])
     return books.my_book_view(book)
 
 
@@ -394,12 +472,42 @@ async def put_on_shelf(database: AsyncDatabase, user: dict) -> MyBookResponse:
 # Adding to a book on the shelf (I3).
 
 
+async def interview_for_book(database: AsyncDatabase, user_id: str) -> dict:
+    """The member's interview. A book on the shelf with no interview behind it (seeded, say) gets
+    one with empty turns, so it can be added to like any other."""
+    interview = await database.interviews.find_one({"user_id": user_id})
+    if interview is not None:
+        return interview
+    book = await books.get_book_of(database, user_id)
+    if book is None or book["status"] != books.ON_SHELF:
+        raise HTTPException(status_code=404, detail="You haven't started your interview yet.")
+    now = datetime.now(UTC)
+    interview = {
+        "_id": str(uuid4()),
+        "user_id": user_id,
+        "stage": "done",
+        "turns": [],
+        "current": None,
+        "topic": None,
+        "ready_for_reveal": False,
+        "resume_text": None,
+        "draft": None,
+        "created_at": now,
+        "updated_at": now,
+    }
+    with contextlib.suppress(DuplicateKeyError):
+        await database.interviews.insert_one(interview)
+    return await get_interview(database, user_id)
+
+
 async def reopen(database: AsyncDatabase, claude: Claude, user: dict) -> dict:
     """Start a short new round of questions. The earlier turns stay as grounding material, and the
     book on the shelf doesn't change unless the member approves a change."""
-    interview = await get_interview(database, user["_id"])
+    interview = await interview_for_book(database, user["_id"])
     if interview["stage"] == "adding":
         return interview
+    if interview["stage"] == "revising":
+        raise conflict("Your proposed changes are waiting for you.")
     book = await books.get_book_of(database, user["_id"])
     if interview["stage"] != "done" or book is None or book["status"] != books.ON_SHELF:
         raise conflict("Only a book on the shelf can be added to.")
@@ -412,6 +520,7 @@ async def reopen(database: AsyncDatabase, claude: Claude, user: dict) -> dict:
                 "current": None,
                 "ready_for_reveal": False,
                 "nothing_new": False,
+                "sparks_asked": 0,
                 "updated_at": datetime.now(UTC),
             }
         },
@@ -422,93 +531,235 @@ async def reopen(database: AsyncDatabase, claude: Claude, user: dict) -> dict:
     return await ask_next_question(database, claude, opened)
 
 
-async def finish_round(database: AsyncDatabase, claude: Claude, interview: dict) -> dict:
-    """Write the proposed changes. The stage moves first, so a failure here loses nothing and
-    POST /interview/finish simply tries again."""
-    if interview["stage"] == "revising" and interview.get("proposal") is not None:
-        raise conflict("Your proposed changes are waiting for you.")
-    if interview["stage"] == "adding":
-        if not interview_view(interview).can_finish:
-            raise conflict("Answer at least one question first.")
-        moved = await database.interviews.find_one_and_update(
-            {"_id": interview["_id"], "stage": "adding"},
-            {
-                "$set": {
-                    "stage": "revising",
-                    "current": None,
-                    "proposal": None,
-                    "updated_at": datetime.now(UTC),
-                }
-            },
-            return_document=ReturnDocument.AFTER,
-        )
-        if moved is None:
-            return await get_interview(database, interview["user_id"])
-        interview = moved
-        await mark_sparks_used(database, interview["user_id"])
-    return await write_proposal(database, claude, interview)
+async def finish_round(
+    database: AsyncDatabase, claude: Claude, interview: dict, background: BackgroundTasks
+) -> dict:
+    """Move to revising and write the proposed changes in the background, so the member can leave.
+    GET /interview reports `revision_status`."""
+    if interview["stage"] == "revising":
+        status = revision_status(interview)
+        if status == "ready":
+            raise conflict("Your proposed changes are waiting for you.")
+        if status == "writing":
+            return interview
+        return await restart_writing(database, claude, interview, background, retried=False)
+    if not interview_view(interview).can_finish:
+        raise conflict("Answer at least one question first.")
+    moved = await database.interviews.find_one_and_update(
+        {"_id": interview["_id"], "stage": "adding"},
+        {
+            "$set": {
+                "stage": "revising",
+                "current": None,
+                "proposal": None,
+                # Anything saved after this point waits for the next proposal.
+                "round_end": len(interview["turns"]),
+                "write_status": "writing",
+                "write_retried": False,
+                "updated_at": datetime.now(UTC),
+            }
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if moved is None:
+        return await get_interview(database, interview["user_id"])
+    background.add_task(write_proposal, database, claude, moved["_id"])
+    return moved
 
 
-async def write_proposal(database: AsyncDatabase, claude: Claude, interview: dict) -> dict:
-    book = await books.get_book_of(database, interview["user_id"])
-    revision: Revision = await ask_engine(
-        engine.revise_book(
+async def restart_writing(
+    database: AsyncDatabase, claude: Claude, interview: dict, background: BackgroundTasks, *, retried: bool
+) -> dict:
+    moved = await database.interviews.find_one_and_update(
+        {
+            "_id": interview["_id"],
+            "stage": "revising",
+            "proposal": None,
+            "updated_at": interview["updated_at"],
+        },
+        {"$set": {"write_status": "writing", "write_retried": True, "updated_at": datetime.now(UTC)}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if moved is None:
+        return await get_interview(database, interview["user_id"])
+    background.add_task(write_proposal, database, claude, moved["_id"])
+    return moved
+
+
+async def write_proposal(database: AsyncDatabase, claude: Claude, interview_id: str) -> None:
+    """Runs in the background, with nobody to send an error to, so every failure lands in `write_status`."""
+    interview = await database.interviews.find_one({"_id": interview_id})
+    if interview is None or interview["stage"] != "revising" or interview.get("proposal"):
+        return
+    try:
+        book = await books.get_book_of(database, interview["user_id"])
+        names = await full_names_of(database, [interview["user_id"]])
+        turns = book_turns(interview)[: interview["round_end"]]
+        revision = await engine.revise_book(
             claude,
-            turns=turns_of(interview),
+            turns=turns,
             round_start=interview["round_start"],
             chapters=[DraftChapter.model_validate(chapter) for chapter in book["chapters"]],
             blurb=book.get("blurb"),
+            off_limits=off_limits_of(interview),
+            member_names=list(names.values()),
+            spark_titles=interview.get("asked_spark_titles", []),
         )
-    )
-    if not revision.changes:
-        # Nothing usable: say so plainly and go back to the book as it was.
-        changes = {"stage": "done", "proposal": None, "nothing_new": True}
-    else:
-        changes = {"proposal": revision.model_dump()}
-    updated = await database.interviews.find_one_and_update(
-        {"_id": interview["_id"], "stage": "revising", "proposal": None},
-        {"$set": {**changes, "updated_at": datetime.now(UTC)}},
-        return_document=ReturnDocument.AFTER,
-    )
-    return updated or await get_interview(database, interview["user_id"])
+    except Exception:
+        logger.exception("Couldn't write the proposed changes for interview %s", interview_id)
+        await database.interviews.update_one(
+            {"_id": interview_id, "stage": "revising", "proposal": None},
+            {"$set": {"write_status": "failed", "updated_at": datetime.now(UTC)}},
+        )
+        return
+    if revision.changes:
+        await database.interviews.update_one(
+            {"_id": interview_id, "stage": "revising", "proposal": None},
+            {
+                "$set": {
+                    "proposal": revision.model_dump(),
+                    "write_status": "ready",
+                    "updated_at": datetime.now(UTC),
+                }
+            },
+        )
+        return
+    # Nothing usable: say so plainly and go back to the book as it was.
+    next_round = await end_revising(database, interview_id, {"nothing_new": True})
+    if next_round:
+        await write_proposal(database, claude, interview_id)
 
 
-async def apply_revision(
-    database: AsyncDatabase, claude: Claude, user: dict, approved: list[str]
-) -> MyBookResponse:
-    """Apply the approved changes and drop the rest. The book on the shelf changes only here."""
-    interview = await get_interview(database, user["_id"])
-    proposal = interview.get("proposal")
-    if interview["stage"] != "revising" or proposal is None:
-        raise conflict("There are no proposed changes to review.")
+async def end_revising(database: AsyncDatabase, interview_id: str, fields: dict) -> bool:
+    """Leave revising. A reading answer saved meanwhile starts its own proposal; True if one did."""
+    interview = await database.interviews.find_one({"_id": interview_id})
+    round_end = interview.get("round_end", len(interview["turns"]))
+    now = datetime.now(UTC)
+    if len(interview["turns"]) > round_end:
+        await database.interviews.update_one(
+            {"_id": interview_id},
+            {
+                "$set": {
+                    **fields,
+                    "proposal": None,
+                    "round_start": round_end,
+                    "round_end": len(interview["turns"]),
+                    "write_status": "writing",
+                    "write_retried": False,
+                    "updated_at": now,
+                }
+            },
+        )
+        return True
+    await database.interviews.update_one(
+        {"_id": interview_id},
+        {"$set": {**fields, "stage": "done", "proposal": None, "current": None, "updated_at": now}},
+    )
+    return False
+
+
+def _selected(proposal: dict, approved: list[str]) -> list[dict]:
     chosen = set(approved)
     if chosen - {change["id"] for change in proposal["changes"]}:
         raise HTTPException(status_code=422, detail="That isn't one of the proposed changes.")
-    changes = [change for change in proposal["changes"] if change["id"] in chosen]
+    return [change for change in proposal["changes"] if change["id"] in chosen]
+
+
+def _revision_parts(changes: list[dict]) -> dict:
+    return {
+        "improved": [_approved_chapter(c, c["chapter_id"]) for c in changes if c["kind"] == "improve"],
+        "added": [
+            {**_approved_chapter(c, c["id"]), "position": c.get("position")}
+            for c in changes
+            if c["kind"] == "new"
+        ],
+        "removed": [c["chapter_id"] for c in changes if c["kind"] == "remove"],
+    }
+
+
+def _shown_blurb(proposal: dict, changes: list[dict]) -> str | None:
+    """The back cover the member has already seen for exactly this selection, if there is one."""
+    if len(changes) == len(proposal["changes"]) and proposal.get("blurb"):
+        return proposal["blurb"]
+    selection = proposal.get("selection") or {}
+    if selection.get("approved") == sorted(change["id"] for change in changes):
+        return selection["blurb"]
+    return None
+
+
+async def revising_proposal(database: AsyncDatabase, user: dict) -> tuple[dict, dict]:
+    interview = await get_interview(database, user["_id"])
+    proposal = interview.get("proposal")
+    if interview["stage"] != "revising" or not proposal:
+        raise conflict("There are no proposed changes to review.")
+    return interview, proposal
+
+
+async def revision_blurb(
+    database: AsyncDatabase, claude: Claude, user: dict, approved: list[str]
+) -> str | None:
+    """The back cover for the selected changes, for the member to read before confirming. With some
+    of them declined it's written now, because the proposed one may describe a declined chapter."""
+    interview, proposal = await revising_proposal(database, user)
+    changes = _selected(proposal, approved)
+    book = await books.get_book_of(database, user["_id"])
+    if not changes:
+        return book.get("blurb")
+    shown = _shown_blurb(proposal, changes)
+    if shown:
+        return shown
+    chapters = books.revised_chapters(book["chapters"], **_revision_parts(changes))
+    blurb = await ask_engine(
+        engine.write_blurb(
+            claude,
+            turns=book_turns(interview),
+            chapters=[DraftChapter.model_validate(chapter) for chapter in chapters],
+        )
+    )
+    await database.interviews.update_one(
+        {"_id": interview["_id"], "stage": "revising"},
+        {"$set": {"proposal.selection": {"approved": sorted(c["id"] for c in changes), "blurb": blurb}}},
+    )
+    return blurb
+
+
+async def apply_revision(
+    database: AsyncDatabase,
+    claude: Claude,
+    user: dict,
+    approved: list[str],
+    blurb_choice: str,
+    background: BackgroundTasks,
+) -> MyBookResponse:
+    """Apply the approved changes and drop the rest. The book on the shelf changes only here, and
+    only with text the member was shown."""
+    interview, proposal = await revising_proposal(database, user)
+    changes = _selected(proposal, approved)
     book = await books.get_book_of(database, user["_id"])
     if changes:
-        improved = [_approved_chapter(c, c["chapter_id"]) for c in changes if c["kind"] == "improve"]
-        added = [_approved_chapter(c, c["id"]) for c in changes if c["kind"] == "new"]
-        # The proposed back cover fits only if everything was approved. Otherwise it may describe a
-        # declined chapter, so a new one is written for what the book will actually hold.
-        blurb = proposal["blurb"] if len(changes) == len(proposal["changes"]) else None
-        if not blurb:
-            replacements = {chapter["id"]: chapter for chapter in improved}
-            chapters = [replacements.get(c["id"], c) for c in book["chapters"]] + added
-            blurb = await ask_engine(
-                engine.write_blurb(
-                    claude,
-                    turns=turns_of(interview),
-                    chapters=[DraftChapter.model_validate(chapter) for chapter in chapters],
-                )
-            )
-        book = await books.apply_revision(database, user["_id"], improved=improved, added=added, blurb=blurb)
+        blurb = None
+        if blurb_choice == "use":
+            blurb = _shown_blurb(proposal, changes)
+            if blurb is None:
+                raise conflict("Read the back cover for this selection first.")
+        parts = _revision_parts(changes)
+        removed = [c for c in book["chapters"] if c["id"] in parts["removed"]]
+        book = await books.apply_revision(database, user["_id"], **parts, blurb=blurb)
         if book is None:
-            raise conflict("Your book changed while this was being applied. Please try again.")
-    await database.interviews.update_one(
-        {"_id": interview["_id"]},
-        {"$set": {"stage": "done", "proposal": None, "current": None, "updated_at": datetime.now(UTC)}},
-    )
+            raise conflict("That can't be applied to your book as it is now. Please look at it again.")
+        if removed:
+            await remember_removed(database, interview["_id"], removed)
+    declined = [
+        _remembered(change)
+        for change in proposal["changes"]
+        if change not in changes and change["kind"] != "remove"
+    ]
+    if declined:
+        await database.interviews.update_one(
+            {"_id": interview["_id"]}, {"$push": {"declined_changes": {"$each": declined}}}
+        )
+    if await end_revising(database, interview["_id"], {}):
+        background.add_task(write_proposal, database, claude, interview["_id"])
     return books.my_book_view(book)
 
 
@@ -521,6 +772,64 @@ def _approved_chapter(change: dict, chapter_id: str) -> dict:
     }
 
 
+async def propose_removal(database: AsyncDatabase, user: dict, chapter_id: str) -> dict:
+    """Take a chapter out of a book on the shelf. It goes through the same confirm step as any other
+    change: nothing happens until POST /interview/revision."""
+    interview = await interview_for_book(database, user["_id"])
+    book = await books.get_book_of(database, user["_id"])
+    if interview["stage"] != "done" or book is None or book["status"] != books.ON_SHELF:
+        raise conflict("Finish what's waiting in your book first.")
+    chapter = next((c for c in book["chapters"] if c["id"] == chapter_id), None)
+    if chapter is None:
+        raise HTTPException(status_code=404, detail="That chapter isn't in your book.")
+    if len(book["chapters"]) <= books.MIN_CHAPTERS:
+        raise conflict(f"A book needs at least {books.MIN_CHAPTERS} chapters.")
+    change = Change(
+        id=str(uuid4()),
+        kind="remove",
+        chapter_id=chapter_id,
+        title=chapter["title"],
+        summary=chapter["summary"],
+        quotes=chapter["quotes"],
+        note="Takes this chapter out of your book.",
+        current={"title": chapter["title"], "summary": chapter["summary"]},
+    )
+    updated = await database.interviews.find_one_and_update(
+        {"_id": interview["_id"], "stage": "done"},
+        {
+            "$set": {
+                "stage": "revising",
+                "proposal": {"changes": [change.model_dump()], "blurb": None},
+                "round_start": len(interview["turns"]),
+                "round_end": len(interview["turns"]),
+                "write_status": "ready",
+                "nothing_new": False,
+                "updated_at": datetime.now(UTC),
+            }
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if updated is None:
+        raise conflict("Finish what's waiting in your book first.")
+    return updated
+
+
+async def undo_revision(database: AsyncDatabase, user: dict) -> MyBookResponse:
+    """Put the book back as it was before the last applied revision."""
+    interview = await interview_for_book(database, user["_id"])
+    if interview["stage"] != "done":
+        raise conflict("Finish what's waiting in your book first.")
+    book = await books.undo_revision(database, user["_id"])
+    if book is None:
+        raise conflict("There's nothing to undo.")
+    # A chapter that's back is no longer one the member removed.
+    titles = [chapter["title"] for chapter in book["chapters"]]
+    await database.interviews.update_one(
+        {"_id": interview["_id"]}, {"$pull": {"removed_chapters": {"title": {"$in": titles}}}}
+    )
+    return books.my_book_view(book)
+
+
 # Sparks (I5). Private to the member who saved them. Nothing here is ever read for anyone else.
 
 
@@ -528,15 +837,29 @@ def spark_view(spark: dict) -> SparkResponse:
     return SparkResponse.model_validate({**spark, "id": spark["_id"]})
 
 
-async def unused_spark_titles(database: AsyncDatabase, user_id: str) -> list[str]:
-    """Only the titles: never a chapter's summary, its author or the title of its book."""
-    cursor = database.sparks.find({"user_id": user_id, "used_at": None}, {"chapter_title": 1})
-    return [spark["chapter_title"] for spark in await cursor.sort("created_at", ASCENDING).to_list()]
+async def spark_cues(database: AsyncDatabase, interview: dict) -> list[dict]:
+    """What the Librarian may work from now: only ids and titles, newest first, up to the round's
+    limit. Never a chapter's summary, its author or the title of its book."""
+    room = MAX_SPARKS_PER_ROUND - interview.get("sparks_asked", 0)
+    if room <= 0:
+        return []
+    cursor = database.sparks.find({"user_id": interview["user_id"], "used_at": None}, {"chapter_title": 1})
+    newest = await cursor.sort([("created_at", DESCENDING), ("_id", DESCENDING)]).limit(room).to_list()
+    return [{"id": spark["_id"], "title": spark["chapter_title"]} for spark in newest]
 
 
-async def mark_sparks_used(database: AsyncDatabase, user_id: str) -> None:
-    await database.sparks.update_many(
-        {"user_id": user_id, "used_at": None}, {"$set": {"used_at": datetime.now(UTC)}}
+async def use_spark(database: AsyncDatabase, interview: dict, spark_id: str) -> dict:
+    """A spark is used only once a question has actually worked from it. Unused ones stay saved."""
+    spark = await database.sparks.find_one_and_update(
+        {"_id": spark_id, "user_id": interview["user_id"], "used_at": None},
+        {"$set": {"used_at": datetime.now(UTC)}},
+    )
+    if spark is None:
+        return interview
+    return await database.interviews.find_one_and_update(
+        {"_id": interview["_id"]},
+        {"$inc": {"sparks_asked": 1}, "$addToSet": {"asked_spark_titles": spark["chapter_title"]}},
+        return_document=ReturnDocument.AFTER,
     )
 
 
@@ -613,15 +936,37 @@ async def ask_after_reading(database: AsyncDatabase, author_id: str, checkout_id
 
 
 async def list_reading_questions(database: AsyncDatabase, user: dict) -> list[ReadingQuestionResponse]:
-    cursor = database.reading_questions.find(
-        {"author_id": user["_id"], "answered_at": None, "dismissed_at": None}
-    ).sort("created_at", ASCENDING)
+    """The newest question waiting, with who the reading was with. Older ones go away after a while."""
+    waiting = {"author_id": user["_id"], "answered_at": None, "dismissed_at": None}
+    newest = await database.reading_questions.find_one(
+        waiting, sort=[("created_at", DESCENDING), ("_id", DESCENDING)]
+    )
+    if newest is None:
+        return []
+    now = datetime.now(UTC)
+    await database.reading_questions.update_many(
+        {
+            **waiting,
+            "_id": {"$ne": newest["_id"]},
+            "created_at": {"$lt": now - timedelta(days=READING_QUESTION_DAYS)},
+        },
+        {"$set": {"dismissed_at": now}},
+    )
     return [
         ReadingQuestionResponse(
-            id=question["_id"], question=READING_QUESTION, created_at=question["created_at"]
+            id=newest["_id"],
+            question=READING_QUESTION,
+            created_at=newest["created_at"],
+            reader_name=await _reader_name(database, user["_id"], newest["checkout_id"]),
         )
-        for question in await cursor.to_list()
     ]
+
+
+async def _reader_name(database: AsyncDatabase, author_id: str, checkout_id: str) -> str | None:
+    checkout = await checkouts.get_checkout_for(database, checkout_id, author_id)
+    if checkout is None:
+        return None
+    return (await full_names_of(database, [checkout["reader_id"]])).get(checkout["reader_id"])
 
 
 async def claim_reading_question(database: AsyncDatabase, user: dict, question_id: str, field: str) -> None:
@@ -639,41 +984,45 @@ async def dismiss_reading_question(database: AsyncDatabase, user: dict, question
 
 
 async def answer_reading_question(
-    database: AsyncDatabase, claude: Claude, user: dict, question_id: str, text: str
+    database: AsyncDatabase,
+    claude: Claude,
+    user: dict,
+    question_id: str,
+    text: str,
+    background: BackgroundTasks,
 ) -> dict:
-    """Save the answer as a turn, then propose changes as a round of adding does. During a round it
-    simply joins that round."""
-    interview = await get_interview(database, user["_id"])
-    if interview["stage"] not in ("done", "adding"):
-        raise conflict("Finish what's waiting in your book first.")
+    """Save the answer as a turn. From `done` it goes to revise right away. During a round it's
+    included when the round finishes. While changes are waiting, it runs after the member decides."""
+    interview = await interview_for_book(database, user["_id"])
+    if interview["stage"] not in ("done", "adding", "revising"):
+        raise conflict("Finish your book first.")
     await claim_reading_question(database, user, question_id, "answered_at")
     turn = {"question": READING_QUESTION, "answer": text, "phase": "reading"}
     now = datetime.now(UTC)
-    if interview["stage"] == "adding":
-        updated = await database.interviews.find_one_and_update(
-            {"_id": interview["_id"], "stage": "adding"},
-            {"$push": {"turns": turn}, "$set": {"updated_at": now}},
-            return_document=ReturnDocument.AFTER,
-        )
-    else:
+    if interview["stage"] == "done":
+        count = len(interview["turns"])
         updated = await database.interviews.find_one_and_update(
             {"_id": interview["_id"], "stage": "done"},
             {
                 "$push": {"turns": turn},
                 "$set": {
                     "stage": "revising",
-                    "round_start": len(interview["turns"]),
+                    "round_start": count,
+                    "round_end": count + 1,
                     "proposal": None,
                     "current": None,
                     "nothing_new": False,
+                    "write_status": "writing",
+                    "write_retried": False,
                     "updated_at": now,
                 },
             },
             return_document=ReturnDocument.AFTER,
         )
         if updated is not None:
-            return await write_proposal(database, claude, updated)
-    if updated is None:
-        await database.reading_questions.update_one({"_id": question_id}, {"$set": {"answered_at": None}})
-        raise conflict("Finish what's waiting in your book first.")
-    return updated
+            background.add_task(write_proposal, database, claude, updated["_id"])
+            return updated
+    # In a round or waiting on a decision. `updated_at` stays, as nothing about the state has moved.
+    return await database.interviews.find_one_and_update(
+        {"_id": interview["_id"]}, {"$push": {"turns": turn}}, return_document=ReturnDocument.AFTER
+    )
