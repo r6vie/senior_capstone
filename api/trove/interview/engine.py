@@ -9,6 +9,7 @@ Errors: ClaudeRefused when Claude declines, Anthropic SDK errors as they come, a
 
 import json
 import re
+from collections.abc import Callable
 from difflib import SequenceMatcher
 from typing import Literal
 from uuid import uuid4
@@ -38,6 +39,10 @@ MIN_SWEEP = 4
 THIN_WINDOW, THIN_SWITCH = 3, 2
 SHORT_ANSWER_WORDS, UNSURE_ANSWER_WORDS = 6, 15
 MIN_CHAPTERS, MAX_CHAPTERS = 3, 5
+# A quote shorter than this can't show a chapter is theirs ("I made it.").
+MIN_QUOTE_WORDS = 5
+# A rewrite this close to the original isn't a rewrite.
+REWRITE_TOO_CLOSE = 0.9
 # A book may grow past its first version, to this many chapters (docs/review/decisions.md, row 1).
 MAX_BOOK_CHAPTERS = 8
 # A round of adding is short. Skips count only toward the second limit, so skipping can't run forever.
@@ -179,6 +184,10 @@ MAX_BLURB = 600
 QUESTION_EFFORT = "medium"
 BOOK_EFFORT = "high"
 MAX_TOKENS = 16000
+
+
+class NotEnoughMaterial(ValueError):
+    """The answers can't yet make enough grounded chapters. Trying again can't help: only more answers can."""
 
 
 class Turn(BaseModel):
@@ -331,10 +340,18 @@ class _Revision(BaseModel):
 
 
 async def next_turn(
-    claude: Claude, *, turns: list[Turn], resume_text: str | None, sparks: list[dict] | None = None
+    claude: Claude,
+    *,
+    turns: list[Turn],
+    resume_text: str | None,
+    sparks: list[dict] | None = None,
+    more_material: bool = False,
 ) -> NextTurn:
-    """The Librarian's next question, given every turn so far."""
-    plan = await plan_turn(claude, turns=turns, resume_text=resume_text, sparks=sparks)
+    """The Librarian's next question, given every turn so far. `more_material` means a draft has just
+    found too little, so the interview carries on past its usual limits."""
+    plan = await plan_turn(
+        claude, turns=turns, resume_text=resume_text, sparks=sparks, more_material=more_material
+    )
     return NextTurn(
         question=plan.question,
         phase=plan.phase,
@@ -346,11 +363,20 @@ async def next_turn(
 
 
 async def plan_turn(
-    claude: Claude, *, turns: list[Turn], resume_text: str | None, sparks: list[dict] | None = None
+    claude: Claude,
+    *,
+    turns: list[Turn],
+    resume_text: str | None,
+    sparks: list[dict] | None = None,
+    more_material: bool = False,
 ) -> TurnPlan:
     """next_turn plus the private thread ranking, which the evals read."""
     plan = await _ask(
-        claude, "interview/interviewer", _turn_blocks(turns, resume_text, sparks), TurnPlan, QUESTION_EFFORT
+        claude,
+        "interview/interviewer",
+        _turn_blocks(turns, resume_text, sparks, more_material),
+        TurnPlan,
+        QUESTION_EFFORT,
     )
 
     answered = sum(1 for turn in turns if turn.answer.strip())
@@ -360,33 +386,70 @@ async def plan_turn(
         plan.ready_for_reveal = False
     if _questions_asked(turns) >= MAX_QUESTIONS or len(turns) >= MAX_TURNS:
         plan.ready_for_reveal = True
+    if more_material:
+        plan.ready_for_reveal = False
+        plan.phase = "dig"
     if plan.phase != "shape":
         plan.playback = None
     return plan
 
 
-async def draft_book(claude: Claude, *, turns: list[Turn]) -> Draft:
+def _never(_text: str) -> bool:
+    return False
+
+
+async def draft_book(
+    claude: Claude,
+    *,
+    turns: list[Turn],
+    leaks: Callable[[str], bool] = _never,
+    spark_titles: list[str] | None = None,
+) -> Draft:
     """One shared pool of grounded chapters, three titles that read it differently (§9.4), and a
-    back-cover blurb."""
+    back-cover blurb. `leaks` says whether text carries a term from outside the member's answers: that
+    forces one retry, and after that the item is dropped. Raises NotEnoughMaterial if too few chapters
+    survive, because then only more answers can help."""
     content = f"{_transcript(turns)}\n\nDraft the pool of chapters, the three titles and the blurb."
-    for _ in range(2):
+    pool: list[DraftChapter] = []
+    for attempt in range(2):
         raw = await _ask(claude, "interview/draft", content, _Draft, BOOK_EFFORT)
+        written = [
+            raw.blurb,
+            *(f"{t.title} {t.why}" for t in raw.titles),
+            *(f"{c.title} {c.summary}" for c in raw.pool),
+        ]
+        if attempt == 0 and any(leaks(text) for text in written):
+            continue
         pool = []
         for chapter in raw.pool:
             quotes = grounded_quotes(chapter.quotes, turns)
-            if quotes:
+            public = f"{chapter.title} {chapter.summary}"
+            if quotes and not leaks(public) and not _too_close_to_a_spark(chapter.title, spark_titles):
                 pool.append(
                     DraftChapter(id=str(uuid4()), title=chapter.title, summary=chapter.summary, quotes=quotes)
                 )
+        titles = [t for t in raw.titles if not leaks(f"{t.title} {t.why}")]
         blurb = _usable_blurb(raw.blurb)
-        if len(pool) >= MIN_CHAPTERS and len(raw.titles) >= 3 and blurb:
-            return Draft(pool=pool, titles=raw.titles[:3], blurb=blurb)
-    raise ValueError("The draft didn't have enough grounded chapters, three titles and a blurb.")
+        if blurb and leaks(blurb):
+            blurb = None
+        if len(pool) >= MIN_CHAPTERS and len(titles) >= 3 and blurb:
+            return Draft(pool=pool, titles=titles[:3], blurb=blurb)
+    if len(pool) < MIN_CHAPTERS:
+        raise NotEnoughMaterial("The draft didn't have enough grounded chapters.")
+    raise ValueError("The draft didn't have three titles and a blurb.")
 
 
-async def finish_book(claude: Claude, *, turns: list[Turn], draft: Draft, title: str) -> FinishedBook:
+async def finish_book(
+    claude: Claude,
+    *,
+    turns: list[Turn],
+    draft: Draft,
+    title: str,
+    leaks: Callable[[str], bool] = _never,
+    spark_titles: list[str] | None = None,
+) -> FinishedBook:
     """3 to 5 chapters from the pool, in reading order, angled to the chosen title, and the blurb
-    rewritten for them."""
+    rewritten for them. Anything that fails a check falls back to the pool's own text."""
     pool = {chapter.id: chapter for chapter in draft.pool}
     listing = json.dumps(
         [{"pool_id": c.id, "title": c.title, "summary": c.summary} for c in draft.pool], indent=1
@@ -401,8 +464,15 @@ async def finish_book(claude: Claude, *, turns: list[Turn], draft: Draft, title:
     for chosen in raw.chapters:
         source = pool.get(chosen.pool_id)
         if source and all(c.id != source.id for c in chapters):
+            unusable = leaks(f"{chosen.title} {chosen.summary}") or _too_close_to_a_spark(
+                chosen.title, spark_titles
+            )
             chapters.append(
-                DraftChapter(id=source.id, title=chosen.title, summary=chosen.summary, quotes=source.quotes)
+                source
+                if unusable
+                else DraftChapter(
+                    id=source.id, title=chosen.title, summary=chosen.summary, quotes=source.quotes
+                )
             )
     # A short or garbled pick still yields a usable book: top up from the pool, in pool order.
     for source in draft.pool:
@@ -411,11 +481,15 @@ async def finish_book(claude: Claude, *, turns: list[Turn], draft: Draft, title:
         if all(c.id != source.id for c in chapters):
             chapters.append(source)
     # An unusable blurb falls back to the draft's, which is grounded in the same interview.
-    blurb = _usable_blurb(raw.blurb) or draft.blurb
+    blurb = _usable_blurb(raw.blurb)
+    if not blurb or leaks(blurb):
+        blurb = draft.blurb
     return FinishedBook(chapters=chapters[:MAX_CHAPTERS], blurb=blurb)
 
 
-async def write_blurb(claude: Claude, *, turns: list[Turn], chapters: list[DraftChapter]) -> str:
+async def write_blurb(
+    claude: Claude, *, turns: list[Turn], chapters: list[DraftChapter], leaks: Callable[[str], bool] = _never
+) -> str:
     """A fresh back-cover blurb for these chapters, after a change to what the book covers."""
     listing = json.dumps([{"title": c.title, "summary": c.summary} for c in chapters], indent=1)
     content = (
@@ -425,15 +499,21 @@ async def write_blurb(claude: Claude, *, turns: list[Turn], chapters: list[Draft
     for _ in range(2):
         raw = await _ask(claude, "interview/blurb", content, _Blurb, BOOK_EFFORT)
         blurb = _usable_blurb(raw.blurb)
-        if blurb:
+        if blurb and not leaks(blurb):
             return blurb
-    raise ValueError("The blurb was empty or too long.")
+    raise ValueError("The blurb was empty, too long or carried a term the member never said.")
 
 
 async def rewrite_chapter(
-    claude: Claude, *, turns: list[Turn], chapters: list[DraftChapter], chapter_id: str
+    claude: Claude,
+    *,
+    turns: list[Turn],
+    chapters: list[DraftChapter],
+    chapter_id: str,
+    leaks: Callable[[str], bool] = _never,
 ) -> DraftChapter:
-    """The same chapter, better told: a new title and summary, keeping its id, topic and quotes."""
+    """The same chapter, better told: a new title and summary, keeping its id, topic and quotes. One
+    too close to the original gets one more try. After that the original comes back unchanged."""
     current = next((chapter for chapter in chapters if chapter.id == chapter_id), None)
     if current is None:
         raise ValueError(f"No chapter {chapter_id!r} in this book.")
@@ -445,9 +525,14 @@ async def rewrite_chapter(
         f"{_transcript(turns)}\n\n<book_chapters>\n{listing}\n</book_chapters>\n\n"
         "Rewrite the title and summary of the chapter marked rewrite_this."
     )
-    raw = await _ask(claude, "interview/rewrite", content, _Retold, BOOK_EFFORT)
-    # The quotes are what tie the chapter to its topic, so they never change on a rewrite.
-    return current.model_copy(update={"title": raw.title, "summary": raw.summary})
+    for attempt in range(2):
+        note = "\n\nThe last attempt was too close to the original. Tell it differently." if attempt else ""
+        raw = await _ask(claude, "interview/rewrite", content + note, _Retold, BOOK_EFFORT)
+        close = SequenceMatcher(None, current.summary, raw.summary).ratio() > REWRITE_TOO_CLOSE
+        if not close and not leaks(f"{raw.title} {raw.summary}"):
+            # The quotes are what tie the chapter to its topic, so they never change on a rewrite.
+            return current.model_copy(update={"title": raw.title, "summary": raw.summary})
+    return current
 
 
 async def next_adding_turn(
@@ -489,6 +574,7 @@ async def revise_book(
     off_limits: list[dict] | None = None,
     member_names: list[str] | None = None,
     spark_titles: list[str] | None = None,
+    leaks: Callable[[str], bool] = _never,
 ) -> Revision:
     """Proposed changes to the book from the round's answers. Grounding is checked here: a change
     must quote the member verbatim, and at least once from this round. An empty list is a real
@@ -545,7 +631,7 @@ async def revise_book(
             )
         )
     proposed = _usable_blurb(raw.blurb) if changes else None
-    if proposed and _mentions_any(proposed, others):
+    if proposed and (_mentions_any(proposed, others) or leaks(proposed)):
         proposed = None
     return Revision(changes=changes, blurb=proposed)
 
@@ -646,13 +732,15 @@ def _usable_blurb(blurb: str) -> str | None:
 
 
 def grounded_quotes(quotes: list[str], turns: list[Turn]) -> list[str]:
-    """The quotes that appear verbatim in one of the member's answers, ignoring case, spacing and
-    curly-vs-straight punctuation. Anything else may be the model's words, so it's dropped."""
+    """The quotes of at least MIN_QUOTE_WORDS that appear verbatim in one of the member's answers,
+    ignoring case, spacing and curly-vs-straight punctuation. Anything else may be the model's words,
+    or too little to show the chapter is theirs, so it's dropped."""
     answers = [_normalize(turn.answer) for turn in turns]
     kept = []
     for quote in quotes:
         needle = _normalize(quote)
-        if needle and any(needle in answer for answer in answers) and quote.strip() not in kept:
+        long_enough = len(needle.split()) >= MIN_QUOTE_WORDS
+        if long_enough and any(needle in answer for answer in answers) and quote.strip() not in kept:
             kept.append(quote.strip())
     return kept
 
@@ -705,7 +793,9 @@ def _questions_asked(turns: list[Turn]) -> int:
     return sum(1 for turn in turns if not _skipped(turn))
 
 
-def _turn_blocks(turns: list[Turn], resume_text: str | None, sparks: list[dict] | None = None) -> list[dict]:
+def _turn_blocks(
+    turns: list[Turn], resume_text: str | None, sparks: list[dict] | None = None, more_material: bool = False
+) -> list[dict]:
     """The transcript as one content block per turn, with a cache breakpoint on the newest turn.
     Each request then extends the previous one's prefix, so the interview so far is read from
     the cache instead of being paid for again on every question."""
@@ -715,11 +805,15 @@ def _turn_blocks(turns: list[Turn], resume_text: str | None, sparks: list[dict] 
     blocks.append({"type": "text", "text": "<interview>\n"})
     blocks += [{"type": "text", "text": _render(n, turn)} for n, turn in enumerate(turns, start=1)]
     blocks[-1]["cache_control"] = {"type": "ephemeral"}
-    blocks.append({"type": "text", "text": f"</interview>\n\n{_status(turns)}{_sparks_block(sparks)}"})
+    blocks.append(
+        {"type": "text", "text": f"</interview>\n\n{_status(turns, more_material)}{_sparks_block(sparks)}"}
+    )
     return blocks
 
 
-def _status(turns: list[Turn]) -> str:
+def _status(turns: list[Turn], more_material: bool = False) -> str:
+    if more_material:
+        return "The material can't yet make three distinct chapters. Open an area not yet covered."
     asked = _questions_asked(turns)
     answered = sum(1 for turn in turns if turn.answer.strip())
     if not turns:

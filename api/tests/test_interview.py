@@ -1,4 +1,5 @@
 import base64
+from datetime import UTC, datetime
 
 import anthropic
 import pytest
@@ -53,7 +54,7 @@ class FakeEngine:
         self.fail_next = False
         self.fail_blurb = False
 
-    async def next_turn(self, claude, *, turns, resume_text, sparks=None):
+    async def next_turn(self, claude, *, turns, resume_text, sparks=None, more_material=False):
         self.calls.append(("next_turn", {"turns": turns, "resume_text": resume_text}))
         if self.fail_next:
             self.fail_next = False
@@ -75,22 +76,22 @@ class FakeEngine:
             topic=f"topic {len(turns)}",
         )
 
-    async def draft_book(self, claude, *, turns):
+    async def draft_book(self, claude, *, turns, **_):
         self.calls.append(("draft_book", {"turns": turns}))
         return Draft(pool=POOL, titles=TITLES, blurb="I know the pool.")
 
-    async def finish_book(self, claude, *, turns, draft, title):
+    async def finish_book(self, claude, *, turns, draft, title, **_):
         self.calls.append(("finish_book", {"title": title}))
         return FinishedBook(chapters=POOL[:4], blurb=f"I know {title}.")
 
-    async def write_blurb(self, claude, *, turns, chapters):
+    async def write_blurb(self, claude, *, turns, chapters, **_):
         self.calls.append(("write_blurb", {"chapters": [c.id for c in chapters]}))
         if self.fail_blurb:
             self.fail_blurb = False
             raise ValueError("unusable")
         return "I know " + ", ".join(c.id for c in chapters) + "."
 
-    async def rewrite_chapter(self, claude, *, turns, chapters, chapter_id):
+    async def rewrite_chapter(self, claude, *, turns, chapters, chapter_id, **_):
         self.calls.append(("rewrite_chapter", {"chapter_id": chapter_id}))
         return DraftChapter(id=chapter_id, title="Rewritten", summary="Better.", quotes=["Quote 1."])
 
@@ -204,6 +205,7 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
         "title": "Rewritten",
         "summary": "Better.",
         "quotes": ["Quote 1."],
+        "has_previous": True,
     }
     # A rewrite keeps the chapter's topic, so the blurb stays.
     assert book["blurb"] == "I know c1, c3, c4."
@@ -276,11 +278,13 @@ async def test_resume_text_is_used_then_deleted_and_the_file_is_never_kept(
     assert "assay lab" in fake_engine.calls[0][1]["resume_text"]
     interview = await database.interviews.find_one({})
     assert pdf not in str(interview)
-    assert "assay lab" in interview["resume_text"]
+    assert "assay lab" not in str(interview)
+    saved = await database.resume_texts.find_one({"_id": interview["_id"]})
+    assert "assay lab" in saved["text"]
 
     await answer_questions(client, headers, 10)
     await client.post("/interview/finish", headers=headers)
-    assert "resume_text" not in await database.interviews.find_one({})
+    assert await database.resume_texts.count_documents({}) == 0
 
 
 async def test_unreadable_resume_is_422(client, headers, fake_engine):
@@ -373,3 +377,195 @@ async def test_finish_with_no_body_still_works(client, headers, fake_engine):
     await client.post("/interview", json={}, headers=headers)
     await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
     assert (await client.post("/interview/finish", headers=headers)).status_code == 200
+
+
+async def test_abandoned_resume_text_expires_30_days_after_the_last_activity(
+    client, database, headers, fake_engine
+):
+    indexes = await database.resume_texts.index_information()
+    assert indexes["resume_texts_expire"]["expireAfterSeconds"] == 30 * 24 * 60 * 60
+    assert indexes["resume_texts_expire"]["key"] == [("last_activity_at", 1)]
+
+    pdf = base64.b64encode(minimal_pdf("Ran the assay lab for three years")).decode()
+    await client.post("/interview", json={"resume_pdf": pdf}, headers=headers)
+    long_ago = datetime(2020, 1, 1, tzinfo=UTC)
+    await database.resume_texts.update_one({}, {"$set": {"last_activity_at": long_ago}})
+    await answer_questions(client, headers, 1)
+    saved = await database.resume_texts.find_one({})
+    assert saved["last_activity_at"].year > 2020
+
+
+async def test_the_start_request_says_what_happens_to_the_resume(client):
+    schema = (await client.get("/openapi.json")).json()
+    description = schema["components"]["schemas"]["StartRequest"]["properties"]["resume_pdf"]["description"]
+    assert "30 days" in description
+    assert "Never stored" not in description
+
+
+async def to_review(client, headers, fake_engine) -> dict:
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    await client.post("/interview/finish", headers=headers)
+    return (await client.post("/interview/title", json={"title": 0}, headers=headers)).json()
+
+
+async def test_the_other_titles_stay_available_in_review(client, headers, fake_engine):
+    await to_review(client, headers, fake_engine)
+    state = (await client.get("/interview", headers=headers)).json()
+    assert state["stage"] == "reviewing"
+    assert [t["title"] for t in state["titles"]] == [t.title for t in TITLES]
+
+
+async def test_change_to_another_title_finishes_the_book_again(client, headers, fake_engine):
+    book = await to_review(client, headers, fake_engine)
+    response = await client.post("/interview/book/title", json={"title": 1}, headers=headers)
+    assert response.status_code == 200
+    changed = response.json()
+    assert changed["title"] == TITLES[1].title
+    assert changed["id"] == book["id"]
+    assert changed["blurb"] == f"I know {TITLES[1].title}."
+
+
+async def test_the_same_title_costs_nothing(client, headers, fake_engine):
+    await to_review(client, headers, fake_engine)
+    calls = len(fake_engine.calls)
+    response = await client.post("/interview/book/title", json={"title": 0}, headers=headers)
+    assert response.status_code == 200
+    assert len(fake_engine.calls) == calls
+
+
+async def test_a_removed_chapter_stays_out_when_the_title_changes(client, headers, monkeypatch, fake_engine):
+    book = await to_review(client, headers, fake_engine)
+    gone = book["chapters"][0]["id"]
+    assert (await client.delete(f"/interview/book/chapters/{gone}", headers=headers)).status_code == 200
+
+    seen = {}
+
+    async def finish_book(claude, *, turns, draft, title, **_):
+        seen["pool"] = [chapter.id for chapter in draft.pool]
+        return FinishedBook(chapters=draft.pool[:3], blurb="Fresh.")
+
+    monkeypatch.setattr(engine, "finish_book", finish_book)
+    await client.post("/interview/book/title", json={"title": 2}, headers=headers)
+    assert gone not in seen["pool"]
+
+
+async def test_title_and_blurb_routes_only_in_review(client, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    assert (await client.post("/interview/book/blurb", headers=headers)).status_code == 409
+    assert (await client.post("/interview/book/title", json={"title": 1}, headers=headers)).status_code == 409
+
+
+async def test_rewrite_the_back_cover(client, database, headers, fake_engine):
+    book = await to_review(client, headers, fake_engine)
+    response = await client.post("/interview/book/blurb", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["blurb"] == "I know " + ", ".join(c["id"] for c in book["chapters"]) + "."
+
+    fake_engine.fail_blurb = True
+    failed = await client.post("/interview/book/blurb", headers=headers)
+    assert failed.status_code == 502
+    assert (await client.get("/books/me", headers=headers)).json()["blurb"] == response.json()["blurb"]
+
+
+async def test_a_rewrite_can_be_taken_back_until_the_shelf(client, database, headers, fake_engine):
+    book = await to_review(client, headers, fake_engine)
+    first = book["chapters"][0]
+    assert first["has_previous"] is False
+
+    restored_none = await client.post(f"/interview/book/chapters/{first['id']}/restore", headers=headers)
+    assert restored_none.status_code == 409
+
+    rewritten = (await client.post(f"/interview/book/chapters/{first['id']}/rewrite", headers=headers)).json()
+    assert rewritten["chapters"][0]["title"] == "Rewritten"
+    assert rewritten["chapters"][0]["has_previous"] is True
+
+    back = (await client.post(f"/interview/book/chapters/{first['id']}/restore", headers=headers)).json()
+    assert back["chapters"][0]["title"] == first["title"]
+    assert back["chapters"][0]["summary"] == first["summary"]
+    assert back["chapters"][0]["has_previous"] is False
+
+    await client.post(f"/interview/book/chapters/{first['id']}/rewrite", headers=headers)
+    await client.post("/interview/book/shelve", headers=headers)
+    saved = await database.books.find_one({})
+    assert all("previous" not in chapter for chapter in saved["chapters"])
+
+
+async def test_a_rewrite_that_changes_nothing_says_so(client, headers, monkeypatch, fake_engine):
+    book = await to_review(client, headers, fake_engine)
+    first = book["chapters"][0]
+
+    async def same(claude, *, turns, chapters, chapter_id, **_):
+        return next(c for c in chapters if c.id == chapter_id)
+
+    monkeypatch.setattr(engine, "rewrite_chapter", same)
+    response = (await client.post(f"/interview/book/chapters/{first['id']}/rewrite", headers=headers)).json()
+    assert response["rewrite_unchanged"] is True
+    assert response["chapters"][0]["title"] == first["title"]
+    assert response["chapters"][0]["has_previous"] is False
+
+
+async def too_little(claude, *, turns, **_):
+    raise engine.NotEnoughMaterial("Too few.")
+
+
+async def test_said_enough_with_too_little_stays_on_the_question(client, headers, monkeypatch, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    state = await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    monkeypatch.setattr(engine, "draft_book", too_little)
+
+    response = await client.post("/interview/finish", headers=headers)
+    assert response.status_code == 200
+    after = response.json()
+    assert after["stage"] == "interviewing"
+    assert after["question"] == state["question"]
+    assert after["needs_more"] is True
+    assert after["at_limit"] is False
+    assert after["can_finish"] is False
+    # No retry that can't succeed.
+    assert (await client.post("/interview/finish", headers=headers)).status_code == 409
+
+    for _ in range(service.MORE_ANSWERS_BEFORE_REDRAFT):
+        after = (await client.post("/interview/answers", json={"answer": "More."}, headers=headers)).json()
+    assert after["needs_more"] is False
+    assert after["can_finish"] is True
+
+
+async def test_a_librarian_finish_with_too_little_asks_on_new_ground(
+    client, database, headers, monkeypatch, fake_engine
+):
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    await database.interviews.update_one({}, {"$set": {"current": None, "ready_for_reveal": True}})
+    monkeypatch.setattr(engine, "draft_book", too_little)
+
+    calls = len(fake_engine.calls)
+    state = (await client.post("/interview/finish", headers=headers)).json()
+    assert state["stage"] == "interviewing"
+    assert state["question"] is not None
+    assert state["ready_for_reveal"] is False
+    assert state["needs_more"] is True
+    assert fake_engine.calls[calls][0] == "next_turn"
+
+
+async def test_too_little_at_the_turn_limit_lets_the_member_decide(
+    client, database, headers, monkeypatch, fake_engine
+):
+    await client.post("/interview", json={}, headers=headers)
+    many = [{"question": "Q?", "answer": "Short answer.", "phase": "dig"}] * engine.MAX_TURNS
+    await database.interviews.update_one(
+        {}, {"$set": {"turns": many, "current": None, "ready_for_reveal": True}}
+    )
+    monkeypatch.setattr(engine, "draft_book", too_little)
+    calls = len(fake_engine.calls)
+    state = (await client.post("/interview/finish", headers=headers)).json()
+    assert state["at_limit"] is True
+    assert state["question"] is None
+    assert state["can_finish"] is False
+    assert len(fake_engine.calls) == calls
+
+    # "Keep answering".
+    state = (await client.post("/interview/question", headers=headers)).json()
+    assert state["question"] is not None
+    assert state["at_limit"] is False
+    assert (await database.interviews.find_one({}))["turns"] == many

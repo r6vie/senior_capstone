@@ -28,6 +28,8 @@ SWEEP_QUESTIONS = 5
 SHAPE_AFTER_ANSWERS = 12
 # The book steps take longer than a question, as the real ones do.
 BOOK_STEP_SLOWER = 2
+# A quote needs this many words, or the engine drops it.
+QUOTE_WORDS = 5
 
 
 def ensure_scripted_allowed(settings) -> None:
@@ -263,31 +265,28 @@ POOL = [
 RETOLD = {
     "Splitting a fry line between two jobs": {
         "title": "The fryer kept stopping to make change",
-        "summary": "I'd been keeping up with the window until I noticed the fryer stopping to take orders and make "
-        "change. So I had one person walk the line taking orders and money, writing each on the paper boat, and "
-        "the fryer only had to cook. Waits went from around 25 minutes to under 10.",
+        "summary": "Waits at the stand ran around 25 minutes because whoever fried also took the money. Once one "
+        "person walked the line writing each order on the paper boat, they dropped under 10.",
     },
     "Checking the simple things before the tools": {
         "title": "Slats and bolts before any tool",
-        "summary": "When a bed frame rocked, I checked whether the slats were sitting right, then tightened the "
-        "bolts by hand before grabbing a tool. The jammed printer got the same order: tray seated, jam light, then "
-        "the back panel, where the paper was.",
+        "summary": "Most things that come to me broken are loose or jammed. So I look first: slats, bolts by hand, "
+        "paper tray, jam light. The back panel only comes off after that.",
     },
     "Why the creek numbers jumped after rain": {
         "title": "Nitrate numbers that jumped after rain",
-        "summary": "The first couple months of nitrate readings were pretty useless, since we sampled at different "
-        "times of day and some samples came right after rain. We changed it to the same spot at 7am every Tuesday, "
-        "kept a log of rain, and ran a blank sample each time.",
+        "summary": "Two months of readings told us nothing, because rain and the time of day were moving them. A "
+        "fixed 7am Tuesday, a rain log and a blank each time made the numbers mean something.",
     },
     "Stuck with the line at the county fair": {
         "title": "Stuck with the line at the fair",
-        "summary": "I worked my family's fry stand at the county fair every summer, and I was usually the one who "
-        "got stuck with the line when it backed up.",
+        "summary": "Every summer at the county fair, the line was mine when it backed up. Being the kid at my "
+        "family's stand meant that job came to me whether I'd asked for it or not.",
     },
     "Running it one night for my mom": {
         "title": "One night to convince the fryer",
-        "summary": "The fryer was my mom's, and she was skeptical of the change. I showed her by doing it for one "
-        "night, and after that she didn't really argue.",
+        "summary": "Arguing wasn't going to move my mom off the way she ran the fryer. I ran the new line myself for "
+        "a single night, and that settled it.",
     },
 }
 DRAFT_BLURB = (
@@ -338,12 +337,14 @@ def _answers(turns: list[ParsedTurn]) -> list[str]:
 
 
 def _first_sentence(answer: str) -> str:
-    return re.split(r"(?<=[.!?])\s+", answer.strip())[0]
+    """The first sentence long enough to count as a quote, or else the whole answer."""
+    sentences = re.split(r"(?<=[.!?])\s+", answer.strip())
+    return next((sentence for sentence in sentences if len(sentence.split()) >= QUOTE_WORDS), answer.strip())
 
 
 def _grounded_chapters(text: str) -> list[dict]:
     """Theo's chapters, with quotes that are verbatim from this member's answers whatever they typed."""
-    answers = _answers(_turns(text))
+    answers = [answer for answer in _answers(_turns(text)) if len(answer.split()) >= QUOTE_WORDS]
     said = " ".join(answers).casefold()
     chapters = []
     for number, chapter in enumerate(POOL):
@@ -375,6 +376,9 @@ def _plan(phase: str, question: str, topic: str, *, playback: str | None = None,
 
 def _interviewer(text: str) -> dict:
     turns = _turns(text)
+    if "can't yet make three distinct chapters" in text:
+        question, topic = _next_question(turns, thin=True)
+        return _plan("dig", question, topic)
     if turns and turns[-1].phase == "shape":
         return _plan("shape", "Thanks, I have enough to start your book.", "your book", ready=True)
     answers = _answers(turns)
@@ -392,6 +396,7 @@ def _interviewer(text: str) -> dict:
 
 
 def _draft(text: str) -> dict:
+    # Thin answers can't quote, so a thin walk reaches "I need a little more" as the real one does.
     return {"pool": _grounded_chapters(text), "titles": TITLES, "blurb": DRAFT_BLURB}
 
 

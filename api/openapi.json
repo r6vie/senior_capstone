@@ -781,6 +781,7 @@
           "Interview"
         ],
         "summary": "Rewrite Chapter",
+        "description": "Tell the chapter again. `rewrite_unchanged` means it couldn't be told better, and nothing changed.",
         "operationId": "rewrite_chapter_interview_book_chapters__chapter_id__rewrite_post",
         "security": [
           {
@@ -820,6 +821,128 @@
             }
           }
         }
+      }
+    },
+    "/interview/book/chapters/{chapter_id}/restore": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Restore Chapter",
+        "description": "Go back to the chapter's last version (`has_previous`), during the review.",
+        "operationId": "restore_chapter_interview_book_chapters__chapter_id__restore_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "chapter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Chapter Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interview/book/blurb": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Rewrite Blurb",
+        "description": "Write the draft's back cover again.",
+        "operationId": "rewrite_blurb_interview_book_blurb_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/book/title": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Change Title",
+        "description": "Change to another of the three titles (`titles`), finishing the book again to match.",
+        "operationId": "change_title_interview_book_title_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TitleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/interview/book/shelve": {
@@ -1564,6 +1687,11 @@
             },
             "type": "array",
             "title": "Quotes"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous",
+            "default": false
           }
         },
         "type": "object",
@@ -1852,6 +1980,14 @@
             "type": "boolean",
             "title": "Ready For Reveal"
           },
+          "needs_more": {
+            "type": "boolean",
+            "title": "Needs More"
+          },
+          "at_limit": {
+            "type": "boolean",
+            "title": "At Limit"
+          },
           "titles": {
             "anyOf": [
               {
@@ -1931,6 +2067,8 @@
           "has_answers",
           "can_finish",
           "ready_for_reveal",
+          "needs_more",
+          "at_limit",
           "titles",
           "blurb",
           "revision_status",
@@ -2144,6 +2282,11 @@
           "can_undo": {
             "type": "boolean",
             "title": "Can Undo",
+            "default": false
+          },
+          "rewrite_unchanged": {
+            "type": "boolean",
+            "title": "Rewrite Unchanged",
             "default": false
           }
         },
@@ -2688,7 +2831,7 @@
               }
             ],
             "title": "Resume Pdf",
-            "description": "An optional r\u00e9sum\u00e9 PDF, base64-encoded. Never stored."
+            "description": "An optional r\u00e9sum\u00e9 PDF, base64-encoded. The file isn't kept. Its text is deleted when the interview ends, or 30 days after the last activity, and nothing from it goes into the book."
           }
         },
         "additionalProperties": false,

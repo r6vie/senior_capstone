@@ -12,6 +12,8 @@ function interview(overrides: Partial<InterviewResponse>): InterviewResponse {
     has_answers: false,
     can_finish: false,
     ready_for_reveal: false,
+    needs_more: false,
+    at_limit: false,
     titles: null,
     blurb: null,
     revision_status: null,

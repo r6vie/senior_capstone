@@ -18,6 +18,8 @@ class Chapter(BaseModel):
 class AuthorChapter(Chapter):
     # The member's own interview words this chapter is grounded in. Only the author sees them.
     quotes: list[str]
+    # In review, a rewrite can be taken back (POST /interview/book/chapters/{id}/restore).
+    has_previous: bool = False
 
 
 class BookCard(BaseModel):
@@ -58,3 +60,5 @@ class MyBookResponse(BaseModel):
     updated_at: datetime
     # The last applied revision can still be taken back (POST /interview/book/undo).
     can_undo: bool = False
+    # After a rewrite: it couldn't be told better from what the member said, so nothing changed.
+    rewrite_unchanged: bool = False

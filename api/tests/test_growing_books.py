@@ -336,6 +336,32 @@ async def test_the_resume_never_comes_back(client, scripted_ai):
     assert not any("RESUMEMARKER" in member_data(request) for request in later)
 
 
+async def test_a_resume_only_term_stays_out_of_book_steps_and_the_saved_interview(
+    client, database, scripted_ai
+):
+    person = await member(client, "terms@case.edu")
+    pdf = base64.b64encode(minimal_pdf("Operations at Gopala Foods 2019")).decode()
+    await client.post("/interview", json={"resume_pdf": pdf}, headers=person["headers"])
+    saved = await database.interviews.find_one({"user_id": person["id"]})
+    assert "Gopala" not in str(saved)
+    # The Librarian's question names the company, as a résumé can make it do.
+    await database.interviews.update_one(
+        {"user_id": person["id"]},
+        {"$set": {"current.question": "What happened at Gopala Foods in 2019?"}},
+    )
+    for answer in scripted.THEO_ANSWERS:
+        await client.post("/interview/answers", json={"answer": answer}, headers=person["headers"])
+    await client.post("/interview/shape", json={}, headers=person["headers"])
+    await client.post("/interview/finish", headers=person["headers"])
+
+    draft_request = next(r for r in scripted_ai.requests if r["system"] == load_prompt("interview/draft"))
+    data = member_data(draft_request)
+    assert "Gopala" not in data
+    assert "2019" not in data
+    assert "What happened at that one" in data
+    assert await database.resume_texts.count_documents({}) == 0
+
+
 async def test_a_whole_round_walks_on_the_scripted_ai(client, database, scripted_ai):
     person = await member(client, "walk@case.edu")
     await first_interview(client, person)
@@ -859,6 +885,56 @@ async def test_a_spark_is_used_only_when_its_question_is_asked(client, database,
     fake_claude.responses.append(revision(change()))
     await client.post("/interview/finish", headers=reader["headers"])
     assert len((await client.get("/interview/sparks", headers=reader["headers"])).json()) == 1
+
+
+async def test_a_spark_title_stays_out_of_a_first_book(client, database, author, reader, fake_claude):
+    saved = (await spark(client, reader, author, "c0")).json()
+    fake_claude.responses.append(
+        text_message(
+            json.dumps(
+                {
+                    "threads": [],
+                    "phase": "sweep",
+                    "question": "You saved Chapter 0. Yours?",
+                    "playback": None,
+                    "topic": "t",
+                    "ready_for_reveal": False,
+                    "spark_id": saved["id"],
+                }
+            )
+        )
+    )
+    await client.post("/interview", json={}, headers=reader["headers"])
+    await database.interviews.update_one(
+        {"user_id": reader["id"]},
+        {
+            "$push": {
+                "turns": {
+                    "$each": [
+                        {"question": "Q?", "answer": f"{OLD_ANSWER} {n}", "phase": "dig"} for n in range(10)
+                    ]
+                }
+            }
+        },
+    )
+    fake_claude.responses.append(
+        text_message(
+            json.dumps(
+                {
+                    "pool": [
+                        {"title": "Chapter 0", "summary": "S.", "quotes": [OLD_ANSWER]},
+                        *({"title": f"Own {n}", "summary": "S.", "quotes": [OLD_ANSWER]} for n in range(3)),
+                    ],
+                    "titles": [{"title": f"T{n}", "why": "W."} for n in range(3)],
+                    "blurb": "A blurb of mine.",
+                }
+            )
+        )
+    )
+    await client.post("/interview/finish", headers=reader["headers"])
+    saved_interview = await database.interviews.find_one({"user_id": reader["id"]})
+    assert [c["title"] for c in saved_interview["draft"]["pool"]] == ["Own 0", "Own 1", "Own 2"]
+    assert "You saved Chapter 0" not in member_data(fake_claude.requests[-1])
 
 
 async def test_a_used_spark_can_be_saved_again(client, database, author, reader):

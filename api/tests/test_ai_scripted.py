@@ -114,6 +114,19 @@ async def test_the_interview_has_sweep_then_dig(client, headers, scripted_ai):
     assert set(phases[5:]) == {"dig"}
 
 
+async def test_a_thin_walk_reaches_i_need_a_little_more(client, headers, scripted_ai):
+    state = (await client.post("/interview", json={}, headers=headers)).json()
+    for _ in range(10):
+        state = (
+            await client.post("/interview/answers", json={"answer": "Not much."}, headers=headers)
+        ).json()
+    assert state["can_finish"] is True
+    state = (await client.post("/interview/finish", headers=headers)).json()
+    assert state["stage"] == "interviewing"
+    assert state["needs_more"] is True
+    assert state["question"] is not None
+
+
 async def test_an_unknown_prompt_is_an_error_not_a_guess():
     with pytest.raises(ValueError):
         await ScriptedClaude().create(system="Who knows.", messages=[{"role": "user", "content": "Hi"}])

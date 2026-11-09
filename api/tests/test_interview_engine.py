@@ -112,7 +112,7 @@ async def test_refusals_propagate():
 
 async def test_draft_keeps_only_verbatim_quotes_and_assigns_ids():
     pool = [
-        chapter("it felt slimy", "Why gums feel wrong"),
+        chapter("used guar gum and it felt slimy", "Why gums feel wrong"),
         # Curly apostrophe and extra spacing still match the member's words.
         chapter("strain it overnight,  and that\u2019s what makes it thick", "Eighteen hours"),
         chapter("walked in with cold samples", "The Friday sample"),
@@ -283,3 +283,87 @@ def test_the_interviewer_bans_small_talk_and_reassurance():
     prompt = load_prompt("interview/interviewer")
     assert "When answers run thin" in prompt
     assert "no reassurance" in prompt and "No small talk" in prompt
+
+
+async def test_two_grounded_chapters_at_the_cap_is_not_enough_material():
+    answers = turns(engine.MAX_QUESTIONS)
+    quote = answers[0].answer
+    thin = [chapter(quote), chapter(quote, "Another")]
+    claude = FakeClaude(
+        [
+            reply({"pool": thin, "titles": TITLES, "blurb": BLURB}),
+            reply({"pool": thin, "titles": TITLES, "blurb": BLURB}),
+        ]
+    )
+    with pytest.raises(engine.NotEnoughMaterial):
+        await engine.draft_book(claude, turns=answers)
+
+
+async def test_more_material_goes_past_the_limits_with_a_status_note():
+    claude = FakeClaude([reply(plan(ready_for_reveal=True, phase="shape", playback="You."))])
+    result = await engine.next_turn(
+        claude, turns=turns(engine.MAX_QUESTIONS), resume_text=None, more_material=True
+    )
+    assert result.ready_for_reveal is False
+    assert result.phase == "dig"
+    assert result.playback is None
+    assert "can't yet make three distinct chapters" in sent(claude)
+    assert "That is the limit" not in sent(claude)
+
+
+def test_a_quote_needs_five_words():
+    said = [engine.Turn(question="Q?", answer="I made it. I made it work on the third try.", phase="dig")]
+    assert engine.grounded_quotes(["I made it."], said) == []
+    assert engine.grounded_quotes(["I made it work on"], said) == ["I made it work on"]
+
+
+async def test_rewrite_too_close_tries_once_more_then_keeps_the_original():
+    book = [
+        DraftChapter(
+            id="c0", title="Old", summary="I split the line so the fryer only had to cook.", quotes=["q"]
+        ),
+    ]
+    close = {"title": "New", "summary": "I split the line so the fryer only had to cook!"}
+    claude = FakeClaude([reply(close), reply(close)])
+    result = await engine.rewrite_chapter(claude, turns=turns(1), chapters=book, chapter_id="c0")
+    assert result == book[0]
+    assert len(claude.requests) == 2
+    assert "too close to the original" in sent(claude)
+
+
+async def test_rewrite_second_try_can_succeed():
+    book = [
+        DraftChapter(id="c0", title="Old", summary="I split the line so the fryer only cooked.", quotes=["q"])
+    ]
+    claude = FakeClaude(
+        [
+            reply({"title": "New", "summary": "I split the line so the fryer only cooked."}),
+            reply(
+                {"title": "New", "summary": "The window stopped backing up once orders moved down the line."}
+            ),
+        ]
+    )
+    result = await engine.rewrite_chapter(claude, turns=turns(1), chapters=book, chapter_id="c0")
+    assert result.title == "New"
+    assert result.quotes == ["q"]
+
+
+async def test_book_output_with_a_resume_only_term_retries_then_drops_it():
+    said = [engine.Turn(question="Q?", answer=a, phase="dig") for a in ANSWERS]
+    leak = {"title": "My time at Gopala", "summary": "It was at Gopala.", "quotes": [ANSWERS[0]]}
+    clean = [chapter(answer, f"Clean {n}") for n, answer in enumerate(ANSWERS[:3])]
+    claude = FakeClaude(
+        [
+            reply({"pool": [leak, *clean], "titles": TITLES, "blurb": BLURB}),
+            reply({"pool": [leak, *clean], "titles": TITLES, "blurb": BLURB}),
+        ]
+    )
+    draft = await engine.draft_book(claude, turns=said, leaks=lambda text: "Gopala" in text)
+    assert len(claude.requests) == 2
+    assert [c.title for c in draft.pool] == ["Clean 0", "Clean 1", "Clean 2"]
+
+
+async def test_a_blurb_with_a_resume_only_term_is_never_returned():
+    claude = FakeClaude([reply({"blurb": "At Gopala, I did it."}), reply({"blurb": "I did it, twice."})])
+    blurb = await engine.write_blurb(claude, turns=turns(1), chapters=[], leaks=lambda text: "Gopala" in text)
+    assert blurb == "I did it, twice."

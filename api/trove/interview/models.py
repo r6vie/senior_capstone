@@ -17,7 +17,8 @@ class StartRequest(RequestBody):
     resume_pdf: str | None = Field(
         None,
         max_length=MAX_RESUME_BASE64,
-        description="An optional résumé PDF, base64-encoded. Never stored.",
+        description="An optional résumé PDF, base64-encoded. The file isn't kept. Its text is deleted when "
+        "the interview ends, or 30 days after the last activity, and nothing from it goes into the book.",
     )
 
 
@@ -117,7 +118,13 @@ class InterviewResponse(BaseModel):
     can_finish: bool
     # The Librarian has enough; the client can go straight to POST /interview/finish.
     ready_for_reveal: bool
-    # The three titles while choosing.
+    # A draft found too little for three chapters. Show "I need a little more before I can write your
+    # book." `can_finish` stays false until enough more is answered, so there's no retry that can't work.
+    needs_more: bool
+    # Still too little at the turn limit, with no question waiting. Everything is saved. "Keep answering"
+    # is POST /interview/question; the member can also leave.
+    at_limit: bool
+    # The three titles while choosing, and while reviewing so another can be picked.
     titles: list[TitleOption] | None
     # The back-cover blurb, first person, 2-4 sentences: the draft's while choosing, then the book's.
     blurb: str | None

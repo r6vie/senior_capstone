@@ -331,8 +331,71 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Rewrite Chapter */
+        /**
+         * Rewrite Chapter
+         * @description Tell the chapter again. `rewrite_unchanged` means it couldn't be told better, and nothing changed.
+         */
         post: operations["rewrite_chapter_interview_book_chapters__chapter_id__rewrite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/book/chapters/{chapter_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore Chapter
+         * @description Go back to the chapter's last version (`has_previous`), during the review.
+         */
+        post: operations["restore_chapter_interview_book_chapters__chapter_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/book/blurb": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rewrite Blurb
+         * @description Write the draft's back cover again.
+         */
+        post: operations["rewrite_blurb_interview_book_blurb_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/book/title": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change Title
+         * @description Change to another of the three titles (`titles`), finishing the book again to match.
+         */
+        post: operations["change_title_interview_book_title_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -685,6 +748,11 @@ export interface components {
             summary: string;
             /** Quotes */
             quotes: string[];
+            /**
+             * Has Previous
+             * @default false
+             */
+            has_previous: boolean;
         };
         /**
          * BookCard
@@ -783,6 +851,10 @@ export interface components {
             can_finish: boolean;
             /** Ready For Reveal */
             ready_for_reveal: boolean;
+            /** Needs More */
+            needs_more: boolean;
+            /** At Limit */
+            at_limit: boolean;
             /** Titles */
             titles: components["schemas"]["TitleOption"][] | null;
             /** Blurb */
@@ -895,6 +967,11 @@ export interface components {
              * @default false
              */
             can_undo: boolean;
+            /**
+             * Rewrite Unchanged
+             * @default false
+             */
+            rewrite_unchanged: boolean;
         };
         /** MyCheckouts */
         MyCheckouts: {
@@ -1101,7 +1178,7 @@ export interface components {
         StartRequest: {
             /**
              * Resume Pdf
-             * @description An optional résumé PDF, base64-encoded. Never stored.
+             * @description An optional résumé PDF, base64-encoded. The file isn't kept. Its text is deleted when the interview ends, or 30 days after the last activity, and nothing from it goes into the book.
              */
             resume_pdf?: string | null;
         };
@@ -1712,6 +1789,90 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_chapter_interview_book_chapters__chapter_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rewrite_blurb_interview_book_blurb_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+        };
+    };
+    change_title_interview_book_title_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TitleRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

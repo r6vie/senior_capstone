@@ -4,7 +4,7 @@ Readers are other CWRU students and alumni. A chapter is something the author co
 
 ## Grounding (this rule is absolute)
 
-Everything you write must trace back to the member's own interview answers. The interviewer's questions are context, not material: nothing the member didn't say goes in. Don't infer employers, schools, numbers, outcomes, feelings or lessons they didn't state. Don't embellish. If the member said "a few stores", don't write "dozens".
+Everything you write must trace back to the member's own interview answers. The interviewer's questions are context, not material: nothing the member didn't say goes in. A claim the interviewer made and the member didn't repeat is not theirs. Don't infer employers, schools, numbers, outcomes, feelings or lessons they didn't state. Don't embellish. If the member said "a few stores", don't write "dozens".
 
 Every chapter carries `quotes`: 1–3 passages copied **exactly, character for character**, from the member's answers, each one a single contiguous span (no ellipses, no stitching, no fixing typos, no added words). Pick the passages that best show the chapter is theirs: the vivid moment or the hard-won know-how. Each quote is between 5 and 60 words.
 

@@ -27,7 +27,7 @@ from trove.auth.service import full_names_of
 from trove.books import service as books
 from trove.books.models import MyBookResponse
 from trove.checkouts import service as checkouts
-from trove.interview import engine
+from trove.interview import engine, resume_terms
 from trove.interview.engine import Change, Draft, DraftChapter, Turn
 from trove.interview.models import (
     InterviewResponse,
@@ -44,6 +44,10 @@ ASKING_STAGES = ("interviewing", "adding")
 MAX_RESUME_PAGES = 20
 # Enough to shape questions; a résumé is a page or two.
 MAX_RESUME_CHARS = 20_000
+# An abandoned interview's résumé text goes this long after the last activity (decisions.md, row 13).
+RESUME_TEXT_DAYS = 30
+# After a draft finds too little, this many more answers before another one is worth paying for.
+MORE_ANSWERS_BEFORE_REDRAFT = 3
 # Unused sparks a member may keep (docs/review/decisions.md, row 5).
 MAX_UNUSED_SPARKS = 12
 # Sparks a round can work from, so it never turns into a list of other people's titles.
@@ -61,6 +65,10 @@ logger = logging.getLogger(__name__)
 async def ensure_indexes(database: AsyncDatabase) -> None:
     # One interview per member, even if two starts arrive at the same moment.
     await database.interviews.create_index("user_id", unique=True, name="interviews_user_unique")
+    # MongoDB deletes the document itself, so an abandoned résumé goes without anyone coming back.
+    await database.resume_texts.create_index(
+        "last_activity_at", expireAfterSeconds=RESUME_TEXT_DAYS * 86400, name="resume_texts_expire"
+    )
     await database.sparks.create_index(
         [("user_id", ASCENDING), ("chapter_id", ASCENDING)], unique=True, name="sparks_user_chapter_unique"
     )
@@ -75,21 +83,31 @@ def conflict(detail: str) -> HTTPException:
     return HTTPException(status_code=409, detail=detail)
 
 
+def answered_count(interview: dict) -> int:
+    return sum(1 for turn in interview["turns"] if turn["answer"].strip())
+
+
+def needs_more_material(interview: dict) -> bool:
+    thin_at = interview.get("thin_at")
+    return thin_at is not None and answered_count(interview) < thin_at + MORE_ANSWERS_BEFORE_REDRAFT
+
+
 def interview_view(interview: dict, book: dict | None = None) -> InterviewResponse:
     """`book` is the member's book, if the interview has made one; its blurb is the current one."""
     current = interview.get("current")
     stage = interview["stage"]
     ready = interview.get("ready_for_reveal", False)
     # A skip is saved as a turn with no answer. It unlocks nothing, and it's never counted or shown.
-    answered = sum(1 for turn in interview["turns"] if turn["answer"].strip())
+    answered = answered_count(interview)
     proposal = interview.get("proposal")
+    needs_more = stage == "interviewing" and needs_more_material(interview)
     if stage == "adding":
         new = interview["turns"][interview["round_start"] :]
         can_finish = any(turn["answer"].strip() for turn in new)
     elif stage == "revising":
         can_finish = revision_status(interview) == "failed"
     else:
-        can_finish = stage == "interviewing" and (ready or answered >= EXIT_AFTER_ANSWERS)
+        can_finish = stage == "interviewing" and not needs_more and (ready or answered >= EXIT_AFTER_ANSWERS)
     return InterviewResponse(
         stage=stage,
         question=Question(text=current["question"], phase=current["phase"], playback=current.get("playback"))
@@ -99,7 +117,11 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
         has_answers=answered > 0,
         can_finish=can_finish,
         ready_for_reveal=ready,
-        titles=interview["draft"]["titles"] if stage == "choosing" else None,
+        needs_more=needs_more,
+        at_limit=needs_more and current is None and len(interview["turns"]) >= engine.MAX_TURNS,
+        titles=interview["draft"]["titles"]
+        if stage in ("choosing", "reviewing") and interview.get("draft")
+        else None,
         blurb=book.get("blurb") if book else (interview.get("draft") or {}).get("blurb"),
         revision_status=revision_status(interview) if stage == "revising" else None,
         changes=[Change.model_validate(change) for change in proposal["changes"]] if proposal else None,
@@ -173,6 +195,9 @@ async def ask_engine(call):
     """Run one engine call; a failure becomes a 502 the member can retry. Nothing saved is lost."""
     try:
         return await call
+    except engine.NotEnoughMaterial:
+        # Not a failure to retry: the caller asks for more answers instead.
+        raise
     # ValueError covers pydantic's ValidationError.
     except (ClaudeRefused, BudgetExceeded, anthropic.APIError, ValueError):
         raise HTTPException(
@@ -184,15 +209,37 @@ def turns_of(interview: dict) -> list[Turn]:
     return [Turn.model_validate(turn) for turn in interview["turns"]]
 
 
+def _answers(interview: dict) -> list[str]:
+    return [turn["answer"] for turn in interview["turns"]]
+
+
 def book_turns(interview: dict) -> list[Turn]:
-    """The transcript the book-writing steps read. Questions that worked from a spark lose its title,
-    so someone else's words can't come through as this member's."""
+    """The transcript the book-writing steps read. Questions lose any term only the résumé had, so a
+    résumé fact can't come through as the member's. Questions that worked from a spark lose its
+    title, for the same reason."""
     turns = turns_of(interview)
+    terms = resume_terms.only_in_resume(
+        interview.get("resume_terms", []), _answers(interview), interview["_id"]
+    )
+    for turn in turns:
+        turn.question = resume_terms.redact(turn.question, terms, interview["_id"])
     for title in interview.get("asked_spark_titles", []):
         pattern = re.compile(re.escape(title), re.IGNORECASE)
         for turn in turns:
             turn.question = pattern.sub(SPARK_REDACTED, turn.question)
     return turns
+
+
+def leak_check(interview: dict):
+    """A check for book output: does this text carry a term only the résumé had?"""
+    terms = resume_terms.only_in_resume(
+        interview.get("resume_terms", []), _answers(interview), interview["_id"]
+    )
+    return lambda text: resume_terms.mentions(text, terms, interview["_id"])
+
+
+def spark_titles_of(interview: dict) -> list[str]:
+    return interview.get("asked_spark_titles", [])
 
 
 def off_limits_of(interview: dict) -> list[dict]:
@@ -212,6 +259,14 @@ async def remember_removed(database: AsyncDatabase, interview_id: str, chapters:
 
 def _remembered(chapter: dict) -> dict:
     return {"id": chapter.get("id"), "title": chapter["title"], "summary": chapter["summary"]}
+
+
+async def resume_text_of(database: AsyncDatabase, interview: dict) -> str | None:
+    """The résumé text, if it's still here. Reading it counts as activity, which keeps it from expiring."""
+    saved = await database.resume_texts.find_one_and_update(
+        {"_id": interview["_id"]}, {"$set": {"last_activity_at": datetime.now(UTC)}}
+    )
+    return saved["text"] if saved else None
 
 
 async def write_question(
@@ -236,7 +291,11 @@ async def write_question(
         return None if turn.done else question, turn.topic, turn.done, turn.spark_id
     turn = await ask_engine(
         engine.next_turn(
-            claude, turns=turns_of(interview), resume_text=interview.get("resume_text"), sparks=sparks
+            claude,
+            turns=turns_of(interview),
+            resume_text=await resume_text_of(database, interview),
+            sparks=sparks,
+            more_material=needs_more_material(interview),
         )
     )
     ready = turn.ready_for_reveal
@@ -271,15 +330,16 @@ async def start(database: AsyncDatabase, claude: Claude, user: dict, resume_pdf:
         raise conflict("You already have a book.")
     resume_text = await run_in_threadpool(read_resume, resume_pdf) if resume_pdf else None
     now = datetime.now(UTC)
+    interview_id = str(uuid4())
     interview = {
-        "_id": str(uuid4()),
+        "_id": interview_id,
         "user_id": user["_id"],
         "stage": "interviewing",
+        "resume_terms": resume_terms.resume_terms(resume_text, interview_id) if resume_text else [],
         "turns": [],
         "current": None,
         "topic": None,
         "ready_for_reveal": False,
-        "resume_text": resume_text,
         "draft": None,
         "created_at": now,
         "updated_at": now,
@@ -288,6 +348,10 @@ async def start(database: AsyncDatabase, claude: Claude, user: dict, resume_pdf:
         await database.interviews.insert_one(interview)
     except DuplicateKeyError:
         raise conflict("You've already started your interview.") from None
+    if resume_text:
+        await database.resume_texts.insert_one(
+            {"_id": interview_id, "text": resume_text, "last_activity_at": now}
+        )
     return await ask_next_question(database, claude, interview)
 
 
@@ -364,7 +428,17 @@ async def finish(
         raise conflict("The interview is already over.")
     if not interview_view(interview).can_finish:
         raise conflict("Keep going a little longer first.")
-    draft = await ask_engine(engine.draft_book(claude, turns=turns_of(interview)))
+    try:
+        draft = await ask_engine(
+            engine.draft_book(
+                claude,
+                turns=book_turns(interview),
+                leaks=leak_check(interview),
+                spark_titles=spark_titles_of(interview),
+            )
+        )
+    except engine.NotEnoughMaterial:
+        return await ask_for_more_material(database, claude, interview)
     updated = await database.interviews.find_one_and_update(
         {"_id": interview["_id"], "stage": "interviewing"},
         {
@@ -374,13 +448,34 @@ async def finish(
                 "current": None,
                 "updated_at": datetime.now(UTC),
             },
-            # The interview has ended, so the résumé text goes (docs/trove.md §4).
-            "$unset": {"resume_text": ""},
         },
         return_document=ReturnDocument.AFTER,
     )
     if updated is None:
         raise conflict("The interview is already over.")
+    # The interview has ended, so the résumé text goes (docs/trove.md §4).
+    await database.resume_texts.delete_one({"_id": interview["_id"]})
+    return updated
+
+
+async def ask_for_more_material(database: AsyncDatabase, claude: Claude, interview: dict) -> dict:
+    """A draft found too little, and trying again can't help. Carry on on new ground: on the waiting
+    question if there is one, on a new one if not, or stop at the turn limit and let the member decide."""
+    updated = await database.interviews.find_one_and_update(
+        {"_id": interview["_id"], "stage": "interviewing"},
+        {
+            "$set": {
+                "thin_at": answered_count(interview),
+                "ready_for_reveal": False,
+                "updated_at": datetime.now(UTC),
+            }
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if updated is None:
+        raise conflict("The interview is already over.")
+    if updated["current"] is None and len(updated["turns"]) < engine.MAX_TURNS:
+        return await ask_next_question(database, claude, updated)
     return updated
 
 
@@ -399,7 +494,14 @@ async def choose_title(database: AsyncDatabase, claude: Claude, user: dict, inde
     draft = Draft.model_validate(interview["draft"])
     title = draft.titles[index].title
     finished = await ask_engine(
-        engine.finish_book(claude, turns=turns_of(interview), draft=draft, title=title)
+        engine.finish_book(
+            claude,
+            turns=book_turns(interview),
+            draft=draft,
+            title=title,
+            leaks=leak_check(interview),
+            spark_titles=spark_titles_of(interview),
+        )
     )
     try:
         book = await books.create_draft_book(
@@ -434,7 +536,11 @@ async def remove_chapter(
         raise conflict(f"A book needs at least {books.MIN_CHAPTERS} chapters.")
     # The book no longer covers what it did, so the back cover is rewritten for what's left. A rewrite
     # keeps each chapter's topic, so it leaves the blurb alone.
-    blurb = await ask_engine(engine.write_blurb(claude, turns=turns_of(interview), chapters=remaining))
+    blurb = await ask_engine(
+        engine.write_blurb(
+            claude, turns=book_turns(interview), chapters=remaining, leaks=leak_check(interview)
+        )
+    )
     gone = next(chapter for chapter in book["chapters"] if chapter["id"] == chapter_id)
     book = await books.remove_chapter(database, user["_id"], chapter_id, blurb=blurb)
     if book is None:
@@ -449,13 +555,95 @@ async def rewrite_chapter(
     interview = await reviewing_interview(database, user)
     book = await own_draft(database, user, chapter_id)
     chapters = [DraftChapter.model_validate(chapter) for chapter in book["chapters"]]
+    current = next(chapter for chapter in book["chapters"] if chapter["id"] == chapter_id)
     chapter = await ask_engine(
-        engine.rewrite_chapter(claude, turns=turns_of(interview), chapters=chapters, chapter_id=chapter_id)
+        engine.rewrite_chapter(
+            claude,
+            turns=book_turns(interview),
+            chapters=chapters,
+            chapter_id=chapter_id,
+            leaks=leak_check(interview),
+        )
     )
-    updated = await books.replace_chapter(database, user["_id"], {**chapter.model_dump(), "id": chapter_id})
+    if chapter.title == current["title"] and chapter.summary == current["summary"]:
+        return books.my_book_view(book, rewrite_unchanged=True)
+    updated = await books.replace_chapter(
+        database,
+        user["_id"],
+        {
+            **chapter.model_dump(),
+            "id": chapter_id,
+            "previous": {"title": current["title"], "summary": current["summary"]},
+        },
+    )
     if updated is None:
         raise conflict("Your book is already on the shelf.")
     return books.my_book_view(updated)
+
+
+async def restore_chapter(database: AsyncDatabase, user: dict, chapter_id: str) -> MyBookResponse:
+    """Go back to a chapter's last version, during the review."""
+    await reviewing_interview(database, user)
+    await own_draft(database, user, chapter_id)
+    book = await books.restore_chapter(database, user["_id"], chapter_id)
+    if book is None:
+        raise conflict("There's no earlier version of that chapter.")
+    return books.my_book_view(book)
+
+
+async def rewrite_blurb(database: AsyncDatabase, claude: Claude, user: dict) -> MyBookResponse:
+    """Write the draft's back cover again."""
+    interview = await reviewing_interview(database, user)
+    book = await books.get_book_of(database, user["_id"])
+    blurb = await ask_engine(
+        engine.write_blurb(
+            claude,
+            turns=book_turns(interview),
+            chapters=[DraftChapter.model_validate(chapter) for chapter in book["chapters"]],
+            leaks=leak_check(interview),
+        )
+    )
+    book = await books.set_draft_blurb(database, user["_id"], blurb)
+    if book is None:
+        raise conflict("Your book is already on the shelf.")
+    return books.my_book_view(book)
+
+
+async def change_title(database: AsyncDatabase, claude: Claude, user: dict, index: int) -> MyBookResponse:
+    """Change to another of the three titles. The book is finished again to match, from the pool,
+    without any chapter the member removed. Earlier rewrites of chapters may be replaced."""
+    interview = await reviewing_interview(database, user)
+    book = await books.get_book_of(database, user["_id"])
+    if not interview.get("draft"):
+        raise conflict("There are no other titles to choose from.")
+    draft = Draft.model_validate(interview["draft"])
+    title = draft.titles[index].title
+    if title == book["title"]:
+        return books.my_book_view(book)
+    removed = {item.get("id") for item in interview.get("removed_chapters", [])}
+    pool = [chapter for chapter in draft.pool if chapter.id not in removed]
+    if len(pool) < books.MIN_CHAPTERS:
+        raise conflict(f"A book needs at least {books.MIN_CHAPTERS} chapters.")
+    finished = await ask_engine(
+        engine.finish_book(
+            claude,
+            turns=book_turns(interview),
+            draft=draft.model_copy(update={"pool": pool}),
+            title=title,
+            leaks=leak_check(interview),
+            spark_titles=spark_titles_of(interview),
+        )
+    )
+    book = await books.retitle_draft(
+        database,
+        user["_id"],
+        title=title,
+        chapters=[chapter.model_dump() for chapter in finished.chapters],
+        blurb=finished.blurb,
+    )
+    if book is None:
+        raise conflict("Your book is already on the shelf.")
+    return books.my_book_view(book)
 
 
 async def put_on_shelf(database: AsyncDatabase, user: dict) -> MyBookResponse:
@@ -490,7 +678,6 @@ async def interview_for_book(database: AsyncDatabase, user_id: str) -> dict:
         "current": None,
         "topic": None,
         "ready_for_reveal": False,
-        "resume_text": None,
         "draft": None,
         "created_at": now,
         "updated_at": now,
@@ -603,7 +790,8 @@ async def write_proposal(database: AsyncDatabase, claude: Claude, interview_id: 
             blurb=book.get("blurb"),
             off_limits=off_limits_of(interview),
             member_names=list(names.values()),
-            spark_titles=interview.get("asked_spark_titles", []),
+            spark_titles=spark_titles_of(interview),
+            leaks=leak_check(interview),
         )
     except Exception:
         logger.exception("Couldn't write the proposed changes for interview %s", interview_id)
@@ -714,6 +902,7 @@ async def revision_blurb(
             claude,
             turns=book_turns(interview),
             chapters=[DraftChapter.model_validate(chapter) for chapter in chapters],
+            leaks=leak_check(interview),
         )
     )
     await database.interviews.update_one(
