@@ -2,6 +2,19 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-09: close-out of the quality notes for the frames
+
+- **Closed (R5-12):** the line under Chapters on the review and on My book now reads "“Show what you said” opens your own words behind
+  each chapter. Only you see those." on every frame that carries it, matching the build. The old line called the public summaries private.
+- **Everything else tagged Design in rounds 1 to 6 was already applied** to the frames (rounds 1, 2 and 4) or fixed in the build (round 5
+  re-check); round 6 has no Design items.
+- **Copy the build still owes, written here so it is built from one place** (both are UI items, not frame work):
+  - R6-03: when words were left out for a name, say which ones: "I left this out because it named someone or somewhere: Geauga,
+    County, Fair. Change those and I'll try again." "Say it again" opens the field with the member's words in it. My book uses the
+    same sentence above the question panel.
+  - R6-08: the undo question is one sentence for both kinds of change: "Undo these changes? Your book goes back to how it was."
+    Add "I won't suggest them again" only when the changes were additions.
+
 ## 2026-11-08: quality round 4 applied to the frames (T40)
 
 - **Interview A:** Shape now has two frames (field empty: the red Yes alone; correction typed: red "Send my correction" and a quiet "Yes,
