@@ -4,6 +4,9 @@ from anthropic import AsyncAnthropic
 from anthropic.types.beta import BetaMessage
 from fastapi import HTTPException
 
+from trove.ai import usage
+from trove.ai.prompts import prompt_name
+from trove.ai.scripted import ScriptedClaude, ensure_scripted_allowed
 from trove.core.config import get_settings
 
 # On a safety decline, the API re-runs the request on Anthropic's recommended fallback model.
@@ -27,8 +30,12 @@ class Claude:
         return {"model": self.model, **params, **extra}
 
     async def create(self, **params) -> BetaMessage:
-        """Send one Messages API request. Raises ClaudeRefused instead of returning a refusal."""
+        """Send one Messages API request. Raises ClaudeRefused instead of returning a refusal, and
+        usage.BudgetExceeded instead of spending past the budget."""
+        usage.check_budget()
         response = await self.client.beta.messages.create(**self.request(params))
+        # Before the refusal check: a declined request can still cost money.
+        usage.record(response, prompt_name(params.get("system")))
         if response.stop_reason == "refusal":
             raise ClaudeRefused()
         return response
@@ -42,10 +49,14 @@ def text_of(response: BetaMessage) -> str:
 _claude: Claude | None = None
 
 
-def get_claude() -> Claude:
-    """FastAPI dependency: the shared Claude client, or 503 until ANTHROPIC_API_KEY is set."""
+def get_claude() -> Claude | ScriptedClaude:
+    """FastAPI dependency: the shared Claude client, or 503 until ANTHROPIC_API_KEY is set.
+    With AI_MODE=scripted, a stand-in that needs no key and spends nothing."""
     global _claude
     settings = get_settings()
+    if settings.ai_mode == "scripted":
+        ensure_scripted_allowed(settings)
+        return ScriptedClaude(settings.ai_scripted_delay_seconds)
     if not settings.anthropic_api_key:
         raise HTTPException(
             status_code=503, detail="AI isn't set up. Add ANTHROPIC_API_KEY to .env and restart."

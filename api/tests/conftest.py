@@ -25,6 +25,9 @@ def no_real_email(monkeypatch):
     monkeypatch.delenv("SMTP_HOST")
     get_settings.cache_clear()
     monkeypatch.setattr(get_settings(), "smtp_host", "")
+    # Tests never write to the real spending ledger, and never run on the scripted AI by accident.
+    monkeypatch.setattr(get_settings(), "ai_usage_log", "")
+    monkeypatch.setattr(get_settings(), "ai_mode", "real")
     yield
     get_settings.cache_clear()
 

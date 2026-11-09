@@ -19,6 +19,7 @@ from pypdf import PdfReader
 from starlette.concurrency import run_in_threadpool
 
 from trove.ai.client import Claude, ClaudeRefused
+from trove.ai.usage import BudgetExceeded
 from trove.books import service as books
 from trove.books.models import MyBookResponse
 from trove.interview import engine
@@ -106,7 +107,8 @@ async def ask_engine(call):
     """Run one engine call; a failure becomes a 502 the member can retry. Nothing saved is lost."""
     try:
         return await call
-    except (ClaudeRefused, anthropic.APIError, ValueError):  # ValueError covers pydantic ValidationError
+    # ValueError covers pydantic's ValidationError.
+    except (ClaudeRefused, BudgetExceeded, anthropic.APIError, ValueError):
         raise HTTPException(
             status_code=502, detail="The Librarian couldn't answer just now. Please try again."
         ) from None

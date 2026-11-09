@@ -2,12 +2,14 @@
 
 from fastapi import FastAPI, Request
 
+from trove.ai.scripted import ensure_scripted_allowed
 from trove.auth import service as auth_service
 from trove.auth.router import router as auth_router
 from trove.books import service as books_service
 from trove.books.router import router as books_router
 from trove.checkouts import service as checkouts_service
 from trove.checkouts.router import router as checkouts_router
+from trove.core.config import get_settings
 from trove.core.database import make_lifespan
 from trove.core.errors import register_error_handlers
 from trove.interview import service as interview_service
@@ -23,6 +25,9 @@ INDEX_SETUPS = [
     checkouts_service.ensure_indexes,
 ]
 ROUTERS = [auth_router, notifications_router, books_router, interview_router, checkouts_router]
+
+# The app won't start at all with canned AI replies anywhere but on a developer's machine.
+ensure_scripted_allowed(get_settings())
 
 app = FastAPI(title="Trove API", lifespan=make_lifespan(INDEX_SETUPS))
 register_error_handlers(app)
