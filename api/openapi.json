@@ -412,7 +412,7 @@
           "Interview"
         ],
         "summary": "Current",
-        "description": "The member's interview, for resuming where they left off.",
+        "description": "The member's interview, for resuming where they left off. If writing proposed changes failed,\na return tries once more on its own.",
         "operationId": "current_interview_get",
         "responses": {
           "200": {
@@ -534,6 +534,73 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaleQuestionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/skip": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Skip",
+        "description": "Skip the waiting question and get the next one. Not on the Shape step (409).",
+        "operationId": "skip_interview_skip_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaleQuestionResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -581,6 +648,16 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaleQuestionResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -605,8 +682,25 @@
           "Interview"
         ],
         "summary": "Finish",
-        "description": "End the interview and get three titles, each with why it's you.",
+        "description": "End the interview: stage goes to `drafting`, and the three titles are written in the background\n(`step_status`). With too little material it says `needs_more` instead. In a round of adding, end\nthe round: the proposed changes are written in the background (`revision_status`). After a\nfailed write, try again.\n`answer` is saved first as the answer to the waiting question, with no question after it.",
         "operationId": "finish_interview_finish_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/FinishRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Data"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -614,6 +708,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaleQuestionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -632,7 +746,7 @@
           "Interview"
         ],
         "summary": "Choose Title",
-        "description": "Choose one of the three titles. The book is finished to match and saved as a draft.",
+        "description": "Choose one of the three titles. Stage goes to `finishing`, and the book is written to match in\nthe background (`step_status`). After a failure, send this again.",
         "operationId": "choose_title_interview_title_post",
         "requestBody": {
           "content": {
@@ -650,7 +764,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MyBookResponse"
+                  "$ref": "#/components/schemas/InterviewResponse"
                 }
               }
             }
@@ -727,6 +841,7 @@
           "Interview"
         ],
         "summary": "Rewrite Chapter",
+        "description": "Tell the chapter again. `rewrite_unchanged` means it couldn't be told better, and nothing changed.",
         "operationId": "rewrite_chapter_interview_book_chapters__chapter_id__rewrite_post",
         "security": [
           {
@@ -768,6 +883,155 @@
         }
       }
     },
+    "/interview/book/chapters/{chapter_id}/restore": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Restore Chapter",
+        "description": "Go back to the chapter's last version (`has_previous`), during the review.",
+        "operationId": "restore_chapter_interview_book_chapters__chapter_id__restore_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "chapter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Chapter Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interview/book/blurb": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Rewrite Blurb",
+        "description": "Write the draft's back cover again.",
+        "operationId": "rewrite_blurb_interview_book_blurb_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/book/blurb/restore": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Restore Blurb",
+        "description": "Go back to the last back cover (`has_previous_blurb`), during the review.",
+        "operationId": "restore_blurb_interview_book_blurb_restore_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/book/title": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Change Title",
+        "description": "Change to another of the three titles (`titles`), finishing the book again to match.",
+        "operationId": "change_title_interview_book_title_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TitleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/interview/book/shelve": {
       "post": {
         "tags": [
@@ -793,6 +1057,511 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/interview/reopen": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Reopen",
+        "description": "Add to a book on the shelf: a short new round of questions. The book doesn't change yet.",
+        "operationId": "reopen_interview_reopen_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/revision/choices": {
+      "put": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Save Revision Choices",
+        "description": "Save which changes are approved so far, as they're pressed. Nothing is applied.",
+        "operationId": "save_revision_choices_interview_revision_choices_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevisionChoicesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/revision/blurb": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Revision Blurb",
+        "description": "Get the back cover for the saved choices, to read before confirming (`selection_blurb_status`).\nWritten in the background when it has to be. Also the retry after `failed` or `stale`.",
+        "operationId": "revision_blurb_interview_revision_blurb_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/revision": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Apply Revision",
+        "description": "Apply the approved changes to the book on the shelf. The rest are dropped and not proposed\nagain. A reading answer saved meanwhile then gets its own proposal.",
+        "operationId": "apply_revision_interview_revision_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/removal": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Propose Removal",
+        "description": "Propose taking a chapter out of a book on the shelf. Confirmed like any change. 409 at three chapters.",
+        "operationId": "propose_removal_interview_removal_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/removal/cancel": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Cancel Removal",
+        "description": "Back out of a removal the member started. Back to `done`, with nothing recorded as declined.",
+        "operationId": "cancel_removal_interview_removal_cancel_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/book/undo": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Undo Revision",
+        "description": "Take back the last applied revision (`can_undo`), until the next one is applied.",
+        "operationId": "undo_revision_interview_book_undo_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/sparks": {
+      "get": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "List Sparks",
+        "description": "The member's own sparks waiting for their next round.",
+        "operationId": "list_sparks_interview_sparks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SparkResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Sparks Interview Sparks Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Add Spark",
+        "description": "\"I have one like this\" on a chapter of someone else's book. Private: its author never knows.",
+        "operationId": "add_spark_interview_sparks_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SparkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SparkResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/sparks/{spark_id}": {
+      "delete": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Remove Spark",
+        "operationId": "remove_spark_interview_sparks__spark_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "spark_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Spark Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interview/reading-questions": {
+      "get": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "List Reading Questions",
+        "description": "The question waiting after a reading, if there is one.",
+        "operationId": "list_reading_questions_interview_reading_questions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReadingQuestionResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Reading Questions Interview Reading Questions Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/reading-questions/{question_id}/answer": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Answer Reading Question",
+        "description": "Answer it. From `done`, changes are written in the background (`revision_status`). During a\nround it joins the round. While changes are waiting, it runs after the member decides.",
+        "operationId": "answer_reading_question_interview_reading_questions__question_id__answer_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Question Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadingAnswerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaleQuestionResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interview/reading-questions/{question_id}/dismiss": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Dismiss Reading Question",
+        "description": "Dismiss it, as quietly as a skip: never shown, never counted.",
+        "operationId": "dismiss_reading_question_interview_reading_questions__question_id__dismiss_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Question Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/checkouts": {
@@ -1040,12 +1809,18 @@
             "maxLength": 5000,
             "minLength": 1,
             "title": "Answer"
+          },
+          "question_id": {
+            "type": "string",
+            "title": "Question Id",
+            "description": "The `question_id` of the question this answers."
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "answer"
+          "answer",
+          "question_id"
         ],
         "title": "AnswerRequest"
       },
@@ -1069,6 +1844,11 @@
             },
             "type": "array",
             "title": "Quotes"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous",
+            "default": false
           }
         },
         "type": "object",
@@ -1131,6 +1911,87 @@
         "title": "BookCard",
         "description": "A book as it appears on the shelf."
       },
+      "Change": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "new",
+              "improve",
+              "remove"
+            ],
+            "title": "Kind"
+          },
+          "chapter_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "quotes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Quotes"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CurrentChapter"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "chapter_id",
+          "title",
+          "summary",
+          "quotes",
+          "note",
+          "current"
+        ],
+        "title": "Change",
+        "description": "One proposed change to a book on the shelf, which the member approves or declines."
+      },
       "Chapter": {
         "properties": {
           "id": {
@@ -1177,6 +2038,57 @@
         ],
         "title": "CheckoutRequest"
       },
+      "CurrentChapter": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "summary"
+        ],
+        "title": "CurrentChapter"
+      },
+      "FinishRequest": {
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer",
+            "description": "What's in the field: saved as the waiting question's answer first."
+          },
+          "question_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Id",
+            "description": "The `question_id` that `answer` answers."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "FinishRequest"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1196,9 +2108,13 @@
             "type": "string",
             "enum": [
               "interviewing",
+              "drafting",
               "choosing",
+              "finishing",
               "reviewing",
-              "done"
+              "done",
+              "adding",
+              "revising"
             ],
             "title": "Stage"
           },
@@ -1235,6 +2151,29 @@
             "type": "boolean",
             "title": "Ready For Reveal"
           },
+          "needs_more": {
+            "type": "boolean",
+            "title": "Needs More"
+          },
+          "at_limit": {
+            "type": "boolean",
+            "title": "At Limit"
+          },
+          "nearly_done": {
+            "type": "boolean",
+            "title": "Nearly Done"
+          },
+          "closing_line": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closing Line"
+          },
           "titles": {
             "anyOf": [
               {
@@ -1259,6 +2198,159 @@
               }
             ],
             "title": "Blurb"
+          },
+          "step_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "writing",
+                  "failed"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Status"
+          },
+          "chosen_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chosen Title"
+          },
+          "revision_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "writing",
+                  "ready",
+                  "failed"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision Status"
+          },
+          "changes": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Change"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changes"
+          },
+          "proposed_blurb": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Blurb"
+          },
+          "approved_changes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved Changes"
+          },
+          "selection_blurb_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "writing",
+                  "ready",
+                  "failed",
+                  "stale"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selection Blurb Status"
+          },
+          "selection_blurb": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selection Blurb"
+          },
+          "nothing_new": {
+            "type": "boolean",
+            "title": "Nothing New"
+          },
+          "dropped_for_names": {
+            "type": "boolean",
+            "title": "Dropped For Names"
+          },
+          "reading_question_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reading Question Id"
+          },
+          "reading_answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reading Answer"
+          },
+          "dropped_words": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dropped Words"
           }
         },
         "type": "object",
@@ -1269,8 +2361,25 @@
           "has_answers",
           "can_finish",
           "ready_for_reveal",
+          "needs_more",
+          "at_limit",
+          "nearly_done",
+          "closing_line",
           "titles",
-          "blurb"
+          "blurb",
+          "step_status",
+          "chosen_title",
+          "revision_status",
+          "changes",
+          "proposed_blurb",
+          "approved_changes",
+          "selection_blurb_status",
+          "selection_blurb",
+          "nothing_new",
+          "dropped_for_names",
+          "reading_question_id",
+          "reading_answer",
+          "dropped_words"
         ],
         "title": "InterviewResponse"
       },
@@ -1474,6 +2583,33 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "can_undo": {
+            "type": "boolean",
+            "title": "Can Undo",
+            "default": false
+          },
+          "revised_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revised At"
+          },
+          "has_previous_blurb": {
+            "type": "boolean",
+            "title": "Has Previous Blurb",
+            "default": false
+          },
+          "rewrite_unchanged": {
+            "type": "boolean",
+            "title": "Rewrite Unchanged",
+            "default": false
           }
         },
         "type": "object",
@@ -1612,6 +2748,10 @@
       },
       "Question": {
         "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id"
+          },
           "text": {
             "type": "string",
             "title": "Text"
@@ -1621,7 +2761,9 @@
             "enum": [
               "sweep",
               "dig",
-              "shape"
+              "shape",
+              "adding",
+              "reading"
             ],
             "title": "Phase"
           },
@@ -1639,6 +2781,7 @@
         },
         "type": "object",
         "required": [
+          "question_id",
           "text",
           "phase",
           "playback"
@@ -1662,6 +2805,22 @@
           "title"
         ],
         "title": "ReaderBook"
+      },
+      "ReadingAnswerRequest": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Answer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "answer"
+        ],
+        "title": "ReadingAnswerRequest"
       },
       "ReadingCheckout": {
         "properties": {
@@ -1727,8 +2886,117 @@
         "title": "ReadingCheckout",
         "description": "A checkout as its reader sees it."
       },
+      "ReadingQuestionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "reader_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reader Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "question",
+          "created_at",
+          "reader_name"
+        ],
+        "title": "ReadingQuestionResponse",
+        "description": "The question after a reading, for its author only."
+      },
+      "RemovalRequest": {
+        "properties": {
+          "chapter_id": {
+            "type": "string",
+            "title": "Chapter Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "chapter_id"
+        ],
+        "title": "RemovalRequest"
+      },
+      "RevisionChoicesRequest": {
+        "properties": {
+          "approved": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Approved",
+            "description": "The ids of the changes approved so far. Saved, not applied."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approved"
+        ],
+        "title": "RevisionChoicesRequest"
+      },
+      "RevisionRequest": {
+        "properties": {
+          "approved": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Approved",
+            "description": "The ids of the changes to apply. The rest are dropped."
+          },
+          "blurb": {
+            "type": "string",
+            "enum": [
+              "keep",
+              "use"
+            ],
+            "title": "Blurb",
+            "description": "\"use\" applies the back cover last shown for exactly this selection, from `proposed_blurb` or POST /interview/revision/blurb. \"keep\" leaves the old one.",
+            "default": "keep"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approved"
+        ],
+        "title": "RevisionRequest"
+      },
       "ShapeRequest": {
         "properties": {
+          "question_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Id",
+            "description": "The `question_id` of the playback being answered."
+          },
           "correction": {
             "anyOf": [
               {
@@ -1814,6 +3082,98 @@
         ],
         "title": "SignupRequest"
       },
+      "SkipRequest": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id",
+            "description": "The `question_id` of the question being skipped."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "question_id"
+        ],
+        "title": "SkipRequest"
+      },
+      "SparkRequest": {
+        "properties": {
+          "book_id": {
+            "type": "string",
+            "title": "Book Id"
+          },
+          "chapter_id": {
+            "type": "string",
+            "title": "Chapter Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "book_id",
+          "chapter_id"
+        ],
+        "title": "SparkRequest"
+      },
+      "SparkResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "book_id": {
+            "type": "string",
+            "title": "Book Id"
+          },
+          "chapter_id": {
+            "type": "string",
+            "title": "Chapter Id"
+          },
+          "chapter_title": {
+            "type": "string",
+            "title": "Chapter Title"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "book_id",
+          "chapter_id",
+          "chapter_title",
+          "created_at"
+        ],
+        "title": "SparkResponse",
+        "description": "A chapter that made this member think \"I have one like this\". Only they ever see it."
+      },
+      "StaleQuestionResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "interview": {
+            "$ref": "#/components/schemas/InterviewResponse"
+          },
+          "already_saved": {
+            "type": "boolean",
+            "title": "Already Saved"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "interview",
+          "already_saved"
+        ],
+        "title": "StaleQuestionResponse",
+        "description": "The 409 when an answer or skip names a question that isn't the one waiting. Nothing was saved."
+      },
       "StartRequest": {
         "properties": {
           "resume_pdf": {
@@ -1827,7 +3187,7 @@
               }
             ],
             "title": "Resume Pdf",
-            "description": "An optional r\u00e9sum\u00e9 PDF, base64-encoded. Never stored."
+            "description": "An optional r\u00e9sum\u00e9 PDF, base64-encoded. The file isn't kept. Its text is deleted when the interview ends, or 30 days after the last activity, and nothing from it goes into the book."
           }
         },
         "additionalProperties": false,

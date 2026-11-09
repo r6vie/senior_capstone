@@ -1,0 +1,220 @@
+{
+ "persona": "Ana (alum 2012, accounting, took over the family bakery)",
+ "slug": "ana",
+ "source": "2026-11-06_193306/ana.md",
+ "turns": [
+  {
+   "question": "What's taking most of your time right now, in class or outside it?",
+   "answer": "Honestly right now it's Paczki Day planning, which is kind of absurd since it's still months away. I'm already doing staff schedules and getting the pre-order form ready, and I'm up at the bakery early most mornings. Between that and the regular daily orders, the rest of life gets squeezed pretty hard.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "What does the pre-order form do for Paczki Day that the old way didn't?",
+   "answer": "Mostly it kills the line. Before, people would show up at 6am on Fat Tuesday and we'd be out of the good ones by 7, and the people who waited two hours were mad at us. Now people pre-order a dozen or two dozen with a pickup window, so I know the count the week before and I can bake to it instead of guessing. The paper notebook was the same idea, but my dad's handwriting was nearly impossible to read after a few hundred entries, and I was off by a lot more than I'd like to admit. The form also gives me cash up front, which matters more than people think, because the two weeks before the holiday are when I need the money for flour and staff.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Your dad's handwriting was the reason the notebook broke down. What was it like the first season you moved the orders off paper?",
+   "answer": "Honestly it was terrifying. The first year we did it, I was convinced something would go wrong, so I kept the notebook going right alongside the form, just in case. I'd be at the counter at 4am with my laptop on one side and the notebook on the other, checking both, and my dad would walk in and look at the screen like it was witchcraft.\n\nThe part that surprised me was how much calmer I got once the numbers lined up. Knowing the count a week out meant I could finally stop guessing on flour and staff. But I'm not going to pretend it was smooth. There was a stretch in the middle of that season where the form was double-counting some orders, and I spent a whole night sorting it out. I still keep the notebook around as a backup, though I'll admit I haven't had to lean on it since.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "The double-counting night is worth coming back to later. Outside the bakery, what are you studying, and where does it fit with all this?",
+   "answer": "Oh, I'm an accounting major, class of 2012, so it's not really a stretch. I did four years at a firm downtown after school, which was fine but I kept thinking about the bakery. Then my dad got sick and I came home to run it. Honestly the degree is what makes the bakery work, more than the baking does. I'm the one doing the spreadsheets and the cash planning, and I'd say that's the part that keeps us alive.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "When you walked away from the firm to come home, what did you think the bakery needed from you, and what did it turn out to need?",
+   "answer": "Honestly I figured it needed someone to keep the lights on and get the books in order. That's what I thought I was good for. What it actually needed was someone to stop my dad from redoing the dough every morning. He couldn't let go of it, and I couldn't make him, so eventually I gave him the rye bread recipe and told him that one was his. That stopped it, more or less. I didn't see that coming at all.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Outside the bakery, what's something you do that most people in your year would never have picked up?",
+   "answer": "Honestly, probably that I'm up at 4am most days and still think it's a good time to do the spreadsheets. Most people in my class were in bed by then, or still out. I'm not sure that counts as a hobby though.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "What did those four years at the firm teach you that you still use at the counter at 4am?",
+   "answer": "Honestly, mostly that the monthly numbers can lie to you. At the firm everything got reported monthly and you learned to trust the profit line. A bakery doesn't work that way. The money really gets decided in the two weeks before Paczki Day, when you're buying flour and paying staff before the orders turn into cash. So I watch the cash, not the profit line.\n\nThe other thing was costing every single item. My first month back I went through every recipe in a spreadsheet, and three of our top ten sellers were losing money. Paczki were the big one, because my dad had never changed the price from 2001. That's just a habit from the firm, pulling things apart line by line until you see where the money leaks out. I still do that every quarter, and I'd say it's the most useful thing I brought home.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Think of the first time you showed your dad that the paczki price was losing money. What did you put in front of him, and what did he say?",
+   "answer": "Ha, okay, so I didn't really show him a presentation. I printed the cost sheet for the paczki, one page, with the flour, the filling, the eggs, the labor per batch, and then what we were actually taking in per paczki after the price. It came out to roughly break-even on the plain ones once you counted the time, and the filled ones were barely above that. I had the number circled in red, which I'm a little embarrassed about now.\n\nHe looked at it for a long time and then said, \"Your mother never let me raise them.\" Which, fair, she was the one who ran the register back then. I said the price hadn't moved since 2001 and he said, \"Nobody's complained.\" And I said, \"Nobody complains about a price they don't notice, Dad. They complain when the paczki get smaller.\" That's the argument I've been making ever since, honestly. Thirty cents is nothing to a regular. A smaller paczki, they see right away.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "After 'Nobody's complained,' what did you actually do with the paczki price, and how long did it take?",
+   "answer": "We went up 30 cents, and I did it that same week. I didn't wait for a big meeting about it. He grumbled, my mom said something like \"finally,\" and that was basically it.\n\nI was watching the counter for the first couple weeks because I was sure someone would say something. Almost nobody did. A few regulars made a joke about it, and one guy asked if we'd changed the recipe, which, no, we just stopped giving it away. We didn't lose anything I could see on the sales numbers after that. The paczki still sell out on Fat Tuesday, so I'd say it was the right call.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Of the other sellers that were losing money, what did you change first, and what did you leave alone?",
+   "answer": "Honestly the paczki were the obvious one, so that went first. The other two losers were a couple of the filled pastries and one of the rye-based items, and I dealt with those a bit differently. For the fillings I cut the cost before I touched the price, because the filling was getting a generous scoop that nobody could see. Smaller scoop, same look, and that fixed most of it on its own.\n\nThe rye I left alone, and that was on purpose. It was losing money on paper because it takes so long to make, but it's the one my dad still makes, and he has his own way of doing it. I wasn't going to put a cost sheet in front of that. I just kept an eye on it and made sure it didn't drag the rest of the day down. Which, now that I say it out loud, is the same thing I did with him.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Back to the form: what did you find on that double-counting night, and how did you finally trace it?",
+   "answer": "Honestly it was a dumb thing once I found it. The form had a setting where if someone edited their order after submitting, it saved a second copy instead of replacing the first one. So anyone who changed a dozen to two dozen was counted twice. I noticed because the count for one Saturday came out about forty paczki higher than the number of people I could match to a name, and I could not figure out why for hours.\n\nHow I traced it was basically going back through the notebook line by line, which my dad would have found hilarious. I matched every name against the form export and kept finding the same person in there twice with slightly different timestamps. Once I saw the pattern I checked the edit history and it was obvious. I fixed the setting that night and then sat in the car for a while before I drove home, because it was almost 6 and I still had to open.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "If another bakery owner asked you how to set up a pre-order form before their first holiday rush, what would you tell them to do in the first week?",
+   "answer": "Honestly the first thing I'd tell them is to not build it all at once. Pick the one holiday, put the form up two or three weeks before it, and keep the paper notebook going right next to it the whole time. Don't retire the notebook until you've had a full season with the form. That's the mistake I'd save them from, because I learned the hard way that a form can break in ways you don't see coming.\n\nThen test it against your own orders. Have a few people you trust submit fake orders, then edit them, then cancel one. Check the count against what you'd expect. That's where I found the double-counting, and I'd rather they find it on a Tuesday in January than on Fat Tuesday.\n\nAnd the cash part. Set it up so people pay or put a deposit up front, because the two weeks before the holiday are when you're buying flour and paying staff, and you need that money before the orders turn into revenue. Once you know the count a week out, you can stop guessing, and that's the whole point of doing it.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Your dad still makes the rye his own way. What does he do with it that a cost sheet could never show?",
+   "answer": "Honestly I'm not sure I could tell you in a way a spreadsheet would catch. He does it by feel. He doesn't weigh the starter the way I'd want him to, he just knows when it's ready by how it smells and how it sits in the bowl. I've watched him pull a loaf early because the crumb looked wrong to him, and it always turned out he was right. If I put that in a cost sheet it would just say \"labor, 90 minutes\" and that would completely miss it.\n\nWhat I actually do is stand back and let him have it. Some mornings I still catch myself wanting to step in, and I don't, because that's the deal we made when I gave him the rye.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When you gave him the rye recipe, what did you actually say to him in that moment?",
+   "answer": "I don't think I had a speech ready. It was the morning after I'd watched him redo the dough for the third time that week, and I was standing at the bench with flour all over me, and I just said something like, \"Dad, you can keep the rye. Nobody touches that one but you, and I won't ask you to change it.\" He looked at me like I'd tried to sell him something. Then he said, \"Fine, but you're going to stop coming in at five to check my work.\" I said okay, and I meant it, and I think about half the time I've kept that.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "What do people who have only ever read profit numbers get wrong about a bakery's money?",
+   "answer": "Mostly they treat the profit line like it's the whole story. A bakery can look fine on paper for the year and still run out of cash in the two weeks before a big holiday, because you're paying for flour and staff before the orders have turned into money. If you only look at monthly profit you miss that completely. I watch the cash in those weeks more than anything else.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Is this you?",
+   "answer": "Mostly, yes. The paczki price and the form are right, and the rye deal is right, though I'd tighten one part. The 30 cents went up the same week I found the cost sheet, and it was my mom who said \"finally,\" not my dad. He grumbled, and he's still grumbling a little. And the rule about checking his work wasn't a formal rule, it was more of a promise I make to myself most mornings and only keep about half the time. Otherwise that's pretty much it.",
+   "phase": "shape",
+   "playback": "You took over a bakery where the paczki had been priced at 2001 levels, and you pushed a 30-cent raise over your dad's objection. You replaced the paper line at 6am with a pre-order form that gives you the count a week out and cash before the holiday. And you gave your dad the rye recipe so he could keep making it his way, with the rule that you stop checking his work."
+  }
+ ],
+ "book": {
+  "titles": [
+   {
+    "title": "Circled in Red",
+    "why": "You circled the paczki cost in red and have been making the same thirty-cent argument ever since."
+   },
+   {
+    "title": "Baked to the Count",
+    "why": "You went back through the notebook line by line until the form's count matched the names."
+   },
+   {
+    "title": "Stand Back From the Dough",
+    "why": "You handed your dad the rye and admitted you only keep your promise to stand back about half the time."
+   }
+  ],
+  "pool": [
+   {
+    "title": "Moving holiday orders off paper",
+    "summary": "How to move holiday orders from a paper notebook to a pre-order form, keep the notebook as a backup, and count on the number a week out.",
+    "quotes": [
+     "Knowing the count a week out meant I could finally stop guessing on flour and staff.",
+     "Don't retire the notebook until you've had a full season with the form."
+    ]
+   },
+   {
+    "title": "Testing a pre-order form until it breaks",
+    "summary": "How to test a pre-order form with fake orders, edits and cancellations before a big holiday, and how a double count was found and fixed.",
+    "quotes": [
+     "Have a few people you trust submit fake orders, then edit them, then cancel one.",
+     "anyone who changed a dozen to two dozen was counted twice"
+    ]
+   },
+   {
+    "title": "Raising the paczki price by thirty cents",
+    "summary": "How to raise a price that hadn't changed since it was set, using a one-page cost sheet and a small increase regulars barely notice.",
+    "quotes": [
+     "Nobody complains about a price they don't notice, Dad. They complain when the paczki get smaller."
+    ]
+   },
+   {
+    "title": "Why cash runs dry before profit shows",
+    "summary": "Why a food business can look profitable on paper and still run short of cash in the weeks before a holiday, and how to watch the cash instead.",
+    "quotes": [
+     "A bakery can look fine on paper for the year and still run out of cash in the two weeks before a big holiday",
+     "I watch the cash in those weeks more than anything else."
+    ]
+   },
+   {
+    "title": "Costing every recipe line by line",
+    "summary": "How to cost every item on a bakery menu line by line, and what it reveals when several top sellers quietly lose money.",
+    "quotes": [
+     "three of our top ten sellers were losing money",
+     "I'd say it's the most useful thing I brought home."
+    ]
+   },
+   {
+    "title": "Fixing the filling, leaving the rye alone",
+    "summary": "How to decide which losing items to fix and which to leave alone, including cutting a filling portion before touching the price.",
+    "quotes": [
+     "For the fillings I cut the cost before I touched the price",
+     "I wasn't going to put a cost sheet in front of that."
+    ]
+   },
+   {
+    "title": "Giving up the rye and standing back",
+    "summary": "How to hand a family's signature recipe back to the person who made it, and what it takes to stop checking their work.",
+    "quotes": [
+     "Nobody touches that one but you, and I won't ask you to change it.",
+     "Fine, but you're going to stop coming in at five to check my work."
+    ]
+   }
+  ],
+  "title": "Circled in Red",
+  "chapters": [
+   {
+    "title": "The Red-Circled Paczki Cost Sheet",
+    "summary": "How a one-page cost sheet, with the number circled in red, showed that a paczki price unchanged since 2001 was roughly break-even once time was counted, and why a thirty-cent rise went largely unnoticed. Covers the week the increase happened and what sales looked like afterward.",
+    "quotes": [
+     "Nobody complains about a price they don't notice, Dad. They complain when the paczki get smaller."
+    ]
+   },
+   {
+    "title": "Costing Every Recipe Line by Line",
+    "summary": "How costing every item in a spreadsheet, one recipe at a time, revealed that three of the top ten sellers were quietly losing money. Covers why this line-by-line habit from an earlier accounting career still gets repeated every quarter.",
+    "quotes": [
+     "three of our top ten sellers were losing money",
+     "I'd say it's the most useful thing I brought home."
+    ]
+   },
+   {
+    "title": "Trimming the Filling Before the Price",
+    "summary": "How cutting an overly generous filling scoop fixed most of the losses on two filled pastries before any price change, while a rye item that loses money on paper was deliberately left alone. Covers how each losing item was handled and why.",
+    "quotes": [
+     "For the fillings I cut the cost before I touched the price",
+     "I wasn't going to put a cost sheet in front of that."
+    ]
+   },
+   {
+    "title": "Watching Cash Before Profit Shows",
+    "summary": "Why a bakery can look fine on the year's profit line and still run short of cash in the two weeks before a holiday, when flour and staff are paid before orders turn into money. Covers why cash is watched closely in those weeks.",
+    "quotes": [
+     "A bakery can look fine on paper for the year and still run out of cash in the two weeks before a big holiday",
+     "I watch the cash in those weeks more than anything else."
+    ]
+   }
+  ],
+  "blurbs": {},
+  "rewrite": {
+   "title": "Pre-Orders That Pay for the Flour",
+   "summary": "How a pre-order form gives a holiday bakery an accurate count a week ahead and collects payment before the rush. Covers why deposits matter in the two weeks before a holiday, when flour and staff must be paid, and a test run that catches counting errors before the big day.",
+   "quotes": [
+    "The form also gives me cash up front, which matters more than people think, because the two weeks before the holiday are when I need the money for flour and staff.",
+    "Now people pre-order a dozen or two dozen with a pickup window, so I know the count the week before and I can bake to it instead of guessing.",
+    "Have a few people you trust submit fake orders, then edit them, then cancel one. Check the count against what you'd expect."
+   ]
+  }
+ }
+}

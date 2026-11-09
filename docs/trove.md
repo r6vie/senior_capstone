@@ -124,7 +124,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   - **"Skip"** is always available, quiet. The member can skip a question they'd rather not answer or have nothing to say to, and the interviewer moves on to the next question. A skip is never shown or counted; the interviewer just takes it as a cue to try other ground.
   - The interview changes angle early instead of reaching the question cap with a thin pool.
   - Signals are internal: never shown, never a score. Grounding is unchanged.
-- **Planned for after the whole loop works, not now** (§9.9):
+- **Built early, waiting on teammates' pieces to run for real** (§9.9; choices in `docs/review/decisions.md`):
   - **Sparks from other books:** while reading someone's book, a member taps "I have one like this" on a chapter. It saves a private prompt for their own next interview, never content.
   - **Each reading grows the book:** after "Did you meet?", the author answers one quick question, "What did they ask you about that surprised you?". The answer can become a new chapter or improve one, with the author's approval (through I3).
 - **On hold until the interview works:** the Librarian reacting in the margins, bursts on strong lines, the card drawer for the sweep, bookmark tabs, the pencil-to-ink spine, the shelf stamp and live cleanup of spoken answers. A practical "how-to" chapter is welcome but not enforced.

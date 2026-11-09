@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Growing books · Proposed changes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+/* Trove design system: tokens and base components. Spec and rules: docs/design/system.md.
+   Look: "Manga screentone": black ink on white paper, screentone dots for shade, one burst of
+   lines for emphasis, one red for the one thing to do next.
+   Port target: web/src/ui/styles.css. Components use only the tokens below: no raw colors or
+   pixel sizes in feature code. The --color-* and --space-* aliases keep the current app working. */
+
+:root {
+  /* Color. Roles, not decoration. Red is the primary action and nothing else. */
+  --paper: #fafaf7;
+  --paper-sunk: #f0f0eb;
+  --white: #ffffff;
+  --ink: #111111;
+  --ink-2: #55554f; /* secondary text: 7.2:1 on paper */
+  --ink-3: #8c8c89; /* borders of disabled things. Never text: 3.2:1 */
+  --rule: #c9c9c6; /* hairlines and disabled fills. Text only on ink: 11.4:1 */
+  --red: #d42a27; /* white text 5.0:1 */
+  --red-hover: #b82220;
+  --red-press: #9e1c1a;
+
+  /* Context. Inside .dark these swap, and every component follows. */
+  --fg: var(--ink);
+  --bg: var(--paper);
+
+  /* Type */
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif; /* labels, nav, buttons, shelf names. Caps. */
+  --font-serif: "Newsreader", Georgia, serif; /* book titles, page titles, the Librarian's voice */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif; /* working text */
+
+  /* Space: 4px base. 44px is the page gutter. */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 44px;
+  --s-8: 64px;
+
+  /* Line, radius, size */
+  --line: 2px; /* controls, book outline */
+  --line-heavy: 3px; /* panels, bubbles, dialogs */
+  --radius-pill: 999px; /* search field and avatar only */
+  --radius-bubble: 26px; /* speech bubbles only */
+  --tap: 44px;
+  --control: 48px;
+  --ease: 120ms ease;
+
+  /* Compatibility with the tokens the app already uses */
+  --color-text: var(--ink);
+  --color-muted: var(--ink-2);
+  --color-accent: var(--red);
+  --color-error: var(--ink);
+  --color-border: var(--rule);
+  --color-background: var(--paper);
+  --radius: 0;
+  --space-1: var(--s-1);
+  --space-2: var(--s-2);
+  --space-3: var(--s-4);
+  --space-4: var(--s-6);
+
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.dark {
+  --fg: var(--white);
+  --bg: var(--ink);
+  color: var(--fg);
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: var(--line-heavy) solid var(--fg);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* ---------- Layout helpers ---------- */
+.narrow-page {
+  max-width: 28rem;
+  margin: var(--s-6) auto;
+  padding: 0 var(--s-4);
+}
+.stack {
+  display: grid;
+  gap: var(--s-4);
+}
+.muted {
+  color: var(--ink-2);
+}
+.error {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- Tone: screentone dots. Grounds and shadows, never behind running text. ---------- */
+.tone-fine {
+  background: radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px, var(--paper);
+}
+.tone-mid {
+  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 6px 6px, var(--paper);
+}
+.tone-dense {
+  background: radial-gradient(circle, var(--ink) 1.9px, transparent 2.3px) 0 0 / 6px 6px, var(--paper);
+}
+/* Fade: apply to a tone layer to let it dissolve (add .tone-fade on the element). */
+.tone-fade {
+  -webkit-mask-image: linear-gradient(var(--fade-dir, 180deg), #000, transparent);
+  mask-image: linear-gradient(var(--fade-dir, 180deg), #000, transparent);
+}
+/* Burst: fanned focus lines. Once per screen, behind the Librarian's pick only. Place inside .dark. */
+.burst {
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(from 0deg at var(--fx, 50%) var(--fy, 50%), var(--white) 0 0.8deg, var(--ink) 0.8deg 3deg, var(--white) 3deg 3.5deg, var(--ink) 3.5deg 8deg);
+  -webkit-mask-image: radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), transparent 14%, #000 44%);
+  mask-image: radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), transparent 14%, #000 44%);
+}
+.halo {
+  position: absolute;
+  background: radial-gradient(circle, var(--white) 1.7px, transparent 2.1px) 0 0 / 7px 7px;
+  border-radius: 50%;
+  -webkit-mask-image: radial-gradient(circle, #000 28%, transparent 68%);
+  mask-image: radial-gradient(circle, #000 28%, transparent 68%);
+}
+
+/* ---------- Buttons ---------- */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  min-height: var(--control);
+  padding: 0 26px;
+  white-space: nowrap;
+  border: var(--line) solid var(--fg);
+  border-radius: 0;
+  font: 700 17px/1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--ease), color var(--ease), border-color var(--ease);
+}
+.button-primary {
+  background: var(--red);
+  color: var(--white);
+}
+.button-primary:is(:hover, .is-hover) {
+  background: var(--red-hover);
+}
+.button-primary:is(:active, .is-press) {
+  background: var(--red-press);
+  transform: translateY(1px);
+}
+.button-secondary {
+  background: transparent;
+  color: var(--fg);
+}
+.button-secondary:is(:hover, .is-hover) {
+  background: var(--fg);
+  color: var(--bg);
+}
+.button-secondary:is(:active, .is-press) {
+  background: var(--fg);
+  color: var(--bg);
+  transform: translateY(1px);
+}
+.button-quiet {
+  min-height: var(--tap);
+  padding: 0 var(--s-3);
+  border-color: transparent;
+  background: transparent;
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+.button-quiet:is(:hover, .is-hover) {
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.button:is(:disabled, [aria-disabled="true"]) {
+  background: var(--rule);
+  border-color: var(--ink-3);
+  color: var(--ink-2);
+  cursor: not-allowed;
+  transform: none;
+}
+.button[aria-busy="true"] {
+  cursor: progress;
+  pointer-events: none;
+}
+
+/* ---------- Fields ---------- */
+.field {
+  display: grid;
+  gap: var(--s-2);
+}
+.field > label {
+  font: 600 14px/1.3 var(--font-sans);
+}
+.field :is(input, textarea, select) {
+  min-height: var(--control);
+  padding: 0 14px;
+  border: var(--line) solid var(--ink);
+  border-radius: 0;
+  background: var(--white);
+  color: var(--ink);
+  font: 400 16px/1.4 var(--font-sans);
+}
+.field textarea {
+  min-height: 112px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+.field select {
+  appearance: none;
+  padding-right: 44px;
+  background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10' viewBox='0 0 16 10' fill='none' stroke='%23111' stroke-width='2.4'%3E%3Cpath d='M2 2l6 6 6-6'/%3E%3C/svg%3E") right 16px center / 16px 10px no-repeat;
+}
+.field :is(input, textarea, select)::placeholder {
+  color: var(--ink-2);
+}
+.field :is(input, textarea, select):is(:focus, .is-focus) {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 2px;
+}
+.field .hint {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.field[data-invalid="true"] :is(input, textarea, select) {
+  border-width: var(--line-heavy);
+}
+.field[data-invalid="true"] .hint {
+  display: flex;
+  gap: var(--s-2);
+  color: var(--ink);
+  font-weight: 600;
+}
+.field[data-invalid="true"] .hint::before {
+  content: "!";
+  flex: none;
+  width: 20px;
+  height: 20px;
+  background: var(--ink);
+  color: var(--white);
+  font: 800 14px/20px var(--font-display);
+  text-align: center;
+}
+.field :is(input, textarea, select):disabled {
+  border-color: var(--ink-3);
+  background: var(--paper-sunk);
+  color: var(--ink-2);
+}
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--tap);
+  font-size: 16px;
+}
+.choice input {
+  appearance: none;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+}
+.choice input[type="radio"] {
+  border-radius: 50%;
+}
+.choice input:checked {
+  background: var(--ink);
+  box-shadow: inset 0 0 0 4px var(--white);
+}
+.choice input[type="checkbox"]:checked {
+  background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.4'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E") center / 18px no-repeat;
+  box-shadow: none;
+}
+
+/* ---------- Navigation ---------- */
+.nav {
+  display: flex;
+  gap: 6px;
+  font: 600 17px/1 var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 12px;
+  border-bottom: var(--line-heavy) solid transparent;
+  color: var(--fg);
+  text-decoration: none;
+}
+.nav a:hover {
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.nav a[aria-current="page"] {
+  border-bottom-color: var(--fg);
+}
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 800 28px/1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.wordmark::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: var(--ink);
+  transform: rotate(-6deg);
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 40px;
+  width: 230px;
+  padding: 0 14px;
+  border: var(--line) solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: var(--line) solid var(--fg);
+  border-radius: 50%;
+  font: 700 14px/1 var(--font-display);
+}
+
+/* ---------- Labels, voice, lists ---------- */
+.caption {
+  display: inline-block;
+  padding: 5px 12px;
+  background: var(--fg);
+  color: var(--bg);
+  font: 600 14px/1.2 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.shelf-name {
+  margin: 0;
+  font: 800 30px/1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.page-title {
+  margin: 0;
+  font: 600 48px/1.02 var(--font-serif);
+  letter-spacing: -0.015em;
+}
+.voice {
+  font: italic 400 20px/1.3 var(--font-serif);
+}
+.bubble {
+  position: relative;
+  padding: 14px 20px;
+  border: var(--line-heavy) solid var(--ink);
+  border-radius: var(--radius-bubble);
+  background: var(--white);
+  color: var(--ink);
+  font: italic 400 19px/1.3 var(--font-serif);
+}
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 44px;
+  bottom: -14px;
+  width: 22px;
+  height: 22px;
+  background: var(--white);
+  border-right: var(--line-heavy) solid var(--ink);
+  border-bottom: var(--line-heavy) solid var(--ink);
+  transform: rotate(45deg) skew(8deg, 8deg);
+}
+.contents {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.contents li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+}
+.contents li::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  border-bottom: 2.5px dotted currentColor;
+  transform: translateY(-4px);
+}
+.contents b {
+  font: 700 18px/1 var(--font-display);
+  letter-spacing: 0.06em;
+}
+
+/* ---------- Surfaces ---------- */
+.panel {
+  padding: 22px 24px;
+  border: var(--line-heavy) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.panel > h2,
+.panel > h3 {
+  margin: 0 0 var(--s-4);
+  font: 800 24px/1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.message {
+  display: flex;
+  gap: var(--s-3);
+  padding: 14px 18px;
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.message-error {
+  border-width: var(--line-heavy);
+  background: radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px, var(--white);
+}
+.message-error > :last-child {
+  padding: 2px 8px;
+  margin: -2px 0;
+  background: var(--white);
+  font-weight: 600;
+}
+.empty {
+  padding: var(--s-6);
+  border: var(--line-heavy) dotted var(--ink);
+  color: var(--fg);
+}
+.empty h3 {
+  margin: 0 0 var(--s-2);
+  font: 600 26px/1.1 var(--font-serif);
+}
+.dialog {
+  position: relative;
+  padding: 26px 28px;
+  border: var(--line-heavy) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.dialog::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 8px -8px -8px 8px;
+  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+}
+.scrim {
+  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 6px 6px, var(--paper);
+}
+.skeleton {
+  background: radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px, var(--paper);
+  border: var(--line) solid var(--ink);
+}
+
+/* ---------- Book, shelf, band ---------- */
+.book {
+  position: relative;
+  flex: none;
+  display: block;
+  width: 122px;
+  height: 178px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform var(--ease);
+}
+.book::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  right: -8px;
+  bottom: -8px;
+  background: radial-gradient(circle, var(--fg) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+}
+.book-cover {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 16px 10px 10px 21px;
+  border: var(--line) solid var(--ink);
+  background: linear-gradient(90deg, #e4e4df 0, #f5f5f1 7px, var(--white) 8px 11px, #f2f2ee 12px, var(--white) 16px);
+  overflow: hidden;
+}
+.book-cover::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--ink);
+}
+.book-title {
+  font: 600 13.5px/1.18 var(--font-serif);
+}
+.book-author {
+  margin-top: auto;
+  /* Full names wrap (at the hyphen too) and stop at 3 lines; the aria-label carries the whole name. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font: 600 9.5px/1.3 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.book:is(:hover, .is-hover) {
+  transform: translateY(-4px);
+}
+.book-lg {
+  width: 236px;
+  height: 344px;
+}
+.book-lg::before {
+  left: 14px;
+  top: 14px;
+  right: -14px;
+  bottom: -14px;
+  background-size: 7px 7px;
+  background-image: radial-gradient(circle, var(--fg) 1.8px, transparent 2.3px);
+}
+.book-lg .book-cover {
+  padding: 30px 18px 18px 40px;
+  border-width: var(--line-heavy);
+}
+.book-lg .book-cover::before {
+  left: 24px;
+  width: 2px;
+}
+.book-lg .book-title {
+  font-size: 27px;
+  line-height: 1.12;
+}
+.book-lg .book-author {
+  font-size: 12px;
+}
+.book-sm {
+  width: 92px;
+  height: 136px;
+}
+.book-sm .book-cover {
+  padding: 12px 6px 6px 16px;
+}
+.book-sm .book-cover::before {
+  left: 9px;
+}
+.book-sm .book-title {
+  font-size: 11.5px;
+}
+.book-sm .book-author {
+  font-size: 8.5px;
+}
+
+.shelf-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-bottom: 18px;
+}
+.shelf-head::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  border-top: 2.5px solid var(--fg);
+}
+.shelf-head a {
+  order: 2;
+  border-bottom: 2.5px solid var(--fg);
+  color: var(--fg);
+  font: 700 15px/1.2 var(--font-display);
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.shelf-books {
+  display: flex;
+  gap: 28px;
+  padding: 0 var(--s-1);
+}
+.ledge {
+  position: relative;
+  height: 14px;
+  background: var(--ink);
+}
+.ledge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 14px;
+  height: 22px;
+  background: radial-gradient(circle, var(--ink) 1.4px, transparent 1.8px) 0 0 / 5px 5px;
+  -webkit-mask-image: linear-gradient(#000, transparent);
+  mask-image: linear-gradient(#000, transparent);
+}
+.band {
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 28px), 0 100%);
+}
+
+
+.iv{width:1700px;padding:56px 64px 64px;background:var(--paper);display:grid;gap:36px;align-content:start}
+.iv,.iv *{box-sizing:border-box}
+:where(.iv) :is(h1,h2,h3,p,ol,ul){margin:0}
+.iv h1{font:800 64px/.95 var(--font-display);letter-spacing:.03em;text-transform:uppercase}
+.iv .lede{font:italic 400 22px/1.35 var(--font-serif);max-width:980px;margin-top:16px}
+.grid{display:grid;grid-template-columns:repeat(2,768px);gap:36px 44px;border-top:3px solid var(--ink);padding-top:30px}
+.cell{display:grid;gap:10px;align-content:start}
+.cell .t{font:700 16px var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.cell .n{font:400 13px var(--font-sans);color:var(--ink-2)}
+.frame{width:768px;height:480px;overflow:hidden;border:3px solid var(--ink);background:var(--paper);position:relative}
+.fr{width:1280px;height:800px;transform:scale(.6);transform-origin:0 0;position:relative;overflow:hidden;background:var(--paper);color:var(--ink);font:400 16px/1.5 var(--font-sans)}
+.fr .button.sm{min-height:44px;padding:0 14px;font-size:14px;letter-spacing:.1em}
+.fr .button-quiet.sm{min-height:44px}
+.button.tl{font:400 15px/1.2 var(--font-sans);letter-spacing:0;text-transform:none;text-decoration:underline;min-height:44px;padding:0 4px;color:var(--ink)}
+.rline{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--ink-2)}
+.booktitle.rv{align-items:flex-start;gap:24px;margin-bottom:0}.booktitle.rv h2{font:600 34px/1.05 var(--font-serif);letter-spacing:-.01em}.by2{font:600 13px var(--font-sans);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin:6px 0 10px}.blurb2{font:400 15px/1.5 var(--font-sans);max-width:62ch;margin:0 0 6px}
+.chs li.confirm{background:radial-gradient(circle,var(--ink) .7px,transparent 1.1px) 0 0/6px 6px,var(--white)}.chs li.confirm>div:nth-child(2){background:var(--white);padding:2px 8px;justify-self:start}
+.chs .qt{margin-top:4px}.chs .qt .button{margin-left:-14px}
+.chs .quotes{margin:4px 0 4px;padding:2px 0 2px 16px;border-left:4px solid var(--ink);font:italic 400 17px/1.4 var(--font-serif);color:var(--ink)}
+.chs li>div>span{display:block}
+.chs .close{margin:6px 0 0;font:italic 400 15px/1.35 var(--font-serif);color:var(--ink)}
+.ph{display:flex;gap:30px;font:700 17px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.ph span{padding:8px 0;border-bottom:3px solid transparent}.ph .on{color:var(--ink);border-bottom-color:var(--ink)}
+.say{font:600 38px/1.15 var(--font-serif);letter-spacing:-.01em}
+.note{font-size:14px;color:var(--ink-2);max-width:60ch}
+.quiet-note{font-size:14px;color:var(--ink-2)}
+.saved{font-size:12px;color:var(--ink-2);letter-spacing:.04em}
+.grow{flex:1}
+.row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.tools{justify-content:flex-start}
+.ta{min-height:170px;padding:16px 18px;border:var(--line) solid var(--ink);background:var(--white);font:400 19px/1.5 var(--font-sans)}
+.ta.edit{min-height:210px}.ta.short{min-height:84px}.ta.empty-ta{min-height:130px}
+.ph-text{color:var(--ink-2)}
+.caret{display:inline-block;width:2px;height:1.1em;background:var(--ink);vertical-align:-3px;margin-left:2px}
+.panel h3{font:800 24px/1 var(--font-display);letter-spacing:.04em;text-transform:uppercase;margin:0 0 14px}
+.drop{display:flex;align-items:center;gap:18px;justify-content:space-between;padding:18px 20px;border:var(--line-heavy) dotted var(--ink);margin-bottom:12px;font-weight:600}
+.rec{display:grid;gap:18px;justify-items:center;text-align:center;padding:30px}
+.ring{position:relative;width:150px;height:150px;display:grid;place-items:center}
+.ring::before{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,var(--ink) 1.6px,transparent 2px) 0 0/7px 7px;-webkit-mask-image:radial-gradient(circle,transparent 42%,#000 46%,#000 60%,transparent 70%);mask-image:radial-gradient(circle,transparent 42%,#000 46%,#000 60%,transparent 70%)}
+.ring b{position:relative;display:grid;place-items:center;width:84px;height:84px;border-radius:50%;background:var(--ink);color:var(--white)}
+.ring b svg{width:34px;height:34px}
+.wave{display:flex;gap:6px;align-items:center;height:60px}.wave i{width:5px;background:var(--ink)}
+.exit{margin-top:18px;border-top:var(--line) dotted var(--ink);padding-top:12px}
+.picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.pick{position:relative;display:grid;gap:10px;justify-items:start;align-content:start;padding:18px;border:var(--line) solid var(--ink);background:var(--white)}
+.pick.on{border-width:var(--line-heavy);padding:17px}
+.pick .book{margin-bottom:6px}
+.pick b{font:600 22px/1.15 var(--font-serif)}
+.pick .why{font:italic 400 16px/1.35 var(--font-serif);color:var(--ink-2)}
+.radio{position:absolute;right:16px;top:16px;width:22px;height:22px;border:var(--line) solid var(--ink);border-radius:50%;background:var(--white)}
+.pick.on .radio{background:radial-gradient(circle,var(--ink) 0 5px,var(--white) 6px)}
+.booktitle{display:flex;gap:20px;align-items:center;margin-bottom:6px}
+.booktitle h2{font:600 34px/1.05 var(--font-serif)}.booktitle p{font-size:15px;color:var(--ink-2);margin-top:4px}
+.chs{list-style:none;padding:0;border:var(--line-heavy) solid var(--ink);background:var(--white)}
+.chs li{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 18px;border-bottom:var(--line) dotted var(--ink)}
+.chs li:last-child{border-bottom:0}
+.chs .n{font:800 26px var(--font-display)}
+.chs b{display:block;font:600 21px/1.2 var(--font-serif)}.chs span{font-size:14px;color:var(--ink-2)}
+.ch-act{display:flex;gap:6px;align-items:center}
+.act{display:grid;gap:20px;align-content:start}
+.donebox{display:flex;gap:36px;align-items:center;padding:30px 36px}
+.dtext{display:grid;gap:22px}.dtext p{font:italic 400 24px/1.3 var(--font-serif);margin:0;max-width:34ch}
+.A .act.done{width:920px}
+/* A: question band, answer below */
+.A .top{display:flex;align-items:center;justify-content:space-between;height:78px;padding:0 48px}
+.A .band{position:relative;overflow:hidden;padding:38px 48px 44px}
+.A .band .say{position:relative;max-width:920px}
+.A .band .halo{right:-70px;top:-110px;width:420px;height:420px}
+.A .act{width:920px;margin:0 auto;padding-top:34px}
+.A .act.reveal,.A .act.review{width:1100px;padding-top:24px}
+.A .act.review{gap:12px;padding-top:24px}.A .act.review .chs li{padding:12px 18px;align-items:start}.A .act.review .row{justify-content:flex-start}
+.A .act.review .row{justify-content:flex-start}
+
+/* B: dark left page, right page carries the action */
+.B{display:grid;grid-template-columns:480px minmax(0,1fr)}
+.B .side{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:34px;padding:40px 44px}
+.B .side .halo{right:-150px;top:-150px;width:400px;height:400px}
+.B .side .say{position:relative;font-size:36px;margin-top:auto}
+.B .side .button-quiet{align-self:flex-start;margin-top:0;color:var(--white);position:relative}
+.phl{position:relative;display:grid;gap:14px;font:700 18px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--rule);margin-top:20px}
+.phl span{display:flex;align-items:center;gap:12px}.phl i{width:14px;height:14px;border:2px solid var(--rule)}
+.phl .on{color:var(--white)}.phl .on i{background:var(--white);border-color:var(--white);transform:rotate(-6deg)}
+.B .act{padding:60px 56px;align-content:center}
+.B .ta{background-image:repeating-linear-gradient(transparent 0 32px,var(--rule) 32px 34px);line-height:34px;background-position:0 16px;background-color:var(--white);border-width:var(--line-heavy)}
+.B .act.reveal .picks{grid-template-columns:1fr}
+.B .act.reveal .pick{grid-template-columns:auto minmax(0,1fr);column-gap:18px;align-items:center;padding:14px 18px}
+.B .act.reveal .pick .book{grid-row:span 2;margin:0}
+.B .act.reveal .pick.on{padding:13px 17px}
+.B .act.review{padding:34px 40px;gap:10px}
+.B .act.review .booktitle h2{font-size:28px}
+.B .act.review .chs li{padding:8px 14px}
+
+/* B: a literal comic page. Heavy panel borders, white gutters, caption boxes, balloons. */
+.Bc .top{display:flex;align-items:center;justify-content:space-between;height:70px;padding:0 28px}
+.tags{display:flex;gap:0;border:var(--line-heavy) solid var(--ink);font:700 16px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.tags span{padding:10px 20px;background:var(--white);color:var(--ink-2)}.tags span+span{border-left:var(--line) solid var(--ink)}
+.tags .on{background:var(--ink);color:var(--white)}
+.pg{height:716px;padding:0 28px 28px;display:grid;gap:14px}
+.pn{position:relative;border:4px solid var(--ink);background:var(--white);overflow:hidden;display:flex;flex-direction:column;justify-content:center}
+.pn.tone{background:radial-gradient(circle,var(--ink) 1.3px,transparent 1.7px) 0 0/6px 6px,var(--paper);justify-content:center;padding:36px 48px}
+.cap{position:absolute;z-index:2;padding:5px 12px;border:var(--line) solid var(--ink);background:var(--white);font:700 13px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.cap.tl{left:-2px;top:-2px}
+.bal{position:relative;margin:0;max-width:860px;padding:22px 30px;border:var(--line-heavy) solid var(--ink);border-radius:34px;background:var(--white);font:italic 500 30px/1.25 var(--font-serif)}
+.bal::after{content:"";position:absolute;left:56px;bottom:-17px;width:26px;height:26px;background:var(--white);border-right:var(--line-heavy) solid var(--ink);border-bottom:var(--line-heavy) solid var(--ink);transform:rotate(45deg) skew(8deg,8deg)}
+.pn.tone .bal{margin-top:6px}
+.pad{padding:26px 28px}.pad2{padding:0 28px 18px}.pad.col{display:grid;gap:14px;justify-items:start}
+.pn .you{margin:44px 28px 12px;padding:16px 20px;border:var(--line-heavy) solid var(--ink);border-radius:26px;background:var(--white);font:400 19px/1.5 var(--font-sans);min-height:130px}
+.pn .note{margin:0}
+.pn .recb{display:flex;gap:30px;align-items:center;justify-content:center;padding-top:44px}
+.pn .recb .note{max-width:300px}
+.pn .exit{margin-top:6px;padding-top:6px}
+.pg.g-start{grid-template-columns:1.5fr 1fr;grid-template-rows:1fr 120px}
+.pg.g-start .big{grid-row:1}.pg.g-start .foot{grid-column:1/3}
+.pg.g-start .big .bal{font-size:36px}
+.pg.g-resume{grid-template-rows:1fr 130px}.pg.g-resume .big .bal{font-size:36px}
+.pg.g-ask,.pg.g-rec,.pg.g-tr,.pg.g-later,.pg.g-shape{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1.2fr}
+.pg .q{grid-column:1/3}
+.pg.g-reveal{grid-template-rows:150px 1fr 100px}
+.pg.g-review{grid-template-rows:150px 1fr 96px}
+.pn.slim{padding:20px 40px;flex-direction:row;align-items:center;gap:28px;justify-content:flex-start}
+.pn.slim .bal{font-size:26px;padding:16px 24px}
+.bt2{font:600 28px/1.1 var(--font-serif);margin-left:auto;text-align:right}.bt2 small{display:block;font:600 14px var(--font-sans);color:var(--ink-2);margin-top:4px}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.pick{align-items:flex-start;justify-content:flex-start;padding:22px;gap:10px}
+.pick.on{border-width:7px;padding:19px}
+.pick b{font:600 24px/1.15 var(--font-serif);margin-top:6px}
+.quad{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.chp{justify-content:flex-start;padding-bottom:14px}.chp .pad{padding:40px 18px 10px}.chp b{display:block;font:600 22px/1.2 var(--font-serif);margin-bottom:10px}.chp span{font-size:14.5px;color:var(--ink-2)}
+.chp .ch-act{margin-top:auto;padding:0 14px;flex-direction:column;align-items:flex-start;gap:4px}
+.pn.foot{justify-content:center}
+/* C: bubble on a tone ground, phase rail across the top */
+.C .top{display:flex;align-items:center;justify-content:space-between;height:78px;padding:0 48px}
+.rail,.rail-gap{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 48px;height:44px}
+.rail span{padding-top:14px;border-top:3px solid var(--rule);font:700 15px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.rail .on{border-top:6px solid var(--ink);color:var(--ink);padding-top:11px}
+.C .stage{position:relative;padding:26px 48px 40px;display:flex;gap:22px;align-items:flex-start}
+.C .stage .tone{position:absolute;inset:0;background:radial-gradient(circle,var(--ink) 1.1px,transparent 1.5px) 0 0/6px 6px;-webkit-mask-image:linear-gradient(180deg,#000,transparent 92%);mask-image:linear-gradient(180deg,#000,transparent 92%);opacity:.5}
+.C .stage .lib{position:relative;flex:none;width:58px;height:58px;border-radius:50%;border:var(--line-heavy) solid var(--ink);background:var(--white) radial-gradient(circle at 50% 50%,var(--ink) 0 9px,transparent 10px);margin-top:10px}
+.C .stage .bubble{position:relative;flex:1;max-width:980px;padding:22px 30px;font-size:29px;line-height:1.28;border-radius:34px}
+.C .stage .bubble::after{left:-12px;bottom:auto;top:26px;transform:rotate(135deg)}
+.C .act{width:1100px;margin:0 auto;padding-top:8px;gap:16px}
+.C .act.review{gap:10px}.C .act.review .booktitle .book{display:none}
+.C .act.review .chs li{padding:8px 16px}
+
+
+.gv{padding:56px 64px 64px;background:var(--paper);display:grid;gap:30px;align-content:start}
+.gv,.gv *{box-sizing:border-box}
+:where(.gv) :is(h1,h2,h3,h4,p,ol,ul,blockquote){margin:0}
+.gv h1{font:800 64px/.95 var(--font-display);letter-spacing:.03em;text-transform:uppercase}
+.gv .lede{font:italic 400 22px/1.35 var(--font-serif);max-width:980px;margin-top:16px}
+.gr{display:grid;gap:10px;border-top:3px solid var(--ink);padding-top:24px}
+.gr .t{font:700 16px var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.gr .n{font:400 13px var(--font-sans);color:var(--ink-2);max-width:1000px}
+.pair{display:flex;gap:44px;align-items:flex-start}
+.fw{width:768px;height:calc(var(--h) * .6px);overflow:hidden;border:3px solid var(--ink);background:var(--paper);position:relative;flex:none}
+.pw{width:312px;height:calc(var(--h) * .8px);overflow:hidden;border:3px solid var(--ink);background:var(--paper);position:relative;flex:none}
+.gv .fr{height:auto;min-height:0;transform:scale(.6);transform-origin:0 0;overflow:visible;width:1280px;padding-bottom:48px}
+.pf{width:390px;transform:scale(.8);transform-origin:0 0;background:var(--paper);color:var(--ink);font:400 16px/1.5 var(--font-sans);position:relative;padding-bottom:84px}
+.pf .tabs{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);height:64px;border-top:3px solid var(--ink);background:var(--paper)}
+.pf .tabs a{display:flex;align-items:center;justify-content:center;font:600 14px var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--ink);text-decoration:none;border-top:3px solid transparent;margin-top:-3px}
+.pf .tabs a[aria-current]{border-top-color:var(--ink)}
+.gtop{display:flex;align-items:center;gap:36px;height:72px;padding:0 44px}
+.gtop .avatar{margin-left:auto}
+.pf .gtop{height:56px;padding:0 16px}.pf .gtop .wordmark{font-size:22px}
+.gmain{padding:0 44px 64px}
+.gv .gpt{font:600 48px/1.02 var(--font-serif);letter-spacing:-.015em;margin:12px 0 28px;text-transform:none}
+.gv .empty p{margin:0;max-width:52ch}
+.pbody{padding:0 16px 24px;display:grid;gap:24px}
+.gv .pf .gpt{font-size:34px;margin:8px 0 20px}
+.D .gmain,.fr.D>.gmain{padding:0 44px 56px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:52px;align-items:start}
+.two>aside{display:grid;gap:24px;align-content:start}
+.one{max-width:820px}
+.bk-head{display:flex;gap:36px;align-items:flex-start;margin-bottom:36px}
+.bk-head .book-lg{flex:none}
+.bk-meta{display:grid;gap:12px;align-content:start;min-width:0}
+.gv .bk-meta h1{font:600 44px/1.04 var(--font-serif);letter-spacing:-.015em;text-transform:none}
+.by{font:600 13px var(--font-sans);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.blurb{font:400 17px/1.55 var(--font-sans);max-width:58ch}
+.bk-meta .row{margin-top:6px}
+.pf .bk-head{gap:16px;margin-bottom:8px;align-items:flex-start}
+.pf .bk-head .book-lg{width:122px;height:178px}
+.pf .bk-head .book-lg .book-cover{padding:16px 10px 10px 21px;border-width:2px}.pf .bk-head .book-lg .book-title{font-size:13.5px}.pf .bk-head .book-lg .book-author{font-size:9.5px}
+.pf .bk-head .book-lg::before{left:8px;top:8px;right:-8px;bottom:-8px;background-size:5px 5px;background-image:radial-gradient(circle,var(--fg) 1.3px,transparent 1.7px)}
+.pf .bk-head .book-lg .book-cover::before{left:12px;width:1.5px}
+.pf .bk-head{flex-direction:column;align-items:flex-start;gap:20px}
+.gv .pf .bk-meta h1{font-size:28px}
+.pf .bk-meta .row .button{width:100%;justify-content:center}
+.sh{font:800 26px/1 var(--font-display);letter-spacing:.04em;text-transform:uppercase;margin:0 0 10px}
+.gch{list-style:none;padding:0;border-top:var(--line-heavy) solid var(--ink);margin-top:14px}
+.gch li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;padding:16px 0;border-bottom:var(--line) dotted var(--ink)}
+.gch .n{font:800 28px/1 var(--font-display)}
+.gch b{display:block;font:600 22px/1.2 var(--font-serif)}.gch li>div>span{display:block;font-size:15px;color:var(--ink-2);margin-top:2px}
+.qt{margin-top:6px}.qt .button{margin-left:-12px}
+.quotes{margin:6px 0 4px;padding:2px 0 2px 16px;border-left:4px solid var(--ink);font:italic 400 18px/1.4 var(--font-serif);color:var(--ink)}
+.sparks{list-style:none;padding:0;margin-top:10px;border-top:var(--line) solid var(--ink)}
+.sparks li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-bottom:var(--line) dotted var(--ink);font:600 16px/1.3 var(--font-serif)}
+.two aside .sh{margin-top:12px}
+.rq{display:grid;gap:12px}.rqq{font:italic 500 24px/1.25 var(--font-serif)}
+.A .act.big,.note.big{font-size:17px;color:var(--ink);max-width:60ch}
+.pf.A .top{height:56px;padding:0 16px}.pf.A .band{padding:22px 16px 28px}.pf.A .say{font-size:26px}.pf.A .band .halo{display:none}
+.pf.A .act{width:auto;padding:24px 16px 24px}
+.pf .button{max-width:100%}
+.pf .row .button-primary,.pf .act>.row:first-child .button-primary{flex:1 1 100%;justify-content:center}
+.pf .tools{flex-wrap:wrap}.pf .tools .grow{display:none}.pf .tools .button-primary{flex:1 1 100%}
+.waitbox p{max-width:52ch}
+.fr.A .act.wide,.pf .act{gap:18px}
+.A .act.wide{width:1100px}
+.chgs{display:grid;gap:14px}
+.chg{border:var(--line-heavy) solid var(--ink);background:var(--white);padding:16px 20px;display:grid;gap:12px}
+.chg-h{display:flex;justify-content:space-between;align-items:center}
+.chg .st{font:700 14px var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.cols>div{display:grid;gap:4px;align-content:start}
+.cols i{font:700 12px var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);font-style:normal}
+.cols b{font:600 20px/1.2 var(--font-serif)}.cols span{font-size:14.5px;color:var(--ink-2)}
+.cols .newc{padding-left:18px;border-left:4px solid var(--ink)}
+.empty-now{border:var(--line) dotted var(--ink);padding:14px;font-size:14.5px;color:var(--ink-2)}
+.chg-f{display:flex;justify-content:space-between;align-items:center;gap:16px;border-top:var(--line) dotted var(--ink);padding-top:10px}
+
+.tog{display:flex;flex:none}.tog .button{min-height:var(--tap)}.tog .button+.button{margin-left:-2px}
+.button[aria-pressed="true"]{background:var(--ink);color:var(--white);border-color:var(--ink)}
+.chg.d .newc b{text-decoration:line-through;text-decoration-thickness:1.5px}
+.pf .cols{grid-template-columns:1fr}.pf .cols .newc{padding-left:14px}
+.pf .chg-f{flex-direction:column;align-items:stretch}.pf .tog .button{flex:1;justify-content:center}
+.confcols{display:grid;grid-template-columns:1fr 1fr;gap:18px}.pf .confcols{grid-template-columns:1fr}
+.conf h3{margin-bottom:10px}
+.clist{list-style:none;padding:0;display:grid;gap:10px}.clist li{display:flex;gap:12px;align-items:baseline}
+.clist b{font:600 19px/1.2 var(--font-serif)}
+.tag{flex:none;font:700 12px var(--font-display);letter-spacing:.14em;text-transform:uppercase;border:var(--line) solid var(--ink);padding:3px 8px;background:var(--white)}
+.donebox{align-items:flex-start}.pf .donebox{flex-direction:column;gap:20px;padding:20px}
+/* spark control */
+.spk{position:relative;display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.spk-b{margin-left:-12px}.spk-b svg{margin-right:6px;flex:none}.spk-u{margin-left:-6px}
+.spk-b.is-focus{outline:3px solid var(--ink);outline-offset:2px}
+.spk-s{display:inline-flex;align-items:center;gap:8px;font:600 14px var(--font-sans);color:var(--ink)}
+.spk-e{font:600 14px var(--font-sans);display:inline-flex;gap:8px;align-items:center}.spk-e b{display:inline-grid;place-items:center;width:18px;height:18px;background:var(--ink);color:var(--white);font-size:12px}
+.tip{position:absolute;left:0;top:100%;margin-top:6px;z-index:3;width:260px;padding:10px 12px;border:var(--line) solid var(--ink);background:var(--white);font:400 13.5px/1.4 var(--font-sans);color:var(--ink)}
+.sparkboard{display:grid;gap:30px}
+.states{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 28px}
+.states>div{display:grid;gap:6px;align-content:start;padding:14px 0;border-top:var(--line) dotted var(--ink);min-height:96px}
+.states i{font:700 13px var(--font-display);letter-spacing:.14em;text-transform:uppercase;font-style:normal;color:var(--ink-2)}
+.hosts{display:grid;gap:26px}
+.host3{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.hostbox{display:grid;gap:10px;align-content:start}
+.hostbox .contents,.hostbox .panel,.hostbox .h3{max-width:520px}
+.h1{padding:6px 0}.h1 li{align-items:center;flex-wrap:wrap}.h1 li::after{display:none}.h1 b{font:600 20px/1.2 var(--font-serif);letter-spacing:0;margin-right:auto}
+.h2t{font:600 20px/1.2 var(--font-serif)}.h2 p,.h3 p{font-size:15px;margin:6px 0 8px}.h3 h4{font:600 20px/1.2 var(--font-serif)}
+.pf .states{grid-template-columns:1fr}
+.gv .button.sm{min-height:44px;padding:0 14px}
+.gv .caption{justify-self:start;align-self:start}
+.band .caption{display:inline-block;margin-bottom:12px}
+.rq{border-width:2px}.rq .caption{background:none;color:var(--ink-2);padding:0;font-size:13px}
+.spk-b{font:400 14px/1.2 var(--font-sans);color:var(--ink-2)}.spk-s{font:400 14px var(--font-sans)}
+.chg .what{font:italic 400 17px/1.3 var(--font-serif);margin:0}
+.nowtog{display:none}.nowtog .button{margin-left:-14px}
+.pf .nowtog{display:block}.pf .chg:not(.open) .now{display:none}
+.chg-f{border-top:0;padding-top:0;justify-content:flex-start}
+.sparkblock{margin-top:32px;max-width:700px}
+.rcap{margin:0;font:400 14px/1.35 var(--font-sans);color:var(--ink-2);justify-self:start}
+.rcap2{display:inline-block;margin-bottom:12px;font:400 14px/1.35 var(--font-sans);color:var(--rule)}
+.pf .chg.nonow .now{display:none}
+.pf .picks{grid-template-columns:1fr}.pf .pick b{padding-right:44px}.pf .pick .book{display:none}
+.pf .chs li{grid-template-columns:1fr;gap:6px}.pf .chs .n{display:none}.pf .ch-act{display:flex;gap:6px}
+.rvt{font:600 28px/1.1 var(--font-serif)!important;letter-spacing:-.01em;text-transform:none!important}
+.pf .pcol{display:grid;gap:0;justify-items:start}
+.gv ins{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+.cols span{display:block}
+.button.tl{font:400 15px/1.2 var(--font-sans);letter-spacing:0;text-transform:none;text-decoration:underline;min-height:44px;padding:0 4px;color:var(--ink)}
+.qt{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}.qt .quotes{flex:1 0 100%}
+.rq .caption{justify-self:start}
+
+</style>
+</helmet>
+<div class="gv" style="width:1300px">
+<header><span class="caption">Proposed changes</span><h1 style="margin-top:20px">Growing books · Proposed changes</h1><p class="lede">After the round, the member decides on each change, then sees the back cover written for exactly what they approved. Nothing is live until they confirm. Text is real length; words added in Proposed are underlined.</p></header>
+<div class="gr"><span class="t">1 · Proposed changes</span><div class="pair"><div class="fw" style="--h:1432"><div class="fr D A" data-k="pc1d"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">Here is what I would change in your book.</p></section><main class="act wide"><div class="chgs"><article class="chg a"><div class="chg-h"><span class="caption">Changed chapter</span><span class="st">Approved</span></div><p class="what">Adds what the collector showed you about testing a board.</p><div class="cols"><div class="now"><i>Now</i><b>Selling the Ones I Couldn't Fix</b><span>I kept the machines I couldn't fix for a year, hoping I would learn how. Then a collector offered to take two of them for parts and tell me what was wrong with them, and what he told me about the boards was worth more to me than the money.</span></div><div class="newc"><i>Proposed</i><b>Selling the Ones I Couldn't Fix</b><span>I kept the machines I couldn't fix for a year, hoping I would learn how. Then a collector offered to take two of them for parts and tell me what was wrong with them, and what he told me about the boards was worth more to me than the money. <ins>He also showed me how to test a board without powering the whole machine, and I have done it that way ever since.</ins></span></div></div><div class="nowtog"><a class="button button-quiet sm" href="#">See what’s there now</a></div><div class="chg-f"><div class="tog"><a class="button button-secondary sm" href="#" aria-pressed="true">Approve</a><a class="button button-secondary sm" href="#" aria-pressed="false">Decline</a></div></div></article><article class="chg u nonow"><div class="chg-h"><span class="caption">New chapter</span><span class="st">Not decided</span></div><p class="what">You described what you gave up to keep the garage going.</p><div class="cols"><div class="now"><i>Now</i><div class="empty-now">Not in your book yet.</div></div><div class="newc"><i>Proposed</i><b>What I Gave Up for the Garage</b><span>The garage is a rented bay, and I go every Saturday from 8 to 4 instead of the weekly pickup game I used to play. I sold my old bike to pay for the first three boards. My partner thinks it is a lot of machines for one person, and she is probably right.</span></div></div><div class="chg-f"><div class="tog"><a class="button button-secondary sm" href="#" aria-pressed="false">Approve</a><a class="button button-secondary sm" href="#" aria-pressed="false">Decline</a></div></div></article><article class="chg d open"><div class="chg-h"><span class="caption">Changed chapter</span><span class="st">Declined</span></div><p class="what">Adds how you keep your own drawings from one machine to the next.</p><div class="cols"><div class="now"><i>Now</i><b>Reading a Schematic by Following the Wire</b><span>The manuals for machines from the 1980s are half wrong, so I stopped trusting the page and started following the wire from the symptom back to the board. It took me six machines to stop skipping the ground connections, which caused most of what I used to call random.</span></div><div class="newc"><i>Proposed</i><b>Reading a Schematic by Following the Wire</b><span>The manuals for machines from the 1980s are half wrong, so I stopped trusting the page and started following the wire from the symptom back to the board. It took me six machines to stop skipping the ground connections, which caused most of what I used to call random. <ins>I draw the wire on paper as I go, in pencil, so the next machine starts with the drawing from the last.</ins></span></div></div><div class="nowtog"><a class="button button-quiet sm" href="#">Hide what’s there now</a></div><div class="chg-f"><div class="tog"><a class="button button-secondary sm" href="#" aria-pressed="false">Approve</a><a class="button button-secondary sm" href="#" aria-pressed="true">Decline</a></div></div></article></div><div class="row"><a class="button button-primary " href="#">Review your choices</a><a class="button button-quiet " href="#">Decide later</a></div><p class="note">Nothing changes on the shelf until you confirm. Anything you haven't decided stays as it is. Your choices are saved.</p></main></div></div><div class="pw" style="--h:2118"><div class="pf A" data-k="pc1p"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">Here is what I would change in your book.</p></section><main class="act "><div class="chgs"><article class="chg a"><div class="chg-h"><span class="caption">Changed chapter</span><span class="st">Approved</span></div><p class="what">Adds what the collector showed you about testing a board.</p><div class="cols"><div class="now"><i>Now</i><b>Selling the Ones I Couldn't Fix</b><span>I kept the machines I couldn't fix for a year, hoping I would learn how. Then a collector offered to take two of them for parts and tell me what was wrong with them, and what he told me about the boards was worth more to me than the money.</span></div><div class="newc"><i>Proposed</i><b>Selling the Ones I Couldn't Fix</b><span>I kept the machines I couldn't fix for a year, hoping I would learn how. Then a collector offered to take two of them for parts and tell me what was wrong with them, and what he told me about the boards was worth more to me than the money. <ins>He also showed me how to test a board without powering the whole machine, and I have done it that way ever since.</ins></span></div></div><div class="nowtog"><a class="button button-quiet sm" href="#">See what’s there now</a></div><div class="chg-f"><div class="tog"><a class="button button-secondary sm" href="#" aria-pressed="true">Approve</a><a class="button button-secondary sm" href="#" aria-pressed="false">Decline</a></div></div></article><article class="chg u nonow"><div class="chg-h"><span class="caption">New chapter</span><span class="st">Not decided</span></div><p class="what">You described what you gave up to keep the garage going.</p><div class="cols"><div class="now"><i>Now</i><div class="empty-now">Not in your book yet.</div></div><div class="newc"><i>Proposed</i><b>What I Gave Up for the Garage</b><span>The garage is a rented bay, and I go every Saturday from 8 to 4 instead of the weekly pickup game I used to play. I sold my old bike to pay for the first three boards. My partner thinks it is a lot of machines for one person, and she is probably right.</span></div></div><div class="chg-f"><div class="tog"><a class="button button-secondary sm" href="#" aria-pressed="false">Approve</a><a class="button button-secondary sm" href="#" aria-pressed="false">Decline</a></div></div></article><article class="chg d open"><div class="chg-h"><span class="caption">Changed chapter</span><span class="st">Declined</span></div><p class="what">Adds how you keep your own drawings from one machine to the next.</p><div class="cols"><div class="now"><i>Now</i><b>Reading a Schematic by Following the Wire</b><span>The manuals for machines from the 1980s are half wrong, so I stopped trusting the page and started following the wire from the symptom back to the board. It took me six machines to stop skipping the ground connections, which caused most of what I used to call random.</span></div><div class="newc"><i>Proposed</i><b>Reading a Schematic by Following the Wire</b><span>The manuals for machines from the 1980s are half wrong, so I stopped trusting the page and started following the wire from the symptom back to the board. It took me six machines to stop skipping the ground connections, which caused most of what I used to call random. <ins>I draw the wire on paper as I go, in pencil, so the next machine starts with the drawing from the last.</ins></span></div></div><div class="nowtog"><a class="button button-quiet sm" href="#">Hide what’s there now</a></div><div class="chg-f"><div class="tog"><a class="button button-secondary sm" href="#" aria-pressed="false">Approve</a><a class="button button-secondary sm" href="#" aria-pressed="true">Decline</a></div></div></article></div><div class="row"><a class="button button-primary " href="#">Review your choices</a><a class="button button-quiet " href="#">Decide later</a></div><p class="note">Nothing changes on the shelf until you confirm. Anything you haven't decided stays as it is. Your choices are saved.</p></main></div></div></div><span class="n">Per change: what is there now, what would replace it with the added words underlined (works without colour), one line on what changed, and Approve or Decline. Selected is filled ink, never red. One exit: Decide later. Undecided counts as not approved.</span></div><div class="gr"><span class="t">2 · Writing the back cover</span><div class="pair"><div class="fw" style="--h:512"><div class="fr D A" data-k="pc1bd"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">I'm writing the back cover for what you approved.</p></section><main class="act "><div class="empty waitbox" aria-busy="true"><p>This can take a while. You can leave. The result will be here when you come back.</p><div class="row" style="margin-top:16px"><a class="button button-quiet " href="#">Back to my book</a></div></div></main></div></div><div class="pw" style="--h:500"><div class="pf A" data-k="pc1bp"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">I'm writing the back cover for what you approved.</p></section><main class="act "><div class="empty waitbox" aria-busy="true"><p>This can take a while. You can leave. The result will be here when you come back.</p><div class="row" style="margin-top:16px"><a class="button button-quiet " href="#">Back to my book</a></div></div></main></div></div></div><span class="n">After Review your choices, before the confirm step: the back cover is written for exactly the approved changes, so the member sees it before it goes live.</span></div><div class="gr"><span class="t">3 · The back cover could not be written</span><div class="pair"><div class="fw" style="--h:755"><div class="fr D A" data-k="pc1cd"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">Here is what changes on the shelf.</p></section><main class="act wide"><div class="confcols"><div class="panel conf"><h3>Will change on the shelf</h3><ul class="clist"><li><span class="tag">Changed</span><b>Selling the Ones I Couldn't Fix</b></li><li><span class="tag">New</span><b>What I Gave Up for the Garage</b></li></ul></div><div class="panel conf"><h3>Stays as it is</h3><ul class="clist"><li><span class="tag">Declined</span><b>Reading a Schematic by Following the Wire</b></li><li><span class="tag">Not decided</span><b>Why the New Part Didn't Help</b></li></ul></div></div><div class="chgs"><article class="chg nonow"><div class="chg-h"><span class="caption">Back cover</span></div><p class="what">I couldn't rewrite the back cover. The old one stays unless you try again.</p><div class="chg-f"><div class="row"><a class="button button-quiet sm" href="#">Try again</a></div></div></article></div><div class="row"><a class="button button-primary " href="#">Update my book on the shelf</a><a class="button button-secondary " href="#">Back to the changes</a></div><p class="note">Until you confirm, your book on the shelf stays exactly as it is.</p></main></div></div><div class="pw" style="--h:1077"><div class="pf A" data-k="pc1cp"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">Here is what changes on the shelf.</p></section><main class="act "><div class="confcols"><div class="panel conf"><h3>Will change on the shelf</h3><ul class="clist"><li><span class="tag">Changed</span><b>Selling the Ones I Couldn't Fix</b></li><li><span class="tag">New</span><b>What I Gave Up for the Garage</b></li></ul></div><div class="panel conf"><h3>Stays as it is</h3><ul class="clist"><li><span class="tag">Declined</span><b>Reading a Schematic by Following the Wire</b></li><li><span class="tag">Not decided</span><b>Why the New Part Didn't Help</b></li></ul></div></div><div class="chgs"><article class="chg nonow"><div class="chg-h"><span class="caption">Back cover</span></div><p class="what">I couldn't rewrite the back cover. The old one stays unless you try again.</p><div class="chg-f"><div class="row"><a class="button button-quiet sm" href="#">Try again</a></div></div></article></div><div class="row"><a class="button button-primary " href="#">Update my book on the shelf</a><a class="button button-secondary " href="#">Back to the changes</a></div><p class="note">Until you confirm, your book on the shelf stays exactly as it is.</p></main></div></div></div><span class="n">The card says so in place. The old back cover stays unless they try again, and they can still confirm.</span></div><div class="gr"><span class="t">4 · Confirm</span><div class="pair"><div class="fw" style="--h:937"><div class="fr D A" data-k="pc2d"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">Here is what changes on the shelf.</p></section><main class="act wide"><div class="confcols"><div class="panel conf"><h3>Will change on the shelf</h3><ul class="clist"><li><span class="tag">Changed</span><b>Selling the Ones I Couldn't Fix</b></li><li><span class="tag">New</span><b>What I Gave Up for the Garage</b></li></ul></div><div class="panel conf"><h3>Stays as it is</h3><ul class="clist"><li><span class="tag">Declined</span><b>Reading a Schematic by Following the Wire</b></li><li><span class="tag">Not decided</span><b>Why the New Part Didn't Help</b></li></ul></div></div><div class="chgs"><article class="chg a open"><div class="chg-h"><span class="caption">Back cover</span><span class="st">Approved</span></div><p class="what">Rewritten to include what you approved. Decline keeps the back cover you have now.</p><div class="cols"><div class="now"><i>Now</i><span>I've restored about thirty pinball machines in a rented garage, and most of them came to me with a part someone had already replaced for no reason. What fixed them was tracing the fault back through the wiring before I touched anything, and keeping a notebook of every machine's first symptom. The two I couldn't fix I sold to a collector, who told me in ten minutes what I had been guessing at for a year.</span></div><div class="newc"><i>Proposed</i><span>I've restored about thirty pinball machines in a rented garage, and most of them came to me with a part someone had already replaced for no reason. What fixed them was tracing the fault back through the wiring before I touched anything, and keeping a notebook of every machine's first symptom. The two I couldn't fix I sold to a collector, who told me in ten minutes what I had been guessing at for a year. The garage takes my Saturdays, and I gave up the weekly pickup game for it.</span></div></div><div class="chg-f"><div class="tog"><a class="button button-secondary sm" href="#" aria-pressed="true">Approve</a><a class="button button-secondary sm" href="#" aria-pressed="false">Decline</a></div></div></article></div><div class="row"><a class="button button-primary " href="#">Update my book on the shelf</a><a class="button button-secondary " href="#">Back to the changes</a></div><p class="note">Until you confirm, your book on the shelf stays exactly as it is.</p></main></div></div><div class="pw" style="--h:1603"><div class="pf A" data-k="pc2p"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">Here is what changes on the shelf.</p></section><main class="act "><div class="confcols"><div class="panel conf"><h3>Will change on the shelf</h3><ul class="clist"><li><span class="tag">Changed</span><b>Selling the Ones I Couldn't Fix</b></li><li><span class="tag">New</span><b>What I Gave Up for the Garage</b></li></ul></div><div class="panel conf"><h3>Stays as it is</h3><ul class="clist"><li><span class="tag">Declined</span><b>Reading a Schematic by Following the Wire</b></li><li><span class="tag">Not decided</span><b>Why the New Part Didn't Help</b></li></ul></div></div><div class="chgs"><article class="chg a open"><div class="chg-h"><span class="caption">Back cover</span><span class="st">Approved</span></div><p class="what">Rewritten to include what you approved. Decline keeps the back cover you have now.</p><div class="cols"><div class="now"><i>Now</i><span>I've restored about thirty pinball machines in a rented garage, and most of them came to me with a part someone had already replaced for no reason. What fixed them was tracing the fault back through the wiring before I touched anything, and keeping a notebook of every machine's first symptom. The two I couldn't fix I sold to a collector, who told me in ten minutes what I had been guessing at for a year.</span></div><div class="newc"><i>Proposed</i><span>I've restored about thirty pinball machines in a rented garage, and most of them came to me with a part someone had already replaced for no reason. What fixed them was tracing the fault back through the wiring before I touched anything, and keeping a notebook of every machine's first symptom. The two I couldn't fix I sold to a collector, who told me in ten minutes what I had been guessing at for a year. The garage takes my Saturdays, and I gave up the weekly pickup game for it.</span></div></div><div class="chg-f"><div class="tog"><a class="button button-secondary sm" href="#" aria-pressed="true">Approve</a><a class="button button-secondary sm" href="#" aria-pressed="false">Decline</a></div></div></article></div><div class="row"><a class="button button-primary " href="#">Update my book on the shelf</a><a class="button button-secondary " href="#">Back to the changes</a></div><p class="note">Until you confirm, your book on the shelf stays exactly as it is.</p></main></div></div></div><span class="n">What will change and what stays, by title. Not decided counts as stays. The back cover is a change like any other: Now, Proposed, Approve or Decline. Decline keeps the old one.</span></div><div class="gr"><span class="t">5 · Confirm a removal</span><div class="pair"><div class="fw" style="--h:1017"><div class="fr D A" data-k="pc2bd"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">You asked to remove a chapter.</p></section><main class="act wide"><div class="chgs"><article class="chg - nonow"><div class="chg-h"><span class="caption">Removing</span><span class="st"></span></div><p class="what">You asked to take this chapter out of your book.</p><div class="cols"><div class="now"><i>Now</i><b>Selling the Ones I Couldn't Fix</b><span>I kept the machines I couldn't fix for a year, hoping I would learn how. Then a collector offered to take two of them for parts and tell me what was wrong with them, and what he told me about the boards was worth more to me than the money.</span></div><div class="newc"><i>Proposed</i><div class="empty-now">Comes out of your book.</div></div></div></article></div><div class="chgs"><article class="chg a open"><div class="chg-h"><span class="caption">Back cover</span><span class="st">Approved</span></div><p class="what">Rewritten without this chapter. Decline keeps the back cover you have now.</p><div class="cols"><div class="now"><i>Now</i><span>I've restored about thirty pinball machines in a rented garage, and most of them came to me with a part someone had already replaced for no reason. What fixed them was tracing the fault back through the wiring before I touched anything, and keeping a notebook of every machine's first symptom. The two I couldn't fix I sold to a collector, who told me in ten minutes what I had been guessing at for a year.</span></div><div class="newc"><i>Proposed</i><span>I've restored about thirty pinball machines in a rented garage, and most of them came to me with a part someone had already replaced for no reason. What fixed them was tracing the fault back through the wiring before I touched anything, and keeping a notebook of every machine's first symptom.</span></div></div><div class="chg-f"><div class="tog"><a class="button button-secondary sm" href="#" aria-pressed="true">Approve</a><a class="button button-secondary sm" href="#" aria-pressed="false">Decline</a></div></div></article></div><div class="row"><a class="button button-primary " href="#">Update my book on the shelf</a><a class="button button-secondary " href="#">Back to my book</a></div><p class="note">Until you confirm, your book on the shelf stays exactly as it is.</p></main></div></div><div class="pw" style="--h:1253"><div class="pf A" data-k="pc2bp"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">You asked to remove a chapter.</p></section><main class="act "><div class="chgs"><article class="chg - nonow"><div class="chg-h"><span class="caption">Removing</span><span class="st"></span></div><p class="what">You asked to take this chapter out of your book.</p><div class="cols"><div class="now"><i>Now</i><b>Selling the Ones I Couldn't Fix</b><span>I kept the machines I couldn't fix for a year, hoping I would learn how. Then a collector offered to take two of them for parts and tell me what was wrong with them, and what he told me about the boards was worth more to me than the money.</span></div><div class="newc"><i>Proposed</i><div class="empty-now">Comes out of your book.</div></div></div></article></div><div class="chgs"><article class="chg a open"><div class="chg-h"><span class="caption">Back cover</span><span class="st">Approved</span></div><p class="what">Rewritten without this chapter. Decline keeps the back cover you have now.</p><div class="cols"><div class="now"><i>Now</i><span>I've restored about thirty pinball machines in a rented garage, and most of them came to me with a part someone had already replaced for no reason. What fixed them was tracing the fault back through the wiring before I touched anything, and keeping a notebook of every machine's first symptom. The two I couldn't fix I sold to a collector, who told me in ten minutes what I had been guessing at for a year.</span></div><div class="newc"><i>Proposed</i><span>I've restored about thirty pinball machines in a rented garage, and most of them came to me with a part someone had already replaced for no reason. What fixed them was tracing the fault back through the wiring before I touched anything, and keeping a notebook of every machine's first symptom.</span></div></div><div class="chg-f"><div class="tog"><a class="button button-secondary sm" href="#" aria-pressed="true">Approve</a><a class="button button-secondary sm" href="#" aria-pressed="false">Decline</a></div></div></article></div><div class="row"><a class="button button-primary " href="#">Update my book on the shelf</a><a class="button button-secondary " href="#">Back to my book</a></div><p class="note">Until you confirm, your book on the shelf stays exactly as it is.</p></main></div></div></div><span class="n">From My book. A removal is a third change type, "Removing", with nothing in Proposed. It goes through the same step, with the back cover shown.</span></div><div class="gr"><span class="t">6 · Confirm, nothing approved</span><div class="pair"><div class="fw" style="--h:582"><div class="fr D A" data-k="pc3d"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">Nothing will change on the shelf.</p></section><main class="act wide"><div class="panel conf"><h3>Stays as it is</h3><ul class="clist"><li><span class="tag">Declined</span><b>Selling the Ones I Couldn't Fix</b></li><li><span class="tag">Declined</span><b>What I Gave Up for the Garage</b></li></ul></div><div class="row"><a class="button button-primary " href="#">Leave my book as it is</a><a class="button button-secondary " href="#">Back to the changes</a></div><p class="note">Your book on the shelf stays exactly as it is.</p></main></div></div><div class="pw" style="--h:625"><div class="pf A" data-k="pc3p"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">Nothing will change on the shelf.</p></section><main class="act "><div class="panel conf"><h3>Stays as it is</h3><ul class="clist"><li><span class="tag">Declined</span><b>Selling the Ones I Couldn't Fix</b></li><li><span class="tag">Declined</span><b>What I Gave Up for the Garage</b></li></ul></div><div class="row"><a class="button button-primary " href="#">Leave my book as it is</a><a class="button button-secondary " href="#">Back to the changes</a></div><p class="note">Your book on the shelf stays exactly as it is.</p></main></div></div></div><span class="n">If every change was declined, the button says what will happen and no back cover is offered.</span></div><div class="gr"><span class="t">7 · Done</span><div class="pair"><div class="fw" style="--h:578"><div class="fr D A" data-k="pc4d"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">Your book on the shelf is updated.</p></section><main class="act "><div class="panel donebox"><span class="book " style=""><span class="book-cover"><span class="book-title">The Coil Was Never the Problem</span><span class="book-author">Nora Valdez</span></span></span><div class="dtext"><div class="row"><a class="button button-primary " href="#">See my book</a><a class="button button-quiet " href="#">Undo these changes</a></div></div></div></main></div></div><div class="pw" style="--h:650"><div class="pf A" data-k="pc4p"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">Your book on the shelf is updated.</p></section><main class="act "><div class="panel donebox"><span class="book " style=""><span class="book-cover"><span class="book-title">The Coil Was Never the Problem</span><span class="book-author">Nora Valdez</span></span></span><div class="dtext"><div class="row"><a class="button button-primary " href="#">See my book</a><a class="button button-quiet " href="#">Undo these changes</a></div></div></div></main></div></div></div><span class="n">The band says it. Undo these changes stays on this screen and on My book until the next change.</span></div><div class="gr"><span class="t">8 · Nothing came of it</span><div class="pair"><div class="fw" style="--h:427"><div class="fr D A" data-k="pc5d"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">Nothing from these questions changes your book.</p></section><main class="act "><p class="note big">What you said is saved, and the next questions can use it.</p><div class="row"><a class="button button-primary " href="#">Back to my book</a></div></main></div></div><div class="pw" style="--h:415"><div class="pf A" data-k="pc5p"><header class="top"><span class="wordmark">Trove</span></header><section class="band dark"><span class="halo"></span><p class="say">Nothing from these questions changes your book.</p></section><main class="act "><p class="note big">What you said is saved, and the next questions can use it.</p><div class="row"><a class="button button-primary " href="#">Back to my book</a></div></main></div></div></div><span class="n">No fault in the member's answers, and true: what they said stays saved.</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1300,"height":2400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -7,6 +7,9 @@ import { speechSupported, useSpeech } from "./useSpeech";
 
 type Mode = "typing" | "recording" | "transcript";
 
+// The API's limit on one answer. A long dictation can pass it, and it's likely the member's best one.
+export const MAX_ANSWER_LENGTH = 5000;
+
 function MicIcon() {
   return (
     <svg
@@ -25,36 +28,47 @@ function MicIcon() {
   );
 }
 
-const BAR_COUNT = 19;
+function withSpeech(prior: string, heard: string): string {
+  return prior ? `${prior}\n\n${heard}` : heard;
+}
 
-function levels(seed: number): number[] {
-  // Deterministic, so the bars only change when a new piece of speech arrives.
-  return Array.from({ length: BAR_COUNT }, (_, i) => 8 + ((seed * 7 + i * 13 + ((i * i) % 5) * 9) % 48));
+/** The way out of the questions. It never drops words: anything in the field goes with it. */
+export interface AnswerExit {
+  label: string;
+  labelWithWords: string;
+  onFinish: (words: string | undefined) => void;
 }
 
 interface Props {
+  /** Give the panel this as its `key` too: one panel per question, each with its own draft. */
   draftKey: string;
   busy: boolean;
-  /** Shown beside Send once something is stored: an earlier answer or this draft. */
-  hasSavedAnswers: boolean;
   onSend: (text: string) => void;
-  children?: ReactNode;
+  /** Move past the question. Offered only while the field is empty. */
+  onSkip?: () => void;
+  /** Sits under the field, for what the member should know before answering. */
+  note?: ReactNode;
+  /** A quiet action beside Speak that's always there, in place of Skip. */
+  aside?: ReactNode;
+  /** One line under the panel on how far along this is. Never a count. */
+  progress?: string;
+  exit?: AnswerExit;
 }
 
-export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, children }: Props) {
+export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, progress, exit }: Props) {
   const [mode, setMode] = useState<Mode>("typing");
   const [text, setText] = useState(() => readDraft(draftKey));
   const [draftSaved, setDraftSaved] = useState(false);
-  const [stopping, setStopping] = useState(false);
+  const [micStopped, setMicStopped] = useState(false);
   const speech = useSpeech();
   const canSpeak = speechSupported();
   const fieldId = useId();
   const field = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    setText(readDraft(draftKey));
-    setMode("typing");
-  }, [draftKey]);
+  const stopButton = useRef<HTMLButtonElement>(null);
+  const previousMode = useRef<Mode>(mode);
+  // What was in the field when Speak was pressed, and what the last recording added to it.
+  const prior = useRef("");
+  const lastHeard = useRef("");
 
   // Save the draft quietly a moment after the member stops typing.
   useEffect(() => {
@@ -66,44 +80,57 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, children 
     return () => clearTimeout(timer);
   }, [draftKey, text]);
 
-  // Final results can arrive just after Stop, so switch to the transcript once listening has ended.
+  // Dictated words count as typed: leaving or refreshing mid-recording mustn't lose them.
+  useEffect(() => {
+    const heard = speech.transcript.trim();
+    if (mode === "recording" && heard) writeDraft(draftKey, withSpeech(prior.current, heard));
+  }, [mode, speech.transcript, draftKey]);
+
+  // Final results can arrive just after Stop, so bring the words in once listening has really ended.
+  // The field only ever gains words here: an empty recording leaves what the member typed alone.
   useEffect(() => {
     if (mode !== "recording" || speech.listening) return;
-    if (speech.error) {
-      setMode("typing");
-      return;
-    }
-    if (stopping) {
-      setText(speech.transcript);
-      setStopping(false);
-      setMode("transcript");
-    }
-  }, [mode, speech.listening, speech.error, speech.transcript, stopping]);
+    const heard = speech.transcript.trim();
+    lastHeard.current = heard;
+    setText(heard ? withSpeech(prior.current, heard) : prior.current);
+    setMicStopped(speech.dropped);
+    setMode(heard ? "transcript" : "typing");
+  }, [mode, speech.listening, speech.transcript, speech.dropped]);
+
+  // Speak, Stop and Cancel unmount as the mode changes; keep keyboard focus where the member is working.
+  useEffect(() => {
+    if (previousMode.current === mode) return;
+    previousMode.current = mode;
+    if (mode === "recording") stopButton.current?.focus();
+    else field.current?.focus();
+  }, [mode]);
 
   function record() {
-    setStopping(false);
+    // "Record again" replaces only the last recording, unless the member has since edited it.
+    const again = mode === "transcript" && lastHeard.current && text.endsWith(lastHeard.current);
+    prior.current = again ? text.slice(0, -lastHeard.current.length).trimEnd() : text.trimEnd();
+    setMicStopped(false);
     speech.start();
     setMode("recording");
   }
 
-  function stop() {
-    setStopping(true);
-    speech.stop();
-  }
-
   function cancel() {
     speech.cancel();
-    setStopping(false);
+    // Back to what was typed before: what was heard so far was only ever a draft of this recording.
+    writeDraft(draftKey, text);
     setMode("typing");
   }
 
+  const tooLong = text.length > MAX_ANSWER_LENGTH;
+  const empty = !text.trim();
+
   function send() {
-    const answer = text.trim();
-    if (!answer) {
+    if (tooLong) return;
+    if (empty) {
       field.current?.focus();
       return;
     }
-    onSend(answer);
+    onSend(text.trim());
   }
 
   if (mode === "recording") {
@@ -115,20 +142,21 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, children 
               <MicIcon />
             </b>
           </div>
-          <div className="iv-wave" aria-hidden="true">
-            {levels(speech.heard).map((height, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: fixed set of bars
-              <i key={i} style={{ height: speech.heard ? height : 6 }} />
-            ))}
-          </div>
+          {/* The words appearing are the honest sign that the microphone is working. */}
+          {speech.transcript && <p className="iv-live">{speech.transcript}</p>}
           <p className="iv-note" role="status">
-            Listening. Speak as you would to a friend. You can fix the words before anything is sent.
+            Listening. Speak naturally. You can fix the words before anything is sent.
           </p>
         </div>
         <div className="iv-row">
-          <Button onClick={stop} aria-busy={stopping}>
+          <button
+            type="button"
+            ref={stopButton}
+            className="button button-primary"
+            onClick={() => speech.stop()}
+          >
             Stop
-          </Button>
+          </button>
           <span className="iv-grow" />
           <button type="button" className="button button-quiet" onClick={cancel}>
             Cancel
@@ -138,11 +166,12 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, children 
     );
   }
 
-  const saved = hasSavedAnswers || draftSaved;
-
   return (
     <>
-      <div className={`field iv-answer${mode === "transcript" ? " iv-answer-edit" : ""}`}>
+      <div
+        className={`field iv-answer${mode === "transcript" ? " iv-answer-edit" : ""}`}
+        data-invalid={tooLong || undefined}
+      >
         <label htmlFor={fieldId} className="iv-visually-hidden">
           Your answer
         </label>
@@ -152,12 +181,36 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, children 
           value={text}
           placeholder="Say it in your own words"
           onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+              event.preventDefault();
+              send();
+            }
+          }}
         />
+        {tooLong && (
+          <span className="hint" role="status">
+            That's longer than I can take in one go. Trim it, or send the first part and I'll ask for the
+            rest.
+          </span>
+        )}
       </div>
-      {mode === "transcript" && <p className="iv-note">This is what I heard. Fix anything, then send it.</p>}
+      {note && <p className="iv-note">{note}</p>}
+      {mode === "transcript" && text.includes(lastHeard.current) && (
+        <p className="iv-note">
+          {micStopped
+            ? "The microphone stopped. Here's what I heard."
+            : "This is what I heard. Fix anything, then send it."}
+        </p>
+      )}
       {speech.error && (
         <p className="message" role="status">
           {speech.error}
+        </p>
+      )}
+      {micStopped && mode === "typing" && (
+        <p className="message" role="status">
+          The microphone stopped before I heard anything. You can try again or type your answer.
         </p>
       )}
       <div className="iv-row">
@@ -171,18 +224,44 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, children 
             Type instead
           </button>
         )}
+        {/* Only while the field is empty: a mis-tap beside Send must never cost the member their words. */}
+        {empty && onSkip && (
+          <button type="button" className="button button-quiet" onClick={onSkip}>
+            Skip
+          </button>
+        )}
+        {aside}
         <span className="iv-grow" />
-        {saved && <span className="iv-saved">Saved</span>}
-        <Button onClick={send} aria-busy={busy}>
+        {draftSaved && <span className="iv-saved">Saved</span>}
+        <Button
+          onClick={send}
+          disabled={tooLong}
+          aria-busy={busy}
+          aria-keyshortcuts="Meta+Enter Control+Enter"
+        >
           Send answer
         </Button>
       </div>
-      {children}
+      {(exit || progress) && (
+        <div className="iv-exit">
+          {progress && <p className="iv-note">{progress}</p>}
+          {exit && (
+            <button
+              type="button"
+              className="iv-textlink"
+              disabled={tooLong}
+              onClick={() => exit.onFinish(empty ? undefined : text.trim())}
+            >
+              {empty ? exit.label : exit.labelWithWords}
+            </button>
+          )}
+        </div>
+      )}
     </>
   );
 }
 
-function readDraft(key: string): string {
+export function readDraft(key: string): string {
   try {
     return localStorage.getItem(key) ?? "";
   } catch {
@@ -199,6 +278,48 @@ function writeDraft(key: string, text: string) {
   }
 }
 
+/** Put words into a question's draft, so its panel opens with them. */
+export function keepDraft(key: string, text: string) {
+  writeDraft(key, text);
+}
+
 export function clearDraft(key: string) {
   writeDraft(key, "");
+}
+
+const DRAFT_PREFIX = "trove_interview_draft:";
+
+/**
+ * Words saved under any question but this one. Drafts are cleared once they're sent, so these were never
+ * sent: another screen moved the interview on while they were being typed. Takes them out of storage.
+ */
+export function takeOrphanDrafts(userId: string, current: string): string[] {
+  const mine = `${DRAFT_PREFIX}${userId}:`;
+  const found: string[] = [];
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (!key.startsWith(mine) || key === current || key.startsWith(`${mine}reading:`)) continue;
+      const text = localStorage.getItem(key);
+      localStorage.removeItem(key);
+      if (text?.trim()) found.push(text);
+    }
+  } catch {
+    // Nothing to recover.
+  }
+  return found;
+}
+
+export function draftKeyFor(userId: string, question: string): string {
+  return `${DRAFT_PREFIX}${userId}:${question}`;
+}
+
+/** Remove every saved draft on this browser. For sign-out, on a computer members may share. */
+export function clearAllDrafts() {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith(DRAFT_PREFIX)) localStorage.removeItem(key);
+    }
+  } catch {
+    // Nothing was stored, then.
+  }
 }

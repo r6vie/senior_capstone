@@ -23,6 +23,8 @@ Run from the repository root unless noted.
 |---|---|
 | Install everything | `uv sync --directory api && npm --prefix web install` |
 | Run the app | `python3 scripts/dev.py` (web on :5173, API docs on :8000/docs) |
+| Second copy on free AI | `MONGODB_DATABASE=trove_dev_qc python3 scripts/dev.py --api-port 8100 --web-port 5273 --scripted-ai` |
+| See what real AI calls cost | `python3 scripts/ai_spend.py` |
 | **All checks (run before every commit)** | `python3 scripts/check.py` (`--fix` formats first) |
 | API tests only | `cd api && uv run pytest -q` (one file: `uv run pytest tests/test_auth.py`) |
 | Web tests only | `npm --prefix web test` |

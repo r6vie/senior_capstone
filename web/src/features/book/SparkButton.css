@@ -1,0 +1,48 @@
+/* The quiet inline action (docs/design/system.md, Additions). It makes no assumption about the row it
+   sits in, so a page owned by someone else can mount it at the end of a chapter's content. */
+
+.spk {
+  position: relative;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--tap);
+  font: 400 14px / 1.3 var(--font-sans);
+  color: var(--ink);
+}
+.spk-link {
+  min-height: var(--tap);
+  padding: 0 var(--s-1);
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+/* Lines its text up with the text of whatever row hosts it. */
+.spk-main {
+  margin-left: -12px;
+  padding: 0 12px;
+}
+.spk-link[aria-busy="true"] {
+  cursor: progress;
+}
+.spk-tip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 3;
+  display: none;
+  width: 260px;
+  margin-top: 6px;
+  padding: 10px var(--s-3);
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+  font-size: 14px;
+  color: var(--ink);
+}
+.spk-main:is(:hover, :focus-visible) + .spk-tip {
+  display: block;
+}

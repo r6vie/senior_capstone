@@ -37,3 +37,36 @@ class FakeClaude(Claude):
 
             raise ClaudeRefused()
         return response
+
+
+async def waiting_question_id(client, headers) -> str:
+    state = (await client.get("/interview", headers=headers)).json()
+    question = state.get("question")
+    return question["question_id"] if question else "no-question-waiting"
+
+
+async def send_answer(client, headers, text: str):
+    """Answer the waiting question, as a client looking at it would."""
+    question_id = await waiting_question_id(client, headers)
+    return await client.post(
+        "/interview/answers", json={"answer": text, "question_id": question_id}, headers=headers
+    )
+
+
+async def send_skip(client, headers):
+    question_id = await waiting_question_id(client, headers)
+    return await client.post("/interview/skip", json={"question_id": question_id}, headers=headers)
+
+
+async def finish_and_wait(client, headers, **body) -> dict:
+    """End the interview or round. The writing runs after the response, so read where it got to."""
+    response = await client.post("/interview/finish", headers=headers, **({"json": body} if body else {}))
+    assert response.status_code == 200, response.text
+    return (await client.get("/interview", headers=headers)).json()
+
+
+async def choose_and_wait(client, headers, title: int) -> dict:
+    """Choose a title. The book is written after the response, so read it."""
+    response = await client.post("/interview/title", json={"title": title}, headers=headers)
+    assert response.status_code == 200, response.text
+    return (await client.get("/books/me", headers=headers)).json()

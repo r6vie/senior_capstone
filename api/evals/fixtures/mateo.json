@@ -1,0 +1,250 @@
+{
+ "persona": "Mateo (alum, bridge inspector, natural-dye yarn studio)",
+ "slug": "mateo",
+ "source": "2026-11-08_220905/mateo.md",
+ "turns": [
+  {
+   "question": "You inspect bridges by day and run a natural-dye yarn business. How did the yarn start?",
+   "answer": "Honestly it started with a rowing injury. I couldn't train, and I had a lot of empty winter evenings, so I got a stockpot out and started dyeing wool with plants. I gave a red hat to my crew coach, then teammates wanted some, and eventually I sold skeins at a campus craft fair. It just grew from there.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "On a bridge inspection, what's something you look for that most people driving over it would never guess matters?",
+   "answer": "Honestly, probably the cracks that don't look like anything. You photograph the same spot every year from the same place, because one reading tells you almost nothing. It's the change over time that matters, not whether it looks bad today.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "You got your PE license in 2021 while inspecting bridges full-time. What part of getting it was harder than you expected?",
+   "answer": "Honestly the exam itself was less of a shock than the paperwork and the waiting. Between work and the studio I had to be really disciplined about getting experience hours logged and references lined up, and that took longer than I'd planned for.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Between the bridges and the dye studio, what do people come to you for?",
+   "answer": "Honestly, mostly people ask me about the yarn colors and how to care for it, and a few ask me to look at a crack in their own house. The two jobs keep each other honest, I think. Bridges teach you patience and the yarn keeps me from getting too stuck in a spreadsheet.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "After that campus craft fair, what changed that made you start selling yarn as a real business?",
+   "answer": "Honestly the fair was the first time people paid for it, and then the crew kept asking for more. I started keeping track of what sold and which colors came back, and it stopped feeling like a hobby. I eventually found a yarn shop that would take consignment, and that's what made it feel like a real business.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "You photograph the same spot every year. Which bridge's photos told you something a single visit never would have?",
+   "answer": "Honestly I can't name the bridge in a way that would mean much outside the county, but there's one with a hairline crack at a bearing seat I've been shooting from the same railing spot for years. One visit, it looked like nothing. Put the photos side by side and you could see it had grown a little each spring, enough that it went to a load rating review. A single visit would have just said it looked fine.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "That crack went to a load rating review. What came out of it?",
+   "answer": "Honestly, not as dramatic as it sounds. The review confirmed the crack was growing slowly, so they reduced the posted load rating and scheduled it for more frequent checks. It was a long week for me, because the same week a shop doubled its order and I was running dye pots at 5am and sitting in the review at 10. But the structure was fine to keep in service with the restriction.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Dye pots at 5am, the review at 10. How did you get that doubled order out the door?",
+   "answer": "Honestly, mostly by running the pots in batches and keeping the rest of the stock simple. I dyed the bulk of the order in the garage before the day got going, then packed skeins at night after I got back from the county office. The shop had been good to me so I didn't want to let them down, and it was a lot of Sunday night and early mornings for a couple of weeks.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "You kept the rest of the stock simple for those couple of weeks. What did you stop making to fit that order in?",
+   "answer": "Honestly, mostly the experimental stuff. I had a couple of indigo test batches I'd been meaning to keep going on, and I pushed those to the side. The indigo is still giving me trouble anyway, so I didn't feel too bad about it. I also skipped a few new colorways I wanted to try and just stuck with the reds and yellows that sell.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "You said the indigo is still giving you trouble. What keeps going wrong with it?",
+   "answer": "Honestly the problem is mostly the vat. Indigo needs the bath at the right alkalinity and reduced, and I keep getting a greenish, muddy result instead of a clean blue when I rush the setup or the bath isn't settled. Some batches come out fine and then the next one doesn't, so I'm still working out what's changing between them.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "One batch comes out clean blue, the next goes muddy. How are you trying to pin down what changed between them?",
+   "answer": "Honestly I've started logging it the same way I do the reds. Each vat gets a card with the date, the bath temperature, how long it sat before I dipped, and the pH I checked before and after reducing. The muddy ones usually show up when I skipped letting the vat settle, so I'm trying to see whether there's a number that predicts it before I waste a batch.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "You said you log the reds the same way. What did those cards show you about the reds that one batch never would?",
+   "answer": "Honestly, the cards are what made the reds finally work. I was logging water hardness, temperature and time for every skein, and over one winter I ran 28 test skeins. The pattern was that the dull, brown ones almost always had either hard tap water or a pot that had been boiled. Skein 19 was the first one that came through 20 washes still red, and that's when I knew the logs were telling me more than any single dye day ever could.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Skein 19 stayed red through 20 washes. What do you do differently on every red batch now because of it?",
+   "answer": "Honestly, the biggest change is that I stopped treating the pot like a recipe and started treating it like an experiment. Every red batch now starts with a rainwater check, and I log the hardness before I put anything in. I keep the pot under 70 C and hold it for about an hour and a half instead of letting it boil, because boiling is what pulls out the brown. And the mordant gets a full overnight soak in alum at 15 percent of the fibre's weight, no shortcuts. Most of the bad reds I see come from people rushing that step and then blaming the plant.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "You said most bad reds you see come from rushing the mordant. Where do other people's bad reds reach you?",
+   "answer": "Honestly, mostly from people who buy hobby yarn and then ask me about it, or from other dyers in the local fiber groups who post photos of reds that went brown after a couple of washes. I've also had a few people bring me skeins at the craft fair to ask what happened. Usually it's the same story when I look at the label or ask how they did it.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "You said it's usually the same story. When a skein someone brought you wasn't a rushed mordant, what was it?",
+   "answer": "Honestly, usually it was the water. Cleveland tap is hard enough to dull a red, and people don't realize it. Or they'd boiled the madder, which pulls out the brown. Once I see the pot temperature and where the water came from, it's usually pretty clear what went wrong.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "You found a yarn shop that would take your skeins on consignment. How did that first conversation with the shop go?",
+   "answer": "Honestly it went better than I expected. I came in on a Wednesday morning, since that's the quiet hour and Saturdays are always slammed, and I brought twelve skeins plus two swatches pinned side by side, one washed 20 times and one not. I offered consignment at 60/40 so she didn't have any risk. She said yes, and I ended up sitting in on her Saturday stitch night for about a month answering questions about the colors. They sold out, which is what got the next shop to listen.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "The first shop sold out, and the next one listened. What did you change about how you pitched that second shop?",
+   "answer": "Honestly, not much on the pitch itself. I just told the second owner the real sell-through from the first shop, what sold and how fast, and let the numbers do the talking. I didn't want to oversell anything, since the first owner had taken a risk on me and I wanted the next one to see it was straightforward.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Back to those yearly crack photos from the same railing spot. What do beginners do with them that makes you wince?",
+   "answer": "Honestly, mostly they take one photo, compare it to nothing, and call it fine. Or they shoot from a different spot or angle each time, so you can't tell if anything changed. If the camera position isn't locked down, the photos are basically useless for seeing growth.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "If the camera position isn't locked down, the photos are useless. How do you lock yours down from one year to the next?",
+   "answer": "Honestly it's mostly just discipline. I stand at the same railing post every time and I note the exact spot on the rail and the reference points around the bearing seat, so I can line the frame up again. I also shoot with the same zoom and at the same height, and I write the date and the position on the photo log so next year's version is taken from the same place. It's not glamorous, but once you have a few years of matching frames side by side, the change is obvious.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Is this you?",
+   "answer": "Yeah, that's pretty much it. With the reds it really was the logs that cracked it, and with the bridges it's the change over time that tells you something. The shops came down to the same thing, just letting the numbers speak for themselves. I'd maybe add that the indigo is the one still teaching me the same lesson, since I'm working through it the same way.",
+   "phase": "shape",
+   "playback": "Your reds worked once the logs told you more than any single dye day; on bridges, it's the change over time; with shops, the numbers do the talking."
+  }
+ ],
+ "book": {
+  "titles": [
+   {
+    "title": "Skein 19",
+    "why": "You knew the logs were telling you something when skein 19 came through 20 washes still red."
+   },
+   {
+    "title": "The Change Over Time",
+    "why": "Your words: one reading tells you almost nothing, whether it's a bearing-seat crack or a dye pot."
+   },
+   {
+    "title": "Dye Pots at 5am",
+    "why": "That week of 5am dye pots before a 10am load rating review is both your jobs in one morning."
+   }
+  ],
+  "pool": [
+   {
+    "title": "Twenty-eight skeins before a red held",
+    "summary": "Over one winter I ran 28 test skeins and logged water hardness, temperature and time for every one. Skein 19 came through 20 washes still red. Most of the bad reds I see now come from people rushing the mordant and then blaming the plant.",
+    "quotes": [
+     "The pattern was that the dull, brown ones almost always had either hard tap water or a pot that had been boiled.",
+     "Honestly, the biggest change is that I stopped treating the pot like a recipe and started treating it like an experiment.",
+     "Cleveland tap is hard enough to dull a red, and people don't realize it."
+    ]
+   },
+   {
+    "title": "The indigo vat that keeps going muddy",
+    "summary": "I keep getting a greenish, muddy result instead of a clean blue, and one batch comes out fine before the next one doesn't. I'm logging every vat on a card the way I did the reds, and it's the one still teaching me the same lesson.",
+    "quotes": [
+     "The muddy ones usually show up when I skipped letting the vat settle, so I'm trying to see whether there's a number that predicts it before I waste a batch."
+    ]
+   },
+   {
+    "title": "The crack that looked like nothing",
+    "summary": "There's a hairline crack at a bearing seat I've shot from the same railing post for years. On one visit it looked like nothing. Side by side, the photos showed it had grown a little each spring, enough to go to a load rating review.",
+    "quotes": [
+     "The review confirmed the crack was growing slowly, so they reduced the posted load rating and scheduled it for more frequent checks.",
+     "Honestly, mostly they take one photo, compare it to nothing, and call it fine.",
+     "It's not glamorous, but once you have a few years of matching frames side by side, the change is obvious."
+    ]
+   },
+   {
+    "title": "Dye pots at 5am, load review at 10",
+    "summary": "The same week a shop doubled its order, I was running dye pots at 5am and sitting in a load rating review at 10. I cut the stock back to the reds and yellows that sell, and I think the two jobs keep each other honest.",
+    "quotes": [
+     "The shop had been good to me so I didn't want to let them down, and it was a lot of Sunday night and early mornings for a couple of weeks.",
+     "Bridges teach you patience and the yarn keeps me from getting too stuck in a spreadsheet."
+    ]
+   },
+   {
+    "title": "Walking into a yarn shop with two swatches",
+    "summary": "I went into the first shop on a quiet Wednesday morning with twelve skeins and offered consignment at 60/40 so she had no risk. They sold out, and with the second shop I just told the owner the real sell-through.",
+    "quotes": [
+     "I brought twelve skeins plus two swatches pinned side by side, one washed 20 times and one not.",
+     "I ended up sitting in on her Saturday stitch night for about a month answering questions about the colors.",
+     "I didn't want to oversell anything, since the first owner had taken a risk on me and I wanted the next one to see it was straightforward."
+    ]
+   },
+   {
+    "title": "A rowing injury and a stockpot",
+    "summary": "A rowing injury left me with empty winter evenings, so I got a stockpot out and started dyeing wool with plants. A red hat for my crew coach turned into teammates asking, then a campus craft fair where people first paid for it.",
+    "quotes": [
+     "I started keeping track of what sold and which colors came back, and it stopped feeling like a hobby."
+    ]
+   },
+   {
+    "title": "The PE exam was the easy part",
+    "summary": "I got my PE license in 2021 while inspecting bridges full-time. The exam itself was less of a shock than the paperwork and the waiting.",
+    "quotes": [
+     "Between work and the studio I had to be really disciplined about getting experience hours logged and references lined up, and that took longer than I'd planned for."
+    ]
+   }
+  ],
+  "title": "Skein 19",
+  "chapters": [
+   {
+    "title": "Twenty-eight skeins before a red held",
+    "summary": "Over one winter I logged water hardness, temperature and time for 28 test skeins. Skein 19 was the first to come through 20 washes still red, and I stopped treating the pot like a recipe and started treating it like an experiment.",
+    "quotes": [
+     "The pattern was that the dull, brown ones almost always had either hard tap water or a pot that had been boiled.",
+     "Honestly, the biggest change is that I stopped treating the pot like a recipe and started treating it like an experiment.",
+     "Cleveland tap is hard enough to dull a red, and people don't realize it."
+    ]
+   },
+   {
+    "title": "The crack that looked like nothing",
+    "summary": "I've shot a hairline crack at a bearing seat from the same railing post for years. On any one visit it looked like nothing. Side by side, the photos showed it had grown a little each spring, enough to send it to a load rating review.",
+    "quotes": [
+     "The review confirmed the crack was growing slowly, so they reduced the posted load rating and scheduled it for more frequent checks.",
+     "Honestly, mostly they take one photo, compare it to nothing, and call it fine.",
+     "It's not glamorous, but once you have a few years of matching frames side by side, the change is obvious."
+    ]
+   },
+   {
+    "title": "Walking into a yarn shop with two swatches",
+    "summary": "I went into the first shop on a quiet Wednesday morning with twelve skeins, two swatches pinned side by side, and a 60/40 consignment offer so she had no risk. They sold out, and with the second shop I barely changed the pitch. I just told the owner the real sell-through.",
+    "quotes": [
+     "I brought twelve skeins plus two swatches pinned side by side, one washed 20 times and one not.",
+     "I ended up sitting in on her Saturday stitch night for about a month answering questions about the colors.",
+     "I didn't want to oversell anything, since the first owner had taken a risk on me and I wanted the next one to see it was straightforward."
+    ]
+   },
+   {
+    "title": "The indigo vat that keeps going muddy",
+    "summary": "My indigo keeps coming out greenish and muddy instead of a clean blue, and one batch is fine before the next one isn't. Every vat now gets a card the way the reds did, and I'm looking for a number that predicts a muddy batch before I waste it.",
+    "quotes": [
+     "The muddy ones usually show up when I skipped letting the vat settle, so I'm trying to see whether there's a number that predicts it before I waste a batch."
+    ]
+   }
+  ],
+  "blurbs": {
+   "draft": "Over one winter I ran 28 test skeins, logging water hardness, temperature and time, until skein 19 came through 20 washes still red. By day I inspect bridges, photographing the same hairline crack from the same railing post every spring, because one reading tells you almost nothing. The indigo vat is still going muddy on me. Most of the bad reds I see come from people rushing the mordant and then blaming the plant.",
+   "finished": "Skein 19 was the first red to come through 20 washes still red, after a winter of logging 28 test skeins. By day I inspect bridges, where one reading tells you almost nothing: I've photographed a hairline crack from the same railing post for years, and only side by side did it show it was growing. My indigo is still going muddy, and I'm working it out the same way. Most bad reds I see come from people rushing the mordant and then blaming the plant.",
+   "after_removal": "For years I've photographed one hairline crack at a bearing seat from the same railing post. On any single visit it looked like nothing, but side by side the frames showed it growing a little each spring, enough to send it to a load rating review. I walked into my first yarn shop with twelve skeins, two swatches pinned side by side and a 60/40 consignment offer, and they sold out. My indigo still goes muddy green one batch after a clean blue, so every vat now gets a card while I look for a number that predicts it."
+  },
+  "rewrite": {
+   "title": "The indigo still teaching me the same lesson",
+   "summary": "My indigo keeps going greenish and muddy instead of clean blue, one batch fine and the next not. When a shop doubled its order I pushed my indigo tests aside without feeling too bad. Now each vat gets a card like the reds, and I'm still working out what changes between batches.",
+   "quotes": [
+    "The muddy ones usually show up when I skipped letting the vat settle, so I'm trying to see whether there's a number that predicts it before I waste a batch."
+   ]
+  }
+ }
+}

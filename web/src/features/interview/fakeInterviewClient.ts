@@ -1,4 +1,13 @@
-import type { DraftBook, InterviewClient, InterviewState, Phase } from "./interviewClient";
+import type {
+  BookStage,
+  DraftBook,
+  InterviewClient,
+  InterviewState,
+  Phase,
+  ProposedChange,
+  ReadingQuestion,
+  Spark,
+} from "./interviewClient";
 
 // A stand-in for the interview API in tests: it plays a fixed script, can wait like a Claude call
 // would, and keeps its state in localStorage so leaving and coming back works.
@@ -109,12 +118,45 @@ const CHAPTERS = [
   },
 ];
 
+const ADDING_QUESTIONS = [
+  "The offer you turned down the second time: what did you tell the person who made it?",
+  "Who noticed before you did that the work was teaching you faster?",
+];
+
+const CHANGES: ProposedChange[] = [
+  {
+    id: "change-1",
+    kind: "improve",
+    note: "Adds what your advisor asked you back.",
+    title: "What I told my advisor",
+    summary:
+      "The conversation where I said it out loud, and what he asked back. He asked what I would do with the extra year, and I had no answer.",
+    now: {
+      title: "What I told my advisor",
+      summary: "The conversation where I said it out loud, and what he asked back.",
+    },
+  },
+  {
+    id: "change-2",
+    kind: "new",
+    note: "You described who noticed first.",
+    title: "The person who noticed first",
+    summary: "A labmate told me I'd stopped talking about the degree, a full year before I admitted it.",
+    now: null,
+  },
+];
+
 interface Stored {
   id: string;
   answers: string[];
-  stage: InterviewState["stage"];
+  stage: InterviewState["stage"] | "adding";
   corrected: boolean;
   book: DraftBook | null;
+  addingAnswers?: number;
+  canUndo?: boolean;
+  previous?: DraftBook;
+  sparks?: Spark[];
+  reading?: ReadingQuestion[];
 }
 
 function scripted(index: number) {
@@ -140,9 +182,37 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// A skip takes a place in the script as an empty answer, so it moves on without counting.
+function answered(stored: Stored): number {
+  return stored.answers.filter(Boolean).length;
+}
+
 function view(stored: Stored, authorName: string): InterviewState {
   const { id } = stored;
   switch (stored.stage) {
+    case "adding":
+      return {
+        id,
+        stage: "asking",
+        round: "adding",
+        phase: "dig",
+        question:
+          ADDING_QUESTIONS[Math.min(stored.addingAnswers ?? 0, ADDING_QUESTIONS.length - 1)] ??
+          "What else belongs in your book?",
+        canFinish: (stored.addingAnswers ?? 0) > 0,
+        hasAnswers: (stored.addingAnswers ?? 0) > 0,
+        lastTopic: null,
+      };
+    case "writing":
+      return { id, stage: "writing" };
+    case "writeFailed":
+      return { id, stage: "writeFailed" };
+    case "proposing":
+      return { id, stage: "proposing", changes: CHANGES, blurb: stored.book?.blurb ?? null };
+    case "nothing":
+      return { id, stage: "nothing" };
+    case "updated":
+      return { id, stage: "updated", book: stored.book ?? emptyBook(authorName), canUndo: true };
     case "asking": {
       const current = scripted(stored.answers.length);
       const previous = scripted(stored.answers.length - 1);
@@ -151,8 +221,9 @@ function view(stored: Stored, authorName: string): InterviewState {
         stage: "asking",
         phase: current.phase,
         question: current.text,
-        canFinish: stored.answers.length >= CAN_FINISH_AFTER,
-        hasAnswers: stored.answers.length > 0,
+        canFinish: answered(stored) >= CAN_FINISH_AFTER,
+        nearlyDone: answered(stored) >= CAN_FINISH_AFTER,
+        hasAnswers: answered(stored) > 0,
         lastTopic: stored.answers.length > 0 ? previous.topic : null,
       };
     }
@@ -167,6 +238,10 @@ function view(stored: Stored, authorName: string): InterviewState {
       };
     case "choosing":
       return { id, stage: "choosing", titles: TITLES };
+    case "drafting":
+      return { id, stage: "drafting", about: "book" };
+    case "notEnough":
+      return { id, stage: "notEnough" };
     default:
       return { id, stage: stored.stage, book: stored.book ?? emptyBook(authorName) };
   }
@@ -178,6 +253,31 @@ function emptyBook(authorName: string): DraftBook {
 
 const BLURB =
   "I've spent years being the person people call when the timeline slips. This book is how I find the one step that went wrong, and what I do the morning after.";
+
+function stageOf(stored: Stored | null): BookStage {
+  switch (stored?.stage) {
+    case undefined:
+      return "none";
+    case "asking":
+    case "shaping":
+      return "interviewing";
+    case "choosing":
+      return "titles";
+    case "reviewing":
+      return "draft";
+    case "adding":
+      // A round with no answers counts as closed: there's nothing to continue.
+      return stored.addingAnswers ? "adding" : "shelf";
+    case "writing":
+      return "writing";
+    case "writeFailed":
+      return "writeFailed";
+    case "proposing":
+      return "changesWaiting";
+    default:
+      return "shelf";
+  }
+}
 
 export function createFakeInterviewClient(authorName: string, delay = 1200): InterviewClient {
   function mutate(id: string, change: (stored: Stored) => void): Promise<InterviewState> {
@@ -194,7 +294,13 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
     async current() {
       await wait(delay / 3);
       const stored = load();
-      return stored ? view(stored, authorName) : null;
+      if (!stored) return null;
+      // The background write finishes by the next look, as it does for a member who waits.
+      if (stored.stage === "writing") {
+        stored.stage = "proposing";
+        save(stored);
+      }
+      return view(stored, authorName);
     },
     async start() {
       await wait(delay);
@@ -210,13 +316,28 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
     },
     answer: (id, text) =>
       mutate(id, (stored) => {
+        if (stored.stage === "adding") {
+          stored.addingAnswers = (stored.addingAnswers ?? 0) + 1;
+          return;
+        }
         stored.answers.push(text);
         if (stored.answers.length >= QUESTIONS.length) stored.stage = "shaping";
       }),
-    askAgain: (id) => mutate(id, () => {}),
-    finish: (id) =>
+    skip: (id) =>
       mutate(id, (stored) => {
-        if (stored.answers.length < CAN_FINISH_AFTER) throw new Error("Answer a few more questions first.");
+        if (stored.stage === "adding") return;
+        stored.answers.push("");
+        if (stored.answers.length >= QUESTIONS.length) stored.stage = "shaping";
+      }),
+    askAgain: (id) => mutate(id, () => {}),
+    finish: (id, answer) =>
+      mutate(id, (stored) => {
+        if (stored.stage === "adding") {
+          stored.stage = "writing";
+          return;
+        }
+        if (answer) stored.answers.push(answer);
+        if (answered(stored) < CAN_FINISH_AFTER) throw new Error("Answer a few more questions first.");
         stored.stage = "shaping";
       }),
     confirmShape: (id) =>
@@ -235,15 +356,26 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
           title: title.title,
           authorName: authorName,
           blurb: BLURB,
-          chapters: CHAPTERS.map((ch) => ({ ...ch })),
+          chapters: CHAPTERS.map((ch) => ({ ...ch, quotes: [`I said this about ${ch.title}.`] })),
         };
         stored.stage = "reviewing";
+      }),
+    otherTitles: async () => TITLES,
+    changeTitle: (id, titleId) =>
+      mutate(id, (stored) => {
+        const title = TITLES.find((option) => option.id === titleId);
+        if (title && stored.book) stored.book.title = title.title;
+      }),
+    rewriteBlurb: (id) =>
+      mutate(id, (stored) => {
+        if (stored.book) stored.book.blurb = `${BLURB} I'd start with the first offer.`;
       }),
     rewriteChapter: (id, chapterId) =>
       mutate(id, (stored) => {
         const chapter = stored.book?.chapters.find((ch) => ch.id === chapterId);
         if (chapter) chapter.summary = `${chapter.summary.replace(/\.$/, "")}, told from where I stand now.`;
       }),
+    restoreChapter: (id) => mutate(id, () => {}),
     removeChapter: (id, chapterId) =>
       mutate(id, (stored) => {
         if (!stored.book) return;
@@ -254,6 +386,105 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
       mutate(id, (stored) => {
         stored.stage = "done";
       }),
+
+    stage: async () => stageOf(load()),
+    myBook: async () => {
+      const stored = load();
+      return stored?.book ? { ...stored.book, canUndo: Boolean(stored.canUndo) } : null;
+    },
+    reopen: () =>
+      wait(delay).then(() => {
+        const stored = load();
+        if (!stored) throw new Error("There's no book to add to.");
+        if (stored.stage !== "adding") stored.addingAnswers = 0;
+        stored.stage = "adding";
+        save(stored);
+        return view(stored, authorName);
+      }),
+    retryWriting: (id) =>
+      mutate(id, (stored) => {
+        stored.stage = "proposing";
+      }),
+    retryDrafting: async () => {
+      const stored = load();
+      if (!stored) throw new Error("There's no interview to continue.");
+      return view(stored, authorName);
+    },
+    saveChoices: async () => undefined,
+    blurbFor: async (approved) => (approved.length ? `${BLURB} I also say who noticed first.` : null),
+    applyChanges: async (approved, blurb) => {
+      await wait(delay);
+      const stored = load();
+      if (!stored?.book) throw new Error("There's no book to change.");
+      stored.stage = "done";
+      if (approved.length) {
+        stored.previous = structuredClone(stored.book);
+        stored.canUndo = true;
+        if (blurb) stored.book.blurb = blurb;
+        for (const change of CHANGES) {
+          if (!approved.includes(change.id)) continue;
+          const existing = stored.book.chapters.find((chapter) => chapter.title === change.now?.title);
+          if (existing) existing.summary = change.summary;
+          else
+            stored.book.chapters.push({
+              id: change.id,
+              title: change.title,
+              summary: change.summary,
+              quotes: [],
+            });
+        }
+      }
+      save(stored);
+      return approved.length
+        ? { id: stored.id, stage: "updated", book: stored.book, canUndo: true }
+        : { id: stored.id, stage: "done", book: stored.book };
+    },
+    undoChanges: async () => {
+      const stored = load();
+      if (stored?.previous) stored.book = stored.previous;
+      if (stored) {
+        stored.previous = undefined;
+        stored.canUndo = false;
+        save(stored);
+      }
+    },
+    blurbWithout: async () => `${BLURB} Shorter now.`,
+    removeFromShelf: async (chapterId, blurb) => {
+      const stored = load();
+      if (!stored?.book) return;
+      stored.previous = structuredClone(stored.book);
+      stored.canUndo = true;
+      stored.book.chapters = stored.book.chapters.filter((chapter) => chapter.id !== chapterId);
+      if (blurb) stored.book.blurb = blurb;
+      save(stored);
+    },
+    restoreBlurb: (id) => mutate(id, () => {}),
+    openRemoval: async () => null,
+    cancelRemoval: async () => undefined,
+    lastRound: async () => ({ empty: load()?.stage === "nothing" }),
+    sparks: async () => load()?.sparks ?? [],
+    removeSpark: async (sparkId) => {
+      const stored = load();
+      if (!stored) return;
+      stored.sparks = (stored.sparks ?? []).filter((spark) => spark.id !== sparkId);
+      save(stored);
+    },
+    readingQuestions: async () => load()?.reading ?? [],
+    answerReading: (questionId) =>
+      wait(delay).then(() => {
+        const stored = load();
+        if (!stored) throw new Error("There's no book to add to.");
+        stored.reading = (stored.reading ?? []).filter((question) => question.id !== questionId);
+        stored.stage = "writing";
+        save(stored);
+        return view(stored, authorName);
+      }),
+    dismissReading: async (questionId) => {
+      const stored = load();
+      if (!stored) return;
+      stored.reading = (stored.reading ?? []).filter((question) => question.id !== questionId);
+      save(stored);
+    },
   };
 }
 

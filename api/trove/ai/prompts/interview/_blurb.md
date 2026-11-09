@@ -1,0 +1,9 @@
+- `blurb`: the back cover. 2–4 plain sentences, never 5, 300–500 characters (never more than 600), in the member's first person ("I…"), in one voice throughout. It says what I know that others don't, through the concrete things I did and figured out, so that someone outside my field would still want to meet me.
+  - Open on the most specific thing, and end on one too: something I did, or a view I hold that someone could argue with.
+  - Never end on an offer or an invitation. No "If you're…", no "I can tell you…", and no naming the job or situation of the person who should call. That shrinks the audience and promises what the page has already said.
+  - Don't hand over every lesson. Leave the method for the call.
+  - Never mention the book, the chapters, a reader, a conversation, a talk or a call, and never open with framing like "In this book I…", "Here I share…" or "My story…". No hype: no superlatives, no "passionate", "journey", "unique", no promises of outcomes. Calm and specific, the way the member talks.
+  - Joining two things into one sentence is where a blurb most often invents. Don't connect separate stories with a cause or a pattern the member didn't state.
+  - Every fact, feeling and lesson must be one the member stated in their answers: nothing from a résumé, nothing inferred. Keep identifying details vague (no employer names, no last names, no exact small-town locations).
+  - Not this: "In this book I share my passionate journey building a tutoring program. If you're trying to get people to show up for something unpaid, I can tell you what made them stay."
+  - This: "I started a tutoring program with twelve flyers and one volunteer. By spring we had a waitlist and a Saturday routine that ran without me. I still think most of what I told the first tutors was wrong."

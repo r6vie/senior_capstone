@@ -4,6 +4,14 @@
 .interview {
   --gutter: 48px;
   --act-width: 920px;
+  /* Sizes this screen needs that the system's type scale doesn't name. */
+  --iv-top-height: 78px;
+  --iv-say-size: 38px;
+  --iv-say-quiet-size: 26px;
+  --iv-wait-size: 30px;
+  --iv-book-title-size: 34px;
+  /* How far the halo reaches into the band, plus a clear gap before the words. */
+  --iv-halo-reach: 340px;
   min-height: 100vh;
   padding-bottom: var(--s-8);
 }
@@ -14,18 +22,21 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--s-5);
-  height: 78px;
+  height: var(--iv-top-height);
   padding: 0 var(--gutter);
 }
 .iv-phases {
   display: flex;
   gap: 30px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   font: 700 17px / 1 var(--font-display);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-2);
 }
-.iv-phases span {
+.iv-phases li {
   padding: var(--s-2) 0;
   border-bottom: var(--line-heavy) solid transparent;
 }
@@ -35,10 +46,12 @@
 }
 
 /* ---------- The question band ---------- */
+/* The same slanted edge as every other band in the app. */
 .iv-band {
   position: relative;
   overflow: hidden;
-  padding: 38px var(--gutter) var(--s-7);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 28px), 0 100%);
+  padding: 38px var(--gutter) calc(var(--s-7) + 28px);
 }
 .iv-band .halo {
   right: -70px;
@@ -48,10 +61,31 @@
 }
 .iv-say {
   position: relative;
-  max-width: var(--act-width);
+  max-width: min(var(--act-width), 100% - var(--iv-halo-reach));
   margin: 0;
-  font: 600 38px / 1.15 var(--font-serif);
+  font: 600 var(--iv-say-size) / 1.15 var(--font-serif);
   letter-spacing: -0.01em;
+}
+/* A sentence with a name in it, so not caps: caps are for short labels. */
+.iv-eyebrow {
+  position: relative;
+  display: block;
+  margin-bottom: var(--s-3);
+  font: 400 14px / 1.3 var(--font-sans);
+  color: var(--rule);
+}
+/* Takes focus from script on arrival, as a place for the keyboard to start. */
+.iv-say:focus {
+  outline: none;
+}
+.iv-say[data-quiet="true"] {
+  font-size: var(--iv-say-quiet-size);
+}
+.iv-still {
+  position: relative;
+  margin: var(--s-3) 0 0;
+  font-size: 15px;
+  color: var(--rule);
 }
 .iv-holding {
   visibility: hidden;
@@ -61,11 +95,15 @@
   inset: 0 auto auto 0;
 }
 .iv-waiting {
-  font: italic 400 30px / 1.2 var(--font-serif);
+  font: italic 400 var(--iv-wait-size) / 1.2 var(--font-serif);
   color: var(--rule);
 }
 
 /* ---------- The member's side ---------- */
+/* Focused only by script, to hold the keyboard's place after the Librarian answers. */
+.iv-act:focus {
+  outline: none;
+}
 .iv-act {
   display: grid;
   gap: 20px;
@@ -89,17 +127,39 @@
   font-size: 14px;
   color: var(--ink-2);
 }
+.iv-note-big {
+  font-size: 17px;
+  color: var(--ink);
+}
 .iv-quiet-note {
   font-size: 14px;
   color: var(--ink-2);
 }
 .iv-saved {
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.04em;
   color: var(--ink-2);
 }
+/* A whole sentence as an action: caps would break the system's rule, so it reads as a link. */
+.iv-textlink {
+  justify-self: start;
+  min-height: var(--tap);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 400 15px / 1.3 var(--font-sans);
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.iv-stuck {
+  max-width: 60ch;
+  margin: 0;
+  font: italic 400 22px / 1.3 var(--font-serif);
+}
 .button.iv-sm {
-  min-height: 36px;
+  min-height: var(--tap);
   padding: 0 14px;
   font-size: 14px;
   letter-spacing: 0.1em;
@@ -145,7 +205,7 @@
   flex: 1;
 }
 
-/* Recording: a dotted ring around the mic, level bars that move only while the member speaks. */
+/* Recording: a dotted ring around the mic, and the member's words as they're heard. */
 .iv-rec {
   display: grid;
   gap: 18px;
@@ -183,20 +243,53 @@
   width: 34px;
   height: 34px;
 }
-.iv-wave {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 60px;
-}
-.iv-wave i {
-  width: 5px;
-  background: var(--ink);
-  transition: height var(--ease);
+.iv-live {
+  max-width: 60ch;
+  margin: 0;
+  font: 400 19px / 1.5 var(--font-sans);
+  text-align: left;
 }
 
 /* ---------- Start ---------- */
-.iv-resume h3 {
+.iv-resume {
+  min-width: 0;
+}
+.iv-undo {
+  display: grid;
+  gap: var(--s-2);
+  flex-basis: 100%;
+}
+.iv-undo p {
+  max-width: 60ch;
+  margin: 0;
+  font-size: 15px;
+}
+.iv-leftovers {
+  display: grid;
+  gap: var(--s-3);
+  width: min(var(--act-width), 100% - 2 * var(--gutter));
+  margin: var(--s-5) auto 0;
+}
+.iv-leftover .button {
+  justify-self: start;
+}
+.iv-leftover {
+  display: grid;
+  gap: var(--s-2);
+}
+.iv-leftover p {
+  margin: 0;
+  font-size: 15px;
+}
+.iv-leftover blockquote {
+  margin: 0;
+  padding: 2px 0 2px var(--s-4);
+  border-left: 4px solid var(--ink);
+  font: italic 400 18px / 1.4 var(--font-serif);
+  white-space: pre-wrap;
+  user-select: text;
+}
+.iv-resume h2 {
   margin: 0 0 14px;
 }
 .iv-drop {
@@ -209,8 +302,19 @@
   border: var(--line-heavy) dotted var(--ink);
   font-weight: 600;
 }
+/* The real file input is hidden, so its keyboard focus shows on the label that stands in for it. */
+.iv-drop:has(input:focus-visible) label {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 3px;
+}
 .iv-drop[data-dragging="true"] {
   border-style: solid;
+}
+/* There's nothing to drop from on a touch screen. */
+@media (hover: none) {
+  .iv-drop-text {
+    display: none;
+  }
 }
 .iv-file {
   overflow: hidden;
@@ -223,14 +327,6 @@
 .iv-act:has(.iv-chapters) {
   --act-width: 1100px;
   padding-top: var(--s-5);
-}
-/* The review is dense: the spec drops the small cover and tightens rows so the shelf button stays in view. */
-.iv-act:has(.iv-chapters) {
-  gap: 10px;
-  padding-top: 14px;
-}
-.iv-act:has(.iv-chapters) .iv-booktitle .book {
-  display: none;
 }
 .iv-picks {
   display: grid;
@@ -291,12 +387,67 @@
 /* ---------- Your book ---------- */
 .iv-booktitle {
   display: flex;
-  align-items: center;
-  gap: 20px;
+  align-items: flex-start;
+  gap: var(--s-6);
+}
+.iv-booktitle .book {
+  flex: none;
+}
+.iv-booktitle .book-sm {
+  display: none;
+  margin: var(--s-2) 0 var(--s-4);
+}
+/* Quiet actions line their text up with the text they sit under. */
+.button.iv-show {
+  margin-left: calc(var(--s-2) * -1);
+  padding: 0 var(--s-2);
+}
+.iv-by {
+  margin: 6px 0 10px;
+  font: 600 13px var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.iv-head-act {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-4);
+}
+.iv-others {
+  display: grid;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+.iv-others p.iv-note {
+  margin: 0;
+}
+.iv-other {
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-3) var(--s-4);
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.iv-other b {
+  font: 600 19px / 1.2 var(--font-serif);
+}
+.iv-quotes {
+  margin: var(--s-1) 0 var(--s-2);
+  padding: 2px 0 2px var(--s-4);
+  border-left: 4px solid var(--ink);
+}
+.iv-chapters .iv-quotes p {
+  margin: 0 0 var(--s-2);
+  font: italic 400 18px / 1.4 var(--font-serif);
+  color: var(--ink);
 }
 .iv-booktitle h2 {
   margin: 0;
-  font: 600 34px / 1.05 var(--font-serif);
+  font: 600 var(--iv-book-title-size) / 1.05 var(--font-serif);
 }
 .iv-booktitle p {
   margin: var(--s-1) 0 0;
@@ -304,11 +455,10 @@
   color: var(--ink-2);
 }
 /* The back cover: running text in the book's voice, kept below the title so the title stays the focus. */
-.iv-booktitle .iv-blurb,
-.iv-done-text .iv-blurb {
-  max-width: 68ch;
-  margin: var(--s-2) 0 0;
-  font: 400 16px / 1.45 var(--font-serif);
+.iv-booktitle .iv-blurb {
+  max-width: 62ch;
+  margin: 0 0 6px;
+  font: 400 15px / 1.5 var(--font-sans);
   color: var(--ink);
 }
 .iv-chapters {
@@ -321,10 +471,24 @@
 .iv-chapters li {
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr) auto;
-  align-items: center;
+  align-items: start;
   gap: 14px;
-  padding: 7px 18px;
+  padding: var(--s-3) 18px;
   border-bottom: var(--line) dotted var(--ink);
+}
+/* Asks in place: a dot tone on the row, the words kept on white so they stay readable. */
+.iv-chapters li.iv-confirm {
+  background:
+    radial-gradient(circle, var(--ink) 0.7px, transparent 1.1px) 0 0 / 6px 6px,
+    var(--white);
+}
+.iv-confirm > div:nth-child(2) {
+  justify-self: start;
+  padding: 2px var(--s-2);
+  background: var(--white);
+}
+.iv-confirm .iv-ch-act {
+  background: var(--white);
 }
 .iv-chapters li:last-child {
   border-bottom: 0;
@@ -337,6 +501,7 @@
   font: 600 21px / 1.2 var(--font-serif);
 }
 .iv-chapters span:not(.iv-n) {
+  display: block;
   font-size: 14px;
   color: var(--ink-2);
 }
@@ -360,10 +525,17 @@
 .iv-done-text p {
   max-width: 34ch;
   margin: 0;
-  font: italic 400 24px / 1.3 var(--font-serif);
+  font: italic 400 20px / 1.3 var(--font-serif);
 }
-.iv-done-text .iv-blurb {
-  max-width: 48ch;
+
+/* Below this the band is too narrow to keep the words clear of the halo. */
+@media (max-width: 1279px) {
+  .iv-band .halo {
+    display: none;
+  }
+  .iv-say {
+    max-width: var(--act-width);
+  }
 }
 
 /* ---------- Phone ---------- */
@@ -387,14 +559,13 @@
     font-size: 15px;
   }
   .iv-band {
-    padding: 28px var(--gutter) 32px;
+    padding: 28px var(--gutter) calc(32px + 28px);
   }
-  /* The question fills the narrow band, so the halo would sit behind running text. */
-  .iv-band .halo {
-    display: none;
-  }
-  .iv-say {
-    font-size: 27px;
+  .interview {
+    --iv-say-size: 27px;
+    --iv-say-quiet-size: 22px;
+    --iv-wait-size: 23px;
+    --iv-book-title-size: 26px;
   }
   .iv-holding {
     visibility: hidden;
@@ -402,9 +573,6 @@
   .iv-waiting[data-over="true"] {
     position: absolute;
     inset: 0 auto auto 0;
-  }
-  .iv-waiting {
-    font-size: 23px;
   }
   .iv-act {
     padding-top: var(--s-5);
@@ -427,8 +595,21 @@
     grid-row: span 2;
     margin: 0;
   }
-  .iv-booktitle h2 {
-    font-size: 26px;
+  /* The title sits beside the cover here, so it has to clear the radio in the corner. */
+  .iv-pick b {
+    padding-right: var(--tap);
+  }
+  /* Title and name first, then the small book on its own row, so the title isn't printed twice
+     side by side; then the back cover, and its two links stacked. */
+  .iv-booktitle .iv-book-wide {
+    display: none;
+  }
+  .iv-booktitle .book-sm {
+    display: block;
+  }
+  .iv-head-act {
+    flex-direction: column;
+    align-items: flex-start;
   }
   .iv-done {
     flex-direction: column;

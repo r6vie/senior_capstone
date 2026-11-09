@@ -163,7 +163,8 @@ export interface paths {
         };
         /**
          * Current
-         * @description The member's interview, for resuming where they left off.
+         * @description The member's interview, for resuming where they left off. If writing proposed changes failed,
+         *     a return tries once more on its own.
          */
         get: operations["current_interview_get"];
         put?: never;
@@ -218,6 +219,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/interview/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Skip
+         * @description Skip the waiting question and get the next one. Not on the Shape step (409).
+         */
+        post: operations["skip_interview_skip_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/interview/shape": {
         parameters: {
             query?: never;
@@ -249,7 +270,11 @@ export interface paths {
         put?: never;
         /**
          * Finish
-         * @description End the interview and get three titles, each with why it's you.
+         * @description End the interview: stage goes to `drafting`, and the three titles are written in the background
+         *     (`step_status`). With too little material it says `needs_more` instead. In a round of adding, end
+         *     the round: the proposed changes are written in the background (`revision_status`). After a
+         *     failed write, try again.
+         *     `answer` is saved first as the answer to the waiting question, with no question after it.
          */
         post: operations["finish_interview_finish_post"];
         delete?: never;
@@ -269,7 +294,8 @@ export interface paths {
         put?: never;
         /**
          * Choose Title
-         * @description Choose one of the three titles. The book is finished to match and saved as a draft.
+         * @description Choose one of the three titles. Stage goes to `finishing`, and the book is written to match in
+         *     the background (`step_status`). After a failure, send this again.
          */
         post: operations["choose_title_interview_title_post"];
         delete?: never;
@@ -307,8 +333,91 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Rewrite Chapter */
+        /**
+         * Rewrite Chapter
+         * @description Tell the chapter again. `rewrite_unchanged` means it couldn't be told better, and nothing changed.
+         */
         post: operations["rewrite_chapter_interview_book_chapters__chapter_id__rewrite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/book/chapters/{chapter_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore Chapter
+         * @description Go back to the chapter's last version (`has_previous`), during the review.
+         */
+        post: operations["restore_chapter_interview_book_chapters__chapter_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/book/blurb": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rewrite Blurb
+         * @description Write the draft's back cover again.
+         */
+        post: operations["rewrite_blurb_interview_book_blurb_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/book/blurb/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore Blurb
+         * @description Go back to the last back cover (`has_previous_blurb`), during the review.
+         */
+        post: operations["restore_blurb_interview_book_blurb_restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/book/title": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change Title
+         * @description Change to another of the three titles (`titles`), finishing the book again to match.
+         */
+        post: operations["change_title_interview_book_title_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -329,6 +438,250 @@ export interface paths {
          * @description Put the finished book on the shelf. The interview is then done.
          */
         post: operations["put_on_shelf_interview_book_shelve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reopen
+         * @description Add to a book on the shelf: a short new round of questions. The book doesn't change yet.
+         */
+        post: operations["reopen_interview_reopen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/revision/choices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Save Revision Choices
+         * @description Save which changes are approved so far, as they're pressed. Nothing is applied.
+         */
+        put: operations["save_revision_choices_interview_revision_choices_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/revision/blurb": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revision Blurb
+         * @description Get the back cover for the saved choices, to read before confirming (`selection_blurb_status`).
+         *     Written in the background when it has to be. Also the retry after `failed` or `stale`.
+         */
+        post: operations["revision_blurb_interview_revision_blurb_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/revision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply Revision
+         * @description Apply the approved changes to the book on the shelf. The rest are dropped and not proposed
+         *     again. A reading answer saved meanwhile then gets its own proposal.
+         */
+        post: operations["apply_revision_interview_revision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/removal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Propose Removal
+         * @description Propose taking a chapter out of a book on the shelf. Confirmed like any change. 409 at three chapters.
+         */
+        post: operations["propose_removal_interview_removal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/removal/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Removal
+         * @description Back out of a removal the member started. Back to `done`, with nothing recorded as declined.
+         */
+        post: operations["cancel_removal_interview_removal_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/book/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Undo Revision
+         * @description Take back the last applied revision (`can_undo`), until the next one is applied.
+         */
+        post: operations["undo_revision_interview_book_undo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/sparks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Sparks
+         * @description The member's own sparks waiting for their next round.
+         */
+        get: operations["list_sparks_interview_sparks_get"];
+        put?: never;
+        /**
+         * Add Spark
+         * @description "I have one like this" on a chapter of someone else's book. Private: its author never knows.
+         */
+        post: operations["add_spark_interview_sparks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/sparks/{spark_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Spark */
+        delete: operations["remove_spark_interview_sparks__spark_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/reading-questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Reading Questions
+         * @description The question waiting after a reading, if there is one.
+         */
+        get: operations["list_reading_questions_interview_reading_questions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/reading-questions/{question_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Answer Reading Question
+         * @description Answer it. From `done`, changes are written in the background (`revision_status`). During a
+         *     round it joins the round. While changes are waiting, it runs after the member decides.
+         */
+        post: operations["answer_reading_question_interview_reading_questions__question_id__answer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/reading-questions/{question_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dismiss Reading Question
+         * @description Dismiss it, as quietly as a skip: never shown, never counted.
+         */
+        post: operations["dismiss_reading_question_interview_reading_questions__question_id__dismiss_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -447,6 +800,11 @@ export interface components {
         AnswerRequest: {
             /** Answer */
             answer: string;
+            /**
+             * Question Id
+             * @description The `question_id` of the question this answers.
+             */
+            question_id: string;
         };
         /** AuthorChapter */
         AuthorChapter: {
@@ -458,6 +816,11 @@ export interface components {
             summary: string;
             /** Quotes */
             quotes: string[];
+            /**
+             * Has Previous
+             * @default false
+             */
+            has_previous: boolean;
         };
         /**
          * BookCard
@@ -478,6 +841,32 @@ export interface components {
             /** Blurb */
             blurb: string | null;
         };
+        /**
+         * Change
+         * @description One proposed change to a book on the shelf, which the member approves or declines.
+         */
+        Change: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "new" | "improve" | "remove";
+            /** Chapter Id */
+            chapter_id: string | null;
+            /** Title */
+            title: string;
+            /** Summary */
+            summary: string;
+            /** Quotes */
+            quotes: string[];
+            /** Note */
+            note: string;
+            current: components["schemas"]["CurrentChapter"] | null;
+            /** Position */
+            position?: number | null;
+        };
         /** Chapter */
         Chapter: {
             /** Id */
@@ -494,6 +883,26 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** CurrentChapter */
+        CurrentChapter: {
+            /** Title */
+            title: string;
+            /** Summary */
+            summary: string;
+        };
+        /** FinishRequest */
+        FinishRequest: {
+            /**
+             * Answer
+             * @description What's in the field: saved as the waiting question's answer first.
+             */
+            answer?: string | null;
+            /**
+             * Question Id
+             * @description The `question_id` that `answer` answers.
+             */
+            question_id?: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -505,7 +914,7 @@ export interface components {
              * Stage
              * @enum {string}
              */
-            stage: "interviewing" | "choosing" | "reviewing" | "done";
+            stage: "interviewing" | "drafting" | "choosing" | "finishing" | "reviewing" | "done" | "adding" | "revising";
             question: components["schemas"]["Question"] | null;
             /** Topic */
             topic: string | null;
@@ -515,10 +924,44 @@ export interface components {
             can_finish: boolean;
             /** Ready For Reveal */
             ready_for_reveal: boolean;
+            /** Needs More */
+            needs_more: boolean;
+            /** At Limit */
+            at_limit: boolean;
+            /** Nearly Done */
+            nearly_done: boolean;
+            /** Closing Line */
+            closing_line: string | null;
             /** Titles */
             titles: components["schemas"]["TitleOption"][] | null;
             /** Blurb */
             blurb: string | null;
+            /** Step Status */
+            step_status: ("writing" | "failed") | null;
+            /** Chosen Title */
+            chosen_title: string | null;
+            /** Revision Status */
+            revision_status: ("writing" | "ready" | "failed") | null;
+            /** Changes */
+            changes: components["schemas"]["Change"][] | null;
+            /** Proposed Blurb */
+            proposed_blurb: string | null;
+            /** Approved Changes */
+            approved_changes: string[] | null;
+            /** Selection Blurb Status */
+            selection_blurb_status: ("writing" | "ready" | "failed" | "stale") | null;
+            /** Selection Blurb */
+            selection_blurb: string | null;
+            /** Nothing New */
+            nothing_new: boolean;
+            /** Dropped For Names */
+            dropped_for_names: boolean;
+            /** Reading Question Id */
+            reading_question_id: string | null;
+            /** Reading Answer */
+            reading_answer: string | null;
+            /** Dropped Words */
+            dropped_words: string[] | null;
         };
         /**
          * LendingCheckout
@@ -614,6 +1057,23 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /**
+             * Can Undo
+             * @default false
+             */
+            can_undo: boolean;
+            /** Revised At */
+            revised_at?: string | null;
+            /**
+             * Has Previous Blurb
+             * @default false
+             */
+            has_previous_blurb: boolean;
+            /**
+             * Rewrite Unchanged
+             * @default false
+             */
+            rewrite_unchanged: boolean;
         };
         /** MyCheckouts */
         MyCheckouts: {
@@ -655,13 +1115,15 @@ export interface components {
         };
         /** Question */
         Question: {
+            /** Question Id */
+            question_id: string;
             /** Text */
             text: string;
             /**
              * Phase
              * @enum {string}
              */
-            phase: "sweep" | "dig" | "shape";
+            phase: "sweep" | "dig" | "shape" | "adding" | "reading";
             /** Playback */
             playback: string | null;
         };
@@ -671,6 +1133,11 @@ export interface components {
             id: string;
             /** Title */
             title: string;
+        };
+        /** ReadingAnswerRequest */
+        ReadingAnswerRequest: {
+            /** Answer */
+            answer: string;
         };
         /**
          * ReadingCheckout
@@ -700,8 +1167,58 @@ export interface components {
             /** Expires At */
             expires_at: string | null;
         };
+        /**
+         * ReadingQuestionResponse
+         * @description The question after a reading, for its author only.
+         */
+        ReadingQuestionResponse: {
+            /** Id */
+            id: string;
+            /** Question */
+            question: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Reader Name */
+            reader_name: string | null;
+        };
+        /** RemovalRequest */
+        RemovalRequest: {
+            /** Chapter Id */
+            chapter_id: string;
+        };
+        /** RevisionChoicesRequest */
+        RevisionChoicesRequest: {
+            /**
+             * Approved
+             * @description The ids of the changes approved so far. Saved, not applied.
+             */
+            approved: string[];
+        };
+        /** RevisionRequest */
+        RevisionRequest: {
+            /**
+             * Approved
+             * @description The ids of the changes to apply. The rest are dropped.
+             */
+            approved: string[];
+            /**
+             * Blurb
+             * @description "use" applies the back cover last shown for exactly this selection, from `proposed_blurb` or POST /interview/revision/blurb. "keep" leaves the old one.
+             * @default keep
+             * @enum {string}
+             */
+            blurb: "keep" | "use";
+        };
         /** ShapeRequest */
         ShapeRequest: {
+            /**
+             * Question Id
+             * @description The `question_id` of the playback being answered.
+             */
+            question_id?: string | null;
             /**
              * Correction
              * @description What's different. Leave out to confirm: "Yes, that's me".
@@ -732,11 +1249,56 @@ export interface components {
             /** Last Name */
             last_name: string;
         };
+        /** SkipRequest */
+        SkipRequest: {
+            /**
+             * Question Id
+             * @description The `question_id` of the question being skipped.
+             */
+            question_id: string;
+        };
+        /** SparkRequest */
+        SparkRequest: {
+            /** Book Id */
+            book_id: string;
+            /** Chapter Id */
+            chapter_id: string;
+        };
+        /**
+         * SparkResponse
+         * @description A chapter that made this member think "I have one like this". Only they ever see it.
+         */
+        SparkResponse: {
+            /** Id */
+            id: string;
+            /** Book Id */
+            book_id: string;
+            /** Chapter Id */
+            chapter_id: string;
+            /** Chapter Title */
+            chapter_title: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * StaleQuestionResponse
+         * @description The 409 when an answer or skip names a question that isn't the one waiting. Nothing was saved.
+         */
+        StaleQuestionResponse: {
+            /** Detail */
+            detail: string;
+            interview: components["schemas"]["InterviewResponse"];
+            /** Already Saved */
+            already_saved: boolean;
+        };
         /** StartRequest */
         StartRequest: {
             /**
              * Resume Pdf
-             * @description An optional résumé PDF, base64-encoded. Never stored.
+             * @description An optional résumé PDF, base64-encoded. The file isn't kept. Its text is deleted when the interview ends, or 30 days after the last activity, and nothing from it goes into the book.
              */
             resume_pdf?: string | null;
         };
@@ -1176,6 +1738,57 @@ export interface operations {
                     "application/json": components["schemas"]["InterviewResponse"];
                 };
             };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaleQuestionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    skip_interview_skip_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SkipRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaleQuestionResponse"];
+                };
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -1209,6 +1822,15 @@ export interface operations {
                     "application/json": components["schemas"]["InterviewResponse"];
                 };
             };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaleQuestionResponse"];
+                };
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -1227,7 +1849,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["FinishRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -1236,6 +1862,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaleQuestionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1259,7 +1903,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MyBookResponse"];
+                    "application/json": components["schemas"]["InterviewResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1335,6 +1979,110 @@ export interface operations {
             };
         };
     };
+    restore_chapter_interview_book_chapters__chapter_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rewrite_blurb_interview_book_blurb_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+        };
+    };
+    restore_blurb_interview_book_blurb_restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+        };
+    };
+    change_title_interview_book_title_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TitleRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     put_on_shelf_interview_book_shelve_post: {
         parameters: {
             query?: never;
@@ -1351,6 +2099,360 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+        };
+    };
+    reopen_interview_reopen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+        };
+    };
+    save_revision_choices_interview_revision_choices_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisionChoicesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revision_blurb_interview_revision_blurb_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+        };
+    };
+    apply_revision_interview_revision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    propose_removal_interview_removal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemovalRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_removal_interview_removal_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+        };
+    };
+    undo_revision_interview_book_undo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+        };
+    };
+    list_sparks_interview_sparks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SparkResponse"][];
+                };
+            };
+        };
+    };
+    add_spark_interview_sparks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SparkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SparkResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_spark_interview_sparks__spark_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spark_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_reading_questions_interview_reading_questions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadingQuestionResponse"][];
+                };
+            };
+        };
+    };
+    answer_reading_question_interview_reading_questions__question_id__answer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadingAnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaleQuestionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_reading_question_interview_reading_questions__question_id__dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

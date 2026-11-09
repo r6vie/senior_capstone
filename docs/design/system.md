@@ -214,4 +214,42 @@ at width−300px, rows scroll horizontally.
 
 Patterns added after v1. Each entry: name, the task it solves, date, owner, snippet or link.
 
-_None yet._
+### Growing books (T33, 2026-11-08, design session)
+
+Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop and phone width.
+
+- **Toggle pair (Approve / Decline).** Two `.button-secondary.sm` joined with a −2px overlap; the chosen one has
+  `aria-pressed="true"` and is filled ink with white text (never red). Declined content is struck through, so the
+  state shows without colour. Used for one decision per row with no side effect until a later confirm.
+  `.button[aria-pressed="true"]{background:var(--ink);color:var(--white);border-color:var(--ink)}`
+- **Change card (`.chg`).** A white panel, 3px ink outline: caption chip (New chapter / Improved chapter), status word
+  at the right, the one italic line on what changed directly under the chip, two columns "Now" and "Proposed" (Proposed has a 4px ink left rule; a new
+  chapter's Now is a dotted "Not in your book yet.", a removal's Proposed is a dotted "Comes out of your book."), then the toggle pair.
+  On a phone only Proposed shows, with a quiet "See what's there now" that opens Now in place. Added words are underlined; a declined card strikes
+  only its title. The status word is Approved, Declined or Not decided.
+- **Author-only quotes (`.quotes`).** A 4px ink left rule and Newsreader italic under a chapter, behind a quiet "Show what
+  you said" button. The chapter list says once that only the author sees them.
+- **Quiet inline action (`.spk`).** A private margin note, not a reaction: the plain text link (`.button.tl`) at 14px in `--ink-2`,
+  sentence case, underlined, 44px tall, no plus or tick mark, no width of its own, −12px left margin so its text lines up with the
+  host's text. After the press it becomes a plain sentence with an Undo link. It makes no assumption about the row it sits in, so a
+  page owned by someone else can mount it at the end of a chapter's content. Hover or focus shows a small `.tip` panel (2px
+  outline, white) with one sentence. Build it with `aria-label` that includes the chapter title, and read the saved state from the
+  member's list so it survives a reload.
+- **Small buttons are 44px.** `.button.sm` (Approve, Decline, Rewrite, Remove, Try again, Choose a PDF) keeps `--tap` height; only its
+  padding and type size shrink. Toggle buttons carry `aria-label="Approve: <chapter title>"`.
+- **The wait (`.empty.waitbox`, `aria-busy`).** A dotted panel with one plain sentence and a quiet way out. No spinner and no
+  progress bar, because the length is unknown and a bar would imply a count.
+- **Plain text link (`.button.tl`).** For a quiet action that reads as a sentence, such as "That is enough. Write the changes"
+  or "Add a PDF so my first questions fit you": Plex Sans 400, 15px, sentence case, underlined, 44px tall. Caps are for
+  short display-face labels only, so a sentence is never set in caps.
+- **Added words (`ins`).** In a Proposed column, words that were not in the Now text are underlined (2px, offset 3px), so the
+  difference shows without colour and without a second column to compare.
+- **Remove in place.** The row turns into "Remove this chapter?" with quiet "Remove" and "Keep it", on a dot tone with the text
+  on a white chip. No dialog.
+- **Interview review.** The book object (`.book`) beside its title, "by" line and back cover, then quiet "Rewrite the back cover"
+  and "See the other titles"; chapters in the member's first-person words with "Show what you said" under each; quiet Rewrite
+  and Remove per row. The page scrolls; the red button ends it.
+- **My book layout.** The book object (`.book-lg`, `.book` on a phone) beside its title and blurb; chapters as a ruled list
+  with dotted separators; a narrow aside holding the reading question and the sparks list. One red button: the next step
+  for the book's current stage (Start the interview, Review your book, Add to your book, Continue adding, Review the
+  proposed changes).

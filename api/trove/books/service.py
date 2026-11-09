@@ -116,9 +116,20 @@ class BookExists(Exception):
     """The member already has a book; there is one per member."""
 
 
-def my_book_view(book: dict) -> MyBookResponse:
+def my_book_view(book: dict, *, rewrite_unchanged: bool = False, undoable: bool = True) -> MyBookResponse:
     """A member's own book as its author sees it, including the grounding quotes and copies."""
-    return MyBookResponse.model_validate({**book, "id": book["_id"], "blurb": book.get("blurb")})
+    return MyBookResponse.model_validate(
+        {
+            **book,
+            "id": book["_id"],
+            "blurb": book.get("blurb"),
+            "chapters": [{**c, "has_previous": bool(c.get("previous"))} for c in book["chapters"]],
+            "can_undo": undoable and bool(book.get("previous_version")),
+            "revised_at": (book.get("previous_version") or {}).get("applied_at"),
+            "has_previous_blurb": book.get("previous_blurb") is not None,
+            "rewrite_unchanged": rewrite_unchanged,
+        }
+    )
 
 
 async def create_draft_book(
@@ -176,7 +187,8 @@ async def remove_chapter(
             # Checked in the same update, so two quick removals can't go below the minimum.
             f"chapters.{MIN_CHAPTERS}": {"$exists": True},
         },
-        {"$pull": {"chapters": {"id": chapter_id}}, "$set": changes},
+        # The old back cover described a chapter that's gone.
+        {"$pull": {"chapters": {"id": chapter_id}}, "$set": changes, "$unset": {"previous_blurb": ""}},
         return_document=ReturnDocument.AFTER,
     )
     return await _named(database, book)
@@ -192,12 +204,147 @@ async def replace_chapter(database: AsyncDatabase, author_id: str, chapter: dict
     return await _named(database, book)
 
 
+async def set_draft_blurb(
+    database: AsyncDatabase, author_id: str, blurb: str, *, previous: str | None
+) -> dict | None:
+    """Replace the back cover of the author's draft, keeping the old one to go back to. None if they
+    have no draft."""
+    book = await database.books.find_one_and_update(
+        {"author_id": author_id, "status": DRAFT},
+        {"$set": {"blurb": blurb, "previous_blurb": previous, "updated_at": datetime.now(UTC)}},
+        return_document=ReturnDocument.AFTER,
+    )
+    return await _named(database, book)
+
+
+async def restore_draft_blurb(database: AsyncDatabase, author_id: str) -> dict | None:
+    """Go back to the draft's last back cover. None if there isn't one."""
+    book = await database.books.find_one_and_update(
+        {"author_id": author_id, "status": DRAFT, "previous_blurb": {"$type": "string"}},
+        [
+            {"$set": {"blurb": "$previous_blurb", "updated_at": datetime.now(UTC)}},
+            {"$unset": "previous_blurb"},
+        ],
+        return_document=ReturnDocument.AFTER,
+    )
+    return await _named(database, book)
+
+
+async def retitle_draft(
+    database: AsyncDatabase, author_id: str, *, title: str, chapters: list[dict], blurb: str | None
+) -> dict | None:
+    """Replace the author's draft with one finished for another title. None if they have no draft."""
+    book = await database.books.find_one_and_update(
+        {"author_id": author_id, "status": DRAFT},
+        {
+            "$set": {"title": title, "chapters": chapters, "blurb": blurb, "updated_at": datetime.now(UTC)},
+            # The old back cover described the old book.
+            "$unset": {"previous_blurb": ""},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    return await _named(database, book)
+
+
+async def restore_chapter(database: AsyncDatabase, author_id: str, chapter_id: str) -> dict | None:
+    """Go back to a draft chapter's last version. None if there isn't one."""
+    book = await database.books.find_one({"author_id": author_id, "status": DRAFT, "chapters.id": chapter_id})
+    chapter = next((c for c in book["chapters"] if c["id"] == chapter_id), None) if book else None
+    if not chapter or not chapter.get("previous"):
+        return None
+    restored = {key: value for key, value in chapter.items() if key != "previous"}
+    return await replace_chapter(database, author_id, {**restored, **chapter["previous"]})
+
+
+def revised_chapters(
+    chapters: list[dict], *, improved: list[dict], added: list[dict], removed: list[str]
+) -> list[dict]:
+    """The chapters after a revision. `improved` replace the ones with their ids, in place. `added`
+    each go where their `position` says (1 is first), or at the end without one."""
+    replacements = {chapter["id"]: chapter for chapter in improved}
+    result = [
+        replacements.get(chapter["id"], chapter) for chapter in chapters if chapter["id"] not in removed
+    ]
+    for chapter in added:
+        position = chapter.get("position")
+        index = len(result) if position is None else max(0, min(position - 1, len(result)))
+        result.insert(index, {key: value for key, value in chapter.items() if key != "position"})
+    return result
+
+
+async def apply_revision(
+    database: AsyncDatabase,
+    author_id: str,
+    *,
+    improved: list[dict],
+    added: list[dict],
+    removed: list[str],
+    blurb: str | None,
+) -> dict | None:
+    """Apply approved changes to the author's book on the shelf, in one update, keeping what was
+    there so it can be undone. `blurb` None keeps the old one. None if there's no such book, it
+    changed meanwhile, or it would fall below MIN_CHAPTERS.
+
+    `published_at` doesn't change: the shelf isn't a feed, and a revision doesn't bump a book.
+    """
+    book = await database.books.find_one({"author_id": author_id, "status": ON_SHELF})
+    if book is None:
+        return None
+    chapters = revised_chapters(book["chapters"], improved=improved, added=added, removed=removed)
+    if len(chapters) < MIN_CHAPTERS:
+        return None
+    changes: dict = {
+        "chapters": chapters,
+        "previous_version": {
+            "chapters": book["chapters"],
+            "blurb": book.get("blurb"),
+            "applied_at": datetime.now(UTC),
+        },
+        "updated_at": datetime.now(UTC),
+    }
+    if blurb is not None:
+        changes["blurb"] = blurb
+    updated = await database.books.find_one_and_update(
+        # Only if the book hasn't changed since it was read, so two approvals can't lose one.
+        {"_id": book["_id"], "status": ON_SHELF, "updated_at": book["updated_at"]},
+        {"$set": changes},
+        return_document=ReturnDocument.AFTER,
+    )
+    return await _named(database, updated)
+
+
+async def undo_revision(database: AsyncDatabase, author_id: str) -> dict | None:
+    """Put back the chapters and blurb from before the last revision, in one update. None if there's
+    nothing to undo. Never reader-facing: `previous_version` isn't in PUBLIC_FIELDS."""
+    book = await database.books.find_one({"author_id": author_id, "status": ON_SHELF})
+    previous = book.get("previous_version") if book else None
+    if not previous:
+        return None
+    restored = await database.books.find_one_and_update(
+        {"_id": book["_id"], "updated_at": book["updated_at"]},
+        {
+            "$set": {
+                "chapters": previous["chapters"],
+                "blurb": previous["blurb"],
+                "updated_at": datetime.now(UTC),
+            },
+            "$unset": {"previous_version": ""},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    return await _named(database, restored)
+
+
 async def put_on_shelf(database: AsyncDatabase, author_id: str) -> dict | None:
     """Publish the author's draft. None if they have no draft."""
     now = datetime.now(UTC)
     book = await database.books.find_one_and_update(
         {"author_id": author_id, "status": DRAFT},
-        {"$set": {"status": ON_SHELF, "published_at": now, "updated_at": now}},
+        # Earlier versions of chapters are for the review only.
+        {
+            "$set": {"status": ON_SHELF, "published_at": now, "updated_at": now},
+            "$unset": {"chapters.$[].previous": "", "previous_blurb": ""},
+        },
         return_document=ReturnDocument.AFTER,
     )
     return await _named(database, book)

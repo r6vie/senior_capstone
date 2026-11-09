@@ -52,6 +52,8 @@ local stub with the same signature and swap it out when the real one merges.
 | `books.get_public_book(db, book_id)` | Josef | The book as readers see it: title, author's full name, cover, chapters, copies. **Never** the author's contacts, employer or title. `None` if not on the shelf | discovery, checkouts |
 | `books.get_book_of(db, user_id)` | Josef | That member's own book, or `None` | checkouts (you need a book to check one out) |
 | `books.list_shelf(db, *, limit, after)` | Josef | Public books on the shelf, newest first | discovery |
+| `interview.nothing_open(db, user_id)` | Josef | Whether no questions or changes are open on this member's book, so it can be undone | books |
+| `interview.ask_after_reading(db, author_id, checkout_id)` | Josef | Nothing. Queues the author's one question after a reading. Safe to call twice. Call it once "Did you meet?" confirms the meeting happened | checkouts (C4) |
 | `auth.first_name_of(db, user_id)` | Daniel | First name (for greetings; books show the full name, trove.md §9.1) | everyone |
 | `auth.contact_details_of(db, user_id)` | Daniel | The contact details the member chose to share on a yes | checkouts (reveal) |
 | `checkouts.get_checkout_for(db, checkout_id, user_id)` | Ellie | The checkout if this user is its reader or author, else `None` | messaging, meetings |
@@ -69,7 +71,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 ### Wave 1: the foundations others build on
 
-**B1 · The book model and sample books** · Josef · `todo`
+**B1 · The book model and sample books** · Josef · `review`
 - `books` collection: one book per member, with title, chapters (title + short text + the quotes
   it's grounded in), cover style, copies (default 3), and on-shelf status.
 - Ships the `books.*` contract functions above, plus `GET /books/me` and `GET /books/{id}`.
@@ -112,20 +114,20 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 ### Wave 2: the core experience
 
-**I1 · The book-finding interview** · Josef · `todo`
+**I1 · The book-finding interview** · Josef · `review`
 - Hunts for what the member knows that others don't (trove.md §4), following strong threads
   and exploring several directions.
 - Optional résumé upload: used only to shape questions. Nothing from it goes in the book. The
   file is not kept.
 - Decide first: the interview format (cards, conversation or both), its length, and how it ends.
 
-**I2 · Three titles, then the book** · Josef · `todo`
+**I2 · Three titles, then the book** · Josef · `review`
 - The interview produces a pool of grounded chapters plus three titles and covers. The member
   picks one, and the inside is finished to match (trove.md §9.4).
 - Evals: 6–10 varied test personas in `api/evals/`, so prompt changes can be compared.
 - Done when: a real person goes from signing up to a book on the shelf.
 
-**I4 · The interview adapts** · Josef · `todo`
+**I4 · The interview adapts** · Josef · `review`
 - When answers run thin (trove.md §4, §9.9), the interviewer changes angle: sharper questions
   anchored in the member's real projects, classes and work, in a professional tone. A quiet
   "Skip" is always available and moves to the next question. No mirror, cards or reassurance copy.
@@ -169,7 +171,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - A "Past meets" page lists books whose authors you've met, with contacts still visible.
 - Ships `checkouts.past_meets`.
 
-**I3 · Adding to your book** · Josef · `todo`
+**I3 · Adding to your book** · Josef · `review`
 - Reopen the interview from your book at any time. New material is rewritten into the book
   (not just appended), and the author approves the changes.
 
@@ -195,13 +197,13 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 ### Later: after the whole loop works
 
-Planned, not started. Begin only once Q1 passes (trove.md §4, §9.9).
+Josef asked for these early. Both are built on `josef/full-build` against stubs, and neither runs for real until its teammate's piece lands: I5 needs `SparkButton` mounted on D1's book page, and I6 needs C4 to call `interview.service.ask_after_reading`.
 
-**I5 · Sparks from other books** · Josef · `later`
+**I5 · Sparks from other books** · Josef · `review`
 - On a chapter of someone else's book, "I have one like this" saves a private prompt for the
   reader's own next interview (I3). Never content, never visible to the other author.
 
-**I6 · Each reading grows the book** · Josef · `later`
+**I6 · Each reading grows the book** · Josef · `review`
 - After "Did you meet?" (C4), the author answers one question: "What did they ask you about that
   surprised you?". The answer can become or improve a chapter, with the author's approval (I3).
 

@@ -47,7 +47,7 @@ def chapter(quote: str, title: str = "Thick without gums") -> dict:
 
 
 TITLES = [{"title": f"Title {n}", "why": "You kept coming back to it."} for n in range(3)]
-BLURB = "I make lassi thick with nothing but time. I learned it the slow way, one split batch at a time."
+BLURB = "I make sourdough thick with nothing but time. I learned it the slow way, one split batch at a time."
 
 
 async def test_next_turn_sends_the_transcript_with_structured_output_and_adaptive_thinking():
@@ -98,10 +98,13 @@ async def test_the_reveal_is_forced_at_the_question_limit():
 
 async def test_playback_is_kept_only_in_shape():
     claude = FakeClaude(
-        [reply(plan(phase="dig", playback="stray")), reply(plan(phase="shape", playback="You make lassi."))]
+        [
+            reply(plan(phase="dig", playback="stray")),
+            reply(plan(phase="shape", playback="You make sourdough.")),
+        ]
     )
     assert (await engine.next_turn(claude, turns=turns(), resume_text=None)).playback is None
-    assert (await engine.next_turn(claude, turns=turns(), resume_text=None)).playback == "You make lassi."
+    assert (await engine.next_turn(claude, turns=turns(), resume_text=None)).playback == "You make sourdough."
 
 
 async def test_refusals_propagate():
@@ -112,7 +115,7 @@ async def test_refusals_propagate():
 
 async def test_draft_keeps_only_verbatim_quotes_and_assigns_ids():
     pool = [
-        chapter("it felt slimy", "Why gums feel wrong"),
+        chapter("used guar gum and it felt slimy", "Why gums feel wrong"),
         # Curly apostrophe and extra spacing still match the member's words.
         chapter("strain it overnight,  and that\u2019s what makes it thick", "Eighteen hours"),
         chapter("walked in with cold samples", "The Friday sample"),
@@ -283,3 +286,258 @@ def test_the_interviewer_bans_small_talk_and_reassurance():
     prompt = load_prompt("interview/interviewer")
     assert "When answers run thin" in prompt
     assert "no reassurance" in prompt and "No small talk" in prompt
+
+
+async def test_one_quote_grounds_only_one_chapter():
+    answers = turns(engine.MAX_QUESTIONS)
+    quote = answers[0].answer
+    thin = [chapter(quote), chapter(quote, "Another"), chapter(quote, "A third")]
+    claude = FakeClaude(
+        [
+            reply({"pool": thin, "titles": TITLES, "blurb": BLURB}),
+            reply({"pool": thin, "titles": TITLES, "blurb": BLURB}),
+        ]
+    )
+    with pytest.raises(engine.NotEnoughMaterial):
+        await engine.draft_book(claude, turns=answers)
+
+
+async def test_more_material_goes_past_the_limits_with_a_status_note():
+    claude = FakeClaude([reply(plan(ready_for_reveal=True, phase="shape", playback="You."))])
+    result = await engine.next_turn(
+        claude, turns=turns(engine.MAX_QUESTIONS), resume_text=None, more_material=True
+    )
+    assert result.ready_for_reveal is False
+    assert result.phase == "dig"
+    assert result.playback is None
+    assert "can't yet make three distinct chapters" in sent(claude)
+    assert "That is the limit" not in sent(claude)
+
+
+def test_a_quote_needs_five_words():
+    said = [engine.Turn(question="Q?", answer="I made it. I made it work on the third try.", phase="dig")]
+    assert engine.grounded_quotes(["I made it."], said) == []
+    assert engine.grounded_quotes(["I made it work on"], said) == ["I made it work on"]
+
+
+async def test_rewrite_too_close_tries_once_more_then_keeps_the_original():
+    book = [
+        DraftChapter(
+            id="c0", title="Old", summary="I split the line so the fryer only had to cook.", quotes=["q"]
+        ),
+    ]
+    close = {"title": "New", "summary": "I split the line so the fryer only had to cook!"}
+    claude = FakeClaude([reply(close), reply(close)])
+    result = await engine.rewrite_chapter(claude, turns=turns(1), chapters=book, chapter_id="c0")
+    assert result == book[0]
+    assert len(claude.requests) == 2
+    assert "too close to the original" in sent(claude)
+
+
+async def test_rewrite_second_try_can_succeed():
+    book = [
+        DraftChapter(id="c0", title="Old", summary="I split the line so the fryer only cooked.", quotes=["q"])
+    ]
+    claude = FakeClaude(
+        [
+            reply({"title": "New", "summary": "I split the line so the fryer only cooked."}),
+            reply(
+                {"title": "New", "summary": "The window stopped backing up once orders moved down the line."}
+            ),
+        ]
+    )
+    result = await engine.rewrite_chapter(claude, turns=turns(1), chapters=book, chapter_id="c0")
+    assert result.title == "New"
+    assert result.quotes == ["q"]
+
+
+async def test_book_output_with_a_resume_only_term_retries_then_drops_it():
+    said = [engine.Turn(question="Q?", answer=a, phase="dig") for a in ANSWERS]
+    leak = {"title": "My time at Brindle", "summary": "It was at Brindle.", "quotes": [ANSWERS[0]]}
+    clean = [chapter(answer, f"Clean {n}") for n, answer in enumerate(ANSWERS[:3])]
+    claude = FakeClaude(
+        [
+            reply({"pool": [leak, *clean], "titles": TITLES, "blurb": BLURB}),
+            reply({"pool": [leak, *clean], "titles": TITLES, "blurb": BLURB}),
+        ]
+    )
+    draft = await engine.draft_book(claude, turns=said, leaks=lambda text: "Brindle" in text)
+    assert len(claude.requests) == 2
+    assert [c.title for c in draft.pool] == ["Clean 0", "Clean 1", "Clean 2"]
+
+
+async def test_a_blurb_with_a_resume_only_term_is_never_returned():
+    claude = FakeClaude([reply({"blurb": "At Brindle, I did it."}), reply({"blurb": "I did it, twice."})])
+    blurb = await engine.write_blurb(
+        claude, turns=turns(1), chapters=[], leaks=lambda text: "Brindle" in text
+    )
+    assert blurb == "I did it, twice."
+
+
+async def test_the_turn_limit_never_goes_below_the_floor():
+    skipped = [engine.Turn(question=f"Q{n}?", answer="", phase="dig") for n in range(engine.MAX_TURNS - 1)]
+    said = [*skipped, engine.Turn(question="Q?", answer="Not sure.", phase="dig")]
+    claude = FakeClaude([reply(plan(ready_for_reveal=True))])
+    result = await engine.next_turn(claude, turns=said, resume_text=None)
+    assert result.ready_for_reveal is False
+
+
+async def test_revise_wont_ground_two_changes_on_one_quote():
+    said = [
+        engine.Turn(question="Old?", answer=ANSWERS[0], phase="dig"),
+        engine.Turn(question="New?", answer=ANSWERS[1], phase="adding"),
+    ]
+    change = {
+        "kind": "new",
+        "chapter_id": None,
+        "title": "First",
+        "summary": "S.",
+        "quotes": [ANSWERS[1]],
+        "note": "N.",
+    }
+    claude = FakeClaude([reply({"changes": [change, {**change, "title": "Second"}], "blurb": BLURB})])
+    revision = await engine.revise_book(claude, turns=said, round_start=1, chapters=[], blurb=None)
+    assert [c.title for c in revision.changes] == ["First"]
+
+
+async def test_revise_drops_a_change_with_a_resume_only_term():
+    said = [
+        engine.Turn(question="Old?", answer=ANSWERS[0], phase="dig"),
+        engine.Turn(question="New?", answer=ANSWERS[1], phase="adding"),
+    ]
+    change = {
+        "kind": "new",
+        "chapter_id": None,
+        "title": "My time at Brindle",
+        "summary": "S.",
+        "quotes": [ANSWERS[1]],
+        "note": "N.",
+    }
+    claude = FakeClaude(
+        [reply({"changes": [change], "blurb": BLURB}), reply({"changes": [change], "blurb": BLURB})]
+    )
+    revision = await engine.revise_book(
+        claude, turns=said, round_start=1, chapters=[], blurb=None, leaks=lambda text: "Brindle" in text
+    )
+    assert revision.changes == []
+    assert revision.dropped_for_names is False
+    assert len(claude.requests) == 2
+
+
+async def test_revise_retries_a_leak_once_and_can_recover():
+    said = [
+        engine.Turn(question="Old?", answer=ANSWERS[0], phase="dig"),
+        engine.Turn(question="New?", answer=ANSWERS[1], phase="adding"),
+    ]
+    good = {
+        "kind": "new",
+        "chapter_id": None,
+        "title": "Soy",
+        "summary": "S.",
+        "quotes": [ANSWERS[1]],
+        "note": "N.",
+    }
+    claude = FakeClaude(
+        [
+            reply({"changes": [{**good, "title": "At Brindle"}], "blurb": BLURB}),
+            reply({"changes": [good], "blurb": BLURB}),
+        ]
+    )
+    revision = await engine.revise_book(
+        claude, turns=said, round_start=1, chapters=[], blurb=None, leaks=lambda text: "Brindle" in text
+    )
+    assert [c.title for c in revision.changes] == ["Soy"]
+
+
+async def test_a_note_that_praises_is_replaced():
+    said = [engine.Turn(question="New?", answer=ANSWERS[1], phase="adding")]
+    change = {
+        "kind": "new",
+        "chapter_id": None,
+        "title": "Soy",
+        "summary": "S.",
+        "quotes": [ANSWERS[1]],
+        "note": "A richer, more vivid telling of your story.",
+    }
+    claude = FakeClaude([reply({"changes": [change], "blurb": BLURB})])
+    revision = await engine.revise_book(claude, turns=said, round_start=0, chapters=[], blurb=None)
+    assert revision.changes[0].note == engine.PLAIN_NOTE
+
+
+async def test_finish_retries_a_leak_once():
+    pool = [DraftChapter(id=f"c{n}", title=f"Pool {n}", summary="S.", quotes=[ANSWERS[n]]) for n in range(3)]
+    draft = engine.Draft(pool=pool, titles=[], blurb="Fallback.")
+    picks = [{"pool_id": f"c{n}", "title": f"T{n}", "summary": "S."} for n in range(3)]
+    claude = FakeClaude(
+        [
+            reply({"chapters": [{**picks[0], "title": "At Brindle"}, *picks[1:]], "blurb": BLURB}),
+            reply({"chapters": picks, "blurb": BLURB}),
+        ]
+    )
+    book = await engine.finish_book(
+        claude, turns=turns(3), draft=draft, title="X", leaks=lambda t: "Brindle" in t
+    )
+    assert [c.title for c in book.chapters] == ["T0", "T1", "T2"]
+    assert len(claude.requests) == 2
+
+
+async def test_finish_rejects_a_title_close_to_a_spark():
+    pool = [DraftChapter(id=f"c{n}", title=f"Pool {n}", summary="S.", quotes=[ANSWERS[n]]) for n in range(3)]
+    draft = engine.Draft(pool=pool, titles=[], blurb="Fallback.")
+    picks = [{"pool_id": f"c{n}", "title": f"Mine {n}", "summary": "New."} for n in range(3)]
+    picks[0]["title"] = "Why gums feel wrong"
+    claude = FakeClaude([reply({"chapters": picks, "blurb": BLURB})])
+    book = await engine.finish_book(
+        claude, turns=turns(3), draft=draft, title="X", spark_titles=["Why gums feel wrong"]
+    )
+    assert book.chapters[0].title == "Pool 0"
+    assert book.chapters[1].title == "Mine 1"
+
+
+async def test_a_rewrite_cant_take_a_sparks_title():
+    book = [
+        DraftChapter(id="c0", title="Old", summary="I split the line so the fryer only cooked.", quotes=["q"])
+    ]
+    copied = {"title": "Why gums feel wrong", "summary": "The window stopped backing up once orders moved."}
+    claude = FakeClaude([reply(copied), reply(copied)])
+    result = await engine.rewrite_chapter(
+        claude, turns=turns(1), chapters=book, chapter_id="c0", spark_titles=["why gums feel wrong"]
+    )
+    assert result == book[0]
+
+
+async def test_every_skip_of_a_round_stays_in_the_status():
+    said = [
+        engine.Turn(question="About math?", answer="", phase="adding"),
+        engine.Turn(question="About printers?", answer="A real answer here for this one.", phase="adding"),
+    ]
+    chapter_one = DraftChapter(id="c0", title="T", summary="S.", quotes=["q"])
+    claude = FakeClaude([reply({"question": "Next?", "topic": "t", "done": False})])
+    await engine.next_adding_turn(claude, turns=said, round_start=0, chapters=[chapter_one], sparks=[])
+    assert "stay off these subjects: About math?" in sent(claude)
+
+
+def test_book_titles_get_one_case_and_names_keep_theirs():
+    said = [engine.Turn(question="Q?", answer="We worked with the crew in Cleveland that year.", phase="dig")]
+    assert engine._sentence_case("Dye Pots In Cleveland", said) == "Dye pots in Cleveland"
+    assert engine._sentence_case("The same red every time", said) == "The same red every time"
+
+
+def test_shape_is_told_to_close_after_it_has_run_long():
+    shaped = [
+        engine.Turn(question="Is this you?", answer="Mostly.", phase="shape") for _ in range(engine.MAX_SHAPE)
+    ]
+    assert "run its course" in engine._status(turns(8) + shaped)
+    assert "run its course" not in engine._status(turns(8) + shaped[:1])
+
+
+def test_a_long_summary_is_cut_at_a_sentence_that_fits():
+    first = "I rebuilt the line. " * 10
+    summary = engine._fit_summary(first + "x" * 200 + ".")
+    assert summary == first.strip()
+    assert len(summary) <= engine.MAX_SUMMARY
+
+
+def test_one_long_sentence_stays_whole():
+    long = "word " * 80 + "end."
+    assert engine._fit_summary(long) == long

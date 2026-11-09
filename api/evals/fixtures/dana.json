@@ -1,0 +1,278 @@
+{
+ "persona": "Dana (quiet sophomore, math, library makerspace)",
+ "slug": "dana",
+ "source": "2026-11-07_211602/dana.md (three answers cut back to what the member said: the simulated member had also written its reasoning)",
+ "turns": [
+  {
+   "question": "What are you studying or working on right now, and what part of it takes most of your week?",
+   "answer": "Math, and the makerspace desk, about 10 hours a week. The desk takes the most time, I think.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Outside class and the desk, what have you built or fixed on your own that nobody asked you to do?",
+   "answer": "",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "How did you end up at the makerspace desk in the first place?",
+   "answer": "I applied for the job at the start of freshman year. I liked the idea of being around the printers.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Before CWRU, what did you build or fix that people started bringing to you?",
+   "answer": "Nothing like that before CWRU, not really.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "In high school, what was the project you spent the most unpaid hours on, and what did you end up making of it?",
+   "answer": "",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "What do people bring to the desk that the printer manuals never cover?",
+   "answer": "Mostly people whose print keeps failing halfway through.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Take the last print that failed halfway through at the desk: what did you check first, before touching anything?",
+   "answer": "Bed adhesion, usually. I check whether the first layer is actually sticking, then clean the bed with alcohol and slow the first layer down.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "What do beginners at the desk do before they ask for help that makes you wince?",
+   "answer": "I don't really wince at anyone. Most people just start pulling the print off the bed with a metal scraper while it's still hot.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Think of the last person who pulled a print off the bed while it was still hot. What did you say to them, and what did you do with the print?",
+   "answer": "I told them to wait, then I showed them how to lift it once it cooled. The print was fine, just a little warped at one corner.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When you started at the desk, what did you get wrong about first layers that you only learned by watching prints fail?",
+   "answer": "I thought the first layer was just about the nozzle height, but most of the time it was the bed being dirty.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When you found out the dirty bed was causing more failures than the nozzle height, what did you change at the desk?",
+   "answer": "Mostly I started wiping the beds with alcohol before every shift, and I told the other desk workers to do the same.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "After the other desk workers started wiping the beds, what was the next print that still failed, and what turned out to be the cause?",
+   "answer": "I don't really remember a specific one. Usually it was a clogged nozzle, not the bed.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When a print fails halfway through, how do you tell a clogged nozzle from a bad bed in the first two minutes?",
+   "answer": "Usually I listen for the extruder clicking or grinding, and look at the first layer. If the filament isn't coming out at all or the nozzle is clicking, it's clogged. If it's extruding fine but the plastic is peeling up off the bed, it's the bed.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When a classmate is stuck on a math problem, what do you show them that the lecture or the textbook left out?",
+   "answer": "",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Think of the last math problem set that beat you for more than a day. Which step did you finally see, and what was it?",
+   "answer": "",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When you told the other desk workers to wipe the beds, how did you get them to actually do it?",
+   "answer": "I just told them at the start of the shift and left the alcohol and paper towels right by the printers.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "In one math class this term, which problem did you end up explaining to a classmate, and what did you draw on the board?",
+   "answer": "",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Before the alcohol and paper towels went out by the printers, what did the desk do to clean the beds?",
+   "answer": "Honestly, I don't think anyone really did. The beds just got wiped when somebody remembered.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Walk me through clearing a clogged nozzle at the desk, step by step, starting from the moment you hear the click.",
+   "answer": "First I turn the printer off and let the nozzle heat up to temp, then I pull the filament back out. If it's stuck I use the pliers and push a cleaning filament through or a needle through the nozzle hole while it's hot. Then I heat it back up and check that the filament comes out clean.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When the other desk workers started bringing their failing prints to you instead of guessing, what did you change about how the desk handled them?",
+   "answer": "",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Which printer at the desk has the worst reputation, and what did you do to earn its trust?",
+   "answer": "The one that had an out of order sign on it when I started. I watched repair videos at night until I could get it printing again, and after that I just kept it running and didn't let it jam on people.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "What was actually wrong with the printer that had the out-of-order sign when you first opened it up?",
+   "answer": "I don't remember exactly, honestly. I think it was a clogged nozzle and a bad heater cartridge, but I'd have to look at my notes from that first semester.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Before the repair videos, what did you try on that printer that didn't work?",
+   "answer": "I mostly just restarted it and pulled the filament out again. That didn't fix it.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "If a new worker opened a jammed printer tomorrow with no one to ask, what's the first thing you'd have them check?",
+   "answer": "Whether the nozzle temperature matches the filament on the card taped to the printer.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Who made the card taped to the printer with the nozzle temperatures, and what was the first print it kept from failing?",
+   "answer": "I made it. The first print it kept from failing was probably a clogged one, since that's what most of the jams were, but I don't remember which exact print it was.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When you made the nozzle temperature card, which filament did you get wrong first, and what did the failed print show you?",
+   "answer": "I didn't really get one wrong myself. People kept printing at the wrong temperature, and the clogs were usually from that. I don't remember which filament was the worst.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Is this you?",
+   "answer": "Mostly, yeah. I watched the repair videos at night and got it printing again. I'd say I can usually tell by the sound and the first layer, but I don't think it's that impressive.",
+   "phase": "shape",
+   "playback": "You revived the printer everyone had given up on by watching repair videos at night, then kept it running so it stopped jamming people. You can usually tell a clogged nozzle from a dirty bed in two minutes, by the sound and the first layer."
+  }
+ ],
+ "book": {
+  "titles": [
+   {
+    "title": "Reading the First Layer Before Touching Anything",
+    "why": "You check the first layer before you touch anything, and you can usually tell a clog from a bad bed by sound."
+   },
+   {
+    "title": "The Printer With the Out-of-Order Sign",
+    "why": "You spent nights with repair videos until the printer with the sign on it printed again."
+   },
+   {
+    "title": "Alcohol and Paper Towels by the Printers",
+    "why": "You stopped waiting for somebody to remember and left the alcohol and paper towels by the printers."
+   }
+  ],
+  "pool": [
+   {
+    "title": "The bed was the problem, not the nozzle",
+    "summary": "I thought the first layer was just about the nozzle height, but most of the time it was the bed being dirty. Now I wipe the beds with alcohol before every shift, and I tell people to wait before they pull a hot print off.",
+    "quotes": [
+     "I thought the first layer was just about the nozzle height, but most of the time it was the bed being dirty.",
+     "Mostly I started wiping the beds with alcohol before every shift, and I told the other desk workers to do the same."
+    ]
+   },
+   {
+    "title": "Clogged nozzle or bad bed in two minutes",
+    "summary": "I listen for the extruder clicking or grinding, and I look at the first layer. If the filament isn't coming out at all, or the nozzle is clicking, it's clogged. If it's extruding fine but the plastic is peeling up off the bed, it's the bed.",
+    "quotes": [
+     "Usually I listen for the extruder clicking or grinding, and look at the first layer.",
+     "I'd say I can usually tell by the sound and the first layer"
+    ]
+   },
+   {
+    "title": "Bringing back the out-of-order printer",
+    "summary": "When I started, one printer had an out of order sign on it. I watched repair videos at night until I could get it printing again. Restarting it and pulling the filament out again didn't fix it.",
+    "quotes": [
+     "The one that had an out of order sign on it when I started.",
+     "I watched repair videos at night until I could get it printing again",
+     "I mostly just restarted it and pulled the filament out again. That didn't fix it."
+    ]
+   },
+   {
+    "title": "A temperature card taped to the printer",
+    "summary": "I made the nozzle temperature card that's taped to the printer. People kept printing at the wrong temperature, and the clogs were usually from that. The first thing I'd have a new worker check is whether the nozzle temperature matches the filament on the card.",
+    "quotes": [
+     "I made it.",
+     "People kept printing at the wrong temperature, and the clogs were usually from that.",
+     "Whether the nozzle temperature matches the filament on the card taped to the printer."
+    ]
+   },
+   {
+    "title": "Clearing a clog while the nozzle is hot",
+    "summary": "I turn the printer off and let the nozzle heat up to temp, then pull the filament back out. If it's stuck, I use pliers and push a cleaning filament or a needle through the nozzle hole while it's hot, then heat it back up and check that it comes out clean.",
+    "quotes": [
+     "First I turn the printer off and let the nozzle heat up to temp, then I pull the filament back out.",
+     "If it's stuck I use the pliers and push a cleaning filament through or a needle through the nozzle hole while it's hot."
+    ]
+   }
+  ],
+  "title": "Reading the First Layer Before Touching Anything",
+  "chapters": [
+   {
+    "title": "Telling a clog from a bad bed",
+    "summary": "I listen for the extruder clicking or grinding, and I look at the first layer. If the filament isn't coming out at all, or the nozzle is clicking, it's clogged. If it's extruding fine but the plastic is peeling up off the bed, it's the bed.",
+    "quotes": [
+     "Usually I listen for the extruder clicking or grinding, and look at the first layer.",
+     "I'd say I can usually tell by the sound and the first layer"
+    ]
+   },
+   {
+    "title": "The bed was the problem, not the nozzle",
+    "summary": "I thought the first layer was just about the nozzle height, but most of the time it was the bed being dirty. Now I wipe the beds with alcohol before every shift, and I tell people to wait before they pull a hot print off.",
+    "quotes": [
+     "I thought the first layer was just about the nozzle height, but most of the time it was the bed being dirty.",
+     "Mostly I started wiping the beds with alcohol before every shift, and I told the other desk workers to do the same."
+    ]
+   },
+   {
+    "title": "Checking nozzle temperature before the first layer",
+    "summary": "I made the nozzle temperature card that's taped to the printer. People kept printing at the wrong temperature, and the clogs were usually from that. The first thing I'd have a new worker check is whether the nozzle temperature matches the filament on the card.",
+    "quotes": [
+     "I made it.",
+     "People kept printing at the wrong temperature, and the clogs were usually from that.",
+     "Whether the nozzle temperature matches the filament on the card taped to the printer."
+    ]
+   },
+   {
+    "title": "Clearing a clog while the nozzle is hot",
+    "summary": "I turn the printer off and let the nozzle heat up to temp, then pull the filament back out. If it's stuck, I use pliers and push a cleaning filament or a needle through the nozzle hole while it's hot, then heat it back up and check that it comes out clean.",
+    "quotes": [
+     "First I turn the printer off and let the nozzle heat up to temp, then I pull the filament back out.",
+     "If it's stuck I use the pliers and push a cleaning filament through or a needle through the nozzle hole while it's hot."
+    ]
+   }
+  ],
+  "blurbs": {
+   "draft": "At the makerspace desk, most of what people bring me is a print that keeps failing halfway through. I thought the first layer was about nozzle height, but most of the time it was a dirty bed, and people kept printing at the wrong temperature. If you're stuck with a failing print, I can tell you what I check first and how I tell a clog from a bad bed by sound.",
+   "finished": "When a print fails halfway through at the makerspace desk, I check whether the first layer is sticking before I touch anything. I thought the problem was nozzle height, but most of the time it was a dirty bed, and I can usually tell which it is by the sound and the first layer. If you're trying to keep shared printers running, I can tell you what I look for first.",
+   "after_removal": "I thought the first layer came down to nozzle height, until I watched enough prints fail to see that a dirty bed was usually the problem. Now I wipe every bed with alcohol before a shift and tell people to wait before they pull a hot print off. Most clogs came from people printing at the wrong temperature, so I made the nozzle temperature card taped to the printer. If you're stuck on a print that keeps failing halfway through, I can tell you what I check first."
+  },
+  "rewrite": {
+   "title": "Pliers and a needle while it's hot",
+   "summary": "I turn the printer off and let the nozzle heat up to temp, then pull the filament back out. If it's stuck, I use pliers and push a cleaning filament or a needle through the nozzle hole while it's hot, then heat it back up and check that it comes out clean.",
+   "quotes": [
+    "First I turn the printer off and let the nozzle heat up to temp, then I pull the filament back out.",
+    "If it's stuck I use the pliers and push a cleaning filament through or a needle through the nozzle hole while it's hot."
+   ]
+  }
+ }
+}
