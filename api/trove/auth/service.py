@@ -135,6 +135,12 @@ async def full_names_of(database: AsyncDatabase, user_ids: list[str]) -> dict[st
     return {user["_id"]: full_name(user) async for user in users}
 
 
+async def user_id_by_email(database: AsyncDatabase, email: str) -> str | None:
+    """For development scripts that take a member's email."""
+    user = await database.users.find_one({"email": email.strip().lower()}, {"_id": 1})
+    return user["_id"] if user else None
+
+
 async def email_recipient(database: AsyncDatabase, user_id: str) -> dict | None:
     """The active account's email address and email preference, for the notifications feature."""
     return await database.users.find_one(

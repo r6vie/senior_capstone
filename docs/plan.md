@@ -52,6 +52,7 @@ local stub with the same signature and swap it out when the real one merges.
 | `books.get_public_book(db, book_id)` | Josef | The book as readers see it: title, author's full name, cover, chapters, copies. **Never** the author's contacts, employer or title. `None` if not on the shelf | discovery, checkouts |
 | `books.get_book_of(db, user_id)` | Josef | That member's own book, or `None` | checkouts (you need a book to check one out) |
 | `books.list_shelf(db, *, limit, after)` | Josef | Public books on the shelf, newest first | discovery |
+| `interview.ask_after_reading(db, author_id, checkout_id)` | Josef | Nothing. Queues the author's one question after a reading. Safe to call twice. Call it once "Did you meet?" confirms the meeting happened | checkouts (C4) |
 | `auth.first_name_of(db, user_id)` | Daniel | First name (for greetings; books show the full name, trove.md §9.1) | everyone |
 | `auth.contact_details_of(db, user_id)` | Daniel | The contact details the member chose to share on a yes | checkouts (reveal) |
 | `checkouts.get_checkout_for(db, checkout_id, user_id)` | Ellie | The checkout if this user is its reader or author, else `None` | messaging, meetings |
@@ -169,7 +170,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - A "Past meets" page lists books whose authors you've met, with contacts still visible.
 - Ships `checkouts.past_meets`.
 
-**I3 · Adding to your book** · Josef · `todo`
+**I3 · Adding to your book** · Josef · `doing`
 - Reopen the interview from your book at any time. New material is rewritten into the book
   (not just appended), and the author approves the changes.
 
@@ -197,11 +198,11 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 Planned, not started. Begin only once Q1 passes (trove.md §4, §9.9).
 
-**I5 · Sparks from other books** · Josef · `later`
+**I5 · Sparks from other books** · Josef · `doing`
 - On a chapter of someone else's book, "I have one like this" saves a private prompt for the
   reader's own next interview (I3). Never content, never visible to the other author.
 
-**I6 · Each reading grows the book** · Josef · `later`
+**I6 · Each reading grows the book** · Josef · `doing`
 - After "Did you meet?" (C4), the author answers one question: "What did they ask you about that
   surprised you?". The answer can become or improve a chapter, with the author's approval (I3).
 
