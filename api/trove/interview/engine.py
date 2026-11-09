@@ -469,6 +469,8 @@ async def finish_book(
         f"<chosen_title>{title}</chosen_title>\n\nFinish the book for this title."
     )
     raw = await _ask(claude, "interview/finish", content, _Finished, BOOK_EFFORT)
+    if any(leaks(f"{c.title} {c.summary}") for c in raw.chapters) or leaks(raw.blurb):
+        raw = await _ask(claude, "interview/finish", content, _Finished, BOOK_EFFORT)
 
     chapters: list[DraftChapter] = []
     for chosen in raw.chapters:
@@ -521,6 +523,7 @@ async def rewrite_chapter(
     chapters: list[DraftChapter],
     chapter_id: str,
     leaks: Callable[[str], bool] = _never,
+    spark_titles: list[str] | None = None,
 ) -> DraftChapter:
     """The same chapter, better told: a new title and summary, keeping its id, topic and quotes. One
     too close to the original gets one more try. After that the original comes back unchanged."""
@@ -539,7 +542,11 @@ async def rewrite_chapter(
         note = "\n\nThe last attempt was too close to the original. Tell it differently." if attempt else ""
         raw = await _ask(claude, "interview/rewrite", content + note, _Retold, BOOK_EFFORT)
         close = SequenceMatcher(None, current.summary, raw.summary).ratio() > REWRITE_TOO_CLOSE
-        if not close and not leaks(f"{raw.title} {raw.summary}"):
+        if (
+            not close
+            and not leaks(f"{raw.title} {raw.summary}")
+            and not _too_close_to_a_spark(raw.title, spark_titles)
+        ):
             # The quotes are what tie the chapter to its topic, so they never change on a rewrite.
             return current.model_copy(update={"title": raw.title, "summary": raw.summary})
     return current
@@ -599,6 +606,8 @@ async def revise_book(
         "Propose the changes these new answers earn."
     )
     raw = await _ask(claude, "interview/revise", content, _Revision, BOOK_EFFORT)
+    if any(leaks(f"{c.title} {c.summary}") for c in raw.changes) or leaks(raw.blurb):
+        raw = await _ask(claude, "interview/revise", content, _Revision, BOOK_EFFORT)
     by_id = {chapter.id: chapter for chapter in chapters}
     new_turns = turns[round_start:]
     others = _other_people(new_turns, member_names or [])
@@ -646,7 +655,7 @@ async def revise_book(
                 title=change.title,
                 summary=change.summary,
                 quotes=quotes,
-                note=change.note,
+                note=PLAIN_NOTE if _PRAISE.search(change.note) else change.note,
                 current=current,
                 position=change.position if change.kind == "new" else None,
             )
@@ -661,6 +670,15 @@ async def revise_book(
         dropped_for_names=dropped,
         dropped_words=_in_order_said(new_turns, others) if dropped else [],
     )
+
+
+# The "what changed" line states the addition. Praise in it is flattery under the member's own book.
+_PRAISE = re.compile(
+    r"\b(great|amazing|impressive|fascinating|wonderful|powerful|compelling|richer|stronger|better|"
+    r"beautiful|brilliant|vivid|excellent|sharper)\b",
+    re.IGNORECASE,
+)
+PLAIN_NOTE = "Adds what you just said."
 
 
 def _unused(quotes: list[str], used: set[str]) -> list[str]:
@@ -754,6 +772,9 @@ def _adding_blocks(
     status = f"Questions answered this round: {answered}."
     if new and _skipped(new[-1]):
         status += " The member skipped the last question. Move to other ground."
+    skipped = [turn.question for turn in new if _skipped(turn)]
+    if skipped:
+        status += " Skipped so far, so stay off these subjects: " + " | ".join(skipped)
     if len(chapters) >= MAX_BOOK_CHAPTERS:
         status += (
             " The book is at its limit of chapters. Only improve: hunt for what's thin, not for new chapters."

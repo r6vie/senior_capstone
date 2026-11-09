@@ -413,9 +413,105 @@ async def test_revise_drops_a_change_with_a_resume_only_term():
         "quotes": [ANSWERS[1]],
         "note": "N.",
     }
-    claude = FakeClaude([reply({"changes": [change], "blurb": BLURB})])
+    claude = FakeClaude(
+        [reply({"changes": [change], "blurb": BLURB}), reply({"changes": [change], "blurb": BLURB})]
+    )
     revision = await engine.revise_book(
         claude, turns=said, round_start=1, chapters=[], blurb=None, leaks=lambda text: "Gopala" in text
     )
     assert revision.changes == []
     assert revision.dropped_for_names is False
+    assert len(claude.requests) == 2
+
+
+async def test_revise_retries_a_leak_once_and_can_recover():
+    said = [
+        engine.Turn(question="Old?", answer=ANSWERS[0], phase="dig"),
+        engine.Turn(question="New?", answer=ANSWERS[1], phase="adding"),
+    ]
+    good = {
+        "kind": "new",
+        "chapter_id": None,
+        "title": "Soy",
+        "summary": "S.",
+        "quotes": [ANSWERS[1]],
+        "note": "N.",
+    }
+    claude = FakeClaude(
+        [
+            reply({"changes": [{**good, "title": "At Gopala"}], "blurb": BLURB}),
+            reply({"changes": [good], "blurb": BLURB}),
+        ]
+    )
+    revision = await engine.revise_book(
+        claude, turns=said, round_start=1, chapters=[], blurb=None, leaks=lambda text: "Gopala" in text
+    )
+    assert [c.title for c in revision.changes] == ["Soy"]
+
+
+async def test_a_note_that_praises_is_replaced():
+    said = [engine.Turn(question="New?", answer=ANSWERS[1], phase="adding")]
+    change = {
+        "kind": "new",
+        "chapter_id": None,
+        "title": "Soy",
+        "summary": "S.",
+        "quotes": [ANSWERS[1]],
+        "note": "A richer, more vivid telling of your story.",
+    }
+    claude = FakeClaude([reply({"changes": [change], "blurb": BLURB})])
+    revision = await engine.revise_book(claude, turns=said, round_start=0, chapters=[], blurb=None)
+    assert revision.changes[0].note == engine.PLAIN_NOTE
+
+
+async def test_finish_retries_a_leak_once():
+    pool = [DraftChapter(id=f"c{n}", title=f"Pool {n}", summary="S.", quotes=[ANSWERS[n]]) for n in range(3)]
+    draft = engine.Draft(pool=pool, titles=[], blurb="Fallback.")
+    picks = [{"pool_id": f"c{n}", "title": f"T{n}", "summary": "S."} for n in range(3)]
+    claude = FakeClaude(
+        [
+            reply({"chapters": [{**picks[0], "title": "At Gopala"}, *picks[1:]], "blurb": BLURB}),
+            reply({"chapters": picks, "blurb": BLURB}),
+        ]
+    )
+    book = await engine.finish_book(
+        claude, turns=turns(3), draft=draft, title="X", leaks=lambda t: "Gopala" in t
+    )
+    assert [c.title for c in book.chapters] == ["T0", "T1", "T2"]
+    assert len(claude.requests) == 2
+
+
+async def test_finish_rejects_a_title_close_to_a_spark():
+    pool = [DraftChapter(id=f"c{n}", title=f"Pool {n}", summary="S.", quotes=[ANSWERS[n]]) for n in range(3)]
+    draft = engine.Draft(pool=pool, titles=[], blurb="Fallback.")
+    picks = [{"pool_id": f"c{n}", "title": f"Mine {n}", "summary": "New."} for n in range(3)]
+    picks[0]["title"] = "Why gums feel wrong"
+    claude = FakeClaude([reply({"chapters": picks, "blurb": BLURB})])
+    book = await engine.finish_book(
+        claude, turns=turns(3), draft=draft, title="X", spark_titles=["Why gums feel wrong"]
+    )
+    assert book.chapters[0].title == "Pool 0"
+    assert book.chapters[1].title == "Mine 1"
+
+
+async def test_a_rewrite_cant_take_a_sparks_title():
+    book = [
+        DraftChapter(id="c0", title="Old", summary="I split the line so the fryer only cooked.", quotes=["q"])
+    ]
+    copied = {"title": "Why gums feel wrong", "summary": "The window stopped backing up once orders moved."}
+    claude = FakeClaude([reply(copied), reply(copied)])
+    result = await engine.rewrite_chapter(
+        claude, turns=turns(1), chapters=book, chapter_id="c0", spark_titles=["why gums feel wrong"]
+    )
+    assert result == book[0]
+
+
+async def test_every_skip_of_a_round_stays_in_the_status():
+    said = [
+        engine.Turn(question="About math?", answer="", phase="adding"),
+        engine.Turn(question="About printers?", answer="A real answer here for this one.", phase="adding"),
+    ]
+    chapter_one = DraftChapter(id="c0", title="T", summary="S.", quotes=["q"])
+    claude = FakeClaude([reply({"question": "Next?", "topic": "t", "done": False})])
+    await engine.next_adding_turn(claude, turns=said, round_start=0, chapters=[chapter_one], sparks=[])
+    assert "stay off these subjects: About math?" in sent(claude)

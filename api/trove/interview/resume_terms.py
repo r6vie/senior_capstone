@@ -37,12 +37,19 @@ def _is_term(word: str) -> bool:
 
 def resume_terms(text: str, salt: str) -> list[str]:
     """Hashes of the résumé's proper nouns and years. A capitalized first word of a line is usually a
-    verb ("Built…"), so it counts only when the next word is capitalized too ("Acme Corp")."""
+    verb ("Built…"), so it counts only when the next word is capitalized too ("Acme Corp"), or
+    punctuation sets it apart as a heading ("Acme, Cleveland")."""
     terms = set()
     for line in text.splitlines():
         words = _WORD.findall(line)
         for index, word in enumerate(words):
-            if index == 0 and not _YEAR.match(word) and not (len(words) > 1 and _is_term(words[1])):
+            set_apart = re.match(rf"\W*{re.escape(word)}\s*[,|:\u2013\u2014-]", line)
+            if (
+                index == 0
+                and not _YEAR.match(word)
+                and not set_apart
+                and not (len(words) > 1 and _is_term(words[1]))
+            ):
                 continue
             if _is_term(word):
                 terms.add(_hash(word, salt))

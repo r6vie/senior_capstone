@@ -52,3 +52,10 @@ def test_output_is_checked_for_terms():
 
 def test_a_different_interview_has_different_hashes():
     assert set(terms()).isdisjoint(resume_terms.resume_terms(RESUME, "interview-2"))
+
+
+def test_a_first_word_set_apart_by_punctuation_is_a_term():
+    terms_found = resume_terms.resume_terms("Gopala, Cleveland\nBuilt the schedule", SALT)
+    only = resume_terms.only_in_resume(terms_found, [], SALT)
+    assert resume_terms.mentions("Gopala taught me.", only, SALT)
+    assert not resume_terms.mentions("Built it myself.", only, SALT)

@@ -626,7 +626,9 @@ async def write_draft(database: AsyncDatabase, claude: Claude, interview_id: str
                 "current": None,
                 "write_status": None,
                 "updated_at": datetime.now(UTC),
-            }
+            },
+            # Interviews from before résumé text had its own collection held it here.
+            "$unset": {"resume_text": ""},
         },
     )
     if updated is not None:
@@ -770,6 +772,7 @@ async def rewrite_chapter(
             chapters=chapters,
             chapter_id=chapter_id,
             leaks=leak_check(interview),
+            spark_titles=spark_titles_of(interview),
         )
     )
     if chapter.title == current["title"] and chapter.summary == current["summary"]:
