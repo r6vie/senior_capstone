@@ -386,7 +386,7 @@
       "x": 0,
       "y": 0,
       "w": 1700,
-      "h": 2900,
+      "h": 4300,
       "title": "A \u00b7 The question band",
       "page": "interview",
       "expand": "fill"
@@ -422,7 +422,7 @@
       "x": 0,
       "y": 0,
       "w": 1300,
-      "h": 5856,
+      "h": 10797,
       "title": "My book",
       "page": "growing",
       "expand": "fill"
@@ -431,7 +431,7 @@
       "x": 1420,
       "y": 0,
       "w": 1300,
-      "h": 2553,
+      "h": 3416,
       "title": "Adding to your book",
       "page": "growing",
       "expand": "fill"
@@ -440,7 +440,7 @@
       "x": 2840,
       "y": 0,
       "w": 1300,
-      "h": 4718,
+      "h": 8075,
       "title": "Proposed changes",
       "page": "growing",
       "expand": "fill"
@@ -449,7 +449,7 @@
       "x": 4260,
       "y": 0,
       "w": 1300,
-      "h": 2800,
+      "h": 2700,
       "title": "\"I have one like this\"",
       "page": "growing",
       "expand": "fill"
@@ -458,7 +458,7 @@
       "x": 5680,
       "y": 0,
       "w": 1300,
-      "h": 2732,
+      "h": 2659,
       "title": "The reading question",
       "page": "growing",
       "expand": "fill"

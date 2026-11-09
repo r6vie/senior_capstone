@@ -2,6 +2,20 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-08: growing books and interview frames revised after quality round 1 (T37)
+
+- **Applied from `qc/round-1.md`:** R1-04 (the back cover is a change like any other, written before the confirm step, with its own
+  failed state), R1-32 (Remove this chapter on My book, confirm step), R1-33 (the note under the reading answer), R1-34 (the
+  reading names the reader, to the author only), R1-36 (writing and failed states on My book and in the round), R1-39 (interview in
+  progress and titles waiting), R1-40 (real-length text from a finished book, added words underlined), R1-41, R1-42 (Skip only
+  while the answer is empty, with its own frame), R1-44, R1-45 (44px targets), R1-59, R1-60, R1-61, R1-62, R1-64.
+- **Interview A also:** start screen (R1-18), review screen (R1-19, R1-21, R1-22, with Remove in place per R1-20), phase names
+  First look, Deeper, Check (R1-28), done screen (R1-30). The sample member is now Siddharth Rao so every frame uses real text.
+  Directions B and C are left as drawn.
+- **Design calls:** undecided changes count as not approved and are listed as "Not decided" under "Stays as it is"; "Not now" on the
+  question screen goes back, "No thanks" on My book dismisses; one exit per screen; "the shelf has not changed" once in the band and
+  once on confirm. Route is `/my-book`.
+
 ## 2026-11-08: growing books frames (T33), under the suspended gate
 
 - **I4 frames go to build as they stand** (`InterviewA2`: Skip, sharper angle). Josef suspended frame approval for the

@@ -233,6 +233,16 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
   Hover or focus shows a small `.tip` panel (2px outline, white) with one sentence.
 - **The wait (`.empty.waitbox`, `aria-busy`).** A dotted panel with one plain sentence and a quiet way out. No spinner and no
   progress bar, because the length is unknown and a bar would imply a count.
+- **Plain text link (`.button.tl`).** For a quiet action that reads as a sentence, such as "That is enough. Write the changes"
+  or "Add a PDF so my first questions fit you": Plex Sans 400, 15px, sentence case, underlined, 44px tall. Caps are for
+  short display-face labels only, so a sentence is never set in caps.
+- **Added words (`ins`).** In a Proposed column, words that were not in the Now text are underlined (2px, offset 3px), so the
+  difference shows without colour and without a second column to compare.
+- **Remove in place.** The row turns into "Remove this chapter?" with quiet "Remove" and "Keep it", on a dot tone with the text
+  on a white chip. No dialog.
+- **Interview review.** The book object (`.book`) beside its title, "by" line and back cover, then quiet "Rewrite the back cover"
+  and "See the other titles"; chapters in the member's first-person words with "Show what you said" under each; quiet Rewrite
+  and Remove per row. The page scrolls; the red button ends it.
 - **My book layout.** The book object (`.book-lg`, `.book` on a phone) beside its title and blurb; chapters as a ruled list
   with dotted separators; a narrow aside holding the reading question and the sparks list. One red button: the next step
   for the book's current stage (Start the interview, Review your book, Add to your book, Continue adding, Review the
