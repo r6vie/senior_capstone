@@ -63,8 +63,8 @@ export interface InterviewClient {
   skip(id: string): Promise<InterviewState>;
   /** Write the waiting question again, after an answer was saved but the next question failed. */
   askAgain(id: string): Promise<InterviewState>;
-  /** "I've said enough. Show me my book." */
-  finish(id: string): Promise<InterviewState>;
+  /** "I've said enough. Show me my book." Words still in the field are saved first. */
+  finish(id: string, answer?: string): Promise<InterviewState>;
   confirmShape(id: string): Promise<InterviewState>;
   correctShape(id: string, correction: string): Promise<InterviewState>;
   chooseTitle(id: string, titleId: string): Promise<InterviewState>;

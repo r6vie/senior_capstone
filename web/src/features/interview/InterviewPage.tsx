@@ -1,41 +1,23 @@
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
+import { ErrorMessage, Frame, RetryContext, SmallBook, Waiting } from "./InterviewFrame";
 import {
   type DraftBook,
   type DraftChapter,
   type InterviewClient,
   InterviewError,
   type InterviewState,
-  type Phase,
   type TitleOption,
 } from "./interviewClient";
-import "./InterviewPage.css";
 
 // The interview, direction A "The question band" (docs/design/shelf/project/InterviewA.dc.html,
 // trove.md §4). The Librarian's words stand alone on the black band; the member acts below it.
 
-const PHASES: { id: Phase; label: string }[] = [
-  { id: "sweep", label: "First look" },
-  { id: "dig", label: "Deeper" },
-  { id: "shape", label: "Check" },
-];
-
-// A wait this long gets one calm line; a wait past the limit stops and offers another try.
-const SLOW_AFTER_MS = 15_000;
+// A wait past this limit stops and offers another try.
 const GIVE_UP_AFTER_MS = 120_000;
 // "Welcome back" is for coming back, not for a refresh seconds later.
 const WELCOME_BACK_AFTER_MS = 60 * 60 * 1000;
@@ -74,121 +56,6 @@ function writeSeen(key: string) {
 function placeOf(state: InterviewState | null): string {
   if (!state) return "";
   return state.stage === "asking" ? `asking:${state.question}` : state.stage;
-}
-
-function Frame({
-  phase,
-  say,
-  busy,
-  canLeave = true,
-  quiet = false,
-  children,
-}: {
-  phase?: Phase;
-  canLeave?: boolean;
-  /** The band steps back, on a screen where something below it is the focus. */
-  quiet?: boolean;
-  say: ReactNode;
-  /** While the Librarian works, the member's side holds still rather than greying out. */
-  busy?: boolean;
-  children?: ReactNode;
-}) {
-  const [slow, setSlow] = useState(false);
-  useEffect(() => {
-    setSlow(false);
-    if (!busy) return;
-    const timer = setTimeout(() => setSlow(true), SLOW_AFTER_MS);
-    return () => clearTimeout(timer);
-  }, [busy]);
-
-  return (
-    <div className="interview">
-      <header className="iv-top">
-        <span className="wordmark">Trove</span>
-        {phase && (
-          <ol className="iv-phases" aria-label="Where we are">
-            {PHASES.map((item) => (
-              <li key={item.id} aria-current={item.id === phase ? "step" : undefined}>
-                {item.label}
-              </li>
-            ))}
-          </ol>
-        )}
-        {canLeave && (
-          <Link to="/" className="button button-quiet">
-            Leave for now
-          </Link>
-        )}
-      </header>
-      <section className="iv-band dark">
-        <span className="halo" />
-        <h1 className="iv-say" data-quiet={quiet || undefined} tabIndex={-1} aria-live="polite">
-          {say}
-        </h1>
-        {slow && (
-          <p className="iv-still" role="status">
-            Still working. Your answers are saved.
-          </p>
-        )}
-      </section>
-      <main className="iv-act" tabIndex={-1} inert={busy} aria-busy={busy}>
-        {children}
-      </main>
-    </div>
-  );
-}
-
-function Waiting({ children, holding }: { children: ReactNode; holding?: ReactNode }) {
-  // The band keeps the height of what it held, so the page doesn't jump while the Librarian thinks.
-  return (
-    <>
-      {holding && (
-        <span className="iv-holding" aria-hidden="true">
-          {holding}
-        </span>
-      )}
-      <span className="iv-waiting" data-over={Boolean(holding)}>
-        {children}
-      </span>
-    </>
-  );
-}
-
-// Set when the last call failed in a way that is safe to repeat (the Librarian couldn't answer).
-const RetryContext = createContext<(() => void) | null>(null);
-
-function ErrorMessage({ message }: { message: string | null }) {
-  const retry = useContext(RetryContext);
-  const box = useRef<HTMLDivElement>(null);
-  // On a phone the member can be several chapters away from where the error appears.
-  useEffect(() => {
-    if (message) box.current?.scrollIntoView?.({ block: "nearest" });
-  }, [message]);
-  if (!message) return null;
-  return (
-    <div className="iv-error" ref={box}>
-      <div className="message message-error" role="alert">
-        <span>{message}</span>
-      </div>
-      {retry && (
-        <Button variant="secondary" className="iv-sm" onClick={retry}>
-          Try again
-        </Button>
-      )}
-    </div>
-  );
-}
-
-function SmallBook({ title, author }: { title: string; author: string }) {
-  return (
-    // The title and name are printed beside it, so a screen reader shouldn't hear them twice.
-    <span className="book book-sm" aria-hidden="true">
-      <span className="book-cover">
-        <span className="book-title">{title}</span>
-        <span className="book-author">{author}</span>
-      </span>
-    </span>
-  );
 }
 
 export function InterviewPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
@@ -368,7 +235,11 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             >
               <ErrorMessage message={error} />
               <div className="iv-row">
-                <Button onClick={() => setWelcomedBack(false)}>Back to the question</Button>
+                <Button onClick={() => setWelcomedBack(false)}>Continue</Button>
+                {/* Leaves the same way "Leave for now" does: everything is already saved. */}
+                <Link to="/my-book" className="button button-quiet">
+                  Continue later
+                </Link>
               </div>
               <p className="iv-note">Everything you've said so far is saved.</p>
             </Frame>
@@ -412,22 +283,22 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
               busy={Boolean(busy)}
               onSend={(text) => moveOn("answer", () => client.answer(state.id, text))}
               onSkip={() => moveOn("skip", () => client.skip(state.id))}
-            >
-              {state.canFinish && (
-                <div className="iv-exit">
-                  {state.phase === "dig" && <p className="iv-note">Most of the way there.</p>}
-                  <button
-                    type="button"
-                    className="iv-textlink"
-                    onClick={() =>
-                      run("The Librarian is gathering what you said…", () => client.finish(state.id))
+              exit={
+                state.canFinish
+                  ? {
+                      label: "I've said enough. Show me my book",
+                      labelWithWords: "Send this, then show me my book",
+                      note: state.phase === "dig" ? "Most of the way there." : undefined,
+                      onFinish: (words) =>
+                        run(
+                          "The Librarian is gathering what you said…",
+                          () => client.finish(state.id, words),
+                          { lost: words ? LOST_ANSWER : LOST_DEFAULT, onSuccess: () => clearDraft(draftKey) },
+                        ),
                     }
-                  >
-                    I've said enough. Show me my book
-                  </button>
-                </div>
-              )}
-            </AnswerPanel>
+                  : undefined
+              }
+            />
           </Frame>
         );
       }
@@ -767,6 +638,33 @@ function ChapterRow({
   onAct: (action: "rewrite" | "remove") => void;
 }) {
   const [showing, setShowing] = useState(false);
+  const [removing, setRemoving] = useState(false);
+
+  if (removing) {
+    return (
+      <li className="iv-confirm">
+        <span className="iv-n">{index + 1}</span>
+        <div>
+          <b>Remove this chapter?</b>
+          <span>{chapter.title}</span>
+        </div>
+        <div className="iv-ch-act">
+          <button
+            type="button"
+            className="button button-quiet iv-sm"
+            aria-label={`Remove ${chapter.title}`}
+            onClick={() => onAct("remove")}
+          >
+            Remove
+          </button>
+          <button type="button" className="button button-quiet iv-sm" onClick={() => setRemoving(false)}>
+            Keep it
+          </button>
+        </div>
+      </li>
+    );
+  }
+
   return (
     <li>
       <span className="iv-n">{index + 1}</span>
@@ -779,10 +677,10 @@ function ChapterRow({
               type="button"
               className="button button-quiet iv-sm iv-show"
               aria-expanded={showing}
-              aria-label={`Show what you said for ${chapter.title}`}
+              aria-label={`${showing ? "Hide" : "Show"} what you said for ${chapter.title}`}
               onClick={() => setShowing((now) => !now)}
             >
-              Show what you said
+              {showing ? "Hide what you said" : "Show what you said"}
             </button>
             {showing && (
               <div className="iv-quotes">
@@ -809,7 +707,7 @@ function ChapterRow({
             type="button"
             className="button button-quiet iv-sm"
             aria-label={`Remove ${chapter.title}`}
-            onClick={() => onAct("remove")}
+            onClick={() => setRemoving(true)}
           >
             Remove
           </button>
@@ -875,12 +773,21 @@ function ReviewScreen({
         </span>
         <div>
           <h2>{book.title}</h2>
-          <p>by {book.authorName}</p>
-          {others === null ? (
-            <button type="button" className="button button-quiet iv-sm iv-show" onClick={seeOthers}>
-              See the other titles
-            </button>
-          ) : (
+          <p className="iv-by">by {book.authorName}</p>
+          {book.blurb && <p className="iv-blurb">{book.blurb}</p>}
+          <div className="iv-head-act">
+            {book.blurb && (
+              <button type="button" className="button button-quiet iv-sm iv-show" onClick={onRewriteBlurb}>
+                Rewrite the back cover
+              </button>
+            )}
+            {others === null && (
+              <button type="button" className="button button-quiet iv-sm iv-show" onClick={seeOthers}>
+                See the other titles
+              </button>
+            )}
+          </div>
+          {others !== null && (
             <div className="iv-others">
               <p className="iv-note">
                 Picking one writes your book again, so any chapter you rewrote may change.
@@ -912,14 +819,6 @@ function ReviewScreen({
               {othersError}
             </p>
           )}
-          {book.blurb && (
-            <>
-              <p className="iv-blurb">{book.blurb}</p>
-              <button type="button" className="button button-quiet iv-sm iv-show" onClick={onRewriteBlurb}>
-                Rewrite the back cover
-              </button>
-            </>
-          )}
         </div>
       </div>
       <p className="iv-note">The words under a chapter are yours. Only you see them.</p>
@@ -949,7 +848,6 @@ function ReviewScreen({
 // ---------- Done ----------
 
 function DoneScreen({ book }: { book: DraftBook }) {
-  // Red "See my book" joins this once the My book route exists, with the shelf link going quiet.
   return (
     <Frame say="Your book is on the shelf." canLeave={false}>
       <div className="panel iv-done">
@@ -960,13 +858,15 @@ function DoneScreen({ book }: { book: DraftBook }) {
           </span>
         </span>
         <div className="iv-done-text">
-          {book.blurb && <p className="iv-blurb">{book.blurb}</p>}
           <p>
             Other members can find it now. When someone asks to check it out, you say yes or no. Your contact
             details stay private until you say yes.
           </p>
           <div className="iv-row">
-            <Link to="/" className="button button-primary">
+            <Link to="/my-book" className="button button-primary">
+              See my book
+            </Link>
+            <Link to="/" className="button button-quiet">
               Go to the shelf
             </Link>
           </div>

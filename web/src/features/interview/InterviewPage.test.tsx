@@ -138,6 +138,25 @@ describe("InterviewPage", () => {
       expect(screen.getByText("Most of the way there.")).toBeTruthy();
     });
 
+    it("finishing with words in the field says so and sends them, never drops them", async () => {
+      const client = at({ ...asking, canFinish: true });
+      const finish = vi.spyOn(client, "finish").mockResolvedValue(asking);
+      renderWith(client);
+      await screen.findByRole("button", { name: "I've said enough. Show me my book" });
+      await type("My last thought");
+      expect(screen.queryByRole("button", { name: "I've said enough. Show me my book" })).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: "Send this, then show me my book" }));
+      expect(finish).toHaveBeenCalledWith("me", "My last thought");
+    });
+
+    it("finishing with an empty field sends nothing", async () => {
+      const client = at({ ...asking, canFinish: true });
+      const finish = vi.spyOn(client, "finish").mockResolvedValue(asking);
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: "I've said enough. Show me my book" }));
+      expect(finish).toHaveBeenCalledWith("me", undefined);
+    });
+
     it("doesn't say it's mostly done early on", async () => {
       renderWith(at(asking));
       await screen.findByLabelText("Your answer");
@@ -396,9 +415,8 @@ describe("InterviewPage", () => {
     it("welcomes a member back after time away, with one way forward", async () => {
       renderWith(at(returning));
       expect(await screen.findByText(/Welcome back. Last time you were telling me about/)).toBeTruthy();
-      expect(screen.queryByText("Continue later")).toBeNull();
-      expect(screen.queryByRole("button", { name: "Continue" })).toBeNull();
-      fireEvent.click(screen.getByRole("button", { name: "Back to the question" }));
+      expect(screen.getByRole("link", { name: "Continue later" }).getAttribute("href")).toBe("/my-book");
+      fireEvent.click(screen.getByRole("button", { name: "Continue" }));
       expect(await screen.findByText(asking.question)).toBeTruthy();
     });
 
@@ -496,6 +514,8 @@ describe("InterviewPage", () => {
       expect(screen.queryByText(quote)).toBeNull();
       fireEvent.click(screen.getByRole("button", { name: `Show what you said for ${CHAPTER_TITLES[0]}` }));
       expect(screen.getByText(quote)).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: `Hide what you said for ${CHAPTER_TITLES[0]}` }));
+      expect(screen.queryByText(quote)).toBeNull();
     });
 
     it("names the chapter on each row's buttons", async () => {
@@ -504,6 +524,21 @@ describe("InterviewPage", () => {
         expect(await screen.findByRole("button", { name: `Rewrite ${title}` })).toBeTruthy();
         expect(screen.getByRole("button", { name: `Remove ${title}` })).toBeTruthy();
       }
+    });
+
+    it("asks in place before removing a chapter", async () => {
+      const client = at(reviewing());
+      const remove = vi.spyOn(client, "removeChapter").mockResolvedValue(reviewing("Blurb.", 3));
+      renderWith(client);
+      const title = CHAPTER_TITLES[0] ?? "";
+      fireEvent.click(await screen.findByRole("button", { name: `Remove ${title}` }));
+      expect(remove).not.toHaveBeenCalled();
+      expect(screen.getByText("Remove this chapter?")).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: "Keep it" }));
+      expect(screen.queryByText("Remove this chapter?")).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: `Remove ${title}` }));
+      fireEvent.click(screen.getByRole("button", { name: `Remove ${title}` }));
+      expect(remove).toHaveBeenCalledWith("me", "0");
     });
 
     it("at three chapters, hides Remove and says why", async () => {
@@ -517,6 +552,7 @@ describe("InterviewPage", () => {
     renderWith(at({ id: "me", stage: "done", book: bookWith("I fix schedules.") }));
     expect(await screen.findByText(/you say yes or no/)).toBeTruthy();
     expect(screen.getByText(/Your contact details stay private until you say yes/)).toBeTruthy();
-    expect(screen.getByText("I fix schedules.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "See my book" }).getAttribute("href")).toBe("/my-book");
+    expect(screen.getByRole("link", { name: "Go to the shelf" }).getAttribute("href")).toBe("/");
   });
 });

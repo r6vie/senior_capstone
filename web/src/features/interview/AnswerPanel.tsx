@@ -32,15 +32,28 @@ function withSpeech(prior: string, heard: string): string {
   return prior ? `${prior}\n\n${heard}` : heard;
 }
 
+/** The way out of the questions. It never drops words: anything in the field goes with it. */
+export interface AnswerExit {
+  label: string;
+  labelWithWords: string;
+  note?: string;
+  onFinish: (words: string | undefined) => void;
+}
+
 interface Props {
   draftKey: string;
   busy: boolean;
   onSend: (text: string) => void;
-  onSkip: () => void;
-  children?: ReactNode;
+  /** Move past the question. Offered only while the field is empty. */
+  onSkip?: () => void;
+  /** Sits under the field, for what the member should know before answering. */
+  note?: ReactNode;
+  /** A quiet action beside Speak that's always there, in place of Skip. */
+  aside?: ReactNode;
+  exit?: AnswerExit;
 }
 
-export function AnswerPanel({ draftKey, busy, onSend, onSkip, children }: Props) {
+export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, exit }: Props) {
   const [mode, setMode] = useState<Mode>("typing");
   const [text, setText] = useState(() => readDraft(draftKey));
   const [draftSaved, setDraftSaved] = useState(false);
@@ -177,6 +190,7 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, children }: Props)
           </span>
         )}
       </div>
+      {note && <p className="iv-note">{note}</p>}
       {mode === "transcript" && (
         <p className="iv-note">
           {micStopped
@@ -206,11 +220,12 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, children }: Props)
           </button>
         )}
         {/* Only while the field is empty: a mis-tap beside Send must never cost the member their words. */}
-        {empty && (
+        {empty && onSkip && (
           <button type="button" className="button button-quiet" onClick={onSkip}>
             Skip
           </button>
         )}
+        {aside}
         <span className="iv-grow" />
         {draftSaved && <span className="iv-saved">Saved</span>}
         <Button
@@ -222,7 +237,19 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, children }: Props)
           Send answer
         </Button>
       </div>
-      {children}
+      {exit && (
+        <div className="iv-exit">
+          {exit.note && <p className="iv-note">{exit.note}</p>}
+          <button
+            type="button"
+            className="iv-textlink"
+            disabled={tooLong}
+            onClick={() => exit.onFinish(empty ? undefined : text.trim())}
+          >
+            {empty ? exit.label : exit.labelWithWords}
+          </button>
+        </div>
+      )}
     </>
   );
 }

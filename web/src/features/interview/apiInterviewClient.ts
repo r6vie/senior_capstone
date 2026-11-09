@@ -122,7 +122,10 @@ export const apiInterviewClient: InterviewClient = {
   async askAgain() {
     return toState(unwrap(await api.POST("/interview/question")));
   },
-  async finish() {
+  async finish(_id, answer) {
+    // Trove API's finish doesn't take `answer` on this branch yet. Saving it as an answer first loses
+    // nothing, and only costs a question that's never shown. Swap for the body once it lands.
+    if (answer) unwrap(await api.POST("/interview/answers", { body: { answer } }));
     return toState(unwrap(await api.POST("/interview/finish")));
   },
   async confirmShape() {

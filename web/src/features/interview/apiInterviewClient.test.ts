@@ -85,6 +85,13 @@ describe("apiInterviewClient", () => {
     expect(state).toMatchObject({ stage: "asking" });
   });
 
+  it("saves words still in the field before finishing", async () => {
+    const post = vi.spyOn(api, "POST").mockResolvedValue(ok(interview({})));
+    await apiInterviewClient.finish("me", "My last thought");
+    expect(post).toHaveBeenCalledWith("/interview/answers", { body: { answer: "My last thought" } });
+    expect(post).toHaveBeenLastCalledWith("/interview/finish");
+  });
+
   it("marks the Librarian's failures as safe to try again", async () => {
     vi.spyOn(api, "POST").mockResolvedValue({
       data: undefined,

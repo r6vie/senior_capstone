@@ -224,8 +224,9 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
         if (stored.answers.length >= QUESTIONS.length) stored.stage = "shaping";
       }),
     askAgain: (id) => mutate(id, () => {}),
-    finish: (id) =>
+    finish: (id, answer) =>
       mutate(id, (stored) => {
+        if (answer) stored.answers.push(answer);
         if (answered(stored) < CAN_FINISH_AFTER) throw new Error("Answer a few more questions first.");
         stored.stage = "shaping";
       }),
