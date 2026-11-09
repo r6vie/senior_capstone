@@ -408,7 +408,7 @@ async def test_revise_drops_a_change_with_a_resume_only_term():
     change = {
         "kind": "new",
         "chapter_id": None,
-        "title": "My time at Gopala",
+        "title": "My time at Brindle",
         "summary": "S.",
         "quotes": [ANSWERS[1]],
         "note": "N.",
@@ -417,7 +417,7 @@ async def test_revise_drops_a_change_with_a_resume_only_term():
         [reply({"changes": [change], "blurb": BLURB}), reply({"changes": [change], "blurb": BLURB})]
     )
     revision = await engine.revise_book(
-        claude, turns=said, round_start=1, chapters=[], blurb=None, leaks=lambda text: "Gopala" in text
+        claude, turns=said, round_start=1, chapters=[], blurb=None, leaks=lambda text: "Brindle" in text
     )
     assert revision.changes == []
     assert revision.dropped_for_names is False

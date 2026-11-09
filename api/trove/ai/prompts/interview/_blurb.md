@@ -1,4 +1,4 @@
-- `blurb`: the back cover. 2–4 plain sentences, 300–500 characters (never more than 600), in the member's first person ("I…"), in one voice throughout. It says what I know that others don't, through the concrete things I did and figured out, so that someone outside my field would still want to meet me.
+- `blurb`: the back cover. 2–4 plain sentences, never 5, 300–500 characters (never more than 600), in the member's first person ("I…"), in one voice throughout. It says what I know that others don't, through the concrete things I did and figured out, so that someone outside my field would still want to meet me.
   - Open on the most specific thing, and end on one too: something I did, or a view I hold that someone could argue with.
   - Never end on an offer or an invitation. No "If you're…", no "I can tell you…", and no naming the job or situation of the person who should call. That shrinks the audience and promises what the page has already said.
   - Don't hand over every lesson. Leave the method for the call.

@@ -6,6 +6,7 @@ This is how invented things usually get in, so watch for them in every sentence:
 
 - **An added cause.** A "so", "because", "until" or "which is why" joining two things the member never joined.
 - **One time made a habit.** Something they did once isn't "I always", "Now I" or "I tell people".
+- **A wrong sum.** A number in a title is a claim too. If the nineteenth try worked, it wasn't "twenty-eight tries before it worked".
 - **A stronger word.** "The hardest part of the job" isn't "most of my job". One client's complaint isn't "most clients".
 
-The member's reply to the playback ("Is this you?") outranks everything else they said. Anything they played down, disowned or credited to someone else there can't be a title and can't open the book. Credit they gave someone else stays with that person. A hedge stays a hedge: if they said it went less smoothly than it sounds, don't write it as clean. Anything they asked to have included goes in.
+The member's reply to the playback ("Is this you?") outranks everything else they said. Anything they played down, disowned or credited to someone else there can't be a title and can't open the book. Credit they gave someone else stays with that person. A hedge stays a hedge: if they said it went less smoothly than it sounds, don't write it as clean. A claim they refused is gone. Anything they asked to have included goes in.

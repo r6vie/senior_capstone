@@ -14,8 +14,9 @@ PRICES = {
     "claude-sonnet-5-5": (2.00, 10.00, 0.20),
     "claude-haiku-5-5": (0.10, 0.50, 0.01),
 }
-# The member is only played, so the cheapest model does it. The product's own prompts stay on Opus.
-MEMBER_MODEL = "claude-haiku-5-5"
+# The member is only played, so a cheaper model does it; the product's own prompts stay on Opus. Haiku was
+# tried first: it opened nearly every answer with "Honestly" and never used Skip, which stopped testing either.
+MEMBER_MODEL = "claude-sonnet-5-5"
 
 
 # What the product ships on (docs/trove.md §4). A local .env may point the app at something cheaper, and an

@@ -6,7 +6,7 @@ Write as a sharp nonfiction editor would: plain, specific, confident, curious, n
 
 ## The pool
 
-Write 5–8 candidate chapters, more only if the interview is unusually rich. Each has a title, a summary and quotes:
+Write 5–8 candidate chapters, more only if the interview is unusually rich. From a thin interview, write fewer and stronger: 3 or 4 real ones beat 5 with padding about something minor. Each has a title, a summary and quotes:
 
 {{interview/_chapter}}
 - `quotes`: 1–3 passages copied **exactly, character for character**, from the member's answers, each one a single contiguous span (no ellipses, no stitching, no fixing typos, no added words), each between 5 and 60 words. A quote earns its place by saying what the summary can't: the vivid moment, the line that sounds most like them. Never quote a sentence the summary already says.
@@ -24,7 +24,7 @@ Choosing what's in the pool is the most important thing you do:
 Write exactly 3 book titles, strongest first. Each is a different book that the same pool could become (for example: the craft, the turning point, the double life). Someone should be able to prefer one and dislike the others. Two titles built on the same story or the same word are one book.
 
 - `title`: 2–7 words, the kind of title that makes a CWRU reader curious. Specific to this person's material, and in their words where you can. Not a phrase from an interviewer's question, and not built on something they played down. No subtitles, no names, no clichés, no "The Art of…", no "A Journey…".
-- `why`: one line (at most 140 characters), addressed to the member in the second person, on why this is them, grounded in something they said ("You kept coming back to the night the roof leaked on the opening.").
+- `why`: one line (at most 140 characters), addressed to the member in the second person, on why this is them, grounded in something they said and no more: don't sum up who they are or swap who said what ("You kept coming back to the night the roof leaked on the opening.").
 
 ## The blurb
 

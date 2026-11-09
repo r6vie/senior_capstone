@@ -10,6 +10,7 @@ from evals.lints import (
     Finding,
     lint_answers,
     lint_book,
+    lint_change,
     lint_playbacks,
     lint_question,
     lint_questions,
@@ -291,6 +292,8 @@ PERSONA_WORDS = [
     "metronome",
     "implant",
     "first batch",
+    "county fair",
+    "split in two",
     "dye",
     "yarn",
     "skein",
@@ -305,6 +308,19 @@ def test_prompts_dont_teach_the_test():
         text = path.read_text(encoding="utf-8").lower()
         for word in PERSONA_WORDS:
             assert word not in text, f"{word!r} in {path.name}"
+
+
+def test_a_change_note_only_says_what_was_added():
+    change = {
+        "summary": "I took the lease and kept the keys. I still have them.",
+        "note": "A stronger, richer chapter.",
+    }
+    assert "praise in note" in rules(lint_change(change))
+    assert "praise in note" not in rules(lint_change(change | {"note": "Adds the keys you kept."}))
+    assert "improve reworded" in rules(lint_change(change, current_summary="I took it. I kept it."))
+    assert not lint_change(
+        change | {"note": "Adds the keys."}, current_summary="I took the lease and kept the keys."
+    )
 
 
 def test_holdouts_are_saved_fixtures():
@@ -356,5 +372,5 @@ def test_evals_run_the_product_on_opus_and_the_member_on_the_cheap_model():
     claude = FakeClaude([])
     claude.model = "claude-haiku-5-5"
     assert product_client(claude).model == "claude-opus-5-5"
-    assert member_client(claude).model == "claude-haiku-5-5"
+    assert member_client(claude).model == "claude-sonnet-5-5"
     assert claude.model == "claude-haiku-5-5"

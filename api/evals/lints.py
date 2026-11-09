@@ -550,6 +550,31 @@ def _names(text: str) -> set[str]:
     return found
 
 
+# A change note says what was added and nothing about how good it is.
+NOTE_PRAISE = (
+    r"\b(great|powerful|rich|richer|stronger|deeper|sharper|better|vivid|compelling|strong|nice|beautiful"
+    r"|insightful|impressive|wonderful|amazing|important|valuable|meaningful|fascinating|now shines)\b"
+)
+
+
+def lint_change(change: dict, *, current_summary: str | None = None, where: str = "change") -> list[Finding]:
+    """One proposed change to a shelved book, in the shape `revise_book` returns."""
+    findings = _lint_grounding(change["summary"], change["summary"], where, resume=None, author="")
+    if len(change["summary"]) > 300:
+        findings.append(Finding("error", "summary length", where, f"{len(change['summary'])} chars"))
+    if found := re.findall(NOTE_PRAISE, change.get("note") or "", re.I):
+        findings.append(Finding("error", "praise in note", where, ", ".join(found)))
+    if current_summary:
+        # The screen underlines added words, so an improvement has to keep what was there (R4-03).
+        kept = [s for s in re.split(r"(?<=[.!?])\s+", current_summary) if s and s in change["summary"]]
+        total = len(re.split(r"(?<=[.!?])\s+", current_summary))
+        if len(kept) < total:
+            findings.append(
+                Finding("warn", "improve reworded", where, f"kept {len(kept)} of {total} sentences")
+            )
+    return findings
+
+
 def lint_playbacks(run: dict) -> list[Finding]:
     return [
         Finding("error", "long playback", f"Q{n}", f"{len(t['playback'].split())} words")
