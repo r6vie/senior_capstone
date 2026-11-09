@@ -948,6 +948,33 @@
         ]
       }
     },
+    "/interview/book/blurb/restore": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Restore Blurb",
+        "description": "Go back to the last back cover (`has_previous_blurb`), during the review.",
+        "operationId": "restore_blurb_interview_book_blurb_restore_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/interview/book/title": {
       "post": {
         "tags": [
@@ -1205,6 +1232,33 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/removal/cancel": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Cancel Removal",
+        "description": "Back out of a removal the member started. Back to `done`, with nothing recorded as declined.",
+        "operationId": "cancel_removal_interview_removal_cancel_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
                 }
               }
             }
@@ -2226,6 +2280,21 @@
           "nothing_new": {
             "type": "boolean",
             "title": "Nothing New"
+          },
+          "dropped_for_names": {
+            "type": "boolean",
+            "title": "Dropped For Names"
+          },
+          "reading_question_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reading Question Id"
           }
         },
         "type": "object",
@@ -2249,7 +2318,9 @@
           "approved_changes",
           "selection_blurb_status",
           "selection_blurb",
-          "nothing_new"
+          "nothing_new",
+          "dropped_for_names",
+          "reading_question_id"
         ],
         "title": "InterviewResponse"
       },
@@ -2457,6 +2528,23 @@
           "can_undo": {
             "type": "boolean",
             "title": "Can Undo",
+            "default": false
+          },
+          "revised_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revised At"
+          },
+          "has_previous_blurb": {
+            "type": "boolean",
+            "title": "Has Previous Blurb",
             "default": false
           },
           "rewrite_unchanged": {
@@ -3000,12 +3088,17 @@
           },
           "interview": {
             "$ref": "#/components/schemas/InterviewResponse"
+          },
+          "already_saved": {
+            "type": "boolean",
+            "title": "Already Saved"
           }
         },
         "type": "object",
         "required": [
           "detail",
-          "interview"
+          "interview",
+          "already_saved"
         ],
         "title": "StaleQuestionResponse",
         "description": "The 409 when an answer or skip names a question that isn't the one waiting. Nothing was saved."

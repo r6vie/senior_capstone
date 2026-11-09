@@ -272,6 +272,8 @@ class Revision(BaseModel):
     changes: list[Change]
     # The back cover if every change is approved. Null means it has to be written first.
     blurb: str | None
+    # No changes survive, and at least one was dropped only for naming someone or somewhere.
+    dropped_for_names: bool = False
 
 
 # What Claude returns. Ids and quote checks are added in code, never trusted to the model.
@@ -600,22 +602,30 @@ async def revise_book(
     others = _other_people(new_turns, member_names or [])
     changes: list[Change] = []
     used = {_normalize(quote) for chapter in chapters for quote in chapter.quotes}
+    named = False
     for change in raw.changes:
         quotes = [
             q for q in grounded_quotes(change.quotes, turns) if not _names_someone(q, new_turns, others)
         ]
         new_quotes = _unused(grounded_quotes(quotes, new_turns), used)
         public = f"{change.title} {change.summary}"
-        if (
-            not new_quotes
-            or _mentions_any(public, others)
-            or _too_close_to_a_spark(change.title, spark_titles)
+        said_new = grounded_quotes(change.quotes, new_turns)
+        if _mentions_any(public, others) or (
+            not new_quotes and any(_names_someone(quote, new_turns, others) for quote in said_new)
         ):
+            named = True
+            continue
+        if not new_quotes or leaks(public) or _too_close_to_a_spark(change.title, spark_titles):
             continue
         current = None
         if change.kind == "improve":
             chapter = by_id.get(change.chapter_id or "")
             if chapter is None or any(c.chapter_id == chapter.id for c in changes):
+                continue
+            # Text that didn't change isn't a change, whatever quote it cites.
+            if _normalize(change.title) == _normalize(chapter.title) and _normalize(
+                change.summary
+            ) == _normalize(chapter.summary):
                 continue
             current = CurrentChapter(title=chapter.title, summary=chapter.summary)
             # The chapter keeps the words it stands on, plus what was added.
@@ -642,7 +652,7 @@ async def revise_book(
     proposed = _usable_blurb(raw.blurb) if changes else None
     if proposed and (_mentions_any(proposed, others) or leaks(proposed)):
         proposed = None
-    return Revision(changes=changes, blurb=proposed)
+    return Revision(changes=changes, blurb=proposed, dropped_for_names=named and not changes)
 
 
 def _unused(quotes: list[str], used: set[str]) -> list[str]:

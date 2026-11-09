@@ -89,14 +89,27 @@ class StaleQuestion(Exception):
 
     detail = "That isn't the question waiting for an answer."
 
-    def __init__(self, interview: dict):
+    def __init__(self, interview: dict, *, already_saved: bool):
         self.interview = interview
+        self.already_saved = already_saved
 
 
-def check_question(interview: dict, question_id: str | None) -> None:
+def _already_saved(interview: dict, question_id: str | None, text: str) -> bool:
+    """Whether this exact answer to this question is the one saved last. Then a lost reply is all that
+    went wrong. Anything else means these words were not saved."""
+    turns = interview["turns"]
+    return bool(
+        question_id
+        and turns
+        and interview.get("last_question_id") == question_id
+        and turns[-1]["answer"] == text.strip()
+    )
+
+
+def check_question(interview: dict, question_id: str | None, text: str) -> None:
     current = interview.get("current")
     if question_id is not None and (current is None or current.get("question_id", "") != question_id):
-        raise StaleQuestion(interview)
+        raise StaleQuestion(interview, already_saved=_already_saved(interview, question_id, text))
 
 
 def conflict(detail: str) -> HTTPException:
@@ -131,6 +144,7 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
     else:
         can_finish = stage == "interviewing" and not needs_more and (ready or answered >= EXIT_AFTER_ANSWERS)
     selection_status, selection_blurb = selection_blurb_state(proposal)
+    dropped = interview.get("dropped_for_names", False)
     return InterviewResponse(
         stage=stage,
         question=Question(
@@ -161,6 +175,8 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
         changes=[Change.model_validate(change) for change in proposal["changes"]] if proposal else None,
         proposed_blurb=proposal["blurb"] if proposal else None,
         nothing_new=interview.get("nothing_new", False),
+        dropped_for_names=dropped,
+        reading_question_id=interview.get("reading_question_id") if dropped else None,
     )
 
 
@@ -454,7 +470,7 @@ async def answer(
     """Save the answer to the waiting question, then ask the next one. `question_id` is the question
     the member was looking at: a resend after a lost response must not land on the next one."""
     interview = await get_interview(database, user["_id"])
-    check_question(interview, question_id)
+    check_question(interview, question_id, text)
     current = interview["current"]
     if interview["stage"] not in ASKING_STAGES or current is None:
         raise conflict("There's no question waiting for an answer.")
@@ -464,11 +480,19 @@ async def answer(
     # Saved before the next question is written, so a failure there never loses the answer.
     saved = await database.interviews.find_one_and_update(
         {"_id": interview["_id"], "stage": interview["stage"], "current": current},
-        {"$push": {"turns": turn}, "$set": {"current": None, "updated_at": datetime.now(UTC)}},
+        {
+            "$push": {"turns": turn},
+            "$set": {
+                "current": None,
+                "last_question_id": current.get("question_id"),
+                "updated_at": datetime.now(UTC),
+            },
+        },
         return_document=ReturnDocument.AFTER,
     )
     if saved is None:
-        raise StaleQuestion(await get_interview(database, user["_id"]))
+        latest = await get_interview(database, user["_id"])
+        raise StaleQuestion(latest, already_saved=_already_saved(latest, question_id, text))
     return await ask_next_question(database, claude, saved)
 
 
@@ -489,7 +513,14 @@ async def save_last_answer(database: AsyncDatabase, interview: dict, text: str) 
         raise conflict("Keep going a little longer first.")
     saved = await database.interviews.find_one_and_update(
         {"_id": interview["_id"], "stage": interview["stage"], "current": current},
-        {"$push": {"turns": turn}, "$set": {"current": None, "updated_at": datetime.now(UTC)}},
+        {
+            "$push": {"turns": turn},
+            "$set": {
+                "current": None,
+                "last_question_id": current.get("question_id"),
+                "updated_at": datetime.now(UTC),
+            },
+        },
         return_document=ReturnDocument.AFTER,
     )
     if saved is None:
@@ -509,7 +540,7 @@ async def finish(
     saved first, so words in the field are never dropped."""
     interview = await get_interview(database, user["_id"])
     if answer_text is not None:
-        check_question(interview, question_id)
+        check_question(interview, question_id, answer_text)
         interview = await save_last_answer(database, interview, answer_text)
     if interview["stage"] in ("adding", "revising"):
         return await finish_round(database, claude, interview, background)
@@ -762,9 +793,18 @@ async def rewrite_blurb(database: AsyncDatabase, claude: Claude, user: dict) -> 
             leaks=leak_check(interview),
         )
     )
-    book = await books.set_draft_blurb(database, user["_id"], blurb)
+    book = await books.set_draft_blurb(database, user["_id"], blurb, previous=book.get("blurb"))
     if book is None:
         raise conflict("Your book is already on the shelf.")
+    return books.my_book_view(book)
+
+
+async def restore_blurb(database: AsyncDatabase, user: dict) -> MyBookResponse:
+    """Go back to the last back cover, during the review."""
+    await reviewing_interview(database, user)
+    book = await books.restore_draft_blurb(database, user["_id"])
+    if book is None:
+        raise conflict("There's no earlier back cover.")
     return books.my_book_view(book)
 
 
@@ -866,6 +906,7 @@ async def reopen(database: AsyncDatabase, claude: Claude, user: dict) -> dict:
                 "current": None,
                 "ready_for_reveal": False,
                 "nothing_new": False,
+                "dropped_for_names": False,
                 "sparks_asked": 0,
                 "updated_at": datetime.now(UTC),
             }
@@ -967,8 +1008,15 @@ async def write_proposal(database: AsyncDatabase, claude: Claude, interview_id: 
             },
         )
         return
-    # Nothing usable: say so plainly and go back to the book as it was.
-    next_round = await end_revising(database, interview_id, {"nothing_new": True})
+    # Nothing usable: say so plainly and go back to the book as it was. If only a name stood in the
+    # way, the question opens again, so the member can say it without the name.
+    if revision.dropped_for_names and interview.get("reading_question_id"):
+        await database.reading_questions.update_one(
+            {"_id": interview["reading_question_id"]}, {"$set": {"answered_at": None}}
+        )
+    next_round = await end_revising(
+        database, interview_id, {"nothing_new": True, "dropped_for_names": revision.dropped_for_names}
+    )
     if next_round:
         await write_proposal(database, claude, interview_id)
 
@@ -1197,6 +1245,7 @@ async def propose_removal(database: AsyncDatabase, user: dict, chapter_id: str) 
                 "round_end": len(interview["turns"]),
                 "write_status": "ready",
                 "nothing_new": False,
+                "dropped_for_names": False,
                 "updated_at": datetime.now(UTC),
             }
         },
@@ -1205,6 +1254,18 @@ async def propose_removal(database: AsyncDatabase, user: dict, chapter_id: str) 
     if updated is None:
         raise conflict("Finish what's waiting in your book first.")
     return updated
+
+
+async def cancel_removal(
+    database: AsyncDatabase, claude: Claude, user: dict, background: BackgroundTasks
+) -> dict:
+    """Back out of a removal the member started: back to `done`, and nothing is recorded as declined."""
+    interview, proposal = await revising_proposal(database, user)
+    if any(change["kind"] != "remove" for change in proposal["changes"]):
+        raise conflict("There's no removal to cancel.")
+    if await end_revising(database, interview["_id"], {}):
+        background.add_task(write_proposal, database, claude, interview["_id"])
+    return await get_interview(database, user["_id"])
 
 
 async def undo_revision(database: AsyncDatabase, user: dict) -> MyBookResponse:
@@ -1405,6 +1466,9 @@ async def answer_reading_question(
     if interview["stage"] not in ("done", "adding", "revising"):
         raise conflict("Finish your book first.")
     await claim_reading_question(database, user, question_id, "answered_at")
+    await database.interviews.update_one(
+        {"_id": interview["_id"]}, {"$set": {"reading_question_id": question_id}}
+    )
     turn = {"question": READING_QUESTION, "answer": text, "phase": "reading"}
     now = datetime.now(UTC)
     if interview["stage"] == "done":
@@ -1420,6 +1484,7 @@ async def answer_reading_question(
                     "proposal": None,
                     "current": None,
                     "nothing_new": False,
+                    "dropped_for_names": False,
                     "write_status": "writing",
                     "write_retried": False,
                     "updated_at": now,

@@ -745,3 +745,105 @@ async def test_nearly_done_comes_from_the_api_for_one_stretch(client, database, 
     state = (await send_answer(client, headers, "Two.")).json()
     assert state["nearly_done"] is True
     assert (await send_answer(client, headers, "Three.")).json()["nearly_done"] is False
+
+
+async def stale_send(client, headers, question_id: str, text: str):
+    return await client.post(
+        "/interview/answers", json={"answer": text, "question_id": question_id}, headers=headers
+    )
+
+
+async def test_a_lost_reply_resend_is_already_saved(client, database, headers, fake_engine):
+    first = (await client.post("/interview", json={}, headers=headers)).json()["question"]
+    await stale_send(client, headers, first["question_id"], "My real answer.")
+    again = await stale_send(client, headers, first["question_id"], "  My real answer.  ")
+    assert again.status_code == 409
+    assert again.json()["already_saved"] is True
+
+
+async def test_words_from_a_stale_screen_are_not_called_saved(client, database, headers, fake_engine):
+    first = (await client.post("/interview", json={}, headers=headers)).json()["question"]
+    await stale_send(client, headers, first["question_id"], "Answer from the phone.")
+    late = await stale_send(client, headers, first["question_id"], "My careful laptop answer.")
+    assert late.status_code == 409
+    assert late.json()["already_saved"] is False
+    saved = await database.interviews.find_one({})
+    assert [turn["answer"] for turn in saved["turns"]] == ["Answer from the phone."]
+
+
+async def test_an_older_question_is_not_already_saved_even_with_the_same_words(client, headers, fake_engine):
+    first = (await client.post("/interview", json={}, headers=headers)).json()["question"]
+    await stale_send(client, headers, first["question_id"], "Same words.")
+    await send_answer(client, headers, "Same words.")
+    late = await stale_send(client, headers, first["question_id"], "Same words.")
+    assert late.json()["already_saved"] is False
+
+
+async def test_finish_with_words_from_a_stale_screen_is_not_saved_and_doesnt_finish(
+    client, database, headers, fake_engine
+):
+    await client.post("/interview", json={}, headers=headers)
+    state = await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    old = state["question"]["question_id"]
+    await send_answer(client, headers, "From the phone.")
+    late = await client.post(
+        "/interview/finish", json={"answer": "From the laptop.", "question_id": old}, headers=headers
+    )
+    assert late.status_code == 409
+    assert late.json()["already_saved"] is False
+    assert late.json()["interview"]["stage"] == "interviewing"
+    assert "From the laptop." not in [t["answer"] for t in (await database.interviews.find_one({}))["turns"]]
+
+
+async def test_finish_resent_after_a_lost_reply_is_already_saved(client, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    state = await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    body = {"answer": "The last thing.", "question_id": state["question"]["question_id"]}
+    assert (await client.post("/interview/finish", json=body, headers=headers)).status_code == 200
+    again = await client.post("/interview/finish", json=body, headers=headers)
+    assert again.status_code == 409
+    assert again.json()["already_saved"] is True
+
+
+async def test_a_stale_skip_after_a_skip_is_already_saved_but_not_after_an_answer(
+    client, headers, fake_engine
+):
+    first = (await client.post("/interview", json={}, headers=headers)).json()["question"]
+    body = {"question_id": first["question_id"]}
+    await client.post("/interview/skip", json=body, headers=headers)
+    assert (await client.post("/interview/skip", json=body, headers=headers)).json()["already_saved"] is True
+
+    second = (await client.get("/interview", headers=headers)).json()["question"]
+    await stale_send(client, headers, second["question_id"], "An answer.")
+    late = await client.post("/interview/skip", json={"question_id": second["question_id"]}, headers=headers)
+    assert late.json()["already_saved"] is False
+
+
+async def test_a_rewritten_back_cover_can_be_taken_back(client, database, headers, fake_engine):
+    book = await to_review(client, headers, fake_engine)
+    assert book["has_previous_blurb"] is False
+    assert (await client.post("/interview/book/blurb/restore", headers=headers)).status_code == 409
+
+    rewritten = (await client.post("/interview/book/blurb", headers=headers)).json()
+    assert rewritten["blurb"] != book["blurb"]
+    assert rewritten["has_previous_blurb"] is True
+
+    back = (await client.post("/interview/book/blurb/restore", headers=headers)).json()
+    assert back["blurb"] == book["blurb"]
+    assert back["has_previous_blurb"] is False
+
+
+async def test_the_previous_back_cover_goes_when_it_no_longer_fits(client, database, headers, fake_engine):
+    book = await to_review(client, headers, fake_engine)
+    await client.post("/interview/book/blurb", headers=headers)
+    removed = await client.delete(f"/interview/book/chapters/{book['chapters'][0]['id']}", headers=headers)
+    assert removed.json()["has_previous_blurb"] is False
+
+    await client.post("/interview/book/blurb", headers=headers)
+    retitled = await client.post("/interview/book/title", json={"title": 2}, headers=headers)
+    assert retitled.json()["has_previous_blurb"] is False
+
+    await client.post("/interview/book/blurb", headers=headers)
+    await client.post("/interview/book/shelve", headers=headers)
+    saved = await database.books.find_one({})
+    assert "previous_blurb" not in saved

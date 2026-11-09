@@ -384,6 +384,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/interview/book/blurb/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore Blurb
+         * @description Go back to the last back cover (`has_previous_blurb`), during the review.
+         */
+        post: operations["restore_blurb_interview_book_blurb_restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/interview/book/title": {
         parameters: {
             query?: never;
@@ -520,6 +540,26 @@ export interface paths {
          * @description Propose taking a chapter out of a book on the shelf. Confirmed like any change. 409 at three chapters.
          */
         post: operations["propose_removal_interview_removal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/removal/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Removal
+         * @description Back out of a removal the member started. Back to `done`, with nothing recorded as declined.
+         */
+        post: operations["cancel_removal_interview_removal_cancel_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -912,6 +952,10 @@ export interface components {
             selection_blurb: string | null;
             /** Nothing New */
             nothing_new: boolean;
+            /** Dropped For Names */
+            dropped_for_names: boolean;
+            /** Reading Question Id */
+            reading_question_id: string | null;
         };
         /**
          * LendingCheckout
@@ -1012,6 +1056,13 @@ export interface components {
              * @default false
              */
             can_undo: boolean;
+            /** Revised At */
+            revised_at?: string | null;
+            /**
+             * Has Previous Blurb
+             * @default false
+             */
+            has_previous_blurb: boolean;
             /**
              * Rewrite Unchanged
              * @default false
@@ -1229,6 +1280,8 @@ export interface components {
             /** Detail */
             detail: string;
             interview: components["schemas"]["InterviewResponse"];
+            /** Already Saved */
+            already_saved: boolean;
         };
         /** StartRequest */
         StartRequest: {
@@ -1957,6 +2010,26 @@ export interface operations {
             };
         };
     };
+    restore_blurb_interview_book_blurb_restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+        };
+    };
     change_title_interview_book_title_post: {
         parameters: {
             query?: never;
@@ -2145,6 +2218,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_removal_interview_removal_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
                 };
             };
         };

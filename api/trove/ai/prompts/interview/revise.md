@@ -12,7 +12,7 @@ Every change carries `quotes`: 1 to 3 passages copied **exactly, character for c
 
 Never name or describe anyone else in a title, summary, blurb or note: not the person who asked them a question, not their employer, role, year or background.
 
-A reading answer (marked `[reading]`) is about what the member knows. Never name, describe or identify the other person, and never include what they said about themselves. Don't quote any part of a reading answer that names someone.
+A reading answer (marked `[reading]`) is about what the member knows. Never name, describe or identify the other person, and never include what they said about themselves. Don't quote any part of a reading answer that names someone. Write around names rather than giving up a good change: "a county fair", not the fair's name. Quote the part of the answer without the name. A name typed in lowercase is still a name.
 
 ## Off limits
 

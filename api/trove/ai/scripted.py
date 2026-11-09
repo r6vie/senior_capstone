@@ -506,7 +506,7 @@ def _revise(text: str) -> dict:
                 "kind": "improve",
                 "chapter_id": chapter["id"],
                 "title": chapter["title"],
-                "summary": f"{chapter['summary']} {quote}"[:300],
+                "summary": f"{chapter['summary'][: 299 - len(quote)]} {quote}",
                 "quotes": [quote],
                 "note": "Adds what you just said to this chapter.",
                 "position": None,

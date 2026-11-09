@@ -125,6 +125,8 @@ def my_book_view(book: dict, *, rewrite_unchanged: bool = False) -> MyBookRespon
             "blurb": book.get("blurb"),
             "chapters": [{**c, "has_previous": bool(c.get("previous"))} for c in book["chapters"]],
             "can_undo": bool(book.get("previous_version")),
+            "revised_at": (book.get("previous_version") or {}).get("applied_at"),
+            "has_previous_blurb": book.get("previous_blurb") is not None,
             "rewrite_unchanged": rewrite_unchanged,
         }
     )
@@ -185,7 +187,8 @@ async def remove_chapter(
             # Checked in the same update, so two quick removals can't go below the minimum.
             f"chapters.{MIN_CHAPTERS}": {"$exists": True},
         },
-        {"$pull": {"chapters": {"id": chapter_id}}, "$set": changes},
+        # The old back cover described a chapter that's gone.
+        {"$pull": {"chapters": {"id": chapter_id}}, "$set": changes, "$unset": {"previous_blurb": ""}},
         return_document=ReturnDocument.AFTER,
     )
     return await _named(database, book)
@@ -201,11 +204,27 @@ async def replace_chapter(database: AsyncDatabase, author_id: str, chapter: dict
     return await _named(database, book)
 
 
-async def set_draft_blurb(database: AsyncDatabase, author_id: str, blurb: str) -> dict | None:
-    """Replace the back cover of the author's draft. None if they have no draft."""
+async def set_draft_blurb(
+    database: AsyncDatabase, author_id: str, blurb: str, *, previous: str | None
+) -> dict | None:
+    """Replace the back cover of the author's draft, keeping the old one to go back to. None if they
+    have no draft."""
     book = await database.books.find_one_and_update(
         {"author_id": author_id, "status": DRAFT},
-        {"$set": {"blurb": blurb, "updated_at": datetime.now(UTC)}},
+        {"$set": {"blurb": blurb, "previous_blurb": previous, "updated_at": datetime.now(UTC)}},
+        return_document=ReturnDocument.AFTER,
+    )
+    return await _named(database, book)
+
+
+async def restore_draft_blurb(database: AsyncDatabase, author_id: str) -> dict | None:
+    """Go back to the draft's last back cover. None if there isn't one."""
+    book = await database.books.find_one_and_update(
+        {"author_id": author_id, "status": DRAFT, "previous_blurb": {"$type": "string"}},
+        [
+            {"$set": {"blurb": "$previous_blurb", "updated_at": datetime.now(UTC)}},
+            {"$unset": "previous_blurb"},
+        ],
         return_document=ReturnDocument.AFTER,
     )
     return await _named(database, book)
@@ -217,7 +236,11 @@ async def retitle_draft(
     """Replace the author's draft with one finished for another title. None if they have no draft."""
     book = await database.books.find_one_and_update(
         {"author_id": author_id, "status": DRAFT},
-        {"$set": {"title": title, "chapters": chapters, "blurb": blurb, "updated_at": datetime.now(UTC)}},
+        {
+            "$set": {"title": title, "chapters": chapters, "blurb": blurb, "updated_at": datetime.now(UTC)},
+            # The old back cover described the old book.
+            "$unset": {"previous_blurb": ""},
+        },
         return_document=ReturnDocument.AFTER,
     )
     return await _named(database, book)
@@ -272,7 +295,11 @@ async def apply_revision(
         return None
     changes: dict = {
         "chapters": chapters,
-        "previous_version": {"chapters": book["chapters"], "blurb": book.get("blurb")},
+        "previous_version": {
+            "chapters": book["chapters"],
+            "blurb": book.get("blurb"),
+            "applied_at": datetime.now(UTC),
+        },
         "updated_at": datetime.now(UTC),
     }
     if blurb is not None:
@@ -316,7 +343,7 @@ async def put_on_shelf(database: AsyncDatabase, author_id: str) -> dict | None:
         # Earlier versions of chapters are for the review only.
         {
             "$set": {"status": ON_SHELF, "published_at": now, "updated_at": now},
-            "$unset": {"chapters.$[].previous": ""},
+            "$unset": {"chapters.$[].previous": "", "previous_blurb": ""},
         },
         return_document=ReturnDocument.AFTER,
     )

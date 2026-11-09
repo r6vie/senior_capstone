@@ -683,6 +683,27 @@ async def test_approving_everything_uses_the_proposed_blurb_for_free(client, aut
     assert len(fake_claude.requests) == calls
 
 
+async def test_a_revision_says_when_it_was_applied(client, database, author, fake_claude):
+    assert (await client.get("/books/me", headers=author["headers"])).json()["revised_at"] is None
+    state = await propose(client, author, fake_claude, change())
+    book = (
+        await client.post(
+            "/interview/revision", json={"approved": [state["changes"][0]["id"]]}, headers=author["headers"]
+        )
+    ).json()
+    assert book["revised_at"]
+    undone = (await client.post("/interview/book/undo", headers=author["headers"])).json()
+    assert undone["revised_at"] is None
+
+
+async def test_an_improve_that_changes_nothing_is_dropped(client, author, fake_claude):
+    same = {**change("improve", "c1", title="Chapter 1"), "summary": "Summary 1."}
+    state = await propose(client, author, fake_claude, same)
+    assert state["stage"] == "done"
+    assert state["nothing_new"] is True
+    assert state["dropped_for_names"] is False
+
+
 async def test_undoing_takes_a_change_back_for_good(client, database, author, fake_claude):
     state = await propose(
         client,
@@ -798,6 +819,28 @@ async def test_removing_from_a_shelved_book_goes_through_the_confirm_step(client
     saved = await database.interviews.find_one({"user_id": person["id"]})
     assert saved["removed_chapters"][0]["title"] == "T1"
     assert saved["stage"] == "done"
+
+
+async def test_a_removal_can_be_cancelled_with_nothing_recorded(client, database, fake_claude):
+    person = await member(client, "cancel@case.edu")
+    many = [{"id": f"c{n}", "title": f"T{n}", "summary": "S.", "quotes": [OLD_ANSWER]} for n in range(4)]
+    await shelve_book(database, person["id"], many)
+    before = await database.books.find_one({"author_id": person["id"]})
+    await client.post("/interview/removal", json={"chapter_id": "c1"}, headers=person["headers"])
+
+    state = (await client.post("/interview/removal/cancel", headers=person["headers"])).json()
+    assert state["stage"] == "done"
+    assert state["changes"] is None
+    assert await database.books.find_one({"author_id": person["id"]}) == before
+    saved = await database.interviews.find_one({"user_id": person["id"]})
+    assert not saved.get("declined_changes")
+    assert not saved.get("removed_chapters")
+    assert (await client.post("/interview/removal/cancel", headers=person["headers"])).status_code == 409
+
+
+async def test_only_a_removal_can_be_cancelled(client, author, fake_claude):
+    await propose(client, author, fake_claude, change())
+    assert (await client.post("/interview/removal/cancel", headers=author["headers"])).status_code == 409
 
 
 async def test_no_removal_at_three_chapters_or_during_a_round(client, author, fake_claude):
@@ -1292,6 +1335,53 @@ async def test_a_reading_quote_naming_someone_is_dropped(client, database, autho
     state = await answer_reading(client, database, author, fake_claude, NAMED, change(quotes=[NAMED]))
     assert state["stage"] == "done"
     assert state["nothing_new"] is True
+    assert state["dropped_for_names"] is True
+
+
+async def test_dropped_for_a_name_says_so_and_offers_another_go(client, database, author, fake_claude):
+    state = await answer_reading(client, database, author, fake_claude, NAMED, change(quotes=[NAMED]))
+    question = state["reading_question_id"]
+    assert question
+    waiting = (await client.get("/interview/reading-questions", headers=author["headers"])).json()
+    assert [item["id"] for item in waiting] == [question]
+
+    fake_claude.responses.append(revision(change(quotes=[PLAIN])))
+    response = await client.post(
+        f"/interview/reading-questions/{question}/answer", json={"answer": PLAIN}, headers=author["headers"]
+    )
+    assert response.status_code == 200
+    state = (await client.get("/interview", headers=author["headers"])).json()
+    assert state["dropped_for_names"] is False
+    assert state["reading_question_id"] is None
+    assert len(state["changes"]) == 1
+    saved = await database.interviews.find_one({"user_id": author["id"]})
+    assert [turn["answer"] for turn in saved["turns"][-2:]] == [NAMED, PLAIN]
+    assert (await client.get("/interview/reading-questions", headers=author["headers"])).json() == []
+
+
+async def test_a_thin_answer_isnt_called_a_name_problem(client, database, author, fake_claude):
+    state = await answer_reading(client, database, author, fake_claude, "Not much.")
+    assert state["nothing_new"] is True
+    assert state["dropped_for_names"] is False
+    assert state["reading_question_id"] is None
+    assert (await client.get("/interview/reading-questions", headers=author["headers"])).json() == []
+
+
+async def test_a_name_with_another_change_surviving_isnt_a_name_problem(
+    client, database, author, fake_claude
+):
+    text = f"{NAMED} {PLAIN}"
+    state = await answer_reading(
+        client,
+        database,
+        author,
+        fake_claude,
+        text,
+        change(quotes=[NAMED], title="Named"),
+        change(quotes=[PLAIN]),
+    )
+    assert state["stage"] == "revising"
+    assert state["dropped_for_names"] is False
 
 
 async def test_a_name_from_a_reading_answer_cant_reach_public_text(client, database, author, fake_claude):

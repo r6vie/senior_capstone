@@ -156,6 +156,10 @@ class InterviewResponse(BaseModel):
     selection_blurb: str | None
     # The last round earned no changes, so the book is as it was. The app says so plainly.
     nothing_new: bool
+    # It earned none because the only changes named someone or somewhere. Say why, and offer another
+    # go: `reading_question_id` is open again, and POST .../answer takes the new words.
+    dropped_for_names: bool
+    reading_question_id: str | None
 
 
 class StaleQuestionResponse(BaseModel):
@@ -163,3 +167,6 @@ class StaleQuestionResponse(BaseModel):
 
     detail: str
     interview: InterviewResponse
+    # True only when this exact answer was saved by an earlier send whose reply was lost. False means
+    # these words were NOT saved: the member moved on elsewhere, so keep them in the field.
+    already_saved: bool

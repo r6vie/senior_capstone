@@ -27,6 +27,8 @@ function interview(overrides: Partial<InterviewResponse>): InterviewResponse {
     changes: null,
     proposed_blurb: null,
     nothing_new: false,
+    dropped_for_names: false,
+    reading_question_id: null,
     ...overrides,
   };
 }

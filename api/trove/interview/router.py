@@ -33,7 +33,9 @@ STALE_QUESTION_RESPONSES = {409: {"model": StaleQuestionResponse}}
 
 def stale_question(error: service.StaleQuestion) -> JSONResponse:
     """The current state comes with the 409, so the client can move to the question that's waiting."""
-    body = StaleQuestionResponse(detail=error.detail, interview=interview_view(error.interview))
+    body = StaleQuestionResponse(
+        detail=error.detail, interview=interview_view(error.interview), already_saved=error.already_saved
+    )
     return JSONResponse(status_code=409, content=jsonable_encoder(body))
 
 
@@ -197,6 +199,15 @@ async def rewrite_blurb(
     return await service.rewrite_blurb(database, claude, user)
 
 
+@router.post("/book/blurb/restore", response_model=MyBookResponse)
+async def restore_blurb(
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> MyBookResponse:
+    """Go back to the last back cover (`has_previous_blurb`), during the review."""
+    return await service.restore_blurb(database, user)
+
+
 @router.post("/book/title", response_model=MyBookResponse)
 async def change_title(
     data: TitleRequest,
@@ -270,6 +281,17 @@ async def propose_removal(
 ) -> InterviewResponse:
     """Propose taking a chapter out of a book on the shelf. Confirmed like any change. 409 at three chapters."""
     return interview_view(await service.propose_removal(database, user, data.chapter_id))
+
+
+@router.post("/removal/cancel", response_model=InterviewResponse)
+async def cancel_removal(
+    background: BackgroundTasks,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+    claude: Claude = Depends(get_claude),
+) -> InterviewResponse:
+    """Back out of a removal the member started. Back to `done`, with nothing recorded as declined."""
+    return interview_view(await service.cancel_removal(database, claude, user, background))
 
 
 @router.post("/book/undo", response_model=MyBookResponse)

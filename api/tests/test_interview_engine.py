@@ -398,3 +398,24 @@ async def test_revise_wont_ground_two_changes_on_one_quote():
     claude = FakeClaude([reply({"changes": [change, {**change, "title": "Second"}], "blurb": BLURB})])
     revision = await engine.revise_book(claude, turns=said, round_start=1, chapters=[], blurb=None)
     assert [c.title for c in revision.changes] == ["First"]
+
+
+async def test_revise_drops_a_change_with_a_resume_only_term():
+    said = [
+        engine.Turn(question="Old?", answer=ANSWERS[0], phase="dig"),
+        engine.Turn(question="New?", answer=ANSWERS[1], phase="adding"),
+    ]
+    change = {
+        "kind": "new",
+        "chapter_id": None,
+        "title": "My time at Gopala",
+        "summary": "S.",
+        "quotes": [ANSWERS[1]],
+        "note": "N.",
+    }
+    claude = FakeClaude([reply({"changes": [change], "blurb": BLURB})])
+    revision = await engine.revise_book(
+        claude, turns=said, round_start=1, chapters=[], blurb=None, leaks=lambda text: "Gopala" in text
+    )
+    assert revision.changes == []
+    assert revision.dropped_for_names is False
