@@ -239,3 +239,24 @@ async def test_the_message_is_required_and_short(client, database, sent):
     assert (await check_out(client, reader, "book-of-maya", message="   ")).status_code == 422
     assert (await check_out(client, reader, "book-of-maya", message="x" * 1001)).status_code == 422
     assert sent == []
+
+
+async def test_a_fully_lent_book_leaves_the_shelf_but_still_opens(client, database, sent):
+    later = NOW + timedelta(seconds=1)
+    await database.books.insert_one(book("one-copy", "author-1", copies=1, published_at=later))
+    _, sam = await member(client, database, "Sam")
+
+    async def shelf_ids(**params):
+        response = await client.get("/books", params=params, headers=sam)
+        return [entry["id"] for entry in response.json()["books"]], response.json()["next"]
+
+    assert "one-copy" in (await shelf_ids())[0]
+    assert (await check_out(client, sam, "one-copy")).status_code == 201
+
+    ids, _ = await shelf_ids()
+    assert "one-copy" not in ids
+    assert ids == ["book-of-sam"]
+    # A page stays full even when a hidden book falls inside it.
+    assert (await shelf_ids(limit=1)) == (["book-of-sam"], None)
+    # A direct link still opens it; only the shelf hides it.
+    assert (await client.get("/books/one-copy", headers=sam)).status_code == 200
