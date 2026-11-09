@@ -1,23 +1,27 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { apiInterviewClient } from "./apiInterviewClient";
-import { ErrorMessage, Frame, Waiting } from "./InterviewFrame";
+import { ErrorMessage, Frame, focusBand, Waiting } from "./InterviewFrame";
 import type { InterviewClient, MyBook } from "./interviewClient";
 import { BackCover, ChangeCard, WaitBox } from "./ProposedChanges";
 
-// Taking a chapter out of a book on the shelf (board G3, frame 5). The same step as any other change:
-// the member sees the back cover written for the shorter book, and nothing is live until they confirm.
+// Taking a chapter out of a book on the shelf (board G3, frame 5). Looking costs nothing: pressing
+// Remove is what starts it. Then it's the same step as any other change: the member sees the back cover
+// written for the shorter book, and nothing is live until they confirm.
 
 const MIN_CHAPTERS = 3;
 
 export function RemovalPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
   const { chapterId = "" } = useParams();
+  const [search] = useSearchParams();
   const navigate = useNavigate();
   const [book, setBook] = useState<MyBook | null | undefined>(undefined);
+  // Coming back to finish one already started skips the question.
+  const [started, setStarted] = useState(search.has("finish"));
   const [blurb, setBlurb] = useState<string | null>(null);
   const [blurbFailed, setBlurbFailed] = useState(false);
-  const [writing, setWriting] = useState(true);
+  const [writing, setWriting] = useState(search.has("finish"));
   const [attempt, setAttempt] = useState(0);
   const [choice, setChoice] = useState<"approve" | "decline">("approve");
   const [busy, setBusy] = useState(false);
@@ -36,6 +40,7 @@ export function RemovalPage({ client = apiInterviewClient }: { client?: Intervie
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: attempt is what asks for another try
   useEffect(() => {
+    if (!started) return;
     let live = true;
     setWriting(true);
     setBlurbFailed(false);
@@ -47,17 +52,54 @@ export function RemovalPage({ client = apiInterviewClient }: { client?: Intervie
     return () => {
       live = false;
     };
-  }, [client, chapterId, attempt]);
+  }, [client, chapterId, attempt, started]);
+
+  const arrived = book !== undefined;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: each step is a new screen for the keyboard
+  useEffect(() => {
+    if (arrived) focusBand();
+  }, [arrived, started, writing]);
 
   if (book === undefined) return <Frame busy say={<Waiting>The Librarian is finding your place…</Waiting>} />;
 
   const chapter = book?.chapters.find((candidate) => candidate.id === chapterId);
   if (!book || !chapter || book.chapters.length <= MIN_CHAPTERS) return <Navigate to="/my-book" replace />;
 
+  if (!started) {
+    return (
+      <Frame canLeave={false} say="Remove this chapter?">
+        <ChangeCard
+          caption="Removing"
+          name={chapter.title}
+          now={{ title: chapter.title, text: chapter.summary }}
+          proposed={null}
+        />
+        <div className="iv-row">
+          <Button variant="secondary" onClick={() => setStarted(true)}>
+            Remove
+          </Button>
+          <Link to="/my-book" className="button button-quiet">
+            Keep it
+          </Link>
+        </div>
+      </Frame>
+    );
+  }
+
+  async function backOut() {
+    setError(null);
+    try {
+      await client.cancelRemoval();
+      navigate("/my-book");
+    } catch {
+      setError("That didn't go through. Your book is as it was. Try again.");
+    }
+  }
+
   if (writing) {
     return (
       <Frame canLeave={false} say="I'm writing the back cover without that chapter.">
-        <WaitBox title="Writing the back cover." />
+        <WaitBox />
       </Frame>
     );
   }
@@ -85,7 +127,6 @@ export function RemovalPage({ client = apiInterviewClient }: { client?: Intervie
       <div className="iv-chgs">
         <ChangeCard
           caption="Removing"
-          note="You asked to take this chapter out of your book."
           name={chapter.title}
           now={{ title: chapter.title, text: chapter.summary }}
           proposed={null}
@@ -97,6 +138,7 @@ export function RemovalPage({ client = apiInterviewClient }: { client?: Intervie
           onRetry={() => setAttempt((count) => count + 1)}
           choice={choice}
           onChoose={setChoice}
+          note="Rewritten without this chapter. Decline keeps the back cover you have now."
         />
       </div>
       <ErrorMessage message={error} />
@@ -104,9 +146,9 @@ export function RemovalPage({ client = apiInterviewClient }: { client?: Intervie
         <Button onClick={confirm} aria-busy={busy}>
           Update my book on the shelf
         </Button>
-        <Link to="/my-book" className="button button-quiet">
+        <button type="button" className="button button-quiet" onClick={backOut}>
           Back to my book
-        </Link>
+        </button>
       </div>
       <p className="iv-note">Until you confirm, your book on the shelf stays exactly as it is.</p>
     </Frame>

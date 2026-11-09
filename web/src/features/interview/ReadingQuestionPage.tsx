@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
-import { ErrorMessage, Frame, Waiting } from "./InterviewFrame";
+import { ErrorMessage, Frame, focusBand, Waiting } from "./InterviewFrame";
 import { type InterviewClient, InterviewError, type ReadingQuestion } from "./interviewClient";
 
 // The question after a reading (trove.md §3, board G5). The other person's name is shown to the author
@@ -44,6 +44,11 @@ export function ReadingQuestionPage({ client = apiInterviewClient }: { client?: 
     };
   }, [client, questionId]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: arriving is a new screen for the keyboard
+  useEffect(() => {
+    if (loaded) focusBand();
+  }, [loaded]);
+
   if (!loaded) return <Frame busy say={<Waiting>The Librarian is finding your place…</Waiting>} />;
 
   if (!question) {
@@ -70,7 +75,14 @@ export function ReadingQuestionPage({ client = apiInterviewClient }: { client?: 
       clearDraft(draftKey);
       navigate("/interview", { state: { fromReading: true } });
     } catch (reason) {
-      // A failed send keeps the answer in the field.
+      // Whether it arrived is what matters: the question is used up once an answer is saved.
+      const waiting = await client.readingQuestions().catch(() => null);
+      if (waiting && !waiting.some((candidate) => candidate.id === question?.id)) {
+        clearDraft(draftKey);
+        navigate("/interview", { state: { fromReading: true, answerSaved: true } });
+        return;
+      }
+      // Still waiting, so the answer stays in the field to send again.
       setError(
         reason instanceof InterviewError
           ? reason.message

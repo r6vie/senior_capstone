@@ -126,12 +126,87 @@ describe("MyBookPage", () => {
     expect(screen.getByText("I said One.")).toBeTruthy();
   });
 
-  it("offers undo right after an update, and it restores the book", async () => {
+  it("asks before undoing, says what it did, and gives the date", async () => {
     const undo = vi.fn(async () => undefined);
-    show(client("shelf", { myBook: async () => ({ ...book, canUndo: true }), undoChanges: undo }));
-    expect(await screen.findByText(/You can undo these changes/)).toBeTruthy();
+    let canUndo = true;
+    undo.mockImplementation(async () => {
+      canUndo = false;
+    });
+    show(
+      client("shelf", {
+        myBook: async () => ({ ...book, canUndo, changedAt: "2026-11-09T12:00:00Z" }),
+        undoChanges: undo,
+      }),
+    );
+    expect(await screen.findByText(/Your book was updated on Nov 9/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Undo these changes" }));
-    await waitFor(() => expect(undo).toHaveBeenCalledTimes(1));
+    expect(undo).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+    expect(await screen.findByText("Your book is back as it was.")).toBeTruthy();
+    expect(undo).toHaveBeenCalledTimes(1);
+  });
+
+  it("a second press while undoing does nothing", async () => {
+    let finish: () => void = () => {};
+    const undo = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
+    show(client("shelf", { myBook: async () => ({ ...book, canUndo: true }), undoChanges: undo }));
+    fireEvent.click(await screen.findByRole("button", { name: "Undo these changes" }));
+    const press = screen.getByRole("button", { name: "Undo" });
+    fireEvent.click(press);
+    fireEvent.click(press);
+    expect(undo).toHaveBeenCalledTimes(1);
+    await act(async () => finish());
+  });
+
+  it("says when the last round changed nothing", async () => {
+    show(client("shelf", { lastRoundEmpty: async () => true }));
+    expect(await screen.findByText(/Your last answers didn't change your book/)).toBeTruthy();
+  });
+
+  it("says the book stays as it is after declining everything", async () => {
+    render(
+      <MemoryRouter initialEntries={[{ pathname: "/my-book", state: { leftAsIs: true } }]}>
+        <MyBookPage client={client("shelf")} />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("Your book stays as it is.")).toBeTruthy();
+  });
+
+  it("a removal left open offers to finish or keep the chapter", async () => {
+    const cancel = vi.fn(async () => undefined);
+    show(
+      client("changesWaiting", {
+        openRemoval: async () => ({ chapterId: "3", title: "Four" }),
+        cancelRemoval: cancel,
+      }),
+    );
+    expect(await screen.findByText("You started removing Four.")).toBeTruthy();
+    expect(linkTo("Finish removing")).toBe("/my-book/remove/3?finish");
+    expect(screen.queryByRole("link", { name: "Review the proposed changes" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Keep it" }));
+    await waitFor(() => expect(cancel).toHaveBeenCalledTimes(1));
+  });
+
+  it("re-reads when an action is refused, and shows no error if the page was just out of date", async () => {
+    const stages: BookStage[] = ["writeFailed", "changesWaiting"];
+    show(
+      client("writeFailed", {
+        stage: async () => stages.shift() ?? "changesWaiting",
+        retryWriting: async () => {
+          throw new Error("refused");
+        },
+      }),
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Try again" }));
+    expect(await screen.findByRole("link", { name: "Review the proposed changes" })).toBeTruthy();
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("shows the page while it loads, then starts the keyboard at the heading", async () => {
+    show(client("shelf"));
+    expect(screen.getByRole("heading", { name: "My book" })).toBeTruthy();
+    const heading = await screen.findByRole("heading", { name: book.title });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
   });
 
   it("names the reader to the author, and No thanks dismisses it", async () => {

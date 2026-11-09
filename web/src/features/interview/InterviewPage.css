@@ -250,6 +250,21 @@
 .iv-resume {
   min-width: 0;
 }
+.iv-undo {
+  display: grid;
+  gap: var(--s-2);
+  flex-basis: 100%;
+}
+.iv-undo p {
+  max-width: 60ch;
+  margin: 0;
+  font-size: 15px;
+}
+/* A full name always shows whole on the small book, however long. */
+.book-sm .book-author {
+  -webkit-line-clamp: 4;
+  overflow-wrap: anywhere;
+}
 .iv-resume h2 {
   margin: 0 0 14px;
 }

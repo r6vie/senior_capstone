@@ -257,6 +257,63 @@ describe("apiInterviewClient", () => {
     await expect(apiInterviewClient.answer("me", "An answer")).rejects.toBeInstanceOf(LostError);
   });
 
+  it("passes through a sentence the API wrote for the member, but not a schema error", async () => {
+    const post = vi.spyOn(api, "POST");
+    post.mockResolvedValueOnce({
+      data: undefined,
+      error: { detail: "We couldn't read any text in that PDF. You can start without it." },
+      response: new Response(null, { status: 422 }),
+    } as never);
+    await expect(apiInterviewClient.start(null)).rejects.toThrow("We couldn't read any text in that PDF");
+  });
+
+  it("reads whether a refused answer is the one already saved", async () => {
+    vi.spyOn(api, "POST").mockResolvedValue({
+      data: undefined,
+      error: { detail: "Stale.", already_saved: true },
+      response: new Response(null, { status: 409 }),
+    } as never);
+    await expect(apiInterviewClient.answer("me", "An answer")).rejects.toMatchObject({
+      conflict: true,
+      alreadySaved: true,
+    });
+  });
+
+  it("treats undoing an already undone book as success", async () => {
+    vi.spyOn(api, "POST").mockResolvedValue({
+      data: undefined,
+      error: { detail: "Nothing to undo." },
+      response: new Response(null, { status: 409 }),
+    } as never);
+    vi.spyOn(api, "GET").mockResolvedValue(
+      ok({ title: "T", author_name: "A", blurb: null, status: "on_shelf", chapters: [], can_undo: false }),
+    );
+    await expect(apiInterviewClient.undoChanges()).resolves.toBeUndefined();
+  });
+
+  it("finds a removal left open only when it's the one open change", async () => {
+    const remove = {
+      id: "x",
+      kind: "remove",
+      chapter_id: "c",
+      title: "T",
+      summary: "",
+      note: "",
+      current: null,
+    };
+    vi.spyOn(api, "GET")
+      .mockResolvedValueOnce(ok({ ...interview({ question: null }), stage: "revising", changes: [remove] }))
+      .mockResolvedValueOnce(
+        ok({
+          ...interview({ question: null }),
+          stage: "revising",
+          changes: [remove, { ...remove, id: "y" }],
+        }),
+      );
+    await expect(apiInterviewClient.openRemoval()).resolves.toEqual({ chapterId: "c", title: "T" });
+    await expect(apiInterviewClient.openRemoval()).resolves.toBeNull();
+  });
+
   it("marks a 409 as out of date", async () => {
     vi.spyOn(api, "POST").mockResolvedValue({
       data: undefined,

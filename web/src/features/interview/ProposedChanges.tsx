@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { addedWords } from "./addedWords";
-import { ErrorMessage, Frame, Waiting } from "./InterviewFrame";
+import { ErrorMessage, Frame, focusBand, Waiting } from "./InterviewFrame";
 import type { InterviewState } from "./interviewClient";
 import "./ProposedChanges.css";
 
@@ -14,17 +14,15 @@ type Choices = Record<string, Choice>;
 
 const NOTE_NOT_LIVE = "Until you confirm, your book on the shelf stays exactly as it is.";
 
-export function WaitBox({ title, children }: { title: string; children?: React.ReactNode }) {
+/** The band says what's happening, so this only says what the member can do about it. */
+export function WaitBox() {
   return (
     <div className="empty iv-waitbox" aria-busy="true">
-      <h3>{title}</h3>
       <p>This can take a while. You can leave. The result will be here when you come back.</p>
       <div className="iv-row iv-waitbox-act">
-        {children ?? (
-          <Link to="/my-book" className="button button-quiet">
-            Back to my book
-          </Link>
-        )}
+        <Link to="/my-book" className="button button-quiet">
+          Back to my book
+        </Link>
       </div>
     </div>
   );
@@ -85,6 +83,7 @@ const STATUS: Record<Choice | "none", string> = {
 export function ChangeCard({
   caption,
   note,
+  alwaysShowNow = false,
   name,
   now,
   proposed,
@@ -92,7 +91,9 @@ export function ChangeCard({
   onChoose,
 }: {
   caption: string;
-  note: string;
+  note?: string;
+  /** A rewrite can't be judged without what it replaces, so Now stays open even on a phone. */
+  alwaysShowNow?: boolean;
   /** What a screen reader hears on the toggle. */
   name: string;
   now: { title?: string; text: string } | null;
@@ -101,16 +102,20 @@ export function ChangeCard({
   onChoose?: (choice: Choice) => void;
 }) {
   const [showingNow, setShowingNow] = useState(false);
-  const replaces = now !== null && proposed !== null;
+  const replaces = now !== null && proposed !== null && !alwaysShowNow;
   return (
     <article className="iv-chg" data-declined={choice === "decline" || undefined}>
       <div className="iv-chg-head">
         <span className="caption">{caption}</span>
         {onChoose && <span className="iv-chg-status">{STATUS[choice ?? "none"]}</span>}
       </div>
-      <p className="iv-chg-note">{note}</p>
+      {note && <p className="iv-chg-note">{note}</p>}
       <div className="iv-chg-cols">
-        <div className="iv-chg-now" data-open={showingNow || !replaces || undefined}>
+        <div
+          className="iv-chg-now"
+          data-open={showingNow || !replaces || undefined}
+          data-blank={!now || undefined}
+        >
           <i>Now</i>
           {now ? (
             <>
@@ -184,6 +189,7 @@ export function BackCover({
   onRetry,
   choice,
   onChoose,
+  note = "Rewritten to include what you approved. Decline keeps the back cover you have now.",
 }: {
   now: string | null;
   proposed: string | null;
@@ -191,6 +197,7 @@ export function BackCover({
   onRetry: () => void;
   choice: Choice;
   onChoose: (choice: Choice) => void;
+  note?: string;
 }) {
   if (failed) {
     return (
@@ -209,7 +216,8 @@ export function BackCover({
   return (
     <ChangeCard
       caption="Back cover"
-      note="Rewritten to include what you approved. Decline keeps the back cover you have now."
+      note={note}
+      alwaysShowNow
       name="the back cover"
       now={now ? { text: now } : null}
       proposed={{ text: proposed }}
@@ -242,7 +250,11 @@ export function ChangesScreen({
   // The API keeps what was approved, for any device. This browser also remembers what was declined.
   const [choices, setChoices] = useState<Choices>(() => {
     const here = readChoices(key);
-    for (const id of state.approved ?? []) here[id] = "approve";
+    // A removal is the member's own idea, and shouldn't read as already decided.
+    const removals = changes.filter((change) => change.kind === "remove").map((change) => change.id);
+    for (const id of state.approved ?? []) {
+      if (!removals.includes(id)) here[id] = "approve";
+    }
     return here;
   });
   const [step, setStep] = useState<"choose" | "writing" | "confirm">("choose");
@@ -251,6 +263,8 @@ export function ChangesScreen({
   const [blurbChoice, setBlurbChoice] = useState<Choice>("approve");
 
   useEffect(() => writeChoices(key, choices), [key, choices]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: each step is a new screen for the keyboard
+  useEffect(() => focusBand(), [step]);
 
   const approved = changes.filter((change) => choices[change.id] === "approve");
   const others = changes.filter((change) => choices[change.id] !== "approve");
@@ -281,7 +295,7 @@ export function ChangesScreen({
   if (step === "writing") {
     return (
       <Frame canLeave={false} say="I'm writing the back cover for what you approved.">
-        <WaitBox title="Writing the back cover." />
+        <WaitBox />
       </Frame>
     );
   }
@@ -350,7 +364,14 @@ export function ChangesScreen({
   }
 
   return (
-    <Frame canLeave={false} say="Here is what I would change in your book.">
+    <Frame
+      canLeave={false}
+      say={
+        changes.every((change) => change.kind === "remove")
+          ? "You asked to remove a chapter."
+          : "Here is what I would change in your book."
+      }
+    >
       <div className="iv-chgs">
         {changes.map((change) => (
           <ChangeCard

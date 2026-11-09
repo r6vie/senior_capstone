@@ -45,6 +45,13 @@
 .mb-head .book {
   flex: none;
 }
+.mb-head .mb-book-narrow {
+  display: none;
+}
+.mb-title:focus,
+.mb-meta h1:focus {
+  outline: none;
+}
 .mb-meta {
   display: grid;
   gap: var(--s-3);
@@ -188,19 +195,11 @@
     gap: 20px;
     margin-bottom: var(--s-5);
   }
-  .mb-head .book-lg {
-    width: 122px;
-    height: 178px;
+  .mb-head .mb-book-wide {
+    display: none;
   }
-  .mb-head .book-lg .book-cover {
-    padding: var(--s-4) 10px 10px 21px;
-    border-width: 2px;
-  }
-  .mb-head .book-lg .book-title {
-    font-size: 13.5px;
-  }
-  .mb-head .book-lg .book-author {
-    font-size: 9.5px;
+  .mb-head .mb-book-narrow {
+    display: block;
   }
   .mb-meta h1 {
     font-size: 28px;

@@ -28,6 +28,8 @@ export interface DraftBook {
   chapters: DraftChapter[];
   /** The last rewrite couldn't be told better from what the member said, so nothing changed. */
   rewriteUnchanged?: boolean;
+  /** In review, the last back cover rewrite can be taken back. */
+  hasPreviousBlurb?: boolean;
 }
 
 /** One proposed change to a book on the shelf. Nothing here is live until the member confirms. */
@@ -50,6 +52,8 @@ export type InterviewState =
       round?: "first" | "adding";
       phase: Phase;
       question: string;
+      /** Tells a repeated question from the one before. */
+      questionId?: string;
       /** True once the member has answered enough to stop early ("I've said enough"). */
       canFinish: boolean;
       /** True when there are answers from an earlier visit. */
@@ -82,9 +86,16 @@ export type InterviewState =
       approved?: string[] | null;
     }
   /** A round that earned no changes. The book is as it was. */
-  | { id: string; stage: "nothing" }
+  | {
+      id: string;
+      stage: "nothing";
+      /** The only thing to come of it named someone or somewhere, so it was left out. */
+      droppedForNames?: boolean;
+      /** The reading question to answer again, when that was the answer. */
+      readingQuestionId?: string;
+    }
   /** Approved changes just went live. */
-  | { id: string; stage: "updated"; book: DraftBook };
+  | { id: string; stage: "updated"; book: DraftBook; canUndo: boolean };
 
 /** Where a member's book stands, for My book. Reading this never asks the Librarian for anything. */
 export type BookStage =
@@ -103,6 +114,8 @@ export type BookStage =
 export interface MyBook extends DraftBook {
   /** The last approved changes can still be taken back. */
   canUndo: boolean;
+  /** When they were applied. */
+  changedAt?: string | null;
 }
 
 export interface Spark {
@@ -125,6 +138,8 @@ export class InterviewError extends Error {
     readonly retryable = false,
     /** 409: the interview isn't where this screen thought it was. */
     readonly conflict = false,
+    /** On that 409, what was sent is what's already saved for that question. */
+    readonly alreadySaved = false,
   ) {
     super(message);
   }
@@ -152,6 +167,8 @@ export interface InterviewClient {
   /** Pick another title. This writes the book again, so chapter rewrites may be replaced. */
   changeTitle(id: string, titleId: string): Promise<InterviewState>;
   rewriteBlurb(id: string): Promise<InterviewState>;
+  /** Go back to the back cover before the last rewrite. */
+  restoreBlurb(id: string): Promise<InterviewState>;
   rewriteChapter(id: string, chapterId: string): Promise<InterviewState>;
   /** Go back to the chapter's last version. */
   restoreChapter(id: string, chapterId: string): Promise<InterviewState>;
@@ -177,6 +194,12 @@ export interface InterviewClient {
   /** The back cover for the book without this chapter. */
   blurbWithout(chapterId: string): Promise<string | null>;
   removeFromShelf(chapterId: string, blurb: string | null): Promise<void>;
+  /** A removal the member started and hasn't finished, if the only open change is that. */
+  openRemoval(): Promise<{ chapterId: string; title: string } | null>;
+  /** Back out of a removal, leaving everything as it was and recording nothing as declined. */
+  cancelRemoval(): Promise<void>;
+  /** The last round changed nothing, so My book can say so rather than look untouched. */
+  lastRoundEmpty(): Promise<boolean>;
   sparks(): Promise<Spark[]>;
   removeSpark(sparkId: string): Promise<void>;
   readingQuestions(): Promise<ReadingQuestion[]>;

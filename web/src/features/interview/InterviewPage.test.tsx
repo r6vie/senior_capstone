@@ -11,7 +11,6 @@ import {
   type InterviewClient,
   InterviewError,
   type InterviewState,
-  LostError,
 } from "./interviewClient";
 
 function renderWith(client: InterviewClient) {
@@ -347,20 +346,120 @@ describe("InterviewPage", () => {
       expect(send).toHaveBeenCalledTimes(1);
     });
 
-    const conflict = new InterviewError("There's no question waiting for an answer.", false, true);
+    const next = { ...asking, question: "The next question?" };
+    const stale = (alreadySaved: boolean) =>
+      new InterviewError("That isn't the question waiting.", false, true, alreadySaved);
+    const moved = (error: InterviewError) => {
+      const client = fake();
+      vi.spyOn(client, "current").mockResolvedValueOnce(asking).mockResolvedValue(next);
+      vi.spyOn(client, "answer").mockRejectedValueOnce(error);
+      return client;
+    };
 
     it("a refused resend moves to the current question and says the answer was saved", async () => {
-      const client = fake();
-      const next = { ...asking, question: "The next question?" };
-      vi.spyOn(client, "current").mockResolvedValueOnce(asking).mockResolvedValue(next);
-      vi.spyOn(client, "answer").mockRejectedValueOnce(conflict);
-      renderWith(client);
+      renderWith(moved(stale(true)));
       await type("My answer");
       fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
       expect(await screen.findByText("The next question?")).toBeTruthy();
       expect(screen.getByText("Your answer was saved.")).toBeTruthy();
       expect(screen.queryByRole("alert")).toBeNull();
+      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("");
       expect(localStorage.getItem(draftKeyFor("anon", asking.question))).toBeNull();
+    });
+
+    it("answering a question another screen already answered keeps the words", async () => {
+      renderWith(moved(stale(false)));
+      await type("My careful answer");
+      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+      expect(await screen.findByText("The next question?")).toBeTruthy();
+      expect(screen.getByText(/already moved past that question on another screen/)).toBeTruthy();
+      expect(screen.queryByText("Your answer was saved.")).toBeNull();
+      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("My careful answer");
+      expect(localStorage.getItem(draftKeyFor("anon", next.question))).toBe("My careful answer");
+    });
+
+    it("finishing from a stale screen keeps the words and doesn't finish", async () => {
+      const client = fake();
+      const open = { ...asking, canFinish: true };
+      vi.spyOn(client, "current")
+        .mockResolvedValueOnce(open)
+        .mockResolvedValue({ ...next, canFinish: true });
+      vi.spyOn(client, "finish").mockRejectedValueOnce(stale(false));
+      renderWith(client);
+      await type("My last words");
+      fireEvent.click(screen.getByRole("button", { name: "Send this, then show me my book" }));
+      expect(await screen.findByText("The next question?")).toBeTruthy();
+      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("My last words");
+    });
+
+    const lost = () => new TypeError("Failed to fetch");
+
+    it("after a lost reply there's no Try again: Send sends what's in the field now", async () => {
+      const client = at(asking);
+      const send = vi.spyOn(client, "answer").mockRejectedValueOnce(lost()).mockResolvedValue(next);
+      renderWith(client);
+      await type("Old words");
+      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+      expect((await screen.findByRole("alert")).textContent).toMatch(/Your answer is still here/);
+      expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+      await type("New better words");
+      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+      expect(await screen.findByText("The next question?")).toBeTruthy();
+      expect(send).toHaveBeenLastCalledWith("me", "New better words");
+    });
+
+    const arrivedAnyway = () => {
+      const client = fake();
+      vi.spyOn(client, "current").mockResolvedValueOnce(asking).mockResolvedValue(next);
+      const send = vi.spyOn(client, "answer").mockRejectedValueOnce(lost());
+      return { client, send };
+    };
+
+    it("if the first try did arrive and the words are the same, says it was saved", async () => {
+      const { client, send } = arrivedAnyway();
+      renderWith(client);
+      await type("My answer");
+      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+      await screen.findByRole("alert");
+      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+      expect(await screen.findByText("The next question?")).toBeTruthy();
+      expect(screen.getByText("Your answer was saved.")).toBeTruthy();
+      expect(send).toHaveBeenCalledTimes(1);
+    });
+
+    it("if the first try did arrive and the words were edited, keeps the edit", async () => {
+      const { client, send } = arrivedAnyway();
+      renderWith(client);
+      await type("Old words");
+      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+      await screen.findByRole("alert");
+      await type("New better words");
+      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+      expect(await screen.findByText("The next question?")).toBeTruthy();
+      expect(screen.getByText(/Your first version was saved. Your changes are still here/)).toBeTruthy();
+      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("New better words");
+      expect(send).toHaveBeenCalledTimes(1);
+    });
+
+    it("a repeated question opens with an empty field, thanks to its id", async () => {
+      const client = at({ ...asking, questionId: "q1" });
+      vi.spyOn(client, "answer").mockResolvedValue({ ...asking, questionId: "q2" });
+      renderWith(client);
+      await type("My answer");
+      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+      await waitFor(() =>
+        expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe(""),
+      );
+    });
+
+    it("says so when asking for the next question fails again", async () => {
+      const client = at(asking);
+      vi.spyOn(client, "skip").mockRejectedValueOnce(stuck);
+      vi.spyOn(client, "askAgain").mockRejectedValueOnce(stuck);
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: "Skip" }));
+      fireEvent.click(await screen.findByRole("button", { name: "Ask me the next question" }));
+      expect(await screen.findByText("That didn't work either. Try again in a moment.")).toBeTruthy();
     });
 
     it("a refused pick of a title shows what's true, not the refusal", async () => {
@@ -386,21 +485,6 @@ describe("InterviewPage", () => {
       renderWith(client);
       fireEvent.click(await screen.findByRole("button", { name: "Put it on the shelf" }));
       expect((await screen.findByRole("alert")).textContent).toMatch(/at least 3 chapters/);
-    });
-
-    it("a proxy's 502 resends the answer on Try again", async () => {
-      const client = at(asking);
-      const send = vi
-        .spyOn(client, "answer")
-        .mockRejectedValueOnce(new LostError())
-        .mockResolvedValue({ ...asking, question: "The next question?" });
-      renderWith(client);
-      await type("My answer");
-      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
-      expect((await screen.findByRole("alert")).textContent).toMatch(/Your answer is still here/);
-      fireEvent.click(screen.getByRole("button", { name: "Try again" }));
-      expect(await screen.findByText("The next question?")).toBeTruthy();
-      expect(send).toHaveBeenCalledTimes(2);
     });
 
     it("waits and looks again when the book is being written after a refresh", async () => {
@@ -456,36 +540,6 @@ describe("InterviewPage", () => {
       fireEvent.click(screen.getByRole("button", { name: "Try again" }));
       expect(await screen.findByRole("button", { name: "Start the interview" })).toBeTruthy();
     });
-
-    it("a lost connection keeps the answer and sends it again only if it never arrived", async () => {
-      const client = at(asking);
-      const send = vi
-        .spyOn(client, "answer")
-        .mockRejectedValueOnce(new TypeError("Failed to fetch"))
-        .mockResolvedValue({ ...asking, question: "The next question?" });
-      renderWith(client);
-      await type("My answer");
-      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
-      expect((await screen.findByRole("alert")).textContent).toMatch(/Your answer is still here/);
-      expect(document.body.textContent).not.toMatch(/Failed to fetch/);
-      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("My answer");
-      fireEvent.click(screen.getByRole("button", { name: "Try again" }));
-      expect(await screen.findByText("The next question?")).toBeTruthy();
-      expect(send).toHaveBeenCalledTimes(2);
-    });
-
-    it("a lost connection doesn't send twice when the answer did arrive", async () => {
-      const client = fake();
-      const next = { ...asking, question: "The next question?" };
-      vi.spyOn(client, "current").mockResolvedValueOnce(asking).mockResolvedValueOnce(next);
-      const send = vi.spyOn(client, "answer").mockRejectedValueOnce(new TypeError("Failed to fetch"));
-      renderWith(client);
-      await type("My answer");
-      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
-      fireEvent.click(await screen.findByRole("button", { name: "Try again" }));
-      expect(await screen.findByText("The next question?")).toBeTruthy();
-      expect(send).toHaveBeenCalledTimes(1);
-    });
   });
 
   describe("waiting", () => {
@@ -500,7 +554,7 @@ describe("InterviewPage", () => {
       await act(() => vi.advanceTimersByTimeAsync(2_000));
       expect(screen.getByText("Still working. Your answers are saved.")).toBeTruthy();
       await act(() => vi.advanceTimersByTimeAsync(105_000));
-      expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
+      expect(screen.getByRole("alert")).toBeTruthy();
       expect(screen.queryByText(/Still working/)).toBeNull();
     });
   });
@@ -545,8 +599,8 @@ describe("InterviewPage", () => {
     it("welcomes a member back after time away, with one way forward", async () => {
       renderWith(at(returning));
       expect(await screen.findByText(/Welcome back. Last time you were telling me about/)).toBeTruthy();
-      expect(screen.getByRole("link", { name: "Continue later" }).getAttribute("href")).toBe("/my-book");
-      fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+      expect(screen.queryByText("Continue later")).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: "Back to the question" }));
       expect(await screen.findByText(asking.question)).toBeTruthy();
     });
 
@@ -608,6 +662,16 @@ describe("InterviewPage", () => {
       fireEvent.click(screen.getByRole("button", { name: "Rewrite the back cover" }));
       expect(await screen.findByText("A better blurb.")).toBeTruthy();
       expect(rewrite).toHaveBeenCalledTimes(1);
+    });
+
+    it("can go back to the back cover before the last rewrite", async () => {
+      const state = reviewing() as Extract<InterviewState, { stage: "reviewing" }>;
+      const client = at({ ...state, book: { ...state.book, hasPreviousBlurb: true } });
+      const restore = vi.spyOn(client, "restoreBlurb").mockResolvedValue(reviewing("The one I liked."));
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: "Go back to the last back cover" }));
+      expect(await screen.findByText("The one I liked.")).toBeTruthy();
+      expect(restore).toHaveBeenCalledTimes(1);
     });
 
     it("says so when a removal rewrote the back cover", async () => {
@@ -678,7 +742,9 @@ describe("InterviewPage", () => {
 
     it("shows the member their own words behind a chapter, on request", async () => {
       renderWith(at(reviewing()));
-      expect(await screen.findByText(/Only you see them/)).toBeTruthy();
+      expect(
+        await screen.findByText(/opens your own words behind each chapter. Only you see those/),
+      ).toBeTruthy();
       const quote = `I said this about ${CHAPTER_TITLES[0]}.`;
       expect(screen.queryByText(quote)).toBeNull();
       fireEvent.click(screen.getByRole("button", { name: `Show what you said for ${CHAPTER_TITLES[0]}` }));

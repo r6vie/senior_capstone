@@ -14,9 +14,16 @@ import {
 // The real interview API (api/trove/interview), mapped onto the shape the screens use.
 // The API keeps one interview per member, so there is no id to pass; the screens' id is a constant.
 
-type MyBookResponse = components["schemas"]["MyBookResponse"];
+// Trove API's round 5 fields (R5-01, R5-07, R5-09, R5-18), read when they're there.
+type MyBookResponse = components["schemas"]["MyBookResponse"] & {
+  last_changed_at?: string | null;
+  has_previous_blurb?: boolean;
+};
 type ChangeResponse = components["schemas"]["Change"];
-type InterviewResponse = components["schemas"]["InterviewResponse"];
+type InterviewResponse = components["schemas"]["InterviewResponse"] & {
+  dropped_for_names?: boolean;
+  reading_question_id?: string | null;
+};
 
 const ID = "me";
 
@@ -31,14 +38,26 @@ function unwrap<T>({ data, error, response }: Result<T>): T {
   // Neither of these reaches a member in the API's own words: one names a database, one names a field.
   if (response?.status === 503)
     throw new InterviewError("Something's wrong on our side. Nothing you said is lost.");
-  if (response?.status === 422) throw new InterviewError("That didn't go through. Check it and try again.");
+  const detail = error && typeof error === "object" && "detail" in error ? error.detail : undefined;
+  // A list here is a schema error, which names fields. A sentence is the API talking to the member.
+  if (response?.status === 422 && typeof detail !== "string") {
+    throw new InterviewError("That didn't go through. Check it and try again.");
+  }
   if (response?.status === 502) {
     // The API's own 502 says what happened, in `detail`: the Librarian failed, with the member's part
     // saved. A proxy's 502 has no such word, and may never have reached the API.
     if (!(error && typeof error === "object" && "detail" in error)) throw new LostError();
     throw new InterviewError(errorMessage(error), true);
   }
-  throw new InterviewError(errorMessage(error), false, response?.status === 409);
+  const alreadySaved = Boolean(
+    error && typeof error === "object" && "already_saved" in error && error.already_saved,
+  );
+  throw new InterviewError(errorMessage(error), false, response?.status === 409, alreadySaved);
+}
+
+// Routes in Trove API's round 5. Their paths can't be typed until schema.ts is regenerated.
+function postUntyped(path: string): Promise<Result<MyBookResponse>> {
+  return (api.POST as unknown as (path: string) => Promise<Result<MyBookResponse>>)(path);
 }
 
 function ended({ error, response }: Result<unknown>) {
@@ -55,6 +74,7 @@ function toBook(book: MyBookResponse): DraftBook {
     authorName: book.author_name,
     blurb: book.blurb,
     rewriteUnchanged: book.rewrite_unchanged,
+    hasPreviousBlurb: book.has_previous_blurb,
     chapters: book.chapters.map(({ id, title, summary, quotes, has_previous }) => ({
       id,
       title,
@@ -113,7 +133,14 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
     case "reviewing":
       return myBook();
     case "done":
-      return response.nothing_new ? { id: ID, stage: "nothing" } : myBook();
+      return response.nothing_new
+        ? {
+            id: ID,
+            stage: "nothing",
+            droppedForNames: response.dropped_for_names,
+            readingQuestionId: response.reading_question_id ?? undefined,
+          }
+        : myBook();
     case "revising":
       if (!response.changes) {
         return { id: ID, stage: response.revision_status === "failed" ? "writeFailed" : "writing" };
@@ -150,6 +177,7 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
         // Only a round of adding has other phases, and those aren't shown.
         phase: question.phase === "dig" ? "dig" : "sweep",
         question: question.text,
+        questionId: question.question_id,
         canFinish: response.can_finish,
         hasAnswers: response.has_answers,
         lastTopic: response.topic,
@@ -260,6 +288,9 @@ export const apiInterviewClient: InterviewClient = {
   async rewriteBlurb() {
     return fromBook(unwrap(await api.POST("/interview/book/blurb")));
   },
+  async restoreBlurb() {
+    return fromBook(unwrap(await postUntyped("/interview/book/blurb/restore")));
+  },
   async rewriteChapter(_id, chapterId) {
     const params = { path: { chapter_id: chapterId } };
     return fromBook(unwrap(await api.POST("/interview/book/chapters/{chapter_id}/rewrite", { params })));
@@ -302,7 +333,7 @@ export const apiInterviewClient: InterviewClient = {
     const { data, error, response } = await api.GET("/books/me");
     if (response.status === 404) return null;
     const book = unwrap<MyBookResponse>({ data, error, response });
-    return { ...toBook(book), canUndo: book.can_undo };
+    return { ...toBook(book), canUndo: book.can_undo, changedAt: book.last_changed_at };
   },
   async reopen() {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/reopen")));
@@ -327,11 +358,17 @@ export const apiInterviewClient: InterviewClient = {
     const body = { approved, blurb: blurb ? ("use" as const) : ("keep" as const) };
     const book = unwrap(await api.POST("/interview/revision", { body }));
     return approved.length
-      ? { id: ID, stage: "updated", book: toBook(book) }
+      ? { id: ID, stage: "updated", book: toBook(book), canUndo: book.can_undo }
       : { id: ID, stage: "done", book: toBook(book) };
   },
   async undoChanges() {
-    ended(await api.POST("/interview/book/undo"));
+    const result = await api.POST("/interview/book/undo");
+    if (result.response.status === 409) {
+      // A double press, or another screen: if the book is already back as it was, that's success.
+      const book = await apiInterviewClient.myBook();
+      if (book && !book.canUndo) return;
+    }
+    ended(result);
   },
   async blurbWithout(chapterId) {
     return writeSelectionBlurb([await removalOf(chapterId)]);
@@ -341,6 +378,21 @@ export const apiInterviewClient: InterviewClient = {
     removals.delete(chapterId);
     const body = { approved: [change], blurb: blurb ? ("use" as const) : ("keep" as const) };
     ended(await api.POST("/interview/revision", { body }));
+  },
+  async openRemoval() {
+    const { data, response } = await api.GET("/interview");
+    if (response.status === 404 || !data) return null;
+    const [only, ...rest] = data.changes ?? [];
+    if (!only || rest.length || only.kind !== "remove" || !only.chapter_id) return null;
+    return { chapterId: only.chapter_id, title: only.current?.title ?? only.title };
+  },
+  async cancelRemoval() {
+    removals.clear();
+    ended(await postUntyped("/interview/removal/cancel"));
+  },
+  async lastRoundEmpty() {
+    const { data } = await api.GET("/interview");
+    return Boolean(data?.nothing_new);
   },
   async sparks() {
     const sparks = unwrap(await api.GET("/interview/sparks"));

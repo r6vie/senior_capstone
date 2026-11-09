@@ -145,7 +145,8 @@
     padding-left: 14px;
   }
   /* On a phone only Proposed shows, so a few changes don't become a very long scroll. */
-  .iv-chg-now:not([data-open="true"]) {
+  .iv-chg-now:not([data-open="true"]),
+  .iv-chg-now[data-blank="true"] {
     display: none;
   }
   .iv-chg-nowtoggle {

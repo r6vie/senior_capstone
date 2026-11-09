@@ -211,6 +211,8 @@ function view(stored: Stored, authorName: string): InterviewState {
       return { id, stage: "proposing", changes: CHANGES, blurb: stored.book?.blurb ?? null };
     case "nothing":
       return { id, stage: "nothing" };
+    case "updated":
+      return { id, stage: "updated", book: stored.book ?? emptyBook(authorName), canUndo: true };
     case "asking": {
       const current = scripted(stored.answers.length);
       const previous = scripted(stored.answers.length - 1);
@@ -434,7 +436,7 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
       }
       save(stored);
       return approved.length
-        ? { id: stored.id, stage: "updated", book: stored.book }
+        ? { id: stored.id, stage: "updated", book: stored.book, canUndo: true }
         : { id: stored.id, stage: "done", book: stored.book };
     },
     undoChanges: async () => {
@@ -456,6 +458,10 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
       if (blurb) stored.book.blurb = blurb;
       save(stored);
     },
+    restoreBlurb: (id) => mutate(id, () => {}),
+    openRemoval: async () => null,
+    cancelRemoval: async () => undefined,
+    lastRoundEmpty: async () => load()?.stage === "nothing",
     sparks: async () => load()?.sparks ?? [],
     removeSpark: async (sparkId) => {
       const stored = load();

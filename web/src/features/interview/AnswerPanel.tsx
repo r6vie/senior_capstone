@@ -270,6 +270,11 @@ function writeDraft(key: string, text: string) {
   }
 }
 
+/** Put words into a question's draft, so its panel opens with them. */
+export function keepDraft(key: string, text: string) {
+  writeDraft(key, text);
+}
+
 export function clearDraft(key: string) {
   writeDraft(key, "");
 }

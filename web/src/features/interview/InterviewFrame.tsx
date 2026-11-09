@@ -13,6 +13,11 @@ const PHASES: { id: Phase; label: string }[] = [
   { id: "shape", label: "Check" },
 ];
 
+/** Arriving on a screen starts the keyboard at the Librarian's words. */
+export function focusBand() {
+  document.querySelector<HTMLElement>(".iv-say")?.focus({ preventScroll: true });
+}
+
 // A wait this long gets one calm line.
 const SLOW_AFTER_MS = 15_000;
 

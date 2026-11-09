@@ -13,8 +13,11 @@ const changes: ProposedChange[] = [
     kind: "improve",
     note: "Adds what the collector showed you.",
     title: "Selling the Ones I Couldn't Fix",
-    summary: "I kept them for a year. He showed me how to test a board.",
-    now: { title: "Selling the Ones I Couldn't Fix", summary: "I kept them for a year." },
+    summary: "I kept them for a year, hoping I would learn how. He showed me a test.",
+    now: {
+      title: "Selling the Ones I Couldn't Fix",
+      summary: "I kept them for a year, hoping I would learn how.",
+    },
   },
   {
     id: "c2",
@@ -48,6 +51,10 @@ function show(c: InterviewClient, url = "/interview") {
 
 function press(name: string) {
   fireEvent.click(screen.getByRole("button", { name }));
+}
+
+function press2(name: string) {
+  return screen.findByRole("button", { name }).then((button) => fireEvent.click(button));
 }
 
 describe("adding to a book", () => {
@@ -115,7 +122,7 @@ describe("adding to a book", () => {
     show(client(inRound, { finish }));
     fireEvent.click(await screen.findByRole("button", { name: "That's enough. Write the changes" }));
     expect(finish).toHaveBeenCalledWith("me", undefined);
-    expect(await screen.findByText("Writing your changes.")).toBeTruthy();
+    expect(await screen.findByText("I'm writing the changes.")).toBeTruthy();
     expect(screen.queryByRole("list", { name: "Where we are" })).toBeNull();
   });
 
@@ -165,7 +172,7 @@ describe("proposed changes", () => {
     expect(screen.queryByText(/Improved/)).toBeNull();
     expect(screen.getByText("Not in your book yet.")).toBeTruthy();
     expect(screen.getAllByText("Not decided")).toHaveLength(2);
-    expect(document.querySelector("ins")?.textContent).toMatch(/He showed me how to test a board/);
+    expect(document.querySelector("ins")?.textContent).toMatch(/He showed me a test/);
   });
 
   it("names the chapter on each decision, and the choice is never red", async () => {
@@ -216,6 +223,7 @@ describe("proposed changes", () => {
         id: "me",
         stage: "updated",
         book: { title: "T", authorName: "N", blurb: null, chapters: [] },
+        canUndo: true,
       }),
     );
     show(client(proposing, { blurbFor, applyChanges: apply }));
@@ -271,13 +279,70 @@ describe("proposed changes", () => {
     const undo = vi.fn(async () => undefined);
     show(
       client(
-        { id: "me", stage: "updated", book: { title: "T", authorName: "N", blurb: null, chapters: [] } },
+        {
+          id: "me",
+          stage: "updated",
+          book: { title: "T", authorName: "N", blurb: null, chapters: [] },
+          canUndo: true,
+        },
         { undoChanges: undo },
       ),
     );
     fireEvent.click(await screen.findByRole("button", { name: "Undo these changes" }));
+    expect(undo).not.toHaveBeenCalled();
+    expect(screen.getByText(/They come out of your book, and I won't suggest them again/)).toBeTruthy();
+    press("Undo");
     await waitFor(() => expect(undo).toHaveBeenCalledTimes(1));
     expect(await screen.findByText("Your book is back as it was.")).toBeTruthy();
+  });
+});
+
+describe("how a round ends", () => {
+  beforeEach(() => localStorage.clear());
+
+  const book = { title: "T", authorName: "N", blurb: null, chapters: [] };
+  const done: InterviewState = { id: "me", stage: "done", book };
+
+  it("hides undo on the updated screen when it can't be undone", async () => {
+    show(client({ id: "me", stage: "updated", book, canUndo: false }));
+    await screen.findByText("Your book on the shelf is updated.");
+    expect(screen.queryByRole("button", { name: "Undo these changes" })).toBeNull();
+  });
+
+  it("declining everything goes to My book, not the first-publication screen", async () => {
+    show(client(proposing, { applyChanges: async () => done }));
+    fireEvent.click(await screen.findByRole("button", { name: "Decline: What I Gave Up for the Garage" }));
+    press("Review your choices");
+    await press2("Leave my book as it is");
+    expect(await screen.findByText("The My book page")).toBeTruthy();
+    expect(screen.queryByText(/Your book is on the shelf/)).toBeNull();
+  });
+
+  it("a round that changes nothing says so, rather than offering more questions", async () => {
+    const reopened: InterviewState = {
+      id: "me",
+      stage: "asking",
+      round: "adding",
+      phase: "dig",
+      question: "What did you stop doing?",
+      canFinish: true,
+      hasAnswers: false,
+      lastTopic: null,
+    };
+    const finish = vi.fn(async (): Promise<InterviewState> => ({ id: "me", stage: "nothing" }));
+    show(client(done, { reopen: async () => reopened, finish }), "/interview?add");
+    fireEvent.click(await screen.findByRole("button", { name: "Start the questions" }));
+    fireEvent.click(await screen.findByRole("button", { name: "That's enough. Write the changes" }));
+    expect(await screen.findByText("Nothing here changes your book.")).toBeTruthy();
+    expect(screen.queryByText(/A few more questions/)).toBeNull();
+  });
+
+  it("says why when an answer was left out for naming someone, and offers another go", async () => {
+    show(client({ id: "me", stage: "nothing", droppedForNames: true, readingQuestionId: "r1" }));
+    expect(await screen.findByText(/I left this out because it named someone or somewhere/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Say it again" }).getAttribute("href")).toBe(
+      "/interview/reading/r1",
+    );
   });
 });
 
@@ -305,13 +370,45 @@ describe("removing a chapter from the shelf", () => {
       }),
       "/my-book/remove/3",
     );
+    await press2("Remove");
     expect(await screen.findByText("You asked to remove a chapter.")).toBeTruthy();
     expect(screen.getByText("Comes out of your book.")).toBeTruthy();
+    expect(document.body.textContent).toContain("Rewritten without this chapter.");
+    expect(document.body.textContent).not.toContain("to include what you approved");
     expect(document.body.textContent).toContain("The shorter back cover.");
     expect(remove).not.toHaveBeenCalled();
     press("Update my book on the shelf");
     await waitFor(() => expect(remove).toHaveBeenCalledWith("3", "The shorter back cover."));
     expect(await screen.findByText("The My book page")).toBeTruthy();
+  });
+
+  it("looking costs nothing: nothing starts until Remove", async () => {
+    const write = vi.fn(async () => "Shorter.");
+    show(client(null, { myBook: async () => book, blurbWithout: write }), "/my-book/remove/3");
+    expect(await screen.findByText("Remove this chapter?")).toBeTruthy();
+    expect(write).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "Keep it" }).getAttribute("href")).toBe("/my-book");
+  });
+
+  it("backing out after starting cancels it", async () => {
+    const cancel = vi.fn(async () => undefined);
+    show(
+      client(null, { myBook: async () => book, blurbWithout: async () => "S.", cancelRemoval: cancel }),
+      "/my-book/remove/3",
+    );
+    await press2("Remove");
+    await screen.findByText("You asked to remove a chapter.");
+    await press2("Back to my book");
+    await waitFor(() => expect(cancel).toHaveBeenCalledTimes(1));
+    expect(await screen.findByText("The My book page")).toBeTruthy();
+  });
+
+  it("coming back to finish skips the question", async () => {
+    show(
+      client(null, { myBook: async () => book, blurbWithout: async () => "S." }),
+      "/my-book/remove/3?finish",
+    );
+    expect(await screen.findByText("You asked to remove a chapter.")).toBeTruthy();
   });
 
   it("isn't reachable at three chapters", async () => {
@@ -361,8 +458,44 @@ describe("the reading question", () => {
     );
     fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "They asked why." } });
     press("Send answer");
-    expect(await screen.findByText("Reading your answer against your book.")).toBeTruthy();
+    expect(await screen.findByText("I'm checking whether this belongs in your book.")).toBeTruthy();
     expect(answer).toHaveBeenCalledWith("r1", "They asked why.");
+  });
+
+  it("when the reply is lost but the answer arrived, goes on and says it was saved", async () => {
+    const asked = vi.fn().mockResolvedValueOnce([question]).mockResolvedValue([]);
+    show(
+      client(
+        { id: "me", stage: "writing" },
+        {
+          readingQuestions: asked,
+          answerReading: async () => {
+            throw new TypeError("Failed to fetch");
+          },
+        },
+      ),
+      "/interview/reading/r1",
+    );
+    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "They asked why." } });
+    press("Send answer");
+    expect(await screen.findByText("Your answer was saved.")).toBeTruthy();
+    expect(screen.getByText("I'm checking whether this belongs in your book.")).toBeTruthy();
+  });
+
+  it("when the send failed and it's still waiting, keeps the answer", async () => {
+    show(
+      client(null, {
+        readingQuestions: async () => [question],
+        answerReading: async () => {
+          throw new TypeError("Failed to fetch");
+        },
+      }),
+      "/interview/reading/r1",
+    );
+    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "They asked why." } });
+    press("Send answer");
+    expect((await screen.findByRole("alert")).textContent).toMatch(/Your answer is still here/);
+    expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("They asked why.");
   });
 
   it("says so when the question isn't waiting any more", async () => {

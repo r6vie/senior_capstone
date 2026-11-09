@@ -1,8 +1,8 @@
 import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { Link, Navigate, useLocation, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { useAuth } from "../auth/AuthProvider";
-import { AnswerPanel, clearDraft, draftKeyFor } from "./AnswerPanel";
+import { AnswerPanel, clearDraft, draftKeyFor, keepDraft } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
 import { ErrorMessage, Frame, RetryContext, SmallBook, Waiting } from "./InterviewFrame";
 import {
@@ -15,6 +15,7 @@ import {
   type TitleOption,
 } from "./interviewClient";
 import { ChangesScreen, WaitBox } from "./ProposedChanges";
+import { UndoChanges } from "./UndoChanges";
 
 // The interview, direction A "The question band" (docs/design/shelf/project/InterviewA.dc.html,
 // trove.md §4). The Librarian's words stand alone on the black band; the member acts below it.
@@ -59,7 +60,7 @@ function writeSeen(key: string) {
 // Where the member is, to tell a new question or screen from the same one.
 function placeOf(state: InterviewState | null): string {
   if (!state) return "";
-  if (state.stage === "asking") return `asking:${state.question}`;
+  if (state.stage === "asking") return `asking:${state.questionId ?? state.question}`;
   return state.stage === "drafting" && state.failed ? "draftingFailed" : state.stage;
 }
 
@@ -88,8 +89,14 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   const location = useLocation();
   // Arrived from answering the question after a reading: the wait and the outcome say so.
   const fromReading = Boolean((location.state as { fromReading?: boolean } | null)?.fromReading);
-  // Done from an earlier visit has nothing to do here. Done just now is the moment to say so.
-  const [doneOnArrival, setDoneOnArrival] = useState(false);
+  const fromLostReading = Boolean((location.state as { answerSaved?: boolean } | null)?.answerSaved);
+  const navigate = useNavigate();
+  // "Your book is on the shelf" is for the moment of shelving, from the review. Anything else that
+  // arrives at done belongs on My book.
+  const [justShelved, setJustShelved] = useState(false);
+  const [leftAsIs, setLeftAsIs] = useState(false);
+  // What the last send tried to save, when the reply never came, so nobody can tell if it arrived.
+  const unsure = useRef<string | null>(null);
   const [hasSparks, setHasSparks] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -103,7 +110,6 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         const seen = readSeen(seenKey);
         const away = seen === null || Date.now() - seen > WELCOME_BACK_AFTER_MS;
         setState(current);
-        setDoneOnArrival(current?.stage === "done");
         setWelcomedBack(away && current?.stage === "asking" && current.hasAnswers);
         writeSeen(seenKey);
       })
@@ -180,9 +186,12 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         /** Instead of Try again, when the API says the member's part was saved and the rest failed. */
         onSavedButStuck?: () => void;
         onSuccess?: () => void;
-        /** The interview had already moved past this screen, so what the member sent did arrive. */
-        onMoved?: () => void;
+        /** The interview had already moved past this screen. */
+        onMoved?: (now: InterviewState, alreadySaved: boolean) => void;
         lost?: string;
+        /** The member's own button is the retry, so what's in the field now is what gets sent. */
+        noRetry?: boolean;
+        onLost?: () => void;
       } = {},
     ) => {
       setBusy(waiting);
@@ -206,20 +215,19 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
       } catch (reason) {
         if (isLost(reason)) {
           setError(options.lost ?? LOST_DEFAULT);
-          // The first try may have arrived even though the reply didn't. Look before repeating it.
-          const looked = async () => {
-            const now = await movedOn();
-            if (now) options.onMoved?.();
-            return now ?? call();
-          };
-          setRetry(() => () => {
-            run(waiting, looked, options);
-          });
+          options.onLost?.();
+          if (!options.noRetry) {
+            // The first try may have arrived even though the reply didn't. Look before repeating it.
+            const looked = async () => (await movedOn()) ?? call();
+            setRetry(() => () => {
+              run(waiting, looked, options);
+            });
+          }
         } else if (reason instanceof InterviewError && reason.conflict) {
           // A 409 means this screen is out of date. Show what's true rather than the refusal.
           const now = await movedOn().catch(() => null);
           if (now) {
-            options.onMoved?.();
+            options.onMoved?.(now, reason.alreadySaved);
             arrive(now);
             return true;
           }
@@ -284,7 +292,12 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           <div className="iv-row">
             <Button
               aria-busy={Boolean(busy)}
-              onClick={() => run("The Librarian is getting ready…", () => client.reopen())}
+              onClick={() =>
+                // ?add only lasts until Start, so the end of this round doesn't land back here.
+                run("The Librarian is getting ready…", () => client.reopen(), {
+                  onSuccess: () => navigate("/interview", { replace: true }),
+                })
+              }
             >
               Start the questions
             </Button>
@@ -318,7 +331,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
 
     switch (state.stage) {
       case "asking": {
-        const draftKey = draftKeyFor(userId, state.question);
+        const draftKey = draftKeyFor(userId, state.questionId ?? state.question);
         const inAdding = state.round === "adding";
         const phase = inAdding ? undefined : state.phase;
         if (welcomedBack && state.lastTopic) {
@@ -330,24 +343,66 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             >
               <ErrorMessage message={error} />
               <div className="iv-row">
-                <Button onClick={() => setWelcomedBack(false)}>Continue</Button>
-                {/* Leaves the same way "Leave for now" does: everything is already saved. */}
-                <Link to="/my-book" className="button button-quiet">
-                  Continue later
-                </Link>
+                <Button onClick={() => setWelcomedBack(false)}>Back to the question</Button>
               </div>
               <p className="iv-note">Everything you've said so far is saved.</p>
             </Frame>
           );
         }
-        // What was said is safe once this runs, whichever try gets through.
-        const moveOn = (kind: "answer" | "skip", call: () => Promise<InterviewState>) =>
-          run("The Librarian is thinking…", call, {
+        // Sending again after a lost reply: the first try may have arrived. Look first, and send what's
+        // in the field now only if it didn't, so a member's edit is never replaced by their first version.
+        const lookThenSend = async (words: string | undefined, call: () => Promise<InterviewState>) => {
+          const sent = unsure.current;
+          if (sent === null) return call();
+          const now = await client.current();
+          if (!now || placeOf(now) === placeOf(state)) return call();
+          unsure.current = null;
+          if (!words || words === sent) {
+            setNotice("Your answer was saved.");
+          } else if (now.stage === "asking") {
+            keepDraft(draftKeyFor(userId, now.questionId ?? now.question), words);
+            setNotice("Your first version was saved. Your changes are still here for the next answer.");
+          }
+          return now;
+        };
+        // On a 409 the interview has moved on. It may be this send that arrived, or another screen that
+        // answered first, in which case the words here were never saved and must not disappear.
+        const onMoved = (words: string | undefined) => (now: InterviewState, alreadySaved: boolean) => {
+          unsure.current = null;
+          if (!words) return;
+          if (alreadySaved) {
+            setNotice("Your answer was saved.");
+          } else if (now.stage === "asking") {
+            keepDraft(draftKeyFor(userId, now.questionId ?? now.question), words);
+            setNotice(
+              "You'd already moved past that question on another screen. Your words are still here. Send them if they fit.",
+            );
+          } else {
+            setError(
+              "You'd already moved on from that question on another screen, so your last words weren't saved.",
+            );
+          }
+        };
+        const moveOn = (
+          kind: "answer" | "skip",
+          words: string | undefined,
+          call: () => Promise<InterviewState>,
+        ) =>
+          run("The Librarian is thinking…", () => lookThenSend(words, call), {
             lost: kind === "answer" ? LOST_ANSWER : LOST_DEFAULT,
-            onSuccess: () => clearDraft(draftKey),
-            onMoved: () => kind === "answer" && setNotice("Your answer was saved."),
+            noRetry: true,
+            onLost: () => {
+              if (words) unsure.current = words;
+            },
+            onSuccess: () => {
+              unsure.current = null;
+              clearDraft(draftKey);
+            },
+            onMoved: onMoved(words),
             onSavedButStuck: () => {
               clearDraft(draftKey);
+              unsure.current = null;
+              if (interrupted) setNotice("That didn't work either. Try again in a moment.");
               setInterrupted(kind);
             },
           });
@@ -359,10 +414,15 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
                 {interrupted === "answer" && "Your answer is saved. "}
                 The next question didn't come through.
               </p>
+              {notice && (
+                <p className="iv-note" role="status">
+                  {notice}
+                </p>
+              )}
               <div className="iv-row">
                 <Button
                   aria-busy={Boolean(busy)}
-                  onClick={() => moveOn(interrupted, () => client.askAgain(state.id))}
+                  onClick={() => moveOn(interrupted, undefined, () => client.askAgain(state.id))}
                 >
                   Ask me the next question
                 </Button>
@@ -385,8 +445,8 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
               key={draftKey}
               draftKey={draftKey}
               busy={Boolean(busy)}
-              onSend={(text) => moveOn("answer", () => client.answer(state.id, text))}
-              onSkip={() => moveOn("skip", () => client.skip(state.id))}
+              onSend={(text) => moveOn("answer", text, () => client.answer(state.id, text))}
+              onSkip={() => moveOn("skip", undefined, () => client.skip(state.id))}
               progress={state.nearlyDone ? "Most of the way there." : undefined}
               exit={
                 state.canFinish
@@ -402,10 +462,18 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
                           inAdding
                             ? "The Librarian is writing the changes…"
                             : "The Librarian is gathering what you said…",
-                          () => client.finish(state.id, words),
+                          () => lookThenSend(words, () => client.finish(state.id, words)),
                           {
                             lost: words ? LOST_ANSWER : LOST_DEFAULT,
-                            onSuccess: () => clearDraft(draftKey),
+                            noRetry: Boolean(words),
+                            onLost: () => {
+                              if (words) unsure.current = words;
+                            },
+                            onSuccess: () => {
+                              unsure.current = null;
+                              clearDraft(draftKey);
+                            },
+                            onMoved: onMoved(words),
                             // After a 502 the words are already saved, so a second try sends none.
                             retryWith: () => client.finish(state.id),
                           },
@@ -461,6 +529,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             onRewriteBlurb={() =>
               run("The Librarian is rewriting the back cover…", () => client.rewriteBlurb(state.id))
             }
+            onRestoreBlurb={() => run("Going back to the last version…", () => client.restoreBlurb(state.id))}
             onRewrite={(chapterId) =>
               run("The Librarian is rewriting that chapter…", () =>
                 client.rewriteChapter(state.id, chapterId),
@@ -472,11 +541,15 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             onRemove={(chapterId) =>
               run("Removing that chapter…", () => client.removeChapter(state.id, chapterId))
             }
-            onShelve={() => run("Putting your book on the shelf…", () => client.putOnShelf(state.id))}
+            onShelve={() =>
+              run("Putting your book on the shelf…", () => client.putOnShelf(state.id), {
+                onSuccess: () => setJustShelved(true),
+              })
+            }
           />
         );
       case "done":
-        if (doneOnArrival) return <Navigate to="/my-book" replace />;
+        if (!justShelved) return <Navigate to="/my-book" replace state={{ leftAsIs }} />;
         return <DoneScreen book={state.book} />;
       case "drafting":
         if (state.failed) {
@@ -532,19 +605,23 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           </Frame>
         );
       case "writing":
-        return fromReading ? (
-          <Frame canLeave={false} say="I'm checking whether this belongs in your book.">
-            <WaitBox title="Reading your answer against your book." />
-          </Frame>
-        ) : (
-          <Frame canLeave={false} say="I'm writing the changes.">
-            <WaitBox title="Writing your changes." />
+        return (
+          <Frame
+            canLeave={false}
+            say={fromReading ? "I'm checking whether this belongs in your book." : "I'm writing the changes."}
+          >
+            {fromLostReading && (
+              <p className="iv-note" role="status">
+                Your answer was saved.
+              </p>
+            )}
+            <WaitBox />
           </Frame>
         );
       case "writeFailed":
         return (
           <Frame canLeave={false} busy={Boolean(busy)} say={say("I couldn't write the changes.")}>
-            <p className="iv-note iv-note-big">The changes weren't written. Your answers are saved.</p>
+            <p className="iv-note iv-note-big">Your answers are saved.</p>
             <div className="iv-row">
               <Button
                 aria-busy={Boolean(busy)}
@@ -568,11 +645,42 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             writeBlurb={(approved) => client.blurbFor(approved)}
             saveChoices={(approved) => client.saveChoices(approved)}
             apply={(approved, blurb, onDone) => {
-              run("Updating your book…", () => client.applyChanges(approved, blurb), { onSuccess: onDone });
+              run("Updating your book…", () => client.applyChanges(approved, blurb), {
+                onSuccess: () => {
+                  setLeftAsIs(approved.length === 0);
+                  onDone();
+                },
+              });
             }}
           />
         );
       case "nothing":
+        if (state.droppedForNames) {
+          return (
+            <Frame canLeave={false} say="Nothing here changes your book.">
+              <p className="iv-note iv-note-big">
+                I left this out because it named someone or somewhere. Say it without the name and I'll try
+                again.
+              </p>
+              <div className="iv-row">
+                {state.readingQuestionId && (
+                  <Link
+                    to={`/interview/reading/${state.readingQuestionId}`}
+                    className="button button-primary"
+                  >
+                    Say it again
+                  </Link>
+                )}
+                <Link
+                  to="/my-book"
+                  className={`button ${state.readingQuestionId ? "button-quiet" : "button-primary"}`}
+                >
+                  Back to my book
+                </Link>
+              </div>
+            </Frame>
+          );
+        }
         return (
           <Frame canLeave={false} say="Nothing here changes your book.">
             <p className="iv-note iv-note-big">
@@ -588,7 +696,9 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           </Frame>
         );
       case "updated":
-        return <UpdatedScreen book={state.book} onUndo={() => client.undoChanges()} />;
+        return (
+          <UpdatedScreen book={state.book} canUndo={state.canUndo} onUndo={() => client.undoChanges()} />
+        );
     }
   })();
 
@@ -983,6 +1093,7 @@ function ReviewScreen({
   loadOtherTitles,
   onChangeTitle,
   onRewriteBlurb,
+  onRestoreBlurb,
   onRewrite,
   onRestore,
   onRemove,
@@ -994,6 +1105,7 @@ function ReviewScreen({
   loadOtherTitles: () => Promise<TitleOption[]>;
   onChangeTitle: (titleId: string) => Promise<boolean>;
   onRewriteBlurb: () => void;
+  onRestoreBlurb: () => void;
   onRewrite: (chapterId: string) => Promise<boolean>;
   onRestore: (chapterId: string) => Promise<boolean>;
   onRemove: (chapterId: string) => Promise<boolean>;
@@ -1055,6 +1167,11 @@ function ReviewScreen({
                 Rewrite the back cover
               </button>
             )}
+            {book.hasPreviousBlurb && (
+              <button type="button" className="button button-quiet iv-sm iv-show" onClick={onRestoreBlurb}>
+                Go back to the last back cover
+              </button>
+            )}
             {others === null && (
               <button type="button" className="button button-quiet iv-sm iv-show" onClick={seeOthers}>
                 See the other titles
@@ -1093,7 +1210,9 @@ function ReviewScreen({
           )}
         </div>
       </div>
-      <p className="iv-note">The words under a chapter are yours. Only you see them.</p>
+      <p className="iv-note">
+        "Show what you said" opens your own words behind each chapter. Only you see those.
+      </p>
       <ol className="iv-chapters">
         {book.chapters.map((chapter, index) => (
           <ChapterRow
@@ -1149,9 +1268,16 @@ function DoneScreen({ book }: { book: DraftBook }) {
   );
 }
 
-function UpdatedScreen({ book, onUndo }: { book: DraftBook; onUndo: () => Promise<void> }) {
+function UpdatedScreen({
+  book,
+  canUndo,
+  onUndo,
+}: {
+  book: DraftBook;
+  canUndo: boolean;
+  onUndo: () => Promise<void>;
+}) {
   const [undone, setUndone] = useState(false);
-  const [failed, setFailed] = useState(false);
   const say = undone ? "Your book is back as it was." : "Your book on the shelf is updated.";
   return (
     <Frame say={say} canLeave={false}>
@@ -1163,32 +1289,11 @@ function UpdatedScreen({ book, onUndo }: { book: DraftBook; onUndo: () => Promis
           </span>
         </span>
         <div className="iv-done-text">
-          {failed && (
-            <p className="message" role="alert">
-              That didn't go through. Your changes are still on the shelf. Try again.
-            </p>
-          )}
           <div className="iv-row">
             <Link to="/my-book" className="button button-primary">
               See my book
             </Link>
-            {!undone && (
-              <button
-                type="button"
-                className="button button-quiet"
-                onClick={async () => {
-                  setFailed(false);
-                  try {
-                    await onUndo();
-                    setUndone(true);
-                  } catch {
-                    setFailed(true);
-                  }
-                }}
-              >
-                Undo these changes
-              </button>
-            )}
+            {canUndo && !undone && <UndoChanges onUndo={onUndo} onDone={() => setUndone(true)} />}
           </div>
         </div>
       </div>

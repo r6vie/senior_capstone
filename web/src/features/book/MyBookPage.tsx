@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { apiInterviewClient } from "../interview/apiInterviewClient";
 import type {
@@ -11,6 +11,7 @@ import type {
   Spark,
 } from "../interview/interviewClient";
 import { readingCaption } from "../interview/ReadingQuestionPage";
+import { UndoChanges } from "../interview/UndoChanges";
 import "./MyBookPage.css";
 
 // The member's own page (board G1): their book as an object, and the one next step for its stage.
@@ -181,16 +182,32 @@ function ChapterRow({
   );
 }
 
+function updatedOn(when: string | null | undefined): string {
+  const undoable = "You can undo these changes until the next time you change it.";
+  if (!when) return undoable;
+  const date = new Date(when).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return `Your book was updated on ${date}. ${undoable}`;
+}
+
 function NextStep({
   stage,
   canUndo,
+  changedAt,
+  removal,
+  onCancelRemoval,
   onUndo,
+  onUndone,
   onRetry,
   retrying,
 }: {
   stage: BookStage;
   canUndo: boolean;
-  onUndo: () => void;
+  changedAt?: string | null;
+  /** The only open change is a removal the member started. */
+  removal: { chapterId: string; title: string } | null;
+  onCancelRemoval: () => void;
+  onUndo: () => Promise<void>;
+  onUndone: () => void;
   onRetry: () => void;
   retrying: boolean;
 }) {
@@ -231,6 +248,21 @@ function NextStep({
         </>
       );
     case "changesWaiting":
+      if (removal) {
+        return (
+          <>
+            <div className="iv-row">
+              <Link to={`/my-book/remove/${removal.chapterId}?finish`} className="button button-primary">
+                Finish removing
+              </Link>
+              <button type="button" className="button button-quiet" onClick={onCancelRemoval}>
+                Keep it
+              </button>
+            </div>
+            <p className="mb-note">You started removing {removal.title}.</p>
+          </>
+        );
+      }
       return (
         <>
           <div className="iv-row">
@@ -250,20 +282,16 @@ function NextStep({
             <Link to="/interview?add" className="button button-primary">
               Add to your book
             </Link>
-            {canUndo && (
-              <button type="button" className="button button-quiet" onClick={onUndo}>
-                Undo these changes
-              </button>
-            )}
+            {canUndo && <UndoChanges onUndo={onUndo} onDone={onUndone} />}
           </div>
-          {canUndo && (
-            <p className="mb-note">
-              Your book was updated just now. You can undo these changes until the next time you change it.
-            </p>
-          )}
+          {canUndo && <p className="mb-note">{updatedOn(changedAt)}</p>}
         </>
       );
   }
+}
+
+function nextStageIsWaiting(stage: BookStage | null): boolean {
+  return stage === "changesWaiting";
 }
 
 export function MyBookPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
@@ -274,17 +302,28 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   const [failed, setFailed] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
+  const [removal, setRemoval] = useState<{ chapterId: string; title: string } | null>(null);
+  const [emptyRound, setEmptyRound] = useState(false);
+  const [undone, setUndone] = useState(false);
+  const location = useLocation();
+  const leftAsIs = Boolean((location.state as { leftAsIs?: boolean } | null)?.leftAsIs);
+  const stageNow = useRef<BookStage | null>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
 
   const load = useCallback(async () => {
     setFailed(false);
     try {
       const [nextStage, nextBook] = await Promise.all([client.stage(), client.myBook()]);
+      stageNow.current = nextStage;
       setStage(nextStage);
       setBook(nextBook);
     } catch {
       setFailed(true);
       return;
     }
+    client.lastRoundEmpty().then(setEmptyRound, () => undefined);
+    if (nextStageIsWaiting(stageNow.current)) client.openRemoval().then(setRemoval, () => undefined);
+    else setRemoval(null);
     // A book without its extras is still the page the member came for.
     client.sparks().then(setSparks, () => undefined);
     client.readingQuestions().then(setReading, () => undefined);
@@ -301,13 +340,24 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
     return () => clearInterval(timer);
   }, [load, stage]);
 
+  // Arriving on the page starts the keyboard at its heading; so does anything that takes away the
+  // control the member just used.
+  const arrived = Boolean(stage);
+  useEffect(() => {
+    if (arrived) heading.current?.focus({ preventScroll: true });
+  }, [arrived]);
+
   async function attempt(call: () => Promise<unknown>, after: () => void) {
     setProblem(null);
+    const before = stageNow.current;
     try {
       await call();
       after();
+      heading.current?.focus({ preventScroll: true });
     } catch {
-      setProblem("That didn't go through. Try again.");
+      // Often the server has moved on and the page is what's out of date. Say so only if it isn't.
+      await load();
+      if (stageNow.current === before) setProblem("That didn't go through. Try again.");
     }
   }
 
@@ -326,7 +376,14 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
     );
   }
 
-  if (!stage) return <main className="mb-page" aria-busy="true" />;
+  if (!stage) {
+    return (
+      <main className="mb-page" aria-busy="true">
+        <h1 className="mb-title">My book</h1>
+        <p className="mb-note">Finding your book…</p>
+      </main>
+    );
+  }
 
   const removeSpark = (id: string) =>
     attempt(
@@ -337,7 +394,9 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   if (!book) {
     return (
       <main className="mb-page">
-        <h1 className="mb-title">My book</h1>
+        <h1 className="mb-title" ref={heading} tabIndex={-1}>
+          My book
+        </h1>
         <div className="mb-one">
           <NoBookYet stage={stage} />
           {problem && (
@@ -376,7 +435,14 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
       <div className={aside ? "mb-two" : "mb-one-wide"}>
         <div>
           <section className="mb-head">
-            <span className="book book-lg" aria-hidden="true">
+            {/* The large book on a wide screen, the regular one on a phone. */}
+            <span className="book book-lg mb-book-wide" aria-hidden="true">
+              <span className="book-cover">
+                <span className="book-title">{book.title}</span>
+                <span className="book-author">{book.authorName}</span>
+              </span>
+            </span>
+            <span className="book mb-book-narrow" aria-hidden="true">
               <span className="book-cover">
                 <span className="book-title">{book.title}</span>
                 <span className="book-author">{book.authorName}</span>
@@ -384,20 +450,42 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
             </span>
             <div className="mb-meta">
               <span className="caption">{onShelf ? "On the shelf" : "Draft, not on the shelf yet"}</span>
-              <h1>{book.title}</h1>
+              <h1 ref={heading} tabIndex={-1}>
+                {book.title}
+              </h1>
               <p className="mb-by">by {book.authorName}</p>
               {book.blurb && <p className="mb-blurb">{book.blurb}</p>}
               <NextStep
                 stage={stage}
                 canUndo={book.canUndo}
+                changedAt={book.changedAt}
+                removal={removal}
+                onCancelRemoval={() => attempt(() => client.cancelRemoval(), load)}
                 retrying={retrying}
-                onUndo={() => attempt(() => client.undoChanges(), load)}
+                onUndo={() => client.undoChanges()}
+                onUndone={() => {
+                  setUndone(true);
+                  load();
+                  heading.current?.focus({ preventScroll: true });
+                }}
                 onRetry={async () => {
                   setRetrying(true);
                   await attempt(() => client.retryWriting("me"), load);
                   setRetrying(false);
                 }}
               />
+              {undone && (
+                <p className="mb-note" role="status">
+                  Your book is back as it was.
+                </p>
+              )}
+              {leftAsIs && !undone && <p className="mb-note">Your book stays as it is.</p>}
+              {emptyRound && onShelf && !open && (
+                <p className="mb-note">
+                  Your last answers didn't change your book. They're saved, and the next questions can use
+                  them.
+                </p>
+              )}
               {problem && (
                 <p className="message" role="alert">
                   {problem}
@@ -409,7 +497,7 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
           {readingPanel && <div className="mb-reading-top">{readingPanel}</div>}
           <h2 className="mb-heading">Chapters</h2>
           <p className="mb-note">
-            The words under a chapter are yours, from your answers. Only you see them.
+            "Show what you said" opens your own words behind each chapter. Only you see those.
           </p>
           <ol className="mb-chapters">
             {book.chapters.map((chapter, index) => (
