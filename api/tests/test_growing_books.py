@@ -291,7 +291,7 @@ async def test_an_unknown_change_is_422_and_changes_nothing(client, database, au
     assert await database.books.find_one({"author_id": author["id"]}) == before
 
 
-async def test_revision_is_409_without_a_proposal(client, author):
+async def test_revision_is_409_without_a_proposal(client, author, fake_claude):
     response = await client.post("/interview/revision", json={"approved": []}, headers=author["headers"])
     assert response.status_code == 409
 
@@ -1606,7 +1606,7 @@ async def test_a_reading_answer_after_another_screen_got_there_first_isnt_saved(
     assert "My words from the laptop here." not in answers
 
 
-async def test_a_reading_answer_after_a_dismissal_isnt_saved(client, database, author):
+async def test_a_reading_answer_after_a_dismissal_isnt_saved(client, database, author, fake_claude):
     question = await waiting_question(client, database, author)
     await client.post(f"/interview/reading-questions/{question}/dismiss", headers=author["headers"])
     late = await client.post(
@@ -1618,7 +1618,7 @@ async def test_a_reading_answer_after_a_dismissal_isnt_saved(client, database, a
     assert late.json()["already_saved"] is False
 
 
-async def test_someone_elses_question_is_404(client, database, author, reader):
+async def test_someone_elses_question_is_404(client, database, author, reader, fake_claude):
     question = await waiting_question(client, database, author)
     await shelve_book(database, reader["id"])
     for path, body in (("answer", {"answer": "Mine now."}), ("dismiss", None)):

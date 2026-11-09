@@ -27,6 +27,9 @@ def no_real_email(monkeypatch):
     monkeypatch.setattr(get_settings(), "smtp_host", "")
     # Tests never write to the real spending ledger, and never run on the scripted AI by accident.
     monkeypatch.setattr(get_settings(), "ai_usage_log", "")
+    # Tests never hold the real key either, so a route that needs Claude fails here as it does on CI,
+    # where there is no .env, unless the test installs fake_claude.
+    monkeypatch.setattr(get_settings(), "anthropic_api_key", "")
     monkeypatch.setattr(get_settings(), "ai_mode", "real")
     yield
     get_settings.cache_clear()
