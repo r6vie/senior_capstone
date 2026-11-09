@@ -575,6 +575,42 @@ def lint_change(change: dict, *, current_summary: str | None = None, where: str 
     return findings
 
 
+def lint_across(runs: list[dict]) -> list[Finding]:
+    """Sameness that only shows when reading several books: the shelf is read as a set (R6-06)."""
+    findings = []
+    phrases: dict[str, set[str]] = {}
+    for run in runs:
+        for turn in run["turns"]:
+            words = re.findall(r"[a-z']+", _ask_sentence(turn["question"]))
+            for n in range(len(words) - 3):
+                phrases.setdefault(" ".join(words[n : n + 4]), set()).add(run["slug"])
+    # Half the runs asking the same four words is a template, not a coincidence.
+    shared = [
+        p
+        for p, slugs in phrases.items()
+        if len(runs) >= 2 and len(slugs) * 2 >= len(runs) and not _generic(p)
+    ]
+    findings += [Finding("warn", "same words across books", "questions", p) for p in sorted(shared)]
+    titles = [(run["slug"], t["title"]) for run in runs for t in run["book"].get("titles", [])]
+    endings: dict[str, list[str]] = {}
+    for slug, title in titles:
+        endings.setdefault(title.split()[-1].lower(), []).append(f"{slug}: {title}")
+        rest = title.split()[1:]
+        if len(rest) >= 2 and sum(w[0].isupper() for w in rest) >= 2:
+            findings.append(Finding("warn", "title case", slug, title))
+    findings += [
+        Finding("warn", "titles end alike", word, "; ".join(hits))
+        for word, hits in endings.items()
+        if len(hits) >= 2 and word not in _STOP - {"first", "last"}
+    ]
+    return findings
+
+
+def _generic(phrase: str) -> bool:
+    # Only the plainest wording of a question is shared by chance, so those don't count.
+    return len(set(phrase.split()) - _STOP - _COMMON_ASKS) < 2
+
+
 def lint_playbacks(run: dict) -> list[Finding]:
     return [
         Finding("error", "long playback", f"Q{n}", f"{len(t['playback'].split())} words")

@@ -21,6 +21,8 @@ Score each 1-5. Use the whole scale; a 3 means "would ship, nobody would talk ab
 | 6 | **Question sharpness** (the interview) | Generic, repeated, or leaves the best material on the table | Competent, a few doors missed | Each question follows the strongest word; the member says things they hadn't planned to |
 | 7 | **No unsupported claims** | Invents outcomes, feelings or lessons | A few stretches beyond what was said | Everything traces to an answer |
 
+Readers see only the back cover, the chapter titles and the summaries. The quotes are the author's alone. So judge dimensions 1, 3 and 5 from the reader's page (`python -m evals.saved reader`), and the rest from the full packet.
+
 For each score, quote the line that most justifies it. Name:
 - the single worst sentence in the book, and what's wrong with it;
 - the best material in the transcript that didn't make it into the book;

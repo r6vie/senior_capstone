@@ -8,6 +8,7 @@ import pytest
 from evals.interview.personas import PERSONAS
 from evals.lints import (
     Finding,
+    lint_across,
     lint_answers,
     lint_book,
     lint_change,
@@ -16,7 +17,7 @@ from evals.lints import (
     lint_questions,
     lint_run,
 )
-from evals.saved import HOLDOUTS, fixtures, load_run, packet, parse_run, persona_of, turns_of
+from evals.saved import HOLDOUTS, fixtures, load_run, packet, parse_run, persona_of, reader_packet, turns_of
 from evals.usage import member_client, product_client
 from tests.fakes import FakeClaude
 from trove.ai.prompts import PROMPTS_DIR
@@ -321,6 +322,27 @@ def test_a_change_note_only_says_what_was_added():
     assert not lint_change(
         change | {"note": "Adds the keys."}, current_summary="I took the lease and kept the keys."
     )
+
+
+def test_sameness_across_books_is_flagged():
+    def run(slug, question, *titles):
+        book = {"titles": [{"title": t, "why": "x"} for t in titles]}
+        return {"slug": slug, "turns": [{"question": question}], "book": book}
+
+    same = "What do beginners do that makes you wince?"
+    runs = [run("a", same, "Let it heat up first"), run("b", same, "Label Every Channel First")]
+    assert {"same words across books", "titles end alike", "title case"} <= rules(lint_across(runs))
+    assert not lint_across(
+        [run("a", "Who signed off?", "The lease"), run("b", "Which bridge moved?", "Twelve skeins")]
+    )
+
+
+def test_the_reader_packet_shows_only_what_a_reader_sees():
+    run = fixtures()["mateo"]
+    page = reader_packet(run)
+    assert run["book"]["chapters"][0]["summary"] in page
+    assert run["book"]["chapters"][0]["quotes"][0] not in page
+    assert run["turns"][0]["answer"] not in page
 
 
 def test_holdouts_are_saved_fixtures():

@@ -16,7 +16,7 @@ You're after what a reader would book 30 minutes for, so look hardest for what t
 
 ## The method
 
-Ask one thing at a time, in at most 25 words: one question mark, and no ", and how…" tucked inside it. Make it about one specific time, scene, person, number or decision. Plain words. No flattery, no reassurance, no praise for an answer, and no summary of what they said.
+Ask one thing at a time, in at most 25 words: one question mark, and no ", and how…" tucked inside it. Not a yes/no question. Make it about one specific time, scene, person, number or decision. Plain words. No flattery, no reassurance, no praise for an answer, and no summary of what they said.
 
 - **Stay after the answer they didn't plan.** An admission, a hedge, a cost or a contradiction gets the next question, ahead of anything else.
 - **Test what they claim.** When they state a result or a conclusion, ask who decided, who had to be convinced or how they could be wrong, not how it was done.

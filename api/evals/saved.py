@@ -5,6 +5,7 @@ Book-writing work replays these instead of interviewing again, which is where mo
     uv run python -m evals.saved fixture evals/out/interview/<run>/dana.md   # writes evals/fixtures/dana.json
     uv run python -m evals.saved packet evals/fixtures/dana.json             # what an editor reads
     uv run python -m evals.saved audit evals/fixtures/dana.json              # what a claim auditor reads
+    uv run python -m evals.saved reader evals/fixtures/dana.json             # what a reader sees
 
 A run here is a plain dict, and evals.book writes the same shape:
     {persona, slug, source, turns: [{question, answer, phase, playback}],
@@ -155,6 +156,18 @@ def packet(run: dict) -> str:
     return "\n".join(lines)
 
 
+def reader_packet(run: dict) -> str:
+    """Only what a reader sees (docs/trove.md §3): no interview, and no quotes, which are the author's alone.
+    Reader-facing scores come from this, since the quotes are where these books are at their best."""
+    book = run["book"]
+    lines = [f"# {book['title']}", ""]
+    if book["blurbs"].get("finished"):
+        lines += [book["blurbs"]["finished"], ""]
+    for n, chapter in enumerate(book["chapters"], start=1):
+        lines += [f"{n}. {chapter['title']}", "", chapter["summary"], ""]
+    return "\n".join(lines)
+
+
 def audit_packet(run: dict) -> str:
     """Every member's answer, then every sentence the book writes in the member's voice, numbered."""
     book = run["book"]
@@ -198,5 +211,7 @@ if __name__ == "__main__":
             print(write_fixture(Path(raw)))
         elif command == "packet":
             print(packet(load_run(Path(raw))))
+        elif command == "reader":
+            print(reader_packet(load_run(Path(raw))))
         elif command == "audit":
             print(audit_packet(load_run(Path(raw))))

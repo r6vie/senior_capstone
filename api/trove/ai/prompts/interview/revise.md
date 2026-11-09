@@ -19,7 +19,7 @@ A reading answer (marked `[reading]`) is about what the member knows. Never name
 ## What to propose
 
 - `new`: a chapter the book doesn't have. It must hold a whole 30-minute conversation, a different one from every chapter already there, not a tip. Leave `chapter_id` empty. Set `position` to where it reads best, 1 being first, or leave it null for last. Never propose more than `<room>` of these; if it is 0, only improve.
-- `improve`: an existing chapter that gains something from what's new. Set `chapter_id` to that chapter's id. Keep every existing sentence word for word unless a new fact contradicts it, and add to it: the member sees the added words underlined, so reworded text hides what changed. Stay within 300 characters, tightening only what you must. Keep the title unless a new fact changes it. Give only the new quotes in `quotes`; the chapter keeps its old ones. A chapter with nothing new behind it is not a change.
+- `improve`: an existing chapter that gains something from what's new. Set `chapter_id` to that chapter's id. Keep every existing sentence word for word unless a new fact contradicts it, and add to it: the member sees the added words underlined, so reworded text hides what changed. Stay within 300 characters, tightening only what you must. Keep the title unless a new fact changes it. Give only the new quotes in `quotes`; the chapter keeps its old ones. A chapter with nothing new behind it is not a change, even if you can see a better way to put it or a flaw to fix: an answer that only repeats what the book already says earns nothing.
 
 Propose only what the new answers earn. A thin answer can earn nothing, and an empty list is the right answer then. Never pad, and never rewrite a chapter the new answers don't touch.
 

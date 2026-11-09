@@ -32,6 +32,8 @@ NEW_FACT = (
     "I'd changed my alum supplier in the fall and never tested the new batch, because it was the same grade on the label."
 )
 THIN = "Not much has changed, really."
+# R1-38: nothing here that isn't already in the book, so nothing should change.
+NOTHING_NEW = "Like I said, skein 19 was the first red that held, and I logged everything on the cards."
 # R1-33: what a reader said about themselves must not reach the book. The name is invented.
 READING = (
     "Sam Okafor from Vantage Mills asked how I'd handle leaving, since she's about to quit. "
@@ -42,6 +44,7 @@ CASES = {
     "adding-follows": "After an answer with a cost in it, the next question stays there",
     "revise-new-fact": "A new fact improves a chapter: its sentences stay, words are added, the note has no praise",
     "revise-thin": "A thin answer earns nothing: an empty list is right",
+    "revise-nothing-new": "A retold answer gives a chapter nothing new: it must not be reworded anyway",
     "revise-reading": "A reading answer: the other person's name and situation stay out",
 }
 
@@ -83,6 +86,7 @@ async def revise_case(claude, name: str) -> str:
     answer, phase = {
         "revise-new-fact": (NEW_FACT, "adding"),
         "revise-thin": (THIN, "adding"),
+        "revise-nothing-new": (NOTHING_NEW, "adding"),
         "revise-reading": (READING, "reading"),
     }[name]
     question = "What did they ask you about that surprised you?" if phase == "reading" else "What's changed?"
