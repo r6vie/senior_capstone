@@ -185,4 +185,39 @@ describe("InterviewPage", () => {
     await screen.findByText("Is this you?");
     expect(screen.queryByRole("button", { name: "Skip" })).toBeNull();
   });
+
+  it("when the interview can't be loaded, offers Try again rather than the start screen", async () => {
+    const client = createFakeInterviewClient("Hana", 0);
+    vi.spyOn(client, "current")
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValueOnce(null);
+    renderWith(client);
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(screen.getByRole("alert").textContent).toMatch(/can't be reached/);
+    expect(document.body.textContent).not.toMatch(/Failed to fetch/);
+    expect(screen.queryByRole("button", { name: "Start the interview" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByRole("button", { name: "Start the interview" })).toBeTruthy();
+  });
+
+  it("keeps the draft when a send can't reach the server", async () => {
+    const client = createFakeInterviewClient("Hana", 0);
+    await client.start(null);
+    vi.spyOn(client, "answer").mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    renderWith(client);
+    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "My answer" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("My answer");
+  });
+
+  it("returns keyboard focus to the member's side after the Librarian answers", async () => {
+    const client = createFakeInterviewClient("Hana", 0);
+    await client.start(null);
+    renderWith(client);
+    await screen.findByLabelText("Your answer");
+    fireEvent.click(screen.getByRole("button", { name: "Skip" }));
+    await waitFor(() => expect(document.activeElement).toBe(document.querySelector(".iv-act")));
+  });
 });

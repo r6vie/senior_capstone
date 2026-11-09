@@ -67,11 +67,11 @@ function Frame({
       </header>
       <section className="iv-band dark">
         <span className="halo" />
-        <p className="iv-say" aria-live="polite">
+        <h1 className="iv-say" aria-live="polite">
           {say}
-        </p>
+        </h1>
       </section>
-      <main className="iv-act" inert={busy} aria-busy={busy}>
+      <main className="iv-act" tabIndex={-1} inert={busy} aria-busy={busy}>
         {children}
       </main>
     </div>
@@ -99,9 +99,14 @@ const RetryContext = createContext<(() => void) | null>(null);
 
 function ErrorMessage({ message }: { message: string | null }) {
   const retry = useContext(RetryContext);
+  const box = useRef<HTMLDivElement>(null);
+  // On a phone the member can be several chapters away from where the error appears.
+  useEffect(() => {
+    if (message) box.current?.scrollIntoView?.({ block: "nearest" });
+  }, [message]);
   if (!message) return null;
   return (
-    <div className="iv-error">
+    <div className="iv-error" ref={box}>
       <div className="message message-error" role="alert">
         <span>{message}</span>
       </div>
@@ -135,7 +140,11 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   const [welcomedBack, setWelcomedBack] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [retry, setRetry] = useState<(() => void) | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: loadAttempt is what asks for another try
   useEffect(() => {
     let live = true;
     client
@@ -145,14 +154,46 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         setState(current);
         setWelcomedBack(current?.stage === "asking" && current.hasAnswers);
       })
-      .catch((reason: unknown) => live && setError(messageOf(reason)))
+      .catch((reason: unknown) => {
+        if (!live) return;
+        setError(messageOf(reason));
+        setLoadFailed(true);
+        setRetry(() => () => {
+          setError(null);
+          setRetry(null);
+          setLoadFailed(false);
+          setLoaded(false);
+          setLoadAttempt((count) => count + 1);
+        });
+      })
       .finally(() => live && setLoaded(true));
     return () => {
       live = false;
     };
-  }, [client]);
+  }, [client, loadAttempt]);
 
-  const [retry, setRetry] = useState<(() => void) | null>(null);
+  // While the Librarian works the member's side is inert, which drops keyboard focus to the page.
+  // Put it back at the start of their side, without moving the page.
+  const wasBusy = useRef(false);
+  useEffect(() => {
+    if (busy) {
+      wasBusy.current = true;
+      return;
+    }
+    if (!wasBusy.current) return;
+    wasBusy.current = false;
+    const focused = document.activeElement;
+    if (!focused || focused === document.body) {
+      document.querySelector<HTMLElement>(".iv-act")?.focus({ preventScroll: true });
+    }
+  }, [busy]);
+
+  // A new question or screen starts at the top, so the Librarian's words are the first thing in view.
+  const place = !state ? "" : state.stage === "asking" ? state.question : state.stage;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the place changes
+  useEffect(() => {
+    document.documentElement.scrollTop = 0;
+  }, [place]);
 
   // Runs one call with a calm waiting line on the band; the screen stays put until it answers.
   // `retryWith` is what to repeat if the Librarian fails: after a saved answer, ask for the question
@@ -188,6 +229,15 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   const screen = (() => {
     if (!loaded) return <Frame say={<Waiting>The Librarian is finding your place…</Waiting>} />;
 
+    // Not the start screen: this member may well have an interview we just couldn't read.
+    if (loadFailed) {
+      return (
+        <Frame say="I can't find your place just now.">
+          <ErrorMessage message={error} />
+        </Frame>
+      );
+    }
+
     if (!state) {
       return (
         <StartScreen
@@ -210,6 +260,12 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     switch (state.stage) {
       case "asking": {
         const draftKey = `trove_interview_draft:${state.id}:${state.question}`;
+        // After a 502 the answer or skip is already saved, so a successful retry also ends the draft.
+        const askAgain = () =>
+          client.askAgain(state.id).then((next) => {
+            clearDraft(draftKey);
+            return next;
+          });
         if (welcomedBack && state.lastTopic) {
           return (
             <Frame
@@ -238,24 +294,12 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
               busy={Boolean(busy)}
               hasSavedAnswers={state.hasAnswers}
               onSend={async (text) => {
-                if (
-                  await run(
-                    "The Librarian is reading…",
-                    () => client.answer(state.id, text),
-                    () => client.askAgain(state.id),
-                  )
-                )
+                if (await run("The Librarian is reading…", () => client.answer(state.id, text), askAgain))
                   clearDraft(draftKey);
               }}
               onSkip={async () => {
                 // The question is gone once skipped, so a part-written answer to it has nowhere to go.
-                if (
-                  await run(
-                    "The Librarian is thinking…",
-                    () => client.skip(state.id),
-                    () => client.askAgain(state.id),
-                  )
-                )
+                if (await run("The Librarian is thinking…", () => client.skip(state.id), askAgain))
                   clearDraft(draftKey);
               }}
             >
@@ -337,6 +381,9 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
 }
 
 function messageOf(reason: unknown): string {
+  // fetch rejects with a TypeError when the network fails, and its own message isn't for members.
+  if (reason instanceof TypeError)
+    return "Trove can't be reached just now. Check your connection and try again.";
   return reason instanceof Error && reason.message
     ? reason.message
     : "Something went wrong. Please try again.";
@@ -375,7 +422,7 @@ function StartScreen({
   return (
     <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={START_SAY}>{busy}</Waiting> : START_SAY}>
       <div className="panel iv-resume">
-        <h3>A résumé, if you like</h3>
+        <h2>A résumé, if you like</h2>
         {/* biome-ignore lint/a11y/noStaticElementInteractions: a drop target for the mouse; "Choose a PDF" is the keyboard path */}
         <div
           className="iv-drop"
@@ -394,7 +441,14 @@ function StartScreen({
           {resume ? (
             <>
               <span className="iv-file">{resume.name}</span>
-              <button type="button" className="button button-quiet" onClick={() => setResume(null)}>
+              <button
+                type="button"
+                className="button button-quiet"
+                onClick={() => {
+                  setResume(null);
+                  input.current?.focus();
+                }}
+              >
                 Remove
               </button>
             </>
@@ -412,6 +466,7 @@ function StartScreen({
             type="file"
             accept="application/pdf,.pdf"
             className="iv-visually-hidden"
+            tabIndex={resume ? -1 : undefined}
             onChange={(event) => {
               pick(event.target.files?.[0]);
               event.target.value = "";

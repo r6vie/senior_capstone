@@ -66,6 +66,10 @@
 }
 
 /* ---------- The member's side ---------- */
+/* Focused only by script, to hold the keyboard's place after the Librarian answers. */
+.iv-act:focus {
+  outline: none;
+}
 .iv-act {
   display: grid;
   gap: 20px;
@@ -196,7 +200,7 @@
 }
 
 /* ---------- Start ---------- */
-.iv-resume h3 {
+.iv-resume h2 {
   margin: 0 0 14px;
 }
 .iv-drop {
@@ -208,6 +212,11 @@
   padding: 18px 20px;
   border: var(--line-heavy) dotted var(--ink);
   font-weight: 600;
+}
+/* The real file input is hidden, so its keyboard focus shows on the label that stands in for it. */
+.iv-drop:has(input:focus-visible) label {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 3px;
 }
 .iv-drop[data-dragging="true"] {
   border-style: solid;
@@ -426,6 +435,10 @@
   .iv-pick .book {
     grid-row: span 2;
     margin: 0;
+  }
+  /* The title sits beside the cover here, so it has to clear the radio in the corner. */
+  .iv-pick b {
+    padding-right: var(--s-6);
   }
   .iv-booktitle h2 {
     font-size: 26px;

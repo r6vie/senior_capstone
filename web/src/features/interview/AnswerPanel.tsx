@@ -51,6 +51,8 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, onSkip, c
   const canSpeak = speechSupported();
   const fieldId = useId();
   const field = useRef<HTMLTextAreaElement>(null);
+  const stopButton = useRef<HTMLButtonElement>(null);
+  const previousMode = useRef<Mode>(mode);
 
   useEffect(() => {
     setText(readDraft(draftKey));
@@ -80,6 +82,14 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, onSkip, c
       setMode("transcript");
     }
   }, [mode, speech.listening, speech.error, speech.transcript, stopping]);
+
+  // Speak, Stop and Cancel unmount as the mode changes; keep keyboard focus where the member is working.
+  useEffect(() => {
+    if (previousMode.current === mode) return;
+    previousMode.current = mode;
+    if (mode === "recording") stopButton.current?.focus();
+    else field.current?.focus();
+  }, [mode]);
 
   function record() {
     setStopping(false);
@@ -127,9 +137,15 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, onSkip, c
           </p>
         </div>
         <div className="iv-row">
-          <Button onClick={stop} aria-busy={stopping}>
+          <button
+            type="button"
+            ref={stopButton}
+            className="button button-primary"
+            onClick={stop}
+            aria-busy={stopping}
+          >
             Stop
-          </Button>
+          </button>
           <span className="iv-grow" />
           <button type="button" className="button button-quiet" onClick={cancel}>
             Cancel
