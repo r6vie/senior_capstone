@@ -382,10 +382,11 @@ async def plan_turn(
     answered = sum(1 for turn in turns if turn.answer.strip())
     if not turns:
         plan.phase = "sweep"
-    if answered < MIN_ANSWERS:
-        plan.ready_for_reveal = False
     if _questions_asked(turns) >= MAX_QUESTIONS or len(turns) >= MAX_TURNS:
         plan.ready_for_reveal = True
+    # The floor wins over the limits: a book is never drafted from fewer answers than this.
+    if answered < MIN_ANSWERS:
+        plan.ready_for_reveal = False
     if more_material:
         plan.ready_for_reveal = False
         plan.phase = "dig"
@@ -421,10 +422,13 @@ async def draft_book(
         if attempt == 0 and any(leaks(text) for text in written):
             continue
         pool = []
+        used: set[str] = set()
         for chapter in raw.pool:
-            quotes = grounded_quotes(chapter.quotes, turns)
+            # A quote grounds only one chapter: three chapters on one sentence are one chapter.
+            quotes = _unused(grounded_quotes(chapter.quotes, turns), used)
             public = f"{chapter.title} {chapter.summary}"
             if quotes and not leaks(public) and not _too_close_to_a_spark(chapter.title, spark_titles):
+                used |= {_normalize(quote) for quote in quotes}
                 pool.append(
                     DraftChapter(id=str(uuid4()), title=chapter.title, summary=chapter.summary, quotes=quotes)
                 )
@@ -593,11 +597,12 @@ async def revise_book(
     new_turns = turns[round_start:]
     others = _other_people(new_turns, member_names or [])
     changes: list[Change] = []
+    used = {_normalize(quote) for chapter in chapters for quote in chapter.quotes}
     for change in raw.changes:
         quotes = [
             q for q in grounded_quotes(change.quotes, turns) if not _names_someone(q, new_turns, others)
         ]
-        new_quotes = grounded_quotes(quotes, new_turns)
+        new_quotes = _unused(grounded_quotes(quotes, new_turns), used)
         public = f"{change.title} {change.summary}"
         if (
             not new_quotes
@@ -612,11 +617,13 @@ async def revise_book(
                 continue
             current = CurrentChapter(title=chapter.title, summary=chapter.summary)
             # The chapter keeps the words it stands on, plus what was added.
-            quotes = [*chapter.quotes, *(q for q in new_quotes if q not in chapter.quotes)]
+            quotes = [*chapter.quotes, *new_quotes]
         elif change.kind == "new" and room > 0:
             room -= 1
+            quotes = _unused(quotes, used)
         else:
             continue
+        used |= {_normalize(quote) for quote in quotes}
         changes.append(
             Change(
                 id=str(uuid4()),
@@ -634,6 +641,10 @@ async def revise_book(
     if proposed and (_mentions_any(proposed, others) or leaks(proposed)):
         proposed = None
     return Revision(changes=changes, blurb=proposed)
+
+
+def _unused(quotes: list[str], used: set[str]) -> list[str]:
+    return [quote for quote in quotes if _normalize(quote) not in used]
 
 
 def _capitalized_words(text: str) -> set[str]:

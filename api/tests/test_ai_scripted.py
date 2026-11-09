@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from tests.fakes import send_answer, send_skip
+from tests.fakes import choose_and_wait, finish_and_wait, send_answer, send_skip
 from trove.ai import scripted
 from trove.ai.client import get_claude, text_of
 from trove.ai.prompts import load_prompt
@@ -45,11 +45,11 @@ async def test_a_whole_interview_walks_through_on_the_scripted_ai(client, databa
     state = (await client.post("/interview/shape", json={}, headers=headers)).json()
     assert state["ready_for_reveal"] is True
 
-    state = (await client.post("/interview/finish", headers=headers)).json()
+    state = await finish_and_wait(client, headers)
     assert state["stage"] == "choosing"
     assert state["titles"][0]["title"] == "Check the Slats First"
 
-    book = (await client.post("/interview/title", json={"title": 0}, headers=headers)).json()
+    book = await choose_and_wait(client, headers, 0)
     assert 3 <= len(book["chapters"]) <= 5
     said = " ".join(scripted.THEO_ANSWERS).casefold()
     for chapter in book["chapters"]:
@@ -78,7 +78,7 @@ async def test_anything_typed_still_makes_a_grounded_book(client, headers, scrip
     assert "fixing the thing" in state["question"]["playback"]
     await client.post("/interview/shape", json={}, headers=headers)
     await client.post("/interview/finish", headers=headers)
-    book = (await client.post("/interview/title", json={"title": 1}, headers=headers)).json()
+    book = await choose_and_wait(client, headers, 1)
     for chapter in book["chapters"]:
         assert chapter["quotes"]
         assert all("fixing the thing" in quote for quote in chapter["quotes"])
@@ -120,7 +120,7 @@ async def test_a_thin_walk_reaches_i_need_a_little_more(client, headers, scripte
     for _ in range(10):
         state = (await send_answer(client, headers, "Not much.")).json()
     assert state["can_finish"] is True
-    state = (await client.post("/interview/finish", headers=headers)).json()
+    state = await finish_and_wait(client, headers)
     assert state["stage"] == "interviewing"
     assert state["needs_more"] is True
     assert state["question"] is not None
@@ -186,3 +186,34 @@ def test_get_claude_refuses_outside_dev(monkeypatch):
     monkeypatch.setattr(get_settings(), "environment", "production")
     with pytest.raises(RuntimeError):
         get_claude()
+
+
+async def walk_answers(client, headers, answers: list[str]) -> dict:
+    state = (await client.post("/interview", json={}, headers=headers)).json()
+    for answer in answers:
+        state = (await send_answer(client, headers, answer)).json()
+    return state
+
+
+async def test_a_scripted_thin_pool_can_be_walked(client, headers, scripted_ai):
+    answers = [*scripted.THEO_ANSWERS[:9], scripted.THIN_POOL]
+    state = await walk_answers(client, headers, answers)
+    state = await finish_and_wait(client, headers)
+    assert state["stage"] == "interviewing"
+    assert state["needs_more"] is True
+
+
+async def test_a_scripted_failure_of_the_next_question_works_once(client, headers, scripted_ai):
+    state = (await client.post("/interview", json={}, headers=headers)).json()
+    failed = await send_answer(client, headers, scripted.FAIL_NEXT)
+    assert failed.status_code == 502
+    state = (await client.post("/interview/question", headers=headers)).json()
+    assert state["question"] is not None
+
+
+async def test_a_scripted_failure_of_a_book_step_works_once(client, headers, scripted_ai):
+    await walk_answers(client, headers, [*scripted.THEO_ANSWERS[:9], scripted.FAIL_BOOK])
+    await client.post("/interview/finish", headers=headers)
+    # The first look back retries on its own, and this time it works.
+    assert (await client.get("/interview", headers=headers)).json()["step_status"] == "writing"
+    assert (await client.get("/interview", headers=headers)).json()["stage"] == "choosing"

@@ -285,10 +285,10 @@ def test_the_interviewer_bans_small_talk_and_reassurance():
     assert "no reassurance" in prompt and "No small talk" in prompt
 
 
-async def test_two_grounded_chapters_at_the_cap_is_not_enough_material():
+async def test_one_quote_grounds_only_one_chapter():
     answers = turns(engine.MAX_QUESTIONS)
     quote = answers[0].answer
-    thin = [chapter(quote), chapter(quote, "Another")]
+    thin = [chapter(quote), chapter(quote, "Another"), chapter(quote, "A third")]
     claude = FakeClaude(
         [
             reply({"pool": thin, "titles": TITLES, "blurb": BLURB}),
@@ -367,3 +367,29 @@ async def test_a_blurb_with_a_resume_only_term_is_never_returned():
     claude = FakeClaude([reply({"blurb": "At Gopala, I did it."}), reply({"blurb": "I did it, twice."})])
     blurb = await engine.write_blurb(claude, turns=turns(1), chapters=[], leaks=lambda text: "Gopala" in text)
     assert blurb == "I did it, twice."
+
+
+async def test_the_turn_limit_never_goes_below_the_floor():
+    skipped = [engine.Turn(question=f"Q{n}?", answer="", phase="dig") for n in range(engine.MAX_TURNS - 1)]
+    said = [*skipped, engine.Turn(question="Q?", answer="Not sure.", phase="dig")]
+    claude = FakeClaude([reply(plan(ready_for_reveal=True))])
+    result = await engine.next_turn(claude, turns=said, resume_text=None)
+    assert result.ready_for_reveal is False
+
+
+async def test_revise_wont_ground_two_changes_on_one_quote():
+    said = [
+        engine.Turn(question="Old?", answer=ANSWERS[0], phase="dig"),
+        engine.Turn(question="New?", answer=ANSWERS[1], phase="adding"),
+    ]
+    change = {
+        "kind": "new",
+        "chapter_id": None,
+        "title": "First",
+        "summary": "S.",
+        "quotes": [ANSWERS[1]],
+        "note": "N.",
+    }
+    claude = FakeClaude([reply({"changes": [change, {**change, "title": "Second"}], "blurb": BLURB})])
+    revision = await engine.revise_book(claude, turns=said, round_start=1, chapters=[], blurb=None)
+    assert [c.title for c in revision.changes] == ["First"]

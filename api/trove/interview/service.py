@@ -27,6 +27,7 @@ from trove.auth.service import full_names_of
 from trove.books import service as books
 from trove.books.models import MyBookResponse
 from trove.checkouts import service as checkouts
+from trove.core.config import get_settings
 from trove.interview import engine, resume_terms
 from trove.interview.engine import Change, Draft, DraftChapter, Turn
 from trove.interview.models import (
@@ -48,6 +49,10 @@ MAX_RESUME_CHARS = 20_000
 RESUME_TEXT_DAYS = 30
 # After a draft finds too little, this many more answers before another one is worth paying for.
 MORE_ANSWERS_BEFORE_REDRAFT = 3
+# "Most of the way there" shows at this many answers, a little before Shape. The scripted interview is
+# shorter than a real one, so it says so sooner.
+NEARLY_DONE_ANSWERS = engine.SHAPE_BY - 3
+NEARLY_DONE_ANSWERS_SCRIPTED = 9
 # Unused sparks a member may keep (docs/review/decisions.md, row 5).
 MAX_UNUSED_SPARKS = 12
 # Sparks a round can work from, so it never turns into a list of other people's titles.
@@ -121,8 +126,11 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
         can_finish = any(turn["answer"].strip() for turn in new)
     elif stage == "revising":
         can_finish = revision_status(interview) == "failed"
+    elif stage == "drafting":
+        can_finish = write_state(interview) == "failed"
     else:
         can_finish = stage == "interviewing" and not needs_more and (ready or answered >= EXIT_AFTER_ANSWERS)
+    selection_status, selection_blurb = selection_blurb_state(proposal)
     return InterviewResponse(
         stage=stage,
         question=Question(
@@ -138,42 +146,71 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
         can_finish=can_finish,
         ready_for_reveal=ready,
         needs_more=needs_more,
+        nearly_done=nearly_done(interview, answered),
         at_limit=needs_more and current is None and len(interview["turns"]) >= engine.MAX_TURNS,
         titles=interview["draft"]["titles"]
-        if stage in ("choosing", "reviewing") and interview.get("draft")
+        if stage in ("choosing", "finishing", "reviewing") and interview.get("draft")
         else None,
         blurb=book.get("blurb") if book else (interview.get("draft") or {}).get("blurb"),
+        step_status=write_state(interview) if stage in ("drafting", "finishing") else None,
+        chosen_title=interview.get("chosen_title") if stage == "finishing" else None,
         revision_status=revision_status(interview) if stage == "revising" else None,
+        approved_changes=proposal.get("choices") if proposal else None,
+        selection_blurb_status=selection_status,
+        selection_blurb=selection_blurb,
         changes=[Change.model_validate(change) for change in proposal["changes"]] if proposal else None,
         proposed_blurb=proposal["blurb"] if proposal else None,
         nothing_new=interview.get("nothing_new", False),
     )
 
 
+def _timed_out(started: datetime) -> bool:
+    started = started if started.tzinfo else started.replace(tzinfo=UTC)
+    return datetime.now(UTC) - started > WRITING_TIMEOUT
+
+
+def write_state(interview: dict) -> str:
+    """`write_status`, with writing that died with the server counted as failed."""
+    status = interview.get("write_status") or "failed"
+    return "failed" if status == "writing" and _timed_out(interview["updated_at"]) else status
+
+
 def revision_status(interview: dict) -> str:
-    if interview.get("proposal"):
-        return "ready"
-    status = interview.get("write_status", "failed")
-    if status == "writing":
-        updated_at = interview["updated_at"]
-        started = updated_at if updated_at.tzinfo else updated_at.replace(tzinfo=UTC)
-        if datetime.now(UTC) - started > WRITING_TIMEOUT:
-            return "failed"
-    return status
+    return "ready" if interview.get("proposal") else write_state(interview)
+
+
+def selection_blurb_state(proposal: dict | None) -> tuple[str | None, str | None]:
+    """The state of the back cover written for the saved choices, and its text once it's usable."""
+    selection = (proposal or {}).get("selection")
+    if not selection:
+        return None, None
+    if selection["approved"] != proposal.get("choices"):
+        return "stale", None
+    status = selection["status"]
+    if status == "writing" and _timed_out(selection["started_at"]):
+        return "failed", None
+    return status, selection["blurb"] if status == "ready" else None
+
+
+def nearly_done(interview: dict, answered: int) -> bool:
+    if interview["stage"] != "interviewing" or (interview.get("current") or {}).get("phase") == "shape":
+        return False
+    scripted = get_settings().ai_mode == "scripted"
+    return answered == (NEARLY_DONE_ANSWERS_SCRIPTED if scripted else NEARLY_DONE_ANSWERS)
 
 
 async def current_view(
     database: AsyncDatabase, user: dict, claude: Claude | None, background: BackgroundTasks
 ) -> InterviewResponse:
     interview = await get_interview(database, user["_id"])
-    if (
-        claude
-        and interview["stage"] == "revising"
-        and revision_status(interview) == "failed"
-        and not interview.get("write_retried")
-    ):
+    failed = (
+        revision_status(interview) == "failed"
+        if interview["stage"] == "revising"
+        else interview["stage"] in WRITERS and write_state(interview) == "failed"
+    )
+    if claude and failed and not interview.get("write_retried"):
         # The member came back to a failed write: try once more without asking them to.
-        interview = await restart_writing(database, claude, interview, background, retried=True)
+        interview = await restart_writing(database, claude, interview, background)
     book = (
         await books.get_book_of(database, user["_id"])
         if interview["stage"] in ("reviewing", "done", "adding", "revising")
@@ -324,7 +361,25 @@ async def write_question(
 
 
 async def ask_next_question(database: AsyncDatabase, claude: Claude, interview: dict) -> dict:
-    """Write the next question for an interview that is waiting for one, and save it."""
+    """Write the next question for an interview that is waiting for one, and save it. At the turn
+    limit with too few answers for any book, it stops and lets the member decide (`at_limit`)."""
+    if (
+        interview["stage"] == "interviewing"
+        and len(interview["turns"]) >= engine.MAX_TURNS
+        and answered_count(interview) < engine.MIN_ANSWERS
+        and not needs_more_material(interview)
+    ):
+        return await database.interviews.find_one_and_update(
+            {"_id": interview["_id"]},
+            {
+                "$set": {
+                    "thin_at": answered_count(interview),
+                    "ready_for_reveal": False,
+                    "updated_at": datetime.now(UTC),
+                }
+            },
+            return_document=ReturnDocument.AFTER,
+        )
     question, topic, ready, spark_id = await write_question(database, claude, interview)
     if question:
         question["question_id"] = str(uuid4())
@@ -458,47 +513,88 @@ async def finish(
         interview = await save_last_answer(database, interview, answer_text)
     if interview["stage"] in ("adding", "revising"):
         return await finish_round(database, claude, interview, background)
+    if interview["stage"] == "drafting":
+        if write_state(interview) == "failed":
+            return await restart_writing(database, claude, interview, background)
+        return interview
     if interview["stage"] != "interviewing":
         raise conflict("The interview is already over.")
     if not interview_view(interview).can_finish:
         raise conflict("Keep going a little longer first.")
+    # Below the floor a draft can't work, so don't pay for one.
+    if answered_count(interview) < engine.MIN_ANSWERS:
+        return await ask_for_more_material(database, claude, interview)
+    moved = await database.interviews.find_one_and_update(
+        {"_id": interview["_id"], "stage": "interviewing"},
+        {
+            "$set": {
+                "stage": "drafting",
+                "write_status": "writing",
+                "write_retried": False,
+                "updated_at": datetime.now(UTC),
+            }
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if moved is None:
+        raise conflict("The interview is already over.")
+    background.add_task(write_draft, database, claude, moved["_id"])
+    return moved
+
+
+async def _write_failed(database: AsyncDatabase, interview_id: str, stage: str) -> None:
+    logger.exception("Couldn't finish the %s step for interview %s", stage, interview_id)
+    await database.interviews.update_one(
+        {"_id": interview_id, "stage": stage},
+        {"$set": {"write_status": "failed", "updated_at": datetime.now(UTC)}},
+    )
+
+
+async def write_draft(database: AsyncDatabase, claude: Claude, interview_id: str) -> None:
+    """Runs in the background: the pool of chapters and the three titles."""
+    interview = await database.interviews.find_one({"_id": interview_id, "stage": "drafting"})
+    if interview is None:
+        return
     try:
-        draft = await ask_engine(
-            engine.draft_book(
-                claude,
-                turns=book_turns(interview),
-                leaks=leak_check(interview),
-                spark_titles=spark_titles_of(interview),
-            )
+        draft = await engine.draft_book(
+            claude,
+            turns=book_turns(interview),
+            leaks=leak_check(interview),
+            spark_titles=spark_titles_of(interview),
         )
     except engine.NotEnoughMaterial:
-        return await ask_for_more_material(database, claude, interview)
+        with contextlib.suppress(HTTPException):  # A failed question can be asked again.
+            await ask_for_more_material(database, claude, interview)
+        return
+    except Exception:
+        await _write_failed(database, interview_id, "drafting")
+        return
     updated = await database.interviews.find_one_and_update(
-        {"_id": interview["_id"], "stage": "interviewing"},
+        {"_id": interview_id, "stage": "drafting"},
         {
             "$set": {
                 "stage": "choosing",
                 "draft": draft.model_dump(),
                 "current": None,
+                "write_status": None,
                 "updated_at": datetime.now(UTC),
-            },
+            }
         },
-        return_document=ReturnDocument.AFTER,
     )
-    if updated is None:
-        raise conflict("The interview is already over.")
-    # The interview has ended, so the résumé text goes (docs/trove.md §4).
-    await database.resume_texts.delete_one({"_id": interview["_id"]})
-    return updated
+    if updated is not None:
+        # The interview has ended, so the résumé text goes (docs/trove.md §4).
+        await database.resume_texts.delete_one({"_id": interview_id})
 
 
 async def ask_for_more_material(database: AsyncDatabase, claude: Claude, interview: dict) -> dict:
     """A draft found too little, and trying again can't help. Carry on on new ground: on the waiting
     question if there is one, on a new one if not, or stop at the turn limit and let the member decide."""
     updated = await database.interviews.find_one_and_update(
-        {"_id": interview["_id"], "stage": "interviewing"},
+        {"_id": interview["_id"], "stage": {"$in": ["interviewing", "drafting"]}},
         {
             "$set": {
+                "stage": "interviewing",
+                "write_status": None,
                 "thin_at": answered_count(interview),
                 "ready_for_reveal": False,
                 "updated_at": datetime.now(UTC),
@@ -520,37 +616,66 @@ async def reviewing_interview(database: AsyncDatabase, user: dict) -> dict:
     return interview
 
 
-async def choose_title(database: AsyncDatabase, claude: Claude, user: dict, index: int) -> MyBookResponse:
-    """Finish the book to match the chosen title, and save it as a draft."""
+async def choose_title(
+    database: AsyncDatabase, claude: Claude, user: dict, index: int, background: BackgroundTasks
+) -> dict:
+    """Choose the title, and write the book to match in the background. After a failed write this
+    tries again, with whichever title is sent."""
     interview = await get_interview(database, user["_id"])
-    if interview["stage"] != "choosing":
+    failed = interview["stage"] == "finishing" and write_state(interview) == "failed"
+    if interview["stage"] == "finishing" and not failed:
+        return interview
+    if interview["stage"] != "choosing" and not failed:
         raise conflict("There are no titles to choose from.")
-    draft = Draft.model_validate(interview["draft"])
-    title = draft.titles[index].title
-    finished = await ask_engine(
-        engine.finish_book(
+    moved = await database.interviews.find_one_and_update(
+        {"_id": interview["_id"], "stage": interview["stage"], "updated_at": interview["updated_at"]},
+        {
+            "$set": {
+                "stage": "finishing",
+                "chosen_title": interview["draft"]["titles"][index]["title"],
+                "write_status": "writing",
+                "write_retried": False,
+                "updated_at": datetime.now(UTC),
+            }
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if moved is None:
+        return await get_interview(database, user["_id"])
+    background.add_task(write_book, database, claude, moved["_id"])
+    return moved
+
+
+async def write_book(database: AsyncDatabase, claude: Claude, interview_id: str) -> None:
+    """Runs in the background: finish the book to match the chosen title, and save it as a draft."""
+    interview = await database.interviews.find_one({"_id": interview_id, "stage": "finishing"})
+    if interview is None:
+        return
+    try:
+        finished = await engine.finish_book(
             claude,
             turns=book_turns(interview),
-            draft=draft,
-            title=title,
+            draft=Draft.model_validate(interview["draft"]),
+            title=interview["chosen_title"],
             leaks=leak_check(interview),
             spark_titles=spark_titles_of(interview),
         )
-    )
-    try:
-        book = await books.create_draft_book(
+    except Exception:
+        await _write_failed(database, interview_id, "finishing")
+        return
+    # A book that already exists was made by an earlier write of this same step.
+    with contextlib.suppress(books.BookExists):
+        await books.create_draft_book(
             database,
-            author_id=user["_id"],
-            title=title,
+            author_id=interview["user_id"],
+            title=interview["chosen_title"],
             chapters=[chapter.model_dump() for chapter in finished.chapters],
             blurb=finished.blurb,
         )
-    except books.BookExists:
-        raise conflict("You already have a book.") from None
     await database.interviews.update_one(
-        {"_id": interview["_id"]}, {"$set": {"stage": "reviewing", "updated_at": datetime.now(UTC)}}
+        {"_id": interview_id, "stage": "finishing"},
+        {"$set": {"stage": "reviewing", "write_status": None, "updated_at": datetime.now(UTC)}},
     )
-    return books.my_book_view(book)
 
 
 async def own_draft(database: AsyncDatabase, user: dict, chapter_id: str) -> dict:
@@ -763,7 +888,7 @@ async def finish_round(
             raise conflict("Your proposed changes are waiting for you.")
         if status == "writing":
             return interview
-        return await restart_writing(database, claude, interview, background, retried=False)
+        return await restart_writing(database, claude, interview, background)
     if not interview_view(interview).can_finish:
         raise conflict("Answer at least one question first.")
     moved = await database.interviews.find_one_and_update(
@@ -789,21 +914,17 @@ async def finish_round(
 
 
 async def restart_writing(
-    database: AsyncDatabase, claude: Claude, interview: dict, background: BackgroundTasks, *, retried: bool
+    database: AsyncDatabase, claude: Claude, interview: dict, background: BackgroundTasks
 ) -> dict:
+    """Run a failed background step again. Only one request gets to, however many arrive."""
     moved = await database.interviews.find_one_and_update(
-        {
-            "_id": interview["_id"],
-            "stage": "revising",
-            "proposal": None,
-            "updated_at": interview["updated_at"],
-        },
+        {"_id": interview["_id"], "stage": interview["stage"], "updated_at": interview["updated_at"]},
         {"$set": {"write_status": "writing", "write_retried": True, "updated_at": datetime.now(UTC)}},
         return_document=ReturnDocument.AFTER,
     )
     if moved is None:
         return await get_interview(database, interview["user_id"])
-    background.add_task(write_proposal, database, claude, moved["_id"])
+    background.add_task(WRITERS[interview["stage"]], database, claude, moved["_id"])
     return moved
 
 
@@ -904,7 +1025,7 @@ def _shown_blurb(proposal: dict, changes: list[dict]) -> str | None:
     if len(changes) == len(proposal["changes"]) and proposal.get("blurb"):
         return proposal["blurb"]
     selection = proposal.get("selection") or {}
-    if selection.get("approved") == sorted(change["id"] for change in changes):
+    if selection.get("status") == "ready" and selection["approved"] == sorted(c["id"] for c in changes):
         return selection["blurb"]
     return None
 
@@ -917,33 +1038,82 @@ async def revising_proposal(database: AsyncDatabase, user: dict) -> tuple[dict, 
     return interview, proposal
 
 
-async def revision_blurb(
-    database: AsyncDatabase, claude: Claude, user: dict, approved: list[str]
-) -> str | None:
-    """The back cover for the selected changes, for the member to read before confirming. With some
-    of them declined it's written now, because the proposed one may describe a declined chapter."""
+async def save_choices(database: AsyncDatabase, user: dict, approved: list[str]) -> dict:
+    """Save the member's choices as they're pressed, so they survive leaving. Nothing is applied."""
     interview, proposal = await revising_proposal(database, user)
-    changes = _selected(proposal, approved)
+    choices = sorted(change["id"] for change in _selected(proposal, approved))
+    updated = await database.interviews.find_one_and_update(
+        {"_id": interview["_id"], "stage": "revising"},
+        {"$set": {"proposal.choices": choices}},
+        return_document=ReturnDocument.AFTER,
+    )
+    return updated or await get_interview(database, user["_id"])
+
+
+async def start_selection_blurb(
+    database: AsyncDatabase, claude: Claude, user: dict, background: BackgroundTasks
+) -> dict:
+    """Get the back cover for the saved choices, for the member to read before confirming. With some
+    declined it's written in the background, because the proposed one may describe a declined chapter."""
+    interview, proposal = await revising_proposal(database, user)
+    if proposal.get("choices") is None:
+        raise conflict("Choose which changes you want first.")
+    status, _ = selection_blurb_state(proposal)
+    if status in ("writing", "ready"):
+        return interview
+    changes = _selected(proposal, proposal["choices"])
     book = await books.get_book_of(database, user["_id"])
-    if not changes:
-        return book.get("blurb")
-    shown = _shown_blurb(proposal, changes)
-    if shown:
-        return shown
-    chapters = books.revised_chapters(book["chapters"], **_revision_parts(changes))
-    blurb = await ask_engine(
-        engine.write_blurb(
+    selection = {
+        "approved": proposal["choices"],
+        "blurb": None,
+        "status": "writing",
+        "started_at": datetime.now(UTC),
+    }
+    shown = _full_proposal_blurb(proposal, changes) if changes else book.get("blurb")
+    if shown or not changes:
+        selection |= {"blurb": shown, "status": "ready"}
+    updated = await database.interviews.find_one_and_update(
+        {"_id": interview["_id"], "stage": "revising"},
+        {"$set": {"proposal.selection": selection}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if updated is None:
+        return await get_interview(database, user["_id"])
+    if selection["status"] == "writing":
+        background.add_task(write_selection_blurb, database, claude, interview["_id"], proposal["choices"])
+    return updated
+
+
+def _full_proposal_blurb(proposal: dict, changes: list[dict]) -> str | None:
+    return proposal.get("blurb") if len(changes) == len(proposal["changes"]) else None
+
+
+async def write_selection_blurb(
+    database: AsyncDatabase, claude: Claude, interview_id: str, approved: list[str]
+) -> None:
+    """Runs in the background. If the choices have changed by the time it lands, it's marked stale by
+    comparison with them, and never applied."""
+    interview = await database.interviews.find_one({"_id": interview_id, "stage": "revising"})
+    if interview is None or not interview.get("proposal"):
+        return
+    this_write = {"_id": interview_id, "stage": "revising", "proposal.selection.approved": approved}
+    try:
+        book = await books.get_book_of(database, interview["user_id"])
+        changes = _selected(interview["proposal"], approved)
+        chapters = books.revised_chapters(book["chapters"], **_revision_parts(changes))
+        blurb = await engine.write_blurb(
             claude,
             turns=book_turns(interview),
             chapters=[DraftChapter.model_validate(chapter) for chapter in chapters],
             leaks=leak_check(interview),
         )
-    )
+    except Exception:
+        logger.exception("Couldn't write the back cover for interview %s", interview_id)
+        await database.interviews.update_one(this_write, {"$set": {"proposal.selection.status": "failed"}})
+        return
     await database.interviews.update_one(
-        {"_id": interview["_id"], "stage": "revising"},
-        {"$set": {"proposal.selection": {"approved": sorted(c["id"] for c in changes), "blurb": blurb}}},
+        this_write, {"$set": {"proposal.selection.status": "ready", "proposal.selection.blurb": blurb}}
     )
-    return blurb
 
 
 async def apply_revision(
@@ -1042,15 +1212,30 @@ async def undo_revision(database: AsyncDatabase, user: dict) -> MyBookResponse:
     interview = await interview_for_book(database, user["_id"])
     if interview["stage"] != "done":
         raise conflict("Finish what's waiting in your book first.")
+    before = await books.get_book_of(database, user["_id"])
     book = await books.undo_revision(database, user["_id"])
     if book is None:
         raise conflict("There's nothing to undo.")
-    # A chapter that's back is no longer one the member removed.
-    titles = [chapter["title"] for chapter in book["chapters"]]
+    restored = {chapter["id"]: chapter for chapter in book["chapters"]}
+    undone = [
+        _remembered(chapter)
+        for chapter in before["chapters"]
+        if chapter["id"] not in restored or chapter != restored[chapter["id"]]
+    ]
+    back = [chapter_id for chapter_id in restored if chapter_id not in {c["id"] for c in before["chapters"]}]
+    # What they took back isn't asked about again. A removal they took back is no longer off limits.
     await database.interviews.update_one(
-        {"_id": interview["_id"]}, {"$pull": {"removed_chapters": {"title": {"$in": titles}}}}
+        {"_id": interview["_id"]},
+        {
+            "$push": {"declined_changes": {"$each": undone}},
+            "$pull": {"removed_chapters": {"id": {"$in": back}}},
+        },
     )
     return books.my_book_view(book)
+
+
+# The background steps that can be run again after a failure, by the stage they belong to.
+WRITERS = {"drafting": write_draft, "finishing": write_book, "revising": write_proposal}
 
 
 # Sparks (I5). Private to the member who saved them. Nothing here is ever read for anyone else.

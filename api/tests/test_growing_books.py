@@ -20,6 +20,9 @@ from trove.main import app
 
 OLD_ANSWER = "I rebuilt the dining hall schedule in a spreadsheet nobody else would touch."
 NEW_ANSWER = "Last spring I ran the whole lab inventory by hand for six weeks straight."
+# Two parts of it, because a quote grounds only one chapter.
+PART_ONE = "Last spring I ran the whole lab"
+PART_TWO = "inventory by hand for six weeks straight"
 CHAPTERS = [
     {"id": f"c{n}", "title": f"Chapter {n}", "summary": f"Summary {n}.", "quotes": [OLD_ANSWER]}
     for n in range(3)
@@ -209,7 +212,13 @@ async def test_a_round_ends_on_its_own_at_the_limit_without_spending(client, dat
 
 
 async def test_a_change_shows_what_is_there_now(client, author, fake_claude):
-    state = await propose(client, author, fake_claude, change(), change("improve", "c1", title="Better"))
+    state = await propose(
+        client,
+        author,
+        fake_claude,
+        change(quotes=[PART_ONE]),
+        change("improve", "c1", quotes=[PART_TWO], title="Better"),
+    )
     new, improved = state["changes"]
     assert new["kind"] == "new"
     assert new["chapter_id"] is None
@@ -226,8 +235,8 @@ async def test_a_bad_chapter_id_or_a_second_improve_is_dropped(client, author, f
         author,
         fake_claude,
         change("improve", "no-such-chapter", title="Lost"),
-        change("improve", "c0", title="First"),
-        change("improve", "c0", title="Second"),
+        change("improve", "c0", quotes=[PART_ONE], title="First"),
+        change("improve", "c0", quotes=[PART_TWO], title="Second"),
     )
     assert [c["title"] for c in state["changes"]] == ["First"]
 
@@ -237,7 +246,11 @@ async def test_a_book_at_eight_chapters_can_only_improve(client, database, fake_
     full = [{"id": f"c{n}", "title": f"T{n}", "summary": "S.", "quotes": [OLD_ANSWER]} for n in range(8)]
     await shelve_book(database, person["id"], full)
     state = await propose(
-        client, person, fake_claude, change(title="Ninth"), change("improve", "c0", title="Better")
+        client,
+        person,
+        fake_claude,
+        change(title="Ninth", quotes=[PART_ONE]),
+        change("improve", "c0", quotes=[PART_TWO], title="Better"),
     )
     assert [c["title"] for c in state["changes"]] == ["Better"]
     assert "<room>0</room>" in member_data(fake_claude.requests[-1])
@@ -247,7 +260,13 @@ async def test_new_chapters_stop_at_eight(client, database, fake_claude):
     person = await member(client, "seven@case.edu")
     seven = [{"id": f"c{n}", "title": f"T{n}", "summary": "S.", "quotes": [OLD_ANSWER]} for n in range(7)]
     await shelve_book(database, person["id"], seven)
-    state = await propose(client, person, fake_claude, change(title="Eighth"), change(title="Ninth"))
+    state = await propose(
+        client,
+        person,
+        fake_claude,
+        change(title="Eighth", quotes=[PART_ONE]),
+        change(title="Ninth", quotes=[PART_TWO]),
+    )
     assert [c["title"] for c in state["changes"]] == ["Eighth"]
 
 
@@ -439,7 +458,13 @@ async def test_the_book_on_the_shelf_only_changes_on_approval(client, database, 
         return (await client.get(f"/books/{before['_id']}", headers=reader["headers"])).json()
 
     seen = await public()
-    state = await propose(client, author, fake_claude, change(), change("improve", "c1", title="Better"))
+    state = await propose(
+        client,
+        author,
+        fake_claude,
+        change(quotes=[PART_ONE]),
+        change("improve", "c1", quotes=[PART_TWO], title="Better"),
+    )
     assert state["stage"] == "revising"
     assert await database.books.find_one({"author_id": author["id"]}) == before
     assert await public() == seen
@@ -471,7 +496,8 @@ async def test_quotes_must_be_verbatim_and_from_the_new_round(client, database, 
         change(title="Kept", quotes=[NEW_ANSWER, OLD_ANSWER, "Words nobody said at all here."]),
     )
     assert [c["title"] for c in state["changes"]] == ["Kept"]
-    assert state["changes"][0]["quotes"] == [NEW_ANSWER, OLD_ANSWER]
+    # The old quote already grounds a chapter, so it can't ground this one too.
+    assert state["changes"][0]["quotes"] == [NEW_ANSWER]
 
 
 async def test_an_improve_needs_something_new_and_keeps_the_old_quotes(client, author, fake_claude):
@@ -505,45 +531,184 @@ async def test_at_the_cap_the_librarian_is_told_to_only_improve(client, database
     assert "Only improve" in member_data(fake_claude.requests[-1])
 
 
+async def choose(client, headers, ids: list[str]) -> dict:
+    response = await client.put("/interview/revision/choices", json={"approved": ids}, headers=headers)
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+async def ask_for_blurb(client, headers) -> dict:
+    """Ask for the back cover of the saved choices. It's written after the response, so read it."""
+    response = await client.post("/interview/revision/blurb", headers=headers)
+    assert response.status_code == 200, response.text
+    return (await client.get("/interview", headers=headers)).json()
+
+
 async def test_a_partial_selection_shows_a_new_blurb_before_anything_applies(
     client, database, author, fake_claude
 ):
-    state = await propose(client, author, fake_claude, change(title="Yes"), change(title="No"))
+    state = await propose(
+        client,
+        author,
+        fake_claude,
+        change(title="Yes", quotes=[PART_ONE]),
+        change(title="No", quotes=[PART_TWO]),
+    )
     yes = state["changes"][0]["id"]
+    headers = author["headers"]
 
     refused = await client.post(
-        "/interview/revision", json={"approved": [yes], "blurb": "use"}, headers=author["headers"]
+        "/interview/revision", json={"approved": [yes], "blurb": "use"}, headers=headers
     )
     assert refused.status_code == 409
 
+    await choose(client, headers, [yes])
     fake_claude.responses.append(text_message(json.dumps({"blurb": "A blurb for what's left."})))
-    shown = await client.post(
-        "/interview/revision/blurb", json={"approved": [yes]}, headers=author["headers"]
-    )
-    assert shown.json()["blurb"] == "A blurb for what's left."
+    started = (await client.post("/interview/revision/blurb", headers=headers)).json()
+    assert started["selection_blurb_status"] == "writing"
+    assert started["selection_blurb"] is None
+    state = (await client.get("/interview", headers=headers)).json()
+    assert state["selection_blurb_status"] == "ready"
+    assert state["selection_blurb"] == "A blurb for what's left."
     assert fake_claude.requests[-1]["system"] == load_prompt("interview/blurb")
-    unchanged = await database.books.find_one({"author_id": author["id"]})
-    assert unchanged["blurb"] == "The old blurb."
+    assert (await database.books.find_one({"author_id": author["id"]}))["blurb"] == "The old blurb."
 
     # A different selection can't use it.
     other = await client.post(
-        "/interview/revision",
-        json={"approved": [state["changes"][1]["id"]], "blurb": "use"},
-        headers=author["headers"],
+        "/interview/revision", json={"approved": [state["changes"][1]["id"]], "blurb": "use"}, headers=headers
     )
     assert other.status_code == 409
 
     calls = len(fake_claude.requests)
     book = (
-        await client.post(
-            "/interview/revision", json={"approved": [yes], "blurb": "use"}, headers=author["headers"]
-        )
+        await client.post("/interview/revision", json={"approved": [yes], "blurb": "use"}, headers=headers)
     ).json()
-    assert book["blurb"] == shown.json()["blurb"]
+    assert book["blurb"] == state["selection_blurb"]
     assert len(fake_claude.requests) == calls
     titles = [c["title"] for c in book["chapters"]]
     assert "Yes" in titles
     assert "No" not in titles
+
+
+async def test_choices_are_saved_on_the_server(client, database, author, fake_claude):
+    state = await propose(
+        client,
+        author,
+        fake_claude,
+        change(title="A", quotes=[PART_ONE]),
+        change(title="B", quotes=[PART_TWO]),
+    )
+    headers = author["headers"]
+    assert state["approved_changes"] is None
+    assert state["selection_blurb_status"] is None
+    first = state["changes"][0]["id"]
+    await choose(client, headers, [first])
+    assert (await client.get("/interview", headers=headers)).json()["approved_changes"] == [first]
+    # Nothing is applied by saving a choice.
+    assert (await database.books.find_one({"author_id": author["id"]}))["chapters"][-1][
+        "title"
+    ] == "Chapter 2"
+    bad = await client.put("/interview/revision/choices", json={"approved": ["nope"]}, headers=headers)
+    assert bad.status_code == 422
+
+
+async def test_the_blurb_needs_choices_first(client, author, fake_claude):
+    await propose(client, author, fake_claude, change())
+    assert (await client.post("/interview/revision/blurb", headers=author["headers"])).status_code == 409
+
+
+async def test_changing_a_choice_makes_the_blurb_stale(client, author, fake_claude):
+    state = await propose(
+        client,
+        author,
+        fake_claude,
+        change(title="A", quotes=[PART_ONE]),
+        change(title="B", quotes=[PART_TWO]),
+    )
+    one, two = [item["id"] for item in state["changes"]]
+    headers = author["headers"]
+    await choose(client, headers, [one])
+    fake_claude.responses.append(text_message(json.dumps({"blurb": "For the first one."})))
+    assert (await ask_for_blurb(client, headers))["selection_blurb"] == "For the first one."
+
+    stale = await choose(client, headers, [two])
+    assert stale["selection_blurb_status"] == "stale"
+    assert stale["selection_blurb"] is None
+    refused = await client.post(
+        "/interview/revision", json={"approved": [two], "blurb": "use"}, headers=headers
+    )
+    assert refused.status_code == 409
+
+    fake_claude.responses.append(text_message(json.dumps({"blurb": "For the second one."})))
+    state = await ask_for_blurb(client, headers)
+    assert state["selection_blurb_status"] == "ready"
+    assert state["selection_blurb"] == "For the second one."
+    book = (
+        await client.post("/interview/revision", json={"approved": [two], "blurb": "use"}, headers=headers)
+    ).json()
+    assert book["blurb"] == "For the second one."
+
+
+async def test_a_failed_blurb_can_be_tried_again_or_skipped(client, author, fake_claude):
+    state = await propose(
+        client,
+        author,
+        fake_claude,
+        change(title="A", quotes=[PART_ONE]),
+        change(title="B", quotes=[PART_TWO]),
+    )
+    one = state["changes"][0]["id"]
+    headers = author["headers"]
+    await choose(client, headers, [one])
+    fake_claude.responses += [
+        text_message(json.dumps({"blurb": ""})),
+        text_message(json.dumps({"blurb": ""})),
+    ]
+    state = await ask_for_blurb(client, headers)
+    assert state["selection_blurb_status"] == "failed"
+
+    fake_claude.responses.append(text_message(json.dumps({"blurb": "Second try."})))
+    state = await ask_for_blurb(client, headers)
+    assert state["selection_blurb"] == "Second try."
+
+
+async def test_approving_everything_uses_the_proposed_blurb_for_free(client, author, fake_claude):
+    state = await propose(client, author, fake_claude, change())
+    headers = author["headers"]
+    await choose(client, headers, [state["changes"][0]["id"]])
+    calls = len(fake_claude.requests)
+    state = (await client.post("/interview/revision/blurb", headers=headers)).json()
+    assert state["selection_blurb_status"] == "ready"
+    assert state["selection_blurb"] == "The proposed blurb."
+    assert len(fake_claude.requests) == calls
+
+
+async def test_undoing_takes_a_change_back_for_good(client, database, author, fake_claude):
+    state = await propose(
+        client,
+        author,
+        fake_claude,
+        change(title="Regretted", quotes=[PART_ONE]),
+        change("improve", "c1", quotes=[PART_TWO], title="Worse"),
+    )
+    ids = [item["id"] for item in state["changes"]]
+    await client.post("/interview/revision", json={"approved": ids}, headers=author["headers"])
+    await client.post("/interview/book/undo", headers=author["headers"])
+    saved = await database.interviews.find_one({"user_id": author["id"]})
+    assert {item["title"] for item in saved["declined_changes"]} == {"Regretted", "Worse"}
+
+    await start_round(client, author, fake_claude)
+    assert "Regretted" in member_data(fake_claude.requests[-1]).split("<off_limits>")[1]
+
+
+async def test_a_round_with_nothing_keeps_undo_available(client, author, fake_claude):
+    state = await propose(client, author, fake_claude, change(quotes=[PART_ONE]))
+    await client.post(
+        "/interview/revision", json={"approved": [state["changes"][0]["id"]]}, headers=author["headers"]
+    )
+    state = await propose(client, author, fake_claude, change(quotes=["Not something anyone said here."]))
+    assert state["nothing_new"] is True
+    assert (await client.get("/books/me", headers=author["headers"])).json()["can_undo"] is True
 
 
 async def test_declining_the_new_blurb_keeps_the_old_one(client, author, fake_claude):
@@ -619,11 +784,10 @@ async def test_removing_from_a_shelved_book_goes_through_the_confirm_step(client
     assert state["proposed_blurb"] is None
     assert await database.books.find_one({"author_id": person["id"]}) == before
 
+    await choose(client, person["headers"], [item["id"]])
     fake_claude.responses.append(text_message(json.dumps({"blurb": "Without that chapter."})))
-    shown = await client.post(
-        "/interview/revision/blurb", json={"approved": [item["id"]]}, headers=person["headers"]
-    )
-    assert shown.json()["blurb"] == "Without that chapter."
+    shown = await ask_for_blurb(client, person["headers"])
+    assert shown["selection_blurb"] == "Without that chapter."
     book = (
         await client.post(
             "/interview/revision", json={"approved": [item["id"]], "blurb": "use"}, headers=person["headers"]
@@ -920,8 +1084,11 @@ async def test_a_spark_title_stays_out_of_a_first_book(client, database, author,
             json.dumps(
                 {
                     "pool": [
-                        {"title": "Chapter 0", "summary": "S.", "quotes": [OLD_ANSWER]},
-                        *({"title": f"Own {n}", "summary": "S.", "quotes": [OLD_ANSWER]} for n in range(3)),
+                        {"title": "Chapter 0", "summary": "S.", "quotes": [f"{OLD_ANSWER} 9"]},
+                        *(
+                            {"title": f"Own {n}", "summary": "S.", "quotes": [f"{OLD_ANSWER} {n}"]}
+                            for n in range(3)
+                        ),
                     ],
                     "titles": [{"title": f"T{n}", "why": "W."} for n in range(3)],
                     "blurb": "A blurb of mine.",
@@ -995,7 +1162,12 @@ async def test_a_spark_title_is_redacted_and_cant_become_a_chapter(
     await client.post("/interview/reopen", headers=reader["headers"])
     fake_claude.responses.append(round_over())
     await send_answer(client, reader["headers"], NEW_ANSWER)
-    fake_claude.responses.append(revision(change(title="chapter 0"), change(title="My own inventory story")))
+    fake_claude.responses.append(
+        revision(
+            change(title="chapter 0", quotes=[PART_ONE]),
+            change(title="My own inventory story", quotes=[PART_TWO]),
+        )
+    )
     await client.post("/interview/finish", headers=reader["headers"])
 
     state = (await client.get("/interview", headers=reader["headers"])).json()

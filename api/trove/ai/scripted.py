@@ -6,6 +6,8 @@ answers in THEO_ANSWERS and the book reads true. Type anything else and the chap
 titles and summaries but quote what you typed, because quotes must be verbatim from your answers
 or the engine drops them.
 
+Answering `qc:fail-next`, `qc:fail-book` or `qc:thin-pool` walks a failure or a thin pool (see below).
+
 A later round of adding has four questions. Its answers become one new chapter and one improved one,
 and a round whose answers are all under six words earns no changes, so that case can be walked too.
 """
@@ -397,7 +399,8 @@ def _interviewer(text: str) -> dict:
 
 def _draft(text: str) -> dict:
     # Thin answers can't quote, so a thin walk reaches "I need a little more" as the real one does.
-    return {"pool": _grounded_chapters(text), "titles": TITLES, "blurb": DRAFT_BLURB}
+    pool = _grounded_chapters(text)
+    return {"pool": pool[:2] if THIN_POOL in text else pool, "titles": TITLES, "blurb": DRAFT_BLURB}
 
 
 def _finish(text: str) -> dict:
@@ -523,6 +526,25 @@ REPLIES = {
 }
 
 
+# Answers that make the hard states walkable for free. Each is plain text in the transcript.
+FAIL_NEXT = "qc:fail-next"  # the next question fails once
+FAIL_BOOK = "qc:fail-book"  # each book step fails once
+THIN_POOL = "qc:thin-pool"  # the draft finds too little for three chapters
+_failed_once: set[tuple[str, str]] = set()
+
+
+def _triggered_failure(name: str, text: str, asking: bool) -> bool:
+    """Fail once per step and transcript, so Try again then works."""
+    turns = [*_turns(text), *_new_round_turns(text)]
+    last_answer = turns[-1].answer.strip() if turns else ""
+    wanted = last_answer == FAIL_NEXT if asking else FAIL_BOOK in text
+    key = (name, text)
+    if not wanted or key in _failed_once:
+        return False
+    _failed_once.add(key)
+    return True
+
+
 class ScriptedClaude:
     def __init__(self, delay_seconds: float = 0, model: str = "scripted"):
         self.model = model
@@ -532,9 +554,12 @@ class ScriptedClaude:
         name = prompt_name(params.get("system"))
         if name not in REPLIES:
             raise ValueError(f"The scripted AI has no reply for the prompt {name!r}.")
-        slower = 1 if name in ("interview/interviewer", "interview/adding") else BOOK_STEP_SLOWER
-        await asyncio.sleep(self.delay_seconds * slower)
-        reply = REPLIES[name](_text_of(params["messages"][-1]["content"]))
+        asking = name in ("interview/interviewer", "interview/adding")
+        await asyncio.sleep(self.delay_seconds * (1 if asking else BOOK_STEP_SLOWER))
+        text = _text_of(params["messages"][-1]["content"])
+        if _triggered_failure(name, text, asking):
+            raise ValueError("A scripted failure, as asked for.")
+        reply = REPLIES[name](text)
         return BetaMessage(
             id=f"msg_scripted_{uuid4().hex}",
             type="message",

@@ -672,7 +672,7 @@
           "Interview"
         ],
         "summary": "Finish",
-        "description": "End the interview and get three titles, each with why it's you. In a round of adding, end\nthe round: the proposed changes are written in the background (`revision_status`). After a\nfailed write, try again.\n`answer` is saved first as the answer to the waiting question, with no question after it.",
+        "description": "End the interview: stage goes to `drafting`, and the three titles are written in the background\n(`step_status`). With too little material it says `needs_more` instead. In a round of adding, end\nthe round: the proposed changes are written in the background (`revision_status`). After a\nfailed write, try again.\n`answer` is saved first as the answer to the waiting question, with no question after it.",
         "operationId": "finish_interview_finish_post",
         "requestBody": {
           "content": {
@@ -736,7 +736,7 @@
           "Interview"
         ],
         "summary": "Choose Title",
-        "description": "Choose one of the three titles. The book is finished to match and saved as a draft.",
+        "description": "Choose one of the three titles. Stage goes to `finishing`, and the book is written to match in\nthe background (`step_status`). After a failure, send this again.",
         "operationId": "choose_title_interview_title_post",
         "requestBody": {
           "content": {
@@ -754,7 +754,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MyBookResponse"
+                  "$ref": "#/components/schemas/InterviewResponse"
                 }
               }
             }
@@ -1049,19 +1049,19 @@
         ]
       }
     },
-    "/interview/revision/blurb": {
-      "post": {
+    "/interview/revision/choices": {
+      "put": {
         "tags": [
           "Interview"
         ],
-        "summary": "Revision Blurb",
-        "description": "The back cover for this selection of changes, to read before confirming. Nothing is applied.",
-        "operationId": "revision_blurb_interview_revision_blurb_post",
+        "summary": "Save Revision Choices",
+        "description": "Save which changes are approved so far, as they're pressed. Nothing is applied.",
+        "operationId": "save_revision_choices_interview_revision_choices_put",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RevisionBlurbRequest"
+                "$ref": "#/components/schemas/RevisionChoicesRequest"
               }
             }
           },
@@ -1073,7 +1073,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RevisionBlurbResponse"
+                  "$ref": "#/components/schemas/InterviewResponse"
                 }
               }
             }
@@ -1084,6 +1084,33 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/revision/blurb": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Revision Blurb",
+        "description": "Get the back cover for the saved choices, to read before confirming (`selection_blurb_status`).\nWritten in the background when it has to be. Also the retry after `failed` or `stale`.",
+        "operationId": "revision_blurb_interview_revision_blurb_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
                 }
               }
             }
@@ -2007,7 +2034,9 @@
             "type": "string",
             "enum": [
               "interviewing",
+              "drafting",
               "choosing",
+              "finishing",
               "reviewing",
               "done",
               "adding",
@@ -2056,6 +2085,10 @@
             "type": "boolean",
             "title": "At Limit"
           },
+          "nearly_done": {
+            "type": "boolean",
+            "title": "Nearly Done"
+          },
           "titles": {
             "anyOf": [
               {
@@ -2080,6 +2113,32 @@
               }
             ],
             "title": "Blurb"
+          },
+          "step_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "writing",
+                  "failed"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Status"
+          },
+          "chosen_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chosen Title"
           },
           "revision_status": {
             "anyOf": [
@@ -2122,6 +2181,48 @@
             ],
             "title": "Proposed Blurb"
           },
+          "approved_changes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved Changes"
+          },
+          "selection_blurb_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "writing",
+                  "ready",
+                  "failed",
+                  "stale"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selection Blurb Status"
+          },
+          "selection_blurb": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selection Blurb"
+          },
           "nothing_new": {
             "type": "boolean",
             "title": "Nothing New"
@@ -2137,11 +2238,17 @@
           "ready_for_reveal",
           "needs_more",
           "at_limit",
+          "nearly_done",
           "titles",
           "blurb",
+          "step_status",
+          "chosen_title",
           "revision_status",
           "changes",
           "proposed_blurb",
+          "approved_changes",
+          "selection_blurb_status",
+          "selection_blurb",
           "nothing_new"
         ],
         "title": "InterviewResponse"
@@ -2683,7 +2790,7 @@
         ],
         "title": "RemovalRequest"
       },
-      "RevisionBlurbRequest": {
+      "RevisionChoicesRequest": {
         "properties": {
           "approved": {
             "items": {
@@ -2691,7 +2798,7 @@
             },
             "type": "array",
             "title": "Approved",
-            "description": "The ids of the changes the member has selected."
+            "description": "The ids of the changes approved so far. Saved, not applied."
           }
         },
         "additionalProperties": false,
@@ -2699,28 +2806,7 @@
         "required": [
           "approved"
         ],
-        "title": "RevisionBlurbRequest"
-      },
-      "RevisionBlurbResponse": {
-        "properties": {
-          "blurb": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Blurb"
-          }
-        },
-        "type": "object",
-        "required": [
-          "blurb"
-        ],
-        "title": "RevisionBlurbResponse",
-        "description": "The back cover for that selection, for the member to read before confirming."
+        "title": "RevisionChoicesRequest"
       },
       "RevisionRequest": {
         "properties": {

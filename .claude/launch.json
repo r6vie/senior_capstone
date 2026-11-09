@@ -67,6 +67,28 @@
         "--strictPort"
       ],
       "port": 5273
+    },
+    {
+      "name": "api-session",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "AI_MODE=scripted",
+        "MONGODB_DATABASE=trove_dev_api_session",
+        "API_URL=http://127.0.0.1:8200",
+        "FRONTEND_URL=http://127.0.0.1:5373",
+        "uv",
+        "run",
+        "--directory",
+        "api",
+        "uvicorn",
+        "trove.main:app",
+        "--reload",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8200"
+      ],
+      "port": 8200
     }
   ]
 }

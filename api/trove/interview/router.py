@@ -15,8 +15,7 @@ from trove.interview.models import (
     ReadingAnswerRequest,
     ReadingQuestionResponse,
     RemovalRequest,
-    RevisionBlurbRequest,
-    RevisionBlurbResponse,
+    RevisionChoicesRequest,
     RevisionRequest,
     ShapeRequest,
     SkipRequest,
@@ -123,7 +122,8 @@ async def finish(
     database: AsyncDatabase = Depends(get_database),
     claude: Claude = Depends(get_claude),
 ) -> InterviewResponse:
-    """End the interview and get three titles, each with why it's you. In a round of adding, end
+    """End the interview: stage goes to `drafting`, and the three titles are written in the background
+    (`step_status`). With too little material it says `needs_more` instead. In a round of adding, end
     the round: the proposed changes are written in the background (`revision_status`). After a
     failed write, try again.
     `answer` is saved first as the answer to the waiting question, with no question after it."""
@@ -142,15 +142,17 @@ async def finish(
         return stale_question(error)
 
 
-@router.post("/title", response_model=MyBookResponse)
+@router.post("/title", response_model=InterviewResponse)
 async def choose_title(
     data: TitleRequest,
+    background: BackgroundTasks,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
     claude: Claude = Depends(get_claude),
-) -> MyBookResponse:
-    """Choose one of the three titles. The book is finished to match and saved as a draft."""
-    return await service.choose_title(database, claude, user, data.title)
+) -> InterviewResponse:
+    """Choose one of the three titles. Stage goes to `finishing`, and the book is written to match in
+    the background (`step_status`). After a failure, send this again."""
+    return interview_view(await service.choose_title(database, claude, user, data.title, background))
 
 
 @router.delete("/book/chapters/{chapter_id}", response_model=MyBookResponse)
@@ -225,15 +227,26 @@ async def reopen(
     return interview_view(await service.reopen(database, claude, user))
 
 
-@router.post("/revision/blurb", response_model=RevisionBlurbResponse)
+@router.put("/revision/choices", response_model=InterviewResponse)
+async def save_revision_choices(
+    data: RevisionChoicesRequest,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> InterviewResponse:
+    """Save which changes are approved so far, as they're pressed. Nothing is applied."""
+    return interview_view(await service.save_choices(database, user, data.approved))
+
+
+@router.post("/revision/blurb", response_model=InterviewResponse)
 async def revision_blurb(
-    data: RevisionBlurbRequest,
+    background: BackgroundTasks,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
     claude: Claude = Depends(get_claude),
-) -> RevisionBlurbResponse:
-    """The back cover for this selection of changes, to read before confirming. Nothing is applied."""
-    return RevisionBlurbResponse(blurb=await service.revision_blurb(database, claude, user, data.approved))
+) -> InterviewResponse:
+    """Get the back cover for the saved choices, to read before confirming (`selection_blurb_status`).
+    Written in the background when it has to be. Also the retry after `failed` or `stale`."""
+    return interview_view(await service.start_selection_blurb(database, claude, user, background))
 
 
 @router.post("/revision", response_model=MyBookResponse)

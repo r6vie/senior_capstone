@@ -8,7 +8,11 @@ from trove.interview.engine import Change, TitleOption, TurnPhase
 
 # interviewing → choosing (three titles shown) → reviewing (draft book) → done (on the shelf).
 # Later, done → adding (a short new round) → revising (proposed changes to approve) → done.
-Stage = Literal["interviewing", "choosing", "reviewing", "done", "adding", "revising"]
+# drafting (titles being written) and finishing (the book being written) sit between the first stages,
+# so a refresh in the middle shows the wait, not a screen where every action fails.
+Stage = Literal[
+    "interviewing", "drafting", "choosing", "finishing", "reviewing", "done", "adding", "revising"
+]
 # A 5 MB PDF, base64-encoded.
 MAX_RESUME_BASE64 = 7_000_000
 
@@ -50,14 +54,8 @@ class TitleRequest(RequestBody):
     title: int = Field(ge=0, le=2, description="Which of the three titles, by position.")
 
 
-class RevisionBlurbRequest(RequestBody):
-    approved: list[str] = Field(description="The ids of the changes the member has selected.")
-
-
-class RevisionBlurbResponse(BaseModel):
-    """The back cover for that selection, for the member to read before confirming."""
-
-    blurb: str | None
+class RevisionChoicesRequest(RequestBody):
+    approved: list[str] = Field(description="The ids of the changes approved so far. Saved, not applied.")
 
 
 class RevisionRequest(RequestBody):
@@ -132,10 +130,17 @@ class InterviewResponse(BaseModel):
     # Still too little at the turn limit, with no question waiting. Everything is saved. "Keep answering"
     # is POST /interview/question; the member can also leave.
     at_limit: bool
+    # True for one stretch when Shape is close: "Most of the way there." The client never counts.
+    nearly_done: bool
     # The three titles while choosing, and while reviewing so another can be picked.
     titles: list[TitleOption] | None
     # The back-cover blurb, first person, 2-4 sentences: the draft's while choosing, then the book's.
     blurb: str | None
+    # While drafting or finishing: the writing is going on, or failed. Poll GET /interview. A failure
+    # is retried once when the member comes back; after that the same POST tries again.
+    step_status: Literal["writing", "failed"] | None
+    # While finishing: the title being written.
+    chosen_title: str | None
     # While revising: the changes are being written, are ready, or failed. A failure is retried
     # once on its own when the member comes back; after that POST /interview/finish tries again.
     revision_status: Literal["writing", "ready", "failed"] | None
@@ -143,6 +148,12 @@ class InterviewResponse(BaseModel):
     changes: list[Change] | None
     # The proposed back cover, if every change is approved.
     proposed_blurb: str | None
+    # While revising: the member's saved choices, null until they've made any.
+    approved_changes: list[str] | None
+    # The back cover for those choices, to read before confirming. `stale` means the choices changed
+    # after it was written: POST /interview/revision/blurb again. Null means it hasn't been asked for.
+    selection_blurb_status: Literal["writing", "ready", "failed", "stale"] | None
+    selection_blurb: str | None
     # The last round earned no changes, so the book is as it was. The app says so plainly.
     nothing_new: bool
 

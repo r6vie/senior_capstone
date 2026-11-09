@@ -270,7 +270,8 @@ export interface paths {
         put?: never;
         /**
          * Finish
-         * @description End the interview and get three titles, each with why it's you. In a round of adding, end
+         * @description End the interview: stage goes to `drafting`, and the three titles are written in the background
+         *     (`step_status`). With too little material it says `needs_more` instead. In a round of adding, end
          *     the round: the proposed changes are written in the background (`revision_status`). After a
          *     failed write, try again.
          *     `answer` is saved first as the answer to the waiting question, with no question after it.
@@ -293,7 +294,8 @@ export interface paths {
         put?: never;
         /**
          * Choose Title
-         * @description Choose one of the three titles. The book is finished to match and saved as a draft.
+         * @description Choose one of the three titles. Stage goes to `finishing`, and the book is written to match in
+         *     the background (`step_status`). After a failure, send this again.
          */
         post: operations["choose_title_interview_title_post"];
         delete?: never;
@@ -442,6 +444,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/interview/revision/choices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Save Revision Choices
+         * @description Save which changes are approved so far, as they're pressed. Nothing is applied.
+         */
+        put: operations["save_revision_choices_interview_revision_choices_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/interview/revision/blurb": {
         parameters: {
             query?: never;
@@ -453,7 +475,8 @@ export interface paths {
         put?: never;
         /**
          * Revision Blurb
-         * @description The back cover for this selection of changes, to read before confirming. Nothing is applied.
+         * @description Get the back cover for the saved choices, to read before confirming (`selection_blurb_status`).
+         *     Written in the background when it has to be. Also the retry after `failed` or `stale`.
          */
         post: operations["revision_blurb_interview_revision_blurb_post"];
         delete?: never;
@@ -851,7 +874,7 @@ export interface components {
              * Stage
              * @enum {string}
              */
-            stage: "interviewing" | "choosing" | "reviewing" | "done" | "adding" | "revising";
+            stage: "interviewing" | "drafting" | "choosing" | "finishing" | "reviewing" | "done" | "adding" | "revising";
             question: components["schemas"]["Question"] | null;
             /** Topic */
             topic: string | null;
@@ -865,16 +888,28 @@ export interface components {
             needs_more: boolean;
             /** At Limit */
             at_limit: boolean;
+            /** Nearly Done */
+            nearly_done: boolean;
             /** Titles */
             titles: components["schemas"]["TitleOption"][] | null;
             /** Blurb */
             blurb: string | null;
+            /** Step Status */
+            step_status: ("writing" | "failed") | null;
+            /** Chosen Title */
+            chosen_title: string | null;
             /** Revision Status */
             revision_status: ("writing" | "ready" | "failed") | null;
             /** Changes */
             changes: components["schemas"]["Change"][] | null;
             /** Proposed Blurb */
             proposed_blurb: string | null;
+            /** Approved Changes */
+            approved_changes: string[] | null;
+            /** Selection Blurb Status */
+            selection_blurb_status: ("writing" | "ready" | "failed" | "stale") | null;
+            /** Selection Blurb */
+            selection_blurb: string | null;
             /** Nothing New */
             nothing_new: boolean;
         };
@@ -1097,21 +1132,13 @@ export interface components {
             /** Chapter Id */
             chapter_id: string;
         };
-        /** RevisionBlurbRequest */
-        RevisionBlurbRequest: {
+        /** RevisionChoicesRequest */
+        RevisionChoicesRequest: {
             /**
              * Approved
-             * @description The ids of the changes the member has selected.
+             * @description The ids of the changes approved so far. Saved, not applied.
              */
             approved: string[];
-        };
-        /**
-         * RevisionBlurbResponse
-         * @description The back cover for that selection, for the member to read before confirming.
-         */
-        RevisionBlurbResponse: {
-            /** Blurb */
-            blurb: string | null;
         };
         /** RevisionRequest */
         RevisionRequest: {
@@ -1803,7 +1830,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MyBookResponse"];
+                    "application/json": components["schemas"]["InterviewResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2003,7 +2030,7 @@ export interface operations {
             };
         };
     };
-    revision_blurb_interview_revision_blurb_post: {
+    save_revision_choices_interview_revision_choices_put: {
         parameters: {
             query?: never;
             header?: never;
@@ -2012,7 +2039,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RevisionBlurbRequest"];
+                "application/json": components["schemas"]["RevisionChoicesRequest"];
             };
         };
         responses: {
@@ -2022,7 +2049,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RevisionBlurbResponse"];
+                    "application/json": components["schemas"]["InterviewResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2032,6 +2059,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revision_blurb_interview_revision_blurb_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
                 };
             };
         };

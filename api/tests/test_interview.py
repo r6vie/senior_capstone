@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 import anthropic
 import pytest
 
-from tests.fakes import send_answer, send_skip
+from tests.fakes import choose_and_wait, finish_and_wait, send_answer, send_skip
 from trove.interview import engine, service
 from trove.interview.engine import Draft, DraftChapter, FinishedBook, NextTurn, TitleOption
 
@@ -179,15 +179,13 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
     assert resumed["question"]["text"] == "Question 12?"
     assert resumed["topic"] == "topic 11"
 
-    state = (await client.post("/interview/finish", headers=headers)).json()
+    state = await finish_and_wait(client, headers)
     assert state["stage"] == "choosing"
     assert state["question"] is None
     assert state["titles"] == [{"title": f"Title {n}", "why": f"Because {n}."} for n in range(3)]
     assert state["blurb"] == "I know the pool."
 
-    book = await client.post("/interview/title", json={"title": 1}, headers=headers)
-    assert book.status_code == 200
-    book = book.json()
+    book = await choose_and_wait(client, headers, 1)
     assert book["title"] == "Title 1"
     assert book["author_name"] == "Hana Sato"
     assert book["status"] == "draft"
@@ -253,12 +251,13 @@ async def test_steps_out_of_order_are_409(client, headers, fake_engine):
 
 async def test_the_librarian_can_end_the_interview(client, headers, fake_engine):
     await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, engine.MIN_ANSWERS - 1)
     fake_engine.ready_next = True
     state = await answer_questions(client, headers, 1)
     assert state["ready_for_reveal"] is True
     assert state["can_finish"] is True
     assert state["question"] is None
-    assert (await client.post("/interview/finish", headers=headers)).json()["stage"] == "choosing"
+    assert (await finish_and_wait(client, headers))["stage"] == "choosing"
 
 
 async def test_answers_are_saved_even_when_the_next_question_fails(client, database, headers, fake_engine):
@@ -356,11 +355,8 @@ async def test_finish_saves_what_is_in_the_field_first(client, database, headers
     waiting = state["question"]
     assert state["can_finish"] is False
 
-    response = await client.post(
-        "/interview/finish", json={"answer": "The last thing I said."}, headers=headers
-    )
-    assert response.status_code == 200, response.text
-    assert response.json()["stage"] == "choosing"
+    state = await finish_and_wait(client, headers, answer="The last thing I said.")
+    assert state["stage"] == "choosing"
     saved = await database.interviews.find_one({})
     assert saved["turns"][-1] == {
         "question": waiting["text"],
@@ -411,7 +407,7 @@ async def to_review(client, headers, fake_engine) -> dict:
     await client.post("/interview", json={}, headers=headers)
     await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
     await client.post("/interview/finish", headers=headers)
-    return (await client.post("/interview/title", json={"title": 0}, headers=headers)).json()
+    return await choose_and_wait(client, headers, 0)
 
 
 async def test_the_other_titles_stay_available_in_review(client, headers, fake_engine):
@@ -519,9 +515,7 @@ async def test_said_enough_with_too_little_stays_on_the_question(client, headers
     state = await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
     monkeypatch.setattr(engine, "draft_book", too_little)
 
-    response = await client.post("/interview/finish", headers=headers)
-    assert response.status_code == 200
-    after = response.json()
+    after = await finish_and_wait(client, headers)
     assert after["stage"] == "interviewing"
     assert after["question"] == state["question"]
     assert after["needs_more"] is True
@@ -545,7 +539,7 @@ async def test_a_librarian_finish_with_too_little_asks_on_new_ground(
     monkeypatch.setattr(engine, "draft_book", too_little)
 
     calls = len(fake_engine.calls)
-    state = (await client.post("/interview/finish", headers=headers)).json()
+    state = await finish_and_wait(client, headers)
     assert state["stage"] == "interviewing"
     assert state["question"] is not None
     assert state["ready_for_reveal"] is False
@@ -563,7 +557,7 @@ async def test_too_little_at_the_turn_limit_lets_the_member_decide(
     )
     monkeypatch.setattr(engine, "draft_book", too_little)
     calls = len(fake_engine.calls)
-    state = (await client.post("/interview/finish", headers=headers)).json()
+    state = await finish_and_wait(client, headers)
     assert state["at_limit"] is True
     assert state["question"] is None
     assert state["can_finish"] is False
@@ -619,3 +613,135 @@ async def test_a_stale_finish_with_an_answer_saves_nothing(client, database, hea
     assert stale.status_code == 409
     assert stale.json()["interview"]["stage"] == "interviewing"
     assert len((await database.interviews.find_one({}))["turns"]) == before
+
+
+async def test_finish_sets_the_stage_first_and_writes_after(client, database, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    state = (await client.post("/interview/finish", headers=headers)).json()
+    assert state["stage"] == "drafting"
+    assert state["step_status"] == "writing"
+    assert state["can_finish"] is False
+    assert (await client.get("/interview", headers=headers)).json()["stage"] == "choosing"
+
+
+async def test_title_sets_the_stage_first_and_writes_after(client, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    await client.post("/interview/finish", headers=headers)
+    state = (await client.post("/interview/title", json={"title": 1}, headers=headers)).json()
+    assert state["stage"] == "finishing"
+    assert state["chosen_title"] == TITLES[1].title
+    assert state["step_status"] == "writing"
+    assert (await client.get("/interview", headers=headers)).json()["stage"] == "reviewing"
+    assert (await client.get("/books/me", headers=headers)).json()["title"] == TITLES[1].title
+
+
+async def test_a_refresh_during_drafting_shows_the_wait_and_answers_get_the_state(
+    client, database, headers, fake_engine
+):
+    await client.post("/interview", json={}, headers=headers)
+    state = await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    await database.interviews.update_one(
+        {}, {"$set": {"stage": "drafting", "write_status": "writing", "updated_at": datetime.now(UTC)}}
+    )
+    seen = (await client.get("/interview", headers=headers)).json()
+    assert seen["stage"] == "drafting"
+    assert seen["step_status"] == "writing"
+    # Another press while it's writing does nothing.
+    calls = len(fake_engine.calls)
+    assert (await client.post("/interview/finish", headers=headers)).json()["stage"] == "drafting"
+    assert len(fake_engine.calls) == calls
+    late = await client.post(
+        "/interview/answers",
+        json={"answer": "Still typing.", "question_id": state["question"]["question_id"]},
+        headers=headers,
+    )
+    assert late.status_code == 409
+
+
+async def failing_draft(claude, *, turns, **_):
+    raise ValueError("unusable")
+
+
+async def test_a_failed_draft_retries_once_on_return_then_by_hand(
+    client, database, headers, monkeypatch, fake_engine
+):
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    good = engine.draft_book
+    monkeypatch.setattr(engine, "draft_book", failing_draft)
+    await client.post("/interview/finish", headers=headers)
+    saved = await database.interviews.find_one({})
+    assert saved["stage"] == "drafting"
+    assert saved["write_status"] == "failed"
+
+    first = (await client.get("/interview", headers=headers)).json()
+    assert first["step_status"] == "writing"
+    second = (await client.get("/interview", headers=headers)).json()
+    assert second["step_status"] == "failed"
+    assert second["can_finish"] is True
+
+    monkeypatch.setattr(engine, "draft_book", good)
+    assert (await finish_and_wait(client, headers))["stage"] == "choosing"
+
+
+async def test_a_failed_book_can_be_tried_again_with_any_title(
+    client, database, headers, monkeypatch, fake_engine
+):
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    await client.post("/interview/finish", headers=headers)
+    good = engine.finish_book
+
+    async def failing(claude, *, turns, draft, title, **_):
+        raise ValueError("unusable")
+
+    monkeypatch.setattr(engine, "finish_book", failing)
+    await client.post("/interview/title", json={"title": 0}, headers=headers)
+    assert (await database.interviews.find_one({}))["write_status"] == "failed"
+    assert (await client.get("/books/me", headers=headers)).status_code == 404
+
+    monkeypatch.setattr(engine, "finish_book", good)
+    book = await choose_and_wait(client, headers, 2)
+    assert book["title"] == TITLES[2].title
+
+
+async def test_never_a_draft_below_the_floor(client, database, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, engine.MIN_ANSWERS - 1)
+    await database.interviews.update_one({}, {"$set": {"ready_for_reveal": True}})
+    calls = len(fake_engine.calls)
+    state = await finish_and_wait(client, headers)
+    assert state["stage"] == "interviewing"
+    assert state["needs_more"] is True
+    assert not [call for call in fake_engine.calls[calls:] if call[0] == "draft_book"]
+
+
+async def test_skipping_to_the_limit_stops_and_lets_the_member_decide(client, database, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    many = [{"question": "Q?", "answer": "", "phase": "dig"}] * (engine.MAX_TURNS - 1)
+    await database.interviews.update_one({}, {"$set": {"turns": many}})
+    calls = len(fake_engine.calls)
+    state = (await send_answer(client, headers, "Not sure.")).json()
+    assert state["at_limit"] is True
+    assert state["needs_more"] is True
+    assert state["question"] is None
+    assert state["ready_for_reveal"] is False
+    assert len(fake_engine.calls) == calls
+
+    # "Keep answering" gets a question, and the answers count from there.
+    state = (await client.post("/interview/question", headers=headers)).json()
+    assert state["question"] is not None
+    assert state["at_limit"] is False
+
+
+async def test_nearly_done_comes_from_the_api_for_one_stretch(client, database, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    almost = [{"question": "Q?", "answer": "Yes.", "phase": "dig"}] * (service.NEARLY_DONE_ANSWERS - 2)
+    await database.interviews.update_one({}, {"$set": {"turns": almost}})
+    state = (await send_answer(client, headers, "One.")).json()
+    assert state["nearly_done"] is False
+    state = (await send_answer(client, headers, "Two.")).json()
+    assert state["nearly_done"] is True
+    assert (await send_answer(client, headers, "Three.")).json()["nearly_done"] is False
