@@ -47,7 +47,7 @@ def chapter(quote: str, title: str = "Thick without gums") -> dict:
 
 
 TITLES = [{"title": f"Title {n}", "why": "You kept coming back to it."} for n in range(3)]
-BLURB = "I make lassi thick with nothing but time. I learned it the slow way, one split batch at a time."
+BLURB = "I make sourdough thick with nothing but time. I learned it the slow way, one split batch at a time."
 
 
 async def test_next_turn_sends_the_transcript_with_structured_output_and_adaptive_thinking():
@@ -98,10 +98,13 @@ async def test_the_reveal_is_forced_at_the_question_limit():
 
 async def test_playback_is_kept_only_in_shape():
     claude = FakeClaude(
-        [reply(plan(phase="dig", playback="stray")), reply(plan(phase="shape", playback="You make lassi."))]
+        [
+            reply(plan(phase="dig", playback="stray")),
+            reply(plan(phase="shape", playback="You make sourdough.")),
+        ]
     )
     assert (await engine.next_turn(claude, turns=turns(), resume_text=None)).playback is None
-    assert (await engine.next_turn(claude, turns=turns(), resume_text=None)).playback == "You make lassi."
+    assert (await engine.next_turn(claude, turns=turns(), resume_text=None)).playback == "You make sourdough."
 
 
 async def test_refusals_propagate():
@@ -350,7 +353,7 @@ async def test_rewrite_second_try_can_succeed():
 
 async def test_book_output_with_a_resume_only_term_retries_then_drops_it():
     said = [engine.Turn(question="Q?", answer=a, phase="dig") for a in ANSWERS]
-    leak = {"title": "My time at Gopala", "summary": "It was at Gopala.", "quotes": [ANSWERS[0]]}
+    leak = {"title": "My time at Brindle", "summary": "It was at Brindle.", "quotes": [ANSWERS[0]]}
     clean = [chapter(answer, f"Clean {n}") for n, answer in enumerate(ANSWERS[:3])]
     claude = FakeClaude(
         [
@@ -358,14 +361,16 @@ async def test_book_output_with_a_resume_only_term_retries_then_drops_it():
             reply({"pool": [leak, *clean], "titles": TITLES, "blurb": BLURB}),
         ]
     )
-    draft = await engine.draft_book(claude, turns=said, leaks=lambda text: "Gopala" in text)
+    draft = await engine.draft_book(claude, turns=said, leaks=lambda text: "Brindle" in text)
     assert len(claude.requests) == 2
     assert [c.title for c in draft.pool] == ["Clean 0", "Clean 1", "Clean 2"]
 
 
 async def test_a_blurb_with_a_resume_only_term_is_never_returned():
-    claude = FakeClaude([reply({"blurb": "At Gopala, I did it."}), reply({"blurb": "I did it, twice."})])
-    blurb = await engine.write_blurb(claude, turns=turns(1), chapters=[], leaks=lambda text: "Gopala" in text)
+    claude = FakeClaude([reply({"blurb": "At Brindle, I did it."}), reply({"blurb": "I did it, twice."})])
+    blurb = await engine.write_blurb(
+        claude, turns=turns(1), chapters=[], leaks=lambda text: "Brindle" in text
+    )
     assert blurb == "I did it, twice."
 
 

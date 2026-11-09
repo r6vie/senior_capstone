@@ -37,7 +37,7 @@ MIN_SWEEP = 4
 # Answers run thin (docs/trove.md §4, §9.9) when this many of the last few are short or unsure.
 # The signal is internal: it changes the angle of the next question and is never shown.
 THIN_WINDOW, THIN_SWITCH = 3, 2
-SHORT_ANSWER_WORDS, UNSURE_ANSWER_WORDS = 6, 15
+SHORT_ANSWER_WORDS, UNSURE_ANSWER_WORDS = 10, 15
 MIN_CHAPTERS, MAX_CHAPTERS = 3, 5
 # A quote shorter than this can't show a chapter is theirs ("I made it.").
 MIN_QUOTE_WORDS = 5
@@ -179,6 +179,9 @@ NOT_NAMES = frozenset(
 )
 # The back-cover blurb fits the book's `blurb` field (B1).
 MAX_BLURB = 600
+
+# "Is this you?" is the most personal moment of the interview, on a phone (R1-14 in the quality notes).
+MAX_PLAYBACK_WORDS = 30
 
 # Questions are on the member's critical path, so they think less than the one-off book steps.
 QUESTION_EFFORT = "medium"
@@ -371,13 +374,12 @@ async def plan_turn(
     more_material: bool = False,
 ) -> TurnPlan:
     """next_turn plus the private thread ranking, which the evals read."""
-    plan = await _ask(
-        claude,
-        "interview/interviewer",
-        _turn_blocks(turns, resume_text, sparks, more_material),
-        TurnPlan,
-        QUESTION_EFFORT,
-    )
+    blocks = _turn_blocks(turns, resume_text, sparks, more_material)
+    plan = await _ask(claude, "interview/interviewer", blocks, TurnPlan, QUESTION_EFFORT)
+    if plan.phase == "shape" and len((plan.playback or "").split()) > MAX_PLAYBACK_WORDS:
+        limit = f"\n\nThe playback must be at most {MAX_PLAYBACK_WORDS} words. Write it again, shorter."
+        retry = [*blocks[:-1], {**blocks[-1], "text": blocks[-1]["text"] + limit}]
+        plan = await _ask(claude, "interview/interviewer", retry, TurnPlan, QUESTION_EFFORT)
 
     answered = sum(1 for turn in turns if turn.answer.strip())
     if not turns:
@@ -832,11 +834,17 @@ def _status(turns: list[Turn], more_material: bool = False) -> str:
     notes = [f"Questions asked so far: {asked}. Answered: {answered}."]
     if _skipped(turns[-1]):
         notes.append(
-            "The member skipped the last question. Move to other ground: don't rephrase it, don't come "
-            "back to it, and don't mention the skip."
+            "The member skipped the last question. Move to other ground: don't rephrase it and don't "
+            "mention the skip."
         )
     elif _running_thin(turns):
-        notes.append('Answers are running thin. Change the angle now (see "When answers run thin").')
+        notes.append(
+            'Answers are running thin. Change the angle now (see "When answers run thin"), and treat this '
+            "area as closed until Dig."
+        )
+    skipped = [turn.question for turn in turns if _skipped(turn)]
+    if skipped:
+        notes.append("Skipped so far, so stay off these subjects: " + " | ".join(skipped))
     swept = sum(1 for turn in turns if turn.phase == "sweep")
     if swept < MIN_SWEEP and all(turn.phase == "sweep" for turn in turns):
         notes.append(

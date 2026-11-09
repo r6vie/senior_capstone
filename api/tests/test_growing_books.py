@@ -359,14 +359,14 @@ async def test_a_resume_only_term_stays_out_of_book_steps_and_the_saved_intervie
     client, database, scripted_ai
 ):
     person = await member(client, "terms@case.edu")
-    pdf = base64.b64encode(minimal_pdf("Operations at Gopala Foods 2019")).decode()
+    pdf = base64.b64encode(minimal_pdf("Operations at Brindle Foods 2019")).decode()
     await client.post("/interview", json={"resume_pdf": pdf}, headers=person["headers"])
     saved = await database.interviews.find_one({"user_id": person["id"]})
-    assert "Gopala" not in str(saved)
+    assert "Brindle" not in str(saved)
     # The Librarian's question names the company, as a résumé can make it do.
     await database.interviews.update_one(
         {"user_id": person["id"]},
-        {"$set": {"current.question": "What happened at Gopala Foods in 2019?"}},
+        {"$set": {"current.question": "What happened at Brindle Foods in 2019?"}},
     )
     for answer in scripted.THEO_ANSWERS:
         await send_answer(client, person["headers"], answer)
@@ -375,7 +375,7 @@ async def test_a_resume_only_term_stays_out_of_book_steps_and_the_saved_intervie
 
     draft_request = next(r for r in scripted_ai.requests if r["system"] == load_prompt("interview/draft"))
     data = member_data(draft_request)
-    assert "Gopala" not in data
+    assert "Brindle" not in data
     assert "2019" not in data
     assert "What happened at that one" in data
     assert await database.resume_texts.count_documents({}) == 0
