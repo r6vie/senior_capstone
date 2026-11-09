@@ -11,6 +11,7 @@ import {
   type InterviewClient,
   InterviewError,
   type InterviewState,
+  LostError,
   type TitleOption,
 } from "./interviewClient";
 import { ChangesScreen, WaitBox } from "./ProposedChanges";
@@ -35,7 +36,7 @@ function giveUpAfter(ms: number): Promise<never> {
 
 function isLost(reason: unknown): boolean {
   // fetch rejects with a TypeError when the network fails, and its own words aren't for members.
-  return reason instanceof TypeError || reason instanceof TimedOut;
+  return reason instanceof TypeError || reason instanceof TimedOut || reason instanceof LostError;
 }
 
 function readSeen(key: string): number | null {
@@ -89,6 +90,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   // Done from an earlier visit has nothing to do here. Done just now is the moment to say so.
   const [doneOnArrival, setDoneOnArrival] = useState(false);
   const [hasSparks, setHasSparks] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: loadAttempt is what asks for another try
   useEffect(() => {
@@ -126,12 +128,12 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   // The changes are written in the background, so the screen moves on by itself when they're ready.
   const stage = state?.stage;
   useEffect(() => {
-    if (stage !== "writing") return;
+    if (stage !== "writing" && stage !== "drafting") return;
     const timer = setInterval(() => {
       client
         .current()
         .then((now) => {
-          if (now && now.stage !== "writing") setState(now);
+          if (now && now.stage !== stage) setState(now);
         })
         .catch(() => undefined);
     }, LOOK_AGAIN_MS);
@@ -172,34 +174,55 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
       waiting: string,
       call: () => Promise<InterviewState>,
       options: {
-        /** What to repeat if the Librarian fails: after a saved answer, ask again rather than resend. */
+        /** What to repeat if the Librarian fails. */
         retryWith?: () => Promise<InterviewState>;
-        /** Instead of Try again, when the Librarian failed after the member's part was saved. */
+        /** Instead of Try again, when the API says the member's part was saved and the rest failed. */
         onSavedButStuck?: () => void;
         onSuccess?: () => void;
+        /** The interview had already moved past this screen, so what the member sent did arrive. */
+        onMoved?: () => void;
         lost?: string;
       } = {},
     ) => {
       setBusy(waiting);
       setError(null);
       setRetry(null);
-      try {
-        setState(await Promise.race([call(), giveUpAfter(GIVE_UP_AFTER_MS)]));
+      setNotice(null);
+      // Where the interview really is, if it isn't where this screen thinks. Null if it's the same.
+      const movedOn = async () => {
+        const now = await client.current();
+        return now && placeOf(now) !== placeOf(latest.current) ? now : null;
+      };
+      const arrive = (now: InterviewState) => {
+        setState(now);
         setInterrupted(null);
         writeSeen(seenKey);
         options.onSuccess?.();
+      };
+      try {
+        arrive(await Promise.race([call(), giveUpAfter(GIVE_UP_AFTER_MS)]));
         return true;
       } catch (reason) {
         if (isLost(reason)) {
           setError(options.lost ?? LOST_DEFAULT);
           // The first try may have arrived even though the reply didn't. Look before repeating it.
           const looked = async () => {
-            const now = await client.current();
-            return now && placeOf(now) !== placeOf(latest.current) ? now : call();
+            const now = await movedOn();
+            if (now) options.onMoved?.();
+            return now ?? call();
           };
           setRetry(() => () => {
             run(waiting, looked, options);
           });
+        } else if (reason instanceof InterviewError && reason.conflict) {
+          // A 409 means this screen is out of date. Show what's true rather than the refusal.
+          const now = await movedOn().catch(() => null);
+          if (now) {
+            options.onMoved?.();
+            arrive(now);
+            return true;
+          }
+          setError(messageOf(reason));
         } else if (reason instanceof InterviewError && reason.retryable) {
           if (options.onSavedButStuck) {
             options.onSavedButStuck();
@@ -321,6 +344,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           run("The Librarian is thinking…", call, {
             lost: kind === "answer" ? LOST_ANSWER : LOST_DEFAULT,
             onSuccess: () => clearDraft(draftKey),
+            onMoved: () => kind === "answer" && setNotice("Your answer was saved."),
             onSavedButStuck: () => {
               clearDraft(draftKey);
               setInterrupted(kind);
@@ -348,6 +372,11 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         return (
           <Frame phase={phase} say={say(state.question)} busy={Boolean(busy)}>
             <ErrorMessage message={error} />
+            {notice && (
+              <p className="iv-note" role="status">
+                {notice}
+              </p>
+            )}
             <AnswerPanel
               key={draftKey}
               draftKey={draftKey}
@@ -442,6 +471,39 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
       case "done":
         if (doneOnArrival) return <Navigate to="/my-book" replace />;
         return <DoneScreen book={state.book} />;
+      case "drafting":
+        return (
+          <Frame
+            busy
+            canLeave={false}
+            say={
+              <Waiting>
+                {state.about === "titles"
+                  ? "The Librarian is finding your titles…"
+                  : "The Librarian is writing your book…"}
+              </Waiting>
+            }
+          >
+            <p className="iv-note iv-note-big">Everything you've said is saved.</p>
+          </Frame>
+        );
+      case "notEnough":
+        return (
+          <Frame
+            busy={Boolean(busy)}
+            say={say("I don't have enough yet for three chapters. Everything you've said is saved.")}
+          >
+            <ErrorMessage message={error} />
+            <div className="iv-row">
+              <Button
+                aria-busy={Boolean(busy)}
+                onClick={() => run("The Librarian is thinking…", () => client.askAgain(state.id))}
+              >
+                Keep answering
+              </Button>
+            </div>
+          </Frame>
+        );
       case "writing":
         return fromReading ? (
           <Frame canLeave={false} say="I'm checking whether this belongs in your book.">
@@ -539,6 +601,7 @@ function StartScreen({
 
   function pick(file: File | undefined) {
     if (!file) return;
+    setFileError(null);
     if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
       setFileError("That isn't a PDF. Choose a PDF, or start without one.");
       return;
@@ -554,6 +617,11 @@ function StartScreen({
   return (
     <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={START_SAY}>{busy}</Waiting> : START_SAY}>
       <ErrorMessage message={error} />
+      {error && resume && (
+        <button type="button" className="iv-textlink" onClick={() => onStart(null)}>
+          Start without it
+        </button>
+      )}
       <div className="iv-row">
         <Button onClick={() => onStart(resume)} aria-busy={Boolean(busy)}>
           Start the interview
@@ -887,8 +955,11 @@ function ReviewScreen({
   const [others, setOthers] = useState<TitleOption[] | null>(null);
   const [othersError, setOthersError] = useState<string | null>(null);
   const canRemove = book.chapters.length > MIN_CHAPTERS;
+  // The back cover changes with a removal, and the member should be told. Until their next action.
+  const [blurbAtRemoval, setBlurbAtRemoval] = useState<string | null | undefined>(undefined);
 
   async function act(chapterId: string, action: "rewrite" | "remove") {
+    setBlurbAtRemoval(action === "remove" ? book.blurb : undefined);
     setWorking(action === "rewrite" ? chapterId : null);
     await (action === "rewrite" ? onRewrite : onRemove)(chapterId);
     setWorking(null);
@@ -910,7 +981,7 @@ function ReviewScreen({
       say={busy ? <Waiting holding={REVIEW_SAY}>{busy}</Waiting> : REVIEW_SAY}
     >
       <div className="iv-booktitle">
-        <span className="book" aria-hidden="true">
+        <span className="book iv-book-wide" aria-hidden="true">
           <span className="book-cover">
             <span className="book-title">{book.title}</span>
             <span className="book-author">{book.authorName}</span>
@@ -919,7 +990,14 @@ function ReviewScreen({
         <div>
           <h2>{book.title}</h2>
           <p className="iv-by">by {book.authorName}</p>
+          {/* On a phone the book comes after the title, at the small size, on its own row. */}
+          <SmallBook title={book.title} author={book.authorName} />
           {book.blurb && <p className="iv-blurb">{book.blurb}</p>}
+          {blurbAtRemoval !== undefined && blurbAtRemoval !== book.blurb && (
+            <p className="iv-note" role="status">
+              Back cover rewritten to match.
+            </p>
+          )}
           <div className="iv-head-act">
             {book.blurb && (
               <button type="button" className="button button-quiet iv-sm iv-show" onClick={onRewriteBlurb}>
@@ -934,9 +1012,7 @@ function ReviewScreen({
           </div>
           {others !== null && (
             <div className="iv-others">
-              <p className="iv-note">
-                Picking one writes your book again, so any chapter you rewrote may change.
-              </p>
+              <p className="iv-note">This rewrites your chapters to fit the new title.</p>
               {others.map((option) => (
                 <button
                   key={option.id}

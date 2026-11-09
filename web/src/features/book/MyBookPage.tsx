@@ -20,6 +20,14 @@ const LOOK_AGAIN_MS = 4000;
 const MIN_CHAPTERS = 3;
 
 function NoBookYet({ stage }: { stage: BookStage }) {
+  if (stage === "writingTitles" || stage === "writingBook") {
+    return (
+      <div className="empty" aria-busy="true">
+        <h3>{stage === "writingTitles" ? "I'm finding your titles." : "I'm writing your book."}</h3>
+        <p>Everything you've said is saved.</p>
+      </div>
+    );
+  }
   if (stage === "titles") {
     return (
       <div className="empty">
@@ -288,12 +296,10 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
 
   // The changes are written in the background, so the page moves on by itself when they're ready.
   useEffect(() => {
-    if (stage !== "writing") return;
-    const timer = setInterval(() => {
-      client.stage().then(setStage, () => undefined);
-    }, LOOK_AGAIN_MS);
+    if (stage !== "writing" && stage !== "writingTitles" && stage !== "writingBook") return;
+    const timer = setInterval(load, LOOK_AGAIN_MS);
     return () => clearInterval(timer);
-  }, [client, stage]);
+  }, [load, stage]);
 
   async function attempt(call: () => Promise<unknown>, after: () => void) {
     setProblem(null);
@@ -339,7 +345,9 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
               {problem}
             </p>
           )}
-          {stage !== "titles" && <Sparks sparks={sparks} shaping={false} onRemove={removeSpark} />}
+          {stage !== "titles" && stage !== "writingTitles" && stage !== "writingBook" && (
+            <Sparks sparks={sparks} shaping={false} onRemove={removeSpark} />
+          )}
         </div>
       </main>
     );

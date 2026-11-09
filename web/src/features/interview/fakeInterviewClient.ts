@@ -235,6 +235,10 @@ function view(stored: Stored, authorName: string): InterviewState {
       };
     case "choosing":
       return { id, stage: "choosing", titles: TITLES };
+    case "drafting":
+      return { id, stage: "drafting", about: "book" };
+    case "notEnough":
+      return { id, stage: "notEnough" };
     default:
       return { id, stage: stored.stage, book: stored.book ?? emptyBook(authorName) };
   }

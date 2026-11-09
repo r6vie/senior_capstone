@@ -11,17 +11,6 @@ import "./SparkButton.css";
 
 type Status = "rest" | "saving" | "saved" | "limit" | "failed";
 
-// The routes aren't in schema.ts on this branch yet, so their paths can't be typed.
-const post = (path: string, init: { body: unknown }) =>
-  (
-    api.POST as unknown as (
-      path: string,
-      init: { body: unknown },
-    ) => Promise<{ data?: { id: string }; response?: Response }>
-  )(path, init);
-const remove = (path: string) =>
-  (api.DELETE as unknown as (path: string) => Promise<{ response?: Response }>)(path);
-
 export function SparkButton({
   bookId,
   chapterId,
@@ -44,14 +33,14 @@ export function SparkButton({
   async function save() {
     setStatus("saving");
     try {
-      const { data, response } = await post("/interview/sparks", {
+      const { data, response } = await api.POST("/interview/sparks", {
         body: { book_id: bookId, chapter_id: chapterId },
       });
       if (data) {
         setSaved(data.id);
         setStatus("saved");
       } else {
-        setStatus(response?.status === 409 ? "limit" : "failed");
+        setStatus(response.status === 409 ? "limit" : "failed");
       }
     } catch {
       setStatus("failed");
@@ -61,8 +50,10 @@ export function SparkButton({
   async function undo() {
     setStatus("rest");
     try {
-      const { response } = await remove(`/interview/sparks/${saved}`);
-      if (response?.ok === false) setStatus("saved");
+      const { response } = await api.DELETE("/interview/sparks/{spark_id}", {
+        params: { path: { spark_id: saved ?? "" } },
+      });
+      if (!response.ok) setStatus("saved");
       else setSaved(undefined);
     } catch {
       setStatus("saved");

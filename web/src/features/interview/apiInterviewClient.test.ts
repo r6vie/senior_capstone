@@ -1,6 +1,7 @@
 import { api } from "../../api/client";
 import type { components } from "../../api/schema";
 import { apiInterviewClient } from "./apiInterviewClient";
+import { LostError } from "./interviewClient";
 
 type InterviewResponse = components["schemas"]["InterviewResponse"];
 
@@ -64,7 +65,7 @@ describe("apiInterviewClient", () => {
         ok(interview({ stage: "choosing", question: null, titles: [{ title: "A", why: "B" }] })),
       );
     const state = await apiInterviewClient.confirmShape("me");
-    expect(post).toHaveBeenLastCalledWith("/interview/finish");
+    expect(post).toHaveBeenLastCalledWith("/interview/finish", {});
     expect(state).toEqual({ id: "me", stage: "choosing", titles: [{ id: "0", title: "A", why: "B" }] });
   });
 
@@ -81,7 +82,7 @@ describe("apiInterviewClient", () => {
   it("moves past a question without sending an answer", async () => {
     const post = vi.spyOn(api, "POST").mockResolvedValue(ok(interview({})));
     const state = await apiInterviewClient.skip("me");
-    expect(post).toHaveBeenCalledWith("/interview/skip");
+    expect(post).toHaveBeenCalledWith("/interview/skip", {});
     expect(state).toMatchObject({ stage: "asking" });
   });
 
@@ -168,18 +169,45 @@ describe("apiInterviewClient", () => {
     expect(state).toMatchObject({ stage: "reviewing", book: { chapters: [{ quotes: ["My words."] }] } });
   });
 
-  it("when a title was already chosen, goes on to where the interview really is", async () => {
+  it("tells the API's 502 from a proxy's, which may never have reached it", async () => {
     vi.spyOn(api, "POST").mockResolvedValue({
       data: undefined,
-      error: { detail: "You already have a book." },
+      error: undefined,
+      response: new Response(null, { status: 502 }),
+    } as never);
+    await expect(apiInterviewClient.answer("me", "An answer")).rejects.toBeInstanceOf(LostError);
+  });
+
+  it("marks a 409 as out of date", async () => {
+    vi.spyOn(api, "POST").mockResolvedValue({
+      data: undefined,
+      error: { detail: "There's no question waiting." },
       response: new Response(null, { status: 409 }),
     } as never);
-    vi.spyOn(api, "GET")
-      .mockResolvedValueOnce(ok(interview({ stage: "reviewing", question: null })))
-      .mockResolvedValueOnce(
-        ok({ title: "T", author_name: "A", blurb: null, status: "draft", chapters: [] }),
+    await expect(apiInterviewClient.answer("me", "An answer")).rejects.toMatchObject({ conflict: true });
+  });
+
+  it("sends the question's id back once the API gives one", async () => {
+    const post = vi
+      .spyOn(api, "POST")
+      .mockResolvedValue(
+        ok(interview({ question: { id: "q1", text: "Q", phase: "sweep", playback: null } as never })),
       );
-    await expect(apiInterviewClient.chooseTitle("me", "1")).resolves.toMatchObject({ stage: "reviewing" });
+    await apiInterviewClient.askAgain("me");
+    await apiInterviewClient.answer("me", "An answer");
+    expect(post).toHaveBeenLastCalledWith("/interview/answers", {
+      body: { answer: "An answer", question_id: "q1" },
+    });
+    post.mockResolvedValue(ok(interview({})));
+    await apiInterviewClient.askAgain("me");
+  });
+
+  it("reads the writing stages after a refresh", async () => {
+    vi.spyOn(api, "GET")
+      .mockResolvedValueOnce(ok({ ...interview({ question: null }), stage: "drafting" }))
+      .mockResolvedValueOnce(ok({ ...interview({ question: null }), stage: "finishing" }));
+    await expect(apiInterviewClient.current()).resolves.toMatchObject({ stage: "drafting", about: "titles" });
+    await expect(apiInterviewClient.current()).resolves.toMatchObject({ stage: "drafting", about: "book" });
   });
 
   it("maps a round of new questions to the adding round", async () => {

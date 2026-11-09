@@ -187,7 +187,7 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, exit 
         )}
       </div>
       {note && <p className="iv-note">{note}</p>}
-      {mode === "transcript" && (
+      {mode === "transcript" && text.includes(lastHeard.current) && (
         <p className="iv-note">
           {micStopped
             ? "The microphone stopped. Here's what I heard."

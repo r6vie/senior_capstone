@@ -247,6 +247,9 @@
 }
 
 /* ---------- Start ---------- */
+.iv-resume {
+  min-width: 0;
+}
 .iv-resume h2 {
   margin: 0 0 14px;
 }
@@ -350,6 +353,10 @@
 }
 .iv-booktitle .book {
   flex: none;
+}
+.iv-booktitle .book-sm {
+  display: none;
+  margin: var(--s-2) 0 var(--s-4);
 }
 /* Quiet actions line their text up with the text they sit under. */
 .button.iv-show {
@@ -551,11 +558,19 @@
   }
   /* The title sits beside the cover here, so it has to clear the radio in the corner. */
   .iv-pick b {
-    padding-right: var(--s-6);
+    padding-right: var(--tap);
   }
-  .iv-booktitle {
+  /* Title and name first, then the small book on its own row, so the title isn't printed twice
+     side by side; then the back cover, and its two links stacked. */
+  .iv-book-wide {
+    display: none;
+  }
+  .iv-booktitle .book-sm {
+    display: block;
+  }
+  .iv-head-act {
     flex-direction: column;
-    gap: var(--s-5);
+    align-items: flex-start;
   }
   .iv-done {
     flex-direction: column;

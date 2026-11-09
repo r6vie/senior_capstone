@@ -5,7 +5,13 @@ import { AuthProvider } from "../auth/AuthProvider";
 import { clearAllDrafts, draftKeyFor } from "./AnswerPanel";
 import { createFakeInterviewClient, resetFakeInterview } from "./fakeInterviewClient";
 import { InterviewPage } from "./InterviewPage";
-import { type DraftBook, type InterviewClient, InterviewError, type InterviewState } from "./interviewClient";
+import {
+  type DraftBook,
+  type InterviewClient,
+  InterviewError,
+  type InterviewState,
+  LostError,
+} from "./interviewClient";
 
 function renderWith(client: InterviewClient) {
   render(
@@ -98,6 +104,34 @@ describe("InterviewPage", () => {
       expect(document.body.textContent).not.toMatch(/never stored/);
       fireEvent.click(start);
       expect(await screen.findByText(/spent years getting good at/)).toBeTruthy();
+    });
+
+    it("clears a file's error when another is picked", async () => {
+      renderWith(fake());
+      fireEvent.click(await screen.findByRole("button", { name: /Have a résumé\?/ }));
+      const picker = screen.getByLabelText("Choose a PDF");
+      fireEvent.change(picker, { target: { files: [new File(["x"], "notes.txt", { type: "text/plain" })] } });
+      expect(screen.getByText(/isn't a PDF/)).toBeTruthy();
+      fireEvent.change(picker, {
+        target: { files: [new File(["x"], "cv.pdf", { type: "application/pdf" })] },
+      });
+      expect(screen.queryByText(/isn't a PDF/)).toBeNull();
+    });
+
+    it("offers to start without a résumé that failed", async () => {
+      const client = fake();
+      const start = vi
+        .spyOn(client, "start")
+        .mockRejectedValueOnce(new InterviewError("That PDF couldn't be read."))
+        .mockResolvedValue(asking);
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: /Have a résumé\?/ }));
+      const cv = new File(["x"], "cv.pdf", { type: "application/pdf" });
+      fireEvent.change(screen.getByLabelText("Choose a PDF"), { target: { files: [cv] } });
+      fireEvent.click(screen.getByRole("button", { name: "Start the interview" }));
+      fireEvent.click(await screen.findByRole("button", { name: "Start without it" }));
+      expect(await screen.findByText(asking.question)).toBeTruthy();
+      expect(start).toHaveBeenLastCalledWith(null);
     });
 
     it("turns down a résumé over the size limit in a plain sentence", async () => {
@@ -305,6 +339,83 @@ describe("InterviewPage", () => {
       expect(send).toHaveBeenCalledTimes(1);
     });
 
+    const conflict = new InterviewError("There's no question waiting for an answer.", false, true);
+
+    it("a refused resend moves to the current question and says the answer was saved", async () => {
+      const client = fake();
+      const next = { ...asking, question: "The next question?" };
+      vi.spyOn(client, "current").mockResolvedValueOnce(asking).mockResolvedValue(next);
+      vi.spyOn(client, "answer").mockRejectedValueOnce(conflict);
+      renderWith(client);
+      await type("My answer");
+      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+      expect(await screen.findByText("The next question?")).toBeTruthy();
+      expect(screen.getByText("Your answer was saved.")).toBeTruthy();
+      expect(screen.queryByRole("alert")).toBeNull();
+      expect(localStorage.getItem(draftKeyFor("anon", asking.question))).toBeNull();
+    });
+
+    it("a refused pick of a title shows what's true, not the refusal", async () => {
+      const titles = [{ id: "0", title: "A title", why: "Because." }];
+      const choosing: InterviewState = { id: "me", stage: "choosing", titles };
+      const client = fake();
+      vi.spyOn(client, "current").mockResolvedValueOnce(choosing).mockResolvedValue(reviewing());
+      vi.spyOn(client, "chooseTitle").mockRejectedValueOnce(
+        new InterviewError("You already have a book.", false, true),
+      );
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("radio"));
+      fireEvent.click(screen.getByRole("button", { name: "Choose this title" }));
+      expect(await screen.findByRole("heading", { name: bookWith(null).title })).toBeTruthy();
+      expect(document.body.textContent).not.toMatch(/already have a book/);
+    });
+
+    it("a 409 where nothing has moved still says why", async () => {
+      const client = at(reviewing("Blurb.", 4));
+      vi.spyOn(client, "putOnShelf").mockRejectedValueOnce(
+        new InterviewError("A book needs at least 3 chapters.", false, true),
+      );
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: "Put it on the shelf" }));
+      expect((await screen.findByRole("alert")).textContent).toMatch(/at least 3 chapters/);
+    });
+
+    it("a proxy's 502 resends the answer on Try again", async () => {
+      const client = at(asking);
+      const send = vi
+        .spyOn(client, "answer")
+        .mockRejectedValueOnce(new LostError())
+        .mockResolvedValue({ ...asking, question: "The next question?" });
+      renderWith(client);
+      await type("My answer");
+      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+      expect((await screen.findByRole("alert")).textContent).toMatch(/Your answer is still here/);
+      fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+      expect(await screen.findByText("The next question?")).toBeTruthy();
+      expect(send).toHaveBeenCalledTimes(2);
+    });
+
+    it("waits and looks again when the book is being written after a refresh", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const client = fake();
+      const drafting: InterviewState = { id: "me", stage: "drafting", about: "book" };
+      vi.spyOn(client, "current").mockResolvedValueOnce(drafting).mockResolvedValue(reviewing());
+      renderWith(client);
+      expect(await screen.findByText("The Librarian is writing your book…")).toBeTruthy();
+      await act(() => vi.advanceTimersByTimeAsync(5000));
+      expect(screen.getByRole("heading", { name: bookWith(null).title })).toBeTruthy();
+    });
+
+    it("not enough yet is never a dead end", async () => {
+      const client = at({ id: "me", stage: "notEnough" });
+      const ask = vi.spyOn(client, "askAgain").mockResolvedValue(asking);
+      renderWith(client);
+      expect(await screen.findByText(/I don't have enough yet for three chapters/)).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: "Keep answering" }));
+      expect(await screen.findByText(asking.question)).toBeTruthy();
+      expect(ask).toHaveBeenCalledTimes(1);
+    });
+
     it("after a skip, doesn't claim an answer was saved", async () => {
       const client = at(asking);
       vi.spyOn(client, "skip").mockRejectedValueOnce(stuck);
@@ -480,6 +591,16 @@ describe("InterviewPage", () => {
       expect(rewrite).toHaveBeenCalledTimes(1);
     });
 
+    it("says so when a removal rewrote the back cover", async () => {
+      const client = at(reviewing("The old blurb."));
+      vi.spyOn(client, "removeChapter").mockResolvedValue(reviewing("The shorter blurb.", 3));
+      renderWith(client);
+      const title = CHAPTER_TITLES[0] ?? "";
+      fireEvent.click(await screen.findByRole("button", { name: `Remove ${title}` }));
+      fireEvent.click(screen.getByRole("button", { name: `Remove ${title}` }));
+      expect(await screen.findByText("Back cover rewritten to match.")).toBeTruthy();
+    });
+
     it("shows no blurb or its button for a book written before blurbs", async () => {
       renderWith(at(reviewing(null)));
       await screen.findByRole("heading", { name: bookWith(null).title });
@@ -500,7 +621,7 @@ describe("InterviewPage", () => {
       });
       renderWith(client);
       fireEvent.click(await screen.findByRole("button", { name: "See the other titles" }));
-      expect(await screen.findByText(/any chapter you rewrote may change/)).toBeTruthy();
+      expect(await screen.findByText(/rewrites your chapters to fit the new title/)).toBeTruthy();
       expect(screen.queryByText("The one you have.")).toBeNull();
       fireEvent.click(screen.getByRole("button", { name: /Another Title/ }));
       await screen.findByRole("heading", { name: "Another Title" });

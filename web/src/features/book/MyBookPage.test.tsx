@@ -78,6 +78,15 @@ describe("MyBookPage", () => {
     expect(await screen.findByText("For your next questions")).toBeTruthy();
   });
 
+  it.each([
+    ["writingTitles", "I'm finding your titles."],
+    ["writingBook", "I'm writing your book."],
+  ] as const)("while %s, says so and has nothing to press", async (stage, words) => {
+    show(client(stage, { myBook: async () => null }));
+    expect(await screen.findByText(words)).toBeTruthy();
+    expect(document.querySelectorAll(".button-primary")).toHaveLength(0);
+  });
+
   it("with titles waiting, goes to them", async () => {
     show(client("titles"));
     expect(await screen.findByText("Your three titles are ready.")).toBeTruthy();

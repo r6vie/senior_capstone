@@ -42,7 +42,9 @@ describe("SparkButton", () => {
     show({ sparkId: "s1" });
     fireEvent.click(screen.getByRole("button", { name: "Undo saving Two offers" }));
     expect(await screen.findByRole("button", { name: "I have one like this: Two offers" })).toBeTruthy();
-    expect(remove).toHaveBeenCalledWith("/interview/sparks/s1");
+    expect(remove).toHaveBeenCalledWith("/interview/sparks/{spark_id}", {
+      params: { path: { spark_id: "s1" } },
+    });
   });
 
   it("at the limit, says what to do", async () => {

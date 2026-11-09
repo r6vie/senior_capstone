@@ -59,6 +59,10 @@ export type InterviewState =
   | { id: string; stage: "done"; book: DraftBook }
   /** The changes are being written in the background. */
   | { id: string; stage: "writing" }
+  /** The first book's titles or chapters are being written, and the page was refreshed or left. */
+  | { id: string; stage: "drafting"; about: "titles" | "book" }
+  /** Not enough yet for three chapters. Never a dead end: the Librarian keeps asking (decision 14). */
+  | { id: string; stage: "notEnough" }
   | { id: string; stage: "writeFailed" }
   | {
       id: string;
@@ -76,7 +80,9 @@ export type InterviewState =
 export type BookStage =
   | "none"
   | "interviewing"
+  | "writingTitles"
   | "titles"
+  | "writingBook"
   | "draft"
   | "shelf"
   | "adding"
@@ -107,10 +113,15 @@ export class InterviewError extends Error {
   constructor(
     message: string,
     readonly retryable = false,
+    /** 409: the interview isn't where this screen thought it was. */
+    readonly conflict = false,
   ) {
     super(message);
   }
 }
+
+/** The call may never have reached the API, or its reply never came back: nobody knows what was saved. */
+export class LostError extends Error {}
 
 export interface InterviewClient {
   /** The member's interview in progress, or null if they haven't started one. */

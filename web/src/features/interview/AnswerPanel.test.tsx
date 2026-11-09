@@ -89,6 +89,15 @@ describe("AnswerPanel with the microphone", () => {
     expect(field().value).toBe("First try, fixed by hand\n\nSecond try.");
   });
 
+  it("drops the transcript note once the words are all replaced", () => {
+    click(/Speak/);
+    microphone().say("What I said.");
+    click("Stop");
+    expect(screen.getByText(/This is what I heard/)).toBeTruthy();
+    fireEvent.change(field(), { target: { value: "Something else entirely" } });
+    expect(screen.queryByText(/This is what I heard/)).toBeNull();
+  });
+
   it("Cancel keeps what was typed", () => {
     fireEvent.change(field(), { target: { value: "Typed." } });
     click(/Speak/);
