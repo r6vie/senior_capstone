@@ -106,9 +106,7 @@ export const apiInterviewClient: InterviewClient = {
     return toState(unwrap(await api.POST("/interview/answers", { body: { answer: text } })));
   },
   async skip() {
-    // The route isn't in schema.ts yet, so its path can't be typed. Goes away once the client is regenerated.
-    const post = api.POST as unknown as (path: string) => Promise<Result<InterviewResponse>>;
-    return toState(unwrap(await post("/interview/skip")));
+    return toState(unwrap(await api.POST("/interview/skip")));
   },
   async askAgain() {
     return toState(unwrap(await api.POST("/interview/question")));
