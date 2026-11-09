@@ -515,3 +515,17 @@ async def test_every_skip_of_a_round_stays_in_the_status():
     claude = FakeClaude([reply({"question": "Next?", "topic": "t", "done": False})])
     await engine.next_adding_turn(claude, turns=said, round_start=0, chapters=[chapter_one], sparks=[])
     assert "stay off these subjects: About math?" in sent(claude)
+
+
+def test_book_titles_get_one_case_and_names_keep_theirs():
+    said = [engine.Turn(question="Q?", answer="We worked with the crew in Cleveland that year.", phase="dig")]
+    assert engine._sentence_case("Dye Pots In Cleveland", said) == "Dye pots in Cleveland"
+    assert engine._sentence_case("The same red every time", said) == "The same red every time"
+
+
+def test_shape_is_told_to_close_after_it_has_run_long():
+    shaped = [
+        engine.Turn(question="Is this you?", answer="Mostly.", phase="shape") for _ in range(engine.MAX_SHAPE)
+    ]
+    assert "run its course" in engine._status(turns(8) + shaped)
+    assert "run its course" not in engine._status(turns(8) + shaped[:1])

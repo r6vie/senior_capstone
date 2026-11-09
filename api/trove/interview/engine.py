@@ -182,6 +182,8 @@ MAX_BLURB = 600
 
 # "Is this you?" is the most personal moment of the interview, on a phone (R1-14 in the quality notes).
 MAX_PLAYBACK_WORDS = 30
+# Shape is 1-3 questions, and following a hedge can stretch it, so it gets a nudge to close here.
+MAX_SHAPE = 4
 
 # Questions are on the member's critical path, so they think less than the one-off book steps.
 QUESTION_EFFORT = "medium"
@@ -443,7 +445,8 @@ async def draft_book(
         if blurb and leaks(blurb):
             blurb = None
         if len(pool) >= MIN_CHAPTERS and len(titles) >= 3 and blurb:
-            return Draft(pool=pool, titles=titles[:3], blurb=blurb)
+            titles = [t.model_copy(update={"title": _sentence_case(t.title, turns)}) for t in titles[:3]]
+            return Draft(pool=pool, titles=titles, blurb=blurb)
     if len(pool) < MIN_CHAPTERS:
         raise NotEnoughMaterial("The draft didn't have enough grounded chapters.")
     raise ValueError("The draft didn't have three titles and a blurb.")
@@ -784,6 +787,17 @@ def _adding_blocks(
     return blocks
 
 
+def _sentence_case(title: str, turns: list[Turn]) -> str:
+    """One case for titles on one shelf. A word stays capitalized only if the member wrote it that way
+    somewhere other than the start of a sentence, which is how a name looks."""
+    first, *rest = title.split()
+    if sum(word[0].isupper() for word in rest) < 2:
+        return title
+    answers = " ".join(turn.answer for turn in turns)
+    named = set(re.findall(r"(?<=[a-z,;] )[A-Z][\w'-]*", answers))
+    return " ".join([first, *(word if word in named else word.lower() for word in rest)])
+
+
 def _usable_blurb(blurb: str) -> str | None:
     """The blurb if it fits. One that runs long is cut back to its last whole sentence that fits,
     as long as two sentences remain; cutting can't add anything ungrounded."""
@@ -895,6 +909,9 @@ def _status(turns: list[Turn], more_material: bool = False) -> str:
     skipped = [turn.question for turn in turns if _skipped(turn)]
     if skipped:
         notes.append("Skipped so far, so stay off these subjects: " + " | ".join(skipped))
+    shaped = sum(1 for turn in turns if turn.phase == "shape")
+    if shaped >= MAX_SHAPE:
+        notes.append("Shape has run its course: set ready_for_reveal to true and close.")
     swept = sum(1 for turn in turns if turn.phase == "sweep")
     if swept < MIN_SWEEP and all(turn.phase == "sweep" for turn in turns):
         notes.append(

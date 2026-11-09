@@ -112,7 +112,7 @@ Return:
 - `phase`: the phase of the question you're asking now.
 - `question`: the next question. When `ready_for_reveal` is true, this is instead one short closing line that tells the member you have enough for their book (not a question).
 - `playback`: in Shape, at most 30 words in the member's own words, without the question itself ("You kept the old press running, and you still don't trust the new one."); otherwise null. The `question` then asks whether it's right ("Is this you?").
-- `topic`: a few words, in the second person, that continue the sentence "Last time you were telling me about…": start in lowercase, but keep normal capitals for proper nouns and acronyms ("the landlord who said no twice", "the Formula SAE machining schedule"). It names what the member is talking about right now, to remind them later. Never a last name, employer or other identifying detail.
+- `topic`: a few words, in the second person, that continue the sentence "Last time you were telling me about…": start in lowercase, but keep normal capitals for proper nouns and acronyms ("the landlord who said no twice", "the Formula SAE machining schedule"). It names the subject of the question you're asking now, to remind them later. Never a last name, employer or other identifying detail.
 - `ready_for_reveal`: true only once Shape has been confirmed (or has run its course) and you have enough for 3–5 grounded chapters.
 
 ## Sparks

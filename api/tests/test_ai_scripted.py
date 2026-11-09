@@ -47,7 +47,7 @@ async def test_a_whole_interview_walks_through_on_the_scripted_ai(client, databa
 
     state = await finish_and_wait(client, headers)
     assert state["stage"] == "choosing"
-    assert state["titles"][0]["title"] == "Check the Slats First"
+    assert state["titles"][0]["title"] == "Check the slats first"
 
     book = await choose_and_wait(client, headers, 0)
     assert 3 <= len(book["chapters"]) <= 5

@@ -39,12 +39,18 @@ READING = (
     "Sam Okafor from Vantage Mills asked how I'd handle leaving, since she's about to quit. "
     "What surprised me was being asked how I decide a batch has failed, because I've never written that rule down."
 )
+# R5-07: places and lowercase names. A change should write around them rather than be lost.
+READING_PLACE = (
+    "they asked how we kept the line moving at the geauga county fair after the band started, and i realized "
+    "i've never told anyone that I decide by watching the third person back, not the first. dev from accounting asked."
+)
 CASES = {
     "adding-opens": "A first question: finds a gap, stays off the removed chapter, treats the spark as a cue",
     "adding-follows": "After an answer with a cost in it, the next question stays there",
     "revise-new-fact": "A new fact improves a chapter: its sentences stay, words are added, the note has no praise",
     "revise-thin": "A thin answer earns nothing: an empty list is right",
     "revise-nothing-new": "A retold answer gives a chapter nothing new: it must not be reworded anyway",
+    "revise-reading-names": "Lowercase names and a place: the change writes around them instead of being lost",
     "revise-reading": "A reading answer: the other person's name and situation stay out",
 }
 
@@ -88,6 +94,7 @@ async def revise_case(claude, name: str) -> str:
         "revise-thin": (THIN, "adding"),
         "revise-nothing-new": (NOTHING_NEW, "adding"),
         "revise-reading": (READING, "reading"),
+        "revise-reading-names": (READING_PLACE, "reading"),
     }[name]
     question = "What did they ask you about that surprised you?" if phase == "reading" else "What's changed?"
     said = [*turns, Turn(question=question, answer=answer, phase=phase)]
@@ -106,14 +113,20 @@ async def revise_case(claude, name: str) -> str:
         current = by_id[change.chapter_id].summary if change.chapter_id else None
         flags = lint_change(change.model_dump(), current_summary=current, where=change.kind)
         text = f"{change.title} {change.summary} {change.note} {' '.join(change.quotes)}"
-        leaked = [w for w in ("Sam", "Okafor", "Vantage", "quit", "leaving") if re.search(rf"\b{w}\b", text)]
+        leaked = [
+            w
+            for w in ("Sam", "Okafor", "Vantage", "quit", "leaving", "geauga", "dev", "accounting")
+            if re.search(rf"\b{w}\b", text, re.I)
+        ]
         lines += [
             f"- **{change.kind}: {change.title}**: {change.summary}",
             f"  - before: {current}" if current else "",
             f"  - note: {change.note}",
             *(f"  - > {q}" for q in change.quotes),
             f"  - flags: {'; '.join(str(f) for f in flags) or 'none'}",
-            f"  - ⚠️ names the other person: {leaked}" if name == "revise-reading" and leaked else "",
+            f"  - ⚠️ names someone or somewhere: {leaked}"
+            if name.startswith("revise-reading") and leaked
+            else "",
             f"  - ⚠️ back on removed chapter: {_removed_words(text)}" if _removed_words(text) else "",
         ]
     if revision.blurb:

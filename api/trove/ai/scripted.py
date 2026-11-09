@@ -200,15 +200,15 @@ THEO_PLAYBACK = (
 )
 TITLES = [
     {
-        "title": "Check the Slats First",
+        "title": "Check the slats first",
         "why": "You checked whether the slats sat right before grabbing a tool, and tightened the bolts by hand first.",
     },
     {
-        "title": "The Fryer Only Cooks",
+        "title": "The fryer only cooks",
         "why": "Once order-taking moved down the line, you said waits went from around 25 minutes to under 10.",
     },
     {
-        "title": "Stuck With the Line",
+        "title": "Stuck with the line",
         "why": "You were the kid who always got stuck with the line when it backed up at the county fair.",
     },
 ]
