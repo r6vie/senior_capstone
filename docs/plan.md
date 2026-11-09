@@ -52,6 +52,7 @@ local stub with the same signature and swap it out when the real one merges.
 | `books.get_public_book(db, book_id)` | Josef | The book as readers see it: title, author's full name, cover, chapters, copies. **Never** the author's contacts, employer or title. `None` if not on the shelf | discovery, checkouts |
 | `books.get_book_of(db, user_id)` | Josef | That member's own book, or `None` | checkouts (you need a book to check one out) |
 | `books.list_shelf(db, *, limit, after)` | Josef | Public books on the shelf, newest first | discovery |
+| `interview.nothing_open(db, user_id)` | Josef | Whether no questions or changes are open on this member's book, so it can be undone | books |
 | `interview.ask_after_reading(db, author_id, checkout_id)` | Josef | Nothing. Queues the author's one question after a reading. Safe to call twice. Call it once "Did you meet?" confirms the meeting happened | checkouts (C4) |
 | `auth.first_name_of(db, user_id)` | Daniel | First name (for greetings; books show the full name, trove.md §9.1) | everyone |
 | `auth.contact_details_of(db, user_id)` | Daniel | The contact details the member chose to share on a yes | checkouts (reveal) |

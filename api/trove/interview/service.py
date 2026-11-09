@@ -51,7 +51,7 @@ RESUME_TEXT_DAYS = 30
 MORE_ANSWERS_BEFORE_REDRAFT = 3
 # "Most of the way there" shows at this many answers, a little before Shape. The scripted interview is
 # shorter than a real one, so it says so sooner.
-NEARLY_DONE_ANSWERS = engine.SHAPE_BY - 3
+NEARLY_DONE_ANSWERS = 13
 NEARLY_DONE_ANSWERS_SCRIPTED = 9
 # Unused sparks a member may keep (docs/review/decisions.md, row 5).
 MAX_UNUSED_SPARKS = 12
@@ -125,6 +125,11 @@ def needs_more_material(interview: dict) -> bool:
     return thin_at is not None and answered_count(interview) < thin_at + MORE_ANSWERS_BEFORE_REDRAFT
 
 
+def _last_reading_answer(interview: dict) -> str | None:
+    answers = [turn["answer"] for turn in interview["turns"] if turn["phase"] == "reading"]
+    return answers[-1] if answers else None
+
+
 def interview_view(interview: dict, book: dict | None = None) -> InterviewResponse:
     """`book` is the member's book, if the interview has made one; its blurb is the current one."""
     current = interview.get("current")
@@ -177,6 +182,8 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
         nothing_new=interview.get("nothing_new", False),
         dropped_for_names=dropped,
         reading_question_id=interview.get("reading_question_id") if dropped else None,
+        reading_answer=_last_reading_answer(interview) if dropped else None,
+        dropped_words=interview.get("dropped_words", []) if dropped else None,
     )
 
 
@@ -212,7 +219,7 @@ def nearly_done(interview: dict, answered: int) -> bool:
     if interview["stage"] != "interviewing" or (interview.get("current") or {}).get("phase") == "shape":
         return False
     scripted = get_settings().ai_mode == "scripted"
-    return answered == (NEARLY_DONE_ANSWERS_SCRIPTED if scripted else NEARLY_DONE_ANSWERS)
+    return answered >= (NEARLY_DONE_ANSWERS_SCRIPTED if scripted else NEARLY_DONE_ANSWERS)
 
 
 async def current_view(
@@ -1015,7 +1022,13 @@ async def write_proposal(database: AsyncDatabase, claude: Claude, interview_id: 
             {"_id": interview["reading_question_id"]}, {"$set": {"answered_at": None}}
         )
     next_round = await end_revising(
-        database, interview_id, {"nothing_new": True, "dropped_for_names": revision.dropped_for_names}
+        database,
+        interview_id,
+        {
+            "nothing_new": True,
+            "dropped_for_names": revision.dropped_for_names,
+            "dropped_words": revision.dropped_words,
+        },
     )
     if next_round:
         await write_proposal(database, claude, interview_id)
@@ -1164,6 +1177,12 @@ async def write_selection_blurb(
     )
 
 
+async def nothing_open(database: AsyncDatabase, user_id: str) -> bool:
+    """Contract for books: no questions or changes are open on this member's book, so it can be undone."""
+    interview = await database.interviews.find_one({"user_id": user_id}, {"stage": 1})
+    return interview is None or interview["stage"] == "done"
+
+
 async def apply_revision(
     database: AsyncDatabase,
     claude: Claude,
@@ -1200,7 +1219,9 @@ async def apply_revision(
             {"_id": interview["_id"]}, {"$push": {"declined_changes": {"$each": declined}}}
         )
     if await end_revising(database, interview["_id"], {}):
+        # A reading answer saved meanwhile is being written up, so this can't be undone just yet.
         background.add_task(write_proposal, database, claude, interview["_id"])
+        return books.my_book_view(book, undoable=False)
     return books.my_book_view(book)
 
 

@@ -274,6 +274,8 @@ class Revision(BaseModel):
     blurb: str | None
     # No changes survive, and at least one was dropped only for naming someone or somewhere.
     dropped_for_names: bool = False
+    # Then, the words in the reading answers that count as names, in the order they were said.
+    dropped_words: list[str] = []
 
 
 # What Claude returns. Ids and quote checks are added in code, never trusted to the model.
@@ -652,7 +654,13 @@ async def revise_book(
     proposed = _usable_blurb(raw.blurb) if changes else None
     if proposed and (_mentions_any(proposed, others) or leaks(proposed)):
         proposed = None
-    return Revision(changes=changes, blurb=proposed, dropped_for_names=named and not changes)
+    dropped = named and not changes
+    return Revision(
+        changes=changes,
+        blurb=proposed,
+        dropped_for_names=dropped,
+        dropped_words=_in_order_said(new_turns, others) if dropped else [],
+    )
 
 
 def _unused(quotes: list[str], used: set[str]) -> list[str]:
@@ -671,6 +679,17 @@ def _other_people(new_turns: list[Turn], member_names: list[str]) -> set[str]:
         if turn.phase == "reading":
             words |= _capitalized_words(turn.answer)
     return {w for w in words if w.casefold() not in NOT_NAMES and w.casefold() not in own}
+
+
+def _in_order_said(new_turns: list[Turn], others: set[str]) -> list[str]:
+    said = [
+        word
+        for turn in new_turns
+        if turn.phase == "reading"
+        for word in re.findall(r"\b[A-Z][A-Za-z-]+", turn.answer)
+        if word in others
+    ]
+    return list(dict.fromkeys(said))
 
 
 def _names_someone(quote: str, new_turns: list[Turn], others: set[str]) -> bool:

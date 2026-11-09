@@ -5,6 +5,7 @@ from trove.auth.service import get_current_user
 from trove.books.models import BookCard, MyBookResponse, PublicBookResponse, ShelfPage
 from trove.books.service import get_book_of, get_public_book, list_shelf, my_book_view, shelf_cursor
 from trove.core.database import get_database
+from trove.interview.service import nothing_open
 
 router = APIRouter(prefix="/books", tags=["Books"])
 
@@ -41,7 +42,7 @@ async def my_book(
     book = await get_book_of(database, user["_id"])
     if book is None:
         raise HTTPException(status_code=404, detail="You don't have a book yet.")
-    return my_book_view(book)
+    return my_book_view(book, undoable=await nothing_open(database, user["_id"]))
 
 
 @router.get("/{book_id}", response_model=PublicBookResponse)

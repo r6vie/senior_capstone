@@ -2295,6 +2295,31 @@
               }
             ],
             "title": "Reading Question Id"
+          },
+          "reading_answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reading Answer"
+          },
+          "dropped_words": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dropped Words"
           }
         },
         "type": "object",
@@ -2320,7 +2345,9 @@
           "selection_blurb",
           "nothing_new",
           "dropped_for_names",
-          "reading_question_id"
+          "reading_question_id",
+          "reading_answer",
+          "dropped_words"
         ],
         "title": "InterviewResponse"
       },

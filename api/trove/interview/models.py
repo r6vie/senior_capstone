@@ -130,7 +130,7 @@ class InterviewResponse(BaseModel):
     # Still too little at the turn limit, with no question waiting. Everything is saved. "Keep answering"
     # is POST /interview/question; the member can also leave.
     at_limit: bool
-    # True for one stretch when Shape is close: "Most of the way there." The client never counts.
+    # True from a little before Shape until Shape: "Most of the way there." The client never counts.
     nearly_done: bool
     # The three titles while choosing, and while reviewing so another can be picked.
     titles: list[TitleOption] | None
@@ -160,6 +160,10 @@ class InterviewResponse(BaseModel):
     # go: `reading_question_id` is open again, and POST .../answer takes the new words.
     dropped_for_names: bool
     reading_question_id: str | None
+    # With `dropped_for_names`: the answer, for the field, so the member needn't type it again, and the
+    # words that counted as names, in the order they said them. Null otherwise.
+    reading_answer: str | None
+    dropped_words: list[str] | None
 
 
 class StaleQuestionResponse(BaseModel):

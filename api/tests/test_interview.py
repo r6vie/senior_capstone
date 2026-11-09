@@ -736,15 +736,33 @@ async def test_skipping_to_the_limit_stops_and_lets_the_member_decide(client, da
     assert state["at_limit"] is False
 
 
-async def test_nearly_done_comes_from_the_api_for_one_stretch(client, database, headers, fake_engine):
+async def test_nearly_done_shows_from_13_answers_until_shape_at_a_real_pace(
+    client, database, headers, fake_engine
+):
+    # Real runs reach Shape after 16 to 18 answers.
     await client.post("/interview", json={}, headers=headers)
-    almost = [{"question": "Q?", "answer": "Yes.", "phase": "dig"}] * (service.NEARLY_DONE_ANSWERS - 2)
-    await database.interviews.update_one({}, {"$set": {"turns": almost}})
-    state = (await send_answer(client, headers, "One.")).json()
+    early = [{"question": "Q?", "answer": "Yes.", "phase": "dig"}] * (service.NEARLY_DONE_ANSWERS - 2)
+    await database.interviews.update_one({}, {"$set": {"turns": early}})
+    state = (await send_answer(client, headers, "Twelve.")).json()
     assert state["nearly_done"] is False
-    state = (await send_answer(client, headers, "Two.")).json()
-    assert state["nearly_done"] is True
-    assert (await send_answer(client, headers, "Three.")).json()["nearly_done"] is False
+
+    seen = []
+    for n in range(4):
+        state = (await send_answer(client, headers, f"Answer {n}.")).json()
+        seen.append(state["nearly_done"])
+    assert seen == [True, True, True, True]
+
+    fake_engine.shape_next = True
+    state = (await send_answer(client, headers, "Seventeen.")).json()
+    assert state["question"]["phase"] == "shape"
+    assert state["nearly_done"] is False
+
+
+async def test_a_skip_doesnt_turn_nearly_done_off(client, database, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    enough = [{"question": "Q?", "answer": "Yes.", "phase": "dig"}] * service.NEARLY_DONE_ANSWERS
+    await database.interviews.update_one({}, {"$set": {"turns": enough}})
+    assert (await send_skip(client, headers)).json()["nearly_done"] is True
 
 
 async def stale_send(client, headers, question_id: str, text: str):

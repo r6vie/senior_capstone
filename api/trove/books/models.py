@@ -58,9 +58,10 @@ class MyBookResponse(BaseModel):
     published_at: datetime | None
     created_at: datetime
     updated_at: datetime
-    # The last applied revision can still be taken back (POST /interview/book/undo).
+    # The last applied revision can be taken back now (POST /interview/book/undo). False while questions
+    # or changes are open on the book, even if a revision is there to undo.
     can_undo: bool = False
-    # When that revision was applied, for "Your book was updated on Nov 9." Null if it can't be undone.
+    # When the last revision was applied, for "Your book was updated on Nov 9." Null once undone.
     revised_at: datetime | None = None
     # In review, a rewritten back cover can be taken back (POST /interview/book/blurb/restore).
     has_previous_blurb: bool = False

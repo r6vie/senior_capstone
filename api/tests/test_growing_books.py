@@ -893,6 +893,33 @@ async def test_an_applied_revision_can_be_undone_once(client, database, author, 
     assert (await client.post("/interview/book/undo", headers=author["headers"])).status_code == 409
 
 
+async def test_can_undo_is_false_unless_nothing_is_open(client, database, author, fake_claude):
+    state = await propose(client, author, fake_claude, change(quotes=[PART_ONE]))
+    question = await waiting_question(client, database, author)
+    await client.post(
+        f"/interview/reading-questions/{question}/answer", json={"answer": PLAIN}, headers=author["headers"]
+    )
+    # The reading answer is written up right after the decision, so the book is open again at once.
+    fake_claude.responses.append(revision(change(quotes=[PLAIN], title="From the reading")))
+    applied = await client.post(
+        "/interview/revision", json={"approved": [state["changes"][0]["id"]]}, headers=author["headers"]
+    )
+    assert applied.json()["can_undo"] is False
+    assert applied.json()["revised_at"]
+
+    async def my_book():
+        return (await client.get("/books/me", headers=author["headers"])).json()
+
+    assert (await my_book())["can_undo"] is False
+    assert (await client.post("/interview/book/undo", headers=author["headers"])).status_code == 409
+
+    await client.post("/interview/revision", json={"approved": []}, headers=author["headers"])
+    assert (await my_book())["can_undo"] is True
+
+    await start_round(client, author, fake_claude)
+    assert (await my_book())["can_undo"] is False
+
+
 async def test_undo_is_only_from_done(client, author, fake_claude):
     state = await propose(client, author, fake_claude, change())
     await client.post(
@@ -1359,11 +1386,31 @@ async def test_dropped_for_a_name_says_so_and_offers_another_go(client, database
     assert (await client.get("/interview/reading-questions", headers=author["headers"])).json() == []
 
 
+async def test_dropped_for_a_name_gives_back_the_answer_and_the_words(client, database, author, fake_claude):
+    text = "They asked how we kept the line moving at the Geauga County Fair after the band started."
+    state = await answer_reading(client, database, author, fake_claude, text, change(quotes=[text]))
+    assert state["dropped_for_names"] is True
+    assert state["reading_answer"] == text
+    assert state["dropped_words"] == ["Geauga", "County", "Fair"]
+    # Neither word list nor answer goes back to the Librarian as an instruction, and the next try clears them.
+    question = state["reading_question_id"]
+    plain = "They asked how we kept the line moving at the fair after the band started."
+    fake_claude.responses.append(revision(change(quotes=[plain])))
+    await client.post(
+        f"/interview/reading-questions/{question}/answer", json={"answer": plain}, headers=author["headers"]
+    )
+    state = (await client.get("/interview", headers=author["headers"])).json()
+    assert state["reading_answer"] is None
+    assert state["dropped_words"] is None
+
+
 async def test_a_thin_answer_isnt_called_a_name_problem(client, database, author, fake_claude):
     state = await answer_reading(client, database, author, fake_claude, "Not much.")
     assert state["nothing_new"] is True
     assert state["dropped_for_names"] is False
     assert state["reading_question_id"] is None
+    assert state["reading_answer"] is None
+    assert state["dropped_words"] is None
     assert (await client.get("/interview/reading-questions", headers=author["headers"])).json() == []
 
 

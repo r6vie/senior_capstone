@@ -956,6 +956,10 @@ export interface components {
             dropped_for_names: boolean;
             /** Reading Question Id */
             reading_question_id: string | null;
+            /** Reading Answer */
+            reading_answer: string | null;
+            /** Dropped Words */
+            dropped_words: string[] | null;
         };
         /**
          * LendingCheckout

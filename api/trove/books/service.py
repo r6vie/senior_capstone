@@ -116,7 +116,7 @@ class BookExists(Exception):
     """The member already has a book; there is one per member."""
 
 
-def my_book_view(book: dict, *, rewrite_unchanged: bool = False) -> MyBookResponse:
+def my_book_view(book: dict, *, rewrite_unchanged: bool = False, undoable: bool = True) -> MyBookResponse:
     """A member's own book as its author sees it, including the grounding quotes and copies."""
     return MyBookResponse.model_validate(
         {
@@ -124,7 +124,7 @@ def my_book_view(book: dict, *, rewrite_unchanged: bool = False) -> MyBookRespon
             "id": book["_id"],
             "blurb": book.get("blurb"),
             "chapters": [{**c, "has_previous": bool(c.get("previous"))} for c in book["chapters"]],
-            "can_undo": bool(book.get("previous_version")),
+            "can_undo": undoable and bool(book.get("previous_version")),
             "revised_at": (book.get("previous_version") or {}).get("applied_at"),
             "has_previous_blurb": book.get("previous_blurb") is not None,
             "rewrite_unchanged": rewrite_unchanged,
