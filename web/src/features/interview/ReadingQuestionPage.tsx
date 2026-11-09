@@ -48,7 +48,6 @@ export function ReadingQuestionPage({ client = apiInterviewClient }: { client?: 
     };
   }, [client, questionId]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: arriving is a new screen for the keyboard
   useEffect(() => {
     if (loaded) focusBand();
   }, [loaded]);

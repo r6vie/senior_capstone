@@ -367,6 +367,22 @@ describe("apiInterviewClient", () => {
     });
   });
 
+  it("sends the question's id with a correction, and carries the closing line to the wait", async () => {
+    const post = vi.spyOn(api, "POST").mockResolvedValue(
+      ok({
+        ...interview({ question: null, closing_line: "That's enough for your book." }),
+        stage: "drafting",
+      }),
+    );
+    await apiInterviewClient.askAgain("me");
+    await expect(apiInterviewClient.correctShape("me", "It was three times")).resolves.toMatchObject({
+      closingLine: "That's enough for your book.",
+    });
+    expect(post).toHaveBeenLastCalledWith("/interview/shape", {
+      body: { correction: "It was three times", question_id: undefined },
+    });
+  });
+
   it("reads the writing stages after a refresh", async () => {
     vi.spyOn(api, "GET")
       .mockResolvedValueOnce(ok({ ...interview({ question: null }), stage: "drafting" }))

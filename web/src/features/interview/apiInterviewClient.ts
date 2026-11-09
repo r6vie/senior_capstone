@@ -16,8 +16,7 @@ import {
 
 type MyBookResponse = components["schemas"]["MyBookResponse"];
 type ChangeResponse = components["schemas"]["Change"];
-// `closing_line` is coming from Trove API (R6-07), and is read when it's there.
-type InterviewResponse = components["schemas"]["InterviewResponse"] & { closing_line?: string | null };
+type InterviewResponse = components["schemas"]["InterviewResponse"];
 
 const ID = "me";
 
@@ -266,10 +265,12 @@ export const apiInterviewClient: InterviewClient = {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/finish", init)));
   },
   async confirmShape() {
-    return toState(unwrap<InterviewResponse>(await api.POST("/interview/shape", { body: {} })));
+    const body = { question_id: waitingQuestionId || undefined };
+    return toState(unwrap<InterviewResponse>(await api.POST("/interview/shape", { body })));
   },
   async correctShape(_id, correction) {
-    return toState(unwrap<InterviewResponse>(await api.POST("/interview/shape", { body: { correction } })));
+    const body = { correction, question_id: waitingQuestionId || undefined };
+    return toState(unwrap<InterviewResponse>(await api.POST("/interview/shape", { body })));
   },
   async chooseTitle(_id, titleId) {
     const body = { title: Number(titleId) };
