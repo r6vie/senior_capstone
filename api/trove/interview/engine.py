@@ -11,11 +11,11 @@ import json
 import re
 from collections.abc import Callable
 from difflib import SequenceMatcher
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import uuid4
 
 from anthropic import transform_schema
-from pydantic import BaseModel, Field
+from pydantic import AfterValidator, BaseModel, Field
 
 from trove.ai.client import Claude, text_of
 from trove.ai.prompts import load_prompt
@@ -179,6 +179,8 @@ NOT_NAMES = frozenset(
 )
 # The back-cover blurb fits the book's `blurb` field (B1).
 MAX_BLURB = 600
+# The prompts ask for at most this, and real runs have come back a few characters over.
+MAX_SUMMARY = 300
 
 # "Is this you?" is the most personal moment of the interview, on a phone (R1-14 in the quality notes).
 MAX_PLAYBACK_WORDS = 30
@@ -299,9 +301,22 @@ class TurnPlan(BaseModel):
     spark_id: str | None = Field(None, description="The id of the spark this question works from, if any.")
 
 
+def _fit_summary(summary: str) -> str:
+    """A summary cut back to its last whole sentence that fits. One long sentence stays whole, since
+    cutting it would leave half a thought under the member's name."""
+    summary = summary.strip()
+    if len(summary) <= MAX_SUMMARY:
+        return summary
+    ends = [m.end() for m in re.finditer(r"[.!?](?=\s|$)", summary[: MAX_SUMMARY + 1])]
+    return summary[: ends[-1]] if ends else summary
+
+
+Summary = Annotated[str, AfterValidator(_fit_summary)]
+
+
 class _Chapter(BaseModel):
     title: str
-    summary: str
+    summary: Summary
     quotes: list[str]
 
 
@@ -313,13 +328,13 @@ class _Draft(BaseModel):
 
 class _Retold(BaseModel):
     title: str
-    summary: str
+    summary: Summary
 
 
 class _FinishedChapter(BaseModel):
     pool_id: str
     title: str
-    summary: str
+    summary: Summary
 
 
 class _Finished(BaseModel):
@@ -335,7 +350,7 @@ class _Change(BaseModel):
     kind: Literal["new", "improve"]
     chapter_id: str | None
     title: str
-    summary: str
+    summary: Summary
     quotes: list[str]
     note: str
     position: int | None = Field(

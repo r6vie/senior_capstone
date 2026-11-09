@@ -529,3 +529,15 @@ def test_shape_is_told_to_close_after_it_has_run_long():
     ]
     assert "run its course" in engine._status(turns(8) + shaped)
     assert "run its course" not in engine._status(turns(8) + shaped[:1])
+
+
+def test_a_long_summary_is_cut_at_a_sentence_that_fits():
+    first = "I rebuilt the line. " * 10
+    summary = engine._fit_summary(first + "x" * 200 + ".")
+    assert summary == first.strip()
+    assert len(summary) <= engine.MAX_SUMMARY
+
+
+def test_one_long_sentence_stays_whole():
+    long = "word " * 80 + "end."
+    assert engine._fit_summary(long) == long
