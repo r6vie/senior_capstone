@@ -56,7 +56,7 @@ export function RemovalPage({ client = apiInterviewClient }: { client?: Intervie
 
   if (writing) {
     return (
-      <Frame say="I'm writing the back cover without that chapter.">
+      <Frame canLeave={false} say="I'm writing the back cover without that chapter.">
         <WaitBox title="Writing the back cover." />
       </Frame>
     );

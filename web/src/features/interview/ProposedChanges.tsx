@@ -273,7 +273,7 @@ export function ChangesScreen({
 
   if (step === "writing") {
     return (
-      <Frame say="I'm writing the back cover for what you approved.">
+      <Frame canLeave={false} say="I'm writing the back cover for what you approved.">
         <WaitBox title="Writing the back cover." />
       </Frame>
     );
@@ -283,7 +283,7 @@ export function ChangesScreen({
     const nothing = approved.length === 0;
     const say = nothing ? "Nothing will change on the shelf." : "Here is what changes on the shelf.";
     return (
-      <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={say}>{busy}</Waiting> : say}>
+      <Frame canLeave={false} busy={Boolean(busy)} say={busy ? <Waiting holding={say}>{busy}</Waiting> : say}>
         <div className="iv-confirm-cols" data-single={nothing || undefined}>
           {!nothing && (
             <div className="panel iv-conf">
@@ -339,7 +339,7 @@ export function ChangesScreen({
   }
 
   return (
-    <Frame say="Here is what I would change in your book.">
+    <Frame canLeave={false} say="Here is what I would change in your book.">
       <div className="iv-chgs">
         {changes.map((change) => (
           <ChangeCard

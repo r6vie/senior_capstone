@@ -126,6 +126,7 @@
   border-width: var(--line);
 }
 .mb-reading-caption {
+  text-wrap: balance;
   font: 600 13px / 1.2 var(--font-display);
   letter-spacing: 0.14em;
   text-transform: uppercase;

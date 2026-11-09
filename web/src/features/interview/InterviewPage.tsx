@@ -247,7 +247,11 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     if (adding && (!state || state.stage === "done" || state.stage === "nothing")) {
       const say = "A few more questions, about what isn't in your book yet. You can finish after any answer.";
       return (
-        <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={say}>{busy}</Waiting> : say}>
+        <Frame
+          canLeave={false}
+          busy={Boolean(busy)}
+          say={busy ? <Waiting holding={say}>{busy}</Waiting> : say}
+        >
           <p className="iv-note iv-note-big">
             Nothing changes on the shelf until you approve it.
             {hasSparks && ' Chapters you marked "I have one like this" will shape some of the questions.'}
@@ -435,17 +439,17 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         return <DoneScreen book={state.book} />;
       case "writing":
         return fromReading ? (
-          <Frame say="I'm checking whether this belongs in your book.">
+          <Frame canLeave={false} say="I'm checking whether this belongs in your book.">
             <WaitBox title="Reading your answer against your book." />
           </Frame>
         ) : (
-          <Frame say="I'm writing the changes.">
+          <Frame canLeave={false} say="I'm writing the changes.">
             <WaitBox title="Writing your changes." />
           </Frame>
         );
       case "writeFailed":
         return (
-          <Frame busy={Boolean(busy)} say={say("I couldn't write the changes.")}>
+          <Frame canLeave={false} busy={Boolean(busy)} say={say("I couldn't write the changes.")}>
             <p className="iv-note iv-note-big">The changes weren't written. Your answers are saved.</p>
             <div className="iv-row">
               <Button
@@ -475,7 +479,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         );
       case "nothing":
         return (
-          <Frame say="Nothing here changes your book.">
+          <Frame canLeave={false} say="Nothing here changes your book.">
             <p className="iv-note iv-note-big">
               {fromReading
                 ? "What you said is saved."
