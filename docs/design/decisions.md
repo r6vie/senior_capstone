@@ -2,6 +2,12 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-08: the sample member is fully invented
+
+- The earlier sample member was modelled on a real alum's news story. Replaced everywhere in the frames (`GrowingG1`, `G3`, `G5`,
+  `InterviewA`) by Nora Valdez, an invented person with invented material of the same length: first-person chapters, a back cover,
+  the three titles. Nothing in the frames comes from a real person.
+
 ## 2026-11-08: growing books and interview frames revised after quality round 1 (T37)
 
 - **Applied from `qc/round-1.md`:** R1-04 (the back cover is a change like any other, written before the confirm step, with its own
@@ -10,7 +16,7 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   progress and titles waiting), R1-40 (real-length text from a finished book, added words underlined), R1-41, R1-42 (Skip only
   while the answer is empty, with its own frame), R1-44, R1-45 (44px targets), R1-59, R1-60, R1-61, R1-62, R1-64.
 - **Interview A also:** start screen (R1-18), review screen (R1-19, R1-21, R1-22, with Remove in place per R1-20), phase names
-  First look, Deeper, Check (R1-28), done screen (R1-30). The sample member is now Siddharth Rao so every frame uses real text.
+  First look, Deeper, Check (R1-28), done screen (R1-30). The sample member is now Nora Valdez, a fully invented person (pinball restoration, invented text of real length) so every frame uses real text.
   Directions B and C are left as drawn.
 - **Design calls:** undecided changes count as not approved and are listed as "Not decided" under "Stays as it is"; "Not now" on the
   question screen goes back, "No thanks" on My book dismisses; one exit per screen; "the shelf has not changed" once in the band and
