@@ -38,10 +38,11 @@ interface Props {
   /** Shown beside Send once something is stored: an earlier answer or this draft. */
   hasSavedAnswers: boolean;
   onSend: (text: string) => void;
+  onSkip: () => void;
   children?: ReactNode;
 }
 
-export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, children }: Props) {
+export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, onSkip, children }: Props) {
   const [mode, setMode] = useState<Mode>("typing");
   const [text, setText] = useState(() => readDraft(draftKey));
   const [draftSaved, setDraftSaved] = useState(false);
@@ -171,6 +172,9 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, children 
             Type instead
           </button>
         )}
+        <button type="button" className="button button-quiet" onClick={onSkip}>
+          Skip
+        </button>
         <span className="iv-grow" />
         {saved && <span className="iv-saved">Saved</span>}
         <Button onClick={send} aria-busy={busy}>

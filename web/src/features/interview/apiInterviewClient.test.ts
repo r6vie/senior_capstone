@@ -72,6 +72,13 @@ describe("apiInterviewClient", () => {
     expect(state).toMatchObject({ stage: "asking", question: "What do people come to you for?" });
   });
 
+  it("moves past a question without sending an answer", async () => {
+    const post = vi.spyOn(api, "POST").mockResolvedValue(ok(interview({})));
+    const state = await apiInterviewClient.skip("me");
+    expect(post).toHaveBeenCalledWith("/interview/skip");
+    expect(state).toMatchObject({ stage: "asking" });
+  });
+
   it("marks the Librarian's failures as safe to try again", async () => {
     vi.spyOn(api, "POST").mockResolvedValue({
       data: undefined,

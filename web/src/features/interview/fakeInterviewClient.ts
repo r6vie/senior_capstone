@@ -140,6 +140,11 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// A skip takes a place in the script as an empty answer, so it moves on without counting.
+function answered(stored: Stored): number {
+  return stored.answers.filter(Boolean).length;
+}
+
 function view(stored: Stored, authorName: string): InterviewState {
   const { id } = stored;
   switch (stored.stage) {
@@ -151,8 +156,8 @@ function view(stored: Stored, authorName: string): InterviewState {
         stage: "asking",
         phase: current.phase,
         question: current.text,
-        canFinish: stored.answers.length >= CAN_FINISH_AFTER,
-        hasAnswers: stored.answers.length > 0,
+        canFinish: answered(stored) >= CAN_FINISH_AFTER,
+        hasAnswers: answered(stored) > 0,
         lastTopic: stored.answers.length > 0 ? previous.topic : null,
       };
     }
@@ -213,10 +218,15 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
         stored.answers.push(text);
         if (stored.answers.length >= QUESTIONS.length) stored.stage = "shaping";
       }),
+    skip: (id) =>
+      mutate(id, (stored) => {
+        stored.answers.push("");
+        if (stored.answers.length >= QUESTIONS.length) stored.stage = "shaping";
+      }),
     askAgain: (id) => mutate(id, () => {}),
     finish: (id) =>
       mutate(id, (stored) => {
-        if (stored.answers.length < CAN_FINISH_AFTER) throw new Error("Answer a few more questions first.");
+        if (answered(stored) < CAN_FINISH_AFTER) throw new Error("Answer a few more questions first.");
         stored.stage = "shaping";
       }),
     confirmShape: (id) =>

@@ -57,6 +57,8 @@ export interface InterviewClient {
   current(): Promise<InterviewState | null>;
   start(resume: File | null): Promise<InterviewState>;
   answer(id: string, text: string): Promise<InterviewState>;
+  /** Move past this question. Skips are never shown or counted. */
+  skip(id: string): Promise<InterviewState>;
   /** Write the waiting question again, after an answer was saved but the next question failed. */
   askAgain(id: string): Promise<InterviewState>;
   /** "I've said enough. Show me my book." */

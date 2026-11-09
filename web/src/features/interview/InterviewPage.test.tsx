@@ -149,4 +149,40 @@ describe("InterviewPage", () => {
     session.clear();
     vi.restoreAllMocks();
   });
+
+  it("Skip goes to the next question with nothing marking it, and drops the part-written answer", async () => {
+    const client = createFakeInterviewClient("Hana", 0);
+    const answerCall = vi.spyOn(client, "answer");
+    renderWith(client);
+    fireEvent.click(await screen.findByRole("button", { name: "Start the interview" }));
+    const first = (await screen.findByText(/spent years getting good at/)).textContent;
+    fireEvent.change(screen.getByLabelText("Your answer"), { target: { value: "Half a thought" } });
+    fireEvent.click(screen.getByRole("button", { name: "Skip" }));
+    await waitFor(() => expect(screen.queryByText(first ?? "")).toBeNull());
+    expect(answerCall).not.toHaveBeenCalled();
+    expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("");
+    expect(screen.getByRole("button", { name: "Skip" })).toBeTruthy();
+    expect(document.body.textContent).not.toMatch(/skipped/i);
+  });
+
+  it("doesn't count skips toward the way out", async () => {
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Start the interview" }));
+    await screen.findByLabelText("Your answer");
+    for (let i = 0; i < 10; i++) {
+      fireEvent.click(screen.getByRole("button", { name: "Skip" }));
+      await waitFor(() => expect(document.querySelector('main[aria-busy="true"]')).toBeNull());
+      await screen.findByRole("button", { name: "Skip" });
+    }
+    expect(screen.queryByRole("button", { name: /I've said enough/ })).toBeNull();
+  });
+
+  it("offers no Skip on the Shape step", async () => {
+    renderWith({
+      ...createFakeInterviewClient("Hana", 0),
+      current: async () => ({ id: "me", stage: "shaping", phase: "shape", playback: "Is this you?" }),
+    });
+    await screen.findByText("Is this you?");
+    expect(screen.queryByRole("button", { name: "Skip" })).toBeNull();
+  });
 });

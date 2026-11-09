@@ -247,6 +247,17 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
                 )
                   clearDraft(draftKey);
               }}
+              onSkip={async () => {
+                // The question is gone once skipped, so a part-written answer to it has nowhere to go.
+                if (
+                  await run(
+                    "The Librarian is thinking…",
+                    () => client.skip(state.id),
+                    () => client.askAgain(state.id),
+                  )
+                )
+                  clearDraft(draftKey);
+              }}
             >
               {state.canFinish && (
                 <div className="iv-exit">
