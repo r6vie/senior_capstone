@@ -58,6 +58,8 @@ export type InterviewState =
       lastTopic: string | null;
       /** A draft found too little, so the Librarian is asking for more. */
       needsMore?: boolean;
+      /** "Most of the way there." The API's word, never a count. */
+      nearlyDone?: boolean;
     }
   | { id: string; stage: "shaping"; phase: "shape"; playback: string }
   | { id: string; stage: "choosing"; titles: TitleOption[] }
@@ -66,7 +68,7 @@ export type InterviewState =
   /** The changes are being written in the background. */
   | { id: string; stage: "writing" }
   /** The first book's titles or chapters are being written, and the page was refreshed or left. */
-  | { id: string; stage: "drafting"; about: "titles" | "book" }
+  | { id: string; stage: "drafting"; about: "titles" | "book"; failed?: boolean; retryTitle?: string }
   /** Not enough yet for three chapters. Never a dead end: the Librarian keeps asking (decision 14). */
   | { id: string; stage: "notEnough" }
   | { id: string; stage: "writeFailed" }
@@ -76,6 +78,8 @@ export type InterviewState =
       changes: ProposedChange[];
       /** The back cover as it stands. */
       blurb: string | null;
+      /** What the member approved on an earlier visit, if they've decided anything. */
+      approved?: string[] | null;
     }
   /** A round that earned no changes. The book is as it was. */
   | { id: string; stage: "nothing" }
@@ -161,6 +165,10 @@ export interface InterviewClient {
   /** Open a short new round of questions on a shelved book. */
   reopen(): Promise<InterviewState>;
   retryWriting(id: string): Promise<InterviewState>;
+  /** Try writing the first titles or book again, after it failed twice. */
+  retryDrafting(about: "titles" | "book", titleId?: string): Promise<InterviewState>;
+  /** Saved as the member presses, so "Decide later" means it on any device. */
+  saveChoices(approved: string[]): Promise<void>;
   /** The back cover for exactly these approved changes. Null means there's nothing to rewrite. */
   blurbFor(approved: string[]): Promise<string | null>;
   /** `blurb` is text the member was shown and approved. Null keeps the back cover as it is. */

@@ -225,6 +225,7 @@ export function ChangesScreen({
   busy,
   error,
   writeBlurb,
+  saveChoices,
   apply,
 }: {
   state: Extract<InterviewState, { stage: "proposing" }>;
@@ -232,12 +233,18 @@ export function ChangesScreen({
   busy: string | null;
   error: string | null;
   writeBlurb: (approved: string[]) => Promise<string | null>;
+  saveChoices: (approved: string[]) => Promise<void>;
   apply: (approved: string[], blurb: string | null, onDone: () => void) => void;
 }) {
   const { changes } = state;
   // Saved per set of changes, so "Decide later" means it.
   const key = `trove_change_choices:${userId}:${changes.map((change) => change.id).join(",")}`;
-  const [choices, setChoices] = useState<Choices>(() => readChoices(key));
+  // The API keeps what was approved, for any device. This browser also remembers what was declined.
+  const [choices, setChoices] = useState<Choices>(() => {
+    const here = readChoices(key);
+    for (const id of state.approved ?? []) here[id] = "approve";
+    return here;
+  });
   const [step, setStep] = useState<"choose" | "writing" | "confirm">("choose");
   const [blurb, setBlurb] = useState<string | null>(null);
   const [blurbFailed, setBlurbFailed] = useState(false);
@@ -360,7 +367,14 @@ export function ChangesScreen({
             now={change.now ? { title: change.now.title, text: change.now.summary } : null}
             proposed={change.kind === "remove" ? null : { title: change.title, text: change.summary }}
             choice={choices[change.id]}
-            onChoose={(choice) => setChoices((now) => ({ ...now, [change.id]: choice }))}
+            onChoose={(choice) => {
+              const next = { ...choices, [change.id]: choice };
+              setChoices(next);
+              // Reviewing saves them again, so a failure here costs nothing.
+              saveChoices(changes.filter((item) => next[item.id] === "approve").map((item) => item.id)).catch(
+                () => undefined,
+              );
+            }}
           />
         ))}
       </div>

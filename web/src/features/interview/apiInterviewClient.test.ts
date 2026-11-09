@@ -8,7 +8,7 @@ type InterviewResponse = components["schemas"]["InterviewResponse"];
 function interview(overrides: Partial<InterviewResponse>): InterviewResponse {
   return {
     stage: "interviewing",
-    question: { text: "What do people come to you for?", phase: "sweep", playback: null },
+    question: { question_id: "q0", text: "What do people come to you for?", phase: "sweep", playback: null },
     topic: null,
     has_answers: false,
     can_finish: false,
@@ -51,7 +51,12 @@ describe("apiInterviewClient", () => {
     vi.spyOn(api, "POST").mockResolvedValue(
       ok(
         interview({
-          question: { text: "Is this you?", phase: "shape", playback: "You left grad school twice." },
+          question: {
+            question_id: "q1",
+            text: "Is this you?",
+            phase: "shape",
+            playback: "You left grad school twice.",
+          },
         }),
       ),
     );
@@ -88,14 +93,86 @@ describe("apiInterviewClient", () => {
   it("moves past a question without sending an answer", async () => {
     const post = vi.spyOn(api, "POST").mockResolvedValue(ok(interview({})));
     const state = await apiInterviewClient.skip("me");
-    expect(post).toHaveBeenCalledWith("/interview/skip", {});
+    expect(post).toHaveBeenCalledWith("/interview/skip", { body: { question_id: expect.any(String) } });
     expect(state).toMatchObject({ stage: "asking" });
   });
 
-  it("sends words still in the field with finishing", async () => {
+  it("proposes a removal once, then confirms it like any change", async () => {
+    const removal = {
+      id: "x",
+      kind: "remove",
+      chapter_id: "c9",
+      title: "T",
+      summary: "",
+      note: "",
+      current: null,
+    };
+    const revising = { ...interview({ question: null }), stage: "revising", changes: [removal] };
+    vi.spyOn(api, "GET")
+      .mockResolvedValueOnce(ok(interview({ question: null, stage: "done" })))
+      .mockResolvedValue(ok({ ...revising, selection_blurb_status: "ready", selection_blurb: "Shorter." }));
+    vi.spyOn(api, "PUT").mockResolvedValue(ok(revising));
+    const post = vi
+      .spyOn(api, "POST")
+      .mockResolvedValueOnce(ok(revising))
+      .mockResolvedValueOnce(
+        ok({ title: "T", author_name: "A", blurb: null, status: "on_shelf", chapters: [] }),
+      );
+    await expect(apiInterviewClient.blurbWithout("c9")).resolves.toBe("Shorter.");
+    expect(post).toHaveBeenCalledWith("/interview/removal", { body: { chapter_id: "c9" } });
+    await apiInterviewClient.removeFromShelf("c9", "Shorter.");
+    expect(post).toHaveBeenLastCalledWith("/interview/revision", { body: { approved: ["x"], blurb: "use" } });
+    expect(post.mock.calls.filter((call) => String(call[0]) === "/interview/removal")).toHaveLength(1);
+  });
+
+  describe("the back cover for a selection", () => {
+    const revising = (selection_blurb_status: string | null, selection_blurb: string | null = null) =>
+      ok({ ...interview({ question: null }), stage: "revising", selection_blurb_status, selection_blurb });
+
+    it("saves the choices, asks for it, and waits until it's written", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const put = vi.spyOn(api, "PUT").mockResolvedValue(ok(revising(null)));
+      const post = vi.spyOn(api, "POST").mockResolvedValue(ok(revising("writing")));
+      vi.spyOn(api, "GET")
+        .mockResolvedValueOnce(revising(null))
+        .mockResolvedValueOnce(revising("writing"))
+        .mockResolvedValue(revising("ready", "Written."));
+      const blurb = apiInterviewClient.blurbFor(["1"]);
+      await vi.advanceTimersByTimeAsync(5000);
+      await expect(blurb).resolves.toBe("Written.");
+      expect(put).toHaveBeenCalledWith("/interview/revision/choices", { body: { approved: ["1"] } });
+      expect(post).toHaveBeenCalledTimes(1);
+      vi.useRealTimers();
+    });
+
+    it("uses one already written, for a member coming back, without another write", async () => {
+      vi.spyOn(api, "PUT").mockResolvedValue(ok(revising(null)));
+      const post = vi.spyOn(api, "POST");
+      vi.spyOn(api, "GET").mockResolvedValue(revising("ready", "Written."));
+      await expect(apiInterviewClient.blurbFor(["1"])).resolves.toBe("Written.");
+      expect(post).not.toHaveBeenCalled();
+    });
+
+    it("gives up when the write fails, so the member can keep the old one", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      vi.spyOn(api, "PUT").mockResolvedValue(ok(revising(null)));
+      vi.spyOn(api, "POST").mockResolvedValue(ok(revising("writing")));
+      vi.spyOn(api, "GET").mockResolvedValueOnce(revising(null)).mockResolvedValue(revising("failed"));
+      const blurb = apiInterviewClient.blurbFor(["1"]);
+      const failed = expect(blurb).rejects.toThrow("couldn't be written");
+      await vi.advanceTimersByTimeAsync(5000);
+      await failed;
+      vi.useRealTimers();
+    });
+  });
+
+  it("sends words still in the field with finishing, and the question they answer", async () => {
     const post = vi.spyOn(api, "POST").mockResolvedValue(ok(interview({})));
+    await apiInterviewClient.askAgain("me");
     await apiInterviewClient.finish("me", "My last thought");
-    expect(post).toHaveBeenCalledWith("/interview/finish", { body: { answer: "My last thought" } });
+    expect(post).toHaveBeenLastCalledWith("/interview/finish", {
+      body: { answer: "My last thought", question_id: "q0" },
+    });
   });
 
   it("uses the back cover shown, or keeps the old one, and never sends its text", async () => {
@@ -110,29 +187,23 @@ describe("apiInterviewClient", () => {
     });
   });
 
-  it("proposes a removal once, then confirms it like any change", async () => {
-    const removal = {
-      id: "x",
-      kind: "remove",
-      chapter_id: "c9",
-      title: "T",
-      summary: "",
-      note: "",
-      current: null,
-    };
-    vi.spyOn(api, "GET").mockResolvedValue(ok(interview({ question: null, stage: "done" })));
-    const post = vi
-      .spyOn(api, "POST")
-      .mockResolvedValueOnce(ok({ ...interview({ question: null }), stage: "revising", changes: [removal] }))
-      .mockResolvedValueOnce(ok({ blurb: "Shorter." }))
-      .mockResolvedValueOnce(
-        ok({ title: "T", author_name: "A", blurb: null, status: "on_shelf", chapters: [] }),
-      );
-    await expect(apiInterviewClient.blurbWithout("c9")).resolves.toBe("Shorter.");
-    expect(post).toHaveBeenCalledWith("/interview/removal", { body: { chapter_id: "c9" } });
-    await apiInterviewClient.removeFromShelf("c9", "Shorter.");
-    expect(post).toHaveBeenLastCalledWith("/interview/revision", { body: { approved: ["x"], blurb: "use" } });
-    expect(post.mock.calls.filter((call) => String(call[0]) === "/interview/removal")).toHaveLength(1);
+  it("choosing a title waits for the book, and a failed step can be tried again with that title", async () => {
+    const titles = [
+      { title: "A", why: "" },
+      { title: "B", why: "" },
+    ];
+    const finishing = (step_status: string) =>
+      ok({ ...interview({ question: null, titles }), stage: "finishing", step_status, chosen_title: "B" });
+    const post = vi.spyOn(api, "POST").mockResolvedValue(finishing("writing"));
+    await expect(apiInterviewClient.chooseTitle("me", "1")).resolves.toMatchObject({
+      stage: "drafting",
+      about: "book",
+    });
+    vi.spyOn(api, "GET").mockResolvedValue(finishing("failed"));
+    const now = await apiInterviewClient.current();
+    expect(now).toMatchObject({ stage: "drafting", failed: true, retryTitle: "1" });
+    await apiInterviewClient.retryDrafting("book", "1");
+    expect(post).toHaveBeenLastCalledWith("/interview/title", { body: { title: 1 } });
   });
 
   it("marks the Librarian's failures as safe to try again", async () => {
@@ -197,9 +268,7 @@ describe("apiInterviewClient", () => {
     const post = vi
       .spyOn(api, "POST")
       .mockResolvedValue(
-        ok(
-          interview({ question: { question_id: "q1", text: "Q", phase: "sweep", playback: null } as never }),
-        ),
+        ok(interview({ question: { question_id: "q1", text: "Q", phase: "sweep", playback: null } })),
       );
     await apiInterviewClient.askAgain("me");
     await apiInterviewClient.answer("me", "An answer");

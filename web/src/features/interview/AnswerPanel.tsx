@@ -36,7 +36,6 @@ function withSpeech(prior: string, heard: string): string {
 export interface AnswerExit {
   label: string;
   labelWithWords: string;
-  note?: string;
   onFinish: (words: string | undefined) => void;
 }
 
@@ -51,10 +50,12 @@ interface Props {
   note?: ReactNode;
   /** A quiet action beside Speak that's always there, in place of Skip. */
   aside?: ReactNode;
+  /** One line under the panel on how far along this is. Never a count. */
+  progress?: string;
   exit?: AnswerExit;
 }
 
-export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, exit }: Props) {
+export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, progress, exit }: Props) {
   const [mode, setMode] = useState<Mode>("typing");
   const [text, setText] = useState(() => readDraft(draftKey));
   const [draftSaved, setDraftSaved] = useState(false);
@@ -233,17 +234,19 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, exit 
           Send answer
         </Button>
       </div>
-      {exit && (
+      {(exit || progress) && (
         <div className="iv-exit">
-          {exit.note && <p className="iv-note">{exit.note}</p>}
-          <button
-            type="button"
-            className="iv-textlink"
-            disabled={tooLong}
-            onClick={() => exit.onFinish(empty ? undefined : text.trim())}
-          >
-            {empty ? exit.label : exit.labelWithWords}
-          </button>
+          {progress && <p className="iv-note">{progress}</p>}
+          {exit && (
+            <button
+              type="button"
+              className="iv-textlink"
+              disabled={tooLong}
+              onClick={() => exit.onFinish(empty ? undefined : text.trim())}
+            >
+              {empty ? exit.label : exit.labelWithWords}
+            </button>
+          )}
         </div>
       )}
     </>

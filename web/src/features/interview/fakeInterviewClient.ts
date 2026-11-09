@@ -220,6 +220,7 @@ function view(stored: Stored, authorName: string): InterviewState {
         phase: current.phase,
         question: current.text,
         canFinish: answered(stored) >= CAN_FINISH_AFTER,
+        nearlyDone: answered(stored) >= CAN_FINISH_AFTER,
         hasAnswers: answered(stored) > 0,
         lastTopic: stored.answers.length > 0 ? previous.topic : null,
       };
@@ -402,6 +403,12 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
       mutate(id, (stored) => {
         stored.stage = "proposing";
       }),
+    retryDrafting: async () => {
+      const stored = load();
+      if (!stored) throw new Error("There's no interview to continue.");
+      return view(stored, authorName);
+    },
+    saveChoices: async () => undefined,
     blurbFor: async (approved) => (approved.length ? `${BLURB} I also say who noticed first.` : null),
     applyChanges: async (approved, blurb) => {
       await wait(delay);

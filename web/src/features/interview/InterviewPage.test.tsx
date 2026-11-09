@@ -165,7 +165,7 @@ describe("InterviewPage", () => {
     }, 20_000);
 
     it("names the steps in plain words, as a list, and says when it's mostly done", async () => {
-      renderWith(at({ ...asking, phase: "dig", canFinish: true }));
+      renderWith(at({ ...asking, phase: "dig", canFinish: true, nearlyDone: true }));
       await screen.findByLabelText("Your answer");
       const steps = screen.getByRole("list", { name: "Where we are" });
       expect(steps.textContent).toBe("First lookDeeperCheck");
@@ -412,6 +412,17 @@ describe("InterviewPage", () => {
       expect(await screen.findByText("The Librarian is writing your book…")).toBeTruthy();
       await act(() => vi.advanceTimersByTimeAsync(5000));
       expect(screen.getByRole("heading", { name: bookWith(null).title })).toBeTruthy();
+    });
+
+    it("when writing failed twice, offers the same step again", async () => {
+      const client = at({ id: "me", stage: "drafting", about: "book", failed: true, retryTitle: "2" });
+      const retry = vi.spyOn(client, "retryDrafting").mockResolvedValue(reviewing());
+      renderWith(client);
+      expect(await screen.findByText("I couldn't finish writing your book.")).toBeTruthy();
+      expect(screen.getByText("Everything you've said is saved.")).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+      expect(retry).toHaveBeenCalledWith("book", "2");
+      expect(await screen.findByRole("heading", { name: bookWith(null).title })).toBeTruthy();
     });
 
     it("not enough yet is never a dead end", async () => {

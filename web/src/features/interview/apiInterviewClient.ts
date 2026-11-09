@@ -16,13 +16,7 @@ import {
 
 type MyBookResponse = components["schemas"]["MyBookResponse"];
 type ChangeResponse = components["schemas"]["Change"];
-// Trove API's next fields (R3-01, R3-03), read when they're there and ignored until they are.
-type InterviewResponse = Omit<components["schemas"]["InterviewResponse"], "stage" | "question"> & {
-  stage: components["schemas"]["InterviewResponse"]["stage"] | "drafting" | "finishing";
-  question:
-    | (NonNullable<components["schemas"]["InterviewResponse"]["question"]> & { question_id?: string })
-    | null;
-};
+type InterviewResponse = components["schemas"]["InterviewResponse"];
 
 const ID = "me";
 
@@ -52,12 +46,8 @@ function ended({ error, response }: Result<unknown>) {
   throw new InterviewError(errorMessage(error), response?.status === 502, response?.status === 409);
 }
 
-// Sent back with an answer or a skip once the API gives one, so a resend can't land on the next question.
-let waitingQuestionId: string | undefined;
-
-function aboutQuestion() {
-  return waitingQuestionId ? { question_id: waitingQuestionId } : {};
-}
+// Sent back with an answer or a skip, so a resend can't land on a question the member never saw.
+let waitingQuestionId = "";
 
 function toBook(book: MyBookResponse): DraftBook {
   return {
@@ -97,12 +87,23 @@ async function myBook(): Promise<InterviewState> {
 // Turns the API's flat response into one screen. Two cases need another call first: the Librarian
 // has enough (go straight to the titles), or the question couldn't be written (ask for it again).
 async function toState(response: InterviewResponse, retried = false): Promise<InterviewState> {
-  waitingQuestionId = response.question?.question_id;
+  waitingQuestionId = response.question?.question_id ?? "";
   switch (response.stage) {
     case "drafting":
-      return { id: ID, stage: "drafting", about: "titles" };
+      return { id: ID, stage: "drafting", about: "titles", failed: response.step_status === "failed" };
     case "finishing":
-      return { id: ID, stage: "drafting", about: "book" };
+      return {
+        id: ID,
+        stage: "drafting",
+        about: "book",
+        failed: response.step_status === "failed",
+        retryTitle: String(
+          Math.max(
+            0,
+            (response.titles ?? []).findIndex((option) => option.title === response.chosen_title),
+          ),
+        ),
+      };
     case "choosing":
       return {
         id: ID,
@@ -122,6 +123,7 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
         stage: "proposing",
         changes: response.changes.map(toChange),
         blurb: response.blurb,
+        approved: response.approved_changes,
       };
     case "adding":
     case "interviewing": {
@@ -152,6 +154,7 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
         hasAnswers: response.has_answers,
         lastTopic: response.topic,
         needsMore: response.needs_more,
+        nearlyDone: response.nearly_done,
       };
     }
   }
@@ -178,6 +181,30 @@ function removalOf(chapterId: string): Promise<string> {
   return asking;
 }
 
+const BLURB_LOOK_MS = 1500;
+const BLURB_GIVE_UP_MS = 110_000;
+const COULD_NOT_WRITE_BLURB = "The back cover couldn't be written.";
+
+// The back cover for a selection is written in the background. Saving the same choices keeps one that's
+// already written, so a member who left during the wait gets it on their return without another write.
+async function writeSelectionBlurb(approved: string[]): Promise<string | null> {
+  ended(await api.PUT("/interview/revision/choices", { body: { approved } }));
+  const started = Date.now();
+  let asked = false;
+  while (Date.now() - started < BLURB_GIVE_UP_MS) {
+    const now: InterviewResponse = unwrap(await api.GET("/interview"));
+    const status = now.selection_blurb_status;
+    if (status === "ready") return now.selection_blurb;
+    if (status === "failed" && asked) throw new InterviewError(COULD_NOT_WRITE_BLURB);
+    if (status !== "writing") {
+      unwrap(await api.POST("/interview/revision/blurb"));
+      asked = true;
+    }
+    await new Promise((resolve) => setTimeout(resolve, BLURB_LOOK_MS));
+  }
+  throw new InterviewError(COULD_NOT_WRITE_BLURB);
+}
+
 function readBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -199,20 +226,19 @@ export const apiInterviewClient: InterviewClient = {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview", { body })));
   },
   async answer(_id, text) {
-    const body = { answer: text, ...aboutQuestion() };
+    const body = { answer: text, question_id: waitingQuestionId };
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/answers", { body })));
   },
   async skip() {
-    const init = (waitingQuestionId ? { body: aboutQuestion() } : {}) as never;
-    return toState(unwrap<InterviewResponse>(await api.POST("/interview/skip", init)));
+    const body = { question_id: waitingQuestionId };
+    return toState(unwrap<InterviewResponse>(await api.POST("/interview/skip", { body })));
   },
   async askAgain() {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/question")));
   },
   async finish(_id, answer) {
-    return toState(
-      unwrap<InterviewResponse>(await api.POST("/interview/finish", answer ? { body: { answer } } : {})),
-    );
+    const init = answer ? { body: { answer, question_id: waitingQuestionId } } : {};
+    return toState(unwrap<InterviewResponse>(await api.POST("/interview/finish", init)));
   },
   async confirmShape() {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/shape", { body: {} })));
@@ -221,7 +247,8 @@ export const apiInterviewClient: InterviewClient = {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/shape", { body: { correction } })));
   },
   async chooseTitle(_id, titleId) {
-    return fromBook(unwrap(await api.POST("/interview/title", { body: { title: Number(titleId) } })));
+    const body = { title: Number(titleId) };
+    return toState(unwrap<InterviewResponse>(await api.POST("/interview/title", { body })));
   },
   async otherTitles() {
     const response: InterviewResponse = unwrap(await api.GET("/interview"));
@@ -259,9 +286,10 @@ export const apiInterviewClient: InterviewClient = {
     const now: InterviewResponse = unwrap({ data, error, response });
     const stages: Record<InterviewResponse["stage"], BookStage> = {
       interviewing: "interviewing",
-      drafting: "writingTitles",
+      // A failed step is the interview page's to offer again, so My book points there.
+      drafting: now.step_status === "failed" ? "interviewing" : "writingTitles",
       choosing: "titles",
-      finishing: "writingBook",
+      finishing: now.step_status === "failed" ? "interviewing" : "writingBook",
       reviewing: "draft",
       done: "shelf",
       // can_finish means a real answer this round. With none, there's nothing to continue.
@@ -282,8 +310,17 @@ export const apiInterviewClient: InterviewClient = {
   async retryWriting() {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/finish", {})));
   },
+  async retryDrafting(about, titleId) {
+    if (about === "titles")
+      return toState(unwrap<InterviewResponse>(await api.POST("/interview/finish", {})));
+    const body = { title: Number(titleId ?? 0) };
+    return toState(unwrap<InterviewResponse>(await api.POST("/interview/title", { body })));
+  },
+  async saveChoices(approved) {
+    ended(await api.PUT("/interview/revision/choices", { body: { approved } }));
+  },
   async blurbFor(approved) {
-    return unwrap(await api.POST("/interview/revision/blurb", { body: { approved } })).blurb;
+    return writeSelectionBlurb(approved);
   },
   async applyChanges(approved, blurb) {
     // The API applies the back cover it last showed for this selection, so the text never travels back.
@@ -297,8 +334,7 @@ export const apiInterviewClient: InterviewClient = {
     ended(await api.POST("/interview/book/undo"));
   },
   async blurbWithout(chapterId) {
-    const change = await removalOf(chapterId);
-    return unwrap(await api.POST("/interview/revision/blurb", { body: { approved: [change] } })).blurb;
+    return writeSelectionBlurb([await removalOf(chapterId)]);
   },
   async removeFromShelf(chapterId, blurb) {
     const change = await removalOf(chapterId);

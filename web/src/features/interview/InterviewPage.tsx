@@ -59,7 +59,8 @@ function writeSeen(key: string) {
 // Where the member is, to tell a new question or screen from the same one.
 function placeOf(state: InterviewState | null): string {
   if (!state) return "";
-  return state.stage === "asking" ? `asking:${state.question}` : state.stage;
+  if (state.stage === "asking") return `asking:${state.question}`;
+  return state.stage === "drafting" && state.failed ? "draftingFailed" : state.stage;
 }
 
 export function InterviewPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
@@ -125,20 +126,21 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     };
   }, [client]);
 
-  // The changes are written in the background, so the screen moves on by itself when they're ready.
+  // The writing happens in the background, so the screen moves on by itself when it's done.
   const stage = state?.stage;
+  const place = placeOf(state);
   useEffect(() => {
-    if (stage !== "writing" && stage !== "drafting") return;
+    if (stage !== "writing" && place !== "drafting") return;
     const timer = setInterval(() => {
       client
         .current()
         .then((now) => {
-          if (now && now.stage !== stage) setState(now);
+          if (now && placeOf(now) !== place) setState(now);
         })
         .catch(() => undefined);
     }, LOOK_AGAIN_MS);
     return () => clearInterval(timer);
-  }, [client, stage]);
+  }, [client, stage, place]);
 
   // While the Librarian works the member's side is inert, which drops keyboard focus to the page.
   // If they stayed on the same screen, put it back at the start of their side.
@@ -158,7 +160,6 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
 
   // A new question or screen starts at the top with the Librarian's words in view. Where there's a real
   // keyboard the member can start typing at once; on a phone that would cover the question.
-  const place = placeOf(state);
   useEffect(() => {
     if (!loaded || loadFailed) return;
     document.documentElement.scrollTop = 0;
@@ -386,6 +387,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
               busy={Boolean(busy)}
               onSend={(text) => moveOn("answer", () => client.answer(state.id, text))}
               onSkip={() => moveOn("skip", () => client.skip(state.id))}
+              progress={state.nearlyDone ? "Most of the way there." : undefined}
               exit={
                 state.canFinish
                   ? {
@@ -395,7 +397,6 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
                       labelWithWords: inAdding
                         ? "Send this, then write the changes"
                         : "Send this, then show me my book",
-                      note: !inAdding && state.phase === "dig" ? "Most of the way there." : undefined,
                       onFinish: (words) =>
                         run(
                           inAdding
@@ -478,10 +479,30 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         if (doneOnArrival) return <Navigate to="/my-book" replace />;
         return <DoneScreen book={state.book} />;
       case "drafting":
+        if (state.failed) {
+          const about = state.about === "titles" ? "your titles" : "your book";
+          return (
+            <Frame busy={Boolean(busy)} say={say(`I couldn't finish writing ${about}.`)}>
+              <p className="iv-note iv-note-big">Everything you've said is saved.</p>
+              <ErrorMessage message={error} />
+              <div className="iv-row">
+                <Button
+                  aria-busy={Boolean(busy)}
+                  onClick={() =>
+                    run("The Librarian is writing…", () =>
+                      client.retryDrafting(state.about, state.retryTitle),
+                    )
+                  }
+                >
+                  Try again
+                </Button>
+              </div>
+            </Frame>
+          );
+        }
         return (
           <Frame
             busy
-            canLeave={false}
             say={
               <Waiting>
                 {state.about === "titles"
@@ -545,6 +566,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             busy={busy}
             error={error}
             writeBlurb={(approved) => client.blurbFor(approved)}
+            saveChoices={(approved) => client.saveChoices(approved)}
             apply={(approved, blurb, onDone) => {
               run("Updating your book…", () => client.applyChanges(approved, blurb), { onSuccess: onDone });
             }}

@@ -177,6 +177,14 @@ describe("proposed changes", () => {
     expect(screen.getByText("Approved")).toBeTruthy();
   });
 
+  it("saves each choice as it's pressed, and shows what was approved on another visit", async () => {
+    const saved = vi.fn(async () => undefined);
+    show(client({ ...proposing, approved: ["c1"] } as InterviewState, { saveChoices: saved }));
+    expect(await screen.findByText("Approved")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Approve: What I Gave Up for the Garage" }));
+    expect(saved).toHaveBeenCalledWith(["c1", "c2"]);
+  });
+
   it("keeps choices after leaving, so Decide later means it", async () => {
     show(client(proposing));
     fireEvent.click(await screen.findByRole("button", { name: "Decline: What I Gave Up for the Garage" }));
