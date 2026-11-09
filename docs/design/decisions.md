@@ -2,6 +2,18 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-08: growing books frames (T33), under the suspended gate
+
+- **I4 frames go to build as they stand** (`InterviewA2`: Skip, sharper angle). Josef suspended frame approval for the
+  unattended run, so this is not an approval of the frames. He reviews the built screens afterwards.
+- **T33 frames drawn** on the new canvas page "Growing books", five boards, desktop and phone: My book (no book, draft, on the
+  shelf, a round open, changes waiting), adding to your book (reopen, a question with Skip, the wait), proposed changes
+  (decide, confirm, confirm with nothing approved, done, nothing came of it), "I have one like this" (every state, in three
+  unrelated rows), the reading question (ask, the wait, one proposed change). New patterns in `system.md` Additions.
+- **Design calls:** Approve/Decline is a toggle pair that fills ink, never red. The confirm step lists titles by group with no
+  numbers. The reading question sits beside the book on My book as a quiet panel; Answer is secondary so the one red action
+  stays the book's next step. The wait has no spinner or bar. A round that yields nothing says so and returns to My book.
+
 ## 2026-11-07: I4, Skip idea approved; frames under review
 
 - **Josef approved the Skip idea only.** The `InterviewA2` frames (Skip, CHEM 223 angle, student-org angle) are drafts under

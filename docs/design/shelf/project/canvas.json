@@ -40,6 +40,10 @@
     {
       "id": "interview",
       "name": "Interview"
+    },
+    {
+      "id": "growing",
+      "name": "Growing books"
     }
   ],
   "boards": {
@@ -413,6 +417,51 @@
       "title": "A \u00b7 The interview adapts",
       "page": "interview",
       "expand": "fill"
+    },
+    "GrowingG1.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1300,
+      "h": 5856,
+      "title": "My book",
+      "page": "growing",
+      "expand": "fill"
+    },
+    "GrowingG2.dc.html": {
+      "x": 1420,
+      "y": 0,
+      "w": 1300,
+      "h": 2553,
+      "title": "Adding to your book",
+      "page": "growing",
+      "expand": "fill"
+    },
+    "GrowingG3.dc.html": {
+      "x": 2840,
+      "y": 0,
+      "w": 1300,
+      "h": 4718,
+      "title": "Proposed changes",
+      "page": "growing",
+      "expand": "fill"
+    },
+    "GrowingG4.dc.html": {
+      "x": 4260,
+      "y": 0,
+      "w": 1300,
+      "h": 2800,
+      "title": "\"I have one like this\"",
+      "page": "growing",
+      "expand": "fill"
+    },
+    "GrowingG5.dc.html": {
+      "x": 5680,
+      "y": 0,
+      "w": 1300,
+      "h": 2732,
+      "title": "The reading question",
+      "page": "growing",
+      "expand": "fill"
     }
   },
   "order": [
@@ -461,7 +510,12 @@
     "InterviewA.dc.html",
     "InterviewB.dc.html",
     "InterviewC.dc.html",
-    "InterviewA2.dc.html"
+    "InterviewA2.dc.html",
+    "GrowingG1.dc.html",
+    "GrowingG2.dc.html",
+    "GrowingG3.dc.html",
+    "GrowingG4.dc.html",
+    "GrowingG5.dc.html"
   ],
   "notes": {
     "head": {

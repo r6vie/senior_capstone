@@ -214,4 +214,26 @@ at width−300px, rows scroll horizontally.
 
 Patterns added after v1. Each entry: name, the task it solves, date, owner, snippet or link.
 
-_None yet._
+### Growing books (T33, 2026-11-08, design session)
+
+Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop and phone width.
+
+- **Toggle pair (Approve / Decline).** Two `.button-secondary.sm` joined with a −2px overlap; the chosen one has
+  `aria-pressed="true"` and is filled ink with white text (never red). Declined content is struck through, so the
+  state shows without colour. Used for one decision per row with no side effect until a later confirm.
+  `.button[aria-pressed="true"]{background:var(--ink);color:var(--white);border-color:var(--ink)}`
+- **Change card (`.chg`).** A white panel, 3px ink outline: caption chip (New chapter / Improved chapter), status word
+  at the right, two columns "Now" and "Proposed" (Proposed has a 4px ink left rule; a new chapter's Now is a dotted
+  "Not in your book yet."), then one italic line on what changed and the toggle pair. One column on a phone.
+- **Author-only quotes (`.quotes`).** A 4px ink left rule and Newsreader italic under a chapter, behind a quiet "Show what
+  you said" button. The chapter list says once that only the author sees them.
+- **Quiet inline action (`.spk`).** A `.button-quiet` with a leading plus mark, 44px tall, no width of its own, a −12px
+  left margin so its text lines up with the host's text. After the press it becomes a plain sentence with Undo. It makes no
+  assumption about the row it sits in, so a page owned by someone else can mount it at the end of a chapter's content.
+  Hover or focus shows a small `.tip` panel (2px outline, white) with one sentence.
+- **The wait (`.empty.waitbox`, `aria-busy`).** A dotted panel with one plain sentence and a quiet way out. No spinner and no
+  progress bar, because the length is unknown and a bar would imply a count.
+- **My book layout.** The book object (`.book-lg`, `.book` on a phone) beside its title and blurb; chapters as a ruled list
+  with dotted separators; a narrow aside holding the reading question and the sparks list. One red button: the next step
+  for the book's current stage (Start the interview, Review your book, Add to your book, Continue adding, Review the
+  proposed changes).
