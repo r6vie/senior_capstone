@@ -7,6 +7,9 @@ import { speechSupported, useSpeech } from "./useSpeech";
 
 type Mode = "typing" | "recording" | "transcript";
 
+// The API's limit on one answer. A long dictation can pass it, and it's likely the member's best one.
+export const MAX_ANSWER_LENGTH = 5000;
+
 function MicIcon() {
   return (
     <svg
@@ -25,34 +28,32 @@ function MicIcon() {
   );
 }
 
-const BAR_COUNT = 19;
-
-function levels(seed: number): number[] {
-  // Deterministic, so the bars only change when a new piece of speech arrives.
-  return Array.from({ length: BAR_COUNT }, (_, i) => 8 + ((seed * 7 + i * 13 + ((i * i) % 5) * 9) % 48));
+function withSpeech(prior: string, heard: string): string {
+  return prior ? `${prior}\n\n${heard}` : heard;
 }
 
 interface Props {
   draftKey: string;
   busy: boolean;
-  /** Shown beside Send once something is stored: an earlier answer or this draft. */
-  hasSavedAnswers: boolean;
   onSend: (text: string) => void;
   onSkip: () => void;
   children?: ReactNode;
 }
 
-export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, onSkip, children }: Props) {
+export function AnswerPanel({ draftKey, busy, onSend, onSkip, children }: Props) {
   const [mode, setMode] = useState<Mode>("typing");
   const [text, setText] = useState(() => readDraft(draftKey));
   const [draftSaved, setDraftSaved] = useState(false);
-  const [stopping, setStopping] = useState(false);
+  const [micStopped, setMicStopped] = useState(false);
   const speech = useSpeech();
   const canSpeak = speechSupported();
   const fieldId = useId();
   const field = useRef<HTMLTextAreaElement>(null);
   const stopButton = useRef<HTMLButtonElement>(null);
   const previousMode = useRef<Mode>(mode);
+  // What was in the field when Speak was pressed, and what the last recording added to it.
+  const prior = useRef("");
+  const lastHeard = useRef("");
 
   useEffect(() => {
     setText(readDraft(draftKey));
@@ -69,19 +70,16 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, onSkip, c
     return () => clearTimeout(timer);
   }, [draftKey, text]);
 
-  // Final results can arrive just after Stop, so switch to the transcript once listening has ended.
+  // Final results can arrive just after Stop, so bring the words in once listening has really ended.
+  // The field only ever gains words here: an empty recording leaves what the member typed alone.
   useEffect(() => {
     if (mode !== "recording" || speech.listening) return;
-    if (speech.error) {
-      setMode("typing");
-      return;
-    }
-    if (stopping) {
-      setText(speech.transcript);
-      setStopping(false);
-      setMode("transcript");
-    }
-  }, [mode, speech.listening, speech.error, speech.transcript, stopping]);
+    const heard = speech.transcript.trim();
+    lastHeard.current = heard;
+    setText(heard ? withSpeech(prior.current, heard) : prior.current);
+    setMicStopped(speech.dropped);
+    setMode(heard ? "transcript" : "typing");
+  }, [mode, speech.listening, speech.transcript, speech.dropped]);
 
   // Speak, Stop and Cancel unmount as the mode changes; keep keyboard focus where the member is working.
   useEffect(() => {
@@ -92,29 +90,29 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, onSkip, c
   }, [mode]);
 
   function record() {
-    setStopping(false);
+    // "Record again" replaces only the last recording, unless the member has since edited it.
+    const again = mode === "transcript" && lastHeard.current && text.endsWith(lastHeard.current);
+    prior.current = again ? text.slice(0, -lastHeard.current.length).trimEnd() : text.trimEnd();
+    setMicStopped(false);
     speech.start();
     setMode("recording");
   }
 
-  function stop() {
-    setStopping(true);
-    speech.stop();
-  }
-
   function cancel() {
     speech.cancel();
-    setStopping(false);
     setMode("typing");
   }
 
+  const tooLong = text.length > MAX_ANSWER_LENGTH;
+  const empty = !text.trim();
+
   function send() {
-    const answer = text.trim();
-    if (!answer) {
+    if (tooLong) return;
+    if (empty) {
       field.current?.focus();
       return;
     }
-    onSend(answer);
+    onSend(text.trim());
   }
 
   if (mode === "recording") {
@@ -126,14 +124,10 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, onSkip, c
               <MicIcon />
             </b>
           </div>
-          <div className="iv-wave" aria-hidden="true">
-            {levels(speech.heard).map((height, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: fixed set of bars
-              <i key={i} style={{ height: speech.heard ? height : 6 }} />
-            ))}
-          </div>
+          {/* The words appearing are the honest sign that the microphone is working. */}
+          {speech.transcript && <p className="iv-live">{speech.transcript}</p>}
           <p className="iv-note" role="status">
-            Listening. Speak as you would to a friend. You can fix the words before anything is sent.
+            Listening. Speak naturally. You can fix the words before anything is sent.
           </p>
         </div>
         <div className="iv-row">
@@ -141,8 +135,7 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, onSkip, c
             type="button"
             ref={stopButton}
             className="button button-primary"
-            onClick={stop}
-            aria-busy={stopping}
+            onClick={() => speech.stop()}
           >
             Stop
           </button>
@@ -155,11 +148,12 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, onSkip, c
     );
   }
 
-  const saved = hasSavedAnswers || draftSaved;
-
   return (
     <>
-      <div className={`field iv-answer${mode === "transcript" ? " iv-answer-edit" : ""}`}>
+      <div
+        className={`field iv-answer${mode === "transcript" ? " iv-answer-edit" : ""}`}
+        data-invalid={tooLong || undefined}
+      >
         <label htmlFor={fieldId} className="iv-visually-hidden">
           Your answer
         </label>
@@ -169,12 +163,35 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, onSkip, c
           value={text}
           placeholder="Say it in your own words"
           onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+              event.preventDefault();
+              send();
+            }
+          }}
         />
+        {tooLong && (
+          <span className="hint" role="status">
+            That's longer than I can take in one go. Trim it, or send the first part and I'll ask for the
+            rest.
+          </span>
+        )}
       </div>
-      {mode === "transcript" && <p className="iv-note">This is what I heard. Fix anything, then send it.</p>}
+      {mode === "transcript" && (
+        <p className="iv-note">
+          {micStopped
+            ? "The microphone stopped. Here's what I heard."
+            : "This is what I heard. Fix anything, then send it."}
+        </p>
+      )}
       {speech.error && (
         <p className="message" role="status">
           {speech.error}
+        </p>
+      )}
+      {micStopped && mode === "typing" && (
+        <p className="message" role="status">
+          The microphone stopped before I heard anything. You can try again or type your answer.
         </p>
       )}
       <div className="iv-row">
@@ -188,12 +205,20 @@ export function AnswerPanel({ draftKey, busy, hasSavedAnswers, onSend, onSkip, c
             Type instead
           </button>
         )}
-        <button type="button" className="button button-quiet" onClick={onSkip}>
-          Skip
-        </button>
+        {/* Only while the field is empty: a mis-tap beside Send must never cost the member their words. */}
+        {empty && (
+          <button type="button" className="button button-quiet" onClick={onSkip}>
+            Skip
+          </button>
+        )}
         <span className="iv-grow" />
-        {saved && <span className="iv-saved">Saved</span>}
-        <Button onClick={send} aria-busy={busy}>
+        {draftSaved && <span className="iv-saved">Saved</span>}
+        <Button
+          onClick={send}
+          disabled={tooLong}
+          aria-busy={busy}
+          aria-keyshortcuts="Meta+Enter Control+Enter"
+        >
           Send answer
         </Button>
       </div>
@@ -221,4 +246,21 @@ function writeDraft(key: string, text: string) {
 
 export function clearDraft(key: string) {
   writeDraft(key, "");
+}
+
+const DRAFT_PREFIX = "trove_interview_draft:";
+
+export function draftKeyFor(userId: string, question: string): string {
+  return `${DRAFT_PREFIX}${userId}:${question}`;
+}
+
+/** Remove every saved draft on this browser. For sign-out, on a computer members may share. */
+export function clearAllDrafts() {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith(DRAFT_PREFIX)) localStorage.removeItem(key);
+    }
+  } catch {
+    // Nothing was stored, then.
+  }
 }

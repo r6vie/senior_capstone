@@ -12,14 +12,16 @@ import {
 import { Link } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { useAuth } from "../auth/AuthProvider";
-import { AnswerPanel, clearDraft } from "./AnswerPanel";
+import { AnswerPanel, clearDraft, draftKeyFor } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
 import {
   type DraftBook,
+  type DraftChapter,
   type InterviewClient,
   InterviewError,
   type InterviewState,
   type Phase,
+  type TitleOption,
 } from "./interviewClient";
 import "./InterviewPage.css";
 
@@ -27,37 +29,90 @@ import "./InterviewPage.css";
 // trove.md §4). The Librarian's words stand alone on the black band; the member acts below it.
 
 const PHASES: { id: Phase; label: string }[] = [
-  { id: "sweep", label: "Sweep" },
-  { id: "dig", label: "Dig" },
-  { id: "shape", label: "Shape" },
+  { id: "sweep", label: "First look" },
+  { id: "dig", label: "Deeper" },
+  { id: "shape", label: "Check" },
 ];
+
+// A wait this long gets one calm line; a wait past the limit stops and offers another try.
+const SLOW_AFTER_MS = 15_000;
+const GIVE_UP_AFTER_MS = 120_000;
+// "Welcome back" is for coming back, not for a refresh seconds later.
+const WELCOME_BACK_AFTER_MS = 60 * 60 * 1000;
+const LOST_DEFAULT = "That didn't reach the Librarian. Try again.";
+const LOST_ANSWER = "That didn't reach the Librarian. Your answer is still here.";
+
+class TimedOut extends Error {}
+
+function giveUpAfter(ms: number): Promise<never> {
+  return new Promise((_, reject) => setTimeout(() => reject(new TimedOut()), ms));
+}
+
+function isLost(reason: unknown): boolean {
+  // fetch rejects with a TypeError when the network fails, and its own words aren't for members.
+  return reason instanceof TypeError || reason instanceof TimedOut;
+}
+
+function readSeen(key: string): number | null {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? Number(value) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSeen(key: string) {
+  try {
+    localStorage.setItem(key, String(Date.now()));
+  } catch {
+    // Without storage the member is welcomed back a little too often. No harm done.
+  }
+}
+
+// Where the member is, to tell a new question or screen from the same one.
+function placeOf(state: InterviewState | null): string {
+  if (!state) return "";
+  return state.stage === "asking" ? `asking:${state.question}` : state.stage;
+}
 
 function Frame({
   phase,
   say,
   busy,
   canLeave = true,
+  quiet = false,
   children,
 }: {
   phase?: Phase;
   canLeave?: boolean;
+  /** The band steps back, on a screen where something below it is the focus. */
+  quiet?: boolean;
   say: ReactNode;
   /** While the Librarian works, the member's side holds still rather than greying out. */
   busy?: boolean;
   children?: ReactNode;
 }) {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    setSlow(false);
+    if (!busy) return;
+    const timer = setTimeout(() => setSlow(true), SLOW_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, [busy]);
+
   return (
     <div className="interview">
       <header className="iv-top">
         <span className="wordmark">Trove</span>
         {phase && (
-          <nav className="iv-phases" aria-label="Where we are">
+          <ol className="iv-phases" aria-label="Where we are">
             {PHASES.map((item) => (
-              <span key={item.id} aria-current={item.id === phase ? "step" : undefined}>
+              <li key={item.id} aria-current={item.id === phase ? "step" : undefined}>
                 {item.label}
-              </span>
+              </li>
             ))}
-          </nav>
+          </ol>
         )}
         {canLeave && (
           <Link to="/" className="button button-quiet">
@@ -67,9 +122,14 @@ function Frame({
       </header>
       <section className="iv-band dark">
         <span className="halo" />
-        <h1 className="iv-say" aria-live="polite">
+        <h1 className="iv-say" data-quiet={quiet || undefined} tabIndex={-1} aria-live="polite">
           {say}
         </h1>
+        {slow && (
+          <p className="iv-still" role="status">
+            Still working. Your answers are saved.
+          </p>
+        )}
       </section>
       <main className="iv-act" tabIndex={-1} inert={busy} aria-busy={busy}>
         {children}
@@ -121,7 +181,8 @@ function ErrorMessage({ message }: { message: string | null }) {
 
 function SmallBook({ title, author }: { title: string; author: string }) {
   return (
-    <span className="book book-sm">
+    // The title and name are printed beside it, so a screen reader shouldn't hear them twice.
+    <span className="book book-sm" aria-hidden="true">
       <span className="book-cover">
         <span className="book-title">{title}</span>
         <span className="book-author">{author}</span>
@@ -135,6 +196,9 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   // Books carry the full name; it falls back to the first name for accounts made before last names.
   const authorName = user?.full_name ?? "";
 
+  const userId = user?.id ?? "anon";
+  const seenKey = `trove_interview_seen:${userId}`;
+
   const [state, setState] = useState<InterviewState | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [welcomedBack, setWelcomedBack] = useState(false);
@@ -143,6 +207,10 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   const [retry, setRetry] = useState<(() => void) | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  // The answer or skip is saved, but the next question didn't come through.
+  const [interrupted, setInterrupted] = useState<"answer" | "skip" | null>(null);
+  const latest = useRef(state);
+  latest.current = state;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: loadAttempt is what asks for another try
   useEffect(() => {
@@ -151,29 +219,21 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
       .current()
       .then((current) => {
         if (!live) return;
+        const seen = readSeen(seenKey);
+        const away = seen === null || Date.now() - seen > WELCOME_BACK_AFTER_MS;
         setState(current);
-        setWelcomedBack(current?.stage === "asking" && current.hasAnswers);
+        setWelcomedBack(away && current?.stage === "asking" && current.hasAnswers);
+        writeSeen(seenKey);
       })
-      .catch((reason: unknown) => {
-        if (!live) return;
-        setError(messageOf(reason));
-        setLoadFailed(true);
-        setRetry(() => () => {
-          setError(null);
-          setRetry(null);
-          setLoadFailed(false);
-          setLoaded(false);
-          setLoadAttempt((count) => count + 1);
-        });
-      })
+      .catch(() => live && setLoadFailed(true))
       .finally(() => live && setLoaded(true));
     return () => {
       live = false;
     };
-  }, [client, loadAttempt]);
+  }, [client, seenKey, loadAttempt]);
 
   // While the Librarian works the member's side is inert, which drops keyboard focus to the page.
-  // Put it back at the start of their side, without moving the page.
+  // If they stayed on the same screen, put it back at the start of their side.
   const wasBusy = useRef(false);
   useEffect(() => {
     if (busy) {
@@ -188,52 +248,91 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     }
   }, [busy]);
 
-  // A new question or screen starts at the top, so the Librarian's words are the first thing in view.
-  const place = !state ? "" : state.stage === "asking" ? state.question : state.stage;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the place changes
+  // A new question or screen starts at the top with the Librarian's words in view. Where there's a real
+  // keyboard the member can start typing at once; on a phone that would cover the question.
+  const place = placeOf(state);
   useEffect(() => {
+    if (!loaded || loadFailed) return;
     document.documentElement.scrollTop = 0;
-  }, [place]);
+    const asking = place.startsWith("asking:") && !welcomedBack;
+    const hasKeyboard = window.matchMedia?.("(hover: hover)").matches;
+    const field = asking && hasKeyboard ? document.querySelector<HTMLElement>(".iv-answer textarea") : null;
+    (field ?? document.querySelector<HTMLElement>(".iv-say"))?.focus({ preventScroll: true });
+  }, [place, loaded, loadFailed, welcomedBack]);
 
   // Runs one call with a calm waiting line on the band; the screen stays put until it answers.
-  // `retryWith` is what to repeat if the Librarian fails: after a saved answer, ask for the question
-  // again rather than sending the answer twice.
   const run = useCallback(
     async (
       waiting: string,
       call: () => Promise<InterviewState>,
-      retryWith?: () => Promise<InterviewState>,
+      options: {
+        /** What to repeat if the Librarian fails: after a saved answer, ask again rather than resend. */
+        retryWith?: () => Promise<InterviewState>;
+        /** Instead of Try again, when the Librarian failed after the member's part was saved. */
+        onSavedButStuck?: () => void;
+        onSuccess?: () => void;
+        lost?: string;
+      } = {},
     ) => {
       setBusy(waiting);
       setError(null);
       setRetry(null);
       try {
-        setState(await call());
+        setState(await Promise.race([call(), giveUpAfter(GIVE_UP_AFTER_MS)]));
+        setInterrupted(null);
+        writeSeen(seenKey);
+        options.onSuccess?.();
         return true;
       } catch (reason) {
-        setError(messageOf(reason));
-        if (reason instanceof InterviewError && reason.retryable) {
-          const again = retryWith ?? call;
+        if (isLost(reason)) {
+          setError(options.lost ?? LOST_DEFAULT);
+          // The first try may have arrived even though the reply didn't. Look before repeating it.
+          const looked = async () => {
+            const now = await client.current();
+            return now && placeOf(now) !== placeOf(latest.current) ? now : call();
+          };
           setRetry(() => () => {
-            run(waiting, again, again);
+            run(waiting, looked, options);
           });
+        } else if (reason instanceof InterviewError && reason.retryable) {
+          if (options.onSavedButStuck) {
+            options.onSavedButStuck();
+          } else {
+            setError(messageOf(reason));
+            const again = options.retryWith ?? call;
+            setRetry(() => () => {
+              run(waiting, again, { ...options, retryWith: again });
+            });
+          }
+        } else {
+          setError(messageOf(reason));
         }
         return false;
       } finally {
         setBusy(null);
       }
     },
-    [],
+    [client, seenKey],
   );
 
   const screen = (() => {
-    if (!loaded) return <Frame say={<Waiting>The Librarian is finding your place…</Waiting>} />;
+    if (!loaded) return <Frame busy say={<Waiting>The Librarian is finding your place…</Waiting>} />;
 
     // Not the start screen: this member may well have an interview we just couldn't read.
     if (loadFailed) {
       return (
-        <Frame say="I can't find your place just now.">
-          <ErrorMessage message={error} />
+        <Frame say="I couldn't find your place just now. Nothing you've said is lost.">
+          <div className="iv-row">
+            <Button
+              onClick={() => {
+                setLoadFailed(false);
+                setLoaded(false);
+                setLoadAttempt((count) => count + 1);
+              }}
+            >
+              Try again
+            </Button>
+          </div>
         </Frame>
       );
     }
@@ -248,7 +347,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
               resume ? "The Librarian is reading your résumé…" : "The Librarian is getting ready…",
               () => client.start(resume),
               // A 502 here means the interview exists but its first question failed.
-              () => client.askAgain(""),
+              { retryWith: () => client.askAgain("") },
             )
           }
         />
@@ -259,13 +358,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
 
     switch (state.stage) {
       case "asking": {
-        const draftKey = `trove_interview_draft:${state.id}:${state.question}`;
-        // After a 502 the answer or skip is already saved, so a successful retry also ends the draft.
-        const askAgain = () =>
-          client.askAgain(state.id).then((next) => {
-            clearDraft(draftKey);
-            return next;
-          });
+        const draftKey = draftKeyFor(userId, state.question);
         if (welcomedBack && state.lastTopic) {
           return (
             <Frame
@@ -275,13 +368,38 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             >
               <ErrorMessage message={error} />
               <div className="iv-row">
-                <Button onClick={() => setWelcomedBack(false)}>Continue</Button>
-                {/* Leaves the same way "Leave for now" does: everything is already saved. */}
-                <Link to="/" className="button button-quiet">
-                  Continue later
-                </Link>
+                <Button onClick={() => setWelcomedBack(false)}>Back to the question</Button>
               </div>
               <p className="iv-note">Everything you've said so far is saved.</p>
+            </Frame>
+          );
+        }
+        // What was said is safe once this runs, whichever try gets through.
+        const moveOn = (kind: "answer" | "skip", call: () => Promise<InterviewState>) =>
+          run("The Librarian is thinking…", call, {
+            lost: kind === "answer" ? LOST_ANSWER : LOST_DEFAULT,
+            onSuccess: () => clearDraft(draftKey),
+            onSavedButStuck: () => {
+              clearDraft(draftKey);
+              setInterrupted(kind);
+            },
+          });
+        if (interrupted) {
+          return (
+            <Frame phase={state.phase} say={say(state.question)} busy={Boolean(busy)}>
+              <ErrorMessage message={error} />
+              <p className="iv-stuck" role="status">
+                {interrupted === "answer" && "Your answer is saved. "}
+                The next question didn't come through.
+              </p>
+              <div className="iv-row">
+                <Button
+                  aria-busy={Boolean(busy)}
+                  onClick={() => moveOn(interrupted, () => client.askAgain(state.id))}
+                >
+                  Ask me the next question
+                </Button>
+              </div>
             </Frame>
           );
         }
@@ -292,22 +410,15 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
               key={draftKey}
               draftKey={draftKey}
               busy={Boolean(busy)}
-              hasSavedAnswers={state.hasAnswers}
-              onSend={async (text) => {
-                if (await run("The Librarian is reading…", () => client.answer(state.id, text), askAgain))
-                  clearDraft(draftKey);
-              }}
-              onSkip={async () => {
-                // The question is gone once skipped, so a part-written answer to it has nowhere to go.
-                if (await run("The Librarian is thinking…", () => client.skip(state.id), askAgain))
-                  clearDraft(draftKey);
-              }}
+              onSend={(text) => moveOn("answer", () => client.answer(state.id, text))}
+              onSkip={() => moveOn("skip", () => client.skip(state.id))}
             >
               {state.canFinish && (
                 <div className="iv-exit">
+                  {state.phase === "dig" && <p className="iv-note">Most of the way there.</p>}
                   <button
                     type="button"
-                    className="button button-quiet"
+                    className="iv-textlink"
                     onClick={() =>
                       run("The Librarian is gathering what you said…", () => client.finish(state.id))
                     }
@@ -327,18 +438,14 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             busy={busy}
             error={error}
             onConfirm={() =>
-              run(
-                "The Librarian is finding your titles…",
-                () => client.confirmShape(state.id),
-                () => client.askAgain(state.id),
-              )
+              run("The Librarian is finding your titles…", () => client.confirmShape(state.id), {
+                retryWith: () => client.askAgain(state.id),
+              })
             }
             onCorrect={(correction) =>
-              run(
-                "The Librarian is listening again…",
-                () => client.correctShape(state.id, correction),
-                () => client.askAgain(state.id),
-              )
+              run("The Librarian is listening again…", () => client.correctShape(state.id, correction), {
+                retryWith: () => client.askAgain(state.id),
+              })
             }
           />
         );
@@ -361,6 +468,13 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             book={state.book}
             busy={busy}
             error={error}
+            loadOtherTitles={() => client.otherTitles(state.id)}
+            onChangeTitle={(titleId) =>
+              run("The Librarian is writing your book…", () => client.changeTitle(state.id, titleId))
+            }
+            onRewriteBlurb={() =>
+              run("The Librarian is rewriting the back cover…", () => client.rewriteBlurb(state.id))
+            }
             onRewrite={(chapterId) =>
               run("The Librarian is rewriting that chapter…", () =>
                 client.rewriteChapter(state.id, chapterId),
@@ -381,9 +495,6 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
 }
 
 function messageOf(reason: unknown): string {
-  // fetch rejects with a TypeError when the network fails, and its own message isn't for members.
-  if (reason instanceof TypeError)
-    return "Trove can't be reached just now. Check your connection and try again.";
   return reason instanceof Error && reason.message
     ? reason.message
     : "Something went wrong. Please try again.";
@@ -392,7 +503,10 @@ function messageOf(reason: unknown): string {
 // ---------- Start ----------
 
 const START_SAY =
-  "In about twenty minutes I'll ask you questions, one at a time, to find the book you haven't written yet.";
+  "I'll ask you one question at a time, to find the book you haven't written yet. Nobody sees it until you put it on the shelf.";
+
+// The API's limit on a résumé.
+const MAX_RESUME_BYTES = 5 * 1024 * 1024;
 
 function StartScreen({
   busy,
@@ -406,6 +520,7 @@ function StartScreen({
   const [resume, setResume] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [adding, setAdding] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const inputId = useId();
 
@@ -415,80 +530,94 @@ function StartScreen({
       setFileError("That isn't a PDF. Choose a PDF, or start without one.");
       return;
     }
+    if (file.size > MAX_RESUME_BYTES) {
+      setFileError("That PDF is over 5 MB. Choose a smaller one, or start without it.");
+      return;
+    }
     setFileError(null);
     setResume(file);
   }
 
   return (
     <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={START_SAY}>{busy}</Waiting> : START_SAY}>
-      <div className="panel iv-resume">
-        <h2>A résumé, if you like</h2>
-        {/* biome-ignore lint/a11y/noStaticElementInteractions: a drop target for the mouse; "Choose a PDF" is the keyboard path */}
-        <div
-          className="iv-drop"
-          data-dragging={dragging}
-          onDragOver={(event) => {
-            event.preventDefault();
-            setDragging(true);
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(event) => {
-            event.preventDefault();
-            setDragging(false);
-            pick(event.dataTransfer.files[0]);
-          }}
-        >
-          {resume ? (
-            <>
-              <span className="iv-file">{resume.name}</span>
-              <button
-                type="button"
-                className="button button-quiet"
-                onClick={() => {
-                  setResume(null);
-                  input.current?.focus();
-                }}
-              >
-                Remove
-              </button>
-            </>
-          ) : (
-            <>
-              <span>Drop a PDF here</span>
-              <label htmlFor={inputId} className="button button-secondary iv-sm">
-                Choose a PDF
-              </label>
-            </>
-          )}
-          <input
-            id={inputId}
-            ref={input}
-            type="file"
-            accept="application/pdf,.pdf"
-            className="iv-visually-hidden"
-            tabIndex={resume ? -1 : undefined}
-            onChange={(event) => {
-              pick(event.target.files?.[0]);
-              event.target.value = "";
-            }}
-          />
-        </div>
-        {fileError && (
-          <p className="message" role="status">
-            {fileError}
-          </p>
-        )}
-        <p className="iv-note">
-          Optional. It only shapes my questions. It is never stored, and nothing from it goes into your book.
-        </p>
-      </div>
       <ErrorMessage message={error} />
       <div className="iv-row">
         <Button onClick={() => onStart(resume)} aria-busy={Boolean(busy)}>
           Start the interview
         </Button>
-        <span className="iv-quiet-note">Twenty to twenty-five minutes. Leave and come back at any time.</span>
+        <span className="iv-quiet-note">
+          About twenty minutes. You can stop sooner, and leave and come back at any time.
+        </span>
       </div>
+      {!adding && (
+        <button type="button" className="iv-textlink" onClick={() => setAdding(true)}>
+          Have a résumé? Add a PDF so my first questions fit you.
+        </button>
+      )}
+      {adding && (
+        <div className="panel iv-resume">
+          <h2>A résumé, if you like</h2>
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: a drop target for the mouse; "Choose a PDF" is the keyboard path */}
+          <div
+            className="iv-drop"
+            data-dragging={dragging}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDragging(false);
+              pick(event.dataTransfer.files[0]);
+            }}
+          >
+            {resume ? (
+              <>
+                <span className="iv-file">{resume.name}</span>
+                <button
+                  type="button"
+                  className="button button-quiet"
+                  onClick={() => {
+                    setResume(null);
+                    input.current?.focus();
+                  }}
+                >
+                  Remove
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="iv-drop-text">Drop a PDF here</span>
+                <label htmlFor={inputId} className="button button-secondary iv-sm">
+                  Choose a PDF
+                </label>
+              </>
+            )}
+            <input
+              id={inputId}
+              ref={input}
+              type="file"
+              accept="application/pdf,.pdf"
+              className="iv-visually-hidden"
+              tabIndex={resume ? -1 : undefined}
+              onChange={(event) => {
+                pick(event.target.files?.[0]);
+                event.target.value = "";
+              }}
+            />
+          </div>
+          {fileError && (
+            <p className="message" role="status">
+              {fileError}
+            </p>
+          )}
+          <p className="iv-note">
+            Optional. I read it for places to dig. The file isn't kept, its text is deleted when the interview
+            ends, and nothing from it goes into your book.
+          </p>
+        </div>
+      )}
     </Frame>
   );
 }
@@ -509,45 +638,48 @@ function ShapeScreen({
   onCorrect: (correction: string) => Promise<boolean>;
 }) {
   const [correction, setCorrection] = useState("");
-  const [needsWords, setNeedsWords] = useState(false);
-  const field = useRef<HTMLTextAreaElement>(null);
   const fieldId = useId();
+  const words = correction.trim();
+
+  async function correct() {
+    if (await onCorrect(words)) setCorrection("");
+  }
 
   return (
     <Frame phase="shape" say={playback} busy={Boolean(busy)}>
-      <div className="field iv-answer iv-answer-short" data-invalid={needsWords || undefined}>
+      <div className="field iv-answer iv-answer-short">
         <label htmlFor={fieldId}>Yes, or tell me what's different</label>
         <textarea
           id={fieldId}
-          ref={field}
           value={correction}
           placeholder="It's close, but…"
-          onChange={(event) => {
-            setCorrection(event.target.value);
-            setNeedsWords(false);
+          onChange={(event) => setCorrection(event.target.value)}
+          onKeyDown={(event) => {
+            if (words && event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+              event.preventDefault();
+              correct();
+            }
           }}
         />
-        {needsWords && <span className="hint">Tell me what's different, then press Not quite.</span>}
       </div>
       <ErrorMessage message={error} />
-      <div className="iv-row">
-        <Button onClick={onConfirm} aria-busy={Boolean(busy)}>
-          Yes, that's me
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={async () => {
-            if (!correction.trim()) {
-              setNeedsWords(true);
-              field.current?.focus();
-              return;
-            }
-            if (await onCorrect(correction.trim())) setCorrection("");
-          }}
-        >
-          Not quite
-        </Button>
-      </div>
+      {/* The red button always does what the field says, so a typed correction can't be lost to it. */}
+      {words ? (
+        <div className="iv-row">
+          <Button onClick={correct} aria-busy={Boolean(busy)} aria-keyshortcuts="Meta+Enter Control+Enter">
+            Send my correction
+          </Button>
+          <button type="button" className="iv-textlink" onClick={onConfirm}>
+            Yes, that's me, ignore this
+          </button>
+        </div>
+      ) : (
+        <div className="iv-row">
+          <Button onClick={onConfirm} aria-busy={Boolean(busy)}>
+            Yes, that's me
+          </Button>
+        </div>
+      )}
     </Frame>
   );
 }
@@ -555,6 +687,7 @@ function ShapeScreen({
 // ---------- The reveal ----------
 
 const REVEAL_STEP_MS = 700;
+const REVEAL_SAY = "Here are three titles for your book.";
 
 function RevealScreen({
   titles,
@@ -584,16 +717,7 @@ function RevealScreen({
   }, [shown, titles.length]);
 
   return (
-    <Frame
-      busy={Boolean(busy)}
-      say={
-        busy ? (
-          <Waiting holding={"Here are three titles for your book. Take a moment with each."}>{busy}</Waiting>
-        ) : (
-          "Here are three titles for your book. Take a moment with each."
-        )
-      }
-    >
+    <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={REVEAL_SAY}>{busy}</Waiting> : REVEAL_SAY}>
       <fieldset className="iv-picks">
         <legend className="iv-visually-hidden">Choose a title</legend>
         {titles.map((option, index) => (
@@ -626,10 +750,82 @@ function RevealScreen({
 
 // ---------- Your book ----------
 
+const REVIEW_SAY = "Here is your book. Rewrite or remove anything that doesn't sound like you.";
+const MIN_CHAPTERS = 3;
+
+function ChapterRow({
+  index,
+  chapter,
+  canRemove,
+  working,
+  onAct,
+}: {
+  index: number;
+  chapter: DraftChapter;
+  canRemove: boolean;
+  working: boolean;
+  onAct: (action: "rewrite" | "remove") => void;
+}) {
+  const [showing, setShowing] = useState(false);
+  return (
+    <li>
+      <span className="iv-n">{index + 1}</span>
+      <div>
+        <b>{chapter.title}</b>
+        <span>{chapter.summary}</span>
+        {chapter.quotes.length > 0 && (
+          <>
+            <button
+              type="button"
+              className="button button-quiet iv-sm iv-show"
+              aria-expanded={showing}
+              aria-label={`Show what you said for ${chapter.title}`}
+              onClick={() => setShowing((now) => !now)}
+            >
+              Show what you said
+            </button>
+            {showing && (
+              <div className="iv-quotes">
+                {chapter.quotes.map((quote) => (
+                  <p key={quote}>{quote}</p>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+      <div className="iv-ch-act">
+        <button
+          type="button"
+          className="button button-quiet iv-sm"
+          aria-busy={working}
+          aria-label={`Rewrite ${chapter.title}`}
+          onClick={() => onAct("rewrite")}
+        >
+          Rewrite
+        </button>
+        {canRemove && (
+          <button
+            type="button"
+            className="button button-quiet iv-sm"
+            aria-label={`Remove ${chapter.title}`}
+            onClick={() => onAct("remove")}
+          >
+            Remove
+          </button>
+        )}
+      </div>
+    </li>
+  );
+}
+
 function ReviewScreen({
   book,
   busy,
   error,
+  loadOtherTitles,
+  onChangeTitle,
+  onRewriteBlurb,
   onRewrite,
   onRemove,
   onShelve,
@@ -637,67 +833,109 @@ function ReviewScreen({
   book: DraftBook;
   busy: string | null;
   error: string | null;
+  loadOtherTitles: () => Promise<TitleOption[]>;
+  onChangeTitle: (titleId: string) => Promise<boolean>;
+  onRewriteBlurb: () => void;
   onRewrite: (chapterId: string) => Promise<boolean>;
   onRemove: (chapterId: string) => Promise<boolean>;
   onShelve: () => void;
 }) {
-  const [working, setWorking] = useState<{ chapterId: string; action: "rewrite" | "remove" } | null>(null);
+  const [working, setWorking] = useState<string | null>(null);
+  const [others, setOthers] = useState<TitleOption[] | null>(null);
+  const [othersError, setOthersError] = useState<string | null>(null);
+  const canRemove = book.chapters.length > MIN_CHAPTERS;
 
   async function act(chapterId: string, action: "rewrite" | "remove") {
-    setWorking({ chapterId, action });
+    setWorking(action === "rewrite" ? chapterId : null);
     await (action === "rewrite" ? onRewrite : onRemove)(chapterId);
     setWorking(null);
   }
 
+  async function seeOthers() {
+    setOthersError(null);
+    try {
+      setOthers((await loadOtherTitles()).filter((option) => option.title !== book.title));
+    } catch (reason) {
+      setOthersError(messageOf(reason));
+    }
+  }
+
   return (
     <Frame
+      quiet
       busy={Boolean(busy)}
-      say={
-        busy ? (
-          <Waiting holding={"Here is your book. Change anything that doesn't sound like you."}>
-            {busy}
-          </Waiting>
-        ) : (
-          "Here is your book. Change anything that doesn't sound like you."
-        )
-      }
+      say={busy ? <Waiting holding={REVIEW_SAY}>{busy}</Waiting> : REVIEW_SAY}
     >
       <div className="iv-booktitle">
-        <SmallBook title={book.title} author={book.authorName} />
+        <span className="book" aria-hidden="true">
+          <span className="book-cover">
+            <span className="book-title">{book.title}</span>
+            <span className="book-author">{book.authorName}</span>
+          </span>
+        </span>
         <div>
           <h2>{book.title}</h2>
           <p>by {book.authorName}</p>
-          {book.blurb && <p className="iv-blurb">{book.blurb}</p>}
-        </div>
-      </div>
-      <ol className="iv-chapters">
-        {book.chapters.map((chapter, index) => (
-          <li key={chapter.id}>
-            <span className="iv-n">{index + 1}</span>
-            <div>
-              <b>{chapter.title}</b>
-              <span>{chapter.summary}</span>
-            </div>
-            <div className="iv-ch-act">
-              <Button
-                variant="secondary"
-                className="iv-sm"
-                aria-busy={working?.chapterId === chapter.id && working.action === "rewrite"}
-                onClick={() => act(chapter.id, "rewrite")}
-              >
-                Rewrite this one
-              </Button>
+          {others === null ? (
+            <button type="button" className="button button-quiet iv-sm iv-show" onClick={seeOthers}>
+              See the other titles
+            </button>
+          ) : (
+            <div className="iv-others">
+              <p className="iv-note">
+                Picking one writes your book again, so any chapter you rewrote may change.
+              </p>
+              {others.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  className="iv-other"
+                  onClick={async () => {
+                    if (await onChangeTitle(option.id)) setOthers(null);
+                  }}
+                >
+                  <b>{option.title}</b>
+                  <span className="iv-why">{option.why}</span>
+                </button>
+              ))}
               <button
                 type="button"
-                className="button button-quiet iv-sm"
-                onClick={() => act(chapter.id, "remove")}
+                className="button button-quiet iv-sm iv-show"
+                onClick={() => setOthers(null)}
               >
-                Remove
+                Keep this title
               </button>
             </div>
-          </li>
+          )}
+          {othersError && (
+            <p className="message" role="status">
+              {othersError}
+            </p>
+          )}
+          {book.blurb && (
+            <>
+              <p className="iv-blurb">{book.blurb}</p>
+              <button type="button" className="button button-quiet iv-sm iv-show" onClick={onRewriteBlurb}>
+                Rewrite the back cover
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+      <p className="iv-note">The words under a chapter are yours. Only you see them.</p>
+      <ol className="iv-chapters">
+        {book.chapters.map((chapter, index) => (
+          <ChapterRow
+            key={chapter.id}
+            index={index}
+            chapter={chapter}
+            canRemove={canRemove}
+            working={working === chapter.id}
+            onAct={(action) => act(chapter.id, action)}
+          />
         ))}
       </ol>
+      {!canRemove && <p className="iv-note">A book keeps at least three chapters.</p>}
       <ErrorMessage message={error} />
       <div className="iv-row">
         <Button onClick={onShelve} aria-busy={Boolean(busy)}>
@@ -711,7 +949,7 @@ function ReviewScreen({
 // ---------- Done ----------
 
 function DoneScreen({ book }: { book: DraftBook }) {
-  // "See my book" from the frame waits for a book page to link to.
+  // Red "See my book" joins this once the My book route exists, with the shelf link going quiet.
   return (
     <Frame say="Your book is on the shelf." canLeave={false}>
       <div className="panel iv-done">
@@ -723,7 +961,10 @@ function DoneScreen({ book }: { book: DraftBook }) {
         </span>
         <div className="iv-done-text">
           {book.blurb && <p className="iv-blurb">{book.blurb}</p>}
-          <p>Other members can find it now and ask to check it out.</p>
+          <p>
+            Other members can find it now. When someone asks to check it out, you say yes or no. Your contact
+            details stay private until you say yes.
+          </p>
           <div className="iv-row">
             <Link to="/" className="button button-primary">
               Go to the shelf

@@ -94,6 +94,51 @@ describe("apiInterviewClient", () => {
     await expect(apiInterviewClient.answer("me", "An answer")).rejects.toMatchObject({ retryable: true });
   });
 
+  it("never shows a member the API's words for a database or a field", async () => {
+    const fails = (status: number, detail: unknown) =>
+      vi.spyOn(api, "POST").mockResolvedValueOnce({
+        data: undefined,
+        error: { detail },
+        response: new Response(null, { status }),
+      } as never);
+    fails(503, "The database is unavailable.");
+    await expect(apiInterviewClient.answer("me", "An answer")).rejects.toThrow(
+      "Something's wrong on our side. Nothing you said is lost.",
+    );
+    fails(422, [{ loc: ["body", "answer"], msg: "String should have at most 5000 characters" }]);
+    await expect(apiInterviewClient.answer("me", "An answer")).rejects.toThrow(
+      "That didn't go through. Check it and try again.",
+    );
+  });
+
+  it("carries a chapter's quotes to the member's own review", async () => {
+    vi.spyOn(api, "POST").mockResolvedValue(
+      ok({
+        title: "T",
+        author_name: "A",
+        blurb: null,
+        status: "draft",
+        chapters: [{ id: "1", title: "C", summary: "S", quotes: ["My words."] }],
+      }),
+    );
+    const state = await apiInterviewClient.rewriteChapter("me", "1");
+    expect(state).toMatchObject({ stage: "reviewing", book: { chapters: [{ quotes: ["My words."] }] } });
+  });
+
+  it("when a title was already chosen, goes on to where the interview really is", async () => {
+    vi.spyOn(api, "POST").mockResolvedValue({
+      data: undefined,
+      error: { detail: "You already have a book." },
+      response: new Response(null, { status: 409 }),
+    } as never);
+    vi.spyOn(api, "GET")
+      .mockResolvedValueOnce(ok(interview({ stage: "reviewing", question: null })))
+      .mockResolvedValueOnce(
+        ok({ title: "T", author_name: "A", blurb: null, status: "draft", chapters: [] }),
+      );
+    await expect(apiInterviewClient.chooseTitle("me", "1")).resolves.toMatchObject({ stage: "reviewing" });
+  });
+
   it("shows the API's sentence when a call fails", async () => {
     vi.spyOn(api, "POST").mockResolvedValue({
       data: undefined,

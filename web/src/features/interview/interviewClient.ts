@@ -14,6 +14,8 @@ export interface DraftChapter {
   id: string;
   title: string;
   summary: string;
+  /** The member's own words behind this chapter. Only they ever see them. */
+  quotes: string[];
 }
 
 export interface DraftBook {
@@ -66,6 +68,11 @@ export interface InterviewClient {
   confirmShape(id: string): Promise<InterviewState>;
   correctShape(id: string, correction: string): Promise<InterviewState>;
   chooseTitle(id: string, titleId: string): Promise<InterviewState>;
+  /** The titles the member can still go back to, while reviewing. */
+  otherTitles(id: string): Promise<TitleOption[]>;
+  /** Pick another title. This writes the book again, so chapter rewrites may be replaced. */
+  changeTitle(id: string, titleId: string): Promise<InterviewState>;
+  rewriteBlurb(id: string): Promise<InterviewState>;
   rewriteChapter(id: string, chapterId: string): Promise<InterviewState>;
   removeChapter(id: string, chapterId: string): Promise<InterviewState>;
   putOnShelf(id: string): Promise<InterviewState>;

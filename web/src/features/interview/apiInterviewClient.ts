@@ -18,17 +18,28 @@ interface Result<T> {
 }
 
 function unwrap<T>({ data, error, response }: Result<T>): T {
+  // Neither of these reaches a member in the API's own words: one names a database, one names a field.
+  if (data === undefined && response?.status === 503)
+    throw new InterviewError("Something's wrong on our side. Nothing you said is lost.");
+  if (data === undefined && response?.status === 422)
+    throw new InterviewError("That didn't go through. Check it and try again.");
   // 502 is the API's "the Librarian couldn't answer just now": safe to try again.
   if (data === undefined) throw new InterviewError(errorMessage(error), response?.status === 502);
   return data;
 }
+
+// Routes Trove API is adding (R1-19). Their paths can't be typed until schema.ts is regenerated.
+const postUntyped = api.POST as unknown as (
+  path: string,
+  init?: { body: unknown },
+) => Promise<Result<MyBookResponse>>;
 
 function toBook(book: MyBookResponse): DraftBook {
   return {
     title: book.title,
     authorName: book.author_name,
     blurb: book.blurb,
-    chapters: book.chapters.map(({ id, title, summary }) => ({ id, title, summary })),
+    chapters: book.chapters.map(({ id, title, summary, quotes }) => ({ id, title, summary, quotes })),
   };
 }
 
@@ -121,7 +132,23 @@ export const apiInterviewClient: InterviewClient = {
     return toState(unwrap(await api.POST("/interview/shape", { body: { correction } })));
   },
   async chooseTitle(_id, titleId) {
-    return fromBook(unwrap(await api.POST("/interview/title", { body: { title: Number(titleId) } })));
+    const result = await api.POST("/interview/title", { body: { title: Number(titleId) } });
+    // Already chosen, by a press before a refresh: go on to where the interview really is.
+    if (result.response.status === 409) {
+      const now = await apiInterviewClient.current();
+      if (now) return now;
+    }
+    return fromBook(unwrap(result));
+  },
+  async otherTitles() {
+    const response = unwrap(await api.GET("/interview"));
+    return (response.titles ?? []).map((option, index) => ({ id: String(index), ...option }));
+  },
+  async changeTitle(_id, titleId) {
+    return fromBook(unwrap(await postUntyped("/interview/book/title", { body: { title: Number(titleId) } })));
+  },
+  async rewriteBlurb() {
+    return fromBook(unwrap(await postUntyped("/interview/book/blurb")));
   },
   async rewriteChapter(_id, chapterId) {
     const params = { path: { chapter_id: chapterId } };

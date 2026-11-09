@@ -245,9 +245,19 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
           title: title.title,
           authorName: authorName,
           blurb: BLURB,
-          chapters: CHAPTERS.map((ch) => ({ ...ch })),
+          chapters: CHAPTERS.map((ch) => ({ ...ch, quotes: [`I said this about ${ch.title}.`] })),
         };
         stored.stage = "reviewing";
+      }),
+    otherTitles: async () => TITLES,
+    changeTitle: (id, titleId) =>
+      mutate(id, (stored) => {
+        const title = TITLES.find((option) => option.id === titleId);
+        if (title && stored.book) stored.book.title = title.title;
+      }),
+    rewriteBlurb: (id) =>
+      mutate(id, (stored) => {
+        if (stored.book) stored.book.blurb = `${BLURB} I'd start with the first offer.`;
       }),
     rewriteChapter: (id, chapterId) =>
       mutate(id, (stored) => {
