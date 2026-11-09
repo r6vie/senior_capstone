@@ -14,16 +14,9 @@ import {
 // The real interview API (api/trove/interview), mapped onto the shape the screens use.
 // The API keeps one interview per member, so there is no id to pass; the screens' id is a constant.
 
-// Trove API's round 5 fields (R5-01, R5-07, R5-09, R5-18), read when they're there.
-type MyBookResponse = components["schemas"]["MyBookResponse"] & {
-  last_changed_at?: string | null;
-  has_previous_blurb?: boolean;
-};
+type MyBookResponse = components["schemas"]["MyBookResponse"];
 type ChangeResponse = components["schemas"]["Change"];
-type InterviewResponse = components["schemas"]["InterviewResponse"] & {
-  dropped_for_names?: boolean;
-  reading_question_id?: string | null;
-};
+type InterviewResponse = components["schemas"]["InterviewResponse"];
 
 const ID = "me";
 
@@ -53,11 +46,6 @@ function unwrap<T>({ data, error, response }: Result<T>): T {
     error && typeof error === "object" && "already_saved" in error && error.already_saved,
   );
   throw new InterviewError(errorMessage(error), false, response?.status === 409, alreadySaved);
-}
-
-// Routes in Trove API's round 5. Their paths can't be typed until schema.ts is regenerated.
-function postUntyped(path: string): Promise<Result<MyBookResponse>> {
-  return (api.POST as unknown as (path: string) => Promise<Result<MyBookResponse>>)(path);
 }
 
 function ended({ error, response }: Result<unknown>) {
@@ -289,7 +277,7 @@ export const apiInterviewClient: InterviewClient = {
     return fromBook(unwrap(await api.POST("/interview/book/blurb")));
   },
   async restoreBlurb() {
-    return fromBook(unwrap(await postUntyped("/interview/book/blurb/restore")));
+    return fromBook(unwrap(await api.POST("/interview/book/blurb/restore")));
   },
   async rewriteChapter(_id, chapterId) {
     const params = { path: { chapter_id: chapterId } };
@@ -333,7 +321,7 @@ export const apiInterviewClient: InterviewClient = {
     const { data, error, response } = await api.GET("/books/me");
     if (response.status === 404) return null;
     const book = unwrap<MyBookResponse>({ data, error, response });
-    return { ...toBook(book), canUndo: book.can_undo, changedAt: book.last_changed_at };
+    return { ...toBook(book), canUndo: book.can_undo, changedAt: book.revised_at };
   },
   async reopen() {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/reopen")));
@@ -388,7 +376,7 @@ export const apiInterviewClient: InterviewClient = {
   },
   async cancelRemoval() {
     removals.clear();
-    ended(await postUntyped("/interview/removal/cancel"));
+    ended(await api.POST("/interview/removal/cancel"));
   },
   async lastRoundEmpty() {
     const { data } = await api.GET("/interview");
