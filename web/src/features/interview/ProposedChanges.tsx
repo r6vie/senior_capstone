@@ -284,7 +284,7 @@ export function ChangesScreen({
     const say = nothing ? "Nothing will change on the shelf." : "Here is what changes on the shelf.";
     return (
       <Frame canLeave={false} busy={Boolean(busy)} say={busy ? <Waiting holding={say}>{busy}</Waiting> : say}>
-        <div className="iv-confirm-cols" data-single={nothing || undefined}>
+        <div className="iv-confirm-cols" data-single={nothing || others.length === 0 || undefined}>
           {!nothing && (
             <div className="panel iv-conf">
               <h3>Will change on the shelf</h3>
@@ -300,19 +300,21 @@ export function ChangesScreen({
               </ul>
             </div>
           )}
-          <div className="panel iv-conf">
-            <h3>Stays as it is</h3>
-            <ul className="iv-clist">
-              {others.map((change) => (
-                <li key={change.id}>
-                  <span className="iv-tag">
-                    {choices[change.id] === "decline" ? "Declined" : "Not decided"}
-                  </span>
-                  <b>{change.now?.title ?? change.title}</b>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {others.length > 0 && (
+            <div className="panel iv-conf">
+              <h3>Stays as it is</h3>
+              <ul className="iv-clist">
+                {others.map((change) => (
+                  <li key={change.id}>
+                    <span className="iv-tag">
+                      {choices[change.id] === "decline" ? "Declined" : "Not decided"}
+                    </span>
+                    <b>{change.now?.title ?? change.title}</b>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
         {!nothing && (
           <BackCover

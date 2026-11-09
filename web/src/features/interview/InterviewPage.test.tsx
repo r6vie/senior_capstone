@@ -601,6 +601,13 @@ describe("InterviewPage", () => {
       expect(await screen.findByText("Back cover rewritten to match.")).toBeTruthy();
     });
 
+    it("hides the back cover and title buttons until their routes exist", async () => {
+      renderWith({ ...at(reviewing()), canChangeCover: false });
+      await screen.findByRole("heading", { name: bookWith(null).title });
+      expect(screen.queryByRole("button", { name: "Rewrite the back cover" })).toBeNull();
+      expect(screen.queryByRole("button", { name: "See the other titles" })).toBeNull();
+    });
+
     it("shows no blurb or its button for a book written before blurbs", async () => {
       renderWith(at(reviewing(null)));
       await screen.findByRole("heading", { name: bookWith(null).title });

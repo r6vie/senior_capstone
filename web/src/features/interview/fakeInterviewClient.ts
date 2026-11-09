@@ -288,6 +288,7 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
   }
 
   return {
+    canChangeCover: true,
     async current() {
       await wait(delay / 3);
       const stored = load();

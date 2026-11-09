@@ -187,6 +187,8 @@ function readBase64(file: File): Promise<string> {
 }
 
 export const apiInterviewClient: InterviewClient = {
+  // Trove API's T36. Set true when POST /interview/book/blurb and /book/title land.
+  canChangeCover: false,
   async current() {
     const { data, error, response } = await api.GET("/interview");
     if (response.status === 404) return null;

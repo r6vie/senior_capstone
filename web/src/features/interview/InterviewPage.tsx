@@ -448,6 +448,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         return (
           <ReviewScreen
             book={state.book}
+            canChangeCover={client.canChangeCover}
             busy={busy}
             error={error}
             loadOtherTitles={() => client.otherTitles(state.id)}
@@ -932,6 +933,7 @@ function ChapterRow({
 
 function ReviewScreen({
   book,
+  canChangeCover,
   busy,
   error,
   loadOtherTitles,
@@ -942,6 +944,7 @@ function ReviewScreen({
   onShelve,
 }: {
   book: DraftBook;
+  canChangeCover: boolean;
   busy: string | null;
   error: string | null;
   loadOtherTitles: () => Promise<TitleOption[]>;
@@ -999,12 +1002,12 @@ function ReviewScreen({
             </p>
           )}
           <div className="iv-head-act">
-            {book.blurb && (
+            {canChangeCover && book.blurb && (
               <button type="button" className="button button-quiet iv-sm iv-show" onClick={onRewriteBlurb}>
                 Rewrite the back cover
               </button>
             )}
-            {others === null && (
+            {canChangeCover && others === null && (
               <button type="button" className="button button-quiet iv-sm iv-show" onClick={seeOthers}>
                 See the other titles
               </button>

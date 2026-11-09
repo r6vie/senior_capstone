@@ -124,6 +124,8 @@ export class InterviewError extends Error {
 export class LostError extends Error {}
 
 export interface InterviewClient {
+  /** The back cover and other-titles routes exist (R1-19). Until they do, their buttons stay hidden. */
+  canChangeCover: boolean;
   /** The member's interview in progress, or null if they haven't started one. */
   current(): Promise<InterviewState | null>;
   start(resume: File | null): Promise<InterviewState>;

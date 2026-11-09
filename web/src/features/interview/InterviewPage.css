@@ -562,7 +562,7 @@
   }
   /* Title and name first, then the small book on its own row, so the title isn't printed twice
      side by side; then the back cover, and its two links stacked. */
-  .iv-book-wide {
+  .iv-booktitle .iv-book-wide {
     display: none;
   }
   .iv-booktitle .book-sm {
