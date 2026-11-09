@@ -422,7 +422,7 @@
       "x": 0,
       "y": 0,
       "w": 1300,
-      "h": 10797,
+      "h": 12134,
       "title": "My book",
       "page": "growing",
       "expand": "fill"
@@ -431,7 +431,7 @@
       "x": 1420,
       "y": 0,
       "w": 1300,
-      "h": 3416,
+      "h": 4104,
       "title": "Adding to your book",
       "page": "growing",
       "expand": "fill"
@@ -440,7 +440,7 @@
       "x": 2840,
       "y": 0,
       "w": 1300,
-      "h": 8075,
+      "h": 8150,
       "title": "Proposed changes",
       "page": "growing",
       "expand": "fill"
@@ -458,7 +458,7 @@
       "x": 5680,
       "y": 0,
       "w": 1300,
-      "h": 2659,
+      "h": 3034,
       "title": "The reading question",
       "page": "growing",
       "expand": "fill"

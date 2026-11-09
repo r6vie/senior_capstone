@@ -2,6 +2,20 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-08: quality round 2 applied to the frames (T39)
+
+- **Applied:** R2-01 (a Removing change type; a back cover that fails says so on its own card, the old one stays, they can still
+  confirm), R2-03 (a quiet "Undo these changes" on the done screen and on My book after an update; the book stores its previous
+  version until the next change), R2-04, R2-05 (no "round" on screen: "For your next questions", "questions in progress"), R2-06 (the
+  reading question is hidden on My book while questions or changes are open), R2-07 (the reason sits under the chip; on a phone
+  Proposed only, with "See what's there now"), R2-08 (sparks listed in the interview-in-progress state; the start screen's extra
+  line only when sparks exist), R2-09 (the spark control is a 14px sentence-case text link, no plus or tick), R2-10, the copy sheet
+  (Changed chapter, "That's enough. Write the changes", a frame for words still in the field, shorter bands, the reading-question
+  variant of "nothing came of it"), R2-11 to R2-15, R2-18, R2-23. R2-16 and R2-17 are in `system.md` Additions.
+- **Not frame work:** R2-19 (slant on the built interview band), R2-20 to R2-22 are UI or API; nothing drawn changes. R2-02 is code.
+- **Judgment:** the shelf line sits once in the proposed-changes note rather than twice; the plus mark on the spark control is
+  dropped at that weight.
+
 ## 2026-11-08: the sample member is fully invented
 
 - The earlier sample member was modelled on a real alum's news story. Replaced everywhere in the frames (`GrowingG1`, `G3`, `G5`,
