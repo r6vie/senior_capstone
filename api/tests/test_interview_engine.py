@@ -439,12 +439,12 @@ async def test_revise_retries_a_leak_once_and_can_recover():
     }
     claude = FakeClaude(
         [
-            reply({"changes": [{**good, "title": "At Gopala"}], "blurb": BLURB}),
+            reply({"changes": [{**good, "title": "At Brindle"}], "blurb": BLURB}),
             reply({"changes": [good], "blurb": BLURB}),
         ]
     )
     revision = await engine.revise_book(
-        claude, turns=said, round_start=1, chapters=[], blurb=None, leaks=lambda text: "Gopala" in text
+        claude, turns=said, round_start=1, chapters=[], blurb=None, leaks=lambda text: "Brindle" in text
     )
     assert [c.title for c in revision.changes] == ["Soy"]
 
@@ -470,12 +470,12 @@ async def test_finish_retries_a_leak_once():
     picks = [{"pool_id": f"c{n}", "title": f"T{n}", "summary": "S."} for n in range(3)]
     claude = FakeClaude(
         [
-            reply({"chapters": [{**picks[0], "title": "At Gopala"}, *picks[1:]], "blurb": BLURB}),
+            reply({"chapters": [{**picks[0], "title": "At Brindle"}, *picks[1:]], "blurb": BLURB}),
             reply({"chapters": picks, "blurb": BLURB}),
         ]
     )
     book = await engine.finish_book(
-        claude, turns=turns(3), draft=draft, title="X", leaks=lambda t: "Gopala" in t
+        claude, turns=turns(3), draft=draft, title="X", leaks=lambda t: "Brindle" in t
     )
     assert [c.title for c in book.chapters] == ["T0", "T1", "T2"]
     assert len(claude.requests) == 2
