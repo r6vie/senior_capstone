@@ -534,6 +534,16 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaleQuestionResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -560,6 +570,16 @@
         "summary": "Skip",
         "description": "Skip the waiting question and get the next one. Not on the Shape step (409).",
         "operationId": "skip_interview_skip_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkipRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -567,6 +587,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaleQuestionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -658,6 +698,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaleQuestionResponse"
                 }
               }
             }
@@ -1658,12 +1708,18 @@
             "maxLength": 5000,
             "minLength": 1,
             "title": "Answer"
+          },
+          "question_id": {
+            "type": "string",
+            "title": "Question Id",
+            "description": "The `question_id` of the question this answers."
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "answer"
+          "answer",
+          "question_id"
         ],
         "title": "AnswerRequest"
       },
@@ -1914,6 +1970,18 @@
             ],
             "title": "Answer",
             "description": "What's in the field: saved as the waiting question's answer first."
+          },
+          "question_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Id",
+            "description": "The `question_id` that `answer` answers."
           }
         },
         "additionalProperties": false,
@@ -2426,6 +2494,10 @@
       },
       "Question": {
         "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id"
+          },
           "text": {
             "type": "string",
             "title": "Text"
@@ -2455,6 +2527,7 @@
         },
         "type": "object",
         "required": [
+          "question_id",
           "text",
           "phase",
           "playback"
@@ -2764,6 +2837,21 @@
         ],
         "title": "SignupRequest"
       },
+      "SkipRequest": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id",
+            "description": "The `question_id` of the question being skipped."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "question_id"
+        ],
+        "title": "SkipRequest"
+      },
       "SparkRequest": {
         "properties": {
           "book_id": {
@@ -2817,6 +2905,24 @@
         ],
         "title": "SparkResponse",
         "description": "A chapter that made this member think \"I have one like this\". Only they ever see it."
+      },
+      "StaleQuestionResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "interview": {
+            "$ref": "#/components/schemas/InterviewResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "interview"
+        ],
+        "title": "StaleQuestionResponse",
+        "description": "The 409 when an answer or skip names a question that isn't the one waiting. Nothing was saved."
       },
       "StartRequest": {
         "properties": {

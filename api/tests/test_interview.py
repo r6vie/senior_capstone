@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 import anthropic
 import pytest
 
+from tests.fakes import send_answer, send_skip
 from trove.interview import engine, service
 from trove.interview.engine import Draft, DraftChapter, FinishedBook, NextTurn, TitleOption
 
@@ -114,7 +115,7 @@ async def headers(client):
 async def answer_questions(client, headers, count: int) -> dict:
     state = {}
     for n in range(count):
-        response = await client.post("/interview/answers", json={"answer": f"Answer {n}."}, headers=headers)
+        response = await send_answer(client, headers, f"Answer {n}.")
         assert response.status_code == 200, response.text
         state = response.json()
     return state
@@ -134,7 +135,13 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
     assert started.status_code == 201
     state = started.json()
     assert state["stage"] == "interviewing"
-    assert state["question"] == {"text": "Question 1?", "phase": "sweep", "playback": None}
+    assert state["question"]["question_id"]
+    assert state["question"] == {
+        "question_id": state["question"]["question_id"],
+        "text": "Question 1?",
+        "phase": "sweep",
+        "playback": None,
+    }
     assert state["can_finish"] is False
     assert state["has_answers"] is False
 
@@ -148,13 +155,15 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
     fake_engine.shape_next = True
     state = await answer_questions(client, headers, 1)
     assert state["can_finish"] is True
+    assert state["question"]["question_id"]
     assert state["question"] == {
+        "question_id": state["question"]["question_id"],
         "text": "Is this you?",
         "phase": "shape",
         "playback": "You walked away twice.",
     }
     # The Shape step takes a confirmation or correction, not an ordinary answer.
-    assert (await client.post("/interview/answers", json={"answer": "x"}, headers=headers)).status_code == 409
+    assert (await send_answer(client, headers, "x")).status_code == 409
 
     state = (await client.post("/interview/shape", json={}, headers=headers)).json()
     assert state["question"]["text"] == "Question 12?"
@@ -235,9 +244,7 @@ async def test_a_member_with_a_book_cannot_start_again(client, database, headers
 
 
 async def test_steps_out_of_order_are_409(client, headers, fake_engine):
-    assert (
-        await client.post("/interview/answers", json={"answer": "Hi"}, headers=headers)
-    ).status_code == 404
+    assert (await send_answer(client, headers, "Hi")).status_code == 404
     await client.post("/interview", json={}, headers=headers)
     assert (await client.post("/interview/title", json={"title": 0}, headers=headers)).status_code == 409
     assert (await client.post("/interview/book/shelve", headers=headers)).status_code == 409
@@ -257,9 +264,7 @@ async def test_the_librarian_can_end_the_interview(client, headers, fake_engine)
 async def test_answers_are_saved_even_when_the_next_question_fails(client, database, headers, fake_engine):
     await client.post("/interview", json={}, headers=headers)
     fake_engine.fail_next = True
-    response = await client.post(
-        "/interview/answers", json={"answer": "Something I'd hate to retype."}, headers=headers
-    )
+    response = await send_answer(client, headers, "Something I'd hate to retype.")
     assert response.status_code == 502
 
     interview = await database.interviews.find_one({})
@@ -310,7 +315,7 @@ async def test_a_removal_whose_blurb_fails_removes_nothing(client, database, hea
 
 async def test_skip_saves_an_empty_answer_and_moves_on(client, database, headers, fake_engine):
     first = (await client.post("/interview", json={}, headers=headers)).json()
-    state = (await client.post("/interview/skip", headers=headers)).json()
+    state = (await send_skip(client, headers)).json()
     assert state["question"]["text"] != first["question"]["text"]
 
     saved = await database.interviews.find_one({})
@@ -322,7 +327,7 @@ async def test_skip_saves_an_empty_answer_and_moves_on(client, database, headers
 async def test_skips_unlock_nothing(client, headers, fake_engine):
     await client.post("/interview", json={}, headers=headers)
     for _ in range(service.EXIT_AFTER_ANSWERS + 1):
-        state = (await client.post("/interview/skip", headers=headers)).json()
+        state = (await send_skip(client, headers)).json()
     assert state["has_answers"] is False
     assert state["can_finish"] is False
     assert (await client.post("/interview/finish", headers=headers)).status_code == 409
@@ -330,19 +335,19 @@ async def test_skips_unlock_nothing(client, headers, fake_engine):
 
 async def test_skips_are_never_in_the_response(client, headers, fake_engine):
     await client.post("/interview", json={}, headers=headers)
-    state = (await client.post("/interview/skip", headers=headers)).json()
+    state = (await send_skip(client, headers)).json()
     assert not [key for key in state if "skip" in key]
 
 
 async def test_skip_is_409_without_a_question_and_on_the_shape_step(client, database, headers, fake_engine):
-    assert (await client.post("/interview/skip", headers=headers)).status_code == 404
+    assert (await send_skip(client, headers)).status_code == 404
     await client.post("/interview", json={}, headers=headers)
     await database.interviews.update_one(
         {}, {"$set": {"current": {"question": "Is this you?", "phase": "shape", "playback": "You."}}}
     )
-    assert (await client.post("/interview/skip", headers=headers)).status_code == 409
+    assert (await send_skip(client, headers)).status_code == 409
     await database.interviews.update_one({}, {"$set": {"current": None}})
-    assert (await client.post("/interview/skip", headers=headers)).status_code == 409
+    assert (await send_skip(client, headers)).status_code == 409
 
 
 async def test_finish_saves_what_is_in_the_field_first(client, database, headers, fake_engine):
@@ -526,7 +531,7 @@ async def test_said_enough_with_too_little_stays_on_the_question(client, headers
     assert (await client.post("/interview/finish", headers=headers)).status_code == 409
 
     for _ in range(service.MORE_ANSWERS_BEFORE_REDRAFT):
-        after = (await client.post("/interview/answers", json={"answer": "More."}, headers=headers)).json()
+        after = (await send_answer(client, headers, "More.")).json()
     assert after["needs_more"] is False
     assert after["can_finish"] is True
 
@@ -569,3 +574,48 @@ async def test_too_little_at_the_turn_limit_lets_the_member_decide(
     assert state["question"] is not None
     assert state["at_limit"] is False
     assert (await database.interviews.find_one({}))["turns"] == many
+
+
+async def test_a_resent_answer_doesnt_land_on_the_next_question(client, database, headers, fake_engine):
+    first = (await client.post("/interview", json={}, headers=headers)).json()["question"]
+    body = {"answer": "My real answer.", "question_id": first["question_id"]}
+    next_up = (await client.post("/interview/answers", json=body, headers=headers)).json()["question"]
+    assert next_up["question_id"] != first["question_id"]
+
+    # The response above was lost, so the client sends it again.
+    again = await client.post("/interview/answers", json=body, headers=headers)
+    assert again.status_code == 409
+    assert again.json()["interview"]["question"]["question_id"] == next_up["question_id"]
+    assert again.json()["detail"]
+    saved = await database.interviews.find_one({})
+    assert [turn["answer"] for turn in saved["turns"]] == ["My real answer."]
+    assert saved["current"]["question_id"] == next_up["question_id"]
+
+
+async def test_a_stale_skip_saves_nothing(client, database, headers, fake_engine):
+    first = (await client.post("/interview", json={}, headers=headers)).json()["question"]
+    await send_answer(client, headers, "An answer.")
+    stale = await client.post("/interview/skip", json={"question_id": first["question_id"]}, headers=headers)
+    assert stale.status_code == 409
+    saved = await database.interviews.find_one({})
+    assert len(saved["turns"]) == 1
+
+
+async def test_answers_and_skips_must_name_the_question(client, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    assert (
+        await client.post("/interview/answers", json={"answer": "Hi."}, headers=headers)
+    ).status_code == 422
+    assert (await client.post("/interview/skip", json={}, headers=headers)).status_code == 422
+
+
+async def test_a_stale_finish_with_an_answer_saves_nothing(client, database, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    before = len((await database.interviews.find_one({}))["turns"])
+    stale = await client.post(
+        "/interview/finish", json={"answer": "Too late.", "question_id": "old"}, headers=headers
+    )
+    assert stale.status_code == 409
+    assert stale.json()["interview"]["stage"] == "interviewing"
+    assert len((await database.interviews.find_one({}))["turns"]) == before

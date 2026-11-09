@@ -737,6 +737,11 @@ export interface components {
         AnswerRequest: {
             /** Answer */
             answer: string;
+            /**
+             * Question Id
+             * @description The `question_id` of the question this answers.
+             */
+            question_id: string;
         };
         /** AuthorChapter */
         AuthorChapter: {
@@ -829,6 +834,11 @@ export interface components {
              * @description What's in the field: saved as the waiting question's answer first.
              */
             answer?: string | null;
+            /**
+             * Question Id
+             * @description The `question_id` that `answer` answers.
+             */
+            question_id?: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1013,6 +1023,8 @@ export interface components {
         };
         /** Question */
         Question: {
+            /** Question Id */
+            question_id: string;
             /** Text */
             text: string;
             /**
@@ -1148,6 +1160,14 @@ export interface components {
             /** Last Name */
             last_name: string;
         };
+        /** SkipRequest */
+        SkipRequest: {
+            /**
+             * Question Id
+             * @description The `question_id` of the question being skipped.
+             */
+            question_id: string;
+        };
         /** SparkRequest */
         SparkRequest: {
             /** Book Id */
@@ -1173,6 +1193,15 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /**
+         * StaleQuestionResponse
+         * @description The 409 when an answer or skip names a question that isn't the one waiting. Nothing was saved.
+         */
+        StaleQuestionResponse: {
+            /** Detail */
+            detail: string;
+            interview: components["schemas"]["InterviewResponse"];
         };
         /** StartRequest */
         StartRequest: {
@@ -1618,6 +1647,15 @@ export interface operations {
                     "application/json": components["schemas"]["InterviewResponse"];
                 };
             };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaleQuestionResponse"];
+                };
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -1636,7 +1674,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SkipRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -1645,6 +1687,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaleQuestionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1702,6 +1762,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaleQuestionResponse"];
                 };
             };
             /** @description Validation Error */

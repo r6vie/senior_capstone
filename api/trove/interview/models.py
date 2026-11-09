@@ -24,6 +24,11 @@ class StartRequest(RequestBody):
 
 class AnswerRequest(RequestBody):
     answer: NonEmptyText = Field(max_length=5000)
+    question_id: str = Field(description="The `question_id` of the question this answers.")
+
+
+class SkipRequest(RequestBody):
+    question_id: str = Field(description="The `question_id` of the question being skipped.")
 
 
 class FinishRequest(RequestBody):
@@ -32,6 +37,7 @@ class FinishRequest(RequestBody):
         max_length=5000,
         description="What's in the field: saved as the waiting question's answer first.",
     )
+    question_id: str | None = Field(None, description="The `question_id` that `answer` answers.")
 
 
 class ShapeRequest(RequestBody):
@@ -98,6 +104,8 @@ class ReadingAnswerRequest(RequestBody):
 
 
 class Question(BaseModel):
+    # Sent back with the answer, so a resend can't land on a question the member never saw.
+    question_id: str
     text: str
     phase: TurnPhase
     # On the Shape step: what the Librarian heard, played back for the member to confirm or correct.
@@ -137,3 +145,10 @@ class InterviewResponse(BaseModel):
     proposed_blurb: str | None
     # The last round earned no changes, so the book is as it was. The app says so plainly.
     nothing_new: bool
+
+
+class StaleQuestionResponse(BaseModel):
+    """The 409 when an answer or skip names a question that isn't the one waiting. Nothing was saved."""
+
+    detail: str
+    interview: InterviewResponse

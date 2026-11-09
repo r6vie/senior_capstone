@@ -1,4 +1,6 @@
 from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from pymongo.asynchronous.database import AsyncDatabase
 
 from trove.ai.client import Claude, get_claude, optional_claude
@@ -17,14 +19,23 @@ from trove.interview.models import (
     RevisionBlurbResponse,
     RevisionRequest,
     ShapeRequest,
+    SkipRequest,
     SparkRequest,
     SparkResponse,
+    StaleQuestionResponse,
     StartRequest,
     TitleRequest,
 )
 from trove.interview.service import interview_view
 
 router = APIRouter(prefix="/interview", tags=["Interview"])
+STALE_QUESTION_RESPONSES = {409: {"model": StaleQuestionResponse}}
+
+
+def stale_question(error: service.StaleQuestion) -> JSONResponse:
+    """The current state comes with the 409, so the client can move to the question that's waiting."""
+    body = StaleQuestionResponse(detail=error.detail, interview=interview_view(error.interview))
+    return JSONResponse(status_code=409, content=jsonable_encoder(body))
 
 
 @router.post("", response_model=InterviewResponse, status_code=201)
@@ -60,7 +71,7 @@ async def ask_again(
     return interview_view(await service.ask_again(database, claude, user))
 
 
-@router.post("/answers", response_model=InterviewResponse)
+@router.post("/answers", response_model=InterviewResponse, responses=STALE_QUESTION_RESPONSES)
 async def answer(
     data: AnswerRequest,
     user: dict = Depends(get_current_user),
@@ -68,17 +79,28 @@ async def answer(
     claude: Claude = Depends(get_claude),
 ) -> InterviewResponse:
     """Answer the waiting question. The answer is saved first, then the next question is written."""
-    return interview_view(await service.answer(database, claude, user, data.answer, shape=False))
+    try:
+        return interview_view(
+            await service.answer(
+                database, claude, user, data.answer, shape=False, question_id=data.question_id
+            )
+        )
+    except service.StaleQuestion as error:
+        return stale_question(error)
 
 
-@router.post("/skip", response_model=InterviewResponse)
+@router.post("/skip", response_model=InterviewResponse, responses=STALE_QUESTION_RESPONSES)
 async def skip(
+    data: SkipRequest,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
     claude: Claude = Depends(get_claude),
 ) -> InterviewResponse:
     """Skip the waiting question and get the next one. Not on the Shape step (409)."""
-    return interview_view(await service.skip(database, claude, user))
+    try:
+        return interview_view(await service.skip(database, claude, user, data.question_id))
+    except service.StaleQuestion as error:
+        return stale_question(error)
 
 
 @router.post("/shape", response_model=InterviewResponse)
@@ -93,7 +115,7 @@ async def shape(
     return interview_view(await service.answer(database, claude, user, text, shape=True))
 
 
-@router.post("/finish", response_model=InterviewResponse)
+@router.post("/finish", response_model=InterviewResponse, responses=STALE_QUESTION_RESPONSES)
 async def finish(
     background: BackgroundTasks,
     data: FinishRequest | None = None,
@@ -105,9 +127,19 @@ async def finish(
     the round: the proposed changes are written in the background (`revision_status`). After a
     failed write, try again.
     `answer` is saved first as the answer to the waiting question, with no question after it."""
-    return interview_view(
-        await service.finish(database, claude, user, background, data.answer if data else None)
-    )
+    try:
+        return interview_view(
+            await service.finish(
+                database,
+                claude,
+                user,
+                background,
+                data.answer if data else None,
+                data.question_id if data else None,
+            )
+        )
+    except service.StaleQuestion as error:
+        return stale_question(error)
 
 
 @router.post("/title", response_model=MyBookResponse)

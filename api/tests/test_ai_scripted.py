@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from tests.fakes import send_answer, send_skip
 from trove.ai import scripted
 from trove.ai.client import get_claude, text_of
 from trove.ai.prompts import load_prompt
@@ -30,7 +31,7 @@ async def headers(client):
 async def walk_to_shape(client, headers, answers: list[str]) -> dict:
     state = (await client.post("/interview", json={}, headers=headers)).json()
     for answer in answers:
-        response = await client.post("/interview/answers", json={"answer": answer}, headers=headers)
+        response = await send_answer(client, headers, answer)
         assert response.status_code == 200, response.text
         state = response.json()
     return state
@@ -90,7 +91,7 @@ async def test_thin_answers_get_a_new_angle_and_questions_never_repeat(client, h
     seen = []
     for _ in range(8):
         seen.append(state["question"]["text"])
-        state = (await client.post("/interview/answers", json={"answer": "Dunno."}, headers=headers)).json()
+        state = (await send_answer(client, headers, "Dunno.")).json()
     assert len(seen) == len(set(seen))
 
 
@@ -98,7 +99,7 @@ async def test_a_skipped_question_never_comes_back(client, headers, scripted_ai)
     state = (await client.post("/interview", json={}, headers=headers)).json()
     seen = [state["question"]["text"]]
     for _ in range(10):
-        state = (await client.post("/interview/skip", headers=headers)).json()
+        state = (await send_skip(client, headers)).json()
         seen.append(state["question"]["text"])
     assert len(seen) == len(set(seen))
 
@@ -108,7 +109,7 @@ async def test_the_interview_has_sweep_then_dig(client, headers, scripted_ai):
     state = (await client.post("/interview", json={}, headers=headers)).json()
     phases = [state["question"]["phase"]]
     for answer in answers:
-        state = (await client.post("/interview/answers", json={"answer": answer}, headers=headers)).json()
+        state = (await send_answer(client, headers, answer)).json()
         phases.append(state["question"]["phase"])
     assert phases[:5] == ["sweep"] * 5
     assert set(phases[5:]) == {"dig"}
@@ -117,9 +118,7 @@ async def test_the_interview_has_sweep_then_dig(client, headers, scripted_ai):
 async def test_a_thin_walk_reaches_i_need_a_little_more(client, headers, scripted_ai):
     state = (await client.post("/interview", json={}, headers=headers)).json()
     for _ in range(10):
-        state = (
-            await client.post("/interview/answers", json={"answer": "Not much."}, headers=headers)
-        ).json()
+        state = (await send_answer(client, headers, "Not much.")).json()
     assert state["can_finish"] is True
     state = (await client.post("/interview/finish", headers=headers)).json()
     assert state["stage"] == "interviewing"

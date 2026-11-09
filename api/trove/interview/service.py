@@ -79,6 +79,21 @@ async def ensure_indexes(database: AsyncDatabase) -> None:
     await database.reading_questions.create_index("author_id", name="reading_questions_author")
 
 
+class StaleQuestion(Exception):
+    """The answer or skip names a question that isn't the one waiting. Nothing was saved."""
+
+    detail = "That isn't the question waiting for an answer."
+
+    def __init__(self, interview: dict):
+        self.interview = interview
+
+
+def check_question(interview: dict, question_id: str | None) -> None:
+    current = interview.get("current")
+    if question_id is not None and (current is None or current.get("question_id", "") != question_id):
+        raise StaleQuestion(interview)
+
+
 def conflict(detail: str) -> HTTPException:
     return HTTPException(status_code=409, detail=detail)
 
@@ -110,7 +125,12 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
         can_finish = stage == "interviewing" and not needs_more and (ready or answered >= EXIT_AFTER_ANSWERS)
     return InterviewResponse(
         stage=stage,
-        question=Question(text=current["question"], phase=current["phase"], playback=current.get("playback"))
+        question=Question(
+            question_id=current.get("question_id", ""),
+            text=current["question"],
+            phase=current["phase"],
+            playback=current.get("playback"),
+        )
         if current
         else None,
         topic=interview.get("topic"),
@@ -306,6 +326,8 @@ async def write_question(
 async def ask_next_question(database: AsyncDatabase, claude: Claude, interview: dict) -> dict:
     """Write the next question for an interview that is waiting for one, and save it."""
     question, topic, ready, spark_id = await write_question(database, claude, interview)
+    if question:
+        question["question_id"] = str(uuid4())
     updated = await database.interviews.find_one_and_update(
         # Only if no other request has written the question in the meantime.
         {"_id": interview["_id"], "stage": interview["stage"], "current": None},
@@ -365,9 +387,19 @@ async def ask_again(database: AsyncDatabase, claude: Claude, user: dict) -> dict
     return await ask_next_question(database, claude, interview)
 
 
-async def answer(database: AsyncDatabase, claude: Claude, user: dict, text: str, *, shape: bool) -> dict:
-    """Save the answer to the waiting question, then ask the next one."""
+async def answer(
+    database: AsyncDatabase,
+    claude: Claude,
+    user: dict,
+    text: str,
+    *,
+    shape: bool,
+    question_id: str | None = None,
+) -> dict:
+    """Save the answer to the waiting question, then ask the next one. `question_id` is the question
+    the member was looking at: a resend after a lost response must not land on the next one."""
     interview = await get_interview(database, user["_id"])
+    check_question(interview, question_id)
     current = interview["current"]
     if interview["stage"] not in ASKING_STAGES or current is None:
         raise conflict("There's no question waiting for an answer.")
@@ -381,14 +413,14 @@ async def answer(database: AsyncDatabase, claude: Claude, user: dict, text: str,
         return_document=ReturnDocument.AFTER,
     )
     if saved is None:
-        raise conflict("That question was already answered.")
+        raise StaleQuestion(await get_interview(database, user["_id"]))
     return await ask_next_question(database, claude, saved)
 
 
-async def skip(database: AsyncDatabase, claude: Claude, user: dict) -> dict:
+async def skip(database: AsyncDatabase, claude: Claude, user: dict, question_id: str) -> dict:
     """Move past the waiting question, saved with an empty answer. Not on the Shape step, which
     needs a confirmation or a correction (docs/review/decisions.md, row 6)."""
-    return await answer(database, claude, user, "", shape=False)
+    return await answer(database, claude, user, "", shape=False, question_id=question_id)
 
 
 async def save_last_answer(database: AsyncDatabase, interview: dict, text: str) -> dict:
@@ -416,11 +448,13 @@ async def finish(
     user: dict,
     background: BackgroundTasks,
     answer_text: str | None = None,
+    question_id: str | None = None,
 ) -> dict:
     """End the interview and write the pool of chapters and the three titles. `answer_text` is
     saved first, so words in the field are never dropped."""
     interview = await get_interview(database, user["_id"])
     if answer_text is not None:
+        check_question(interview, question_id)
         interview = await save_last_answer(database, interview, answer_text)
     if interview["stage"] in ("adding", "revising"):
         return await finish_round(database, claude, interview, background)

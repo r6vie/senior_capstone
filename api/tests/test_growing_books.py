@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from tests.fakes import text_message
+from tests.fakes import send_answer, send_skip, text_message
 from tests.test_interview import minimal_pdf
 from trove.ai import scripted
 from trove.ai.client import get_claude
@@ -97,7 +97,7 @@ async def start_round(client, author, fake_claude) -> dict:
 async def propose(client, author, fake_claude, *changes: dict, blurb: str = "The proposed blurb.") -> dict:
     await start_round(client, author, fake_claude)
     fake_claude.responses.append(round_over())
-    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=author["headers"])
+    await send_answer(client, author["headers"], NEW_ANSWER)
     fake_claude.responses.append(revision(*changes, blurb=blurb))
     response = await client.post("/interview/finish", headers=author["headers"])
     assert response.status_code == 200, response.text
@@ -121,7 +121,13 @@ def member_data(request: dict) -> str:
 async def test_a_round_keeps_the_old_turns_and_marks_where_it_starts(client, database, author, fake_claude):
     state = await start_round(client, author, fake_claude)
     assert state["stage"] == "adding"
-    assert state["question"] == {"text": "What did you do next?", "phase": "adding", "playback": None}
+    assert state["question"]["question_id"]
+    assert state["question"] == {
+        "question_id": state["question"]["question_id"],
+        "text": "What did you do next?",
+        "phase": "adding",
+        "playback": None,
+    }
     assert state["can_finish"] is False
 
     saved = await database.interviews.find_one({"user_id": author["id"]})
@@ -139,14 +145,12 @@ async def test_finishing_needs_one_real_answer(client, author, fake_claude):
     assert (await client.post("/interview/finish", headers=author["headers"])).status_code == 409
 
     fake_claude.responses.append(next_question("Another?"))
-    state = (await client.post("/interview/skip", headers=author["headers"])).json()
+    state = (await send_skip(client, author["headers"])).json()
     assert state["can_finish"] is False
     assert state["question"]["text"] == "Another?"
 
     fake_claude.responses.append(next_question("And another?"))
-    state = (
-        await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=author["headers"])
-    ).json()
+    state = (await send_answer(client, author["headers"], NEW_ANSWER)).json()
     assert state["can_finish"] is True
 
 
@@ -177,9 +181,7 @@ async def test_the_shape_step_doesnt_exist_in_a_round(client, author, fake_claud
 async def test_the_librarian_can_end_the_round(client, author, fake_claude):
     await start_round(client, author, fake_claude)
     fake_claude.responses.append(round_over())
-    state = (
-        await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=author["headers"])
-    ).json()
+    state = (await send_answer(client, author["headers"], NEW_ANSWER)).json()
     assert state["question"] is None
     assert state["ready_for_reveal"] is True
     assert state["can_finish"] is True
@@ -201,9 +203,7 @@ async def test_a_round_ends_on_its_own_at_the_limit_without_spending(client, dat
     )
     await database.interviews.update_one({"user_id": author["id"]}, {"$push": {"turns": {"$each": answers}}})
     calls = len(fake_claude.requests)
-    state = (
-        await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=author["headers"])
-    ).json()
+    state = (await send_answer(client, author["headers"], NEW_ANSWER)).json()
     assert state["ready_for_reveal"] is True
     assert len(fake_claude.requests) == calls
 
@@ -312,7 +312,7 @@ async def first_interview(client, person, resume_pdf: str | None = None):
     body = {"resume_pdf": resume_pdf} if resume_pdf else {}
     await client.post("/interview", json=body, headers=person["headers"])
     for answer in scripted.THEO_ANSWERS:
-        await client.post("/interview/answers", json={"answer": answer}, headers=person["headers"])
+        await send_answer(client, person["headers"], answer)
     await client.post("/interview/shape", json={}, headers=person["headers"])
     await client.post("/interview/finish", headers=person["headers"])
     await client.post("/interview/title", json={"title": 0}, headers=person["headers"])
@@ -329,7 +329,7 @@ async def test_the_resume_never_comes_back(client, scripted_ai):
 
     first_after = len(scripted_ai.requests)
     await client.post("/interview/reopen", headers=person["headers"])
-    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=person["headers"])
+    await send_answer(client, person["headers"], NEW_ANSWER)
     await client.post("/interview/finish", headers=person["headers"])
     later = scripted_ai.requests[first_after:]
     assert [r["system"] for r in later[-1:]] == [load_prompt("interview/revise")]
@@ -350,7 +350,7 @@ async def test_a_resume_only_term_stays_out_of_book_steps_and_the_saved_intervie
         {"$set": {"current.question": "What happened at Gopala Foods in 2019?"}},
     )
     for answer in scripted.THEO_ANSWERS:
-        await client.post("/interview/answers", json={"answer": answer}, headers=person["headers"])
+        await send_answer(client, person["headers"], answer)
     await client.post("/interview/shape", json={}, headers=person["headers"])
     await client.post("/interview/finish", headers=person["headers"])
 
@@ -375,9 +375,7 @@ async def test_a_whole_round_walks_on_the_scripted_ai(client, database, scripted
         "Then I stopped doing it myself.",
     ]:
         seen.append(state["question"]["text"])
-        state = (
-            await client.post("/interview/answers", json={"answer": answer}, headers=person["headers"])
-        ).json()
+        state = (await send_answer(client, person["headers"], answer)).json()
     assert len(seen) == len(set(seen))
     assert state["ready_for_reveal"] is True
 
@@ -400,7 +398,7 @@ async def test_a_thin_round_on_the_scripted_ai_earns_nothing(client, scripted_ai
     person = await member(client, "thin@case.edu")
     await first_interview(client, person)
     await client.post("/interview/reopen", headers=person["headers"])
-    await client.post("/interview/answers", json={"answer": "Nothing much."}, headers=person["headers"])
+    await send_answer(client, person["headers"], "Nothing much.")
     await client.post("/interview/finish", headers=person["headers"])
     state = (await client.get("/interview", headers=person["headers"])).json()
     assert state["stage"] == "done"
@@ -715,7 +713,7 @@ async def test_undo_lets_a_removed_chapter_come_back_for_good(client, database, 
 async def finish_to_failure(client, author, fake_claude) -> dict:
     await start_round(client, author, fake_claude)
     fake_claude.responses.append(round_over())
-    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=author["headers"])
+    await send_answer(client, author["headers"], NEW_ANSWER)
     fake_claude.responses.append(text_message("not json"))
     response = await client.post("/interview/finish", headers=author["headers"])
     assert response.status_code == 200
@@ -725,7 +723,7 @@ async def finish_to_failure(client, author, fake_claude) -> dict:
 async def test_finishing_writes_in_the_background_and_reports_it(client, author, fake_claude):
     await start_round(client, author, fake_claude)
     fake_claude.responses.append(round_over())
-    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=author["headers"])
+    await send_answer(client, author["headers"], NEW_ANSWER)
     fake_claude.responses.append(revision(change()))
     state = (await client.post("/interview/finish", headers=author["headers"])).json()
     assert state["stage"] == "revising"
@@ -762,7 +760,7 @@ async def test_a_return_after_a_failed_write_retries_once_on_its_own(client, dat
 async def test_a_write_that_died_with_the_server_counts_as_failed(client, database, author, fake_claude):
     await start_round(client, author, fake_claude)
     fake_claude.responses.append(round_over())
-    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=author["headers"])
+    await send_answer(client, author["headers"], NEW_ANSWER)
     await database.interviews.update_one(
         {"user_id": author["id"]},
         {
@@ -877,7 +875,7 @@ async def test_a_spark_is_used_only_when_its_question_is_asked(client, database,
     fake_claude.responses.append(
         text_message(json.dumps({"question": "Yours?", "topic": "t", "done": False, "spark_id": used["id"]}))
     )
-    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=reader["headers"])
+    await send_answer(client, reader["headers"], NEW_ANSWER)
     waiting = (await client.get("/interview/sparks", headers=reader["headers"])).json()
     assert [item["chapter_id"] for item in waiting] == ["c1"]
 
@@ -966,13 +964,13 @@ async def test_at_most_three_sparks_a_round_newest_first(client, database, reade
         fake_claude.responses.append(
             text_message(json.dumps({"question": f"Q{n}?", "topic": "t", "done": False, "spark_id": ids[n]}))
         )
-        await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=reader["headers"])
+        await send_answer(client, reader["headers"], NEW_ANSWER)
     # Three have been asked about, so the rest wait for the next round.
     assert "<sparks>" not in member_data(fake_claude.requests[-1]) or "Title 1" not in member_data(
         fake_claude.requests[-1]
     )
     fake_claude.responses.append(round_over())
-    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=reader["headers"])
+    await send_answer(client, reader["headers"], NEW_ANSWER)
     assert "<sparks>" not in member_data(fake_claude.requests[-1])
     assert len((await client.get("/interview/sparks", headers=reader["headers"])).json()) == 2
 
@@ -996,7 +994,7 @@ async def test_a_spark_title_is_redacted_and_cant_become_a_chapter(
     )
     await client.post("/interview/reopen", headers=reader["headers"])
     fake_claude.responses.append(round_over())
-    await client.post("/interview/answers", json={"answer": NEW_ANSWER}, headers=reader["headers"])
+    await send_answer(client, reader["headers"], NEW_ANSWER)
     fake_claude.responses.append(revision(change(title="chapter 0"), change(title="My own inventory story")))
     await client.post("/interview/finish", headers=reader["headers"])
 
