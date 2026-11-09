@@ -20,6 +20,7 @@ type MyBookResponse = components["schemas"]["MyBookResponse"] & { can_undo?: boo
 interface ChangeResponse {
   id: string;
   kind: string;
+  chapter_id: string | null;
   title: string;
   summary: string;
   note: string;
@@ -27,6 +28,7 @@ interface ChangeResponse {
 }
 type InterviewResponse = Omit<components["schemas"]["InterviewResponse"], "stage"> & {
   stage: components["schemas"]["InterviewResponse"]["stage"] | "adding" | "revising";
+  revision_status?: "writing" | "ready" | "failed" | null;
   changes?: ChangeResponse[] | null;
   proposed_blurb?: string | null;
   nothing_new?: boolean;
@@ -67,10 +69,6 @@ function ended({ error, response }: Result<unknown>) {
   throw new InterviewError(errorMessage(error), response?.status === 502);
 }
 
-// The proposal's back cover is written for every change being approved, so it's kept for that case.
-let wholeProposalBlurb: string | null = null;
-let wholeProposalIds: string[] = [];
-
 function toBook(book: MyBookResponse): DraftBook {
   return {
     title: book.title,
@@ -87,7 +85,7 @@ function fromBook(book: MyBookResponse): InterviewState {
 function toChange(change: ChangeResponse): ProposedChange {
   return {
     id: change.id,
-    kind: change.kind === "new" ? "new" : "improve",
+    kind: change.kind === "new" || change.kind === "remove" ? change.kind : "improve",
     note: change.note,
     title: change.title,
     summary: change.summary,
@@ -114,9 +112,9 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
     case "done":
       return response.nothing_new ? { id: ID, stage: "nothing" } : myBook();
     case "revising": {
-      if (!response.changes) return { id: ID, stage: response.can_finish ? "writeFailed" : "writing" };
-      wholeProposalIds = response.changes.map((change) => change.id);
-      wholeProposalBlurb = response.proposed_blurb ?? null;
+      if (!response.changes) {
+        return { id: ID, stage: response.revision_status === "failed" ? "writeFailed" : "writing" };
+      }
       return {
         id: ID,
         stage: "proposing",
@@ -152,6 +150,29 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
   }
 }
 
+// A removal is proposed once, then confirmed like any change. The proposal may already be open from an
+// earlier visit, and asking again would be refused, so look first.
+const removals = new Map<string, Promise<string>>();
+
+function removalOf(chapterId: string): Promise<string> {
+  const known = removals.get(chapterId);
+  if (known) return known;
+  const asking = (async () => {
+    const now = unwrap<InterviewResponse>(await api.GET("/interview"));
+    const open = now.changes?.find((change) => change.kind === "remove" && change.chapter_id === chapterId);
+    if (open) return open.id;
+    const proposed = unwrap(
+      await postUntyped<InterviewResponse>("/interview/removal", { body: { chapter_id: chapterId } }),
+    );
+    const change = proposed.changes?.find((candidate) => candidate.kind === "remove");
+    if (!change) throw new InterviewError("That chapter can't be removed just now.");
+    return change.id;
+  })();
+  asking.catch(() => removals.delete(chapterId));
+  removals.set(chapterId, asking);
+  return asking;
+}
+
 function readBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -184,10 +205,8 @@ export const apiInterviewClient: InterviewClient = {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/question")));
   },
   async finish(_id, answer) {
-    // Trove API's finish doesn't take `answer` on this branch yet. Saving it as an answer first loses
-    // nothing, and only costs a question that's never shown. Swap for the body once it lands.
-    if (answer) unwrap(await api.POST("/interview/answers", { body: { answer } }));
-    return toState(unwrap<InterviewResponse>(await api.POST("/interview/finish")));
+    const init = answer ? { body: { answer } } : undefined;
+    return toState(unwrap(await postUntyped<InterviewResponse>("/interview/finish", init)));
   },
   async confirmShape() {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/shape", { body: {} })));
@@ -239,8 +258,9 @@ export const apiInterviewClient: InterviewClient = {
       choosing: "titles",
       reviewing: "draft",
       done: "shelf",
-      adding: now.has_answers ? "adding" : "shelf",
-      revising: now.changes ? "changesWaiting" : now.can_finish ? "writeFailed" : "writing",
+      // can_finish means a real answer this round. With none, there's nothing to continue.
+      adding: now.can_finish ? "adding" : "shelf",
+      revising: now.changes ? "changesWaiting" : now.revision_status === "failed" ? "writeFailed" : "writing",
     };
     return stages[now.stage];
   },
@@ -257,30 +277,37 @@ export const apiInterviewClient: InterviewClient = {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/finish")));
   },
   async blurbFor(approved) {
-    if (!approved.length) return null;
-    if (approved.length === wholeProposalIds.length && wholeProposalBlurb) return wholeProposalBlurb;
     const result = await postUntyped<{ blurb: string | null }>("/interview/revision/blurb", {
       body: { approved },
     });
     return unwrap(result).blurb;
   },
   async applyChanges(approved, blurb) {
-    const book = unwrap(await postUntyped("/interview/revision", { body: { approved, blurb } }));
+    // The API applies the back cover it last showed for this selection, so the text never travels back.
+    const body = { approved, blurb: blurb ? "use" : "keep" };
+    const book = unwrap(await postUntyped("/interview/revision", { body }));
     return approved.length
       ? { id: ID, stage: "updated", book: toBook(book) }
       : { id: ID, stage: "done", book: toBook(book) };
   },
   async undoChanges() {
-    ended(await postUntyped<unknown>("/interview/revision/undo"));
+    ended(await postUntyped<unknown>("/interview/book/undo"));
   },
   async blurbWithout(chapterId) {
-    const result = await postUntyped<{ blurb: string | null }>("/interview/removal/blurb", {
-      body: { chapter_id: chapterId },
+    const change = await removalOf(chapterId);
+    const result = await postUntyped<{ blurb: string | null }>("/interview/revision/blurb", {
+      body: { approved: [change] },
     });
     return unwrap(result).blurb;
   },
   async removeFromShelf(chapterId, blurb) {
-    ended(await postUntyped<unknown>("/interview/removal", { body: { chapter_id: chapterId, blurb } }));
+    const change = await removalOf(chapterId);
+    removals.delete(chapterId);
+    ended(
+      await postUntyped<unknown>("/interview/revision", {
+        body: { approved: [change], blurb: blurb ? "use" : "keep" },
+      }),
+    );
   },
   async sparks() {
     const sparks = unwrap(await getUntyped<{ id: string; chapter_title: string }[]>("/interview/sparks"));

@@ -29,12 +29,12 @@ export interface DraftBook {
 /** One proposed change to a book on the shelf. Nothing here is live until the member confirms. */
 export interface ProposedChange {
   id: string;
-  kind: "new" | "improve";
+  kind: "new" | "improve" | "remove";
   /** One line, to the member, on what this adds. */
   note: string;
   title: string;
   summary: string;
-  /** What's in the book now. Null for a new chapter. */
+  /** What's in the book now. Null for a new chapter. A removal has only this. */
   now: { title: string; summary: string } | null;
 }
 

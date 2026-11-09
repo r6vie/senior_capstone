@@ -291,7 +291,9 @@ export function ChangesScreen({
               <ul className="iv-clist">
                 {approved.map((change) => (
                   <li key={change.id}>
-                    <span className="iv-tag">{change.kind === "new" ? "New" : "Changed"}</span>
+                    <span className="iv-tag">
+                      {change.kind === "new" ? "New" : change.kind === "remove" ? "Removing" : "Changed"}
+                    </span>
                     <b>{change.title}</b>
                   </li>
                 ))}
@@ -344,11 +346,17 @@ export function ChangesScreen({
         {changes.map((change) => (
           <ChangeCard
             key={change.id}
-            caption={change.kind === "new" ? "New chapter" : "Changed chapter"}
+            caption={
+              change.kind === "new"
+                ? "New chapter"
+                : change.kind === "remove"
+                  ? "Removing"
+                  : "Changed chapter"
+            }
             note={change.note}
             name={change.title}
             now={change.now ? { title: change.now.title, text: change.now.summary } : null}
-            proposed={{ title: change.title, text: change.summary }}
+            proposed={change.kind === "remove" ? null : { title: change.title, text: change.summary }}
             choice={choices[change.id]}
             onChoose={(choice) => setChoices((now) => ({ ...now, [change.id]: choice }))}
           />

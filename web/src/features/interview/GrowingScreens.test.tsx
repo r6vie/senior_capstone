@@ -187,6 +187,20 @@ describe("proposed changes", () => {
     expect(await screen.findByText("Declined")).toBeTruthy();
   });
 
+  it("shows a removal left open from My book as a removal", async () => {
+    const removal: ProposedChange = {
+      id: "r",
+      kind: "remove",
+      note: "You asked to take this chapter out of your book.",
+      title: "Four",
+      summary: "",
+      now: { title: "Four", summary: "About four." },
+    };
+    show(client({ id: "me", stage: "proposing", changes: [removal], blurb: null }));
+    expect(await screen.findByText("Removing")).toBeTruthy();
+    expect(screen.getByText("Comes out of your book.")).toBeTruthy();
+  });
+
   it("nothing goes live until the member confirms, and they see the back cover first", async () => {
     const blurbFor = vi.fn(async () => "The new back cover.");
     const apply = vi.fn(

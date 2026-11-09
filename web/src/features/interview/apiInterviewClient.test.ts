@@ -85,11 +85,47 @@ describe("apiInterviewClient", () => {
     expect(state).toMatchObject({ stage: "asking" });
   });
 
-  it("saves words still in the field before finishing", async () => {
+  it("sends words still in the field with finishing", async () => {
     const post = vi.spyOn(api, "POST").mockResolvedValue(ok(interview({})));
     await apiInterviewClient.finish("me", "My last thought");
-    expect(post).toHaveBeenCalledWith("/interview/answers", { body: { answer: "My last thought" } });
-    expect(post).toHaveBeenLastCalledWith("/interview/finish");
+    expect(post).toHaveBeenCalledWith("/interview/finish", { body: { answer: "My last thought" } });
+  });
+
+  it("uses the back cover shown, or keeps the old one, and never sends its text", async () => {
+    const post = vi
+      .spyOn(api, "POST")
+      .mockResolvedValue(ok({ title: "T", author_name: "A", blurb: null, status: "on_shelf", chapters: [] }));
+    await apiInterviewClient.applyChanges(["1"], "The new back cover.");
+    expect(post).toHaveBeenLastCalledWith("/interview/revision", { body: { approved: ["1"], blurb: "use" } });
+    await apiInterviewClient.applyChanges(["1"], null);
+    expect(post).toHaveBeenLastCalledWith("/interview/revision", {
+      body: { approved: ["1"], blurb: "keep" },
+    });
+  });
+
+  it("proposes a removal once, then confirms it like any change", async () => {
+    const removal = {
+      id: "x",
+      kind: "remove",
+      chapter_id: "c9",
+      title: "T",
+      summary: "",
+      note: "",
+      current: null,
+    };
+    vi.spyOn(api, "GET").mockResolvedValue(ok(interview({ question: null, stage: "done" })));
+    const post = vi
+      .spyOn(api, "POST")
+      .mockResolvedValueOnce(ok({ ...interview({ question: null }), stage: "revising", changes: [removal] }))
+      .mockResolvedValueOnce(ok({ blurb: "Shorter." }))
+      .mockResolvedValueOnce(
+        ok({ title: "T", author_name: "A", blurb: null, status: "on_shelf", chapters: [] }),
+      );
+    await expect(apiInterviewClient.blurbWithout("c9")).resolves.toBe("Shorter.");
+    expect(post).toHaveBeenCalledWith("/interview/removal", { body: { chapter_id: "c9" } });
+    await apiInterviewClient.removeFromShelf("c9", "Shorter.");
+    expect(post).toHaveBeenLastCalledWith("/interview/revision", { body: { approved: ["x"], blurb: "use" } });
+    expect(post.mock.calls.filter((call) => String(call[0]) === "/interview/removal")).toHaveLength(1);
   });
 
   it("marks the Librarian's failures as safe to try again", async () => {
@@ -156,6 +192,7 @@ describe("apiInterviewClient", () => {
     vi.spyOn(api, "GET").mockResolvedValue(
       ok({
         ...interview({ question: null, blurb: "Old." }),
+        revision_status: "ready",
         stage: "revising",
         changes: [
           { ...change, id: "1", kind: "new", chapter_id: null, current: null },
@@ -173,10 +210,10 @@ describe("apiInterviewClient", () => {
     });
   });
 
-  it("reads a revising interview with no changes as still writing, or failed if it can be retried", async () => {
-    const revising = (can_finish: boolean) =>
-      ok({ ...interview({ question: null, can_finish }), stage: "revising", changes: null });
-    vi.spyOn(api, "GET").mockResolvedValueOnce(revising(false)).mockResolvedValueOnce(revising(true));
+  it("follows the API's word on whether changes are being written or failed", async () => {
+    const revising = (revision_status: string) =>
+      ok({ ...interview({ question: null }), stage: "revising", changes: null, revision_status });
+    vi.spyOn(api, "GET").mockResolvedValueOnce(revising("writing")).mockResolvedValueOnce(revising("failed"));
     await expect(apiInterviewClient.current()).resolves.toMatchObject({ stage: "writing" });
     await expect(apiInterviewClient.current()).resolves.toMatchObject({ stage: "writeFailed" });
   });
@@ -196,7 +233,7 @@ describe("apiInterviewClient", () => {
   });
 
   it("counts a round with no answers as closed on My book", async () => {
-    vi.spyOn(api, "GET").mockResolvedValue(ok({ ...interview({ has_answers: false }), stage: "adding" }));
+    vi.spyOn(api, "GET").mockResolvedValue(ok({ ...interview({ can_finish: false }), stage: "adding" }));
     await expect(apiInterviewClient.stage()).resolves.toBe("shelf");
   });
 

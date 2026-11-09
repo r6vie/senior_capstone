@@ -370,7 +370,12 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
                             ? "The Librarian is writing the changes…"
                             : "The Librarian is gathering what you said…",
                           () => client.finish(state.id, words),
-                          { lost: words ? LOST_ANSWER : LOST_DEFAULT, onSuccess: () => clearDraft(draftKey) },
+                          {
+                            lost: words ? LOST_ANSWER : LOST_DEFAULT,
+                            onSuccess: () => clearDraft(draftKey),
+                            // After a 502 the words are already saved, so a second try sends none.
+                            retryWith: () => client.finish(state.id),
+                          },
                         ),
                     }
                   : undefined

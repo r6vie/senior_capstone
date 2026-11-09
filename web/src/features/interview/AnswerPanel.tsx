@@ -41,6 +41,7 @@ export interface AnswerExit {
 }
 
 interface Props {
+  /** Give the panel this as its `key` too: one panel per question, each with its own draft. */
   draftKey: string;
   busy: boolean;
   onSend: (text: string) => void;
@@ -67,11 +68,6 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, exit 
   // What was in the field when Speak was pressed, and what the last recording added to it.
   const prior = useRef("");
   const lastHeard = useRef("");
-
-  useEffect(() => {
-    setText(readDraft(draftKey));
-    setMode("typing");
-  }, [draftKey]);
 
   // Save the draft quietly a moment after the member stops typing.
   useEffect(() => {
