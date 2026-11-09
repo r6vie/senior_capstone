@@ -323,6 +323,15 @@ describe("MyBookPage", () => {
     await waitFor(() => expect(screen.queryByText("For your next questions")).toBeNull());
   });
 
+  it("after removing a spark, the keyboard goes on to the next one", async () => {
+    const two = [...sparks, { id: "s2", chapterTitle: "The question I stopped asking" }];
+    show(client("draft", { stage: async () => "none", myBook: async () => null, sparks: async () => two }));
+    fireEvent.click(await screen.findByRole("button", { name: `Remove ${sparks[0]?.chapterTitle}` }));
+    const next = await screen.findByRole("button", { name: "Remove The question I stopped asking" });
+    await waitFor(() => expect(screen.queryByText(sparks[0]?.chapterTitle ?? "")).toBeNull());
+    expect(next).toBeTruthy();
+  });
+
   it("when it can't load, doesn't say the member has no book", async () => {
     let fail = true;
     show(

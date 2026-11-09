@@ -84,11 +84,10 @@ export function ReadingQuestionPage({ client = apiInterviewClient }: { client?: 
       const gone = waiting && !waiting.some((candidate) => candidate.id === question?.id);
       const sentBefore = firstSent.current;
       const refused = reason instanceof InterviewError && reason.conflict;
-      if (gone && refused && sentBefore === null && !reason.alreadySaved) {
-        // Refused on the first try: another screen dealt with this question, and these words weren't
-        // saved. They stay in the field, with the honest sentence.
+      if (refused && !reason.alreadySaved && sentBefore === null) {
+        // Another screen answered or dismissed it, so these words weren't saved. They stay in the field.
         setError(
-          "You'd already answered this on another screen, so these words weren't saved. They're still here.",
+          "You'd already dealt with this on another screen, so these words weren't saved. They're still here.",
         );
         setBusy(false);
         return;

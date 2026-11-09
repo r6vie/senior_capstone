@@ -684,8 +684,28 @@ describe("the reading question", () => {
     fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "My words." } });
     press("Send answer");
     expect((await screen.findByRole("alert")).textContent).toMatch(/these words weren't saved/);
+    expect(asked).toHaveBeenCalled();
     expect(screen.queryByText("Your answer was saved.")).toBeNull();
     expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("My words.");
+  });
+
+  it("a refusal that says this answer arrived goes on and says it was saved", async () => {
+    const asked = vi.fn().mockResolvedValueOnce([question]).mockResolvedValue([]);
+    show(
+      client(
+        { id: "me", stage: "writing" },
+        {
+          readingQuestions: asked,
+          answerReading: async () => {
+            throw new InterviewError("Already answered.", false, true, true);
+          },
+        },
+      ),
+      "/interview/reading/r1",
+    );
+    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "My words." } });
+    press("Send answer");
+    expect(await screen.findByText("Your answer was saved.")).toBeTruthy();
   });
 
   it("an edit after a lost reply that did arrive stays visible", async () => {

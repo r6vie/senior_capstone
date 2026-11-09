@@ -71,7 +71,7 @@ export function Frame({
       </header>
       <section className="iv-band dark">
         <span className="halo" />
-        {eyebrow && <span className="caption iv-eyebrow">{eyebrow}</span>}
+        {eyebrow && <span className="iv-eyebrow">{eyebrow}</span>}
         <h1 className="iv-say" data-quiet={quiet || undefined} tabIndex={-1} aria-live="polite">
           {say}
         </h1>

@@ -66,9 +66,13 @@
   font: 600 var(--iv-say-size) / 1.15 var(--font-serif);
   letter-spacing: -0.01em;
 }
+/* A sentence with a name in it, so not caps: caps are for short labels. */
 .iv-eyebrow {
   position: relative;
+  display: block;
   margin-bottom: var(--s-3);
+  font: 400 14px / 1.3 var(--font-sans);
+  color: var(--rule);
 }
 /* Takes focus from script on arrival, as a place for the keyboard to start. */
 .iv-say:focus {

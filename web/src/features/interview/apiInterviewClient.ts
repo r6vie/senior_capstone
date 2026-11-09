@@ -16,12 +16,8 @@ import {
 
 type MyBookResponse = components["schemas"]["MyBookResponse"];
 type ChangeResponse = components["schemas"]["Change"];
-// Trove API's round 6 fields (R6-03, R6-07), read when they're there.
-type InterviewResponse = components["schemas"]["InterviewResponse"] & {
-  reading_answer?: string | null;
-  dropped_words?: string[] | null;
-  closing_line?: string | null;
-};
+// `closing_line` is coming from Trove API (R6-07), and is read when it's there.
+type InterviewResponse = components["schemas"]["InterviewResponse"] & { closing_line?: string | null };
 
 const ID = "me";
 
@@ -393,7 +389,7 @@ export const apiInterviewClient: InterviewClient = {
   },
   async lastRound() {
     const { data } = await api.GET("/interview");
-    const now = data as InterviewResponse | undefined;
+    const now = data;
     return {
       empty: Boolean(now?.nothing_new),
       droppedForNames: now?.dropped_for_names,

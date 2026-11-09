@@ -317,6 +317,7 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   const leftAsIs = Boolean((location.state as { leftAsIs?: boolean } | null)?.leftAsIs);
   const stageNow = useRef<BookStage | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const focusAfterSpark = useRef(false);
 
   const load = useCallback(async () => {
     setFailed(false);
@@ -361,6 +362,17 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
     if (arrived) heading.current?.focus({ preventScroll: true });
   }, [arrived]);
 
+  // A spark's Remove goes with its row, so the keyboard moves on to the next one, if there is one.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the list changes
+  useEffect(() => {
+    if (!focusAfterSpark.current) return;
+    focusAfterSpark.current = false;
+    const next = [...document.querySelectorAll<HTMLElement>(".mb-sparks li button")].find(
+      (button) => button.offsetParent !== null || document.documentElement.clientWidth === 0,
+    );
+    next?.focus({ preventScroll: true });
+  }, [sparks]);
+
   async function attempt(call: () => Promise<unknown>, after: () => void) {
     setProblem(null);
     const before = stageNow.current;
@@ -402,7 +414,10 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   const removeSpark = (id: string) =>
     attempt(
       () => client.removeSpark(id),
-      () => setSparks((now) => now.filter((spark) => spark.id !== id)),
+      () => {
+        setSparks((now) => now.filter((spark) => spark.id !== id));
+        focusAfterSpark.current = true;
+      },
     );
 
   if (!book) {
