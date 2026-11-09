@@ -5,6 +5,9 @@ The questions and chapters come from a real saved interview (the eval persona Th
 answers in THEO_ANSWERS and the book reads true. Type anything else and the chapters keep Theo's
 titles and summaries but quote what you typed, because quotes must be verbatim from your answers
 or the engine drops them.
+
+A later round of adding has four questions. Its answers become one new chapter and one improved one,
+and a round whose answers are all under six words earns no changes, so that case can be walked too.
 """
 
 import asyncio
@@ -309,7 +312,8 @@ REMOVED_BLURB = (
 )
 
 _TURN = re.compile(
-    r"^Q\d+ \[(\w+)\]: (.*?)\nA\d+: (.*?)(?=\n+Q\d+ \[|\n*</interview>)", re.DOTALL | re.MULTILINE
+    r"^Q\d+ \[(\w+)\]: (.*?)\nA\d+: (.*?)(?=\n+Q\d+ \[|\n*</interview>|\n*</new_round>)",
+    re.DOTALL | re.MULTILINE,
 )
 SKIPPED = "(skipped)"
 
@@ -417,7 +421,92 @@ def _rewrite(text: str) -> dict:
     return {"title": f"{chapter['title']}, retold", "summary": chapter["summary"]}
 
 
+ADDING_QUESTIONS = [
+    Asked(
+        "The book has the fry stand line but not who ran it after you. When you left, what did the next person "
+        "do differently?",
+        "the fry stand line after you left",
+    ),
+    Asked(
+        "Which of your floor repairs have you had to teach somebody else, and where did they get stuck?",
+        "teaching someone a repair",
+    ),
+    Asked(
+        "Since the creek project, when have you been the one to say a number couldn't be trusted yet?",
+        "a number you didn't trust",
+    ),
+    Asked(
+        "What's something you've changed your mind about since you first told me these stories?",
+        "what you've changed your mind about",
+    ),
+]
+ADDING_ROUND_ANSWERS = 4
+# A round with only answers this short earns nothing, so "no changes" can be walked too.
+THIN_ROUND_WORDS = 6
+NEW_CHAPTER_TITLE = "What I'd only just worked out"
+
+
+def _new_round_turns(text: str) -> list[ParsedTurn]:
+    found = re.search(r"<new_round>\n(.*?</new_round>)", text, re.DOTALL)
+    return _turns(found.group(1)) if found else []
+
+
+def _adding(text: str) -> dict:
+    new = _new_round_turns(text)
+    answered = [turn for turn in new if turn.answer != SKIPPED]
+    if len(answered) >= ADDING_ROUND_ANSWERS:
+        return {"question": "", "topic": "what you've just added", "done": True}
+    asked = {turn.question for turn in new}
+    # A spark stands in for the first question, asked as the member's own version and never quoted.
+    if "<sparks>" in text and not new:
+        return {
+            "question": "You've seen something in someone else's book that felt like yours. Tell me about "
+            "one specific time it happened to you.",
+            "topic": "the one you said you have",
+            "done": False,
+        }
+    question, topic = next((q for q in ADDING_QUESTIONS if q.question not in asked), LAST_RESORT)
+    return {"question": question, "topic": topic, "done": False}
+
+
+def _revise(text: str) -> dict:
+    answers = [t.answer.strip() for t in _new_round_turns(text) if t.answer != SKIPPED]
+    answers = [answer for answer in answers if len(answer.split()) >= THIN_ROUND_WORDS]
+    chapters = _book_chapters(text)
+    room = int(re.search(r"<room>(\d+)</room>", text).group(1))
+    changes = []
+    if answers and room:
+        quote = _first_sentence(answers[0])
+        changes.append(
+            {
+                "kind": "new",
+                "chapter_id": None,
+                "title": NEW_CHAPTER_TITLE,
+                "summary": answers[0][:300],
+                "quotes": [quote],
+                "note": "A new chapter, from what you just told me.",
+            }
+        )
+    remaining = answers[1:] if room else answers
+    if remaining:
+        chapter = chapters[0]
+        quote = _first_sentence(remaining[0])
+        changes.append(
+            {
+                "kind": "improve",
+                "chapter_id": chapter["id"],
+                "title": chapter["title"],
+                "summary": f"{chapter['summary']} {quote}"[:300],
+                "quotes": [*chapter["quotes"], quote],
+                "note": "Adds what you just said to this chapter.",
+            }
+        )
+    return {"changes": changes, "blurb": FINISHED_BLURB}
+
+
 REPLIES = {
+    "interview/adding": _adding,
+    "interview/revise": _revise,
     "interview/interviewer": _interviewer,
     "interview/draft": _draft,
     "interview/finish": _finish,
@@ -435,7 +524,7 @@ class ScriptedClaude:
         name = prompt_name(params.get("system"))
         if name not in REPLIES:
             raise ValueError(f"The scripted AI has no reply for the prompt {name!r}.")
-        slower = 1 if name == "interview/interviewer" else BOOK_STEP_SLOWER
+        slower = 1 if name in ("interview/interviewer", "interview/adding") else BOOK_STEP_SLOWER
         await asyncio.sleep(self.delay_seconds * slower)
         reply = REPLIES[name](_text_of(params["messages"][-1]["content"]))
         return BetaMessage(

@@ -192,6 +192,31 @@ async def replace_chapter(database: AsyncDatabase, author_id: str, chapter: dict
     return await _named(database, book)
 
 
+async def apply_revision(
+    database: AsyncDatabase, author_id: str, *, improved: list[dict], added: list[dict], blurb: str | None
+) -> dict | None:
+    """Apply approved changes to the author's book on the shelf, in one update. `improved` chapters
+    replace the ones with their ids, in place; `added` ones go at the end. None if there's no such book.
+
+    `published_at` doesn't change: the shelf isn't a feed, and a revision doesn't bump a book.
+    """
+    book = await database.books.find_one({"author_id": author_id, "status": ON_SHELF})
+    if book is None:
+        return None
+    replacements = {chapter["id"]: chapter for chapter in improved}
+    chapters = [replacements.get(chapter["id"], chapter) for chapter in book["chapters"]] + added
+    changes: dict = {"chapters": chapters, "updated_at": datetime.now(UTC)}
+    if blurb is not None:
+        changes["blurb"] = blurb
+    updated = await database.books.find_one_and_update(
+        # Only if the book hasn't changed since it was read, so two approvals can't lose one.
+        {"_id": book["_id"], "status": ON_SHELF, "updated_at": book["updated_at"]},
+        {"$set": changes},
+        return_document=ReturnDocument.AFTER,
+    )
+    return await _named(database, updated)
+
+
 async def put_on_shelf(database: AsyncDatabase, author_id: str) -> dict | None:
     """Publish the author's draft. None if they have no draft."""
     now = datetime.now(UTC)

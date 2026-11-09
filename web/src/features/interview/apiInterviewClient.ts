@@ -52,6 +52,9 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
       };
     case "reviewing":
     case "done":
+    // No screens yet for growing a book: the member sees their book, which hasn't changed.
+    case "adding":
+    case "revising":
       return myBook();
     case "interviewing": {
       const { question } = response;
@@ -68,7 +71,8 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
       return {
         id: ID,
         stage: "asking",
-        phase: question.phase,
+        // Only a round of adding has other phases, and that stage is handled above.
+        phase: question.phase === "dig" ? "dig" : "sweep",
         question: question.text,
         canFinish: response.can_finish,
         hasAnswers: response.has_answers,

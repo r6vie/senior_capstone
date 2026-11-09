@@ -269,7 +269,8 @@ export interface paths {
         put?: never;
         /**
          * Finish
-         * @description End the interview and get three titles, each with why it's you.
+         * @description End the interview and get three titles, each with why it's you. In a round of adding, end
+         *     the round and get proposed changes. While revising with `changes` null, write them again.
          */
         post: operations["finish_interview_finish_post"];
         delete?: never;
@@ -349,6 +350,147 @@ export interface paths {
          * @description Put the finished book on the shelf. The interview is then done.
          */
         post: operations["put_on_shelf_interview_book_shelve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reopen
+         * @description Add to a book on the shelf: a short new round of questions. The book doesn't change yet.
+         */
+        post: operations["reopen_interview_reopen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/revision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply Revision
+         * @description Apply the approved changes to the book on the shelf. The rest are dropped.
+         */
+        post: operations["apply_revision_interview_revision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/sparks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Sparks
+         * @description The member's own sparks waiting for their next round.
+         */
+        get: operations["list_sparks_interview_sparks_get"];
+        put?: never;
+        /**
+         * Add Spark
+         * @description "I have one like this" on a chapter of someone else's book. Private: its author never knows.
+         */
+        post: operations["add_spark_interview_sparks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/sparks/{spark_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Spark */
+        delete: operations["remove_spark_interview_sparks__spark_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/reading-questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Reading Questions
+         * @description The question waiting after a reading, if there is one.
+         */
+        get: operations["list_reading_questions_interview_reading_questions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/reading-questions/{question_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Answer Reading Question
+         * @description Answer it, and get proposed changes to the book (or `nothing_new`).
+         */
+        post: operations["answer_reading_question_interview_reading_questions__question_id__answer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/reading-questions/{question_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dismiss Reading Question
+         * @description Dismiss it, as quietly as a skip: never shown, never counted.
+         */
+        post: operations["dismiss_reading_question_interview_reading_questions__question_id__dismiss_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -498,6 +640,30 @@ export interface components {
             /** Blurb */
             blurb: string | null;
         };
+        /**
+         * Change
+         * @description One proposed change to a book on the shelf, which the member approves or declines.
+         */
+        Change: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "new" | "improve";
+            /** Chapter Id */
+            chapter_id: string | null;
+            /** Title */
+            title: string;
+            /** Summary */
+            summary: string;
+            /** Quotes */
+            quotes: string[];
+            /** Note */
+            note: string;
+            current: components["schemas"]["CurrentChapter"] | null;
+        };
         /** Chapter */
         Chapter: {
             /** Id */
@@ -514,6 +680,13 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** CurrentChapter */
+        CurrentChapter: {
+            /** Title */
+            title: string;
+            /** Summary */
+            summary: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -525,7 +698,7 @@ export interface components {
              * Stage
              * @enum {string}
              */
-            stage: "interviewing" | "choosing" | "reviewing" | "done";
+            stage: "interviewing" | "choosing" | "reviewing" | "done" | "adding" | "revising";
             question: components["schemas"]["Question"] | null;
             /** Topic */
             topic: string | null;
@@ -539,6 +712,12 @@ export interface components {
             titles: components["schemas"]["TitleOption"][] | null;
             /** Blurb */
             blurb: string | null;
+            /** Changes */
+            changes: components["schemas"]["Change"][] | null;
+            /** Proposed Blurb */
+            proposed_blurb: string | null;
+            /** Nothing New */
+            nothing_new: boolean;
         };
         /**
          * LendingCheckout
@@ -681,7 +860,7 @@ export interface components {
              * Phase
              * @enum {string}
              */
-            phase: "sweep" | "dig" | "shape";
+            phase: "sweep" | "dig" | "shape" | "adding" | "reading";
             /** Playback */
             playback: string | null;
         };
@@ -691,6 +870,11 @@ export interface components {
             id: string;
             /** Title */
             title: string;
+        };
+        /** ReadingAnswerRequest */
+        ReadingAnswerRequest: {
+            /** Answer */
+            answer: string;
         };
         /**
          * ReadingCheckout
@@ -719,6 +903,29 @@ export interface components {
             created_at: string;
             /** Expires At */
             expires_at: string | null;
+        };
+        /**
+         * ReadingQuestionResponse
+         * @description The question after a reading. Nothing here says who the reader was.
+         */
+        ReadingQuestionResponse: {
+            /** Id */
+            id: string;
+            /** Question */
+            question: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** RevisionRequest */
+        RevisionRequest: {
+            /**
+             * Approved
+             * @description The ids of the changes to apply. The rest are dropped.
+             */
+            approved: string[];
         };
         /** ShapeRequest */
         ShapeRequest: {
@@ -751,6 +958,32 @@ export interface components {
             first_name: string;
             /** Last Name */
             last_name: string;
+        };
+        /** SparkRequest */
+        SparkRequest: {
+            /** Book Id */
+            book_id: string;
+            /** Chapter Id */
+            chapter_id: string;
+        };
+        /**
+         * SparkResponse
+         * @description A chapter that made this member think "I have one like this". Only they ever see it.
+         */
+        SparkResponse: {
+            /** Id */
+            id: string;
+            /** Book Id */
+            book_id: string;
+            /** Chapter Id */
+            chapter_id: string;
+            /** Chapter Title */
+            chapter_title: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** StartRequest */
         StartRequest: {
@@ -1391,6 +1624,225 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+        };
+    };
+    reopen_interview_reopen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+        };
+    };
+    apply_revision_interview_revision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_sparks_interview_sparks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SparkResponse"][];
+                };
+            };
+        };
+    };
+    add_spark_interview_sparks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SparkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SparkResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_spark_interview_sparks__spark_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spark_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_reading_questions_interview_reading_questions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadingQuestionResponse"][];
+                };
+            };
+        };
+    };
+    answer_reading_question_interview_reading_questions__question_id__answer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadingAnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_reading_question_interview_reading_questions__question_id__dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

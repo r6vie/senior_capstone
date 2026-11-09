@@ -53,7 +53,7 @@ class FakeEngine:
         self.fail_next = False
         self.fail_blurb = False
 
-    async def next_turn(self, claude, *, turns, resume_text):
+    async def next_turn(self, claude, *, turns, resume_text, sparks=None):
         self.calls.append(("next_turn", {"turns": turns, "resume_text": resume_text}))
         if self.fail_next:
             self.fail_next = False

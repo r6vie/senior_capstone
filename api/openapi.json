@@ -632,7 +632,7 @@
           "Interview"
         ],
         "summary": "Finish",
-        "description": "End the interview and get three titles, each with why it's you.",
+        "description": "End the interview and get three titles, each with why it's you. In a round of adding, end\nthe round and get proposed changes. While revising with `changes` null, write them again.",
         "operationId": "finish_interview_finish_post",
         "responses": {
           "200": {
@@ -820,6 +820,326 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/interview/reopen": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Reopen",
+        "description": "Add to a book on the shelf: a short new round of questions. The book doesn't change yet.",
+        "operationId": "reopen_interview_reopen_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/revision": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Apply Revision",
+        "description": "Apply the approved changes to the book on the shelf. The rest are dropped.",
+        "operationId": "apply_revision_interview_revision_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/sparks": {
+      "get": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "List Sparks",
+        "description": "The member's own sparks waiting for their next round.",
+        "operationId": "list_sparks_interview_sparks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SparkResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Sparks Interview Sparks Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Add Spark",
+        "description": "\"I have one like this\" on a chapter of someone else's book. Private: its author never knows.",
+        "operationId": "add_spark_interview_sparks_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SparkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SparkResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/sparks/{spark_id}": {
+      "delete": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Remove Spark",
+        "operationId": "remove_spark_interview_sparks__spark_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "spark_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Spark Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interview/reading-questions": {
+      "get": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "List Reading Questions",
+        "description": "The question waiting after a reading, if there is one.",
+        "operationId": "list_reading_questions_interview_reading_questions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReadingQuestionResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Reading Questions Interview Reading Questions Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/reading-questions/{question_id}/answer": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Answer Reading Question",
+        "description": "Answer it, and get proposed changes to the book (or `nothing_new`).",
+        "operationId": "answer_reading_question_interview_reading_questions__question_id__answer_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Question Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadingAnswerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interview/reading-questions/{question_id}/dismiss": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Dismiss Reading Question",
+        "description": "Dismiss it, as quietly as a skip: never shown, never counted.",
+        "operationId": "dismiss_reading_question_interview_reading_questions__question_id__dismiss_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Question Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/checkouts": {
@@ -1158,6 +1478,75 @@
         "title": "BookCard",
         "description": "A book as it appears on the shelf."
       },
+      "Change": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "new",
+              "improve"
+            ],
+            "title": "Kind"
+          },
+          "chapter_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "quotes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Quotes"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CurrentChapter"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "chapter_id",
+          "title",
+          "summary",
+          "quotes",
+          "note",
+          "current"
+        ],
+        "title": "Change",
+        "description": "One proposed change to a book on the shelf, which the member approves or declines."
+      },
       "Chapter": {
         "properties": {
           "id": {
@@ -1204,6 +1593,24 @@
         ],
         "title": "CheckoutRequest"
       },
+      "CurrentChapter": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "summary"
+        ],
+        "title": "CurrentChapter"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1225,7 +1632,9 @@
               "interviewing",
               "choosing",
               "reviewing",
-              "done"
+              "done",
+              "adding",
+              "revising"
             ],
             "title": "Stage"
           },
@@ -1286,6 +1695,35 @@
               }
             ],
             "title": "Blurb"
+          },
+          "changes": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Change"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changes"
+          },
+          "proposed_blurb": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Blurb"
+          },
+          "nothing_new": {
+            "type": "boolean",
+            "title": "Nothing New"
           }
         },
         "type": "object",
@@ -1297,7 +1735,10 @@
           "can_finish",
           "ready_for_reveal",
           "titles",
-          "blurb"
+          "blurb",
+          "changes",
+          "proposed_blurb",
+          "nothing_new"
         ],
         "title": "InterviewResponse"
       },
@@ -1648,7 +2089,9 @@
             "enum": [
               "sweep",
               "dig",
-              "shape"
+              "shape",
+              "adding",
+              "reading"
             ],
             "title": "Phase"
           },
@@ -1689,6 +2132,22 @@
           "title"
         ],
         "title": "ReaderBook"
+      },
+      "ReadingAnswerRequest": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Answer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "answer"
+        ],
+        "title": "ReadingAnswerRequest"
       },
       "ReadingCheckout": {
         "properties": {
@@ -1753,6 +2212,49 @@
         ],
         "title": "ReadingCheckout",
         "description": "A checkout as its reader sees it."
+      },
+      "ReadingQuestionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "question",
+          "created_at"
+        ],
+        "title": "ReadingQuestionResponse",
+        "description": "The question after a reading. Nothing here says who the reader was."
+      },
+      "RevisionRequest": {
+        "properties": {
+          "approved": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Approved",
+            "description": "The ids of the changes to apply. The rest are dropped."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approved"
+        ],
+        "title": "RevisionRequest"
       },
       "ShapeRequest": {
         "properties": {
@@ -1840,6 +2342,60 @@
           "last_name"
         ],
         "title": "SignupRequest"
+      },
+      "SparkRequest": {
+        "properties": {
+          "book_id": {
+            "type": "string",
+            "title": "Book Id"
+          },
+          "chapter_id": {
+            "type": "string",
+            "title": "Chapter Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "book_id",
+          "chapter_id"
+        ],
+        "title": "SparkRequest"
+      },
+      "SparkResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "book_id": {
+            "type": "string",
+            "title": "Book Id"
+          },
+          "chapter_id": {
+            "type": "string",
+            "title": "Chapter Id"
+          },
+          "chapter_title": {
+            "type": "string",
+            "title": "Chapter Title"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "book_id",
+          "chapter_id",
+          "chapter_title",
+          "created_at"
+        ],
+        "title": "SparkResponse",
+        "description": "A chapter that made this member think \"I have one like this\". Only they ever see it."
       },
       "StartRequest": {
         "properties": {

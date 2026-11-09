@@ -6,7 +6,18 @@ from trove.auth.service import get_current_user
 from trove.books.models import MyBookResponse
 from trove.core.database import get_database
 from trove.interview import service
-from trove.interview.models import AnswerRequest, InterviewResponse, ShapeRequest, StartRequest, TitleRequest
+from trove.interview.models import (
+    AnswerRequest,
+    InterviewResponse,
+    ReadingAnswerRequest,
+    ReadingQuestionResponse,
+    RevisionRequest,
+    ShapeRequest,
+    SparkRequest,
+    SparkResponse,
+    StartRequest,
+    TitleRequest,
+)
 from trove.interview.service import interview_view
 
 router = APIRouter(prefix="/interview", tags=["Interview"])
@@ -81,7 +92,8 @@ async def finish(
     database: AsyncDatabase = Depends(get_database),
     claude: Claude = Depends(get_claude),
 ) -> InterviewResponse:
-    """End the interview and get three titles, each with why it's you."""
+    """End the interview and get three titles, each with why it's you. In a round of adding, end
+    the round and get proposed changes. While revising with `changes` null, write them again."""
     return interview_view(await service.finish(database, claude, user))
 
 
@@ -124,3 +136,85 @@ async def put_on_shelf(
 ) -> MyBookResponse:
     """Put the finished book on the shelf. The interview is then done."""
     return await service.put_on_shelf(database, user)
+
+
+@router.post("/reopen", response_model=InterviewResponse)
+async def reopen(
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+    claude: Claude = Depends(get_claude),
+) -> InterviewResponse:
+    """Add to a book on the shelf: a short new round of questions. The book doesn't change yet."""
+    return interview_view(await service.reopen(database, claude, user))
+
+
+@router.post("/revision", response_model=MyBookResponse)
+async def apply_revision(
+    data: RevisionRequest,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+    claude: Claude = Depends(get_claude),
+) -> MyBookResponse:
+    """Apply the approved changes to the book on the shelf. The rest are dropped."""
+    return await service.apply_revision(database, claude, user, data.approved)
+
+
+@router.post("/sparks", response_model=SparkResponse)
+async def add_spark(
+    data: SparkRequest,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> SparkResponse:
+    """ "I have one like this" on a chapter of someone else's book. Private: its author never knows."""
+    return await service.add_spark(database, user, data.book_id, data.chapter_id)
+
+
+@router.get("/sparks", response_model=list[SparkResponse])
+async def list_sparks(
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> list[SparkResponse]:
+    """The member's own sparks waiting for their next round."""
+    return await service.list_sparks(database, user)
+
+
+@router.delete("/sparks/{spark_id}", status_code=204)
+async def remove_spark(
+    spark_id: str,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> None:
+    await service.remove_spark(database, user, spark_id)
+
+
+@router.get("/reading-questions", response_model=list[ReadingQuestionResponse])
+async def list_reading_questions(
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> list[ReadingQuestionResponse]:
+    """The question waiting after a reading, if there is one."""
+    return await service.list_reading_questions(database, user)
+
+
+@router.post("/reading-questions/{question_id}/answer", response_model=InterviewResponse)
+async def answer_reading_question(
+    question_id: str,
+    data: ReadingAnswerRequest,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+    claude: Claude = Depends(get_claude),
+) -> InterviewResponse:
+    """Answer it, and get proposed changes to the book (or `nothing_new`)."""
+    return interview_view(
+        await service.answer_reading_question(database, claude, user, question_id, data.answer)
+    )
+
+
+@router.post("/reading-questions/{question_id}/dismiss", status_code=204)
+async def dismiss_reading_question(
+    question_id: str,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> None:
+    """Dismiss it, as quietly as a skip: never shown, never counted."""
+    await service.dismiss_reading_question(database, user, question_id)

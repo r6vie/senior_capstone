@@ -19,6 +19,8 @@ from trove.ai.client import Claude, text_of
 from trove.ai.prompts import load_prompt
 
 Phase = Literal["sweep", "dig", "shape"]
+# Turns after the first interview: a question of an adding round (I3), or the question after a reading (I6).
+TurnPhase = Literal["sweep", "dig", "shape", "adding", "reading"]
 
 # The spec asks for about 15-25 questions. Past SHAPE_BY the Librarian is told to wrap up;
 # at MAX_QUESTIONS the reveal is forced. Before MIN_ANSWERS a reveal is never offered.
@@ -35,6 +37,10 @@ MIN_SWEEP = 4
 THIN_WINDOW, THIN_SWITCH = 3, 2
 SHORT_ANSWER_WORDS, UNSURE_ANSWER_WORDS = 6, 15
 MIN_CHAPTERS, MAX_CHAPTERS = 3, 5
+# A book may grow past its first version, to this many chapters (docs/review/decisions.md, row 1).
+MAX_BOOK_CHAPTERS = 8
+# A round of adding is short. Skips count only toward the second limit, so skipping can't run forever.
+MAX_ADDING_ANSWERS, MAX_ADDING_TURNS = 8, 14
 # The back-cover blurb fits the book's `blurb` field (B1).
 MAX_BLURB = 600
 
@@ -48,7 +54,7 @@ class Turn(BaseModel):
     question: str
     # Empty when the member skipped the question.
     answer: str
-    phase: Phase
+    phase: TurnPhase
 
 
 class NextTurn(BaseModel):
@@ -59,6 +65,14 @@ class NextTurn(BaseModel):
     ready_for_reveal: bool
     # A few words for "Last time you were telling me about {topic}." Display only, never the book.
     topic: str
+
+
+class AddingTurn(BaseModel):
+    """The next step of an adding round. `done` means no more questions: `question` is empty."""
+
+    question: str
+    topic: str
+    done: bool
 
 
 class DraftChapter(BaseModel):
@@ -82,6 +96,33 @@ class Draft(BaseModel):
 
 class FinishedBook(BaseModel):
     chapters: list[DraftChapter]
+    blurb: str | None
+
+
+class CurrentChapter(BaseModel):
+    title: str
+    summary: str
+
+
+class Change(BaseModel):
+    """One proposed change to a book on the shelf, which the member approves or declines."""
+
+    id: str
+    kind: Literal["new", "improve"]
+    # The chapter an `improve` replaces. Null for a new chapter.
+    chapter_id: str | None
+    title: str
+    summary: str
+    quotes: list[str]
+    # One line to the member on what changed.
+    note: str
+    # What's there now, so the member can compare. Null for a new chapter.
+    current: CurrentChapter | None
+
+
+class Revision(BaseModel):
+    changes: list[Change]
+    # The back cover if every change is approved.
     blurb: str | None
 
 
@@ -135,9 +176,25 @@ class _Blurb(BaseModel):
     blurb: str
 
 
-async def next_turn(claude: Claude, *, turns: list[Turn], resume_text: str | None) -> NextTurn:
+class _Change(BaseModel):
+    kind: Literal["new", "improve"]
+    chapter_id: str | None
+    title: str
+    summary: str
+    quotes: list[str]
+    note: str
+
+
+class _Revision(BaseModel):
+    changes: list[_Change]
+    blurb: str
+
+
+async def next_turn(
+    claude: Claude, *, turns: list[Turn], resume_text: str | None, sparks: list[str] | None = None
+) -> NextTurn:
     """The Librarian's next question, given every turn so far."""
-    plan = await plan_turn(claude, turns=turns, resume_text=resume_text)
+    plan = await plan_turn(claude, turns=turns, resume_text=resume_text, sparks=sparks)
     return NextTurn(
         question=plan.question,
         phase=plan.phase,
@@ -147,10 +204,12 @@ async def next_turn(claude: Claude, *, turns: list[Turn], resume_text: str | Non
     )
 
 
-async def plan_turn(claude: Claude, *, turns: list[Turn], resume_text: str | None) -> TurnPlan:
+async def plan_turn(
+    claude: Claude, *, turns: list[Turn], resume_text: str | None, sparks: list[str] | None = None
+) -> TurnPlan:
     """next_turn plus the private thread ranking, which the evals read."""
     plan = await _ask(
-        claude, "interview/interviewer", _turn_blocks(turns, resume_text), TurnPlan, QUESTION_EFFORT
+        claude, "interview/interviewer", _turn_blocks(turns, resume_text, sparks), TurnPlan, QUESTION_EFFORT
     )
 
     answered = sum(1 for turn in turns if turn.answer.strip())
@@ -250,6 +309,115 @@ async def rewrite_chapter(
     return current.model_copy(update={"title": raw.title, "summary": raw.summary})
 
 
+async def next_adding_turn(
+    claude: Claude, *, turns: list[Turn], round_start: int, chapters: list[DraftChapter], sparks: list[str]
+) -> AddingTurn:
+    """The next question of a round of adding to a book on the shelf, or the end of the round."""
+    new = turns[round_start:]
+    answered = sum(1 for turn in new if not _skipped(turn))
+    # At the limit there's nothing to ask Claude, so nothing is spent.
+    if answered >= MAX_ADDING_ANSWERS or len(new) >= MAX_ADDING_TURNS:
+        return AddingTurn(question="", topic="what you've just added", done=True)
+    plan = await _ask(
+        claude,
+        "interview/adding",
+        _adding_blocks(turns, round_start, chapters, sparks),
+        AddingTurn,
+        QUESTION_EFFORT,
+    )
+    if plan.done and answered > 0:
+        return plan.model_copy(update={"question": ""})
+    if not plan.question.strip():
+        raise ValueError("The adding round has to ask something before it can end.")
+    return plan.model_copy(update={"done": False})
+
+
+async def revise_book(
+    claude: Claude, *, turns: list[Turn], round_start: int, chapters: list[DraftChapter], blurb: str | None
+) -> Revision:
+    """Proposed changes to the book from the round's answers. Grounding is checked here: a change
+    must quote the member verbatim, and at least once from this round. An empty list is a real
+    result: a thin answer can earn nothing."""
+    room = max(0, MAX_BOOK_CHAPTERS - len(chapters))
+    listing = json.dumps([chapter.model_dump() for chapter in chapters], indent=1)
+    content = (
+        f"{_transcript(turns[:round_start])}\n\n{_new_round(turns, round_start)}\n\n"
+        f"<book_chapters>\n{listing}\n</book_chapters>\n\n"
+        f"<current_blurb>{blurb or ''}</current_blurb>\n\n<room>{room}</room>\n\n"
+        "Propose the changes these new answers earn."
+    )
+    raw = await _ask(claude, "interview/revise", content, _Revision, BOOK_EFFORT)
+    by_id = {chapter.id: chapter for chapter in chapters}
+    new_turns = turns[round_start:]
+    changes: list[Change] = []
+    for change in raw.changes:
+        quotes = grounded_quotes(change.quotes, turns)
+        if not grounded_quotes(quotes, new_turns):
+            continue
+        current = None
+        if change.kind == "improve":
+            chapter = by_id.get(change.chapter_id or "")
+            if chapter is None or any(c.chapter_id == chapter.id for c in changes):
+                continue
+            current = CurrentChapter(title=chapter.title, summary=chapter.summary)
+        elif room == 0:
+            continue
+        else:
+            room -= 1
+        changes.append(
+            Change(
+                id=str(uuid4()),
+                kind=change.kind,
+                chapter_id=change.chapter_id if change.kind == "improve" else None,
+                title=change.title,
+                summary=change.summary,
+                quotes=quotes,
+                note=change.note,
+                current=current,
+            )
+        )
+    return Revision(changes=changes, blurb=_usable_blurb(raw.blurb) if changes else None)
+
+
+def _new_round(turns: list[Turn], round_start: int) -> str:
+    rendered = (_render(n, turn) for n, turn in enumerate(turns, start=1) if n > round_start)
+    return "\n".join(["<new_round>", *rendered, "</new_round>"])
+
+
+def _sparks_block(sparks: list[str] | None) -> str:
+    """Only titles of other people's chapters, as a cue. The prompts say none of it is about the member."""
+    if not sparks:
+        return ""
+    listed = "\n".join(f"- {title}" for title in sparks)
+    return f"\n\n<sparks>\n{listed}\n</sparks>"
+
+
+def _adding_blocks(
+    turns: list[Turn], round_start: int, chapters: list[DraftChapter], sparks: list[str]
+) -> list[dict]:
+    """The book and the earlier interview, then one block per new turn with a cache breakpoint on
+    the newest, so each question of the round reads what came before from the cache."""
+    listing = json.dumps([{"title": c.title, "summary": c.summary} for c in chapters], indent=1)
+    new = turns[round_start:]
+    blocks = [
+        {
+            "type": "text",
+            "text": f"<book_chapters>\n{listing}\n</book_chapters>\n\n{_transcript(turns[:round_start])}\n\n",
+        },
+        {"type": "text", "text": "<new_round>\n"},
+    ]
+    blocks += [
+        {"type": "text", "text": _render(n, turn)} for n, turn in enumerate(new, start=round_start + 1)
+    ]
+    blocks[-1]["cache_control"] = {"type": "ephemeral"}
+    answered = sum(1 for turn in new if not _skipped(turn))
+    status = f"Questions answered this round: {answered}."
+    if new and _skipped(new[-1]):
+        status += " The member skipped the last question. Move to other ground."
+    blocks.append({"type": "text", "text": f"</new_round>\n\n{status}{_sparks_block(sparks)}"})
+    return blocks
+
+
 def _usable_blurb(blurb: str) -> str | None:
     """The blurb if it fits. One that runs long is cut back to its last whole sentence that fits,
     as long as two sentences remain; cutting can't add anything ungrounded."""
@@ -320,7 +488,7 @@ def _questions_asked(turns: list[Turn]) -> int:
     return sum(1 for turn in turns if not _skipped(turn))
 
 
-def _turn_blocks(turns: list[Turn], resume_text: str | None) -> list[dict]:
+def _turn_blocks(turns: list[Turn], resume_text: str | None, sparks: list[str] | None = None) -> list[dict]:
     """The transcript as one content block per turn, with a cache breakpoint on the newest turn.
     Each request then extends the previous one's prefix, so the interview so far is read from
     the cache instead of being paid for again on every question."""
@@ -330,7 +498,7 @@ def _turn_blocks(turns: list[Turn], resume_text: str | None) -> list[dict]:
     blocks.append({"type": "text", "text": "<interview>\n"})
     blocks += [{"type": "text", "text": _render(n, turn)} for n, turn in enumerate(turns, start=1)]
     blocks[-1]["cache_control"] = {"type": "ephemeral"}
-    blocks.append({"type": "text", "text": f"</interview>\n\n{_status(turns)}"})
+    blocks.append({"type": "text", "text": f"</interview>\n\n{_status(turns)}{_sparks_block(sparks)}"})
     return blocks
 
 
