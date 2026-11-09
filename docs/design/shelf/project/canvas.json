@@ -386,7 +386,7 @@
       "x": 0,
       "y": 0,
       "w": 1700,
-      "h": 4300,
+      "h": 4700,
       "title": "A \u00b7 The question band",
       "page": "interview",
       "expand": "fill"
@@ -422,7 +422,7 @@
       "x": 0,
       "y": 0,
       "w": 1300,
-      "h": 12134,
+      "h": 13363,
       "title": "My book",
       "page": "growing",
       "expand": "fill"
@@ -431,7 +431,7 @@
       "x": 1420,
       "y": 0,
       "w": 1300,
-      "h": 4104,
+      "h": 3976,
       "title": "Adding to your book",
       "page": "growing",
       "expand": "fill"
@@ -440,7 +440,7 @@
       "x": 2840,
       "y": 0,
       "w": 1300,
-      "h": 8150,
+      "h": 8122,
       "title": "Proposed changes",
       "page": "growing",
       "expand": "fill"
@@ -458,9 +458,27 @@
       "x": 5680,
       "y": 0,
       "w": 1300,
-      "h": 3034,
+      "h": 2905,
       "title": "The reading question",
       "page": "growing",
+      "expand": "fill"
+    },
+    "InterviewA3.dc.html": {
+      "x": 7280,
+      "y": 0,
+      "w": 1700,
+      "h": 2900,
+      "title": "A \u00b7 Other states",
+      "page": "interview",
+      "expand": "fill"
+    },
+    "InterviewAPhone.dc.html": {
+      "x": 9100,
+      "y": 0,
+      "w": 1300,
+      "h": 2262,
+      "title": "A \u00b7 Phone",
+      "page": "interview",
       "expand": "fill"
     }
   },
@@ -515,7 +533,9 @@
     "GrowingG2.dc.html",
     "GrowingG3.dc.html",
     "GrowingG4.dc.html",
-    "GrowingG5.dc.html"
+    "GrowingG5.dc.html",
+    "InterviewA3.dc.html",
+    "InterviewAPhone.dc.html"
   ],
   "notes": {
     "head": {

@@ -2,6 +2,21 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-08: quality round 4 applied to the frames (T40)
+
+- **Interview A:** Shape now has two frames (field empty: the red Yes alone; correction typed: red "Send my correction" and a quiet "Yes,
+  that's me, ignore this"); the exit link has a words-in-the-field frame ("Send this, then show me my book"); "Back to the question"
+  replaces Continue / Continue later; "Saved" no longer sits beside an empty field. New board "A · Other states" draws not enough
+  material, writing after a return, a failed load, answer saved but next question missing, the review after rewriting (go back to
+  the last version; a rewrite that came back too close) and the other two titles. New board "A · Phone" draws start, reveal (title
+  clear of the radio) and review (title, then book at small size, then back cover and stacked quiet links).
+- **My book and the rest:** sparks list under the red button when no book exists (R4-06); finding titles and writing book states; undo
+  copy with the date (R4-05); the reading caption is Plex 14px sentence case (R4-11); the wait and failed panels lose their headings
+  (R4-12); a new chapter hides Now on phones (R4-13); "Nothing from these questions changes your book" (R4-08); a removal's back cover
+  card says "Rewritten without this chapter" (R4-10); the back cover is always open and never underlined (R4-03); G4 note fixed (R4-15).
+- **Samples (R4-18):** the back cover no longer ends "If you're…, I can tell you…", and sample questions ask one thing without "first".
+- **CoverDirections:** it never held the old persona; its sample authors now show full names.
+
 ## 2026-11-08: quality round 2 applied to the frames (T39)
 
 - **Applied:** R2-01 (a Removing change type; a back cover that fails says so on its own card, the old one stays, they can still
