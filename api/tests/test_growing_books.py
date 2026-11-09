@@ -166,6 +166,25 @@ async def test_finishing_needs_one_real_answer(client, author, fake_claude):
     assert state["can_finish"] is True
 
 
+async def test_finishing_a_round_keeps_what_is_in_the_field(client, database, author, fake_claude):
+    state = await start_round(client, author, fake_claude)
+    fake_claude.responses.append(revision(change()))
+    response = await client.post("/interview/finish", json={"answer": NEW_ANSWER}, headers=author["headers"])
+    assert response.status_code == 200, response.text
+    assert response.json()["stage"] == "revising"
+    # One request wrote the first question and one the revision: no extra question in between.
+    assert [r["system"] for r in fake_claude.requests] == [
+        load_prompt("interview/adding"),
+        load_prompt("interview/revise"),
+    ]
+    saved = await database.interviews.find_one({"user_id": author["id"]})
+    assert saved["turns"][-1] == {
+        "question": state["question"]["text"],
+        "answer": NEW_ANSWER,
+        "phase": "adding",
+    }
+
+
 async def test_the_shape_step_doesnt_exist_in_a_round(client, author, fake_claude):
     await start_round(client, author, fake_claude)
     assert (await client.post("/interview/shape", json={}, headers=author["headers"])).status_code == 409

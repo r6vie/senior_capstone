@@ -271,6 +271,7 @@ export interface paths {
          * Finish
          * @description End the interview and get three titles, each with why it's you. In a round of adding, end
          *     the round and get proposed changes. While revising with `changes` null, write them again.
+         *     `answer` is saved first as the answer to the waiting question, with no question after it.
          */
         post: operations["finish_interview_finish_post"];
         delete?: never;
@@ -686,6 +687,14 @@ export interface components {
             title: string;
             /** Summary */
             summary: string;
+        };
+        /** FinishRequest */
+        FinishRequest: {
+            /**
+             * Answer
+             * @description What's in the field: saved as the waiting question's answer first.
+             */
+            answer?: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1500,7 +1509,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["FinishRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -1509,6 +1522,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

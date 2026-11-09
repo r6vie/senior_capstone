@@ -25,6 +25,14 @@ class AnswerRequest(RequestBody):
     answer: NonEmptyText = Field(max_length=5000)
 
 
+class FinishRequest(RequestBody):
+    answer: NonEmptyText | None = Field(
+        None,
+        max_length=5000,
+        description="What's in the field: saved as the waiting question's answer first.",
+    )
+
+
 class ShapeRequest(RequestBody):
     correction: NonEmptyText | None = Field(
         None, max_length=5000, description="What's different. Leave out to confirm: \"Yes, that's me\"."

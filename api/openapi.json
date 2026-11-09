@@ -632,8 +632,25 @@
           "Interview"
         ],
         "summary": "Finish",
-        "description": "End the interview and get three titles, each with why it's you. In a round of adding, end\nthe round and get proposed changes. While revising with `changes` null, write them again.",
+        "description": "End the interview and get three titles, each with why it's you. In a round of adding, end\nthe round and get proposed changes. While revising with `changes` null, write them again.\n`answer` is saved first as the answer to the waiting question, with no question after it.",
         "operationId": "finish_interview_finish_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/FinishRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Data"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -641,6 +658,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -1610,6 +1637,27 @@
           "summary"
         ],
         "title": "CurrentChapter"
+      },
+      "FinishRequest": {
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer",
+            "description": "What's in the field: saved as the waiting question's answer first."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "FinishRequest"
       },
       "HTTPValidationError": {
         "properties": {

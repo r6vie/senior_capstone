@@ -8,6 +8,7 @@ from trove.core.database import get_database
 from trove.interview import service
 from trove.interview.models import (
     AnswerRequest,
+    FinishRequest,
     InterviewResponse,
     ReadingAnswerRequest,
     ReadingQuestionResponse,
@@ -88,13 +89,15 @@ async def shape(
 
 @router.post("/finish", response_model=InterviewResponse)
 async def finish(
+    data: FinishRequest | None = None,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
     claude: Claude = Depends(get_claude),
 ) -> InterviewResponse:
     """End the interview and get three titles, each with why it's you. In a round of adding, end
-    the round and get proposed changes. While revising with `changes` null, write them again."""
-    return interview_view(await service.finish(database, claude, user))
+    the round and get proposed changes. While revising with `changes` null, write them again.
+    `answer` is saved first as the answer to the waiting question, with no question after it."""
+    return interview_view(await service.finish(database, claude, user, data.answer if data else None))
 
 
 @router.post("/title", response_model=MyBookResponse)

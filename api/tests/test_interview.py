@@ -339,3 +339,37 @@ async def test_skip_is_409_without_a_question_and_on_the_shape_step(client, data
     assert (await client.post("/interview/skip", headers=headers)).status_code == 409
     await database.interviews.update_one({}, {"$set": {"current": None}})
     assert (await client.post("/interview/skip", headers=headers)).status_code == 409
+
+
+async def test_finish_saves_what_is_in_the_field_first(client, database, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    state = await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS - 1)
+    waiting = state["question"]
+    assert state["can_finish"] is False
+
+    response = await client.post(
+        "/interview/finish", json={"answer": "The last thing I said."}, headers=headers
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["stage"] == "choosing"
+    saved = await database.interviews.find_one({})
+    assert saved["turns"][-1] == {
+        "question": waiting["text"],
+        "answer": "The last thing I said.",
+        "phase": waiting["phase"],
+    }
+
+
+async def test_finish_too_early_keeps_the_question_and_saves_nothing(client, database, headers, fake_engine):
+    first = (await client.post("/interview", json={}, headers=headers)).json()
+    response = await client.post("/interview/finish", json={"answer": "Too soon."}, headers=headers)
+    assert response.status_code == 409
+    saved = await database.interviews.find_one({})
+    assert saved["turns"] == []
+    assert saved["current"]["question"] == first["question"]["text"]
+
+
+async def test_finish_with_no_body_still_works(client, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    assert (await client.post("/interview/finish", headers=headers)).status_code == 200

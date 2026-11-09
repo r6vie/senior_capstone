@@ -256,9 +256,31 @@ async def skip(database: AsyncDatabase, claude: Claude, user: dict) -> dict:
     return await answer(database, claude, user, "", shape=False)
 
 
-async def finish(database: AsyncDatabase, claude: Claude, user: dict) -> dict:
-    """End the interview and write the pool of chapters and the three titles."""
+async def save_last_answer(database: AsyncDatabase, interview: dict, text: str) -> dict:
+    """Save what was in the field when the member chose to finish, with no question after it. Only
+    if finishing is allowed with it counted, so a refused finish leaves the question waiting."""
+    current = interview["current"]
+    if interview["stage"] not in ASKING_STAGES or current is None:
+        raise conflict("There's no question waiting for an answer.")
+    turn = {"question": current["question"], "answer": text, "phase": current["phase"]}
+    if not interview_view({**interview, "turns": [*interview["turns"], turn]}).can_finish:
+        raise conflict("Keep going a little longer first.")
+    saved = await database.interviews.find_one_and_update(
+        {"_id": interview["_id"], "stage": interview["stage"], "current": current},
+        {"$push": {"turns": turn}, "$set": {"current": None, "updated_at": datetime.now(UTC)}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if saved is None:
+        raise conflict("That question was already answered.")
+    return saved
+
+
+async def finish(database: AsyncDatabase, claude: Claude, user: dict, answer_text: str | None = None) -> dict:
+    """End the interview and write the pool of chapters and the three titles. `answer_text` is
+    saved first, so words in the field are never dropped."""
     interview = await get_interview(database, user["_id"])
+    if answer_text is not None:
+        interview = await save_last_answer(database, interview, answer_text)
     if interview["stage"] in ("adding", "revising"):
         return await finish_round(database, claude, interview)
     if interview["stage"] != "interviewing":
