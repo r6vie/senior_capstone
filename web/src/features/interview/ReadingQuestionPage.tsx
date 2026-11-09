@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
 import { ErrorMessage, Frame, focusBand, Waiting } from "./InterviewFrame";
 import { type InterviewClient, InterviewError, type ReadingQuestion } from "./interviewClient";
+import { FIRST_VERSION_SAVED, leaveWords } from "./LeftoverWords";
 
 // The question after a reading (trove.md §3, board G5). The other person's name is shown to the author
 // here, and it never goes to a prompt or into the book.
@@ -24,6 +25,9 @@ export function ReadingQuestionPage({ client = apiInterviewClient }: { client?: 
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // What a failed send tried to save, so an edit since can be told from a repeat.
+  const firstSent = useRef<string | null>(null);
+  const userId = user?.id ?? "anon";
 
   useEffect(() => {
     let live = true;
@@ -64,7 +68,7 @@ export function ReadingQuestionPage({ client = apiInterviewClient }: { client?: 
     );
   }
 
-  const draftKey = draftKeyFor(user?.id ?? "anon", `reading:${question.id}`);
+  const draftKey = draftKeyFor(userId, `reading:${question.id}`);
   const say = question.question;
 
   async function send(text: string) {
@@ -75,14 +79,29 @@ export function ReadingQuestionPage({ client = apiInterviewClient }: { client?: 
       clearDraft(draftKey);
       navigate("/interview", { state: { fromReading: true } });
     } catch (reason) {
-      // Whether it arrived is what matters: the question is used up once an answer is saved.
+      // The question is used up once an answer is saved, so whether it's still waiting says what happened.
       const waiting = await client.readingQuestions().catch(() => null);
-      if (waiting && !waiting.some((candidate) => candidate.id === question?.id)) {
+      const gone = waiting && !waiting.some((candidate) => candidate.id === question?.id);
+      const sentBefore = firstSent.current;
+      const refused = reason instanceof InterviewError && reason.conflict;
+      if (gone && refused && sentBefore === null && !reason.alreadySaved) {
+        // Refused on the first try: another screen dealt with this question, and these words weren't
+        // saved. They stay in the field, with the honest sentence.
+        setError(
+          "You'd already answered this on another screen, so these words weren't saved. They're still here.",
+        );
+        setBusy(false);
+        return;
+      }
+      if (gone) {
+        // It arrived, this try or an earlier one. An edit made since has nowhere to go but stays visible.
+        if (sentBefore !== null && sentBefore !== text) leaveWords(userId, FIRST_VERSION_SAVED, text);
         clearDraft(draftKey);
         navigate("/interview", { state: { fromReading: true, answerSaved: true } });
         return;
       }
       // Still waiting, so the answer stays in the field to send again.
+      firstSent.current = sentBefore ?? text;
       setError(
         reason instanceof InterviewError
           ? reason.message

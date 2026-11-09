@@ -8,10 +8,11 @@ export function UndoChanges({ onUndo, onDone }: { onUndo: () => Promise<void>; o
   const [working, setWorking] = useState(false);
   const [failed, setFailed] = useState(false);
   const running = useRef(false);
-  const confirm = useRef<HTMLButtonElement>(null);
+  // Focus goes to the safe answer, so a second Enter can't undo by accident.
+  const keep = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (asking) confirm.current?.focus();
+    if (asking) keep.current?.focus();
   }, [asking]);
 
   async function undo() {
@@ -39,7 +40,7 @@ export function UndoChanges({ onUndo, onDone }: { onUndo: () => Promise<void>; o
   }
   return (
     <div className="iv-undo">
-      <p>Undo these changes? They come out of your book, and I won't suggest them again.</p>
+      <p>Undo these changes? Your book goes back to how it was.</p>
       {failed && (
         <p className="message" role="alert">
           That didn't go through. Your book hasn't changed. Try again.
@@ -48,7 +49,6 @@ export function UndoChanges({ onUndo, onDone }: { onUndo: () => Promise<void>; o
       <div className="iv-row">
         <button
           type="button"
-          ref={confirm}
           className="button button-quiet iv-sm"
           aria-busy={working}
           disabled={working}
@@ -56,7 +56,12 @@ export function UndoChanges({ onUndo, onDone }: { onUndo: () => Promise<void>; o
         >
           Undo
         </button>
-        <button type="button" className="button button-quiet iv-sm" onClick={() => setAsking(false)}>
+        <button
+          type="button"
+          ref={keep}
+          className="button button-quiet iv-sm"
+          onClick={() => setAsking(false)}
+        >
           Keep them
         </button>
       </div>

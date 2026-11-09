@@ -1,15 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "../../ui/Button";
+import { useAuth } from "../auth/AuthProvider";
+import { draftKeyFor, keepDraft } from "../interview/AnswerPanel";
 import { apiInterviewClient } from "../interview/apiInterviewClient";
+import { droppedSentence } from "../interview/InterviewPage";
 import type {
   BookStage,
   DraftChapter,
   InterviewClient,
+  LastRound,
   MyBook,
   ReadingQuestion,
   Spark,
 } from "../interview/interviewClient";
+import { LeftoverWords } from "../interview/LeftoverWords";
 import { readingCaption } from "../interview/ReadingQuestionPage";
 import { UndoChanges } from "../interview/UndoChanges";
 import "./MyBookPage.css";
@@ -111,9 +116,11 @@ function Sparks({
 
 function ReadingPanel({
   question,
+  onAnswer,
   onDismiss,
 }: {
   question: ReadingQuestion;
+  onAnswer: () => void;
   onDismiss: (id: string) => void;
 }) {
   return (
@@ -121,7 +128,11 @@ function ReadingPanel({
       <span className="mb-reading-caption">{readingCaption(question)}</span>
       <p>{question.question}</p>
       <div className="iv-row">
-        <Link to={`/interview/reading/${question.id}`} className="button button-secondary iv-sm">
+        <Link
+          to={`/interview/reading/${question.id}`}
+          className="button button-secondary iv-sm"
+          onClick={onAnswer}
+        >
           Answer
         </Link>
         <button type="button" className="button button-quiet iv-sm" onClick={() => onDismiss(question.id)}>
@@ -290,10 +301,6 @@ function NextStep({
   }
 }
 
-function nextStageIsWaiting(stage: BookStage | null): boolean {
-  return stage === "changesWaiting";
-}
-
 export function MyBookPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
   const [stage, setStage] = useState<BookStage | null>(null);
   const [book, setBook] = useState<MyBook | null>(null);
@@ -303,7 +310,8 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   const [problem, setProblem] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [removal, setRemoval] = useState<{ chapterId: string; title: string } | null>(null);
-  const [emptyRound, setEmptyRound] = useState(false);
+  const [lastRound, setLastRound] = useState<LastRound>({ empty: false });
+  const { user } = useAuth();
   const [undone, setUndone] = useState(false);
   const location = useLocation();
   const leftAsIs = Boolean((location.state as { leftAsIs?: boolean } | null)?.leftAsIs);
@@ -313,17 +321,23 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   const load = useCallback(async () => {
     setFailed(false);
     try {
-      const [nextStage, nextBook] = await Promise.all([client.stage(), client.myBook()]);
+      // All together, so the next step is drawn once, right the first time.
+      const [nextStage, nextBook, nextRound] = await Promise.all([
+        client.stage(),
+        client.myBook(),
+        client.lastRound().catch(() => ({ empty: false })),
+      ]);
+      const nextRemoval =
+        nextStage === "changesWaiting" ? await client.openRemoval().catch(() => null) : null;
       stageNow.current = nextStage;
       setStage(nextStage);
       setBook(nextBook);
+      setLastRound(nextRound);
+      setRemoval(nextRemoval);
     } catch {
       setFailed(true);
       return;
     }
-    client.lastRoundEmpty().then(setEmptyRound, () => undefined);
-    if (nextStageIsWaiting(stageNow.current)) client.openRemoval().then(setRemoval, () => undefined);
-    else setRemoval(null);
     // A book without its extras is still the page the member came for.
     client.sparks().then(setSparks, () => undefined);
     client.readingQuestions().then(setReading, () => undefined);
@@ -398,6 +412,7 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
           My book
         </h1>
         <div className="mb-one">
+          <LeftoverWords />
           <NoBookYet stage={stage} />
           {problem && (
             <p className="message" role="alert">
@@ -421,6 +436,11 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   const readingPanel = question && (
     <ReadingPanel
       question={question}
+      onAnswer={() => {
+        if (lastRound.readingAnswer && lastRound.readingQuestionId === question.id) {
+          keepDraft(draftKeyFor(user?.id ?? "anon", `reading:${question.id}`), lastRound.readingAnswer);
+        }
+      }}
       onDismiss={(id) =>
         attempt(
           () => client.dismissReading(id),
@@ -432,6 +452,7 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
 
   return (
     <main className="mb-page">
+      <LeftoverWords />
       <div className={aside ? "mb-two" : "mb-one-wide"}>
         <div>
           <section className="mb-head">
@@ -480,10 +501,11 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
                 </p>
               )}
               {leftAsIs && !undone && <p className="mb-note">Your book stays as it is.</p>}
-              {emptyRound && onShelf && !open && (
+              {lastRound.empty && onShelf && !open && (
                 <p className="mb-note">
-                  Your last answers didn't change your book. They're saved, and the next questions can use
-                  them.
+                  {lastRound.droppedForNames
+                    ? droppedSentence(lastRound.droppedWords)
+                    : "Your last answers didn't change your book. They're saved, and the next questions can use them."}
                 </p>
               )}
               {problem && (

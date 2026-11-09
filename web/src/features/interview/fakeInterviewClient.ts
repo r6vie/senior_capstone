@@ -461,7 +461,7 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
     restoreBlurb: (id) => mutate(id, () => {}),
     openRemoval: async () => null,
     cancelRemoval: async () => undefined,
-    lastRoundEmpty: async () => load()?.stage === "nothing",
+    lastRound: async () => ({ empty: load()?.stage === "nothing" }),
     sparks: async () => load()?.sparks ?? [],
     removeSpark: async (sparkId) => {
       const stored = load();

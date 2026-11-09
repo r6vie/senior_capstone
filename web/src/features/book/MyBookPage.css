@@ -48,6 +48,13 @@
 .mb-head .mb-book-narrow {
   display: none;
 }
+.mb-page .iv-leftovers {
+  width: auto;
+  margin: 0 0 var(--s-5);
+}
+.mb-one .iv-leftovers {
+  margin: 0;
+}
 .mb-title:focus,
 .mb-meta h1:focus {
   outline: none;

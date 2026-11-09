@@ -3,7 +3,13 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "../auth/AuthProvider";
 import { createFakeInterviewClient, resetFakeInterview } from "./fakeInterviewClient";
 import { InterviewPage } from "./InterviewPage";
-import type { InterviewClient, InterviewState, MyBook, ProposedChange } from "./interviewClient";
+import {
+  type InterviewClient,
+  InterviewError,
+  type InterviewState,
+  type MyBook,
+  type ProposedChange,
+} from "./interviewClient";
 import { ReadingQuestionPage } from "./ReadingQuestionPage";
 import { RemovalPage } from "./RemovalPage";
 
@@ -290,10 +296,172 @@ describe("proposed changes", () => {
     );
     fireEvent.click(await screen.findByRole("button", { name: "Undo these changes" }));
     expect(undo).not.toHaveBeenCalled();
-    expect(screen.getByText(/They come out of your book, and I won't suggest them again/)).toBeTruthy();
+    expect(screen.getByText(/Your book goes back to how it was/)).toBeTruthy();
     press("Undo");
     await waitFor(() => expect(undo).toHaveBeenCalledTimes(1));
     expect(await screen.findByText("Your book is back as it was.")).toBeTruthy();
+  });
+});
+
+describe("words that can't go where they were meant", () => {
+  beforeEach(() => localStorage.clear());
+  afterEach(() => vi.restoreAllMocks());
+
+  const stale = new InterviewError("That isn't the question waiting.", false, true, false);
+  const inRound: InterviewState = {
+    id: "me",
+    stage: "asking",
+    round: "adding",
+    phase: "dig",
+    question: "What did you stop doing?",
+    canFinish: false,
+    hasAnswers: false,
+    lastTopic: null,
+  };
+  const moved = (now: InterviewState) => {
+    const c = client(null);
+    vi.spyOn(c, "current").mockResolvedValueOnce(inRound).mockResolvedValue(now);
+    vi.spyOn(c, "answer").mockRejectedValueOnce(stale);
+    return c;
+  };
+  const screens: [string, InterviewState][] = [
+    ["writing", { id: "me", stage: "writing" }],
+    ["proposing", proposing],
+    ["drafting", { id: "me", stage: "drafting", about: "titles" }],
+    ["shaping", { id: "me", stage: "shaping", phase: "shape", playback: "Is this you?" }],
+  ];
+
+  it.each(screens)(
+    "another screen ended the questions, and this lands on %s: the words stay",
+    async (_, now) => {
+      localStorage.setItem("trove_interview_seen:anon", String(Date.now()));
+      show(moved(now));
+      fireEvent.change(await screen.findByLabelText("Your answer"), {
+        target: { value: "My careful words" },
+      });
+      press("Send answer");
+      expect(await screen.findByText("My careful words")).toBeTruthy();
+      expect(
+        screen.getByText(/Your last words weren't saved, because the questions had already ended/),
+      ).toBeTruthy();
+      await act(async () => {});
+      fireEvent.click(screen.getByRole("button", { name: "I've got them" }));
+      await waitFor(() => expect(screen.queryByText("My careful words")).toBeNull());
+    },
+  );
+
+  it("the words stay usable during a wait, and the wait doesn't claim everything was saved", async () => {
+    localStorage.setItem("trove_interview_seen:anon", String(Date.now()));
+    show(moved({ id: "me", stage: "drafting", about: "titles" }));
+    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "My careful words" } });
+    press("Send answer");
+    const words = await screen.findByText("My careful words");
+    expect(words.closest("[inert]")).toBeNull();
+    expect(await screen.findByText("Everything else you've said is saved.")).toBeTruthy();
+    expect(screen.queryByText("Everything you've said is saved.")).toBeNull();
+  });
+
+  it("an edit after a lost reply, when the questions have since ended, stays visible", async () => {
+    localStorage.setItem("trove_interview_seen:anon", String(Date.now()));
+    const c = client(null);
+    vi.spyOn(c, "current").mockResolvedValueOnce(inRound).mockResolvedValue({ id: "me", stage: "writing" });
+    const answer = vi.spyOn(c, "answer").mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    show(c);
+    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "First." } });
+    press("Send answer");
+    await screen.findByRole("alert");
+    fireEvent.change(screen.getByLabelText("Your answer"), { target: { value: "Better." } });
+    press("Send answer");
+    expect(await screen.findByText("Better.")).toBeTruthy();
+    expect(screen.getByText(/Your first version was saved/)).toBeTruthy();
+    expect(answer).toHaveBeenCalledTimes(1);
+  });
+
+  it("a draft left behind by another screen comes back on arrival", async () => {
+    localStorage.setItem("trove_interview_seen:anon", String(Date.now()));
+    localStorage.setItem("trove_interview_draft:anon:An earlier question", "Unsent words");
+    localStorage.setItem("trove_interview_draft:anon:reading:r1", "A reading draft");
+    show(client(inRound));
+    expect(await screen.findByText("Unsent words")).toBeTruthy();
+    expect(screen.queryByText("A reading draft")).toBeNull();
+    expect(localStorage.getItem("trove_interview_draft:anon:reading:r1")).toBe("A reading draft");
+  });
+
+  describe("on Is this you?", () => {
+    const shaping: InterviewState = { id: "me", stage: "shaping", phase: "shape", playback: "Is this you?" };
+    const correct = (text: string) =>
+      fireEvent.change(screen.getByLabelText(/tell me what's different/), { target: { value: text } });
+
+    it("after a lost reply there's no Try again, and an edit is what gets sent", async () => {
+      const c = client(shaping);
+      const send = vi
+        .spyOn(c, "correctShape")
+        .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+        .mockResolvedValue({ id: "me", stage: "nothing" });
+      show(c);
+      await screen.findByText("Is this you?");
+      correct("OLD correction");
+      press("Send my correction");
+      await screen.findByRole("alert");
+      expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+      correct("NEW correction");
+      press("Send my correction");
+      await screen.findByText("Nothing here changes your book.");
+      expect(send).toHaveBeenLastCalledWith("me", "NEW correction");
+    });
+
+    it("if the first correction did arrive, an edit stays visible instead of vanishing", async () => {
+      const c = client(null);
+      vi.spyOn(c, "current")
+        .mockResolvedValueOnce(shaping)
+        .mockResolvedValue({ id: "me", stage: "drafting", about: "titles" });
+      const send = vi.spyOn(c, "correctShape").mockRejectedValueOnce(new TypeError("Failed to fetch"));
+      show(c);
+      await screen.findByText("Is this you?");
+      correct("OLD correction");
+      press("Send my correction");
+      await screen.findByRole("alert");
+      correct("NEW correction");
+      press("Send my correction");
+      expect(await screen.findByText("NEW correction")).toBeTruthy();
+      expect(send).toHaveBeenCalledTimes(1);
+    });
+
+    it("Yes, that's me looks first too, so it isn't sent twice", async () => {
+      const c = client(null);
+      vi.spyOn(c, "current")
+        .mockResolvedValueOnce(shaping)
+        .mockResolvedValue({ id: "me", stage: "drafting", about: "titles" });
+      const confirm = vi.spyOn(c, "confirmShape").mockRejectedValueOnce(new TypeError("Failed to fetch"));
+      show(c);
+      fireEvent.click(await screen.findByRole("button", { name: "Yes, that's me" }));
+      await screen.findByRole("alert");
+      press("Yes, that's me");
+      await screen.findByText("The Librarian is finding your titles…");
+      expect(confirm).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps a typed correction through a refresh", async () => {
+      const key = "trove_interview_draft:anon:shape:Is this you?";
+      localStorage.setItem(key, "Half a correction");
+      show(client(shaping));
+      await screen.findByText("Is this you?");
+      expect((screen.getByLabelText(/tell me what's different/) as HTMLTextAreaElement).value).toBe(
+        "Half a correction",
+      );
+    });
+  });
+
+  it("holds the Librarian's last line on the band during the wait", async () => {
+    show(
+      client({
+        id: "me",
+        stage: "drafting",
+        about: "titles",
+        closingLine: "That's enough for your book. I'll keep it as plain as you told it.",
+      }),
+    );
+    expect(await screen.findByText(/I'll keep it as plain as you told it/)).toBeTruthy();
   });
 });
 
@@ -342,6 +510,26 @@ describe("how a round ends", () => {
     expect(await screen.findByText(/I left this out because it named someone or somewhere/)).toBeTruthy();
     expect(screen.getByRole("link", { name: "Say it again" }).getAttribute("href")).toBe(
       "/interview/reading/r1",
+    );
+  });
+
+  it("names what was caught, and Say it again opens with the member's words", async () => {
+    show(
+      client({
+        id: "me",
+        stage: "nothing",
+        droppedForNames: true,
+        readingQuestionId: "r1",
+        droppedWords: ["Geauga", "County", "Fair"],
+        readingAnswer: "They asked about the Geauga County Fair.",
+      }),
+    );
+    expect(
+      await screen.findByText(/named someone or somewhere: Geauga, County, Fair. Change those/),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByRole("link", { name: "Say it again" }));
+    expect(localStorage.getItem("trove_interview_draft:anon:reading:r1")).toBe(
+      "They asked about the Geauga County Fair.",
     );
   });
 });
@@ -480,6 +668,47 @@ describe("the reading question", () => {
     press("Send answer");
     expect(await screen.findByText("Your answer was saved.")).toBeTruthy();
     expect(screen.getByText("I'm checking whether this belongs in your book.")).toBeTruthy();
+  });
+
+  it("a first send refused because another screen answered doesn't claim it was saved", async () => {
+    const asked = vi.fn().mockResolvedValueOnce([question]).mockResolvedValue([]);
+    show(
+      client(null, {
+        readingQuestions: asked,
+        answerReading: async () => {
+          throw new InterviewError("That question isn't waiting for you.", false, true);
+        },
+      }),
+      "/interview/reading/r1",
+    );
+    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "My words." } });
+    press("Send answer");
+    expect((await screen.findByRole("alert")).textContent).toMatch(/these words weren't saved/);
+    expect(screen.queryByText("Your answer was saved.")).toBeNull();
+    expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("My words.");
+  });
+
+  it("an edit after a lost reply that did arrive stays visible", async () => {
+    const asked = vi
+      .fn()
+      .mockResolvedValueOnce([question])
+      .mockResolvedValueOnce([question])
+      .mockResolvedValue([]);
+    const answer = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockRejectedValue(new InterviewError("That question isn't waiting for you.", false, true));
+    show(
+      client({ id: "me", stage: "writing" }, { readingQuestions: asked, answerReading: answer }),
+      "/interview/reading/r1",
+    );
+    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "First." } });
+    press("Send answer");
+    await screen.findByRole("alert");
+    fireEvent.change(screen.getByLabelText("Your answer"), { target: { value: "Better." } });
+    press("Send answer");
+    expect(await screen.findByText("Better.")).toBeTruthy();
+    expect(screen.getByText(/Your first version was saved/)).toBeTruthy();
   });
 
   it("when the send failed and it's still waiting, keeps the answer", async () => {

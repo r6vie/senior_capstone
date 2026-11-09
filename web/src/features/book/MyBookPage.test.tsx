@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { AuthProvider } from "../auth/AuthProvider";
 import { createFakeInterviewClient } from "../interview/fakeInterviewClient";
 import type {
   BookStage,
@@ -8,6 +9,7 @@ import type {
   ReadingQuestion,
   Spark,
 } from "../interview/interviewClient";
+import { leaveWords } from "../interview/LeftoverWords";
 import { MyBookPage } from "./MyBookPage";
 
 const book: MyBook = {
@@ -45,9 +47,11 @@ function client(stage: BookStage, overrides: Partial<InterviewClient> = {}): Int
 
 function show(c: InterviewClient) {
   render(
-    <MemoryRouter>
-      <MyBookPage client={c} />
-    </MemoryRouter>,
+    <AuthProvider>
+      <MemoryRouter>
+        <MyBookPage client={c} />
+      </MemoryRouter>
+    </AuthProvider>,
   );
 }
 
@@ -141,6 +145,9 @@ describe("MyBookPage", () => {
     expect(await screen.findByText(/Your book was updated on Nov 9/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Undo these changes" }));
     expect(undo).not.toHaveBeenCalled();
+    expect(screen.getByText("Undo these changes? Your book goes back to how it was.")).toBeTruthy();
+    // A second Enter lands on the safe answer.
+    await waitFor(() => expect(document.activeElement?.textContent).toBe("Keep them"));
     fireEvent.click(screen.getByRole("button", { name: "Undo" }));
     expect(await screen.findByText("Your book is back as it was.")).toBeTruthy();
     expect(undo).toHaveBeenCalledTimes(1);
@@ -159,15 +166,61 @@ describe("MyBookPage", () => {
   });
 
   it("says when the last round changed nothing", async () => {
-    show(client("shelf", { lastRoundEmpty: async () => true }));
+    show(client("shelf", { lastRound: async () => ({ empty: true }) }));
     expect(await screen.findByText(/Your last answers didn't change your book/)).toBeTruthy();
+  });
+
+  it("says which words were left out, and answering again starts from what was said", async () => {
+    localStorage.clear();
+    show(
+      client("shelf", {
+        readingQuestions: async () => reading,
+        lastRound: async () => ({
+          empty: true,
+          droppedForNames: true,
+          droppedWords: ["Geauga", "Fair"],
+          readingQuestionId: "r1",
+          readingAnswer: "They asked about the Geauga Fair.",
+        }),
+      }),
+    );
+    expect(await screen.findByText(/named someone or somewhere: Geauga, Fair/)).toBeTruthy();
+    fireEvent.click(screen.getAllByRole("link", { name: "Answer" })[0] as HTMLElement);
+    expect(localStorage.getItem("trove_interview_draft:anon:reading:r1")).toBe(
+      "They asked about the Geauga Fair.",
+    );
+  });
+
+  it("draws the next step once, with what it needs: a removal never flashes as changes", async () => {
+    let finish: (value: { chapterId: string; title: string } | null) => void = () => {};
+    show(
+      client("changesWaiting", {
+        openRemoval: () => new Promise((resolve) => (finish = resolve)),
+      }),
+    );
+    await act(async () => {});
+    expect(screen.queryByRole("link", { name: "Review the proposed changes" })).toBeNull();
+    await act(async () => finish({ chapterId: "3", title: "Four" }));
+    expect(await screen.findByRole("link", { name: "Finish removing" })).toBeTruthy();
+  });
+
+  it("shows words that couldn't be used, until the member says they've got them", async () => {
+    localStorage.clear();
+    leaveWords("anon", "Your last words weren't saved. Here they are:", "My careful words");
+    show(client("shelf"));
+    expect(await screen.findByText("My careful words")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "I've got them" }));
+    expect(screen.queryByText("My careful words")).toBeNull();
+    expect(localStorage.getItem("trove_interview_draft:leftover:anon")).toBeNull();
   });
 
   it("says the book stays as it is after declining everything", async () => {
     render(
-      <MemoryRouter initialEntries={[{ pathname: "/my-book", state: { leftAsIs: true } }]}>
-        <MyBookPage client={client("shelf")} />
-      </MemoryRouter>,
+      <AuthProvider>
+        <MemoryRouter initialEntries={[{ pathname: "/my-book", state: { leftAsIs: true } }]}>
+          <MyBookPage client={client("shelf")} />
+        </MemoryRouter>
+      </AuthProvider>,
     );
     expect(await screen.findByText("Your book stays as it is.")).toBeTruthy();
   });

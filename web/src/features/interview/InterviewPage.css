@@ -260,10 +260,30 @@
   margin: 0;
   font-size: 15px;
 }
-/* A full name always shows whole on the small book, however long. */
-.book-sm .book-author {
-  -webkit-line-clamp: 4;
-  overflow-wrap: anywhere;
+.iv-leftovers {
+  display: grid;
+  gap: var(--s-3);
+  width: min(var(--act-width), 100% - 2 * var(--gutter));
+  margin: var(--s-5) auto 0;
+}
+.iv-leftover .button {
+  justify-self: start;
+}
+.iv-leftover {
+  display: grid;
+  gap: var(--s-2);
+}
+.iv-leftover p {
+  margin: 0;
+  font-size: 15px;
+}
+.iv-leftover blockquote {
+  margin: 0;
+  padding: 2px 0 2px var(--s-4);
+  border-left: 4px solid var(--ink);
+  font: italic 400 18px / 1.4 var(--font-serif);
+  white-space: pre-wrap;
+  user-select: text;
 }
 .iv-resume h2 {
   margin: 0 0 14px;

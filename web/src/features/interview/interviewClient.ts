@@ -65,14 +65,22 @@ export type InterviewState =
       /** "Most of the way there." The API's word, never a count. */
       nearlyDone?: boolean;
     }
-  | { id: string; stage: "shaping"; phase: "shape"; playback: string }
+  | { id: string; stage: "shaping"; phase: "shape"; playback: string; questionId?: string }
   | { id: string; stage: "choosing"; titles: TitleOption[] }
   | { id: string; stage: "reviewing"; book: DraftBook }
   | { id: string; stage: "done"; book: DraftBook }
   /** The changes are being written in the background. */
   | { id: string; stage: "writing" }
   /** The first book's titles or chapters are being written, and the page was refreshed or left. */
-  | { id: string; stage: "drafting"; about: "titles" | "book"; failed?: boolean; retryTitle?: string }
+  | {
+      id: string;
+      stage: "drafting";
+      about: "titles" | "book";
+      failed?: boolean;
+      retryTitle?: string;
+      /** The Librarian's last line, held on the band during the wait. */
+      closingLine?: string;
+    }
   /** Not enough yet for three chapters. Never a dead end: the Librarian keeps asking (decision 14). */
   | { id: string; stage: "notEnough" }
   | { id: string; stage: "writeFailed" }
@@ -93,6 +101,9 @@ export type InterviewState =
       droppedForNames?: boolean;
       /** The reading question to answer again, when that was the answer. */
       readingQuestionId?: string;
+      /** What was caught, and what the member said, so they needn't retype it. */
+      droppedWords?: string[];
+      readingAnswer?: string;
     }
   /** Approved changes just went live. */
   | { id: string; stage: "updated"; book: DraftBook; canUndo: boolean };
@@ -110,6 +121,14 @@ export type BookStage =
   | "writing"
   | "writeFailed"
   | "changesWaiting";
+
+export interface LastRound {
+  empty: boolean;
+  droppedForNames?: boolean;
+  droppedWords?: string[];
+  readingQuestionId?: string;
+  readingAnswer?: string;
+}
 
 export interface MyBook extends DraftBook {
   /** The last approved changes can still be taken back. */
@@ -199,7 +218,7 @@ export interface InterviewClient {
   /** Back out of a removal, leaving everything as it was and recording nothing as declined. */
   cancelRemoval(): Promise<void>;
   /** The last round changed nothing, so My book can say so rather than look untouched. */
-  lastRoundEmpty(): Promise<boolean>;
+  lastRound(): Promise<LastRound>;
   sparks(): Promise<Spark[]>;
   removeSpark(sparkId: string): Promise<void>;
   readingQuestions(): Promise<ReadingQuestion[]>;

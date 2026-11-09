@@ -2,6 +2,7 @@ import { createContext, type ReactNode, useContext, useEffect, useRef, useState 
 import { Link } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import type { Phase } from "./interviewClient";
+import { LeftoverWords } from "./LeftoverWords";
 import "./InterviewPage.css";
 
 // The question band and its top bar, shared by every interview screen: the first interview, adding to
@@ -80,6 +81,8 @@ export function Frame({
           </p>
         )}
       </section>
+      {/* Outside the part that goes inert during a wait: these words have to stay selectable. */}
+      <LeftoverWords />
       <main className="iv-act" tabIndex={-1} inert={busy} aria-busy={busy}>
         {children}
       </main>

@@ -80,6 +80,12 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, progr
     return () => clearTimeout(timer);
   }, [draftKey, text]);
 
+  // Dictated words count as typed: leaving or refreshing mid-recording mustn't lose them.
+  useEffect(() => {
+    const heard = speech.transcript.trim();
+    if (mode === "recording" && heard) writeDraft(draftKey, withSpeech(prior.current, heard));
+  }, [mode, speech.transcript, draftKey]);
+
   // Final results can arrive just after Stop, so bring the words in once listening has really ended.
   // The field only ever gains words here: an empty recording leaves what the member typed alone.
   useEffect(() => {
@@ -110,6 +116,8 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, progr
 
   function cancel() {
     speech.cancel();
+    // Back to what was typed before: what was heard so far was only ever a draft of this recording.
+    writeDraft(draftKey, text);
     setMode("typing");
   }
 
@@ -253,7 +261,7 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, progr
   );
 }
 
-function readDraft(key: string): string {
+export function readDraft(key: string): string {
   try {
     return localStorage.getItem(key) ?? "";
   } catch {
@@ -280,6 +288,26 @@ export function clearDraft(key: string) {
 }
 
 const DRAFT_PREFIX = "trove_interview_draft:";
+
+/**
+ * Words saved under any question but this one. Drafts are cleared once they're sent, so these were never
+ * sent: another screen moved the interview on while they were being typed. Takes them out of storage.
+ */
+export function takeOrphanDrafts(userId: string, current: string): string[] {
+  const mine = `${DRAFT_PREFIX}${userId}:`;
+  const found: string[] = [];
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (!key.startsWith(mine) || key === current || key.startsWith(`${mine}reading:`)) continue;
+      const text = localStorage.getItem(key);
+      localStorage.removeItem(key);
+      if (text?.trim()) found.push(text);
+    }
+  } catch {
+    // Nothing to recover.
+  }
+  return found;
+}
 
 export function draftKeyFor(userId: string, question: string): string {
   return `${DRAFT_PREFIX}${userId}:${question}`;

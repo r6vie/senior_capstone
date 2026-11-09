@@ -16,7 +16,12 @@ import {
 
 type MyBookResponse = components["schemas"]["MyBookResponse"];
 type ChangeResponse = components["schemas"]["Change"];
-type InterviewResponse = components["schemas"]["InterviewResponse"];
+// Trove API's round 6 fields (R6-03, R6-07), read when they're there.
+type InterviewResponse = components["schemas"]["InterviewResponse"] & {
+  reading_answer?: string | null;
+  dropped_words?: string[] | null;
+  closing_line?: string | null;
+};
 
 const ID = "me";
 
@@ -98,7 +103,13 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
   waitingQuestionId = response.question?.question_id ?? "";
   switch (response.stage) {
     case "drafting":
-      return { id: ID, stage: "drafting", about: "titles", failed: response.step_status === "failed" };
+      return {
+        id: ID,
+        stage: "drafting",
+        about: "titles",
+        failed: response.step_status === "failed",
+        closingLine: response.closing_line ?? undefined,
+      };
     case "finishing":
       return {
         id: ID,
@@ -127,6 +138,8 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
             stage: "nothing",
             droppedForNames: response.dropped_for_names,
             readingQuestionId: response.reading_question_id ?? undefined,
+            droppedWords: response.dropped_words ?? undefined,
+            readingAnswer: response.reading_answer ?? undefined,
           }
         : myBook();
     case "revising":
@@ -156,7 +169,7 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
       }
       if (question.phase === "shape") {
         const playback = question.playback ? `${question.playback} ${question.text}` : question.text;
-        return { id: ID, stage: "shaping", phase: "shape", playback };
+        return { id: ID, stage: "shaping", phase: "shape", playback, questionId: question.question_id };
       }
       return {
         id: ID,
@@ -378,9 +391,16 @@ export const apiInterviewClient: InterviewClient = {
     removals.clear();
     ended(await api.POST("/interview/removal/cancel"));
   },
-  async lastRoundEmpty() {
+  async lastRound() {
     const { data } = await api.GET("/interview");
-    return Boolean(data?.nothing_new);
+    const now = data as InterviewResponse | undefined;
+    return {
+      empty: Boolean(now?.nothing_new),
+      droppedForNames: now?.dropped_for_names,
+      droppedWords: now?.dropped_words ?? undefined,
+      readingQuestionId: now?.reading_question_id ?? undefined,
+      readingAnswer: now?.reading_answer ?? undefined,
+    };
   },
   async sparks() {
     const sparks = unwrap(await api.GET("/interview/sparks"));

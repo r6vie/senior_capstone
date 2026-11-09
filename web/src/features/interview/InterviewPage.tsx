@@ -2,7 +2,7 @@ import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef, useStat
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { useAuth } from "../auth/AuthProvider";
-import { AnswerPanel, clearDraft, draftKeyFor, keepDraft } from "./AnswerPanel";
+import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, readDraft, takeOrphanDrafts } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
 import { ErrorMessage, Frame, RetryContext, SmallBook, Waiting } from "./InterviewFrame";
 import {
@@ -14,6 +14,13 @@ import {
   LostError,
   type TitleOption,
 } from "./interviewClient";
+import {
+  FIRST_VERSION_SAVED,
+  leaveWords,
+  NOT_SAVED_ANOTHER_SCREEN,
+  STARTED_FOR_EARLIER,
+  useSavedLine,
+} from "./LeftoverWords";
 import { ChangesScreen, WaitBox } from "./ProposedChanges";
 import { UndoChanges } from "./UndoChanges";
 
@@ -61,6 +68,7 @@ function writeSeen(key: string) {
 function placeOf(state: InterviewState | null): string {
   if (!state) return "";
   if (state.stage === "asking") return `asking:${state.questionId ?? state.question}`;
+  if (state.stage === "shaping") return `shaping:${state.questionId ?? state.playback}`;
   return state.stage === "drafting" && state.failed ? "draftingFailed" : state.stage;
 }
 
@@ -97,8 +105,44 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   const [leftAsIs, setLeftAsIs] = useState(false);
   // What the last send tried to save, when the reply never came, so nobody can tell if it arrived.
   const unsure = useRef<string | null>(null);
+
+  // Sending again after a lost reply: the first try may have arrived. Look first, and send what's in the
+  // field now only if it didn't, so a member's edit is never replaced by their first version.
+  const lookThenSend = async (words: string | undefined, call: () => Promise<InterviewState>) => {
+    const sent = unsure.current;
+    if (sent === null) return call();
+    const now = await client.current();
+    if (!now || placeOf(now) === placeOf(latest.current)) return call();
+    unsure.current = null;
+    if (!words || words === sent) {
+      if (sent) setNotice("Your answer was saved.");
+    } else if (now.stage === "asking") {
+      keepDraft(draftKeyFor(userId, now.questionId ?? now.question), words);
+      setNotice("Your first version was saved. Your changes are still here for the next answer.");
+    } else {
+      leaveWords(userId, FIRST_VERSION_SAVED, words);
+    }
+    return now;
+  };
+  // On a 409 the interview has moved on. It may be this send that arrived, or another screen that
+  // answered first, in which case the words here were never saved and must not disappear.
+  const onMoved = (words: string | undefined) => (now: InterviewState, alreadySaved: boolean) => {
+    unsure.current = null;
+    if (!words) return;
+    if (alreadySaved) {
+      setNotice("Your answer was saved.");
+    } else if (now.stage === "asking") {
+      keepDraft(draftKeyFor(userId, now.questionId ?? now.question), words);
+      setNotice(
+        "You'd already moved past that question on another screen. Your words are still here. Send them if they fit.",
+      );
+    } else {
+      leaveWords(userId, NOT_SAVED_ANOTHER_SCREEN, words);
+    }
+  };
   const [hasSparks, setHasSparks] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const savedLine = useSavedLine();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: loadAttempt is what asks for another try
   useEffect(() => {
@@ -119,6 +163,19 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
       live = false;
     };
   }, [client, seenKey, loadAttempt]);
+
+  // Words typed here that were never sent, because another screen moved the interview on.
+  const placeForDrafts =
+    state?.stage === "asking"
+      ? draftKeyFor(userId, state.questionId ?? state.question)
+      : state?.stage === "shaping"
+        ? draftKeyFor(userId, `shape:${state.questionId ?? state.playback}`)
+        : null;
+  useEffect(() => {
+    if (!loaded || !placeForDrafts) return;
+    for (const text of takeOrphanDrafts(userId, placeForDrafts))
+      leaveWords(userId, STARTED_FOR_EARLIER, text);
+  }, [loaded, placeForDrafts, userId]);
 
   // Sparks shape the questions, so the start screens mention them when there are any. Never a number.
   useEffect(() => {
@@ -349,40 +406,6 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             </Frame>
           );
         }
-        // Sending again after a lost reply: the first try may have arrived. Look first, and send what's
-        // in the field now only if it didn't, so a member's edit is never replaced by their first version.
-        const lookThenSend = async (words: string | undefined, call: () => Promise<InterviewState>) => {
-          const sent = unsure.current;
-          if (sent === null) return call();
-          const now = await client.current();
-          if (!now || placeOf(now) === placeOf(state)) return call();
-          unsure.current = null;
-          if (!words || words === sent) {
-            setNotice("Your answer was saved.");
-          } else if (now.stage === "asking") {
-            keepDraft(draftKeyFor(userId, now.questionId ?? now.question), words);
-            setNotice("Your first version was saved. Your changes are still here for the next answer.");
-          }
-          return now;
-        };
-        // On a 409 the interview has moved on. It may be this send that arrived, or another screen that
-        // answered first, in which case the words here were never saved and must not disappear.
-        const onMoved = (words: string | undefined) => (now: InterviewState, alreadySaved: boolean) => {
-          unsure.current = null;
-          if (!words) return;
-          if (alreadySaved) {
-            setNotice("Your answer was saved.");
-          } else if (now.stage === "asking") {
-            keepDraft(draftKeyFor(userId, now.questionId ?? now.question), words);
-            setNotice(
-              "You'd already moved past that question on another screen. Your words are still here. Send them if they fit.",
-            );
-          } else {
-            setError(
-              "You'd already moved on from that question on another screen, so your last words weren't saved.",
-            );
-          }
-        };
         const moveOn = (
           kind: "answer" | "skip",
           words: string | undefined,
@@ -485,24 +508,45 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           </Frame>
         );
       }
-      case "shaping":
+      case "shaping": {
+        const draftKey = draftKeyFor(userId, `shape:${state.questionId ?? state.playback}`);
+        const options = (words: string | undefined) => ({
+          lost: words ? LOST_ANSWER : LOST_DEFAULT,
+          noRetry: true,
+          retryWith: () => client.askAgain(state.id),
+          onLost: () => {
+            unsure.current = words ?? "";
+          },
+          onSuccess: () => {
+            unsure.current = null;
+            clearDraft(draftKey);
+          },
+          onMoved: onMoved(words),
+        });
         return (
           <ShapeScreen
+            key={draftKey}
+            draftKey={draftKey}
             playback={say(state.playback)}
             busy={busy}
             error={error}
             onConfirm={() =>
-              run("The Librarian is finding your titles…", () => client.confirmShape(state.id), {
-                retryWith: () => client.askAgain(state.id),
-              })
+              run(
+                "The Librarian is finding your titles…",
+                () => lookThenSend(undefined, () => client.confirmShape(state.id)),
+                options(undefined),
+              )
             }
             onCorrect={(correction) =>
-              run("The Librarian is listening again…", () => client.correctShape(state.id, correction), {
-                retryWith: () => client.askAgain(state.id),
-              })
+              run(
+                "The Librarian is listening again…",
+                () => lookThenSend(correction, () => client.correctShape(state.id, correction)),
+                options(correction),
+              )
             }
           />
         );
+      }
       case "choosing":
         return (
           <RevealScreen
@@ -556,7 +600,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           const about = state.about === "titles" ? "your titles" : "your book";
           return (
             <Frame busy={Boolean(busy)} say={say(`I couldn't finish writing ${about}.`)}>
-              <p className="iv-note iv-note-big">Everything you've said is saved.</p>
+              <p className="iv-note iv-note-big">{savedLine}</p>
               <ErrorMessage message={error} />
               <div className="iv-row">
                 <Button
@@ -577,14 +621,16 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           <Frame
             busy
             say={
-              <Waiting>
-                {state.about === "titles"
-                  ? "The Librarian is finding your titles…"
-                  : "The Librarian is writing your book…"}
-              </Waiting>
+              state.closingLine ?? (
+                <Waiting>
+                  {state.about === "titles"
+                    ? "The Librarian is finding your titles…"
+                    : "The Librarian is writing your book…"}
+                </Waiting>
+              )
             }
           >
-            <p className="iv-note iv-note-big">Everything you've said is saved.</p>
+            <p className="iv-note iv-note-big">{savedLine}</p>
           </Frame>
         );
       case "notEnough":
@@ -656,24 +702,27 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         );
       case "nothing":
         if (state.droppedForNames) {
+          const { readingQuestionId, readingAnswer } = state;
           return (
             <Frame canLeave={false} say="Nothing here changes your book.">
-              <p className="iv-note iv-note-big">
-                I left this out because it named someone or somewhere. Say it without the name and I'll try
-                again.
-              </p>
+              <p className="iv-note iv-note-big">{droppedSentence(state.droppedWords)}</p>
               <div className="iv-row">
-                {state.readingQuestionId && (
+                {readingQuestionId && (
                   <Link
-                    to={`/interview/reading/${state.readingQuestionId}`}
+                    to={`/interview/reading/${readingQuestionId}`}
                     className="button button-primary"
+                    onClick={() => {
+                      if (readingAnswer) {
+                        keepDraft(draftKeyFor(userId, `reading:${readingQuestionId}`), readingAnswer);
+                      }
+                    }}
                   >
                     Say it again
                   </Link>
                 )}
                 <Link
                   to="/my-book"
-                  className={`button ${state.readingQuestionId ? "button-quiet" : "button-primary"}`}
+                  className={`button ${readingQuestionId ? "button-quiet" : "button-primary"}`}
                 >
                   Back to my book
                 </Link>
@@ -703,6 +752,12 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   })();
 
   return <RetryContext.Provider value={retry}>{screen}</RetryContext.Provider>;
+}
+
+export function droppedSentence(words: string[] | undefined): string {
+  return words?.length
+    ? `I left this out because it named someone or somewhere: ${words.join(", ")}. Change those and I'll try again.`
+    : "I left this out because it named someone or somewhere. Say it without the name and I'll try again.";
 }
 
 function messageOf(reason: unknown): string {
@@ -847,24 +902,32 @@ function StartScreen({
 // ---------- Shape ----------
 
 function ShapeScreen({
+  draftKey,
   playback,
   busy,
   error,
   onConfirm,
   onCorrect,
 }: {
+  draftKey: string;
   playback: ReactNode;
   busy: string | null;
   error: string | null;
   onConfirm: () => void;
   onCorrect: (correction: string) => Promise<boolean>;
 }) {
-  const [correction, setCorrection] = useState("");
+  // Saved like an answer: this is the most personal thing typed in the interview.
+  const [correction, setCorrection] = useState(() => readDraft(draftKey));
   const fieldId = useId();
   const words = correction.trim();
 
+  useEffect(() => {
+    const timer = setTimeout(() => keepDraft(draftKey, correction), 600);
+    return () => clearTimeout(timer);
+  }, [draftKey, correction]);
+
   async function correct() {
-    if (await onCorrect(words)) setCorrection("");
+    await onCorrect(words);
   }
 
   return (

@@ -98,6 +98,21 @@ describe("AnswerPanel with the microphone", () => {
     expect(screen.queryByText(/This is what I heard/)).toBeNull();
   });
 
+  it("saves dictated words as they arrive, so leaving mid-recording loses nothing", () => {
+    fireEvent.change(field(), { target: { value: "Typed." } });
+    click(/Speak/);
+    microphone().say("Heard so far");
+    expect(localStorage.getItem("draft")).toBe("Typed.\n\nHeard so far");
+  });
+
+  it("Cancel puts the draft back to what was typed", () => {
+    fireEvent.change(field(), { target: { value: "Typed." } });
+    click(/Speak/);
+    microphone().say("Never mind.");
+    click("Cancel");
+    expect(localStorage.getItem("draft")).toBe("Typed.");
+  });
+
   it("Cancel keeps what was typed", () => {
     fireEvent.change(field(), { target: { value: "Typed." } });
     click(/Speak/);

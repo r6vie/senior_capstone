@@ -70,6 +70,7 @@ describe("apiInterviewClient", () => {
       stage: "shaping",
       phase: "shape",
       playback: "You left grad school twice. Is this you?",
+      questionId: "q1",
     });
   });
 
