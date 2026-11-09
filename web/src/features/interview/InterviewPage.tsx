@@ -377,6 +377,9 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
                 {notice}
               </p>
             )}
+            {state.needsMore && (
+              <p className="iv-note iv-note-big">I need a little more before I can write your book.</p>
+            )}
             <AnswerPanel
               key={draftKey}
               draftKey={draftKey}
@@ -448,7 +451,6 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         return (
           <ReviewScreen
             book={state.book}
-            canChangeCover={client.canChangeCover}
             busy={busy}
             error={error}
             loadOtherTitles={() => client.otherTitles(state.id)}
@@ -462,6 +464,9 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
               run("The Librarian is rewriting that chapter…", () =>
                 client.rewriteChapter(state.id, chapterId),
               )
+            }
+            onRestore={(chapterId) =>
+              run("Going back to the last version…", () => client.restoreChapter(state.id, chapterId))
             }
             onRemove={(chapterId) =>
               run("Removing that chapter…", () => client.removeChapter(state.id, chapterId))
@@ -843,13 +848,16 @@ function ChapterRow({
   chapter,
   canRemove,
   working,
+  unchanged,
   onAct,
 }: {
   index: number;
   chapter: DraftChapter;
   canRemove: boolean;
   working: boolean;
-  onAct: (action: "rewrite" | "remove") => void;
+  /** The rewrite just asked for here came back no better. */
+  unchanged: boolean;
+  onAct: (action: "rewrite" | "remove" | "restore") => void;
 }) {
   const [showing, setShowing] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -885,6 +893,21 @@ function ChapterRow({
       <div>
         <b>{chapter.title}</b>
         <span>{chapter.summary}</span>
+        {unchanged && (
+          <p className="iv-note" role="status">
+            I couldn't tell this one better from what you said. If it's not right, remove it.
+          </p>
+        )}
+        {chapter.hasPrevious && (
+          <button
+            type="button"
+            className="button button-quiet iv-sm iv-show"
+            aria-label={`Go back to the last version of ${chapter.title}`}
+            onClick={() => onAct("restore")}
+          >
+            Go back to the last version
+          </button>
+        )}
         {chapter.quotes.length > 0 && (
           <>
             <button
@@ -933,24 +956,24 @@ function ChapterRow({
 
 function ReviewScreen({
   book,
-  canChangeCover,
   busy,
   error,
   loadOtherTitles,
   onChangeTitle,
   onRewriteBlurb,
   onRewrite,
+  onRestore,
   onRemove,
   onShelve,
 }: {
   book: DraftBook;
-  canChangeCover: boolean;
   busy: string | null;
   error: string | null;
   loadOtherTitles: () => Promise<TitleOption[]>;
   onChangeTitle: (titleId: string) => Promise<boolean>;
   onRewriteBlurb: () => void;
   onRewrite: (chapterId: string) => Promise<boolean>;
+  onRestore: (chapterId: string) => Promise<boolean>;
   onRemove: (chapterId: string) => Promise<boolean>;
   onShelve: () => void;
 }) {
@@ -961,10 +984,13 @@ function ReviewScreen({
   // The back cover changes with a removal, and the member should be told. Until their next action.
   const [blurbAtRemoval, setBlurbAtRemoval] = useState<string | null | undefined>(undefined);
 
-  async function act(chapterId: string, action: "rewrite" | "remove") {
+  const [lastRewritten, setLastRewritten] = useState<string | null>(null);
+
+  async function act(chapterId: string, action: "rewrite" | "remove" | "restore") {
     setBlurbAtRemoval(action === "remove" ? book.blurb : undefined);
     setWorking(action === "rewrite" ? chapterId : null);
-    await (action === "rewrite" ? onRewrite : onRemove)(chapterId);
+    setLastRewritten(action === "rewrite" ? chapterId : null);
+    await { rewrite: onRewrite, remove: onRemove, restore: onRestore }[action](chapterId);
     setWorking(null);
   }
 
@@ -1002,12 +1028,12 @@ function ReviewScreen({
             </p>
           )}
           <div className="iv-head-act">
-            {canChangeCover && book.blurb && (
+            {book.blurb && (
               <button type="button" className="button button-quiet iv-sm iv-show" onClick={onRewriteBlurb}>
                 Rewrite the back cover
               </button>
             )}
-            {canChangeCover && others === null && (
+            {others === null && (
               <button type="button" className="button button-quiet iv-sm iv-show" onClick={seeOthers}>
                 See the other titles
               </button>
@@ -1054,6 +1080,7 @@ function ReviewScreen({
             chapter={chapter}
             canRemove={canRemove}
             working={working === chapter.id}
+            unchanged={lastRewritten === chapter.id && working === null && Boolean(book.rewriteUnchanged)}
             onAct={(action) => act(chapter.id, action)}
           />
         ))}

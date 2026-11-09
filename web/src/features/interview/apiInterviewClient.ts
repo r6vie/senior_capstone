@@ -16,11 +16,12 @@ import {
 
 type MyBookResponse = components["schemas"]["MyBookResponse"];
 type ChangeResponse = components["schemas"]["Change"];
-// Trove API's next fields (R3-01, R3-03, R1-03), read when they're there and ignored until they are.
+// Trove API's next fields (R3-01, R3-03), read when they're there and ignored until they are.
 type InterviewResponse = Omit<components["schemas"]["InterviewResponse"], "stage" | "question"> & {
   stage: components["schemas"]["InterviewResponse"]["stage"] | "drafting" | "finishing";
-  question: (NonNullable<components["schemas"]["InterviewResponse"]["question"]> & { id?: string }) | null;
-  not_enough?: boolean;
+  question:
+    | (NonNullable<components["schemas"]["InterviewResponse"]["question"]> & { question_id?: string })
+    | null;
 };
 
 const ID = "me";
@@ -46,14 +47,6 @@ function unwrap<T>({ data, error, response }: Result<T>): T {
   throw new InterviewError(errorMessage(error), false, response?.status === 409);
 }
 
-// Routes Trove API is adding (R1-19). Their paths can't be typed until schema.ts is regenerated.
-function postUntyped(path: string, init?: { body: unknown }): Promise<Result<MyBookResponse>> {
-  return (api.POST as unknown as (path: string, init?: unknown) => Promise<Result<MyBookResponse>>)(
-    path,
-    init,
-  );
-}
-
 function ended({ error, response }: Result<unknown>) {
   if (response?.ok) return;
   throw new InterviewError(errorMessage(error), response?.status === 502, response?.status === 409);
@@ -71,7 +64,14 @@ function toBook(book: MyBookResponse): DraftBook {
     title: book.title,
     authorName: book.author_name,
     blurb: book.blurb,
-    chapters: book.chapters.map(({ id, title, summary, quotes }) => ({ id, title, summary, quotes })),
+    rewriteUnchanged: book.rewrite_unchanged,
+    chapters: book.chapters.map(({ id, title, summary, quotes, has_previous }) => ({
+      id,
+      title,
+      summary,
+      quotes,
+      hasPrevious: has_previous,
+    })),
   };
 }
 
@@ -97,7 +97,7 @@ async function myBook(): Promise<InterviewState> {
 // Turns the API's flat response into one screen. Two cases need another call first: the Librarian
 // has enough (go straight to the titles), or the question couldn't be written (ask for it again).
 async function toState(response: InterviewResponse, retried = false): Promise<InterviewState> {
-  waitingQuestionId = response.question?.id;
+  waitingQuestionId = response.question?.question_id;
   switch (response.stage) {
     case "drafting":
       return { id: ID, stage: "drafting", about: "titles" };
@@ -125,7 +125,8 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
       };
     case "adding":
     case "interviewing": {
-      if (response.not_enough) return { id: ID, stage: "notEnough" };
+      // Before the question below: at the limit, whether to keep answering is the member's choice.
+      if (response.at_limit) return { id: ID, stage: "notEnough" };
       const { question } = response;
       if (!question) {
         if (response.ready_for_reveal) {
@@ -150,6 +151,7 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
         canFinish: response.can_finish,
         hasAnswers: response.has_answers,
         lastTopic: response.topic,
+        needsMore: response.needs_more,
       };
     }
   }
@@ -187,8 +189,6 @@ function readBase64(file: File): Promise<string> {
 }
 
 export const apiInterviewClient: InterviewClient = {
-  // Trove API's T36. Set true when POST /interview/book/blurb and /book/title land.
-  canChangeCover: false,
   async current() {
     const { data, error, response } = await api.GET("/interview");
     if (response.status === 404) return null;
@@ -228,14 +228,18 @@ export const apiInterviewClient: InterviewClient = {
     return (response.titles ?? []).map((option, index) => ({ id: String(index), ...option }));
   },
   async changeTitle(_id, titleId) {
-    return fromBook(unwrap(await postUntyped("/interview/book/title", { body: { title: Number(titleId) } })));
+    return fromBook(unwrap(await api.POST("/interview/book/title", { body: { title: Number(titleId) } })));
   },
   async rewriteBlurb() {
-    return fromBook(unwrap(await postUntyped("/interview/book/blurb")));
+    return fromBook(unwrap(await api.POST("/interview/book/blurb")));
   },
   async rewriteChapter(_id, chapterId) {
     const params = { path: { chapter_id: chapterId } };
     return fromBook(unwrap(await api.POST("/interview/book/chapters/{chapter_id}/rewrite", { params })));
+  },
+  async restoreChapter(_id, chapterId) {
+    const params = { path: { chapter_id: chapterId } };
+    return fromBook(unwrap(await api.POST("/interview/book/chapters/{chapter_id}/restore", { params })));
   },
   async removeChapter(_id, chapterId) {
     const params = { path: { chapter_id: chapterId } };

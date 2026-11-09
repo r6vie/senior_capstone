@@ -191,7 +191,9 @@ describe("apiInterviewClient", () => {
     const post = vi
       .spyOn(api, "POST")
       .mockResolvedValue(
-        ok(interview({ question: { id: "q1", text: "Q", phase: "sweep", playback: null } as never })),
+        ok(
+          interview({ question: { question_id: "q1", text: "Q", phase: "sweep", playback: null } as never }),
+        ),
       );
     await apiInterviewClient.askAgain("me");
     await apiInterviewClient.answer("me", "An answer");
@@ -200,6 +202,31 @@ describe("apiInterviewClient", () => {
     });
     post.mockResolvedValue(ok(interview({})));
     await apiInterviewClient.askAgain("me");
+  });
+
+  it("at the limit, leaves keeping going to the member rather than asking by itself", async () => {
+    const post = vi.spyOn(api, "POST");
+    vi.spyOn(api, "GET").mockResolvedValue(
+      ok(interview({ question: null, at_limit: true, needs_more: true })),
+    );
+    await expect(apiInterviewClient.current()).resolves.toMatchObject({ stage: "notEnough" });
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("carries what a rewrite did to the book", async () => {
+    vi.spyOn(api, "POST").mockResolvedValue(
+      ok({
+        title: "T",
+        author_name: "A",
+        blurb: null,
+        status: "draft",
+        rewrite_unchanged: true,
+        chapters: [{ id: "1", title: "C", summary: "S", quotes: [], has_previous: true }],
+      }),
+    );
+    await expect(apiInterviewClient.rewriteChapter("me", "1")).resolves.toMatchObject({
+      book: { rewriteUnchanged: true, chapters: [{ hasPrevious: true }] },
+    });
   });
 
   it("reads the writing stages after a refresh", async () => {

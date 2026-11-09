@@ -288,7 +288,6 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
   }
 
   return {
-    canChangeCover: true,
     async current() {
       await wait(delay / 3);
       const stored = load();
@@ -373,6 +372,7 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
         const chapter = stored.book?.chapters.find((ch) => ch.id === chapterId);
         if (chapter) chapter.summary = `${chapter.summary.replace(/\.$/, "")}, told from where I stand now.`;
       }),
+    restoreChapter: (id) => mutate(id, () => {}),
     removeChapter: (id, chapterId) =>
       mutate(id, (stored) => {
         if (!stored.book) return;

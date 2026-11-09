@@ -7,6 +7,7 @@ import { createFakeInterviewClient, resetFakeInterview } from "./fakeInterviewCl
 import { InterviewPage } from "./InterviewPage";
 import {
   type DraftBook,
+  type DraftChapter,
   type InterviewClient,
   InterviewError,
   type InterviewState,
@@ -189,6 +190,13 @@ describe("InterviewPage", () => {
       renderWith(client);
       fireEvent.click(await screen.findByRole("button", { name: "I've said enough. Show me my book" }));
       expect(finish).toHaveBeenCalledWith("me", undefined);
+    });
+
+    it("asks for more, with the question still there, when a draft found too little", async () => {
+      renderWith(at({ ...asking, needsMore: true }));
+      expect(await screen.findByText(/I need a little more before I can write your book/)).toBeTruthy();
+      expect(screen.getByText(asking.question)).toBeTruthy();
+      expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
     });
 
     it("doesn't say it's mostly done early on", async () => {
@@ -601,11 +609,33 @@ describe("InterviewPage", () => {
       expect(await screen.findByText("Back cover rewritten to match.")).toBeTruthy();
     });
 
-    it("hides the back cover and title buttons until their routes exist", async () => {
-      renderWith({ ...at(reviewing()), canChangeCover: false });
-      await screen.findByRole("heading", { name: bookWith(null).title });
-      expect(screen.queryByRole("button", { name: "Rewrite the back cover" })).toBeNull();
-      expect(screen.queryByRole("button", { name: "See the other titles" })).toBeNull();
+    it("says so on the row when a rewrite came back no better", async () => {
+      const client = at(reviewing());
+      const same = reviewing() as Extract<InterviewState, { stage: "reviewing" }>;
+      vi.spyOn(client, "rewriteChapter").mockResolvedValue({
+        ...same,
+        book: { ...same.book, rewriteUnchanged: true },
+      });
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: `Rewrite ${CHAPTER_TITLES[0]}` }));
+      expect(await screen.findByText(/I couldn't tell this one better from what you said/)).toBeTruthy();
+      expect(screen.getAllByText(/I couldn't tell this one better/)).toHaveLength(1);
+    });
+
+    it("goes back to a chapter's last version", async () => {
+      const state = reviewing() as Extract<InterviewState, { stage: "reviewing" }>;
+      const [first, ...rest] = state.book.chapters;
+      const client = at({
+        ...state,
+        book: { ...state.book, chapters: [{ ...(first as DraftChapter), hasPrevious: true }, ...rest] },
+      });
+      const restore = vi.spyOn(client, "restoreChapter").mockResolvedValue(reviewing());
+      renderWith(client);
+      const name = `Go back to the last version of ${CHAPTER_TITLES[0]}`;
+      fireEvent.click(await screen.findByRole("button", { name }));
+      expect(restore).toHaveBeenCalledWith("me", "0");
+      expect(await screen.findByRole("heading", { name: bookWith(null).title })).toBeTruthy();
+      expect(screen.queryByRole("button", { name })).toBeNull();
     });
 
     it("shows no blurb or its button for a book written before blurbs", async () => {

@@ -16,6 +16,8 @@ export interface DraftChapter {
   summary: string;
   /** The member's own words behind this chapter. Only they ever see them. */
   quotes: string[];
+  /** In review, the last rewrite can be taken back. */
+  hasPrevious?: boolean;
 }
 
 export interface DraftBook {
@@ -24,6 +26,8 @@ export interface DraftBook {
   /** The back-cover blurb, in the member's own voice. Null on books written before blurbs. */
   blurb: string | null;
   chapters: DraftChapter[];
+  /** The last rewrite couldn't be told better from what the member said, so nothing changed. */
+  rewriteUnchanged?: boolean;
 }
 
 /** One proposed change to a book on the shelf. Nothing here is live until the member confirms. */
@@ -52,6 +56,8 @@ export type InterviewState =
       hasAnswers: boolean;
       /** "Last time you were telling me about…", for coming back. Null on a fresh interview. */
       lastTopic: string | null;
+      /** A draft found too little, so the Librarian is asking for more. */
+      needsMore?: boolean;
     }
   | { id: string; stage: "shaping"; phase: "shape"; playback: string }
   | { id: string; stage: "choosing"; titles: TitleOption[] }
@@ -124,8 +130,6 @@ export class InterviewError extends Error {
 export class LostError extends Error {}
 
 export interface InterviewClient {
-  /** The back cover and other-titles routes exist (R1-19). Until they do, their buttons stay hidden. */
-  canChangeCover: boolean;
   /** The member's interview in progress, or null if they haven't started one. */
   current(): Promise<InterviewState | null>;
   start(resume: File | null): Promise<InterviewState>;
@@ -145,6 +149,8 @@ export interface InterviewClient {
   changeTitle(id: string, titleId: string): Promise<InterviewState>;
   rewriteBlurb(id: string): Promise<InterviewState>;
   rewriteChapter(id: string, chapterId: string): Promise<InterviewState>;
+  /** Go back to the chapter's last version. */
+  restoreChapter(id: string, chapterId: string): Promise<InterviewState>;
   removeChapter(id: string, chapterId: string): Promise<InterviewState>;
   putOnShelf(id: string): Promise<InterviewState>;
 
