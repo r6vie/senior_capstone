@@ -1,13 +1,36 @@
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
-import { type DraftBook, type InterviewClient, InterviewError, type InterviewState } from "./interviewClient";
+import {
+  type BookStage,
+  type DraftBook,
+  type InterviewClient,
+  InterviewError,
+  type InterviewState,
+  type ProposedChange,
+} from "./interviewClient";
 
 // The real interview API (api/trove/interview), mapped onto the shape the screens use.
 // The API keeps one interview per member, so there is no id to pass; the screens' id is a constant.
 
-type InterviewResponse = components["schemas"]["InterviewResponse"];
-type MyBookResponse = components["schemas"]["MyBookResponse"];
+type MyBookResponse = components["schemas"]["MyBookResponse"] & { can_undo?: boolean };
+
+// Trove API's growing-books fields (T31). They aren't in schema.ts on this branch yet, so they're
+// described here and go away once the client is regenerated.
+interface ChangeResponse {
+  id: string;
+  kind: string;
+  title: string;
+  summary: string;
+  note: string;
+  current: { title: string; summary: string } | null;
+}
+type InterviewResponse = Omit<components["schemas"]["InterviewResponse"], "stage"> & {
+  stage: components["schemas"]["InterviewResponse"]["stage"] | "adding" | "revising";
+  changes?: ChangeResponse[] | null;
+  proposed_blurb?: string | null;
+  nothing_new?: boolean;
+};
 
 const ID = "me";
 
@@ -29,10 +52,24 @@ function unwrap<T>({ data, error, response }: Result<T>): T {
 }
 
 // Routes Trove API is adding (R1-19). Their paths can't be typed until schema.ts is regenerated.
-const postUntyped = api.POST as unknown as (
-  path: string,
-  init?: { body: unknown },
-) => Promise<Result<MyBookResponse>>;
+function postUntyped<T = MyBookResponse>(path: string, init?: { body: unknown }): Promise<Result<T>> {
+  return (api.POST as unknown as (path: string, init?: unknown) => Promise<Result<T>>)(path, init);
+}
+function getUntyped<T>(path: string): Promise<Result<T>> {
+  return (api.GET as unknown as (path: string) => Promise<Result<T>>)(path);
+}
+function deleteUntyped(path: string): Promise<Result<unknown>> {
+  return (api.DELETE as unknown as (path: string) => Promise<Result<unknown>>)(path);
+}
+
+function ended({ error, response }: Result<unknown>) {
+  if (response?.ok) return;
+  throw new InterviewError(errorMessage(error), response?.status === 502);
+}
+
+// The proposal's back cover is written for every change being approved, so it's kept for that case.
+let wholeProposalBlurb: string | null = null;
+let wholeProposalIds: string[] = [];
 
 function toBook(book: MyBookResponse): DraftBook {
   return {
@@ -45,6 +82,17 @@ function toBook(book: MyBookResponse): DraftBook {
 
 function fromBook(book: MyBookResponse): InterviewState {
   return { id: ID, stage: book.status === "on_shelf" ? "done" : "reviewing", book: toBook(book) };
+}
+
+function toChange(change: ChangeResponse): ProposedChange {
+  return {
+    id: change.id,
+    kind: change.kind === "new" ? "new" : "improve",
+    note: change.note,
+    title: change.title,
+    summary: change.summary,
+    now: change.current ? { title: change.current.title, summary: change.current.summary } : null,
+  };
 }
 
 async function myBook(): Promise<InterviewState> {
@@ -62,18 +110,29 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
         titles: (response.titles ?? []).map((option, index) => ({ id: String(index), ...option })),
       };
     case "reviewing":
-    case "done":
-    // No screens yet for growing a book: the member sees their book, which hasn't changed.
-    case "adding":
-    case "revising":
       return myBook();
+    case "done":
+      return response.nothing_new ? { id: ID, stage: "nothing" } : myBook();
+    case "revising": {
+      if (!response.changes) return { id: ID, stage: response.can_finish ? "writeFailed" : "writing" };
+      wholeProposalIds = response.changes.map((change) => change.id);
+      wholeProposalBlurb = response.proposed_blurb ?? null;
+      return {
+        id: ID,
+        stage: "proposing",
+        changes: response.changes.map(toChange),
+        blurb: response.blurb,
+      };
+    }
+    case "adding":
     case "interviewing": {
       const { question } = response;
       if (!question) {
-        if (response.ready_for_reveal) return toState(unwrap(await api.POST("/interview/finish")));
+        if (response.ready_for_reveal)
+          return toState(unwrap<InterviewResponse>(await api.POST("/interview/finish")));
         if (retried)
           throw new InterviewError("The Librarian couldn't answer just now. Please try again.", true);
-        return toState(unwrap(await api.POST("/interview/question")), true);
+        return toState(unwrap<InterviewResponse>(await api.POST("/interview/question")), true);
       }
       if (question.phase === "shape") {
         const playback = question.playback ? `${question.playback} ${question.text}` : question.text;
@@ -82,7 +141,7 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
       return {
         id: ID,
         stage: "asking",
-        // Only a round of adding has other phases, and that stage is handled above.
+        round: response.stage === "adding" ? "adding" : "first",
         phase: question.phase === "dig" ? "dig" : "sweep",
         question: question.text,
         canFinish: response.can_finish,
@@ -107,32 +166,34 @@ export const apiInterviewClient: InterviewClient = {
   async current() {
     const { data, error, response } = await api.GET("/interview");
     if (response.status === 404) return null;
-    return toState(unwrap({ data, error, response }));
+    return toState(unwrap<InterviewResponse>({ data, error, response }));
   },
   async start(resume) {
     const body = resume ? { resume_pdf: await readBase64(resume) } : {};
-    return toState(unwrap(await api.POST("/interview", { body })));
+    return toState(unwrap<InterviewResponse>(await api.POST("/interview", { body })));
   },
   async answer(_id, text) {
-    return toState(unwrap(await api.POST("/interview/answers", { body: { answer: text } })));
+    return toState(
+      unwrap<InterviewResponse>(await api.POST("/interview/answers", { body: { answer: text } })),
+    );
   },
   async skip() {
-    return toState(unwrap(await api.POST("/interview/skip")));
+    return toState(unwrap<InterviewResponse>(await api.POST("/interview/skip")));
   },
   async askAgain() {
-    return toState(unwrap(await api.POST("/interview/question")));
+    return toState(unwrap<InterviewResponse>(await api.POST("/interview/question")));
   },
   async finish(_id, answer) {
     // Trove API's finish doesn't take `answer` on this branch yet. Saving it as an answer first loses
     // nothing, and only costs a question that's never shown. Swap for the body once it lands.
     if (answer) unwrap(await api.POST("/interview/answers", { body: { answer } }));
-    return toState(unwrap(await api.POST("/interview/finish")));
+    return toState(unwrap<InterviewResponse>(await api.POST("/interview/finish")));
   },
   async confirmShape() {
-    return toState(unwrap(await api.POST("/interview/shape", { body: {} })));
+    return toState(unwrap<InterviewResponse>(await api.POST("/interview/shape", { body: {} })));
   },
   async correctShape(_id, correction) {
-    return toState(unwrap(await api.POST("/interview/shape", { body: { correction } })));
+    return toState(unwrap<InterviewResponse>(await api.POST("/interview/shape", { body: { correction } })));
   },
   async chooseTitle(_id, titleId) {
     const result = await api.POST("/interview/title", { body: { title: Number(titleId) } });
@@ -144,7 +205,7 @@ export const apiInterviewClient: InterviewClient = {
     return fromBook(unwrap(result));
   },
   async otherTitles() {
-    const response = unwrap(await api.GET("/interview"));
+    const response = unwrap<InterviewResponse>(await api.GET("/interview"));
     return (response.titles ?? []).map((option, index) => ({ id: String(index), ...option }));
   },
   async changeTitle(_id, titleId) {
@@ -163,5 +224,94 @@ export const apiInterviewClient: InterviewClient = {
   },
   async putOnShelf() {
     return fromBook(unwrap(await api.POST("/interview/book/shelve")));
+  },
+
+  async stage() {
+    const { data, response } = await api.GET("/interview");
+    if (response.status === 404) {
+      // A book can be on the shelf with no interview behind it, such as a sample.
+      const book = await api.GET("/books/me");
+      return book.data ? "shelf" : "none";
+    }
+    const now = unwrap<InterviewResponse>({ data, response });
+    const stages: Record<InterviewResponse["stage"], BookStage> = {
+      interviewing: "interviewing",
+      choosing: "titles",
+      reviewing: "draft",
+      done: "shelf",
+      adding: now.has_answers ? "adding" : "shelf",
+      revising: now.changes ? "changesWaiting" : now.can_finish ? "writeFailed" : "writing",
+    };
+    return stages[now.stage];
+  },
+  async myBook() {
+    const { data, error, response } = await api.GET("/books/me");
+    if (response.status === 404) return null;
+    const book: MyBookResponse = unwrap({ data, error, response });
+    return { ...toBook(book), canUndo: Boolean(book.can_undo) };
+  },
+  async reopen() {
+    return toState(unwrap(await postUntyped<InterviewResponse>("/interview/reopen")));
+  },
+  async retryWriting() {
+    return toState(unwrap<InterviewResponse>(await api.POST("/interview/finish")));
+  },
+  async blurbFor(approved) {
+    if (!approved.length) return null;
+    if (approved.length === wholeProposalIds.length && wholeProposalBlurb) return wholeProposalBlurb;
+    const result = await postUntyped<{ blurb: string | null }>("/interview/revision/blurb", {
+      body: { approved },
+    });
+    return unwrap(result).blurb;
+  },
+  async applyChanges(approved, blurb) {
+    const book = unwrap(await postUntyped("/interview/revision", { body: { approved, blurb } }));
+    return approved.length
+      ? { id: ID, stage: "updated", book: toBook(book) }
+      : { id: ID, stage: "done", book: toBook(book) };
+  },
+  async undoChanges() {
+    ended(await postUntyped<unknown>("/interview/revision/undo"));
+  },
+  async blurbWithout(chapterId) {
+    const result = await postUntyped<{ blurb: string | null }>("/interview/removal/blurb", {
+      body: { chapter_id: chapterId },
+    });
+    return unwrap(result).blurb;
+  },
+  async removeFromShelf(chapterId, blurb) {
+    ended(await postUntyped<unknown>("/interview/removal", { body: { chapter_id: chapterId, blurb } }));
+  },
+  async sparks() {
+    const sparks = unwrap(await getUntyped<{ id: string; chapter_title: string }[]>("/interview/sparks"));
+    return sparks.map(({ id, chapter_title }) => ({ id, chapterTitle: chapter_title }));
+  },
+  async removeSpark(sparkId) {
+    ended(await deleteUntyped(`/interview/sparks/${sparkId}`));
+  },
+  async readingQuestions() {
+    const questions = unwrap(
+      await getUntyped<{ id: string; question: string; reader_name?: string; created_at: string }[]>(
+        "/interview/reading-questions",
+      ),
+    );
+    return questions.map(({ id, question, reader_name, created_at }) => ({
+      id,
+      question,
+      readerName: reader_name ?? null,
+      createdAt: created_at,
+    }));
+  },
+  async answerReading(questionId, answer) {
+    return toState(
+      unwrap(
+        await postUntyped<InterviewResponse>(`/interview/reading-questions/${questionId}/answer`, {
+          body: { answer },
+        }),
+      ),
+    );
+  },
+  async dismissReading(questionId) {
+    ended(await postUntyped<unknown>(`/interview/reading-questions/${questionId}/dismiss`));
   },
 };

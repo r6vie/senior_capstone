@@ -66,6 +66,10 @@
   font: 600 var(--iv-say-size) / 1.15 var(--font-serif);
   letter-spacing: -0.01em;
 }
+.iv-eyebrow {
+  position: relative;
+  margin-bottom: var(--s-3);
+}
 /* Takes focus from script on arrival, as a place for the keyboard to start. */
 .iv-say:focus {
   outline: none;
@@ -118,6 +122,10 @@
   margin: 0;
   font-size: 14px;
   color: var(--ink-2);
+}
+.iv-note-big {
+  font-size: 17px;
+  color: var(--ink);
 }
 .iv-quiet-note {
   font-size: 14px;

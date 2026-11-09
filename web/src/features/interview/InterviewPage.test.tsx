@@ -549,7 +549,14 @@ describe("InterviewPage", () => {
   });
 
   it("the done screen answers what happens now", async () => {
-    renderWith(at({ id: "me", stage: "done", book: bookWith("I fix schedules.") }));
+    const client = at(reviewing());
+    vi.spyOn(client, "putOnShelf").mockResolvedValue({
+      id: "me",
+      stage: "done",
+      book: bookWith("I fix schedules."),
+    });
+    renderWith(client);
+    fireEvent.click(await screen.findByRole("button", { name: "Put it on the shelf" }));
     expect(await screen.findByText(/you say yes or no/)).toBeTruthy();
     expect(screen.getByText(/Your contact details stay private until you say yes/)).toBeTruthy();
     expect(screen.getByRole("link", { name: "See my book" }).getAttribute("href")).toBe("/my-book");

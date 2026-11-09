@@ -146,6 +146,60 @@ describe("apiInterviewClient", () => {
     await expect(apiInterviewClient.chooseTitle("me", "1")).resolves.toMatchObject({ stage: "reviewing" });
   });
 
+  it("maps a round of new questions to the adding round", async () => {
+    vi.spyOn(api, "GET").mockResolvedValue(ok({ ...interview({}), stage: "adding" }));
+    await expect(apiInterviewClient.current()).resolves.toMatchObject({ stage: "asking", round: "adding" });
+  });
+
+  it("maps proposed changes, and marks what's new", async () => {
+    const change = { quotes: [], title: "T", summary: "S", note: "N" };
+    vi.spyOn(api, "GET").mockResolvedValue(
+      ok({
+        ...interview({ question: null, blurb: "Old." }),
+        stage: "revising",
+        changes: [
+          { ...change, id: "1", kind: "new", chapter_id: null, current: null },
+          { ...change, id: "2", kind: "improve", chapter_id: "c", current: { title: "T0", summary: "S0" } },
+        ],
+      }),
+    );
+    await expect(apiInterviewClient.current()).resolves.toMatchObject({
+      stage: "proposing",
+      blurb: "Old.",
+      changes: [
+        { id: "1", kind: "new", now: null },
+        { id: "2", kind: "improve", now: { title: "T0", summary: "S0" } },
+      ],
+    });
+  });
+
+  it("reads a revising interview with no changes as still writing, or failed if it can be retried", async () => {
+    const revising = (can_finish: boolean) =>
+      ok({ ...interview({ question: null, can_finish }), stage: "revising", changes: null });
+    vi.spyOn(api, "GET").mockResolvedValueOnce(revising(false)).mockResolvedValueOnce(revising(true));
+    await expect(apiInterviewClient.current()).resolves.toMatchObject({ stage: "writing" });
+    await expect(apiInterviewClient.current()).resolves.toMatchObject({ stage: "writeFailed" });
+  });
+
+  it("says a round that earned nothing is nothing", async () => {
+    vi.spyOn(api, "GET").mockResolvedValue(
+      ok({ ...interview({ question: null, stage: "done" }), nothing_new: true }),
+    );
+    await expect(apiInterviewClient.current()).resolves.toMatchObject({ stage: "nothing" });
+  });
+
+  it("reads My book's stage without asking the Librarian for anything", async () => {
+    const post = vi.spyOn(api, "POST");
+    vi.spyOn(api, "GET").mockResolvedValue(ok(interview({ question: null })));
+    await expect(apiInterviewClient.stage()).resolves.toBe("interviewing");
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("counts a round with no answers as closed on My book", async () => {
+    vi.spyOn(api, "GET").mockResolvedValue(ok({ ...interview({ has_answers: false }), stage: "adding" }));
+    await expect(apiInterviewClient.stage()).resolves.toBe("shelf");
+  });
+
   it("shows the API's sentence when a call fails", async () => {
     vi.spyOn(api, "POST").mockResolvedValue({
       data: undefined,

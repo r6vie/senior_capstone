@@ -26,10 +26,24 @@ export interface DraftBook {
   chapters: DraftChapter[];
 }
 
+/** One proposed change to a book on the shelf. Nothing here is live until the member confirms. */
+export interface ProposedChange {
+  id: string;
+  kind: "new" | "improve";
+  /** One line, to the member, on what this adds. */
+  note: string;
+  title: string;
+  summary: string;
+  /** What's in the book now. Null for a new chapter. */
+  now: { title: string; summary: string } | null;
+}
+
 export type InterviewState =
   | {
       id: string;
       stage: "asking";
+      /** "adding" is a short new round on a shelved book: no phases, and a different way out. */
+      round?: "first" | "adding";
       phase: Phase;
       question: string;
       /** True once the member has answered enough to stop early ("I've said enough"). */
@@ -42,7 +56,51 @@ export type InterviewState =
   | { id: string; stage: "shaping"; phase: "shape"; playback: string }
   | { id: string; stage: "choosing"; titles: TitleOption[] }
   | { id: string; stage: "reviewing"; book: DraftBook }
-  | { id: string; stage: "done"; book: DraftBook };
+  | { id: string; stage: "done"; book: DraftBook }
+  /** The changes are being written in the background. */
+  | { id: string; stage: "writing" }
+  | { id: string; stage: "writeFailed" }
+  | {
+      id: string;
+      stage: "proposing";
+      changes: ProposedChange[];
+      /** The back cover as it stands. */
+      blurb: string | null;
+    }
+  /** A round that earned no changes. The book is as it was. */
+  | { id: string; stage: "nothing" }
+  /** Approved changes just went live. */
+  | { id: string; stage: "updated"; book: DraftBook };
+
+/** Where a member's book stands, for My book. Reading this never asks the Librarian for anything. */
+export type BookStage =
+  | "none"
+  | "interviewing"
+  | "titles"
+  | "draft"
+  | "shelf"
+  | "adding"
+  | "writing"
+  | "writeFailed"
+  | "changesWaiting";
+
+export interface MyBook extends DraftBook {
+  /** The last approved changes can still be taken back. */
+  canUndo: boolean;
+}
+
+export interface Spark {
+  id: string;
+  chapterTitle: string;
+}
+
+export interface ReadingQuestion {
+  id: string;
+  question: string;
+  /** The person the reading was with. To the author only, and never sent to a prompt. */
+  readerName: string | null;
+  createdAt: string;
+}
 
 /** A failed call. Retryable when the Librarian (Claude) failed and nothing the member said was lost. */
 export class InterviewError extends Error {
@@ -76,4 +134,25 @@ export interface InterviewClient {
   rewriteChapter(id: string, chapterId: string): Promise<InterviewState>;
   removeChapter(id: string, chapterId: string): Promise<InterviewState>;
   putOnShelf(id: string): Promise<InterviewState>;
+
+  // ---------- A book that grows (trove.md §3, §4) ----------
+  stage(): Promise<BookStage>;
+  /** The member's book as it stands, or null. */
+  myBook(): Promise<MyBook | null>;
+  /** Open a short new round of questions on a shelved book. */
+  reopen(): Promise<InterviewState>;
+  retryWriting(id: string): Promise<InterviewState>;
+  /** The back cover for exactly these approved changes. Null means there's nothing to rewrite. */
+  blurbFor(approved: string[]): Promise<string | null>;
+  /** `blurb` is text the member was shown and approved. Null keeps the back cover as it is. */
+  applyChanges(approved: string[], blurb: string | null): Promise<InterviewState>;
+  undoChanges(): Promise<void>;
+  /** The back cover for the book without this chapter. */
+  blurbWithout(chapterId: string): Promise<string | null>;
+  removeFromShelf(chapterId: string, blurb: string | null): Promise<void>;
+  sparks(): Promise<Spark[]>;
+  removeSpark(sparkId: string): Promise<void>;
+  readingQuestions(): Promise<ReadingQuestion[]>;
+  answerReading(questionId: string, answer: string): Promise<InterviewState>;
+  dismissReading(questionId: string): Promise<void>;
 }

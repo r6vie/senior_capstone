@@ -1,5 +1,5 @@
 import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor } from "./AnswerPanel";
@@ -13,6 +13,7 @@ import {
   type InterviewState,
   type TitleOption,
 } from "./interviewClient";
+import { ChangesScreen, WaitBox } from "./ProposedChanges";
 
 // The interview, direction A "The question band" (docs/design/shelf/project/InterviewA.dc.html,
 // trove.md §4). The Librarian's words stand alone on the black band; the member acts below it.
@@ -23,6 +24,8 @@ const GIVE_UP_AFTER_MS = 120_000;
 const WELCOME_BACK_AFTER_MS = 60 * 60 * 1000;
 const LOST_DEFAULT = "That didn't reach the Librarian. Try again.";
 const LOST_ANSWER = "That didn't reach the Librarian. Your answer is still here.";
+// How often to look while changes are written in the background.
+const LOOK_AGAIN_MS = 4000;
 
 class TimedOut extends Error {}
 
@@ -78,6 +81,14 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   const [interrupted, setInterrupted] = useState<"answer" | "skip" | null>(null);
   const latest = useRef(state);
   latest.current = state;
+  const [search] = useSearchParams();
+  const adding = search.has("add");
+  const location = useLocation();
+  // Arrived from answering the question after a reading: the wait and the outcome say so.
+  const fromReading = Boolean((location.state as { fromReading?: boolean } | null)?.fromReading);
+  // Done from an earlier visit has nothing to do here. Done just now is the moment to say so.
+  const [doneOnArrival, setDoneOnArrival] = useState(false);
+  const [hasSparks, setHasSparks] = useState(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: loadAttempt is what asks for another try
   useEffect(() => {
@@ -89,6 +100,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         const seen = readSeen(seenKey);
         const away = seen === null || Date.now() - seen > WELCOME_BACK_AFTER_MS;
         setState(current);
+        setDoneOnArrival(current?.stage === "done");
         setWelcomedBack(away && current?.stage === "asking" && current.hasAnswers);
         writeSeen(seenKey);
       })
@@ -98,6 +110,33 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
       live = false;
     };
   }, [client, seenKey, loadAttempt]);
+
+  // Sparks shape the questions, so the start screens mention them when there are any. Never a number.
+  useEffect(() => {
+    let live = true;
+    client
+      .sparks()
+      .then((sparks) => live && setHasSparks(sparks.length > 0))
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [client]);
+
+  // The changes are written in the background, so the screen moves on by itself when they're ready.
+  const stage = state?.stage;
+  useEffect(() => {
+    if (stage !== "writing") return;
+    const timer = setInterval(() => {
+      client
+        .current()
+        .then((now) => {
+          if (now && now.stage !== "writing") setState(now);
+        })
+        .catch(() => undefined);
+    }, LOOK_AGAIN_MS);
+    return () => clearInterval(timer);
+  }, [client, stage]);
 
   // While the Librarian works the member's side is inert, which drops keyboard focus to the page.
   // If they stayed on the same screen, put it back at the start of their side.
@@ -204,9 +243,35 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
       );
     }
 
+    // Reopening: from My book, on a book that's on the shelf. Nothing is open until they press Start.
+    if (adding && (!state || state.stage === "done" || state.stage === "nothing")) {
+      const say = "A few more questions, about what isn't in your book yet. You can finish after any answer.";
+      return (
+        <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={say}>{busy}</Waiting> : say}>
+          <p className="iv-note iv-note-big">
+            Nothing changes on the shelf until you approve it.
+            {hasSparks && ' Chapters you marked "I have one like this" will shape some of the questions.'}
+          </p>
+          <ErrorMessage message={error} />
+          <div className="iv-row">
+            <Button
+              aria-busy={Boolean(busy)}
+              onClick={() => run("The Librarian is getting ready…", () => client.reopen())}
+            >
+              Start the questions
+            </Button>
+            <Link to="/my-book" className="button button-quiet">
+              Back to my book
+            </Link>
+          </div>
+        </Frame>
+      );
+    }
+
     if (!state) {
       return (
         <StartScreen
+          hasSparks={hasSparks}
           busy={busy}
           error={error}
           onStart={(resume) =>
@@ -226,10 +291,12 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     switch (state.stage) {
       case "asking": {
         const draftKey = draftKeyFor(userId, state.question);
+        const inAdding = state.round === "adding";
+        const phase = inAdding ? undefined : state.phase;
         if (welcomedBack && state.lastTopic) {
           return (
             <Frame
-              phase={state.phase}
+              phase={phase}
               busy={Boolean(busy)}
               say={say(`Welcome back. Last time you were telling me about ${state.lastTopic}.`)}
             >
@@ -257,7 +324,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           });
         if (interrupted) {
           return (
-            <Frame phase={state.phase} say={say(state.question)} busy={Boolean(busy)}>
+            <Frame phase={phase} say={say(state.question)} busy={Boolean(busy)}>
               <ErrorMessage message={error} />
               <p className="iv-stuck" role="status">
                 {interrupted === "answer" && "Your answer is saved. "}
@@ -275,7 +342,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           );
         }
         return (
-          <Frame phase={state.phase} say={say(state.question)} busy={Boolean(busy)}>
+          <Frame phase={phase} say={say(state.question)} busy={Boolean(busy)}>
             <ErrorMessage message={error} />
             <AnswerPanel
               key={draftKey}
@@ -286,12 +353,18 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
               exit={
                 state.canFinish
                   ? {
-                      label: "I've said enough. Show me my book",
-                      labelWithWords: "Send this, then show me my book",
-                      note: state.phase === "dig" ? "Most of the way there." : undefined,
+                      label: inAdding
+                        ? "That's enough. Write the changes"
+                        : "I've said enough. Show me my book",
+                      labelWithWords: inAdding
+                        ? "Send this, then write the changes"
+                        : "Send this, then show me my book",
+                      note: !inAdding && state.phase === "dig" ? "Most of the way there." : undefined,
                       onFinish: (words) =>
                         run(
-                          "The Librarian is gathering what you said…",
+                          inAdding
+                            ? "The Librarian is writing the changes…"
+                            : "The Librarian is gathering what you said…",
                           () => client.finish(state.id, words),
                           { lost: words ? LOST_ANSWER : LOST_DEFAULT, onSuccess: () => clearDraft(draftKey) },
                         ),
@@ -358,7 +431,65 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           />
         );
       case "done":
+        if (doneOnArrival) return <Navigate to="/my-book" replace />;
         return <DoneScreen book={state.book} />;
+      case "writing":
+        return fromReading ? (
+          <Frame say="I'm checking whether this belongs in your book.">
+            <WaitBox title="Reading your answer against your book." />
+          </Frame>
+        ) : (
+          <Frame say="I'm writing the changes.">
+            <WaitBox title="Writing your changes." />
+          </Frame>
+        );
+      case "writeFailed":
+        return (
+          <Frame busy={Boolean(busy)} say={say("I couldn't write the changes.")}>
+            <p className="iv-note iv-note-big">The changes weren't written. Your answers are saved.</p>
+            <div className="iv-row">
+              <Button
+                aria-busy={Boolean(busy)}
+                onClick={() => run("I'm writing the changes.", () => client.retryWriting(state.id))}
+              >
+                Try again
+              </Button>
+              <Link to="/my-book" className="button button-quiet">
+                Back to my book
+              </Link>
+            </div>
+          </Frame>
+        );
+      case "proposing":
+        return (
+          <ChangesScreen
+            state={state}
+            userId={userId}
+            busy={busy}
+            error={error}
+            writeBlurb={(approved) => client.blurbFor(approved)}
+            apply={(approved, blurb, onDone) => {
+              run("Updating your book…", () => client.applyChanges(approved, blurb), { onSuccess: onDone });
+            }}
+          />
+        );
+      case "nothing":
+        return (
+          <Frame say="Nothing here changes your book.">
+            <p className="iv-note iv-note-big">
+              {fromReading
+                ? "What you said is saved."
+                : "What you said is saved, and the next questions can use it."}
+            </p>
+            <div className="iv-row">
+              <Link to="/my-book" className="button button-primary">
+                Back to my book
+              </Link>
+            </div>
+          </Frame>
+        );
+      case "updated":
+        return <UpdatedScreen book={state.book} onUndo={() => client.undoChanges()} />;
     }
   })();
 
@@ -380,10 +511,12 @@ const START_SAY =
 const MAX_RESUME_BYTES = 5 * 1024 * 1024;
 
 function StartScreen({
+  hasSparks,
   busy,
   error,
   onStart,
 }: {
+  hasSparks: boolean;
   busy: string | null;
   error: string | null;
   onStart: (resume: File | null) => void;
@@ -391,7 +524,7 @@ function StartScreen({
   const [resume, setResume] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [adding, setAdding] = useState(false);
+  const [addingResume, setAddingResume] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const inputId = useId();
 
@@ -420,12 +553,15 @@ function StartScreen({
           About twenty minutes. You can stop sooner, and leave and come back at any time.
         </span>
       </div>
-      {!adding && (
-        <button type="button" className="iv-textlink" onClick={() => setAdding(true)}>
+      {hasSparks && (
+        <p className="iv-note">I'll use the chapters you marked to shape some of the questions.</p>
+      )}
+      {!addingResume && (
+        <button type="button" className="iv-textlink" onClick={() => setAddingResume(true)}>
           Have a résumé? Add a PDF so my first questions fit you.
         </button>
       )}
-      {adding && (
+      {addingResume && (
         <div className="panel iv-resume">
           <h2>A résumé, if you like</h2>
           {/* biome-ignore lint/a11y/noStaticElementInteractions: a drop target for the mouse; "Choose a PDF" is the keyboard path */}
@@ -869,6 +1005,53 @@ function DoneScreen({ book }: { book: DraftBook }) {
             <Link to="/" className="button button-quiet">
               Go to the shelf
             </Link>
+          </div>
+        </div>
+      </div>
+    </Frame>
+  );
+}
+
+function UpdatedScreen({ book, onUndo }: { book: DraftBook; onUndo: () => Promise<void> }) {
+  const [undone, setUndone] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const say = undone ? "Your book is back as it was." : "Your book on the shelf is updated.";
+  return (
+    <Frame say={say} canLeave={false}>
+      <div className="panel iv-done">
+        <span className="book" aria-hidden="true">
+          <span className="book-cover">
+            <span className="book-title">{book.title}</span>
+            <span className="book-author">{book.authorName}</span>
+          </span>
+        </span>
+        <div className="iv-done-text">
+          {failed && (
+            <p className="message" role="alert">
+              That didn't go through. Your changes are still on the shelf. Try again.
+            </p>
+          )}
+          <div className="iv-row">
+            <Link to="/my-book" className="button button-primary">
+              See my book
+            </Link>
+            {!undone && (
+              <button
+                type="button"
+                className="button button-quiet"
+                onClick={async () => {
+                  setFailed(false);
+                  try {
+                    await onUndo();
+                    setUndone(true);
+                  } catch {
+                    setFailed(true);
+                  }
+                }}
+              >
+                Undo these changes
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -22,12 +22,15 @@ export function Frame({
   busy,
   canLeave = true,
   quiet = false,
+  eyebrow,
   children,
 }: {
   phase?: Phase;
   canLeave?: boolean;
   /** The band steps back, on a screen where something below it is the focus. */
   quiet?: boolean;
+  /** A small caption above the Librarian's words. */
+  eyebrow?: string;
   say: ReactNode;
   /** While the Librarian works, the member's side holds still rather than greying out. */
   busy?: boolean;
@@ -62,6 +65,7 @@ export function Frame({
       </header>
       <section className="iv-band dark">
         <span className="halo" />
+        {eyebrow && <span className="caption iv-eyebrow">{eyebrow}</span>}
         <h1 className="iv-say" data-quiet={quiet || undefined} tabIndex={-1} aria-live="polite">
           {say}
         </h1>
