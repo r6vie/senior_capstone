@@ -45,6 +45,7 @@ class FinishRequest(RequestBody):
 
 
 class ShapeRequest(RequestBody):
+    question_id: str | None = Field(None, description="The `question_id` of the playback being answered.")
     correction: NonEmptyText | None = Field(
         None, max_length=5000, description="What's different. Leave out to confirm: \"Yes, that's me\"."
     )
@@ -132,6 +133,8 @@ class InterviewResponse(BaseModel):
     at_limit: bool
     # True from a little before Shape until Shape: "Most of the way there." The client never counts.
     nearly_done: bool
+    # What the Librarian said on ending the interview, to hold on screen during the title wait.
+    closing_line: str | None
     # The three titles while choosing, and while reviewing so another can be picked.
     titles: list[TitleOption] | None
     # The back-cover blurb, first person, 2-4 sentences: the draft's while choosing, then the book's.

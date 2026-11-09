@@ -165,6 +165,9 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
         can_finish=can_finish,
         ready_for_reveal=ready,
         needs_more=needs_more,
+        closing_line=interview.get("closing_line")
+        if stage == "drafting" or (stage == "interviewing" and ready)
+        else None,
         nearly_done=nearly_done(interview, answered),
         at_limit=needs_more and current is None and len(interview["turns"]) >= engine.MAX_TURNS,
         titles=interview["draft"]["titles"]
@@ -349,9 +352,15 @@ async def resume_text_of(database: AsyncDatabase, interview: dict) -> str | None
     return saved["text"] if saved else None
 
 
+def closing_line_of(turn: engine.NextTurn) -> str | None:
+    """The Librarian's last words, if they are. At a forced limit the text can still be a question."""
+    line = turn.question.strip()
+    return line if line and not line.endswith("?") else None
+
+
 async def write_question(
     database: AsyncDatabase, claude: Claude, interview: dict
-) -> tuple[dict | None, str, bool, str | None]:
+) -> tuple[dict | None, str, bool, str | None, str | None]:
     """The next question to save, what the member was last talking about, whether that's enough, and
     the spark the question works from."""
     sparks = await spark_cues(database, interview)
@@ -368,7 +377,7 @@ async def write_question(
             )
         )
         question = {"question": turn.question, "phase": "adding", "playback": None}
-        return None if turn.done else question, turn.topic, turn.done, turn.spark_id
+        return None if turn.done else question, turn.topic, turn.done, turn.spark_id, None
     turn = await ask_engine(
         engine.next_turn(
             claude,
@@ -380,7 +389,7 @@ async def write_question(
     )
     ready = turn.ready_for_reveal
     question = None if ready else turn.model_dump(include={"question", "phase", "playback"})
-    return question, turn.topic, ready, turn.spark_id
+    return question, turn.topic, ready, turn.spark_id, closing_line_of(turn) if ready else None
 
 
 async def ask_next_question(database: AsyncDatabase, claude: Claude, interview: dict) -> dict:
@@ -403,7 +412,7 @@ async def ask_next_question(database: AsyncDatabase, claude: Claude, interview: 
             },
             return_document=ReturnDocument.AFTER,
         )
-    question, topic, ready, spark_id = await write_question(database, claude, interview)
+    question, topic, ready, spark_id, closing_line = await write_question(database, claude, interview)
     if question:
         question["question_id"] = str(uuid4())
     updated = await database.interviews.find_one_and_update(
@@ -412,6 +421,7 @@ async def ask_next_question(database: AsyncDatabase, claude: Claude, interview: 
         {
             "$set": {
                 "current": question,
+                "closing_line": closing_line,
                 "topic": topic,
                 "ready_for_reveal": ready,
                 "updated_at": datetime.now(UTC),
@@ -1459,14 +1469,33 @@ async def _reader_name(database: AsyncDatabase, author_id: str, checkout_id: str
     return (await full_names_of(database, [checkout["reader_id"]])).get(checkout["reader_id"])
 
 
-async def claim_reading_question(database: AsyncDatabase, user: dict, question_id: str, field: str) -> None:
+async def claim_reading_question(
+    database: AsyncDatabase, user: dict, question_id: str, field: str, *, answer: str | None = None
+) -> None:
     """Mark a waiting question answered or dismissed. It can only happen once."""
+    changes: dict = {field: datetime.now(UTC)}
+    if answer is not None:
+        # Kept so a resend can be told apart from another screen answering first.
+        changes["answer"] = answer
     claimed = await database.reading_questions.update_one(
         {"_id": question_id, "author_id": user["_id"], "answered_at": None, "dismissed_at": None},
-        {"$set": {field: datetime.now(UTC)}},
+        {"$set": changes},
     )
     if claimed.modified_count == 0:
         raise HTTPException(status_code=404, detail="That question isn't waiting for you.")
+
+
+async def check_reading_question(
+    database: AsyncDatabase, user: dict, question_id: str, text: str, interview: dict
+) -> None:
+    """Someone else's question or an unknown one is a 404. This member's, already dealt with, is a stale
+    send: `already_saved` says whether it was this same answer, or another screen got there first."""
+    question = await database.reading_questions.find_one({"_id": question_id, "author_id": user["_id"]})
+    if question is None:
+        raise HTTPException(status_code=404, detail="That question isn't waiting for you.")
+    if question["answered_at"] or question["dismissed_at"]:
+        same = bool(question["answered_at"]) and question.get("answer") == text.strip()
+        raise StaleQuestion(interview, already_saved=same)
 
 
 async def dismiss_reading_question(database: AsyncDatabase, user: dict, question_id: str) -> None:
@@ -1486,7 +1515,13 @@ async def answer_reading_question(
     interview = await interview_for_book(database, user["_id"])
     if interview["stage"] not in ("done", "adding", "revising"):
         raise conflict("Finish your book first.")
-    await claim_reading_question(database, user, question_id, "answered_at")
+    await check_reading_question(database, user, question_id, text, interview)
+    try:
+        await claim_reading_question(database, user, question_id, "answered_at", answer=text)
+    except HTTPException:
+        # Another request claimed it between the check and here.
+        await check_reading_question(database, user, question_id, text, interview)
+        raise
     await database.interviews.update_one(
         {"_id": interview["_id"]}, {"$set": {"reading_question_id": question_id}}
     )

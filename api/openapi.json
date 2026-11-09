@@ -648,6 +648,16 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaleQuestionResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1490,6 +1500,16 @@
               }
             }
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaleQuestionResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -2143,6 +2163,17 @@
             "type": "boolean",
             "title": "Nearly Done"
           },
+          "closing_line": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closing Line"
+          },
           "titles": {
             "anyOf": [
               {
@@ -2333,6 +2364,7 @@
           "needs_more",
           "at_limit",
           "nearly_done",
+          "closing_line",
           "titles",
           "blurb",
           "step_status",
@@ -2953,6 +2985,18 @@
       },
       "ShapeRequest": {
         "properties": {
+          "question_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Id",
+            "description": "The `question_id` of the playback being answered."
+          },
           "correction": {
             "anyOf": [
               {

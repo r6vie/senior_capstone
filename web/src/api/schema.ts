@@ -930,6 +930,8 @@ export interface components {
             at_limit: boolean;
             /** Nearly Done */
             nearly_done: boolean;
+            /** Closing Line */
+            closing_line: string | null;
             /** Titles */
             titles: components["schemas"]["TitleOption"][] | null;
             /** Blurb */
@@ -1212,6 +1214,11 @@ export interface components {
         };
         /** ShapeRequest */
         ShapeRequest: {
+            /**
+             * Question Id
+             * @description The `question_id` of the playback being answered.
+             */
+            question_id?: string | null;
             /**
              * Correction
              * @description What's different. Leave out to confirm: "Yes, that's me".
@@ -1815,6 +1822,15 @@ export interface operations {
                     "application/json": components["schemas"]["InterviewResponse"];
                 };
             };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaleQuestionResponse"];
+                };
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -2390,6 +2406,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaleQuestionResponse"];
                 };
             };
             /** @description Validation Error */

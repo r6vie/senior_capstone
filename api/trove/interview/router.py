@@ -104,7 +104,7 @@ async def skip(
         return stale_question(error)
 
 
-@router.post("/shape", response_model=InterviewResponse)
+@router.post("/shape", response_model=InterviewResponse, responses=STALE_QUESTION_RESPONSES)
 async def shape(
     data: ShapeRequest,
     user: dict = Depends(get_current_user),
@@ -113,7 +113,12 @@ async def shape(
 ) -> InterviewResponse:
     """Confirm the Librarian's playback ("Yes, that's me"), or correct it."""
     text = data.correction or service.SHAPE_CONFIRMED
-    return interview_view(await service.answer(database, claude, user, text, shape=True))
+    try:
+        return interview_view(
+            await service.answer(database, claude, user, text, shape=True, question_id=data.question_id)
+        )
+    except service.StaleQuestion as error:
+        return stale_question(error)
 
 
 @router.post("/finish", response_model=InterviewResponse, responses=STALE_QUESTION_RESPONSES)
@@ -340,7 +345,11 @@ async def list_reading_questions(
     return await service.list_reading_questions(database, user)
 
 
-@router.post("/reading-questions/{question_id}/answer", response_model=InterviewResponse)
+@router.post(
+    "/reading-questions/{question_id}/answer",
+    response_model=InterviewResponse,
+    responses=STALE_QUESTION_RESPONSES,
+)
 async def answer_reading_question(
     question_id: str,
     data: ReadingAnswerRequest,
@@ -351,9 +360,14 @@ async def answer_reading_question(
 ) -> InterviewResponse:
     """Answer it. From `done`, changes are written in the background (`revision_status`). During a
     round it joins the round. While changes are waiting, it runs after the member decides."""
-    return interview_view(
-        await service.answer_reading_question(database, claude, user, question_id, data.answer, background)
-    )
+    try:
+        return interview_view(
+            await service.answer_reading_question(
+                database, claude, user, question_id, data.answer, background
+            )
+        )
+    except service.StaleQuestion as error:
+        return stale_question(error)
 
 
 @router.post("/reading-questions/{question_id}/dismiss", status_code=204)

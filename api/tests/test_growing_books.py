@@ -1573,6 +1573,51 @@ async def test_during_a_round_an_answer_joins_it(client, database, author, fake_
     assert state["can_finish"] is True
 
 
+async def test_a_resent_reading_answer_is_already_saved(client, database, author, fake_claude):
+    question = await waiting_question(client, database, author)
+    fake_claude.responses.append(revision(change()))
+    path = f"/interview/reading-questions/{question}/answer"
+    assert (
+        await client.post(path, json={"answer": NEW_ANSWER}, headers=author["headers"])
+    ).status_code == 200
+
+    again = await client.post(path, json={"answer": NEW_ANSWER}, headers=author["headers"])
+    assert again.status_code == 409
+    assert again.json()["already_saved"] is True
+    assert again.json()["interview"]["stage"] == "revising"
+
+
+async def test_a_reading_answer_after_another_screen_got_there_first_isnt_saved(
+    client, database, author, fake_claude
+):
+    question = await waiting_question(client, database, author)
+    fake_claude.responses.append(revision(change()))
+    path = f"/interview/reading-questions/{question}/answer"
+    await client.post(path, json={"answer": NEW_ANSWER}, headers=author["headers"])
+
+    late = await client.post(
+        path, json={"answer": "My words from the laptop here."}, headers=author["headers"]
+    )
+    assert late.status_code == 409
+    assert late.json()["already_saved"] is False
+    answers = [
+        turn["answer"] for turn in (await database.interviews.find_one({"user_id": author["id"]}))["turns"]
+    ]
+    assert "My words from the laptop here." not in answers
+
+
+async def test_a_reading_answer_after_a_dismissal_isnt_saved(client, database, author):
+    question = await waiting_question(client, database, author)
+    await client.post(f"/interview/reading-questions/{question}/dismiss", headers=author["headers"])
+    late = await client.post(
+        f"/interview/reading-questions/{question}/answer",
+        json={"answer": NEW_ANSWER},
+        headers=author["headers"],
+    )
+    assert late.status_code == 409
+    assert late.json()["already_saved"] is False
+
+
 async def test_someone_elses_question_is_404(client, database, author, reader):
     question = await waiting_question(client, database, author)
     await shelve_book(database, reader["id"])

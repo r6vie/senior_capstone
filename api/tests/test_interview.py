@@ -865,3 +865,73 @@ async def test_the_previous_back_cover_goes_when_it_no_longer_fits(client, datab
     await client.post("/interview/book/shelve", headers=headers)
     saved = await database.books.find_one({})
     assert "previous_blurb" not in saved
+
+
+async def test_a_stale_shape_saves_nothing_and_a_resend_is_already_saved(
+    client, database, headers, fake_engine
+):
+    await client.post("/interview", json={}, headers=headers)
+    fake_engine.shape_next = True
+    state = await answer_questions(client, headers, 1)
+    playback = state["question"]["question_id"]
+    body = {"correction": "Not quite: I left twice.", "question_id": playback}
+    assert (await client.post("/interview/shape", json=body, headers=headers)).status_code == 200
+
+    again = await client.post("/interview/shape", json=body, headers=headers)
+    assert again.status_code == 409
+    assert again.json()["already_saved"] is True
+
+    other = {"correction": "A different correction.", "question_id": playback}
+    late = await client.post("/interview/shape", json=other, headers=headers)
+    assert late.status_code == 409
+    assert late.json()["already_saved"] is False
+    answers = [turn["answer"] for turn in (await database.interviews.find_one({}))["turns"]]
+    assert "A different correction." not in answers
+
+
+async def test_shape_without_a_question_id_still_works(client, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    fake_engine.shape_next = True
+    await answer_questions(client, headers, 1)
+    assert (await client.post("/interview/shape", json={}, headers=headers)).status_code == 200
+
+
+async def test_the_closing_line_is_kept_for_the_title_wait(
+    client, database, headers, monkeypatch, fake_engine
+):
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, engine.MIN_ANSWERS - 1)
+
+    async def closing(claude, *, turns, resume_text, sparks=None, more_material=False):
+        return NextTurn(
+            question="That's enough for your book.",
+            phase="shape",
+            playback=None,
+            ready_for_reveal=True,
+            topic="t",
+        )
+
+    monkeypatch.setattr(engine, "next_turn", closing)
+    state = await answer_questions(client, headers, 1)
+    assert state["ready_for_reveal"] is True
+    assert state["closing_line"] == "That's enough for your book."
+
+    drafting = (await client.post("/interview/finish", headers=headers)).json()
+    assert drafting["stage"] == "drafting"
+    assert drafting["closing_line"] == "That's enough for your book."
+    assert (await client.get("/interview", headers=headers)).json()["closing_line"] is None
+
+
+async def test_a_question_forced_to_end_the_interview_isnt_a_closing_line(
+    client, headers, monkeypatch, fake_engine
+):
+    await client.post("/interview", json={}, headers=headers)
+
+    async def forced(claude, *, turns, resume_text, sparks=None, more_material=False):
+        return NextTurn(
+            question="What came next?", phase="dig", playback=None, ready_for_reveal=True, topic="t"
+        )
+
+    monkeypatch.setattr(engine, "next_turn", forced)
+    state = await answer_questions(client, headers, 1)
+    assert state["closing_line"] is None
