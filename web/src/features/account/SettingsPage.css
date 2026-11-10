@@ -1,0 +1,39 @@
+/* Settings page: plain stacked sections from the design system's recipes (fields, choices, messages).
+   Only tokens are used for colors, type and spacing. */
+
+.settings-page {
+  max-width: 640px;
+  padding: var(--s-6) var(--s-7) var(--s-8);
+}
+.settings-page .page-title {
+  margin-bottom: var(--s-5);
+}
+.settings-section {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-5) 0;
+  border-top: var(--line-heavy) solid var(--ink);
+}
+.settings-heading {
+  margin: 0;
+  font: 600 26px / 1.1 var(--font-serif);
+}
+.settings-fixed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  margin: 0;
+}
+.settings-section .message {
+  margin: 0;
+}
+.settings-error {
+  border-width: var(--line-heavy);
+}
+
+@media (max-width: 719px) {
+  .settings-page {
+    padding: var(--s-5) var(--s-4) var(--s-6);
+  }
+}

@@ -79,7 +79,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
   includes last names.
 - Decide first: the exact chapter fields; what a "cover" is for now (a style id is enough).
 
-**A1 · Account basics and contact details** · Daniel · `todo`
+**A1 · Account basics and contact details** · Daniel · `review`
 - Ships `auth.first_name_of` and `auth.contact_details_of`.
 - Already done (Josef, 2026-11-07, for full names on books): signup asks for a required last name;
   the account has `last_name` and `full_name` (`auth.full_name`, `auth.full_names_of`); and
@@ -90,6 +90,12 @@ the owner answers them. Each item's "Decide first" lists the known ones.
   the book; coordinate with Josef).
 - Done when: contact details are saved, are never visible before a yes, and deleting an account
   removes everything that belongs to it.
+- Built (PR pending): the contract functions, `GET/PUT /auth/me/contact`, `PUT /auth/me/notifications`,
+  `DELETE /auth/me` and the Settings page. Decisions are in trove.md (2026-11-10).
+- **Waiting on owners:** deleting an account removes the account and sessions, then runs each feature's
+  cleanup. Josef (the book) and Ellie (checkouts: keep accepted ones, show "a former member") need to
+  register theirs with `@on_account_deleted` from `trove.auth.service`.
+- Ellie's reveal (C2) can now call `auth.contact_details_of`.
 
 **U1 · App shell and navigation** · Daniel · `todo`
 - A minimal layout with navigation to Shelf, My book, Checkouts, Past meets and Settings, with
