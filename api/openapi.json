@@ -113,6 +113,44 @@
           }
         ]
       },
+      "delete": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Delete Me",
+        "description": "Delete the account for good. The body must repeat the account's email address.",
+        "operationId": "delete_me_auth_me_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
       "patch": {
         "tags": [
           "Accounts"
@@ -125,6 +163,125 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/NameUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/auth/me/contact": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "My Contact Details",
+        "description": "The contact details this member will share when an author says yes, for them to edit.",
+        "operationId": "my_contact_details_auth_me_contact_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactDetailsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Update My Contact Details",
+        "description": "Choose what to share on a yes. The sign-in email is always shared; LinkedIn and phone are optional.",
+        "operationId": "update_my_contact_details_auth_me_contact_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactDetailsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactDetailsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/auth/me/notifications": {
+      "put": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Update My Notifications",
+        "description": "Turn email notifications on or off. Account emails are sent either way.",
+        "operationId": "update_my_notifications_auth_me_notifications_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationSettingsUpdate"
               }
             }
           },
@@ -1177,6 +1334,92 @@
         ],
         "title": "CheckoutRequest"
       },
+      "ContactDetailsResponse": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "linkedin_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linkedin Url"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "linkedin_url",
+          "phone"
+        ],
+        "title": "ContactDetailsResponse"
+      },
+      "ContactDetailsUpdate": {
+        "properties": {
+          "linkedin_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linkedin Url"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 30
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ContactDetailsUpdate",
+        "description": "What a member shares once an author says yes.\n\nThe sign-in email is always shared. LinkedIn and phone are optional: send null or leave one out\nto stop sharing it. Both are replaced together, so the settings form sends the whole picture."
+      },
+      "DeleteAccountRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "DeleteAccountRequest",
+        "description": "Deleting an account cannot be undone, so the member types their email to confirm."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1551,6 +1794,21 @@
         "title": "NameUpdate",
         "description": "Change the name on the account. Leave out a field to keep it."
       },
+      "NotificationSettingsUpdate": {
+        "properties": {
+          "email_notifications": {
+            "type": "boolean",
+            "title": "Email Notifications"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "email_notifications"
+        ],
+        "title": "NotificationSettingsUpdate",
+        "description": "The one email switch. Account emails, like the welcome message, are sent either way."
+      },
       "PublicBookResponse": {
         "properties": {
           "id": {
@@ -1899,6 +2157,10 @@
             "format": "email",
             "title": "Email"
           },
+          "email_notifications": {
+            "type": "boolean",
+            "title": "Email Notifications"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -1912,6 +2174,7 @@
           "last_name",
           "full_name",
           "email",
+          "email_notifications",
           "created_at"
         ],
         "title": "UserResponse"

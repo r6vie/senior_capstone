@@ -348,3 +348,8 @@ Membership verification is still open:
   - 3 open checkouts per reader; pending and accepted checkouts both use a copy; unanswered checkouts close after 7 days.
   - After a decline or expiry, the same book can be checked out again after 30 days; readers can cancel an unanswered checkout; authors get an email for each new checkout (§6).
   - Your own book must be on the shelf before you check one out; authors see the reader's book when deciding.
+- **2026-11-10, account basics (A1, Daniel):**
+  - Contact details: the sign-in email is always shared on a yes; a LinkedIn profile link and a phone number are optional, and each is shared only if the member adds it. No separate contact email for now.
+  - Checked lightly: LinkedIn must be an `https://linkedin.com/in/...` link, and a phone number has 7 to 15 digits. We never check that a number works.
+  - One email switch (checkouts and messages). Account emails, like the welcome message, are sent either way.
+  - Deleting an account is permanent and asks the member to type their email. It removes the account, sessions and the member's book. Accepted checkouts and past meets stay for the other person, who sees "a former member". Each feature cleans up its own data through `auth.on_account_deleted` (books and checkouts still need to register theirs).

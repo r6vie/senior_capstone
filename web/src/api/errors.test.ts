@@ -10,6 +10,11 @@ describe("errorMessage", () => {
     expect(errorMessage(body)).toBe("password: Too short");
   });
 
+  it('drops pydantic\'s "Value error" prefix from our own validators', () => {
+    const body = { detail: [{ loc: ["body", "phone"], msg: "Value error, Enter a phone number." }] };
+    expect(errorMessage(body)).toBe("phone: Enter a phone number.");
+  });
+
   it("falls back for anything else", () => {
     expect(errorMessage(undefined)).toBe("Something went wrong. Please try again.");
   });
