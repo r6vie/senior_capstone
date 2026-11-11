@@ -29,7 +29,10 @@ function ContactSection({ email }: { email: string }) {
   const [notice, setNotice] = useState<Notice>(null);
 
   useEffect(() => {
+    // A response from an earlier request must not overwrite what the member has since typed.
+    let stale = false;
     api.GET("/auth/me/contact").then(({ data }) => {
+      if (stale) return;
       if (data) {
         setLinkedin(data.linkedin_url ?? "");
         setPhone(data.phone ?? "");
@@ -38,6 +41,9 @@ function ContactSection({ email }: { email: string }) {
         setNotice({ kind: "error", text: "We couldn't load your contact details. Please refresh." });
       }
     });
+    return () => {
+      stale = true;
+    };
   }, []);
 
   async function save(event: FormEvent) {
