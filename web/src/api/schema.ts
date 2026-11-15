@@ -182,6 +182,72 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /**
+         * Edit My Book
+         * @description Change the book's title or back cover, in the member's own words. On a published book it's
+         *     live at once, and POST /interview/book/undo takes it back. 409 while proposed changes wait.
+         */
+        patch: operations["edit_my_book_books_me_patch"];
+        trace?: never;
+    };
+    "/books/me/chapters/{chapter_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Edit My Chapter
+         * @description Change a chapter's title or summary. Its quotes stay. In a draft, the last version can be
+         *     restored (`has_previous`, POST /interview/book/chapters/{id}/restore).
+         */
+        patch: operations["edit_my_chapter_books_me_chapters__chapter_id__patch"];
+        trace?: never;
+    };
+    "/books/me/take-down": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Take Down
+         * @description Take the book off the shelf. No new checkouts; anything already arranged goes ahead.
+         */
+        post: operations["take_down_books_me_take_down_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/books/me/put-back": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Put Back
+         * @description Put a book that was taken down back on the shelf, in the same place as before.
+         */
+        post: operations["put_back_books_me_put_back_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -890,6 +956,16 @@ export interface components {
             blurb: string | null;
         };
         /**
+         * BookEdit
+         * @description The member's own words for their book's title or back cover. Plain text.
+         */
+        BookEdit: {
+            /** Title */
+            title?: string | null;
+            /** Blurb */
+            blurb?: string | null;
+        };
+        /**
          * Change
          * @description One proposed change to a book on the shelf, which the member approves or declines.
          */
@@ -923,6 +999,16 @@ export interface components {
             title: string;
             /** Summary */
             summary: string;
+        };
+        /**
+         * ChapterEdit
+         * @description The member's own words for a chapter's title or summary. Its quotes stay as they are.
+         */
+        ChapterEdit: {
+            /** Title */
+            title?: string | null;
+            /** Summary */
+            summary?: string | null;
         };
         /** CheckoutRequest */
         CheckoutRequest: {
@@ -1128,7 +1214,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "draft" | "on_shelf";
+            status: "draft" | "on_shelf" | "off_shelf";
             /** Published At */
             published_at: string | null;
             /**
@@ -1804,6 +1890,114 @@ export interface operations {
         };
     };
     my_book_books_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+        };
+    };
+    edit_my_book_books_me_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookEdit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_my_chapter_books_me_chapters__chapter_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChapterEdit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    take_down_books_me_take_down_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyBookResponse"];
+                };
+            };
+        };
+    };
+    put_back_books_me_put_back_post: {
         parameters: {
             query?: never;
             header?: never;

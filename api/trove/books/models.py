@@ -1,11 +1,18 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
+
+from trove.core.models import NonEmptyText, RequestBody
+from trove.interview.engine import MAX_BLURB, MAX_SUMMARY
 
 # Books are plain white for now; the style is stored so covers can differ later without a migration.
 CoverStyle = Literal["cover-1", "cover-2", "cover-3", "cover-4", "cover-5", "cover-6", "cover-7", "cover-8"]
-BookStatus = Literal["draft", "on_shelf"]
+BookStatus = Literal["draft", "on_shelf", "off_shelf"]
+# The AI's summaries and blurbs have these limits too. Titles have none in the prompts, so these
+# leave room (docs/review/decisions.md, row 30).
+MAX_BOOK_TITLE = 80
+MAX_CHAPTER_TITLE = 100
 DEFAULT_COPIES = 3
 
 
@@ -67,3 +74,29 @@ class MyBookResponse(BaseModel):
     has_previous_blurb: bool = False
     # After a rewrite: it couldn't be told better from what the member said, so nothing changed.
     rewrite_unchanged: bool = False
+
+
+class BookEdit(RequestBody):
+    """The member's own words for their book's title or back cover. Plain text."""
+
+    title: NonEmptyText | None = Field(None, max_length=MAX_BOOK_TITLE)
+    blurb: NonEmptyText | None = Field(None, max_length=MAX_BLURB)
+
+    @model_validator(mode="after")
+    def something_to_change(self):
+        if self.title is None and self.blurb is None:
+            raise ValueError("Send a title or a blurb to change.")
+        return self
+
+
+class ChapterEdit(RequestBody):
+    """The member's own words for a chapter's title or summary. Its quotes stay as they are."""
+
+    title: NonEmptyText | None = Field(None, max_length=MAX_CHAPTER_TITLE)
+    summary: NonEmptyText | None = Field(None, max_length=MAX_SUMMARY)
+
+    @model_validator(mode="after")
+    def something_to_change(self):
+        if self.title is None and self.summary is None:
+            raise ValueError("Send a title or a summary to change.")
+        return self

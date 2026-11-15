@@ -514,6 +514,163 @@
             "HTTPBearer": []
           }
         ]
+      },
+      "patch": {
+        "tags": [
+          "Books"
+        ],
+        "summary": "Edit My Book",
+        "description": "Change the book's title or back cover, in the member's own words. On a published book it's\nlive at once, and POST /interview/book/undo takes it back. 409 while proposed changes wait.",
+        "operationId": "edit_my_book_books_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/books/me/chapters/{chapter_id}": {
+      "patch": {
+        "tags": [
+          "Books"
+        ],
+        "summary": "Edit My Chapter",
+        "description": "Change a chapter's title or summary. Its quotes stay. In a draft, the last version can be\nrestored (`has_previous`, POST /interview/book/chapters/{id}/restore).",
+        "operationId": "edit_my_chapter_books_me_chapters__chapter_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "chapter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Chapter Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChapterEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/books/me/take-down": {
+      "post": {
+        "tags": [
+          "Books"
+        ],
+        "summary": "Take Down",
+        "description": "Take the book off the shelf. No new checkouts; anything already arranged goes ahead.",
+        "operationId": "take_down_books_me_take_down_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/books/me/put-back": {
+      "post": {
+        "tags": [
+          "Books"
+        ],
+        "summary": "Put Back",
+        "description": "Put a book that was taken down back on the shelf, in the same place as before.",
+        "operationId": "put_back_books_me_put_back_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyBookResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/books/{book_id}": {
@@ -2068,6 +2225,40 @@
         "title": "BookCard",
         "description": "A book as it appears on the shelf."
       },
+      "BookEdit": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "blurb": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 600,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blurb"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "BookEdit",
+        "description": "The member's own words for their book's title or back cover. Plain text."
+      },
       "Change": {
         "properties": {
           "id": {
@@ -2171,6 +2362,40 @@
           "summary"
         ],
         "title": "Chapter"
+      },
+      "ChapterEdit": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ChapterEdit",
+        "description": "The member's own words for a chapter's title or summary. Its quotes stay as they are."
       },
       "CheckoutRequest": {
         "properties": {
@@ -2801,7 +3026,8 @@
             "type": "string",
             "enum": [
               "draft",
-              "on_shelf"
+              "on_shelf",
+              "off_shelf"
             ],
             "title": "Status"
           },

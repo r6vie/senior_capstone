@@ -23,7 +23,7 @@ from starlette.concurrency import run_in_threadpool
 
 from trove.ai.client import Claude, ClaudeRefused
 from trove.ai.usage import BudgetExceeded
-from trove.auth.service import full_names_of
+from trove.auth.service import full_names_of, on_account_deleted
 from trove.books import service as books
 from trove.books.models import MyBookResponse
 from trove.checkouts import service as checkouts
@@ -886,7 +886,7 @@ async def interview_for_book(database: AsyncDatabase, user_id: str) -> dict:
     if interview is not None:
         return interview
     book = await books.get_book_of(database, user_id)
-    if book is None or book["status"] != books.ON_SHELF:
+    if book is None or book["status"] not in books.PUBLISHED:
         raise HTTPException(status_code=404, detail="You haven't started your interview yet.")
     now = datetime.now(UTC)
     interview = {
@@ -915,7 +915,7 @@ async def reopen(database: AsyncDatabase, claude: Claude, user: dict) -> dict:
     if interview["stage"] == "revising":
         raise conflict("Your proposed changes are waiting for you.")
     book = await books.get_book_of(database, user["_id"])
-    if interview["stage"] != "done" or book is None or book["status"] != books.ON_SHELF:
+    if interview["stage"] != "done" or book is None or book["status"] not in books.PUBLISHED:
         raise conflict("Only a book on the shelf can be added to.")
     opened = await database.interviews.find_one_and_update(
         {"_id": interview["_id"], "stage": "done"},
@@ -1190,6 +1190,11 @@ async def write_selection_blurb(
     )
 
 
+async def changes_waiting(database: AsyncDatabase, user_id: str) -> bool:
+    """Contract for books: proposed changes are waiting for this member, so their book can't be edited."""
+    return await database.interviews.count_documents({"user_id": user_id, "stage": "revising"}) > 0
+
+
 async def nothing_open(database: AsyncDatabase, user_id: str) -> bool:
     """Contract for books: no questions or changes are open on this member's book, so it can be undone."""
     interview = await database.interviews.find_one({"user_id": user_id}, {"stage": 1})
@@ -1252,7 +1257,7 @@ async def propose_removal(database: AsyncDatabase, user: dict, chapter_id: str) 
     change: nothing happens until POST /interview/revision."""
     interview = await interview_for_book(database, user["_id"])
     book = await books.get_book_of(database, user["_id"])
-    if interview["stage"] != "done" or book is None or book["status"] != books.ON_SHELF:
+    if interview["stage"] != "done" or book is None or book["status"] not in books.PUBLISHED:
         raise conflict("Finish what's waiting in your book first.")
     chapter = next((c for c in book["chapters"] if c["id"] == chapter_id), None)
     if chapter is None:
@@ -1311,6 +1316,9 @@ async def undo_revision(database: AsyncDatabase, user: dict) -> MyBookResponse:
     book = await books.undo_revision(database, user["_id"])
     if book is None:
         raise conflict("There's nothing to undo.")
+    if (before.get("previous_version") or {}).get("kind") == "edit":
+        # The member's own words, taken back: nothing to keep out of later rounds.
+        return books.my_book_view(book)
     restored = {chapter["id"]: chapter for chapter in book["chapters"]}
     undone = [
         _remembered(chapter)
@@ -1391,6 +1399,8 @@ async def add_spark(database: AsyncDatabase, user: dict, book_id: str, chapter_i
         "_id": str(uuid4()),
         "user_id": user["_id"],
         "book_id": book_id,
+        # Whose book it is, so their account deletion can take this spark with it.
+        "book_author_id": book["author_id"],
         "chapter_id": chapter_id,
         "chapter_title": chapter["title"],
         "created_at": now,
@@ -1558,3 +1568,18 @@ async def answer_reading_question(
     return await database.interviews.find_one_and_update(
         {"_id": interview["_id"]}, {"$push": {"turns": turn}}, return_document=ReturnDocument.AFTER
     )
+
+
+@on_account_deleted
+async def delete_interview_of(database: AsyncDatabase, user_id: str) -> None:
+    """Account deletion: the member's interview, résumé text, sparks and reading questions go, and so
+    do other members' unused sparks on this member's book, whose title would otherwise still feed
+    their interviews. Safe to run twice."""
+    interviews = await database.interviews.find({"user_id": user_id}, {"_id": 1}).to_list()
+    await database.resume_texts.delete_many({"_id": {"$in": [interview["_id"] for interview in interviews]}})
+    await database.interviews.delete_many({"user_id": user_id})
+    await database.sparks.delete_many({"user_id": user_id})
+    await database.reading_questions.delete_many({"author_id": user_id})
+    book = await books.get_book_of(database, user_id)
+    pointing_here = [{"book_author_id": user_id}] + ([{"book_id": book["_id"]}] if book else [])
+    await database.sparks.delete_many({"used_at": None, "$or": pointing_here})
