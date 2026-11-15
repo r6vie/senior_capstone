@@ -1,0 +1,116 @@
+/* The app shell: top bar and, on phones, the bottom tab bar (docs/design/system.md, "Phone").
+   The bar's measurements are the shelf handoff's; only tokens are used for everything else. */
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--s-6) + var(--s-1));
+  height: 80px;
+  padding: var(--s-4) calc(var(--s-6) + var(--s-1));
+}
+.top-bar-end {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto;
+}
+.top-bar .avatar {
+  background: var(--white);
+  color: var(--fg);
+  text-decoration: none;
+}
+.top-bar .avatar[aria-current="page"] {
+  border-width: var(--line-heavy);
+}
+.top-bar .search {
+  position: relative;
+}
+.search svg {
+  flex: none;
+  stroke: var(--ink);
+  stroke-width: 2.4;
+}
+.search input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+.search input::placeholder {
+  color: var(--ink-2);
+}
+.search:focus-within {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* Pages that are not designed yet sit in the same gutters as the shelf. */
+.shell-page {
+  padding: var(--s-6) var(--s-7) var(--s-8);
+}
+.shell-page .page-title {
+  margin-bottom: var(--s-5);
+}
+.shell-page .empty {
+  max-width: 640px;
+}
+
+@media (max-width: 719px) {
+  .top-bar {
+    height: 56px;
+    padding: 0 var(--s-4);
+    gap: var(--s-3);
+  }
+  .top-bar .wordmark {
+    font-size: 22px;
+  }
+  .top-bar .search {
+    width: var(--tap);
+    height: var(--tap);
+    padding: 0;
+    justify-content: center;
+  }
+  .top-bar .search input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+  }
+  .top-bar .avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* The nav becomes the bottom tab bar. */
+  .nav {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 10;
+    gap: 0;
+    height: 64px;
+    border-top: var(--line-heavy) solid var(--ink);
+    background: var(--paper);
+    font-size: 14px;
+  }
+  .nav a {
+    flex: 1;
+    justify-content: center;
+    padding: 0 var(--s-1);
+    border-bottom: 0;
+    border-top: var(--line-heavy) solid transparent;
+    margin-top: calc(var(--line-heavy) * -1);
+    text-align: center;
+  }
+  .nav a[aria-current="page"] {
+    border-top-color: var(--ink);
+  }
+  .app-shell {
+    padding-bottom: 64px;
+  }
+  .shell-page {
+    padding: var(--s-5) var(--s-4) var(--s-6);
+  }
+}
