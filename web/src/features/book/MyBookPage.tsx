@@ -4,9 +4,12 @@ import { Button } from "../../ui/Button";
 import { useAuth } from "../auth/AuthProvider";
 import { draftKeyFor, keepDraft } from "../interview/AnswerPanel";
 import { apiInterviewClient } from "../interview/apiInterviewClient";
-import { droppedSentence } from "../interview/InterviewPage";
+import { EditForm, editKeyFor, hasEditDraft } from "../interview/EditInPlace";
+import { bookFields, chapterFields, droppedSentence } from "../interview/InterviewPage";
 import type {
+  BookEdit,
   BookStage,
+  ChapterEdit,
   DraftChapter,
   InterviewClient,
   LastRound,
@@ -147,12 +150,30 @@ function ChapterRow({
   index,
   chapter,
   canRemove,
+  editKey,
+  onEdit,
 }: {
   index: number;
   chapter: DraftChapter;
   canRemove: boolean;
+  editKey: string;
+  onEdit: (edit: ChapterEdit) => Promise<void>;
 }) {
   const [showing, setShowing] = useState(false);
+  const [editing, setEditing] = useState(() => hasEditDraft(editKey));
+  if (editing) {
+    return (
+      <li>
+        <span className="mb-n">{index + 1}</span>
+        <EditForm
+          fields={chapterFields(chapter)}
+          draftKey={editKey}
+          onSave={onEdit}
+          onClose={() => setEditing(false)}
+        />
+      </li>
+    );
+  }
   return (
     <li>
       <span className="mb-n">{index + 1}</span>
@@ -160,6 +181,14 @@ function ChapterRow({
         <b>{chapter.title}</b>
         <span className="mb-summary">{chapter.summary}</span>
         <div className="mb-row-act">
+          <button
+            type="button"
+            className="button button-quiet iv-sm iv-show"
+            aria-label={`Edit ${chapter.title}`}
+            onClick={() => setEditing(true)}
+          >
+            Edit
+          </button>
           {chapter.quotes.length > 0 && (
             <button
               type="button"
@@ -193,6 +222,57 @@ function ChapterRow({
   );
 }
 
+/** Taking a book down stops new checkouts, so it asks in place first, and focus goes to the safe answer. */
+function TakeOffShelf({ onTakeDown }: { onTakeDown: () => Promise<void> }) {
+  const [asking, setAsking] = useState(false);
+  const [working, setWorking] = useState(false);
+  const keep = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (asking) keep.current?.focus();
+  }, [asking]);
+
+  if (!asking) {
+    return (
+      <button type="button" className="button button-quiet iv-sm iv-show" onClick={() => setAsking(true)}>
+        Take off the shelf
+      </button>
+    );
+  }
+  return (
+    <div className="mb-confirm">
+      <p>
+        Take your book off the shelf? Other members won't be able to find it, and no new checkouts can start.
+        Anything already arranged still happens. You can put it back at any time.
+      </p>
+      <div className="iv-row">
+        <button
+          type="button"
+          className="button button-quiet iv-sm"
+          aria-busy={working}
+          disabled={working}
+          onClick={async () => {
+            setWorking(true);
+            await onTakeDown();
+            setWorking(false);
+            setAsking(false);
+          }}
+        >
+          Take it off
+        </button>
+        <button
+          type="button"
+          ref={keep}
+          className="button button-quiet iv-sm"
+          onClick={() => setAsking(false)}
+        >
+          Keep it on the shelf
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function updatedOn(when: string | null | undefined): string {
   const undoable = "You can undo these changes until the next time you change it.";
   if (!when) return undoable;
@@ -210,7 +290,13 @@ function NextStep({
   onUndone,
   onRetry,
   retrying,
+  offShelf,
+  onPutBack,
+  puttingBack,
 }: {
+  offShelf: boolean;
+  onPutBack: () => void;
+  puttingBack: boolean;
   stage: BookStage;
   canUndo: boolean;
   changedAt?: string | null;
@@ -287,6 +373,27 @@ function NextStep({
         </>
       );
     default:
+      if (offShelf) {
+        // Off the shelf, putting it back is the next step. Adding to it still works, as a quieter choice.
+        return (
+          <>
+            <p className="mb-note mb-off">
+              Your book is off the shelf. Other members can't find it or ask to check it out. Anything already
+              arranged still happens.
+            </p>
+            <div className="iv-row">
+              <Button onClick={onPutBack} aria-busy={puttingBack}>
+                Put back on the shelf
+              </Button>
+              <Link to="/interview?add" className="button button-quiet iv-show">
+                Add to your book
+              </Link>
+              {canUndo && <UndoChanges onUndo={onUndo} onDone={onUndone} />}
+            </div>
+            {canUndo && <p className="mb-note">{updatedOn(changedAt)}</p>}
+          </>
+        );
+      }
       return (
         <>
           <div className="iv-row">
@@ -313,11 +420,13 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   const [lastRound, setLastRound] = useState<LastRound>({ empty: false });
   const { user } = useAuth();
   const [undone, setUndone] = useState(false);
+  const [editingBook, setEditingBook] = useState(() => hasEditDraft(editKeyFor(user?.id ?? "anon", "book")));
   const location = useLocation();
   const leftAsIs = Boolean((location.state as { leftAsIs?: boolean } | null)?.leftAsIs);
   const stageNow = useRef<BookStage | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const focusAfterSpark = useRef(false);
+  const [puttingBack, setPuttingBack] = useState(false);
 
   const load = useCallback(async () => {
     setFailed(false);
@@ -442,6 +551,17 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
     );
   }
 
+  const userId = user?.id ?? "anon";
+  const bookKey = editKeyFor(userId, "book");
+  const offShelf = book.status === "off_shelf";
+  // Saved means live, so the page shows the book as the server now has it.
+  const afterEdit = (updated: MyBook) => {
+    setBook(updated);
+    load();
+  };
+  const editBook = async (edit: BookEdit) => afterEdit(await client.editBook(edit));
+  const editChapter = async (chapterId: string, edit: ChapterEdit) =>
+    afterEdit(await client.editChapter(chapterId, edit));
   const onShelf = stage !== "draft";
   const open =
     stage === "adding" || stage === "writing" || stage === "writeFailed" || stage === "changesWaiting";
@@ -485,12 +605,34 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
               </span>
             </span>
             <div className="mb-meta">
-              <span className="caption">{onShelf ? "On the shelf" : "Draft, not on the shelf yet"}</span>
-              <h1 ref={heading} tabIndex={-1}>
-                {book.title}
-              </h1>
+              <span className="caption">
+                {!onShelf ? "Draft, not on the shelf yet" : offShelf ? "Off the shelf" : "On the shelf"}
+              </span>
+              {editingBook ? (
+                <EditForm
+                  fields={bookFields(book)}
+                  draftKey={bookKey}
+                  onSave={editBook}
+                  onClose={() => setEditingBook(false)}
+                />
+              ) : (
+                <h1 ref={heading} tabIndex={-1}>
+                  {book.title}
+                </h1>
+              )}
               <p className="mb-by">by {book.authorName}</p>
-              {book.blurb && <p className="mb-blurb">{book.blurb}</p>}
+              {book.blurb && !editingBook && <p className="mb-blurb">{book.blurb}</p>}
+              {!editingBook && (
+                <div className="mb-edit-act">
+                  <button
+                    type="button"
+                    className="button button-quiet iv-sm iv-show"
+                    onClick={() => setEditingBook(true)}
+                  >
+                    Edit the title and back cover
+                  </button>
+                </div>
+              )}
               <NextStep
                 stage={stage}
                 canUndo={book.canUndo}
@@ -503,6 +645,13 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
                   setUndone(true);
                   load();
                   heading.current?.focus({ preventScroll: true });
+                }}
+                offShelf={offShelf}
+                puttingBack={puttingBack}
+                onPutBack={async () => {
+                  setPuttingBack(true);
+                  await attempt(() => client.putBackOnShelf(), load);
+                  setPuttingBack(false);
                 }}
                 onRetry={async () => {
                   setRetrying(true);
@@ -543,9 +692,16 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
                 index={index}
                 chapter={chapter}
                 canRemove={onShelf && !open && book.chapters.length > MIN_CHAPTERS}
+                editKey={editKeyFor(userId, `chapter:${chapter.id}`)}
+                onEdit={(edit) => editChapter(chapter.id, edit)}
               />
             ))}
           </ol>
+          {onShelf && !offShelf && (
+            <div className="mb-shelf-act">
+              <TakeOffShelf onTakeDown={() => attempt(() => client.takeOffShelf(), load)} />
+            </div>
+          )}
           {onShelf && (
             <div className="mb-sparks-below">
               <Sparks sparks={sparks} shaping={open} onRemove={removeSpark} />

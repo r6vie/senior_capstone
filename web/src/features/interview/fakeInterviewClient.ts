@@ -3,6 +3,7 @@ import type {
   DraftBook,
   InterviewClient,
   InterviewState,
+  MyBook,
   Phase,
   ProposedChange,
   ReadingQuestion,
@@ -154,6 +155,7 @@ interface Stored {
   book: DraftBook | null;
   addingAnswers?: number;
   canUndo?: boolean;
+  offShelf?: boolean;
   previous?: DraftBook;
   sparks?: Spark[];
   reading?: ReadingQuestion[];
@@ -253,6 +255,12 @@ function emptyBook(authorName: string): DraftBook {
 
 const BLURB =
   "I've spent years being the person people call when the timeline slips. This book is how I find the one step that went wrong, and what I do the morning after.";
+
+function asMyBook(stored: Stored): MyBook {
+  const book = stored.book as DraftBook;
+  const status = stored.stage === "reviewing" ? "draft" : stored.offShelf ? "off_shelf" : "on_shelf";
+  return { ...book, status, canUndo: Boolean(stored.canUndo) };
+}
 
 function stageOf(stored: Stored | null): BookStage {
   switch (stored?.stage) {
@@ -390,7 +398,36 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
     stage: async () => stageOf(load()),
     myBook: async () => {
       const stored = load();
-      return stored?.book ? { ...stored.book, canUndo: Boolean(stored.canUndo) } : null;
+      return stored?.book ? asMyBook(stored) : null;
+    },
+    editBook: async (edit) => {
+      const stored = load();
+      if (!stored?.book) throw new Error("There's no book to edit.");
+      Object.assign(stored.book, edit);
+      save(stored);
+      return asMyBook(stored);
+    },
+    editChapter: async (chapterId, edit) => {
+      const stored = load();
+      const chapter = stored?.book?.chapters.find((candidate) => candidate.id === chapterId);
+      if (!stored || !chapter) throw new Error("That chapter isn't in your book.");
+      Object.assign(chapter, edit);
+      save(stored);
+      return asMyBook(stored);
+    },
+    takeOffShelf: async () => {
+      const stored = load();
+      if (!stored?.book) throw new Error("There's no book to take down.");
+      stored.offShelf = true;
+      save(stored);
+      return asMyBook(stored);
+    },
+    putBackOnShelf: async () => {
+      const stored = load();
+      if (!stored?.book) throw new Error("There's no book to put back.");
+      stored.offShelf = false;
+      save(stored);
+      return asMyBook(stored);
     },
     reopen: () =>
       wait(delay).then(() => {

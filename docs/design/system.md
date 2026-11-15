@@ -254,3 +254,16 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
   with dotted separators; a narrow aside holding the reading question and the sparks list. One red button: the next step
   for the book's current stage (Start the interview, Review your book, Add to your book, Continue adding, Review the
   proposed changes).
+
+### Editing your own book (spec-editing.md, 2026-11-15, Trove UI)
+
+- **Edit in place (`.ed-form`).** A quiet "Edit" (`.button-quiet.sm`, 44px) under the text it edits; the text becomes
+  `.field`s where it stood, labelled ("Title", "Back cover", "Chapter title", "What it's about"), with a secondary
+  "Save" and quiet "Cancel" (never red: the screen's red stays its next step). Typing past the limit is allowed and
+  says so under the field, and Save waits; nothing is cut. A refusal from the server shows as a `.message` under the
+  fields, in its own words, and the fields keep what was typed. The edit is kept as a draft while it's open, so a
+  refresh reopens it. Cmd/Ctrl+Enter saves, Escape cancels.
+- **Take off the shelf.** A quiet link under the chapters, asking in place (as **Remove in place** and Undo do):
+  "Take your book off the shelf? …" with quiet "Take it off" and "Keep it on the shelf", focus on keeping it. An
+  off-shelf book's caption is "Off the shelf", a plain note says what that means, and "Put back on the shelf" is
+  the page's red action.

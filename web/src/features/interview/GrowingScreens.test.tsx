@@ -540,6 +540,7 @@ describe("removing a chapter from the shelf", () => {
     authorName: "N",
     blurb: "The old back cover.",
     canUndo: false,
+    status: "on_shelf",
     chapters: ["One", "Two", "Three", "Four"].map((title, index) => ({
       id: String(index),
       title,

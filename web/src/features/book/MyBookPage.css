@@ -55,6 +55,29 @@
 .mb-one .iv-leftovers {
   margin: 0;
 }
+.mb-edit-act,
+.mb-shelf-act {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-4);
+}
+.mb-shelf-act {
+  margin-top: var(--s-5);
+}
+.mb-confirm {
+  display: grid;
+  gap: var(--s-2);
+  max-width: 60ch;
+}
+.mb-confirm p,
+.mb-off {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink);
+}
+.mb-chapters > li .ed-form {
+  min-width: 0;
+}
 .mb-title:focus,
 .mb-meta h1:focus {
   outline: none;

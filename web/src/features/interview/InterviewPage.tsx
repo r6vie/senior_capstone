@@ -4,8 +4,11 @@ import { Button } from "../../ui/Button";
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, readDraft, takeOrphanDrafts } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
+import { EditForm, editKeyFor, hasEditDraft } from "./EditInPlace";
 import { ErrorMessage, Frame, RetryContext, SmallBook, Waiting } from "./InterviewFrame";
 import {
+  type BookEdit,
+  type ChapterEdit,
   type DraftBook,
   type DraftChapter,
   type InterviewClient,
@@ -564,6 +567,15 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         return (
           <ReviewScreen
             book={state.book}
+            userId={userId}
+            onEditBook={async (edit) => {
+              const book = await client.editBook(edit);
+              setState({ id: state.id, stage: "reviewing", book });
+            }}
+            onEditChapter={async (chapterId, edit) => {
+              const book = await client.editChapter(chapterId, edit);
+              setState({ id: state.id, stage: "reviewing", book });
+            }}
             busy={busy}
             error={error}
             loadOtherTitles={() => client.otherTitles(state.id)}
@@ -752,6 +764,28 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   })();
 
   return <RetryContext.Provider value={retry}>{screen}</RetryContext.Provider>;
+}
+
+// The API's limits (books/models.py and the engine's).
+export const MAX_BOOK_TITLE = 80;
+export const MAX_CHAPTER_TITLE = 100;
+export const MAX_SUMMARY = 300;
+export const MAX_BLURB = 600;
+
+export function bookFields(book: DraftBook) {
+  return [
+    { key: "title", label: "Title", value: book.title, max: MAX_BOOK_TITLE },
+    ...(book.blurb !== null
+      ? [{ key: "blurb", label: "Back cover", value: book.blurb, max: MAX_BLURB, multiline: true }]
+      : []),
+  ];
+}
+
+export function chapterFields(chapter: DraftChapter) {
+  return [
+    { key: "title", label: "Chapter title", value: chapter.title, max: MAX_CHAPTER_TITLE },
+    { key: "summary", label: "What it's about", value: chapter.summary, max: MAX_SUMMARY, multiline: true },
+  ];
 }
 
 export function droppedSentence(words: string[] | undefined): string {
@@ -1044,18 +1078,39 @@ function ChapterRow({
   canRemove,
   working,
   unchanged,
+  editKey,
+  onEdit,
   onAct,
 }: {
   index: number;
   chapter: DraftChapter;
   canRemove: boolean;
   working: boolean;
+  editKey: string;
+  onEdit: (edit: ChapterEdit) => Promise<void>;
   /** The rewrite just asked for here came back no better. */
   unchanged: boolean;
   onAct: (action: "rewrite" | "remove" | "restore") => void;
 }) {
   const [showing, setShowing] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [editing, setEditing] = useState(() => hasEditDraft(editKey));
+
+  if (editing) {
+    return (
+      <li>
+        <span className="iv-n">{index + 1}</span>
+        <div className="ed-row">
+          <EditForm
+            fields={chapterFields(chapter)}
+            draftKey={editKey}
+            onSave={onEdit}
+            onClose={() => setEditing(false)}
+          />
+        </div>
+      </li>
+    );
+  }
 
   if (removing) {
     return (
@@ -1128,6 +1183,14 @@ function ChapterRow({
         <button
           type="button"
           className="button button-quiet iv-sm"
+          aria-label={`Edit ${chapter.title}`}
+          onClick={() => setEditing(true)}
+        >
+          Edit
+        </button>
+        <button
+          type="button"
+          className="button button-quiet iv-sm"
           aria-busy={working}
           aria-label={`Rewrite ${chapter.title}`}
           onClick={() => onAct("rewrite")}
@@ -1151,6 +1214,9 @@ function ChapterRow({
 
 function ReviewScreen({
   book,
+  userId,
+  onEditBook,
+  onEditChapter,
   busy,
   error,
   loadOtherTitles,
@@ -1163,6 +1229,9 @@ function ReviewScreen({
   onShelve,
 }: {
   book: DraftBook;
+  userId: string;
+  onEditBook: (edit: BookEdit) => Promise<void>;
+  onEditChapter: (chapterId: string, edit: ChapterEdit) => Promise<void>;
   busy: string | null;
   error: string | null;
   loadOtherTitles: () => Promise<TitleOption[]>;
@@ -1178,6 +1247,9 @@ function ReviewScreen({
   const [others, setOthers] = useState<TitleOption[] | null>(null);
   const [othersError, setOthersError] = useState<string | null>(null);
   const canRemove = book.chapters.length > MIN_CHAPTERS;
+  const bookKey = editKeyFor(userId, "book");
+  // An edit under way before a refresh opens again with the member's words.
+  const [editingBook, setEditingBook] = useState(() => hasEditDraft(bookKey));
   // The back cover changes with a removal, and the member should be told. Until their next action.
   const [blurbAtRemoval, setBlurbAtRemoval] = useState<string | null | undefined>(undefined);
 
@@ -1214,17 +1286,35 @@ function ReviewScreen({
           </span>
         </span>
         <div>
-          <h2>{book.title}</h2>
+          {editingBook ? (
+            <EditForm
+              fields={bookFields(book)}
+              draftKey={bookKey}
+              onSave={onEditBook}
+              onClose={() => setEditingBook(false)}
+            />
+          ) : (
+            <h2>{book.title}</h2>
+          )}
           <p className="iv-by">by {book.authorName}</p>
           {/* On a phone the book comes after the title, at the small size, on its own row. */}
           <SmallBook title={book.title} author={book.authorName} />
-          {book.blurb && <p className="iv-blurb">{book.blurb}</p>}
+          {book.blurb && !editingBook && <p className="iv-blurb">{book.blurb}</p>}
           {blurbAtRemoval !== undefined && blurbAtRemoval !== book.blurb && (
             <p className="iv-note" role="status">
               Back cover rewritten to match.
             </p>
           )}
           <div className="iv-head-act">
+            {!editingBook && (
+              <button
+                type="button"
+                className="button button-quiet iv-sm iv-show"
+                onClick={() => setEditingBook(true)}
+              >
+                Edit the title and back cover
+              </button>
+            )}
             {book.blurb && (
               <button type="button" className="button button-quiet iv-sm iv-show" onClick={onRewriteBlurb}>
                 Rewrite the back cover
@@ -1285,6 +1375,8 @@ function ReviewScreen({
             canRemove={canRemove}
             working={working === chapter.id}
             unchanged={lastRewritten === chapter.id && working === null && Boolean(book.rewriteUnchanged)}
+            editKey={editKeyFor(userId, `chapter:${chapter.id}`)}
+            onEdit={(edit) => onEditChapter(chapter.id, edit)}
             onAct={(action) => act(chapter.id, action)}
           />
         ))}

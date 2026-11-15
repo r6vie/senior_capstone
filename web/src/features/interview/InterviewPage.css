@@ -254,6 +254,18 @@
 .iv-resume {
   min-width: 0;
 }
+/* Editing in place: the text becomes fields where it stood. */
+.ed-form {
+  display: grid;
+  gap: var(--s-3);
+  max-width: 62ch;
+}
+.ed-form .field {
+  margin: 0;
+}
+.ed-row {
+  grid-column: 2 / -1;
+}
 .iv-undo {
   display: grid;
   gap: var(--s-2);

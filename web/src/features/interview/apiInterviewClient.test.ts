@@ -318,6 +318,29 @@ describe("apiInterviewClient", () => {
     await expect(apiInterviewClient.openRemoval()).resolves.toBeNull();
   });
 
+  it("edits through the books routes, and reads an off-shelf book as on the shelf's side, not a draft", async () => {
+    const offShelf = {
+      title: "T",
+      author_name: "A",
+      blurb: null,
+      status: "off_shelf",
+      chapters: [],
+      can_undo: true,
+    };
+    const patch = vi.spyOn(api, "PATCH").mockResolvedValue(ok(offShelf));
+    await expect(apiInterviewClient.editBook({ title: "T" })).resolves.toMatchObject({ status: "off_shelf" });
+    expect(patch).toHaveBeenCalledWith("/books/me", { body: { title: "T" } });
+    await apiInterviewClient.editChapter("c1", { summary: "S" });
+    expect(patch).toHaveBeenLastCalledWith("/books/me/chapters/{chapter_id}", {
+      params: { path: { chapter_id: "c1" } },
+      body: { summary: "S" },
+    });
+    const post = vi.spyOn(api, "POST").mockResolvedValue(ok(offShelf));
+    await apiInterviewClient.takeOffShelf();
+    expect(post).toHaveBeenLastCalledWith("/books/me/take-down");
+    await expect(apiInterviewClient.rewriteChapter("me", "c1")).resolves.toMatchObject({ stage: "done" });
+  });
+
   it("marks a 409 as out of date", async () => {
     vi.spyOn(api, "POST").mockResolvedValue({
       data: undefined,

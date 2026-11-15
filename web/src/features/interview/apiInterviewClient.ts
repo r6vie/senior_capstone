@@ -73,8 +73,12 @@ function toBook(book: MyBookResponse): DraftBook {
   };
 }
 
+function toMyBook(book: MyBookResponse) {
+  return { ...toBook(book), status: book.status, canUndo: book.can_undo, changedAt: book.revised_at };
+}
+
 function fromBook(book: MyBookResponse): InterviewState {
-  return { id: ID, stage: book.status === "on_shelf" ? "done" : "reviewing", book: toBook(book) };
+  return { id: ID, stage: book.status === "draft" ? "reviewing" : "done", book: toBook(book) };
 }
 
 function toChange(change: ChangeResponse): ProposedChange {
@@ -331,7 +335,7 @@ export const apiInterviewClient: InterviewClient = {
     const { data, error, response } = await api.GET("/books/me");
     if (response.status === 404) return null;
     const book = unwrap<MyBookResponse>({ data, error, response });
-    return { ...toBook(book), canUndo: book.can_undo, changedAt: book.revised_at };
+    return toMyBook(book);
   },
   async reopen() {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/reopen")));
@@ -376,6 +380,19 @@ export const apiInterviewClient: InterviewClient = {
     removals.delete(chapterId);
     const body = { approved: [change], blurb: blurb ? ("use" as const) : ("keep" as const) };
     ended(await api.POST("/interview/revision", { body }));
+  },
+  async editBook(edit) {
+    return toMyBook(unwrap(await api.PATCH("/books/me", { body: edit })));
+  },
+  async editChapter(chapterId, edit) {
+    const params = { path: { chapter_id: chapterId } };
+    return toMyBook(unwrap(await api.PATCH("/books/me/chapters/{chapter_id}", { params, body: edit })));
+  },
+  async takeOffShelf() {
+    return toMyBook(unwrap(await api.POST("/books/me/take-down")));
+  },
+  async putBackOnShelf() {
+    return toMyBook(unwrap(await api.POST("/books/me/put-back")));
   },
   async openRemoval() {
     const { data, response } = await api.GET("/interview");

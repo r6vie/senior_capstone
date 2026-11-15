@@ -130,7 +130,20 @@ export interface LastRound {
   readingAnswer?: string;
 }
 
+/** The book's own text, as the member writes it. Saved means live on a shelved book. */
+export interface BookEdit {
+  title?: string;
+  blurb?: string;
+}
+
+export interface ChapterEdit {
+  title?: string;
+  summary?: string;
+}
+
 export interface MyBook extends DraftBook {
+  /** A book off the shelf can still be edited and added to; it just takes no new checkouts. */
+  status: "draft" | "on_shelf" | "off_shelf";
   /** The last approved changes can still be taken back. */
   canUndo: boolean;
   /** When they were applied. */
@@ -215,6 +228,10 @@ export interface InterviewClient {
   removeFromShelf(chapterId: string, blurb: string | null): Promise<void>;
   /** A removal the member started and hasn't finished, if the only open change is that. */
   openRemoval(): Promise<{ chapterId: string; title: string } | null>;
+  editBook(edit: BookEdit): Promise<MyBook>;
+  editChapter(chapterId: string, edit: ChapterEdit): Promise<MyBook>;
+  takeOffShelf(): Promise<MyBook>;
+  putBackOnShelf(): Promise<MyBook>;
   /** Back out of a removal, leaving everything as it was and recording nothing as declined. */
   cancelRemoval(): Promise<void>;
   /** The last round changed nothing, so My book can say so rather than look untouched. */

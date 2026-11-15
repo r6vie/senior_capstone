@@ -664,6 +664,37 @@ describe("InterviewPage", () => {
       expect(rewrite).toHaveBeenCalledTimes(1);
     });
 
+    it("edits a chapter in place, and the review shows it", async () => {
+      const client = at(reviewing());
+      const edit = vi.spyOn(client, "editChapter").mockResolvedValue({
+        ...bookWith("I fix schedules that slipped."),
+        chapters: bookWith(null).chapters.map((chapter, index) =>
+          index === 0 ? { ...chapter, summary: "In my own words." } : chapter,
+        ),
+        canUndo: false,
+        status: "draft",
+      });
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: `Edit ${CHAPTER_TITLES[0]}` }));
+      fireEvent.change(screen.getByLabelText("What it's about"), { target: { value: "In my own words." } });
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+      expect(await screen.findByText("In my own words.")).toBeTruthy();
+      expect(edit).toHaveBeenCalledWith("0", { summary: "In my own words." });
+    });
+
+    it("an edit refused while changes wait keeps the words and says why", async () => {
+      const client = at(reviewing());
+      vi.spyOn(client, "editBook").mockRejectedValue(
+        new InterviewError("Decide on the waiting changes first.", false, true),
+      );
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: "Edit the title and back cover" }));
+      fireEvent.change(screen.getByLabelText("Back cover"), { target: { value: "My blurb" } });
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+      expect((await screen.findByRole("alert")).textContent).toMatch(/waiting changes/);
+      expect((screen.getByLabelText("Back cover") as HTMLTextAreaElement).value).toBe("My blurb");
+    });
+
     it("can go back to the back cover before the last rewrite", async () => {
       const state = reviewing() as Extract<InterviewState, { stage: "reviewing" }>;
       const client = at({ ...state, book: { ...state.book, hasPreviousBlurb: true } });
