@@ -27,6 +27,7 @@ Read this before you build or change any UI. Everything here sits beside the pro
 A system is a set of decisions, not a cage. Each rule below belongs to one of three tiers.
 
 **Fixed. Change only with a human's yes.** The identity. If these move, the product stops looking like itself.
+Fixed isn't frozen: when one of these turns out to be a real limit, raise it with the human and record the change here.
 
 - The palette and the red rule.
 - The three faces and their jobs; caps only on short display-face labels.
@@ -82,7 +83,7 @@ ink 18:1; rule on ink 11.4:1.
 | Nav, buttons | Barlow Condensed 600–700, +0.10–0.14em | 17 / 1 | CAPS |
 | Caption chip | Barlow Condensed 600, +0.14em | 14 | CAPS |
 | Book title | Newsreader 600 | 13.5 shelf, 27 feature | Sentence |
-| Book author (full name) | Plex Sans 600, +0.12em, line-height 1.3 | 9.5 | CAPS, wraps to 3 lines |
+| Book author (full name) | Plex Sans 600, +0.12em, line-height 1.3 | 9.5 | CAPS, wraps to 4 lines |
 | The Librarian's voice | Newsreader italic | 19–22 / 1.3 | Sentence |
 | Body, labels | Plex Sans 400/600 | 15–16 / 1.5 | Sentence |
 | Hint, secondary | Plex Sans 400, `--ink-2` | 14 | Sentence |
@@ -186,7 +187,7 @@ Page ground `--paper`. Four stacked parts:
 
 **Book** (`.book` 122×178, `.book-lg` 236×344, `.book-sm` 92×136): white cover, 2px ink outline (3px on lg), hinge line at
 left 12px, dot shadow offset 8px right and down, title Newsreader 600 13.5px (27px on lg) at top, full name Plex 600
-9.5px caps at bottom. A long name wraps (also at a hyphen) and stops at 3 lines with an ellipsis; "ALEXANDRA OKONKWO-BRENNAN" takes 3 lines on `.book` and `.book-sm`, 2 on `.book-lg` (measured in the app with the real fonts). Title and full name only; never a headline, employer, genre, count or badge. Make the book an `<a>`
+9.5px caps at bottom. A long name wraps (also at a hyphen) and stops at 4 lines with an ellipsis, so a real full name is never cut (it was 3 until 2026-11-15, when long names hit the limit; Josef approved 4); "ALEXANDRA OKONKWO-BRENNAN" takes 3 lines on `.book` and `.book-sm`, 2 on `.book-lg` (measured in the app with the real fonts). Title and full name only; never a headline, employer, genre, count or badge. Make the book an `<a>`
 (or `<button>`) with `aria-label="<Title>, by <Full name>"`, a focus ring and the hover lift (`translateY(-4px)`).
 
 **Nav, shelf row and band** have no other states in this slice. Search is a text input styled as `.search`.
