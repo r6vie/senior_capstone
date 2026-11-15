@@ -14,49 +14,6 @@
   overflow-x: hidden;
 }
 
-/* ---------- Top bar ---------- */
-.top-bar {
-  display: flex;
-  align-items: center;
-  gap: calc(var(--s-6) + var(--s-1));
-  height: 80px;
-  padding: var(--s-4) calc(var(--s-6) + var(--s-1));
-}
-.top-bar-end {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-left: auto;
-}
-.top-bar .avatar {
-  background: var(--white);
-}
-.top-bar .search {
-  position: relative;
-}
-.search svg {
-  flex: none;
-  stroke: var(--ink);
-  stroke-width: 2.4;
-}
-.search input {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
-}
-.search input::placeholder {
-  color: var(--ink-2);
-}
-.search:focus-within {
-  outline: var(--line-heavy) solid var(--ink);
-  outline-offset: 3px;
-}
-
 /* ---------- The Librarian's band ---------- */
 .feature {
   position: relative;

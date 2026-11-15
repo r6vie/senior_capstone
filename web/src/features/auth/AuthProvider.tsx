@@ -11,6 +11,8 @@ interface AuthValue {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (firstName: string, lastName: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  // Re-reads the account, for pages that change it (settings).
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -58,8 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, signIn, signUp, signOut }),
-    [user, loading, signIn, signUp, signOut],
+    () => ({ user, loading, signIn, signUp, signOut, refreshUser: loadUser }),
+    [user, loading, signIn, signUp, signOut, loadUser],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

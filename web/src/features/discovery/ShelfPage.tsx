@@ -1,5 +1,4 @@
 import { Button } from "../../ui/Button";
-import { useAuth } from "../auth/AuthProvider";
 import { type SampleBook, sampleBooks, sampleFeatured, sampleShelves } from "./sampleBooks";
 import "./ShelfPage.css";
 
@@ -29,38 +28,11 @@ function Book({ book, size }: { book: SampleBook; size?: "lg" }) {
   );
 }
 
-const NAV_ITEMS = ["Shelf", "My book", "Checkouts", "Past meets"];
-
 export function ShelfPage() {
-  const { user } = useAuth();
   const featured = bookById(sampleFeatured.bookId);
 
   return (
     <div className="shelf-page">
-      <header className="top-bar">
-        <span className="wordmark">Trove</span>
-        <nav className="nav" aria-label="Main">
-          {NAV_ITEMS.map((item) => (
-            // biome-ignore lint/a11y/useValidAnchor: inert in this static preview; the routes don't exist yet
-            <a key={item} aria-current={item === "Shelf" ? "page" : undefined}>
-              {item}
-            </a>
-          ))}
-        </nav>
-        <div className="top-bar-end">
-          <label className="search">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-            <input type="search" placeholder="Search by topic" aria-label="Search by topic" />
-          </label>
-          <span className="avatar" aria-hidden="true">
-            {user?.first_name.charAt(0)}
-          </span>
-        </div>
-      </header>
-
       <main>
         <section className="feature" aria-labelledby="feature-title">
           <div className="band dark">
