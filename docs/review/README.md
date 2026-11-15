@@ -9,7 +9,7 @@ Every call we made for him is in [decisions.md](decisions.md).
 python3 scripts/dev.py --scripted-ai
 ```
 
-That runs the app with a free stand-in for the AI, so walking it costs nothing. Drop `--scripted-ai` to use real Claude, which costs money. Nothing links to the interview or My book yet, so type the addresses: `/interview` and `/my-book`.
+That runs the app with a free stand-in for the AI, so walking it costs nothing. Drop `--scripted-ai` to use real Claude, which costs money. My book is in the top bar (Daniel's app shell); the interview starts from there.
 
 - Give a member the question after a reading: `scripts/ask_after_reading.py`
 - See real API spending: `python3 scripts/ai_spend.py`
@@ -21,6 +21,9 @@ That runs the app with a free stand-in for the AI, so walking it costs nothing. 
 - **My book (`/my-book`):** one page for every stage, from no book yet to on the shelf.
 - **Adding to your book (I3):** a short new round of questions, then proposed changes approved one by one. The shelved book doesn't change until the member confirms, nothing goes live unseen, and an approved change can be undone.
 - **Sparks (I5) and the question after a reading (I6):** built against stubs.
+- **Editing (2026-11-15):** members edit their book's title, back cover and chapters in their own words, in review and after it's on the shelf, with undo. Contact details (email, link, phone) are refused.
+- **Taking a book down (2026-11-15):** "Take off the shelf" on My book. New checkouts stop; anything already arranged still happens; "Put back on the shelf" returns it to the same place.
+- **Deleting an account** now also removes the member's book, interview, résumé text, sparks and reading questions.
 - **Book writing:** rewritten prompts in the chosen voice, plus tools to measure them: saved transcripts, lints and an editor's rubric (`api/evals/`).
 
 ## How good is the writing?
@@ -52,18 +55,18 @@ Claims traced to what the member said went from 93.4% to 96.8%, with none unsupp
 - **Adding and proposed changes ran on the real model once per case on the final prompts,** and no editor judged the output. Skip got little real testing.
 - **The 30-day résumé expiry** is tested for its index, not an actual deletion. Older unfinished interviews can keep résumé text on the interview itself until their draft is written.
 
-## Decisions for Josef
+## Decisions for Josef (answered 2026-11-15)
 
-1. **Should readers see one line of the author's own words per chapter?** The plan says no. Quality recommends yes, as the cheapest way to raise a quiet member's book. Not built.
-2. **Should members be able to edit their book's text directly?** The plan says later. Quality calls its absence the top risk to a member's pride in their book, which appears under their real name. Not built.
-3. **What happens when a member takes a whole book off the shelf?** Today they can only remove chapters, down to three. It affects open checkouts, so it needs Ellie. Not built.
-4. **Test with real people?** Quality suggests Josef and three teammates take the real interview, for about $2.40.
-5. **Remove the old persona from git history?** Until this build, the repo held a test persona based on a real CWRU alum, with invented details. It's gone from the current files but still in the public history. Removing it means rewriting history, which affects everyone's clones.
-6. **Author names on the book can take 4 lines instead of 3.** This touches a Fixed design rule (decisions.md).
+1. **One line of the author's words for readers:** no. The member can edit the book freely, so its text becomes their own words.
+2. **Free-text editing:** yes, built.
+3. **Taking a whole book off the shelf:** built as a member would expect (above).
+4. **Test with real people:** yes, later, by the team (about $2.40).
+5. **The old persona:** removed from main's files in #11. Not rewritten out of history: that would break everyone's branches, and GitHub keeps old commits reachable anyway. Removing it fully needs GitHub Support or a private repo (the repo owner's call).
+6. **Author names take 4 lines:** approved, recorded in `docs/design/system.md`.
 
 ## Needs teammates
 
-- **Daniel:** navigation, so members can reach `/interview` and `/my-book`. **Until this lands, a real member can't get to any of this without typing an address.** Also a way back to the shelf from My book, sign-out (call `clearAllDrafts`), the per-tab session, the sign-in page shown when the API is down, and account deletion that also removes sparks and reading questions. `auth/service.py` gained a small dev helper, `user_id_by_email`.
+- **Daniel:** navigation and account deletion landed (U1, A1). Still open: sign-out (call `clearAllDrafts`), the per-tab session, and the sign-in page shown when the API is down. `auth/service.py` gained a small dev helper, `user_id_by_email`.
 - **Alvisa:** the shelf still shows sample books, so a member's own book doesn't appear on it. D1 mounts `SparkButton` on each chapter of someone else's book. `.book-author` now clamps at 4 lines, so check the shelf.
 - **Ellie:** C4 calls `interview.service.ask_after_reading` once "Did you meet?" confirms the meeting. Use the module form, `from trove.interview import service`, to avoid an import cycle.
 
