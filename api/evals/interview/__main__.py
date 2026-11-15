@@ -1,7 +1,7 @@
 """Run interview personas in parallel, one output file each:
 
     uv run python -m evals.interview              # every persona
-    uv run python -m evals.interview Siddharth    # personas whose name starts with these words
+    uv run python -m evals.interview Mateo        # personas whose name starts with these words
 
 Outputs go to evals/out/interview/<timestamp>/ (git-ignored). Costs money.
 """
