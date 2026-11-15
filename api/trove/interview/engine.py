@@ -398,7 +398,7 @@ async def plan_turn(
     blocks = _turn_blocks(turns, resume_text, sparks, more_material)
     plan = await _ask(claude, "interview/interviewer", blocks, TurnPlan, QUESTION_EFFORT)
     if plan.phase == "shape" and len((plan.playback or "").split()) > MAX_PLAYBACK_WORDS:
-        limit = f"\n\nThe playback must be at most {MAX_PLAYBACK_WORDS} words. Write it again, shorter."
+        limit = "\n\n" + load_prompt("interview/retry_playback")
         retry = [*blocks[:-1], {**blocks[-1], "text": blocks[-1]["text"] + limit}]
         plan = await _ask(claude, "interview/interviewer", retry, TurnPlan, QUESTION_EFFORT)
 
@@ -557,7 +557,7 @@ async def rewrite_chapter(
         "Rewrite the title and summary of the chapter marked rewrite_this."
     )
     for attempt in range(2):
-        note = "\n\nThe last attempt was too close to the original. Tell it differently." if attempt else ""
+        note = "\n\n" + load_prompt("interview/retry_rewrite") if attempt else ""
         raw = await _ask(claude, "interview/rewrite", content + note, _Retold, BOOK_EFFORT)
         close = SequenceMatcher(None, current.summary, raw.summary).ratio() > REWRITE_TOO_CLOSE
         if (

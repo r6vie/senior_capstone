@@ -935,3 +935,14 @@ async def test_a_question_forced_to_end_the_interview_isnt_a_closing_line(
     monkeypatch.setattr(engine, "next_turn", forced)
     state = await answer_questions(client, headers, 1)
     assert state["closing_line"] is None
+
+
+async def test_restoring_a_rewrite_brings_its_quotes_back(client, headers, fake_engine):
+    book = await to_review(client, headers, fake_engine)
+    # The fake rewrite's quotes are chapter 1's, so use another chapter to see them change.
+    first = book["chapters"][1]
+    rewritten = (await client.post(f"/interview/book/chapters/{first['id']}/rewrite", headers=headers)).json()
+    assert rewritten["chapters"][1]["quotes"] != first["quotes"]
+    back = (await client.post(f"/interview/book/chapters/{first['id']}/restore", headers=headers)).json()
+    assert back["chapters"][1]["quotes"] == first["quotes"]
+    assert back["chapters"][1]["summary"] == first["summary"]

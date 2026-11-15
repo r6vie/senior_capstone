@@ -54,14 +54,48 @@ def cost_of(model: str, usage) -> float:
     ) / 1_000_000
 
 
+def _parsed(lines: list[str]) -> list[dict]:
+    """The ledger's entries. A line that doesn't parse, such as one another process is still
+    writing, is skipped rather than stopping every call."""
+    entries = []
+    for line in lines:
+        if line.strip():
+            try:
+                entries.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return entries
+
+
 def read_ledger(path: Path) -> list[dict]:
     if not path.exists():
         return []
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return _parsed(path.read_text(encoding="utf-8").splitlines())
+
+
+# The total so far, and how many bytes of the ledger it covers, so each call reads only what's new.
+_totals: dict[Path, tuple[int, float]] = {}
 
 
 def total_spent(path: Path) -> float:
-    return sum(entry["cost_usd"] for entry in read_ledger(path))
+    """What the ledger records, read incrementally. Only complete lines are counted, so a half-written
+    last line is counted once it's finished."""
+    if not path.exists():
+        _totals.pop(path, None)
+        return 0.0
+    size = path.stat().st_size
+    offset, total = _totals.get(path, (0, 0.0))
+    if size < offset:  # The ledger was replaced or cut; start again.
+        offset, total = 0, 0.0
+    if size > offset:
+        with path.open("rb") as ledger:
+            ledger.seek(offset)
+            chunk = ledger.read(size - offset)
+        complete = chunk[: chunk.rfind(b"\n") + 1]
+        total += sum(entry.get("cost_usd", 0) for entry in _parsed(complete.decode("utf-8").splitlines()))
+        offset += len(complete)
+        _totals[path] = (offset, total)
+    return total
 
 
 def check_budget() -> None:

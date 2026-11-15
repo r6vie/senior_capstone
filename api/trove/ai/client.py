@@ -49,6 +49,12 @@ def text_of(response: BetaMessage) -> str:
 _claude: Claude | None = None
 
 
+def ai_not_set_up() -> HTTPException:
+    return HTTPException(
+        status_code=503, detail="AI isn't set up. Add ANTHROPIC_API_KEY to .env and restart."
+    )
+
+
 def get_claude() -> Claude | ScriptedClaude:
     """FastAPI dependency: the shared Claude client, or 503 until ANTHROPIC_API_KEY is set.
     With AI_MODE=scripted, a stand-in that needs no key and spends nothing."""
@@ -58,9 +64,7 @@ def get_claude() -> Claude | ScriptedClaude:
         ensure_scripted_allowed(settings)
         return ScriptedClaude(settings.ai_scripted_delay_seconds)
     if not settings.anthropic_api_key:
-        raise HTTPException(
-            status_code=503, detail="AI isn't set up. Add ANTHROPIC_API_KEY to .env and restart."
-        )
+        raise ai_not_set_up()
     if _claude is None or _claude.model != settings.anthropic_model:
         _claude = Claude(settings.anthropic_api_key, settings.anthropic_model)
     return _claude

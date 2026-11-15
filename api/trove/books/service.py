@@ -450,7 +450,11 @@ async def edit_chapter(
     chapter = book["chapters"][index]
     edited = {**chapter, "title": title or chapter["title"], "summary": summary or chapter["summary"]}
     if book["status"] == DRAFT:
-        edited["previous"] = {"title": chapter["title"], "summary": chapter["summary"]}
+        edited["previous"] = {
+            "title": chapter["title"],
+            "summary": chapter["summary"],
+            "quotes": chapter["quotes"],
+        }
     changes: dict = {f"chapters.{index}": edited}
     if book["status"] != DRAFT:
         changes["previous_version"] = _snapshot(book)

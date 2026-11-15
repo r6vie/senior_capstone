@@ -271,7 +271,7 @@ async def apply_revision(
     background: BackgroundTasks,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
-    claude: Claude = Depends(get_claude),
+    claude: Claude | None = Depends(optional_claude),
 ) -> MyBookResponse:
     """Apply the approved changes to the book on the shelf. The rest are dropped and not proposed
     again. A reading answer saved meanwhile then gets its own proposal."""
@@ -293,7 +293,7 @@ async def cancel_removal(
     background: BackgroundTasks,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
-    claude: Claude = Depends(get_claude),
+    claude: Claude | None = Depends(optional_claude),
 ) -> InterviewResponse:
     """Back out of a removal the member started. Back to `done`, with nothing recorded as declined."""
     return interview_view(await service.cancel_removal(database, claude, user, background))
@@ -356,7 +356,7 @@ async def answer_reading_question(
     background: BackgroundTasks,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
-    claude: Claude = Depends(get_claude),
+    claude: Claude | None = Depends(optional_claude),
 ) -> InterviewResponse:
     """Answer it. From `done`, changes are written in the background (`revision_status`). During a
     round it joins the round. While changes are waiting, it runs after the member decides."""

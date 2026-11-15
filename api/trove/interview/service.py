@@ -21,7 +21,7 @@ from pymongo.errors import DuplicateKeyError
 from pypdf import PdfReader
 from starlette.concurrency import run_in_threadpool
 
-from trove.ai.client import Claude, ClaudeRefused
+from trove.ai.client import Claude, ClaudeRefused, ai_not_set_up
 from trove.ai.usage import BudgetExceeded
 from trove.auth.service import full_names_of, on_account_deleted
 from trove.books import service as books
@@ -307,7 +307,8 @@ def book_turns(interview: dict) -> list[Turn]:
     for turn in turns:
         turn.question = resume_terms.redact(turn.question, terms, interview["_id"])
     for title in interview.get("asked_spark_titles", []):
-        pattern = re.compile(re.escape(title), re.IGNORECASE)
+        # Whole words only: a title like "Time" mustn't take "sometimes" apart.
+        pattern = re.compile(rf"(?<!\w){re.escape(title)}(?!\w)", re.IGNORECASE)
         for turn in turns:
             turn.question = pattern.sub(SPARK_REDACTED, turn.question)
     return turns
@@ -392,6 +393,10 @@ async def write_question(
     return question, turn.topic, ready, turn.spark_id, closing_line_of(turn) if ready else None
 
 
+def _round_answered(interview: dict) -> bool:
+    return any(turn["answer"].strip() for turn in interview["turns"][interview["round_start"] :])
+
+
 async def ask_next_question(database: AsyncDatabase, claude: Claude, interview: dict) -> dict:
     """Write the next question for an interview that is waiting for one, and save it. At the turn
     limit with too few answers for any book, it stops and lets the member decide (`at_limit`)."""
@@ -413,6 +418,20 @@ async def ask_next_question(database: AsyncDatabase, claude: Claude, interview: 
             return_document=ReturnDocument.AFTER,
         )
     question, topic, ready, spark_id, closing_line = await write_question(database, claude, interview)
+    if interview["stage"] == "adding" and ready and not _round_answered(interview):
+        # A round skipped to its limit has nothing to work from: say so plainly and close it.
+        return await database.interviews.find_one_and_update(
+            {"_id": interview["_id"], "stage": "adding", "current": None},
+            {
+                "$set": {
+                    "stage": "done",
+                    "nothing_new": True,
+                    "ready_for_reveal": False,
+                    "updated_at": datetime.now(UTC),
+                }
+            },
+            return_document=ReturnDocument.AFTER,
+        ) or await get_interview(database, interview["user_id"])
     if question:
         question["question_id"] = str(uuid4())
     updated = await database.interviews.find_one_and_update(
@@ -783,7 +802,11 @@ async def rewrite_chapter(
         {
             **chapter.model_dump(),
             "id": chapter_id,
-            "previous": {"title": current["title"], "summary": current["summary"]},
+            "previous": {
+                "title": current["title"],
+                "summary": current["summary"],
+                "quotes": current["quotes"],
+            },
         },
     )
     if updated is None:
@@ -987,6 +1010,20 @@ async def restart_writing(
         return await get_interview(database, interview["user_id"])
     background.add_task(WRITERS[interview["stage"]], database, claude, moved["_id"])
     return moved
+
+
+async def schedule_proposal(
+    database: AsyncDatabase, claude: Claude | None, interview_id: str, background: BackgroundTasks
+) -> None:
+    """Write proposed changes in the background, or, with AI not set up, mark them failed so the
+    member's return retries once it is. The decision that led here is saved either way."""
+    if claude is None:
+        await database.interviews.update_one(
+            {"_id": interview_id, "stage": "revising"},
+            {"$set": {"write_status": "failed", "write_retried": False, "updated_at": datetime.now(UTC)}},
+        )
+        return
+    background.add_task(write_proposal, database, claude, interview_id)
 
 
 async def write_proposal(database: AsyncDatabase, claude: Claude, interview_id: str) -> None:
@@ -1238,9 +1275,10 @@ async def apply_revision(
         )
     if await end_revising(database, interview["_id"], {}):
         # A reading answer saved meanwhile is being written up, so this can't be undone just yet.
-        background.add_task(write_proposal, database, claude, interview["_id"])
+        await schedule_proposal(database, claude, interview["_id"], background)
         return books.my_book_view(book, undoable=False)
-    return books.my_book_view(book)
+    # Nothing applied, so there's nothing of this decision to undo. An older revision isn't offered here.
+    return books.my_book_view(book, undoable=bool(changes))
 
 
 def _approved_chapter(change: dict, chapter_id: str) -> dict:
@@ -1303,7 +1341,7 @@ async def cancel_removal(
     if any(change["kind"] != "remove" for change in proposal["changes"]):
         raise conflict("There's no removal to cancel.")
     if await end_revising(database, interview["_id"], {}):
-        background.add_task(write_proposal, database, claude, interview["_id"])
+        await schedule_proposal(database, claude, interview["_id"], background)
     return await get_interview(database, user["_id"])
 
 
@@ -1529,6 +1567,10 @@ async def answer_reading_question(
     if interview["stage"] not in ("done", "adding", "revising"):
         raise conflict("Finish your book first.")
     await check_reading_question(database, user, question_id, text, interview)
+    if interview["stage"] == "done" and claude is None:
+        # Only this path writes changes now. The others just save the answer.
+        raise ai_not_set_up()
+    await check_reading_question(database, user, question_id, text, interview)
     try:
         await claim_reading_question(database, user, question_id, "answered_at", answer=text)
     except HTTPException:
@@ -1562,7 +1604,7 @@ async def answer_reading_question(
             return_document=ReturnDocument.AFTER,
         )
         if updated is not None:
-            background.add_task(write_proposal, database, claude, updated["_id"])
+            await schedule_proposal(database, claude, updated["_id"], background)
             return updated
     # In a round or waiting on a decision. `updated_at` stays, as nothing about the state has moved.
     return await database.interviews.find_one_and_update(
