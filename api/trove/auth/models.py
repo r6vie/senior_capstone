@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from typing import Annotated, Literal
 
@@ -46,6 +47,71 @@ class NameUpdate(RequestBody):
         return self
 
 
+LINKEDIN_PROFILE = re.compile(r"^https://(?:www\.)?linkedin\.com/in/[A-Za-z0-9%_\-]{2,100}/?$")
+PHONE_CHARACTERS = re.compile(r"^\+?[0-9 ()\-.]+$")
+
+
+class ContactDetailsUpdate(RequestBody):
+    """What a member shares once an author says yes.
+
+    The sign-in email is always shared. LinkedIn and phone are optional: send null or leave one out
+    to stop sharing it. Both are replaced together, so the settings form sends the whole picture.
+    """
+
+    linkedin_url: Annotated[str, Field(max_length=200)] | None = None
+    phone: Annotated[str, Field(max_length=30)] | None = None
+
+    @field_validator("linkedin_url", "phone", mode="before")
+    @classmethod
+    def blank_means_unset(cls, value: object) -> object:
+        # An emptied form field clears the detail instead of failing validation.
+        if isinstance(value, str):
+            return value.strip() or None
+        return value
+
+    @field_validator("linkedin_url")
+    @classmethod
+    def check_linkedin(cls, value: str | None) -> str | None:
+        if value is not None and not LINKEDIN_PROFILE.match(value):
+            raise ValueError(
+                "Use the link to your LinkedIn profile, like https://www.linkedin.com/in/your-name."
+            )
+        return value
+
+    @field_validator("phone")
+    @classmethod
+    def check_phone(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        digits = sum(character.isdigit() for character in value)
+        if not PHONE_CHARACTERS.match(value) or not 7 <= digits <= 15:
+            raise ValueError("Enter a phone number with 7 to 15 digits. Spaces, dashes and + are fine.")
+        return value
+
+
+class ContactDetailsResponse(BaseModel):
+    email: EmailStr
+    linkedin_url: str | None
+    phone: str | None
+
+
+class NotificationSettingsUpdate(RequestBody):
+    """The one email switch. Account emails, like the welcome message, are sent either way."""
+
+    email_notifications: bool
+
+
+class DeleteAccountRequest(RequestBody):
+    """Deleting an account cannot be undone, so the member types their email to confirm."""
+
+    email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        return value.casefold()
+
+
 class UserResponse(BaseModel):
     id: str
     first_name: str
@@ -54,6 +120,7 @@ class UserResponse(BaseModel):
     # What books show (trove.md §3): first and last name, or the first name alone.
     full_name: str
     email: EmailStr
+    email_notifications: bool
     created_at: datetime
 
 

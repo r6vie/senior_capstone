@@ -6,16 +6,30 @@ from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
 from starlette.concurrency import run_in_threadpool
 
-from trove.auth.models import LoginRequest, LoginResponse, NameUpdate, SignupRequest, UserResponse
+from trove.auth.models import (
+    ContactDetailsResponse,
+    ContactDetailsUpdate,
+    DeleteAccountRequest,
+    LoginRequest,
+    LoginResponse,
+    NameUpdate,
+    NotificationSettingsUpdate,
+    SignupRequest,
+    UserResponse,
+)
 from trove.auth.service import (
     DUMMY_HASH,
     SESSION_SECONDS,
+    contact_details_of,
     create_session,
+    delete_account,
     get_current_user,
     get_session_token,
     limit_attempts,
     password_hasher,
     public_user,
+    set_contact_details,
+    set_email_notifications,
     token_digest,
 )
 from trove.core.database import get_database
@@ -86,6 +100,53 @@ async def update_me(
     changes = data.model_dump(exclude_none=True)
     await database.users.update_one({"_id": user["_id"]}, {"$set": changes})
     return public_user({**user, **changes})
+
+
+@router.get("/me/contact", response_model=ContactDetailsResponse)
+async def my_contact_details(
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> ContactDetailsResponse:
+    """The contact details this member will share when an author says yes, for them to edit."""
+    details = await contact_details_of(database, user["_id"])
+    if details is None:
+        raise HTTPException(status_code=404, detail="Account not found.")
+    return details
+
+
+@router.put("/me/contact", response_model=ContactDetailsResponse)
+async def update_my_contact_details(
+    data: ContactDetailsUpdate,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> ContactDetailsResponse:
+    """Choose what to share on a yes. The sign-in email is always shared; LinkedIn and phone are optional."""
+    await set_contact_details(database, user["_id"], data)
+    return await my_contact_details(user, database)
+
+
+@router.put("/me/notifications", response_model=UserResponse)
+async def update_my_notifications(
+    data: NotificationSettingsUpdate,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> UserResponse:
+    """Turn email notifications on or off. Account emails are sent either way."""
+    await set_email_notifications(database, user["_id"], data.email_notifications)
+    return public_user({**user, "email_notifications": data.email_notifications})
+
+
+@router.delete("/me", status_code=204, response_class=Response)
+async def delete_me(
+    data: DeleteAccountRequest,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> Response:
+    """Delete the account for good. The body must repeat the account's email address."""
+    if data.email != user["email"]:
+        raise HTTPException(status_code=422, detail="That is not the email address on this account.")
+    await delete_account(database, user["_id"])
+    return Response(status_code=204)
 
 
 @router.post("/logout", status_code=204, response_class=Response)

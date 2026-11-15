@@ -2,6 +2,7 @@
 
 import hashlib
 import secrets
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 
 from fastapi import Depends, HTTPException, Request, Security
@@ -11,7 +12,7 @@ from pymongo import ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
 
-from trove.auth.models import UserResponse
+from trove.auth.models import ContactDetailsResponse, ContactDetailsUpdate, UserResponse
 from trove.core.database import get_database
 
 SESSION_SECONDS = 7 * 24 * 3600
@@ -19,7 +20,14 @@ bearer = HTTPBearer(auto_error=False, description="The access_token returned by 
 password_hasher = PasswordHash.recommended()
 # Unknown emails still run a password check, so response timing doesn't reveal which accounts exist.
 DUMMY_HASH = password_hasher.hash("Not a real account password.")
-USER_FIELDS = {"_id": 1, "first_name": 1, "last_name": 1, "email": 1, "created_at": 1}
+USER_FIELDS = {
+    "_id": 1,
+    "first_name": 1,
+    "last_name": 1,
+    "email": 1,
+    "email_notifications": 1,
+    "created_at": 1,
+}
 
 
 async def ensure_indexes(database: AsyncDatabase) -> None:
@@ -49,6 +57,7 @@ def public_user(user: dict) -> UserResponse:
         last_name=user.get("last_name"),
         full_name=full_name(user),
         email=user["email"],
+        email_notifications=user.get("email_notifications", True),
         created_at=user["created_at"],
     )
 
@@ -144,3 +153,52 @@ async def email_recipient(database: AsyncDatabase, user_id: str) -> dict | None:
 
 async def set_email_notifications(database: AsyncDatabase, user_id: str, enabled: bool) -> None:
     await database.users.update_one({"_id": user_id}, {"$set": {"email_notifications": enabled}})
+
+
+async def first_name_of(database: AsyncDatabase, user_id: str) -> str | None:
+    """The active account's first name, for greetings. Books show full names (trove.md §9.1)."""
+    user = await database.users.find_one({"_id": user_id, "is_active": True}, {"first_name": 1})
+    return user["first_name"] if user else None
+
+
+async def contact_details_of(database: AsyncDatabase, user_id: str) -> ContactDetailsResponse | None:
+    """What this member chose to share once an author says yes: their email, plus a LinkedIn link
+    and a phone number if they added them. `None` if there is no active account.
+
+    Call this only after an accepted checkout (trove.md §9.1). Contact details never appear on a
+    book, on the shelf, or before a yes.
+    """
+    user = await database.users.find_one({"_id": user_id, "is_active": True}, {"email": 1, "contact": 1})
+    if user is None:
+        return None
+    contact = user.get("contact") or {}
+    return ContactDetailsResponse(
+        email=user["email"], linkedin_url=contact.get("linkedin_url"), phone=contact.get("phone")
+    )
+
+
+async def set_contact_details(database: AsyncDatabase, user_id: str, details: ContactDetailsUpdate) -> None:
+    contact = {key: value for key, value in details.model_dump().items() if value is not None}
+    await database.users.update_one({"_id": user_id}, {"$set": {"contact": contact}})
+
+
+# Other features clean up their own data when an account is deleted (CONTRIBUTING.md: a feature only
+# touches its own collections). Each owner registers a function from its own service module, for
+# example books removes the member's book. A hook is called with the database and the member's id.
+DeletionHook = Callable[[AsyncDatabase, str], Awaitable[None]]
+deletion_hooks: list[DeletionHook] = []
+
+
+def on_account_deleted(hook: DeletionHook) -> DeletionHook:
+    """Register a cleanup that runs, before the account goes, when a member deletes their account."""
+    deletion_hooks.append(hook)
+    return hook
+
+
+async def delete_account(database: AsyncDatabase, user_id: str) -> None:
+    """Remove the account and everything auth keeps about it. Other features' hooks run first, so a
+    failing hook leaves the account in place and the member can try again."""
+    for hook in deletion_hooks:
+        await hook(database, user_id)
+    await database.sessions.delete_many({"user_id": user_id})
+    await database.users.delete_one({"_id": user_id})

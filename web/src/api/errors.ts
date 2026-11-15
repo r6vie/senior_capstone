@@ -9,7 +9,9 @@ export function errorMessage(error: unknown): string {
     return detail
       .map((issue: { loc?: unknown[]; msg?: string }) => {
         const field = issue.loc?.at(-1);
-        return `${typeof field === "string" ? `${field}: ` : ""}${issue.msg ?? "Invalid value."}`;
+        // Pydantic starts the message of our own validators with "Value error, ": a member shouldn't see that.
+        const message = (issue.msg ?? "Invalid value.").replace(/^Value error, /, "");
+        return `${typeof field === "string" ? `${field}: ` : ""}${message}`;
       })
       .join(" ");
   }

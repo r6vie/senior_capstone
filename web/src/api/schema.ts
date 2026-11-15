@@ -52,7 +52,11 @@ export interface paths {
         get: operations["me_auth_me_get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete Me
+         * @description Delete the account for good. The body must repeat the account's email address.
+         */
+        delete: operations["delete_me_auth_me_delete"];
         options?: never;
         head?: never;
         /**
@@ -60,6 +64,50 @@ export interface paths {
          * @description Set or change the member's first or last name. Their book shows the new name straight away.
          */
         patch: operations["update_me_auth_me_patch"];
+        trace?: never;
+    };
+    "/auth/me/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Contact Details
+         * @description The contact details this member will share when an author says yes, for them to edit.
+         */
+        get: operations["my_contact_details_auth_me_contact_get"];
+        /**
+         * Update My Contact Details
+         * @description Choose what to share on a yes. The sign-in email is always shared; LinkedIn and phone are optional.
+         */
+        put: operations["update_my_contact_details_auth_me_contact_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update My Notifications
+         * @description Turn email notifications on or off. Account emails are sent either way.
+         */
+        put: operations["update_my_notifications_auth_me_notifications_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/auth/logout": {
@@ -494,6 +542,42 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** ContactDetailsResponse */
+        ContactDetailsResponse: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Linkedin Url */
+            linkedin_url: string | null;
+            /** Phone */
+            phone: string | null;
+        };
+        /**
+         * ContactDetailsUpdate
+         * @description What a member shares once an author says yes.
+         *
+         *     The sign-in email is always shared. LinkedIn and phone are optional: send null or leave one out
+         *     to stop sharing it. Both are replaced together, so the settings form sends the whole picture.
+         */
+        ContactDetailsUpdate: {
+            /** Linkedin Url */
+            linkedin_url?: string | null;
+            /** Phone */
+            phone?: string | null;
+        };
+        /**
+         * DeleteAccountRequest
+         * @description Deleting an account cannot be undone, so the member types their email to confirm.
+         */
+        DeleteAccountRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -633,6 +717,14 @@ export interface components {
             last_name?: string | null;
         };
         /**
+         * NotificationSettingsUpdate
+         * @description The one email switch. Account emails, like the welcome message, are sent either way.
+         */
+        NotificationSettingsUpdate: {
+            /** Email Notifications */
+            email_notifications: boolean;
+        };
+        /**
          * PublicBookResponse
          * @description A book as readers see it: the author's full name, but no contacts, copy counts or grounding quotes.
          */
@@ -770,6 +862,8 @@ export interface components {
              * Format: email
              */
             email: string;
+            /** Email Notifications */
+            email_notifications: boolean;
             /**
              * Created At
              * Format: date-time
@@ -884,6 +978,37 @@ export interface operations {
             };
         };
     };
+    delete_me_auth_me_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     update_me_auth_me_patch: {
         parameters: {
             query?: never;
@@ -894,6 +1019,92 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["NameUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_contact_details_auth_me_contact_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDetailsResponse"];
+                };
+            };
+        };
+    };
+    update_my_contact_details_auth_me_contact_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactDetailsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDetailsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_my_notifications_auth_me_notifications_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationSettingsUpdate"];
             };
         };
         responses: {
