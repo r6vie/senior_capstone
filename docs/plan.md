@@ -93,9 +93,9 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Built (merged in #10): the contract functions, `GET/PUT /auth/me/contact`, `PUT /auth/me/notifications`,
   `DELETE /auth/me` and the Settings page. Decisions are in trove.md (2026-11-10).
 - **Waiting on owners:** deleting an account removes the account and sessions, then runs each feature's
-  cleanup. Josef (the book) and Ellie (checkouts: keep accepted ones, show "a former member") need to
-  register theirs with `@on_account_deleted` from `trove.auth.service`. Both are written but not merged
-  yet: Josef's in #8, Ellie's in #12.
+  cleanup. Deleting removes everything that belongs to the member (decided 2026-11-16, trove.md). Josef
+  (the book) and Ellie (checkouts, both ways) register theirs with `@on_account_deleted` from
+  `trove.auth.service`. Both are written but not merged yet: Josef's in #8, Ellie's in #12.
 - Ellie's reveal (C2) can now call `auth.contact_details_of`.
 
 **U1 · App shell and navigation** · Daniel · `done`
