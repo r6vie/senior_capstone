@@ -359,4 +359,5 @@ Membership verification is still open:
   - Times are shown in each person's own time zone. The reminder email shows UTC until we decide how to know a member's zone.
   - The video link must start with `https://`. A place to meet is an optional short note for people who are both nearby.
   - The calendar invite (.ics) is a download for each person. Nobody is emailed when a time is confirmed; that waits on messages (C3).
+  - Deleting an account removes the member's meetings, for both people, through `auth.on_account_deleted`.
   - One reminder email per person, sent once the meeting is within 24 hours. It respects the email switch. There is no scheduled job yet, so it goes out when someone opens a meeting page.

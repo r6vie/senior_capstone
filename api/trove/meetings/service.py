@@ -9,6 +9,7 @@ from datetime import UTC, datetime, timedelta
 
 from pymongo.asynchronous.database import AsyncDatabase
 
+from trove.auth.service import on_account_deleted
 from trove.checkouts.service import ACCEPTED, get_checkout_for
 from trove.meetings.models import SLOT_MINUTES
 
@@ -57,6 +58,12 @@ def view_parts(meeting: dict | None, checkout: dict, user_id: str, now: datetime
         "video_link": (meeting or {}).get("video_link"),
         "place_note": (meeting or {}).get("place_note"),
     }
+
+
+@on_account_deleted
+async def remove_meetings_of(database: AsyncDatabase, user_id: str) -> None:
+    """When a member deletes their account, the times they offered, the link and the meeting go too."""
+    await database.meetings.delete_many({"$or": [{"reader_id": user_id}, {"author_id": user_id}]})
 
 
 async def get_meeting(database: AsyncDatabase, checkout_id: str) -> dict | None:
