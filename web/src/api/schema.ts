@@ -438,7 +438,7 @@ export interface paths {
         put?: never;
         /**
          * Accept
-         * @description Say yes to a checkout of your book.
+         * @description Say yes to a checkout of your book. Both of you now see each other's contact details.
          */
         post: operations["accept_checkouts__checkout_id__accept_post"];
         delete?: never;
@@ -650,6 +650,18 @@ export interface components {
              */
             start: string;
         };
+        /**
+         * Contact
+         * @description What the other member chose to share once the author said yes (docs/trove.md §9.1).
+         */
+        Contact: {
+            /** Email */
+            email: string;
+            /** Linkedin Url */
+            linkedin_url: string | null;
+            /** Phone */
+            phone: string | null;
+        };
         /** ContactDetailsResponse */
         ContactDetailsResponse: {
             /**
@@ -747,6 +759,7 @@ export interface components {
             created_at: string;
             /** Expires At */
             expires_at: string | null;
+            reader_contact?: components["schemas"]["Contact"] | null;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -932,6 +945,7 @@ export interface components {
             created_at: string;
             /** Expires At */
             expires_at: string | null;
+            author_contact?: components["schemas"]["Contact"] | null;
         };
         /** ShapeRequest */
         ShapeRequest: {
