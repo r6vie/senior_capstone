@@ -110,8 +110,25 @@ describe("CheckoutsPage", () => {
     expect((await screen.findByRole("alert")).textContent).toContain("already been answered");
   });
 
-  it("confirms a new checkout", async () => {
-    renderPage({ checkedOut: "Small Town, Big Contracts" });
-    expect((await screen.findByRole("status")).textContent).toContain('"Small Town, Big Contracts"');
+  it("confirms a new checkout, with the day it closes if unanswered", async () => {
+    renderPage({ checkedOut: "Small Town, Big Contracts", answerBy: "2026-11-22T10:00:00Z" });
+    const status = (await screen.findByRole("status")).textContent ?? "";
+    expect(status).toContain('"Small Town, Big Contracts"');
+    expect(status).toContain("November 22");
+  });
+
+  it("links an accepted checkout to arranging the reading, for both people", async () => {
+    api.GET.mockResolvedValue({
+      data: {
+        lending: [{ ...waitingRequest, status: "accepted", expires_at: null }],
+        reading: [reading("accepted")],
+      },
+    });
+    renderPage();
+    const links = await screen.findAllByRole("link", { name: "Arrange the reading" });
+    expect(links.map((link) => link.getAttribute("href"))).toEqual([
+      "/checkouts/c1/meeting",
+      "/checkouts/r-accepted/meeting",
+    ]);
   });
 });

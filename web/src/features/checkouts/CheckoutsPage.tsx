@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
@@ -18,6 +18,17 @@ type Act = (path: "accept" | "decline" | "cancel", id: string) => Promise<string
 
 function Note({ text }: { text: string }) {
   return <blockquote className="checkout-note">{text}</blockquote>;
+}
+
+// After a yes, the next step is the meeting page (M1).
+function ArrangeLink({ id }: { id: string }) {
+  return (
+    <div className="checkout-actions">
+      <Link className="button button-secondary" to={`/checkouts/${id}/meeting`}>
+        Arrange the reading
+      </Link>
+    </div>
+  );
 }
 
 function ItemError({ text }: { text: string | null }) {
@@ -47,7 +58,10 @@ function LendingItem({ item, act }: { item: Lending; act: Act }) {
       {item.reader_book && <p className="muted">Author of "{item.reader_book.title}"</p>}
       <Note text={item.message} />
       {item.status === "accepted" ? (
-        <p>You said yes. Next, you'll arrange the reading together.</p>
+        <>
+          <p>You said yes.</p>
+          <ArrangeLink id={item.id} />
+        </>
       ) : confirming ? (
         <div className="checkout-actions">
           <span>Decline {item.reader_name}'s checkout? They'll see the book isn't available right now.</span>
@@ -87,7 +101,7 @@ function readingStatus(item: Reading): string {
         ? `Waiting for an answer. If there's none by ${formatDay(item.expires_at)}, it closes on its own.`
         : "Waiting for an answer.";
     case "accepted":
-      return "Accepted. Next, you'll arrange the reading together.";
+      return "Accepted.";
     case "cancelled":
       return "You cancelled this checkout.";
     default:
@@ -111,6 +125,7 @@ function ReadingItem({ item, act }: { item: Reading; act: Act }) {
       <p className="muted">by {item.author_name}</p>
       <Note text={item.message} />
       <p>{readingStatus(item)}</p>
+      {item.status === "accepted" && <ArrangeLink id={item.id} />}
       {item.status === "waiting" && (
         <div className="checkout-actions">
           <Button variant="quiet" disabled={busy} aria-busy={busy} onClick={cancel}>
@@ -127,18 +142,29 @@ export function CheckoutsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   // Shown once: clear it from the history entry, so a refresh doesn't repeat it.
-  const [checkedOut] = useState((location.state as { checkedOut?: string } | null)?.checkedOut);
+  const [justCheckedOut] = useState(
+    location.state as { checkedOut?: string; answerBy?: string | null } | null,
+  );
+  const checkedOut = justCheckedOut?.checkedOut;
   const [mine, setMine] = useState<Mine | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
 
+  // Only the newest load may update the page, and none after leaving it: an older, slower response
+  // must not overwrite a newer one.
+  const latest = useRef(0);
   const load = useCallback(async () => {
+    const request = ++latest.current;
     const { data } = await api.GET("/checkouts");
+    if (request !== latest.current) return;
     if (data) setMine(data);
     setLoadFailed(!data);
   }, []);
 
   useEffect(() => {
     load();
+    return () => {
+      latest.current += 1;
+    };
   }, [load]);
 
   useEffect(() => {
@@ -163,7 +189,11 @@ export function CheckoutsPage() {
       {checkedOut && (
         <p role="status" className="message">
           <span>✓</span>
-          <span>You asked to check out "{checkedOut}". The author has 7 days to answer.</span>
+          <span>
+            You asked to check out "{checkedOut}".
+            {justCheckedOut?.answerBy &&
+              ` If the author hasn't answered by ${formatDay(justCheckedOut.answerBy)}, it closes on its own.`}
+          </span>
         </p>
       )}
       {loadFailed && (

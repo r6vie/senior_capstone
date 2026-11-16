@@ -53,7 +53,7 @@ export function CheckOutPage() {
       setNeedsOwnBook(response.status === 403);
       return setError(errorMessage(failure));
     }
-    navigate("/checkouts", { state: { checkedOut: data.book_title } });
+    navigate("/checkouts", { state: { checkedOut: data.book_title, answerBy: data.expires_at } });
   }
 
   if (missing) {
