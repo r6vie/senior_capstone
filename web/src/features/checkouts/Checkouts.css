@@ -1,0 +1,82 @@
+/* Checkouts: stacked sections and a plain list, composed from the design system's recipes
+   (fields, buttons, messages, empty). Tokens only. See docs/design/system.md, Additions. */
+
+.checkouts-page {
+  max-width: 720px;
+}
+.checkouts-page > .message {
+  margin: 0 0 var(--s-5);
+}
+.checkouts-section {
+  display: grid;
+  gap: var(--s-4);
+  padding: var(--s-5) 0;
+  border-top: var(--line-heavy) solid var(--ink);
+}
+.checkouts-heading,
+.checkout-name,
+.checkout-book {
+  margin: 0;
+  font: 600 26px / 1.1 var(--font-serif);
+}
+.checkout-name,
+.checkout-book {
+  font-size: 22px;
+}
+.checkout-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checkout {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-4) 0;
+  border-bottom: var(--line) dotted var(--ink);
+}
+.checkout:last-child {
+  border-bottom: none;
+}
+.checkout p {
+  margin: 0;
+}
+/* The other member's own words: an ink rule, as in the emails' quotes. */
+.checkout-note {
+  margin: var(--s-1) 0;
+  padding-left: var(--s-4);
+  border-left: var(--line-heavy) solid var(--ink);
+  font: italic 400 18px / 1.45 var(--font-serif);
+  white-space: pre-wrap;
+}
+.checkout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+.checkout-skeleton {
+  height: 160px;
+}
+
+/* Checking out a book. */
+.checkout-book-title {
+  margin-bottom: var(--s-1);
+}
+.checkout-byline {
+  margin: 0 0 var(--s-4);
+  color: var(--ink-2);
+}
+.checkout-blurb {
+  margin: 0 0 var(--s-5);
+}
+.checkout-form {
+  padding-top: var(--s-5);
+  border-top: var(--line-heavy) solid var(--ink);
+}
+.checkout-submit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4);
+}

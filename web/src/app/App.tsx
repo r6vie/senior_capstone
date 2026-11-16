@@ -4,6 +4,7 @@ import { AuthPage } from "../features/auth/AuthPage";
 import { AuthProvider } from "../features/auth/AuthProvider";
 import { RequireAuth } from "../features/auth/RequireAuth";
 import { MyBookPage } from "../features/book/MyBookPage";
+import { CheckOutPage } from "../features/checkouts/CheckOutPage";
 import { CheckoutsPage } from "../features/checkouts/CheckoutsPage";
 import { PastMeetsPage } from "../features/checkouts/PastMeetsPage";
 import { ShelfPage } from "../features/discovery/ShelfPage";
@@ -29,6 +30,7 @@ export function App() {
             <Route path="/" element={<ShelfPage />} />
             <Route path="/my-book" element={<MyBookPage />} />
             <Route path="/checkouts" element={<CheckoutsPage />} />
+            <Route path="/checkouts/new/:bookId" element={<CheckOutPage />} />
             <Route path="/checkouts/:checkoutId/meeting" element={<MeetingPage />} />
             <Route path="/past-meets" element={<PastMeetsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
