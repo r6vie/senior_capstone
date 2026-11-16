@@ -105,7 +105,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
   from the Reference screen · The shelf.
 - Done when: every owner has a route and an empty page in their own feature folder to work in.
 
-**C1 · Checking out a book** · Ellie · `doing`
+**C1 · Checking out a book** · Ellie · `done`
 - One step (trove.md §6, §9.6): a reader presses "Check out" and writes a short message. They must
   have a book of their own (`books.get_book_of`). The author accepts or declines.
 - An unanswered checkout closes quietly after a set time. A declined or expired checkout shows
@@ -114,6 +114,8 @@ the owner answers them. Each item's "Decide first" lists the known ones.
   No queue. Readers never see copy or checkout counts.
 - Ships `checkouts.get_checkout_for`.
 - Builds against the seeded books from B1.
+- Screens: `/checkouts` lists requests for your book and the books you've checked out; `/checkouts/new/<book id>`
+  is the check-out form. D1's book page links its "Ask to check out" button there.
 - Decide first: open-checkout limit per reader; the exact expiry period; whether a reader can
   check out the same book again after an expiry.
 

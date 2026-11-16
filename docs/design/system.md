@@ -214,4 +214,11 @@ at width−300px, rows scroll horizontally.
 
 Patterns added after v1. Each entry: name, the task it solves, date, owner, snippet or link.
 
-_None yet._
+- **Checkout list** (2026-11-15, Ellie, `web/src/features/checkouts/Checkouts.css`). Task: answer or follow
+  checkouts without a feed. Sections under a 3px ink rule; each item is a name or title, the other member's note
+  as `.checkout-note` (a 3px ink rule on the left, Newsreader italic), one line of status, and secondary/quiet
+  buttons. **No red on this page**: no single action is the next step for everyone. Declining asks once, in
+  place ("Decline …? Decline / Keep it"), not in a dialog.
+- **Check out form** (2026-11-15, Ellie, `CheckOutPage.tsx`). The book's title, byline and blurb, then one
+  textarea and the screen's one red button, "Ask to check out", with the note "A thirty-minute video call, if
+  the author says yes."
