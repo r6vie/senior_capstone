@@ -352,11 +352,13 @@ Membership verification is still open:
   - Contact details: the sign-in email is always shared on a yes; a LinkedIn profile link and a phone number are optional, and each is shared only if the member adds it. No separate contact email for now.
   - Checked lightly: LinkedIn must be an `https://linkedin.com/in/...` link, and a phone number has 7 to 15 digits. We never check that a number works.
   - One email switch (checkouts and messages). Account emails, like the welcome message, are sent either way.
-  - Deleting an account is permanent and asks the member to type their email. It removes the account, sessions and the member's book. Accepted checkouts and past meets stay for the other person, who sees "a former member". Each feature cleans up its own data through `auth.on_account_deleted` (books and checkouts still need to register theirs).
+  - Deleting an account is permanent and asks the member to type their email. It removes the account, sessions and the member's book. (The first version kept accepted checkouts for the other person as "a former member"; changed on 2026-11-16, below.) Each feature cleans up its own data through `auth.on_account_deleted`.
+- **2026-11-16, deleting an account removes everything (Daniel):** when a member deletes their account, everything that belongs to them goes: the account, sessions, book, and every checkout and meeting they were in, for both people. Accepted checkouts and past meets do not stay behind for the other person. This keeps one rule for every feature and frees any copy the member had taken.
 - **2026-11-16, arranging the meeting (M1, Daniel):**
   - A meeting belongs to one accepted checkout, and only the two people on it can see it. Before the author says yes there is nothing to arrange.
   - Each person offers up to 5 start times, each 30 minutes. The app shows which ones both offered; either person can confirm any offered time that is still ahead, and can change it later.
   - Times are shown in each person's own time zone. The reminder email shows UTC until we decide how to know a member's zone.
   - The video link must start with `https://`. A place to meet is an optional short note for people who are both nearby.
   - The calendar invite (.ics) is a download for each person. Nobody is emailed when a time is confirmed; that waits on messages (C3).
+  - Deleting an account removes the member's meetings, for both people, through `auth.on_account_deleted`.
   - One reminder email per person, sent once the meeting is within 24 hours. It respects the email switch. There is no scheduled job yet, so it goes out when someone opens a meeting page.

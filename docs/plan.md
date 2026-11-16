@@ -79,7 +79,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
   includes last names.
 - Decide first: the exact chapter fields; what a "cover" is for now (a style id is enough).
 
-**A1 · Account basics and contact details** · Daniel · `review`
+**A1 · Account basics and contact details** · Daniel · `done`
 - Ships `auth.first_name_of` and `auth.contact_details_of`.
 - Already done (Josef, 2026-11-07, for full names on books): signup asks for a required last name;
   the account has `last_name` and `full_name` (`auth.full_name`, `auth.full_names_of`); and
@@ -90,14 +90,15 @@ the owner answers them. Each item's "Decide first" lists the known ones.
   the book; coordinate with Josef).
 - Done when: contact details are saved, are never visible before a yes, and deleting an account
   removes everything that belongs to it.
-- Built (PR pending): the contract functions, `GET/PUT /auth/me/contact`, `PUT /auth/me/notifications`,
+- Built (merged in #10): the contract functions, `GET/PUT /auth/me/contact`, `PUT /auth/me/notifications`,
   `DELETE /auth/me` and the Settings page. Decisions are in trove.md (2026-11-10).
 - **Waiting on owners:** deleting an account removes the account and sessions, then runs each feature's
-  cleanup. Josef (the book) and Ellie (checkouts: keep accepted ones, show "a former member") need to
-  register theirs with `@on_account_deleted` from `trove.auth.service`.
+  cleanup. Deleting removes everything that belongs to the member (decided 2026-11-16, trove.md). Josef
+  (the book) and Ellie (checkouts, both ways) register theirs with `@on_account_deleted` from
+  `trove.auth.service`. Both are written but not merged yet: Josef's in #8, Ellie's in #12.
 - Ellie's reveal (C2) can now call `auth.contact_details_of`.
 
-**U1 · App shell and navigation** · Daniel · `review`
+**U1 · App shell and navigation** · Daniel · `done`
 - A minimal layout with navigation to Shelf, My book, Checkouts, Past meets and Settings, with
   empty pages that the owners fill in.
 - Style it with the design system (`docs/design/system.md`, `docs/design/system/tokens.css`). Use the top bar
@@ -160,18 +161,17 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - A plain thread per checkout. No messages outside a checkout (trove.md §9.8).
 - Email notification for new messages, at most one every 10 minutes per thread.
 
-**M1 · Arranging the meeting** · Daniel · `review`
+**M1 · Arranging the meeting** · Daniel · `done`
 - Each person shares a few times that work, and the app suggests overlaps.
 - A field for the video link, a calendar invite (.ics) for both people, and a reminder email on
   the day. In person is optional when both are nearby.
 - Uses `checkouts.get_checkout_for`.
-- Built, in two PRs. The API: `GET /meetings/{checkout_id}`, `PUT .../times`, `PUT .../confirm`,
-  `PUT .../details`, `GET .../invite.ics` and the reminder email. The page at
+- Built (merged in #14 and #15): `GET /meetings/{checkout_id}`, `PUT .../times`, `PUT .../confirm`,
+  `PUT .../details`, `GET .../invite.ics`, the reminder email, and the page at
   `/checkouts/<checkout id>/meeting`. Decisions are in trove.md (2026-11-16).
 - **For Ellie (C2, C4):** link to `/checkouts/<checkout id>/meeting` from an accepted checkout, e.g. an
   "Arrange the meeting" button. The meeting only opens once the author has accepted.
-- **Open:** reminders have no scheduled job yet, so they go out when someone opens a meeting page. A
-  real scheduler is a team decision.
+- Known limit: reminders have no scheduled job, so they go out when someone opens a meeting page.
 
 ### Wave 3: closing the loop
 

@@ -256,3 +256,15 @@ async def test_a_reminder_email_names_the_meeting(client, database, capsys):
     assert "Sam Lee" in printed
     assert "15:30 UTC" in printed
     assert "https://meet.example.com/abc" in printed
+
+
+async def test_deleting_an_account_removes_its_meetings(client, database):
+    checkout_id, maya, sam = await accepted_pair(client, database)
+    await client.put(f"/meetings/{checkout_id}/times", json={"times": iso(slot(3))}, headers=maya)
+    # A meeting between two other members is left alone.
+    await database.meetings.insert_one({"_id": "other", "reader_id": "x", "author_id": "y", "times": {}})
+    assert await database.meetings.count_documents({}) == 2
+
+    response = await client.request("DELETE", "/auth/me", json={"email": "sam@example.com"}, headers=sam)
+    assert response.status_code == 204
+    assert [m["_id"] async for m in database.meetings.find()] == ["other"]
