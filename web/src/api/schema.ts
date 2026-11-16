@@ -467,6 +467,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/meetings/{checkout_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Meeting
+         * @description The times each of you offered, where they overlap, and the confirmed meeting if there is one.
+         */
+        get: operations["get_meeting_meetings__checkout_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{checkout_id}/times": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Offer Times
+         * @description Replace the times you offer (up to five, 30 minutes each). Send none to take them back.
+         */
+        put: operations["offer_times_meetings__checkout_id__times_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{checkout_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Confirm
+         * @description Settle on one of the offered times. Either of you can.
+         */
+        put: operations["confirm_meetings__checkout_id__confirm_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{checkout_id}/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Details
+         * @description The video link and, if you're both nearby, a place to meet.
+         */
+        put: operations["set_details_meetings__checkout_id__details_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/meetings/{checkout_id}/invite.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Invite
+         * @description A calendar file for the confirmed meeting.
+         */
+        get: operations["invite_meetings__checkout_id__invite_ics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -542,6 +642,14 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** ConfirmRequest */
+        ConfirmRequest: {
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+        };
         /** ContactDetailsResponse */
         ContactDetailsResponse: {
             /**
@@ -577,6 +685,13 @@ export interface components {
              * Format: email
              */
             email: string;
+        };
+        /** DetailsUpdate */
+        DetailsUpdate: {
+            /** Video Link */
+            video_link?: string | null;
+            /** Place Note */
+            place_note?: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -658,6 +773,32 @@ export interface components {
             token_type: "bearer";
             /** Expires In */
             expires_in: number;
+        };
+        /** MeetingView */
+        MeetingView: {
+            /** Checkout Id */
+            checkout_id: string;
+            /** Book Title */
+            book_title: string;
+            /** Other Name */
+            other_name: string;
+            /**
+             * Minutes
+             * @default 30
+             */
+            minutes: number;
+            /** My Times */
+            my_times: string[];
+            /** Their Times */
+            their_times: string[];
+            /** Shared Times */
+            shared_times: string[];
+            /** Start */
+            start: string | null;
+            /** Video Link */
+            video_link: string | null;
+            /** Place Note */
+            place_note: string | null;
         };
         /**
          * MyBookResponse
@@ -831,6 +972,11 @@ export interface components {
              * @description An optional résumé PDF, base64-encoded. Never stored.
              */
             resume_pdf?: string | null;
+        };
+        /** TimesUpdate */
+        TimesUpdate: {
+            /** Times */
+            times: string[];
         };
         /** TitleOption */
         TitleOption: {
@@ -1694,6 +1840,171 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_meeting_meetings__checkout_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    offer_times_meetings__checkout_id__times_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimesUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_meetings__checkout_id__confirm_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_details_meetings__checkout_id__details_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DetailsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    invite_meetings__checkout_id__invite_ics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
