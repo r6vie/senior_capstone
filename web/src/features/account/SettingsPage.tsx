@@ -153,8 +153,8 @@ function DeleteSection({ email }: { email: string }) {
         Delete your account
       </h2>
       <p className="muted">
-        This removes your account, your book, and your checkouts and meetings, for the other person too. It can't be undone. To confirm, type your email address:{" "}
-        <strong>{email}</strong>
+        This removes your account, your book, and your checkouts and meetings, for the other person too. It
+        can't be undone. To confirm, type your email address: <strong>{email}</strong>
       </p>
       <form onSubmit={remove} className="stack">
         <TextField
