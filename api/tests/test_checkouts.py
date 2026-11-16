@@ -85,6 +85,7 @@ async def test_check_out_then_author_accepts(client, database, sent):
             "reader_name": "Sam Lee",
             "book_title": "Maya's book",
             "message": "I'd love to hear about this.",
+            "answer_days": 7,
         }
     ]
 

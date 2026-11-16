@@ -98,6 +98,7 @@ async def notify_checkout_requested(
     reader_name: str,
     book_title: str,
     message: str,
+    answer_days: int,
 ) -> str:
     """Tell an author someone checked out their book. Sample books have no account, so nothing is sent."""
     checkouts_url = f"{get_settings().frontend_url.rstrip('/')}/checkouts"
@@ -105,7 +106,7 @@ async def notify_checkout_requested(
         database,
         f"checkout-requested:{checkout_id}",
         author_id,
-        templates.checkout_requested(reader_name, book_title, message, checkouts_url).render,
+        templates.checkout_requested(reader_name, book_title, message, checkouts_url, answer_days).render,
     )
 
 

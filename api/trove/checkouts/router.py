@@ -91,6 +91,8 @@ async def check_out(
         reader_name=reader_name,
         book_title=checkout["book_title"],
         message=checkout["message"],
+        # From the checkout rules, so the email can't drift from them.
+        answer_days=service.ANSWER_DAYS,
     )
     return (await reading_views(database, [checkout]))[0]
 
