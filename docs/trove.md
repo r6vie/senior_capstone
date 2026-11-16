@@ -353,3 +353,10 @@ Membership verification is still open:
   - Checked lightly: LinkedIn must be an `https://linkedin.com/in/...` link, and a phone number has 7 to 15 digits. We never check that a number works.
   - One email switch (checkouts and messages). Account emails, like the welcome message, are sent either way.
   - Deleting an account is permanent and asks the member to type their email. It removes the account, sessions and the member's book. Accepted checkouts and past meets stay for the other person, who sees "a former member". Each feature cleans up its own data through `auth.on_account_deleted` (books and checkouts still need to register theirs).
+- **2026-11-16, arranging the meeting (M1, Daniel):**
+  - A meeting belongs to one accepted checkout, and only the two people on it can see it. Before the author says yes there is nothing to arrange.
+  - Each person offers up to 5 start times, each 30 minutes. The app shows which ones both offered; either person can confirm any offered time that is still ahead, and can change it later.
+  - Times are shown in each person's own time zone. The reminder email shows UTC until we decide how to know a member's zone.
+  - The video link must start with `https://`. A place to meet is an optional short note for people who are both nearby.
+  - The calendar invite (.ics) is a download for each person. Nobody is emailed when a time is confirmed; that waits on messages (C3).
+  - One reminder email per person, sent once the meeting is within 24 hours. It respects the email switch. There is no scheduled job yet, so it goes out when someone opens a meeting page.

@@ -160,11 +160,18 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - A plain thread per checkout. No messages outside a checkout (trove.md §9.8).
 - Email notification for new messages, at most one every 10 minutes per thread.
 
-**M1 · Arranging the meeting** · Daniel · `todo`
+**M1 · Arranging the meeting** · Daniel · `review`
 - Each person shares a few times that work, and the app suggests overlaps.
 - A field for the video link, a calendar invite (.ics) for both people, and a reminder email on
   the day. In person is optional when both are nearby.
 - Uses `checkouts.get_checkout_for`.
+- Built (PR pending): `GET /meetings/{checkout_id}`, `PUT .../times`, `PUT .../confirm`, `PUT .../details`,
+  `GET .../invite.ics`, a reminder email, and the page at `/checkouts/<checkout id>/meeting`. Decisions
+  are in trove.md (2026-11-16).
+- **For Ellie (C2, C4):** link to `/checkouts/<checkout id>/meeting` from an accepted checkout, e.g. an
+  "Arrange the meeting" button. The meeting only opens once the author has accepted.
+- **Open:** reminders have no scheduled job yet, so they go out when someone opens a meeting page. A
+  real scheduler is a team decision.
 
 ### Wave 3: closing the loop
 
