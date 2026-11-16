@@ -109,6 +109,28 @@ async def notify_checkout_requested(
     )
 
 
+async def notify_meeting_reminder(
+    database: AsyncDatabase,
+    *,
+    checkout_id: str,
+    user_id: str,
+    other_name: str,
+    book_title: str,
+    start: datetime,
+    video_link: str | None,
+    place_note: str | None,
+) -> str:
+    """Remind one member of a confirmed meeting. A new time earns a new reminder."""
+    meeting_url = f"{get_settings().frontend_url.rstrip('/')}/checkouts/{checkout_id}/meeting"
+    when = f"{start:%A %B} {start.day} at {start:%H:%M} UTC"
+    return await notify_once(
+        database,
+        f"meeting-reminder:{checkout_id}:{start.isoformat()}:{user_id}",
+        user_id,
+        templates.meeting_reminder(other_name, book_title, when, meeting_url, video_link, place_note).render,
+    )
+
+
 async def notify_welcome(database: AsyncDatabase, user_id: str, first_name: str) -> str:
     app_url = get_settings().frontend_url
     return await notify_once(
