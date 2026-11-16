@@ -53,3 +53,18 @@ def test_new_checkout_email_quotes_the_readers_note():
     assert "<b>Hello</b>" not in html
     assert "http://app/checkouts" in text
     assert "within 7 days" in text
+
+
+def test_accepted_emails_link_to_trove_without_contact_details():
+    from trove.notifications.templates import checkout_accepted_for_author, checkout_accepted_for_reader
+
+    subject, text, _ = checkout_accepted_for_reader("Maya Lee", "My book", "http://app/checkouts").render(
+        "http://u"
+    )
+    assert subject == "Maya Lee said yes"
+    assert "http://app/checkouts" in text
+    subject, text, _ = checkout_accepted_for_author("Sam Lee", "My book", "http://app/checkouts").render(
+        "http://u"
+    )
+    assert subject == "You said yes to Sam Lee"
+    assert "@" not in text.replace("http://u", "")

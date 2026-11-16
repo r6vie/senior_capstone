@@ -132,6 +132,32 @@ async def notify_meeting_reminder(
     )
 
 
+async def notify_checkout_accepted(
+    database: AsyncDatabase,
+    *,
+    checkout_id: str,
+    reader_id: str,
+    author_id: str,
+    reader_name: str,
+    author_name: str,
+    book_title: str,
+) -> None:
+    """Tell both people the author said yes. Each respects their own email setting."""
+    checkouts_url = f"{get_settings().frontend_url.rstrip('/')}/checkouts"
+    await notify_once(
+        database,
+        f"checkout-accepted-reader:{checkout_id}",
+        reader_id,
+        templates.checkout_accepted_for_reader(author_name, book_title, checkouts_url).render,
+    )
+    await notify_once(
+        database,
+        f"checkout-accepted-author:{checkout_id}",
+        author_id,
+        templates.checkout_accepted_for_author(reader_name, book_title, checkouts_url).render,
+    )
+
+
 async def notify_welcome(database: AsyncDatabase, user_id: str, first_name: str) -> str:
     app_url = get_settings().frontend_url
     return await notify_once(
