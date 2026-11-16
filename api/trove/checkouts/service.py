@@ -7,6 +7,7 @@ from pymongo import DESCENDING, ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
 
+from trove.auth.service import on_account_deleted
 from trove.books.service import get_book_of, get_public_book
 
 OPEN_LIMIT = 3  # open checkouts per reader
@@ -230,6 +231,13 @@ async def fully_checked_out(database: AsyncDatabase, books: list[dict]) -> set[s
         )
     }
     return {book["_id"] for book in books if counts.get(book["_id"], 0) >= book["copies"]}
+
+
+@on_account_deleted
+async def remove_checkouts_of(database: AsyncDatabase, user_id: str) -> None:
+    """When a member deletes their account, their checkouts go too, both ways. That frees the copies
+    they had taken, and their requests disappear from authors' lists."""
+    await database.checkouts.delete_many({"$or": [{"reader_id": user_id}, {"author_id": user_id}]})
 
 
 async def reader_book_of(database: AsyncDatabase, reader_id: str) -> dict | None:
