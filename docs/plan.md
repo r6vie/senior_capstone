@@ -154,7 +154,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
     MongoDB text index covers title, chapters and those terms. No new provider needed.
   - Alternative: vector search, which needs an embeddings provider.
 
-**C2 · Accepting and the reveal** · Ellie · `todo`
+**C2 · Accepting and the reveal** · Ellie · `done`
 - When the author accepts, both people see each other's full name and the contact details they
   chose (`auth.contact_details_of`), at the same moment, and both get an email.
 - Done when: names and contacts are visible only to those two people, and only after accept.

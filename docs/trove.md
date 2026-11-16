@@ -348,6 +348,9 @@ Membership verification is still open:
   - 3 open checkouts per reader; pending and accepted checkouts both use a copy; unanswered checkouts close after 7 days.
   - After a decline or expiry, the same book can be checked out again after 30 days; readers can cancel an unanswered checkout; authors get an email for each new checkout (§6).
   - Your own book must be on the shelf before you check one out; authors see the reader's book when deciding.
+- **2026-11-16, the reveal (C2, Ellie):**
+  - On accept, both people see each other's contact details on the Checkouts page (the sign-in email, plus LinkedIn and phone if added), read fresh from Settings.
+  - Both get an email that only links to Trove; contact details are never copied into emails. It respects each member's email switch.
 - **2026-11-10, account basics (A1, Daniel):**
   - Contact details: the sign-in email is always shared on a yes; a LinkedIn profile link and a phone number are optional, and each is shared only if the member adds it. No separate contact email for now.
   - Checked lightly: LinkedIn must be an `https://linkedin.com/in/...` link, and a phone number has 7 to 15 digits. We never check that a number works.
