@@ -1,10 +1,11 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 from pymongo.asynchronous.database import AsyncDatabase
 
-from trove.auth.service import full_names_of, get_current_user
+from trove.auth.service import contact_details_of, full_names_of, get_current_user
 from trove.checkouts import service
 from trove.checkouts.models import (
     CheckoutRequest,
+    Contact,
     LendingCheckout,
     MyCheckouts,
     ReaderBook,
@@ -12,7 +13,7 @@ from trove.checkouts.models import (
 )
 from trove.checkouts.service import CheckoutRefused
 from trove.core.database import get_database
-from trove.notifications.service import notify_checkout_requested
+from trove.notifications.service import notify_checkout_accepted, notify_checkout_requested
 
 router = APIRouter(prefix="/checkouts", tags=["Checkouts"])
 
@@ -29,6 +30,17 @@ def refused(error: CheckoutRefused) -> HTTPException:
     return HTTPException(status_code=error.status_code, detail=error.detail)
 
 
+async def contact_after_yes(database: AsyncDatabase, checkout: dict, other_id: str) -> Contact | None:
+    """The other member's contact details, but only on an accepted checkout (the reveal, C2).
+
+    Read fresh each time, so a change in Settings shows up, and nothing is copied onto the checkout.
+    """
+    if checkout["status"] != service.ACCEPTED:
+        return None
+    details = await contact_details_of(database, other_id)
+    return Contact.model_validate(details.model_dump()) if details else None
+
+
 async def reading_views(database: AsyncDatabase, checkouts: list[dict]) -> list[ReadingCheckout]:
     # Authors' current names; the name saved on the checkout covers sample books with no account.
     names = await full_names_of(database, list({checkout["author_id"] for checkout in checkouts}))
@@ -42,6 +54,7 @@ async def reading_views(database: AsyncDatabase, checkouts: list[dict]) -> list[
             status=READER_STATUS[checkout["status"]],
             created_at=checkout["created_at"],
             expires_at=checkout["expires_at"] if checkout["status"] == service.REQUESTED else None,
+            author_contact=await contact_after_yes(database, checkout, checkout["author_id"]),
         )
         for checkout in checkouts
     ]
@@ -63,6 +76,7 @@ async def lending_views(database: AsyncDatabase, checkouts: list[dict]) -> list[
                 status="accepted" if checkout["status"] == service.ACCEPTED else "waiting",
                 created_at=checkout["created_at"],
                 expires_at=checkout["expires_at"] if checkout["status"] == service.REQUESTED else None,
+                reader_contact=await contact_after_yes(database, checkout, checkout["reader_id"]),
             )
         )
     return views
@@ -126,14 +140,26 @@ async def cancel(
 @router.post("/{checkout_id}/accept", response_model=LendingCheckout)
 async def accept(
     checkout_id: str,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
 ) -> LendingCheckout:
-    """Say yes to a checkout of your book."""
+    """Say yes to a checkout of your book. Both of you now see each other's contact details."""
     try:
         checkout = await service.accept(database, checkout_id, user["_id"])
     except CheckoutRefused as error:
         raise refused(error) from None
+    names = await full_names_of(database, [checkout["reader_id"], checkout["author_id"]])
+    background_tasks.add_task(
+        notify_checkout_accepted,
+        database,
+        checkout_id=checkout["_id"],
+        reader_id=checkout["reader_id"],
+        author_id=checkout["author_id"],
+        reader_name=names.get(checkout["reader_id"], ""),
+        author_name=names.get(checkout["author_id"]) or checkout["author_name"],
+        book_title=checkout["book_title"],
+    )
     return (await lending_views(database, [checkout]))[0]
 
 

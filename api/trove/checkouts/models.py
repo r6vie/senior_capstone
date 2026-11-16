@@ -17,6 +17,14 @@ class CheckoutRequest(RequestBody):
     message: NonEmptyText = Field(max_length=1000)
 
 
+class Contact(BaseModel):
+    """What the other member chose to share once the author said yes (docs/trove.md §9.1)."""
+
+    email: str
+    linkedin_url: str | None
+    phone: str | None
+
+
 class ReadingCheckout(BaseModel):
     """A checkout as its reader sees it."""
 
@@ -29,6 +37,8 @@ class ReadingCheckout(BaseModel):
     created_at: datetime
     # When an unanswered checkout closes on its own; null once it's answered or closed.
     expires_at: datetime | None
+    # The author's contact details, only once they've accepted.
+    author_contact: Contact | None = None
 
 
 class ReaderBook(BaseModel):
@@ -49,6 +59,8 @@ class LendingCheckout(BaseModel):
     status: AuthorStatus
     created_at: datetime
     expires_at: datetime | None
+    # The reader's contact details, only once you've accepted.
+    reader_contact: Contact | None = None
 
 
 class MyCheckouts(BaseModel):

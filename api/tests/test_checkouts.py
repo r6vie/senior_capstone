@@ -49,15 +49,26 @@ async def check_out(client, headers, book_id: str, message: str = "I'd love to h
     return await client.post("/checkouts", json={"book_id": book_id, "message": message}, headers=headers)
 
 
+class Sent(list):
+    """New-checkout emails; `accepted` holds the checkout-accepted ones."""
+
+    accepted: list
+
+
 @pytest.fixture
 def sent(monkeypatch):
-    """Records the new-checkout emails instead of sending them."""
-    calls = []
+    """Records the checkout emails instead of sending them."""
+    calls = Sent()
+    calls.accepted = []
 
     async def record(database, **details):
         calls.append(details)
 
+    async def record_accepted(database, **details):
+        calls.accepted.append(details)
+
     monkeypatch.setattr(checkouts_router, "notify_checkout_requested", record)
+    monkeypatch.setattr(checkouts_router, "notify_checkout_accepted", record_accepted)
     return calls
 
 
@@ -277,3 +288,57 @@ async def test_deleting_an_account_removes_its_checkouts_both_ways(client, datab
     # The copy Sam had taken is free again.
     assert await fully_checked_out(database, [{"_id": "one-copy", "copies": 1}]) == set()
     assert (await client.get("/checkouts", headers=maya)).json() == {"reading": [], "lending": []}
+
+
+async def test_contact_details_are_revealed_to_both_only_on_accept(client, database, sent):
+    author_id, author = await member(client, database, "Maya")
+    reader_id, reader = await member(client, database, "Sam")
+    await client.put("/auth/me/contact", json={"phone": "216-555-0142"}, headers=author)
+    await client.put(
+        "/auth/me/contact", json={"linkedin_url": "https://www.linkedin.com/in/sam-lee"}, headers=reader
+    )
+    checkout_id = (await check_out(client, reader, "book-of-maya")).json()["id"]
+
+    # Before a yes, neither side sees the other's details.
+    reading = (await client.get("/checkouts", headers=reader)).text
+    lending = (await client.get("/checkouts", headers=author)).text
+    assert "maya@example.com" not in reading and "216-555-0142" not in reading
+    assert "sam@example.com" not in lending and "linkedin.com/in/sam-lee" not in lending
+
+    accepted = await client.post(f"/checkouts/{checkout_id}/accept", headers=author)
+    assert accepted.json()["reader_contact"] == {
+        "email": "sam@example.com",
+        "linkedin_url": "https://www.linkedin.com/in/sam-lee",
+        "phone": None,
+    }
+    reading = (await client.get("/checkouts", headers=reader)).json()["reading"][0]
+    assert reading["author_contact"] == {
+        "email": "maya@example.com",
+        "linkedin_url": None,
+        "phone": "216-555-0142",
+    }
+    lending = (await client.get("/checkouts", headers=author)).json()["lending"][0]
+    assert lending["reader_contact"]["email"] == "sam@example.com"
+
+    assert sent.accepted == [
+        {
+            "checkout_id": checkout_id,
+            "reader_id": reader_id,
+            "author_id": author_id,
+            "reader_name": "Sam Lee",
+            "author_name": "Maya Lee",
+            "book_title": "Maya's book",
+        }
+    ]
+
+
+async def test_no_contact_details_after_a_decline(client, database, sent):
+    _, author = await member(client, database, "Maya")
+    _, reader = await member(client, database, "Sam")
+    checkout_id = (await check_out(client, reader, "book-of-maya")).json()["id"]
+    await client.post(f"/checkouts/{checkout_id}/decline", headers=author)
+
+    reading = (await client.get("/checkouts", headers=reader)).json()["reading"][0]
+    assert reading["author_contact"] is None
+    assert "maya@example.com" not in str(reading)
+    assert sent.accepted == []

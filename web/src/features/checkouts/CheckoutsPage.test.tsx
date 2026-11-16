@@ -110,6 +110,47 @@ describe("CheckoutsPage", () => {
     expect((await screen.findByRole("alert")).textContent).toContain("already been answered");
   });
 
+  it("shows contact details on both sides once the author has said yes", async () => {
+    api.GET.mockResolvedValue({
+      data: {
+        lending: [
+          {
+            ...waitingRequest,
+            status: "accepted",
+            expires_at: null,
+            reader_contact: { email: "sam@example.com", linkedin_url: null, phone: "216-555-0142" },
+          },
+        ],
+        reading: [
+          reading("accepted", {
+            author_contact: {
+              email: "ana@example.com",
+              linkedin_url: "https://www.linkedin.com/in/ana-diaz",
+              phone: null,
+            },
+          }),
+        ],
+      },
+    });
+    renderPage();
+    expect(await screen.findByText("How to reach Sam Lee")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "sam@example.com" }).getAttribute("href")).toBe(
+      "mailto:sam@example.com",
+    );
+    expect(screen.getByRole("link", { name: "216-555-0142" })).toBeTruthy();
+    expect(screen.getByText("How to reach Ana Diaz")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "LinkedIn profile" }).getAttribute("href")).toBe(
+      "https://www.linkedin.com/in/ana-diaz",
+    );
+  });
+
+  it("shows no contact details before a yes", async () => {
+    api.GET.mockResolvedValue({ data: { reading: [reading("waiting")], lending: [waitingRequest] } });
+    renderPage();
+    expect(await screen.findByText("Sam Lee")).toBeTruthy();
+    expect(screen.queryByText(/How to reach/)).toBeNull();
+  });
+
   it("confirms a new checkout, with the day it closes if unanswered", async () => {
     renderPage({ checkedOut: "Small Town, Big Contracts", answerBy: "2026-11-22T10:00:00Z" });
     const status = (await screen.findByRole("status")).textContent ?? "";
