@@ -1,0 +1,91 @@
+/* Meeting page: plain stacked sections from the design system's recipes (fields, messages, panel, caption).
+   Only tokens are used for colors, type and spacing. No red here except the one primary button. */
+
+.meeting-page {
+  max-width: 640px;
+  padding: var(--s-6) var(--s-7) var(--s-8);
+}
+.meeting-page .page-title {
+  margin-bottom: var(--s-5);
+}
+.meeting-section {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-5) 0;
+  border-top: var(--line-heavy) solid var(--ink);
+}
+.meeting-heading {
+  margin: 0;
+  font: 600 26px / 1.1 var(--font-serif);
+}
+.meeting-section .message {
+  margin: 0;
+}
+.meeting-error {
+  border-width: var(--line-heavy);
+}
+
+/* The confirmed meeting is the focal point once there is one. */
+.meeting-confirmed {
+  display: grid;
+  gap: var(--s-2);
+  margin-bottom: var(--s-5);
+  padding: var(--s-5);
+  border: var(--line-heavy) solid var(--ink);
+  background: var(--white);
+}
+.meeting-confirmed p {
+  margin: 0;
+}
+.meeting-confirmed a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.meeting-when {
+  margin: 0;
+  font: 600 32px / 1.1 var(--font-serif);
+}
+
+.meeting-times {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.meeting-times li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) 0;
+  border-bottom: var(--line) solid var(--rule);
+}
+.meeting-times li > span {
+  display: grid;
+}
+.meeting-times li[data-shared="true"] > span {
+  font-weight: 600;
+}
+.meeting-empty {
+  margin: 0;
+  padding: var(--s-4);
+  border: var(--line) dotted var(--ink-2);
+}
+.meeting-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--s-3);
+}
+
+@media (max-width: 719px) {
+  .meeting-page {
+    padding: var(--s-5) var(--s-4) var(--s-6);
+  }
+  .meeting-when {
+    font-size: 26px;
+  }
+}
