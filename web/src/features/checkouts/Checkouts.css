@@ -80,3 +80,22 @@
   align-items: center;
   gap: var(--s-4);
 }
+
+/* The reveal (C2): the other member's contact details, on a white panel because it's something to pick up. */
+.checkout-contact {
+  display: grid;
+  gap: var(--s-2);
+  justify-self: start;
+  padding: var(--s-3) var(--s-4);
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+}
+.checkout-contact ul {
+  display: grid;
+  /* A long email address wraps instead of running out of the panel on a phone. */
+  overflow-wrap: anywhere;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

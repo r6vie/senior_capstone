@@ -14,6 +14,7 @@ import "./Checkouts.css";
 type Mine = components["schemas"]["MyCheckouts"];
 type Lending = components["schemas"]["LendingCheckout"];
 type Reading = components["schemas"]["ReadingCheckout"];
+type Contact = components["schemas"]["Contact"];
 type Act = (path: "accept" | "decline" | "cancel", id: string) => Promise<string | null>;
 
 function Note({ text }: { text: string }) {
@@ -27,6 +28,33 @@ function ArrangeLink({ id }: { id: string }) {
       <Link className="button button-secondary" to={`/checkouts/${id}/meeting`}>
         Arrange the reading
       </Link>
+    </div>
+  );
+}
+
+// The reveal (C2): shown only once the author has said yes, to the two people in the checkout.
+function ContactDetails({ name, contact }: { name: string; contact: Contact }) {
+  return (
+    <div className="checkout-contact">
+      <span className="caption">How to reach {name}</span>
+      <ul>
+        <li>
+          <a href={`mailto:${contact.email}`}>{contact.email}</a>
+        </li>
+        {contact.linkedin_url && (
+          <li>
+            <a href={contact.linkedin_url} target="_blank" rel="noreferrer">
+              LinkedIn profile
+            </a>
+          </li>
+        )}
+        {contact.phone && (
+          <li>
+            {/* Shown as typed; dialled as digits only (and a leading +), which every phone understands. */}
+            <a href={`tel:${contact.phone.replace(/(?!^\+)[^\d]/g, "")}`}>{contact.phone}</a>
+          </li>
+        )}
+      </ul>
     </div>
   );
 }
@@ -60,6 +88,7 @@ function LendingItem({ item, act }: { item: Lending; act: Act }) {
       {item.status === "accepted" ? (
         <>
           <p>You said yes.</p>
+          {item.reader_contact && <ContactDetails name={item.reader_name} contact={item.reader_contact} />}
           <ArrangeLink id={item.id} />
         </>
       ) : confirming ? (
@@ -125,6 +154,9 @@ function ReadingItem({ item, act }: { item: Reading; act: Act }) {
       <p className="muted">by {item.author_name}</p>
       <Note text={item.message} />
       <p>{readingStatus(item)}</p>
+      {item.status === "accepted" && item.author_contact && (
+        <ContactDetails name={item.author_name} contact={item.author_contact} />
+      )}
       {item.status === "accepted" && <ArrangeLink id={item.id} />}
       {item.status === "waiting" && (
         <div className="checkout-actions">

@@ -33,6 +33,33 @@ def verification_code(code: str, verify_url: str) -> Email:
     )
 
 
+def checkout_accepted_for_reader(author_name: str, book_title: str, checkouts_url: str) -> Email:
+    # Link only: contact details stay in Trove, not copied into inboxes (C2, docs/trove.md §7).
+    return Email(
+        subject=f"{author_name} said yes",
+        heading="Your checkout was accepted",
+        paragraphs=[
+            f'{author_name} said yes to your checkout of "{book_title}".',
+            "Open Trove to see their contact details and arrange the reading.",
+        ],
+        button_text="See contact details",
+        button_url=checkouts_url,
+    )
+
+
+def checkout_accepted_for_author(reader_name: str, book_title: str, checkouts_url: str) -> Email:
+    return Email(
+        subject=f"You said yes to {reader_name}",
+        heading="You accepted a checkout",
+        paragraphs=[
+            f'You said yes to {reader_name}\'s checkout of "{book_title}".',
+            "Open Trove to see their contact details and arrange the reading.",
+        ],
+        button_text="See contact details",
+        button_url=checkouts_url,
+    )
+
+
 def welcome(first_name: str, app_url: str) -> Email:
     return Email(
         subject="Welcome to Trove",

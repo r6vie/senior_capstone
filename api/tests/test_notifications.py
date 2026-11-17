@@ -53,3 +53,42 @@ def test_new_checkout_email_quotes_the_readers_note():
     assert "<b>Hello</b>" not in html
     assert "http://app/checkouts" in text
     assert "within 7 days" in text
+
+
+def test_accepted_emails_link_to_trove_without_contact_details():
+    from trove.notifications.templates import checkout_accepted_for_author, checkout_accepted_for_reader
+
+    subject, text, _ = checkout_accepted_for_reader("Maya Lee", "My book", "http://app/checkouts").render(
+        "http://u"
+    )
+    assert subject == "Maya Lee said yes"
+    assert "http://app/checkouts" in text
+    subject, text, _ = checkout_accepted_for_author("Sam Lee", "My book", "http://app/checkouts").render(
+        "http://u"
+    )
+    assert subject == "You said yes to Sam Lee"
+    assert "@" not in text.replace("http://u", "")
+
+
+async def test_accepted_emails_respect_each_persons_email_switch(database, capsys):
+    from trove.notifications.service import notify_checkout_accepted
+
+    await database.users.insert_many(
+        [
+            {"_id": "reader-1", "email": "sam@example.com", "is_active": True, "email_notifications": False},
+            {"_id": "author-1", "email": "maya@example.com", "is_active": True},
+        ]
+    )
+    await notify_checkout_accepted(
+        database,
+        checkout_id="c1",
+        reader_id="reader-1",
+        author_id="author-1",
+        reader_name="Sam Lee",
+        author_name="Maya Lee",
+        book_title="My book",
+    )
+    printed = capsys.readouterr().out
+    # Without SMTP, emails are printed instead of sent: only the author's went out.
+    assert "To user author-1: You said yes to Sam Lee" in printed
+    assert "reader-1" not in printed

@@ -2219,7 +2219,7 @@
           "Checkouts"
         ],
         "summary": "Accept",
-        "description": "Say yes to a checkout of your book.",
+        "description": "Say yes to a checkout of your book. Both of you now see each other's contact details.",
         "operationId": "accept_checkouts__checkout_id__accept_post",
         "security": [
           {
@@ -2913,6 +2913,44 @@
         ],
         "title": "ConfirmRequest"
       },
+      "Contact": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "linkedin_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linkedin Url"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "linkedin_url",
+          "phone"
+        ],
+        "title": "Contact",
+        "description": "What the other member chose to share once the author said yes (docs/trove.md \u00a79.1)."
+      },
       "ContactDetailsResponse": {
         "properties": {
           "email": {
@@ -3515,6 +3553,16 @@
               }
             ],
             "title": "Expires At"
+          },
+          "reader_contact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Contact"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -4054,6 +4102,16 @@
               }
             ],
             "title": "Expires At"
+          },
+          "author_contact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Contact"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",

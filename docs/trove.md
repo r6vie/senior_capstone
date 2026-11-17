@@ -185,7 +185,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 ### Decided
 
 - **A video call by default, or in person when both people are nearby.**
-- **Contact details are revealed when the author accepts.**
+- **Contact details are revealed when the author accepts.** Both people see each other's on the Checkouts page, and both get an email that only links to Trove: contact details are never copied into emails (C2).
 - **The meeting is arranged in the app, and kept light** (§9.7):
   - Each side shares a few times that work, and the app suggests overlaps.
   - A calendar invite with one click, a field for the video link, a reminder on the day, and "Did you meet?" afterwards.
@@ -362,3 +362,6 @@ Membership verification (decided 2026-11-16, A2, Daniel):
   - The calendar invite (.ics) is a download for each person. Nobody is emailed when a time is confirmed; that waits on messages (C3).
   - Deleting an account removes the member's meetings, for both people, through `auth.on_account_deleted`.
   - One reminder email per person, sent once the meeting is within 24 hours. It respects the email switch. There is no scheduled job yet, so it goes out when someone opens a meeting page.
+- **2026-11-16, the reveal (C2, Ellie):**
+  - On accept, both people see each other's contact details on the Checkouts page (the sign-in email, plus LinkedIn and phone if added), read fresh from Settings.
+  - Both get an email that only links to Trove; contact details are never copied into emails. It respects each member's email switch.
