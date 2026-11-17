@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SettingsPage } from "./SettingsPage";
 
-const api = vi.hoisted(() => ({ GET: vi.fn(), PUT: vi.fn(), DELETE: vi.fn() }));
+const api = vi.hoisted(() => ({ GET: vi.fn(), PUT: vi.fn(), POST: vi.fn(), DELETE: vi.fn() }));
 const auth = vi.hoisted(() => ({
   user: { id: "u1", email: "maya@example.com", email_notifications: true },
   signOut: vi.fn(),
@@ -17,7 +17,7 @@ const contact = { email: "maya@example.com", linkedin_url: null, phone: null };
 beforeEach(() => {
   vi.resetAllMocks();
   auth.user = { id: "u1", email: "maya@example.com", email_notifications: true };
-  api.GET.mockResolvedValue({ data: contact });
+  api.GET.mockImplementation(async (path: string) => ({ data: path === "/auth/invites" ? [] : contact }));
 });
 
 describe("SettingsPage", () => {

@@ -28,6 +28,20 @@
 .settings-section .message {
   margin: 0;
 }
+.settings-invites {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.settings-invites li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
 .settings-error {
   border-width: var(--line-heavy);
 }

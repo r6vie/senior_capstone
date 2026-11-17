@@ -196,8 +196,12 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Recommend a book to someone in your Past meets, inside the app (uses `checkouts.past_meets`),
   or to anyone else with a share link.
 
-**A2 · CWRU verification and sign-in** · Daniel · `todo`
+**A2 · CWRU verification and sign-in** · Daniel · `done`
 - Decided (trove.md §9.2): students verify with a case.edu code; alumni with an invite from a verified member; sign-in stays email and password.
+- Built (#17 API, then the screens): sign-up, `/verify`, invite links from Settings, and `VERIFICATION_REQUIRED` in `.env`
+  (set it to `false` to sign up with any email while developing).
+- Known limits: real email sending is untested (no SMTP yet; codes print in the API terminal), and the cap of 5
+  open invites can be exceeded by simultaneous requests.
 
 ### Wave 4: demo readiness
 
