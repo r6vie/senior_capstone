@@ -92,6 +92,8 @@
 }
 .checkout-contact ul {
   display: grid;
+  /* A long email address wraps instead of running out of the panel on a phone. */
+  overflow-wrap: anywhere;
   gap: var(--s-1);
   margin: 0;
   padding: 0;

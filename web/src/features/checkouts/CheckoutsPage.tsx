@@ -50,7 +50,8 @@ function ContactDetails({ name, contact }: { name: string; contact: Contact }) {
         )}
         {contact.phone && (
           <li>
-            <a href={`tel:${contact.phone}`}>{contact.phone}</a>
+            {/* Shown as typed; dialled as digits only (and a leading +), which every phone understands. */}
+            <a href={`tel:${contact.phone.replace(/(?!^\+)[^\d]/g, "")}`}>{contact.phone}</a>
           </li>
         )}
       </ul>

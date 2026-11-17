@@ -137,7 +137,7 @@ describe("CheckoutsPage", () => {
     expect(screen.getByRole("link", { name: "sam@example.com" }).getAttribute("href")).toBe(
       "mailto:sam@example.com",
     );
-    expect(screen.getByRole("link", { name: "216-555-0142" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "216-555-0142" }).getAttribute("href")).toBe("tel:2165550142");
     expect(screen.getByText("How to reach Ana Diaz")).toBeTruthy();
     expect(screen.getByRole("link", { name: "LinkedIn profile" }).getAttribute("href")).toBe(
       "https://www.linkedin.com/in/ana-diaz",

@@ -34,6 +34,8 @@ async def contact_after_yes(database: AsyncDatabase, checkout: dict, other_id: s
     """The other member's contact details, but only on an accepted checkout (the reveal, C2).
 
     Read fresh each time, so a change in Settings shows up, and nothing is copied onto the checkout.
+    When C4 returns a copy after "Did you meet?", returned checkouts must keep showing these
+    (docs/trove.md §8: contact details stay available after a meeting).
     """
     if checkout["status"] != service.ACCEPTED:
         return None
@@ -156,8 +158,9 @@ async def accept(
         checkout_id=checkout["_id"],
         reader_id=checkout["reader_id"],
         author_id=checkout["author_id"],
-        reader_name=names.get(checkout["reader_id"], ""),
-        author_name=names.get(checkout["author_id"]) or checkout["author_name"],
+        # Fallbacks so a subject line never starts with an empty name.
+        reader_name=names.get(checkout["reader_id"]) or "A reader",
+        author_name=names.get(checkout["author_id"]) or checkout["author_name"] or "The author",
         book_title=checkout["book_title"],
     )
     return (await lending_views(database, [checkout]))[0]

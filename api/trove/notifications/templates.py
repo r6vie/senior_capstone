@@ -20,7 +20,7 @@ def checkout_requested(
 
 
 def checkout_accepted_for_reader(author_name: str, book_title: str, checkouts_url: str) -> Email:
-    # Link only: contact details stay in Trove, not copied into inboxes (C2, docs/trove.md §6).
+    # Link only: contact details stay in Trove, not copied into inboxes (C2, docs/trove.md §7).
     return Email(
         subject=f"{author_name} said yes",
         heading="Your checkout was accepted",

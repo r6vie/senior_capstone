@@ -185,7 +185,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 ### Decided
 
 - **A video call by default, or in person when both people are nearby.**
-- **Contact details are revealed when the author accepts.**
+- **Contact details are revealed when the author accepts.** Both people see each other's on the Checkouts page, and both get an email that only links to Trove: contact details are never copied into emails (C2).
 - **The meeting is arranged in the app, and kept light** (§9.7):
   - Each side shares a few times that work, and the app suggests overlaps.
   - A calendar invite with one click, a field for the video link, a reminder on the day, and "Did you meet?" afterwards.
@@ -348,9 +348,6 @@ Membership verification is still open:
   - 3 open checkouts per reader; pending and accepted checkouts both use a copy; unanswered checkouts close after 7 days.
   - After a decline or expiry, the same book can be checked out again after 30 days; readers can cancel an unanswered checkout; authors get an email for each new checkout (§6).
   - Your own book must be on the shelf before you check one out; authors see the reader's book when deciding.
-- **2026-11-16, the reveal (C2, Ellie):**
-  - On accept, both people see each other's contact details on the Checkouts page (the sign-in email, plus LinkedIn and phone if added), read fresh from Settings.
-  - Both get an email that only links to Trove; contact details are never copied into emails. It respects each member's email switch.
 - **2026-11-10, account basics (A1, Daniel):**
   - Contact details: the sign-in email is always shared on a yes; a LinkedIn profile link and a phone number are optional, and each is shared only if the member adds it. No separate contact email for now.
   - Checked lightly: LinkedIn must be an `https://linkedin.com/in/...` link, and a phone number has 7 to 15 digits. We never check that a number works.
@@ -365,3 +362,6 @@ Membership verification is still open:
   - The calendar invite (.ics) is a download for each person. Nobody is emailed when a time is confirmed; that waits on messages (C3).
   - Deleting an account removes the member's meetings, for both people, through `auth.on_account_deleted`.
   - One reminder email per person, sent once the meeting is within 24 hours. It respects the email switch. There is no scheduled job yet, so it goes out when someone opens a meeting page.
+- **2026-11-16, the reveal (C2, Ellie):**
+  - On accept, both people see each other's contact details on the Checkouts page (the sign-in email, plus LinkedIn and phone if added), read fresh from Settings.
+  - Both get an email that only links to Trove; contact details are never copied into emails. It respects each member's email switch.
