@@ -195,9 +195,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
   or to anyone else with a share link.
 
 **A2 · CWRU verification and sign-in** · Daniel · `todo`
-- Decide first:
-  - how students and alumni are verified (trove.md §9.2)
-  - whether to keep password sign-in or switch to one-time email codes
+- Decided (trove.md §9.2): students verify with a case.edu code; alumni with an invite from a verified member; sign-in stays email and password.
 
 ### Wave 4: demo readiness
 
