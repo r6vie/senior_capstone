@@ -6,6 +6,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
 from starlette.concurrency import run_in_threadpool
 
+from trove.auth.invites import claim_invite, release_invite
 from trove.auth.models import (
     ContactDetailsResponse,
     ContactDetailsUpdate,
@@ -32,8 +33,10 @@ from trove.auth.service import (
     set_email_notifications,
     token_digest,
 )
+from trove.auth.verification import code_digest, is_case_email, is_verified, new_verification
+from trove.core.config import get_settings
 from trove.core.database import get_database
-from trove.notifications.service import notify_welcome
+from trove.notifications.service import notify_verification_code, notify_welcome
 
 router = APIRouter(prefix="/auth", tags=["Accounts"])
 
@@ -45,8 +48,10 @@ async def signup(
     background_tasks: BackgroundTasks,
     database: AsyncDatabase = Depends(get_database),
 ) -> UserResponse:
-    """Create an account. Sign in afterwards with POST /auth/login."""
+    """Create an account. Students use their case.edu email and get a code to enter at POST /auth/verify;
+    alumni sign up with an invite from a member. Then sign in with POST /auth/login."""
     await limit_attempts(request, database, "signup", limit=5, seconds=3600)
+    now = datetime.now(UTC)
     password_hash = await run_in_threadpool(password_hasher.hash, data.password.get_secret_value())
     user = {
         "_id": str(uuid4()),
@@ -55,13 +60,51 @@ async def signup(
         "email": data.email,
         "password_hash": password_hash,
         "is_active": True,
-        "created_at": datetime.now(UTC),
+        "created_at": now,
     }
+    code = None
+    invite = data.invite if get_settings().verification_required else None
+    if invite:
+        inviter_id = await claim_invite(database, invite, user["_id"], now)
+        if inviter_id is None:
+            raise HTTPException(
+                status_code=422, detail="This invite link has already been used or has expired."
+            )
+        user |= {"verified": True, "invited_by": inviter_id}
+    elif get_settings().verification_required:
+        if not is_case_email(data.email):
+            raise HTTPException(
+                status_code=422,
+                detail="Sign up with your case.edu email, or use an invite link from a Trove member.",
+            )
+        code, record = new_verification(user["_id"], now)
+        user |= {"verified": False, "verification": record}
     try:
         await database.users.insert_one(user)
     except DuplicateKeyError:
-        raise HTTPException(status_code=409, detail="An account with this email already exists.") from None
-    background_tasks.add_task(notify_welcome, database, user["_id"], user["first_name"])
+        # Someone who never entered their code can try again (or the address's real owner can sign up).
+        if code is None:
+            if invite:
+                await release_invite(database, invite, user["_id"])
+            raise HTTPException(
+                status_code=409, detail="An account with this email already exists."
+            ) from None
+        existing = await database.users.find_one({"email": data.email, "verified": False}, {"_id": 1})
+        if existing is None:
+            raise HTTPException(
+                status_code=409, detail="An account with this email already exists."
+            ) from None
+        user["_id"] = existing["_id"]
+        user["verification"]["code_hash"] = code_digest(existing["_id"], code)
+        pending = {
+            key: user[key]
+            for key in ("first_name", "last_name", "password_hash", "verification", "created_at")
+        }
+        await database.users.update_one({"_id": existing["_id"], "verified": False}, {"$set": pending})
+    if code is not None:
+        background_tasks.add_task(notify_verification_code, database, user["_id"], code, user["email"])
+    else:
+        background_tasks.add_task(notify_welcome, database, user["_id"], user["first_name"])
     return public_user(user)
 
 
@@ -81,6 +124,8 @@ async def login(
             detail="Incorrect email or password.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if not is_verified(user):
+        raise HTTPException(status_code=403, detail="Please confirm your case.edu email first.")
     token = await create_session(database, user["_id"])
     return LoginResponse(access_token=token, expires_in=SESSION_SECONDS)
 

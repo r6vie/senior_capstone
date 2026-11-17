@@ -15,7 +15,8 @@ export interface paths {
         put?: never;
         /**
          * Signup
-         * @description Create an account. Sign in afterwards with POST /auth/login.
+         * @description Create an account. Students use their case.edu email and get a code to enter at POST /auth/verify;
+         *     alumni sign up with an invite from a member. Then sign in with POST /auth/login.
          */
         post: operations["signup_auth_signup_post"];
         delete?: never;
@@ -124,6 +125,107 @@ export interface paths {
          * @description Revoke this session. Other signed-in sessions stay active.
          */
         post: operations["logout_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify
+         * @description Confirm a case.edu email with the 6-digit code we sent. Signs the member in.
+         */
+        post: operations["verify_auth_verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/verify/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resend
+         * @description Send a new code. Answers the same whether or not the email has an account, and at most one a minute.
+         */
+        post: operations["resend_auth_verify_resend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Invites
+         * @description Your open invites. The link itself is only shown when you make it.
+         */
+        get: operations["my_invites_auth_invites_get"];
+        put?: never;
+        /**
+         * Create Invite
+         * @description Make a single-use link for an alum. It lasts 14 days; you can have 5 open at a time.
+         */
+        post: operations["create_invite_auth_invites_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/invites/{invite_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cancel Invite */
+        delete: operations["cancel_invite_auth_invites__invite_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/invites/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Invite
+         * @description For the sign-up page: who invited you, if the link still works. Doesn't use it up.
+         */
+        post: operations["check_invite_auth_invites_check_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -719,6 +821,48 @@ export interface components {
             /** Blurb */
             blurb: string | null;
         };
+        /** InviteCheckRequest */
+        InviteCheckRequest: {
+            /** Invite */
+            invite: string;
+        };
+        /** InviteCheckResponse */
+        InviteCheckResponse: {
+            /** Inviter Name */
+            inviter_name: string;
+        };
+        /** InviteCreated */
+        InviteCreated: {
+            /** Id */
+            id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Link */
+            link: string;
+        };
+        /** InviteView */
+        InviteView: {
+            /** Id */
+            id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
         /**
          * LendingCheckout
          * @description A checkout of your book, as its author sees it.
@@ -933,6 +1077,14 @@ export interface components {
             /** Expires At */
             expires_at: string | null;
         };
+        /** ResendRequest */
+        ResendRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+        };
         /** ShapeRequest */
         ShapeRequest: {
             /**
@@ -964,6 +1116,8 @@ export interface components {
             first_name: string;
             /** Last Name */
             last_name: string;
+            /** Invite */
+            invite?: string | null;
         };
         /** StartRequest */
         StartRequest: {
@@ -1010,6 +1164,8 @@ export interface components {
             email: string;
             /** Email Notifications */
             email_notifications: boolean;
+            /** Verified */
+            verified: boolean;
             /**
              * Created At
              * Format: date-time
@@ -1028,6 +1184,16 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VerifyRequest */
+        VerifyRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Code */
+            code: string;
         };
     };
     responses: never;
@@ -1289,6 +1455,172 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    verify_auth_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resend_auth_verify_resend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResendRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_invites_auth_invites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteView"][];
+                };
+            };
+        };
+    };
+    create_invite_auth_invites_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteCreated"];
+                };
+            };
+        };
+    };
+    cancel_invite_auth_invites__invite_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_invite_auth_invites_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteCheckResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
