@@ -3,6 +3,7 @@ import { SettingsPage } from "../features/account/SettingsPage";
 import { AuthPage } from "../features/auth/AuthPage";
 import { AuthProvider } from "../features/auth/AuthProvider";
 import { RequireAuth } from "../features/auth/RequireAuth";
+import { VerifyPage } from "../features/auth/VerifyPage";
 import { MyBookPage } from "../features/book/MyBookPage";
 import { SparkPreviewPage } from "../features/book/SparkPreviewPage";
 import { CheckOutPage } from "../features/checkouts/CheckOutPage";
@@ -23,6 +24,7 @@ export function App() {
         <Routes>
           <Route path="/sign-in" element={<AuthPage mode="sign-in" />} />
           <Route path="/sign-up" element={<AuthPage mode="sign-up" />} />
+          <Route path="/verify" element={<VerifyPage />} />
           <Route
             element={
               <RequireAuth>
