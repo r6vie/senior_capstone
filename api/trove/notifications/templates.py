@@ -3,13 +3,15 @@
 from trove.notifications.email import Email
 
 
-def checkout_requested(reader_name: str, book_title: str, message: str, checkouts_url: str) -> Email:
+def checkout_requested(
+    reader_name: str, book_title: str, message: str, checkouts_url: str, answer_days: int
+) -> Email:
     return Email(
         subject=f"{reader_name} would like to check out your book",
         heading="Someone would like to check out your book",
         paragraphs=[
             f'{reader_name} would like to check out "{book_title}". Here is their note:',
-            "If you don't answer within 7 days, the checkout closes quietly.",
+            f"If you don't answer within {answer_days} days, the checkout closes quietly.",
         ],
         quote=message,
         button_text="Accept or decline",

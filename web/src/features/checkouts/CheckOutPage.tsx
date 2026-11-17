@@ -1,0 +1,123 @@
+import { type FormEvent, useEffect, useId, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { api } from "../../api/client";
+import { errorMessage } from "../../api/errors";
+import type { components } from "../../api/schema";
+import { Button } from "../../ui/Button";
+import "./Checkouts.css";
+
+// Checking out a book (plan item C1, docs/trove.md §6): one note to the author, one red button.
+// The book page (D1) links here with the book's id.
+
+type Book = components["schemas"]["PublicBookResponse"];
+const MAX_NOTE = 1000;
+
+export function CheckOutPage() {
+  const { bookId = "" } = useParams();
+  const navigate = useNavigate();
+  const noteId = useId();
+  const hintId = useId();
+  const [book, setBook] = useState<Book | null>(null);
+  const [missing, setMissing] = useState(false);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [needsOwnBook, setNeedsOwnBook] = useState(false);
+
+  useEffect(() => {
+    let stale = false;
+    api.GET("/books/{book_id}", { params: { path: { book_id: bookId } } }).then(({ data }) => {
+      if (stale) return;
+      if (data) setBook(data);
+      else setMissing(true);
+    });
+    return () => {
+      stale = true;
+    };
+  }, [bookId]);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!note.trim()) return setError("Write a short note to the author first.");
+    setBusy(true);
+    setError(null);
+    const {
+      data,
+      error: failure,
+      response,
+    } = await api.POST("/checkouts", {
+      body: { book_id: bookId, message: note.trim() },
+    });
+    setBusy(false);
+    if (!data) {
+      setNeedsOwnBook(response.status === 403);
+      return setError(errorMessage(failure));
+    }
+    navigate("/checkouts", { state: { checkedOut: data.book_title, answerBy: data.expires_at } });
+  }
+
+  if (missing) {
+    return (
+      <main className="shell-page checkouts-page">
+        <h1 className="page-title">Check out a book</h1>
+        <div className="empty">
+          <h3>This book isn't available right now.</h3>
+          <p>
+            <Link to="/">Back to the shelf</Link>
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!book) {
+    return (
+      <main className="shell-page checkouts-page" aria-busy="true">
+        <div className="skeleton checkout-skeleton" />
+      </main>
+    );
+  }
+
+  return (
+    <main className="shell-page checkouts-page">
+      <span className="caption">Check out</span>
+      <h1 className="page-title checkout-book-title">{book.title}</h1>
+      <p className="checkout-byline">by {book.author_name}</p>
+      {book.blurb && <p className="voice checkout-blurb">{book.blurb}</p>}
+
+      <form onSubmit={submit} className="stack checkout-form">
+        <div className="field" data-invalid={error && !needsOwnBook ? "true" : undefined}>
+          <label htmlFor={noteId}>Your note to {book.author_name}</label>
+          <textarea
+            id={noteId}
+            value={note}
+            maxLength={MAX_NOTE}
+            aria-describedby={hintId}
+            onChange={(event) => {
+              setNote(event.target.value);
+              setError(null);
+              setNeedsOwnBook(false);
+            }}
+          />
+          <span id={hintId} className="hint" role={error && !needsOwnBook ? "alert" : undefined}>
+            {error && !needsOwnBook ? error : "Say what you'd like to hear about. Up to 1,000 characters."}
+          </span>
+        </div>
+        {needsOwnBook && (
+          <p role="alert" className="message message-error">
+            <span>!</span>
+            <span>
+              {error} <Link to="/my-book">Go to my book</Link>
+            </span>
+          </p>
+        )}
+        <div className="checkout-submit">
+          <Button type="submit" disabled={busy} aria-busy={busy}>
+            Ask to check out
+          </Button>
+          <span className="muted">A thirty-minute video call, if the author says yes.</span>
+        </div>
+      </form>
+    </main>
+  );
+}

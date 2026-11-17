@@ -46,9 +46,10 @@ def test_new_checkout_email_quotes_the_readers_note():
     from trove.notifications.templates import checkout_requested
 
     subject, text, html = checkout_requested(
-        "Sam Lee", "My book", "<b>Hello</b>", "http://app/checkouts"
+        "Sam Lee", "My book", "<b>Hello</b>", "http://app/checkouts", 7
     ).render("http://unsubscribe")
     assert subject == "Sam Lee would like to check out your book"
     assert '"<b>Hello</b>"' in text
     assert "<b>Hello</b>" not in html
     assert "http://app/checkouts" in text
+    assert "within 7 days" in text
