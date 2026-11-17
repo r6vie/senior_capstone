@@ -7,9 +7,10 @@ interface Props {
   type?: "text" | "email" | "password";
   hint?: string;
   autoComplete?: string;
+  inputMode?: "numeric";
 }
 
-export function TextField({ label, value, onChange, type = "text", hint, autoComplete }: Props) {
+export function TextField({ label, value, onChange, type = "text", hint, autoComplete, inputMode }: Props) {
   const id = useId();
   return (
     <label htmlFor={id} className="field">
@@ -19,6 +20,7 @@ export function TextField({ label, value, onChange, type = "text", hint, autoCom
         type={type}
         value={value}
         autoComplete={autoComplete}
+        inputMode={inputMode}
         onChange={(event) => onChange(event.target.value)}
       />
       {hint && <small className="muted">{hint}</small>}

@@ -4,6 +4,7 @@ import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
 import { TextField } from "../../ui/TextField";
 import { useAuth } from "../auth/AuthProvider";
+import { InviteSection } from "./InviteSection";
 import "./SettingsPage.css";
 
 // Account settings (plan item A1): what to share when an author says yes, the one email switch, and
@@ -189,6 +190,7 @@ export function SettingsPage() {
       <h1 className="page-title">Settings</h1>
       <ContactSection email={user.email} />
       <EmailSection initial={user.email_notifications} onChanged={refreshUser} />
+      <InviteSection />
       <DeleteSection email={user.email} />
     </main>
   );
