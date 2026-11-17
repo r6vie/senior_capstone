@@ -1,6 +1,8 @@
+import { type ReactNode, useRef } from "react";
 import { Button } from "../../ui/Button";
 import { type SampleBook, sampleBooks, sampleFeatured, sampleShelves } from "./sampleBooks";
 import "./ShelfPage.css";
+import { useBookStepping } from "./useBookStepping";
 
 // A static preview of the shelf (reference screen manga B2, docs/design/system.md). Books, the nav,
 // "See all" and "Ask to check out" are drawn but not wired yet: nothing here has a handler or a route.
@@ -25,6 +27,16 @@ function Book({ book, size }: { book: SampleBook; size?: "lg" }) {
         <span className="book-author">{book.authorName}</span>
       </span>
     </button>
+  );
+}
+
+function ShelfBooks({ children }: { children: ReactNode }) {
+  const row = useRef<HTMLDivElement>(null);
+  useBookStepping(row);
+  return (
+    <div className="shelf-books" ref={row}>
+      {children}
+    </div>
   );
 }
 
@@ -65,11 +77,11 @@ export function ShelfPage() {
               {/* biome-ignore lint/a11y/useValidAnchor: inert in this static preview */}
               <a>See all</a>
             </div>
-            <div className="shelf-books">
+            <ShelfBooks>
               {shelf.bookIds.map((id) => (
                 <Book key={id} book={bookById(id)} />
               ))}
-            </div>
+            </ShelfBooks>
             <div className="ledge" />
           </section>
         ))}
