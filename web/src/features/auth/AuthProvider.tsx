@@ -2,6 +2,7 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useM
 import { api, session } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
+import { clearAllDrafts } from "../interview/AnswerPanel";
 
 type User = components["schemas"]["UserResponse"];
 
@@ -86,6 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     await api.POST("/auth/logout").catch(() => undefined);
     session.clear();
+    // Unsent interview answers and edits stay in this browser's storage; on a shared computer the next
+    // person shouldn't find them there.
+    clearAllDrafts();
     setUser(null);
   }, []);
 

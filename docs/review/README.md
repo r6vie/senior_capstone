@@ -9,7 +9,7 @@ Every call we made for him is in [decisions.md](decisions.md).
 python3 scripts/dev.py --scripted-ai
 ```
 
-That runs the app with a free stand-in for the AI, so walking it costs nothing. Sign-up now needs a case.edu code or an invite (A2), so for a local walk set `VERIFICATION_REQUIRED=false` in `.env`, or sign up with a case.edu address and take the code from the API terminal. Drop `--scripted-ai` to use real Claude, which costs money. My book is in the top bar (Daniel's app shell); the interview starts from there.
+That runs the app with a free stand-in for the AI, so walking it costs nothing. Sign-up needs a case.edu code or an invite (A2). For a local walk, sign up with a case.edu address and take the code from the API terminal, or set `VERIFICATION_REQUIRED=false` in `.env` to skip it. Drop `--scripted-ai` to use real Claude, which costs money. My book is in the top bar (Daniel's app shell); the interview starts from there.
 
 - Give a member the question after a reading: `scripts/ask_after_reading.py`
 - See real API spending: `python3 scripts/ai_spend.py`
@@ -66,7 +66,7 @@ Claims traced to what the member said went from 93.4% to 96.8%, with none unsupp
 
 ## Needs teammates
 
-- **Daniel:** navigation and account deletion landed (U1, A1). Still open: sign-out (call `clearAllDrafts`), the per-tab session, and the sign-in page shown when the API is down. `auth/service.py` gained a small dev helper, `user_id_by_email`.
+- **Daniel:** navigation, account deletion and verification landed (U1, A1, A2). Sign-out now calls `clearAllDrafts` (added in this PR, in `AuthProvider.tsx`). Still open: the per-tab session, and the sign-in page shown when the API is down. `auth/service.py` gained a small dev helper, `user_id_by_email`.
 - **Alvisa:** the shelf still shows sample books, so a member's own book doesn't appear on it. D1 mounts `SparkButton` on each chapter of someone else's book. `.book-author` now clamps at 4 lines, so check the shelf.
 - **Ellie:** C4 calls `interview.service.ask_after_reading` once "Did you meet?" confirms the meeting. Use the module form, `from trove.interview import service`, to avoid an import cycle.
 
