@@ -1,0 +1,227 @@
+{
+ "persona": "Priya (alum, staff engineer, résumé-speak)",
+ "slug": "priya",
+ "source": "2026-11-06_194759/priya.md (one answer trimmed: the simulated member had mentioned a profile)",
+ "turns": [
+  {
+   "question": "Your résumé says you led an incident response program. Think of the first real outage you had to run, where the program didn't exist yet. What happened in the first hour?",
+   "answer": "Honestly the first hour was mostly chaos. We had a bunch of smart people all jumping into the same logs at once, and nobody knew who was talking to whom. I was new to the team, only about six weeks in, and I ended up as incident commander mostly because I was the one willing to say \"stop, everyone, let's pick roles.\"\n\nThe thing that actually helped was giving one person the job of only writing down what was happening, minute by minute, with timestamps. No fixing, just the timeline. That turned out to be the key, because once we had it laid out we could see the failover had fired twice, which is how we found the cause. It was a Black Friday, card payments were down for 47 minutes, so it was not a fun afternoon.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Who was the person writing the timeline, and how did you pick them for that job in the middle of the chaos?",
+   "answer": "Honestly I don't remember exactly how it came together, it was all happening fast. I think I just looked around for the quietest person on the call who wasn't already deep in a log, and asked them directly. Jordan was the one who ended up doing it, a backend engineer who'd been on the team a lot longer than me. He was a little surprised to be asked, but he was good at it, and he didn't try to fix things, which was the whole point.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Your résumé also lists a mentoring role with a women in computing group. Think of one student who came to you with a real problem, and what was the first thing she asked you?",
+   "answer": "I'm not sure what you're referring to with a women in computing group. I don't think I have a formal mentoring role there. What I do get is people from work and some alumni reaching out, and the most common thing they ask is some version of \"I wrote a design doc and it got shot down, what did I do wrong?\" I don't have a single student I can point to, though.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "You said people bring you design docs that got shot down. What is the one thing you find wrong with them most often?",
+   "answer": "The most common problem is that the decision isn't in the document until page three. People write a long background section, walk through every option, and then the reader still doesn't know what they're being asked to approve. I tell them to put the decision they want in the first sentence.\n\nThe second thing is that they only argue for their own option. If they don't list the option they're rejecting and give its best argument, reviewers assume they didn't consider it, and they spend the meeting poking holes in the one path on the page.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Think of the week you decided to leave your job before the fintech one. Who was the first person you told?",
+   "answer": "I don't think I've described a job before the fintech one, so I'm not sure which move you mean. I've been at my current company since I left school, and before that I was at a couple of internships, not a full-time role I walked away from.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Once that Black Friday outage was over, what did you change so the next incident didn't start with everyone in the same logs?",
+   "answer": "Honestly the biggest change was the first five minutes. Now when something goes sideways, the first job is deciding roles, not fixing. Who's incident commander, who's on the timeline, who's talking to the customer-facing side. Nobody touches a log until those are named. It sounds almost too basic, but after that Friday I'd rather lose five minutes up front than have six people chasing the same symptom.\n\nWe also changed how we write postmortems. I got pretty strict about being blameless but not nameless. You name the decision and the reason it looked right at the time, not the person who made it. That made people much more willing to write down the timeline honestly, which is the part that actually found the double failover.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Outside of your payments work, what do you spend real time on that the people you work with would be surprised by?",
+   "answer": "I don't really have a hobby that would surprise anyone at work. Mostly I cook a lot on weekends and I'm trying to get better at bread, which my coworkers find a little funny since I'm usually the one telling them to slow down. Nothing dramatic.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "You said blameless but not nameless. Take one postmortem you wrote after that Friday: what did the sentence naming the decision actually say?",
+   "answer": "I don't remember the exact wording, and I didn't write that one alone, so I'd be guessing if I quoted it. The gist was something like: the failover was triggered while the primary still had in-flight writes, and the decision to let the automation proceed without a manual check looked reasonable given the alerting at the time. That's the shape of it: what was decided, and why it made sense then, with no name attached.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "What do new incident commanders get wrong in the first five minutes that you had to unlearn?",
+   "answer": "I think the big one is wanting to be useful right away. You see the alert, you open the dashboards, and you start fixing because that feels like doing your job. I did that too, even as the one who was supposed to be coordinating. It took me a while to accept that the first few minutes are for deciding who does what, not for touching anything. Once I started saying \"you're on the timeline, you're on customer comms, nobody touches a log until we have that,\" the room got quieter and the work got faster.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When you hand someone the timeline job during an incident, what do you tell them to write for each line?",
+   "answer": "Just the facts, with a timestamp. What the system did, what someone observed, and what someone said they were doing. I tell them not to write interpretations or guesses, because the moment someone writes \"probably the replica\" the timeline starts arguing with itself. If a line is a hypothesis, it goes in a separate list.\n\nI also tell them to write down who did what, even if it's obvious at the time. That's what let us see the failover had fired twice. The second trigger was sitting right there in the logs, but nobody had written the sequence down in one place to notice it.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Since that Friday, who has run the incidents you weren't on, and what did they do that you wouldn't have?",
+   "answer": "I don't really know the details of incidents I wasn't on, since those teams run their own rotations and I mostly hear about them after the fact. A few people I've trained have commanded their own, and the ones who did well were the ones who held off on touching anything for the first few minutes. Beyond that I'd be guessing, so I'd check with the incident channel or the postmortems rather than take my word for it.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Pick one design doc a colleague brought you that got rejected. What did the reviewers say in the meeting that the author didn't see coming?",
+   "answer": "I can't point to one specific doc I'd want to describe in detail. Most of the ones that come to me have the same pattern, so the reviewers' objections tend to repeat. The one that comes up most is that someone asks \"what happens if we don't do this?\" and the author has no answer, because the rejected option never got a fair hearing on the page. Once that question lands, the meeting turns into a debate about the one path they wrote up, and nobody is weighing the alternative. I'd rather not invent a particular meeting, though.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "You're usually the one telling people to slow down, and bread is what you're working on to get better. Which step in a loaf can't be rushed, and what does the dough do when you try?",
+   "answer": "Bulk fermentation, mostly. You can't really speed it up without paying for it later. If you pull the dough too early because you're impatient, it's tight and sluggish, it doesn't stretch, and the loaf comes out dense with a flat crumb. I've done that more than once. The dough just sits there looking like it's not doing anything, and the temptation is to add more yeast or warm the kitchen, which tends to give you a fast, sour, weak dough instead of a good one.\n\nIt's a bit like the first five minutes of an incident, honestly. Everybody wants to start touching things, and the fix is to wait for the structure to form first.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Jordan had been on the team longer than you. The first time you asked a senior engineer to stop touching logs, what exactly did you say to them?",
+   "answer": "I don't have a specific memory of saying that to a senior engineer, and I don't want to make up a scene. What I remember is that during the outage I asked whoever was on the call to take the timeline job, and Jordan was the one who said yes. Beyond that I'd be guessing at the wording, so I won't put words in my own mouth.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Think of the last design doc you sent back to its author with one question. What was the question?",
+   "answer": "I don't really send design docs back with one question as a habit, so I can't point to a specific one. When I review them, the question I usually end up asking is some version of \"what happens if we don't do this?\" If the doc doesn't have an answer to that, it's almost always missing the rejected option and its best argument, and that's the thing I'd send back.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When you're deciding whether the dough is ready, what do you look for instead of the clock?",
+   "answer": "Mostly the feel and how it looks, not the timer. I poke it with a floured finger and if the dent springs back slowly and only partly, it's usually ready. If it snaps back right away, it needs more time. I also look for bubbles along the edges and a dough that's gotten a bit domed and jiggly instead of stiff. The recipe says a number of hours, but the kitchen temperature changes everything, so the clock is more of a rough guess.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Is this you?",
+   "answer": "Mostly, yes. The first five minutes are about naming roles before anyone touches a log, and the timeline person writing timestamped facts only is what surfaced the double failover on that Black Friday. The bread part is accurate too: I go by the poke test and how the dough looks, not the clock.\n\nOne correction: I'd leave out the \"double failover\" as something I found myself. The timeline showed it, and the team found the cause together.",
+   "phase": "shape",
+   "playback": "Before anyone touches a log, name the roles, and keep one person writing timestamped facts only; that's how we found the double failover on Black Friday. And with bread, wait for the dough to form and test it with a floured poke instead of the clock."
+  }
+ ],
+ "book": {
+  "titles": [
+   {
+    "title": "Nobody Touches the Logs Yet",
+    "why": "You admitted you wanted to be useful right away, and learned to hold off until the roles were named."
+   },
+   {
+    "title": "Forty-Seven Minutes of Dead Card Payments",
+    "why": "You were six weeks on the team when the payments went down, and you were the one who said stop, everyone."
+   },
+   {
+    "title": "Waiting for the Structure to Form",
+    "why": "You said the first five minutes of an incident and a loaf of bread need the same patience before anything gets touched."
+   }
+  ],
+  "pool": [
+   {
+    "title": "Forty-Seven Minutes of Dead Card Payments",
+    "summary": "Card payments were down for 47 minutes on Black Friday, with smart people all in the same logs and nobody sure who was talking to whom. Stepping in to say let's pick roles, then keeping one clean timeline, showed the failover had fired twice.",
+    "quotes": [
+     "We had a bunch of smart people all jumping into the same logs at once, and nobody knew who was talking to whom.",
+     "I ended up as incident commander mostly because I was the one willing to say \"stop, everyone, let's pick roles.\""
+    ]
+   },
+   {
+    "title": "Deciding Roles Before Touching Anything",
+    "summary": "When something goes sideways the first job is deciding roles, not fixing: who commands, who keeps the timeline, who talks to the customer-facing side. Nobody touches a log until those are named.",
+    "quotes": [
+     "Now when something goes sideways, the first job is deciding roles, not fixing.",
+     "Nobody touches a log until those are named."
+    ]
+   },
+   {
+    "title": "Writing the Timeline Without Guesses",
+    "summary": "Each line is what the system did, what someone observed, or what someone said they were doing, each with a timestamp and who did what. Hypotheses go on a separate list, because one guess in the timeline starts it arguing with itself.",
+    "quotes": [
+     "I tell them not to write interpretations or guesses, because the moment someone writes \"probably the replica\" the timeline starts arguing with itself.",
+     "I also tell them to write down who did what, even if it's obvious at the time."
+    ]
+   },
+   {
+    "title": "Blameless, But Not Nameless",
+    "summary": "A postmortem names the decision and the reason it looked right at the time, never the person who made it. Being strict about that made people willing to write the timeline down honestly.",
+    "quotes": [
+     "I got pretty strict about being blameless but not nameless.",
+     "You name the decision and the reason it looked right at the time, not the person who made it."
+    ]
+   },
+   {
+    "title": "Put the Decision in the First Sentence",
+    "summary": "Design docs get shot down when the decision isn't stated until page three, or when only one option is argued for. Put the decision first and give the rejected option its best argument.",
+    "quotes": [
+     "The most common problem is that the decision isn't in the document until page three.",
+     "If they don't list the option they're rejecting and give its best argument, reviewers assume they didn't consider it, and they spend the meeting poking holes in the one path on the page."
+    ]
+   },
+   {
+    "title": "Poking Dough Instead of Watching the Clock",
+    "summary": "Pulled too early, bulk fermentation leaves dough tight and sluggish, and the loaf comes out dense with a flat crumb. The clock is a rough guess; a floured poke tells you when the dough is ready.",
+    "quotes": [
+     "I poke it with a floured finger and if the dent springs back slowly and only partly, it's usually ready.",
+     "The recipe says a number of hours, but the kitchen temperature changes everything, so the clock is more of a rough guess."
+    ]
+   }
+  ],
+  "title": "Nobody Touches the Logs Yet",
+  "chapters": [
+   {
+    "title": "Roles First, Then Anyone Touches a Log",
+    "summary": "When something goes sideways, the first job is deciding roles, not fixing: who commands, who keeps the timeline, who talks to the customer-facing side. Nobody touches a log until those are named.",
+    "quotes": [
+     "Now when something goes sideways, the first job is deciding roles, not fixing.",
+     "Nobody touches a log until those are named."
+    ]
+   },
+   {
+    "title": "One Person Writing Only What Happened",
+    "summary": "The timeline records only timestamped facts: what the system did, what someone observed, what someone said they were doing, and who did what. Hypotheses go on a separate list, because one guess in the timeline starts it arguing with itself.",
+    "quotes": [
+     "I tell them not to write interpretations or guesses, because the moment someone writes \"probably the replica\" the timeline starts arguing with itself.",
+     "I also tell them to write down who did what, even if it's obvious at the time."
+    ]
+   },
+   {
+    "title": "Forty-Seven Minutes Without Card Payments",
+    "summary": "Card payments were down for 47 minutes on Black Friday, with smart people all in the same logs and nobody sure who was talking to whom. Picking roles, then keeping one clean timeline, showed the failover had fired twice.",
+    "quotes": [
+     "We had a bunch of smart people all jumping into the same logs at once, and nobody knew who was talking to whom.",
+     "I ended up as incident commander mostly because I was the one willing to say \"stop, everyone, let's pick roles.\""
+    ]
+   },
+   {
+    "title": "Naming the Decision, Not the Person",
+    "summary": "A postmortem names the decision and the reason it looked right at the time, never the person who made it. Being strict about that made people willing to write the timeline down honestly.",
+    "quotes": [
+     "I got pretty strict about being blameless but not nameless.",
+     "You name the decision and the reason it looked right at the time, not the person who made it."
+    ]
+   },
+   {
+    "title": "Waiting for Dough to Build Structure",
+    "summary": "Pulled too early, bulk fermentation leaves dough tight and sluggish, and the loaf comes out dense with a flat crumb. Everybody wants to start touching things, so the fix is to wait for the structure to form first.",
+    "quotes": [
+     "I poke it with a floured finger and if the dent springs back slowly and only partly, it's usually ready.",
+     "The recipe says a number of hours, but the kitchen temperature changes everything, so the clock is more of a rough guess."
+    ]
+   }
+  ],
+  "blurbs": {},
+  "rewrite": {
+   "title": "Impatient Dough Makes a Dense Loaf",
+   "summary": "Pull bulk fermentation early and the dough turns tight and sluggish, baking into a dense loaf with a flat crumb. Extra yeast or a warm kitchen only makes it fast, sour and weak. A floured poke that springs back slowly and only partly means it's ready, not the clock.",
+   "quotes": [
+    "I poke it with a floured finger and if the dent springs back slowly and only partly, it's usually ready.",
+    "The recipe says a number of hours, but the kitchen temperature changes everything, so the clock is more of a rough guess."
+   ]
+  }
+ }
+}

@@ -47,55 +47,106 @@ const ERRORS: Record<string, string> = {
   network: "Speech recognition needs a connection. You can type your answer instead.",
 };
 
+// How many times in a row recognition may end by itself, with nothing new heard, before we say so.
+const MAX_QUIET_RESTARTS = 3;
+
+function joined(left: string, right: string): string {
+  return [left.trim(), right.trim()].filter(Boolean).join(" ");
+}
+
 export function useSpeech() {
   const recognition = useRef<Recognition | null>(null);
   const finalText = useRef("");
+  const interimText = useRef("");
+  // True from Speak until Stop, Cancel or an error: any other end is the browser giving up by itself.
+  const wanted = useRef(false);
+  const quietRestarts = useRef(0);
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
-  // Bumps on every result, so the level bars move only while the member is speaking.
-  const [heard, setHeard] = useState(0);
+  const [dropped, setDropped] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const start = useCallback(() => {
+  const listen = useCallback(() => {
     const Constructor = recognitionConstructor();
     if (!Constructor) return;
-    recognition.current?.abort();
     const next = new Constructor();
     next.continuous = true;
     next.interimResults = true;
     next.lang = navigator.language || "en-US";
-    finalText.current = "";
-    setTranscript("");
-    setError(null);
     next.onresult = (event) => {
       let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (!result) continue;
-        if (result.isFinal) finalText.current += result[0].transcript;
+        // Some browsers run final results together, so the space is ours to add.
+        if (result.isFinal) finalText.current = joined(finalText.current, result[0].transcript);
         else interim += result[0].transcript;
       }
-      setTranscript((finalText.current + interim).trim());
-      setHeard((count) => count + 1);
+      interimText.current = interim;
+      quietRestarts.current = 0;
+      setTranscript(joined(finalText.current, interim));
     };
     next.onerror = (event) => {
       if (event.error === "aborted" || event.error === "no-speech") return;
+      wanted.current = false;
       setError(ERRORS[event.error] ?? "Speech recognition stopped. You can type your answer instead.");
     };
-    next.onend = () => setListening(false);
+    next.onend = () => {
+      // Words still in flight when recognition ended are the last thing the member said. Keep them.
+      finalText.current = joined(finalText.current, interimText.current);
+      interimText.current = "";
+      setTranscript(finalText.current);
+      if (recognition.current !== next) return;
+      if (wanted.current) {
+        quietRestarts.current += 1;
+        if (quietRestarts.current <= MAX_QUIET_RESTARTS) {
+          try {
+            listen();
+            return;
+          } catch {
+            // Falls through to telling the member the microphone stopped.
+          }
+        }
+        wanted.current = false;
+        setDropped(true);
+      }
+      setListening(false);
+    };
     recognition.current = next;
     next.start();
-    setListening(true);
   }, []);
 
-  const stop = useCallback(() => recognition.current?.stop(), []);
+  const start = useCallback(() => {
+    recognition.current?.abort();
+    finalText.current = "";
+    interimText.current = "";
+    quietRestarts.current = 0;
+    wanted.current = true;
+    setTranscript("");
+    setDropped(false);
+    setError(null);
+    listen();
+    setListening(true);
+  }, [listen]);
+
+  const stop = useCallback(() => {
+    wanted.current = false;
+    recognition.current?.stop();
+  }, []);
 
   const cancel = useCallback(() => {
+    wanted.current = false;
     recognition.current?.abort();
     setListening(false);
   }, []);
 
-  useEffect(() => () => recognition.current?.abort(), []);
+  useEffect(
+    () => () => {
+      wanted.current = false;
+      recognition.current?.abort();
+    },
+    [],
+  );
 
-  return { listening, transcript, heard, error, start, stop, cancel };
+  return { listening, transcript, dropped, error, start, stop, cancel };
 }

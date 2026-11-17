@@ -5,11 +5,14 @@ import { AuthProvider } from "../features/auth/AuthProvider";
 import { RequireAuth } from "../features/auth/RequireAuth";
 import { VerifyPage } from "../features/auth/VerifyPage";
 import { MyBookPage } from "../features/book/MyBookPage";
+import { SparkPreviewPage } from "../features/book/SparkPreviewPage";
 import { CheckOutPage } from "../features/checkouts/CheckOutPage";
 import { CheckoutsPage } from "../features/checkouts/CheckoutsPage";
 import { PastMeetsPage } from "../features/checkouts/PastMeetsPage";
 import { ShelfPage } from "../features/discovery/ShelfPage";
 import { InterviewPage } from "../features/interview/InterviewPage";
+import { ReadingQuestionPage } from "../features/interview/ReadingQuestionPage";
+import { RemovalPage } from "../features/interview/RemovalPage";
 import { MeetingPage } from "../features/meetings/MeetingPage";
 import { AppShell } from "../ui/AppShell";
 
@@ -45,6 +48,24 @@ export function App() {
               </RequireAuth>
             }
           />
+          <Route
+            path="/interview/reading/:questionId"
+            element={
+              <RequireAuth>
+                <ReadingQuestionPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/my-book/remove/:chapterId"
+            element={
+              <RequireAuth>
+                <RemovalPage />
+              </RequireAuth>
+            }
+          />
+          {/* Dev only: SparkButton before the reader's book page mounts it. */}
+          {import.meta.env.DEV && <Route path="/dev/spark" element={<SparkPreviewPage />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

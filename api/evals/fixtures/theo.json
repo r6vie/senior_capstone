@@ -1,0 +1,238 @@
+{
+ "persona": "Theo (first-year, says they have nothing interesting)",
+ "slug": "theo",
+ "source": "2026-11-07_211602/theo.md",
+ "turns": [
+  {
+   "question": "What are you studying or working on these days, and what part of it takes up most of your week?",
+   "answer": "Honestly not a lot yet, I'm just a freshman. I'm probably going into biology, and most of my week is classes and figuring out the campus. I fix wobbly bed frames and printers on my floor sometimes, which takes more time than I'd expect.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "What made biology the one you kept coming back to, and was there a point where you almost went another way?",
+   "answer": "Honestly I'm not sure it's that deep, I just liked the bio class in high school and it seemed like a safe bet. I don't think I really considered anything else seriously.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "What was the last printer you got working on your floor, and how did it end up on your desk?",
+   "answer": "Honestly it was a pretty basic one. Someone on my floor had a printer that kept jamming and nobody wanted to deal with it, so they asked around. I opened it up and found a piece of paper stuck behind the roller, so it was pretty quick. It's not really a big deal.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Before you got to campus, what's something you built or fixed that nobody had asked you to touch?",
+   "answer": "Honestly not much, I don't think I've really built anything. I guess in high school I did a creek project for AP Environmental Science, but that was just a class thing.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "How did people on your floor find out you'd fix things, before anyone asked you to?",
+   "answer": "Honestly I don't think anyone really found out on purpose. I fixed a bed frame for a guy down the hall in the first couple weeks, and I guess he mentioned it to people.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "When you first looked at the guy's bed frame down the hall, what was wrong with it, and what did you check before you picked up a tool?",
+   "answer": "Honestly it was mostly the bolts on one side. The frame would rock when he moved, so I checked whether the slats were sitting right first, then tightened the bolts by hand before grabbing anything. It was pretty simple, nothing special.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "When someone on your floor brings you something broken, what do they usually get wrong before they ask you?",
+   "answer": "Honestly I don't think they get much wrong. Most of the time it's just something loose or jammed, and they usually already know what it is.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "When the bed frame got fixed, what was the first thing someone asked you for that you said no to or passed on to someone else?",
+   "answer": "Honestly I can't think of a time I said no. Usually if someone asks I just take a look, and if it's something bigger I'd probably tell them to ask the front desk or maintenance.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Which repair on your floor has taken you the longest, and what did you try first that didn't work?",
+   "answer": "Honestly I don't think any of them took that long. The bed frame was maybe twenty minutes. The printer was the longest, but mostly because I had to find the paper first.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "In the creek project for AP Environmental Science, what was the first measurement or step that didn't go the way you planned, and what did you change?",
+   "answer": "Honestly the first couple months of nitrate readings were pretty useless. We were sampling at different times of day, and some of the samples were taken right after rain, so the numbers jumped around and didn't mean much. We changed it so we always went to the same spot at 7am every Tuesday, kept a log of rain, and ran a blank sample each time.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "What did the blank sample catch that the nitrate numbers alone couldn't show you?",
+   "answer": "Honestly I'm not sure I'd know the technical side well enough to explain it. I think it was supposed to show whether something was contaminating the samples in the lab or during collection, so we'd know if a high number was real or just from our process. My teacher explained it, but I don't remember all the details.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "What was the plan for the creek samples before the 7am Tuesday routine?",
+   "answer": "Honestly the first plan was pretty loose. We were just going out whenever we had a free period or whenever it seemed like a good day to get water, so the times kept changing. Nobody really thought about rain until the numbers looked weird.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "The jammed printer had paper behind the roller, but what did you check first before you opened it up?",
+   "answer": "Honestly I just checked whether the paper tray was seated right and whether there was a jam light on. Then I opened the back panel and saw the paper. It was pretty quick.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When the creek samples moved to a fixed 7am Tuesday, who made that call, and what made them sure the old loose schedule had to go?",
+   "answer": "Honestly I think it was mostly our teacher's idea, or at least she signed off on it. Once the numbers came back weird after rain, we kind of realized the timing was the problem, so it made sense to pick one time and stick to it.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "On the creek project, which part of the sampling ended up being yours to handle, and how did that get decided?",
+   "answer": "Honestly I'm not sure I had a specific part. We kind of split things up as a group, and I think I ended up doing a lot of the going out to the creek since I had free periods that worked. I don't remember us really deciding it formally.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When someone new goes out to a creek to take samples for the first time, what do they usually get wrong that you had to unlearn?",
+   "answer": "Honestly I don't know if I had to unlearn much, I just went out when I had a free period. I guess timing was the big thing, since we were going whenever it seemed like a good day and that messed up the numbers.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Before campus, was there a job, team, or family situation where people kept handing you the problem nobody else wanted, and what was it?",
+   "answer": "Honestly my family has a fry stand at the county fair, and I worked there every summer. I guess I was the one who always got stuck with the line when it backed up, but that's just what happens when you're the kid working the fair.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "On a busy night at the fry stand, when the line backed up, what did you do to get it moving again?",
+   "answer": "Honestly not a lot at first, I just tried to keep up with whoever was at the window. But when I was about 16 I noticed the fryer person was stopping every time they had to take an order and make change, so I changed it so one person walks down the line taking orders and money and writes the order on the paper boat. Then the fryer only has to cook. Waits went from around 25 minutes to under 10, which was a big deal for us, but it's not really a big thing.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When you split the fry stand line into an order taker and a fryer, who pushed back on it, and what did they say?",
+   "answer": "Honestly I don't think anyone really pushed back that much. My mom was the one running the fryer, and she was skeptical at first, so I just showed her by doing it for a night. After that she didn't really argue.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Your mom came around after one night of you running it that way. If a kid at that window watched the line back up next summer, what would you have them check first?",
+   "answer": "Honestly I'd probably tell them to watch whoever's at the fryer for a few minutes first, to see how often they stop to take orders or make change. That's usually where the time goes. It's not really a complicated thing.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Is this you?",
+   "answer": "Mostly yes, I guess. The fry stand part is right, and the creek thing too. I don't think the bolts and slats are that big a deal though, that was just a bed frame. The 7am Tuesday and rain log were what the teacher ended up going with, so I wouldn't say I figured that out by myself.",
+   "phase": "shape",
+   "playback": "You split the fry stand line at 16 so one person takes orders and money while the fryer only cooks, and waits went from about 25 minutes to under 10. You also check the bolts and the slats before touching a tool, and you learned the creek samples only meant something once they moved to a fixed 7am Tuesday with a rain log."
+  }
+ ],
+ "book": {
+  "titles": [
+   {
+    "title": "Check the Slats First",
+    "why": "You checked whether the slats sat right before grabbing a tool, and tightened the bolts by hand first."
+   },
+   {
+    "title": "The Fryer Only Cooks",
+    "why": "Once order-taking moved down the line, you said waits went from around 25 minutes to under 10."
+   },
+   {
+    "title": "Stuck With the Line",
+    "why": "You were the kid who always got stuck with the line when it backed up at the county fair."
+   }
+  ],
+  "pool": [
+   {
+    "title": "Splitting a fry line between two jobs",
+    "summary": "I was keeping up with the window until I saw the fryer person stopping to take orders and make change. I had one person walk the line taking orders and money, writing each on the paper boat, so the fryer only cooked. Waits went from around 25 minutes to under 10.",
+    "quotes": [
+     "I noticed the fryer person was stopping every time they had to take an order and make change",
+     "Waits went from around 25 minutes to under 10"
+    ]
+   },
+   {
+    "title": "Running it one night for my mom",
+    "summary": "My mom was running the fryer and was skeptical of the change, so I showed her by doing it for one night. After that she didn't really argue.",
+    "quotes": [
+     "My mom was the one running the fryer, and she was skeptical at first, so I just showed her by doing it for a night"
+    ]
+   },
+   {
+    "title": "Checking the simple things before the tools",
+    "summary": "When a bed frame rocked, I checked whether the slats were sitting right, then tightened the bolts by hand before grabbing a tool. A jammed printer got the same order: tray seated, jam light, then the back panel.",
+    "quotes": [
+     "I checked whether the slats were sitting right first, then tightened the bolts by hand before grabbing anything",
+     "I just checked whether the paper tray was seated right and whether there was a jam light on"
+    ]
+   },
+   {
+    "title": "Why the creek numbers jumped after rain",
+    "summary": "The first couple months of nitrate readings were pretty useless, since we sampled at different times of day and some samples came right after rain. We changed it so we always went to the same spot at 7am every Tuesday, kept a log of rain, and ran a blank sample each time.",
+    "quotes": [
+     "We were sampling at different times of day, and some of the samples were taken right after rain, so the numbers jumped around and didn't mean much",
+     "We changed it so we always went to the same spot at 7am every Tuesday, kept a log of rain, and ran a blank sample each time"
+    ]
+   },
+   {
+    "title": "Stuck with the line at the county fair",
+    "summary": "My family has a fry stand at the county fair, and I worked there every summer. I was usually the one who got stuck with the line when it backed up.",
+    "quotes": [
+     "my family has a fry stand at the county fair, and I worked there every summer",
+     "I guess I was the one who always got stuck with the line when it backed up"
+    ]
+   }
+  ],
+  "title": "Check the Slats First",
+  "chapters": [
+   {
+    "title": "Slats and bolts before any tool",
+    "summary": "When a bed frame rocked, I checked whether the slats were sitting right, then tightened the bolts by hand before grabbing a tool. The jammed printer got the same order: tray seated, jam light, then the back panel, where the paper was.",
+    "quotes": [
+     "I checked whether the slats were sitting right first, then tightened the bolts by hand before grabbing anything",
+     "I just checked whether the paper tray was seated right and whether there was a jam light on"
+    ]
+   },
+   {
+    "title": "Nitrate numbers that jumped after rain",
+    "summary": "The first couple months of nitrate readings were pretty useless, since we sampled at different times of day and some samples came right after rain. We changed it to the same spot at 7am every Tuesday, kept a log of rain, and ran a blank sample each time.",
+    "quotes": [
+     "We were sampling at different times of day, and some of the samples were taken right after rain, so the numbers jumped around and didn't mean much",
+     "We changed it so we always went to the same spot at 7am every Tuesday, kept a log of rain, and ran a blank sample each time"
+    ]
+   },
+   {
+    "title": "Stuck with the line at the fair",
+    "summary": "My family has a fry stand at the county fair, and I worked there every summer. I was usually the one who got stuck with the line when it backed up.",
+    "quotes": [
+     "my family has a fry stand at the county fair, and I worked there every summer",
+     "I guess I was the one who always got stuck with the line when it backed up"
+    ]
+   },
+   {
+    "title": "Splitting a fry line between two jobs",
+    "summary": "I was keeping up with the window until I noticed the fryer person stopping to take orders and make change. I had one person walk the line taking orders and money, writing each on the paper boat, so the fryer only cooked. Waits went from around 25 minutes to under 10.",
+    "quotes": [
+     "I noticed the fryer person was stopping every time they had to take an order and make change",
+     "Waits went from around 25 minutes to under 10"
+    ]
+   }
+  ],
+  "blurbs": {
+   "draft": "I worked my family's fry stand at the county fair every summer, and I noticed the fryer kept stopping to take orders. One person walking the line taking orders and money cut waits from around 25 minutes to under 10. On my floor I fix bed frames and printers, checking the simple things before I reach for a tool. If you're trying to get a line moving, I can tell you what I'd watch for first.",
+   "finished": "I fix wobbly bed frames and printers on my floor, and I check the simple things before reaching for a tool: whether the slats sit right, whether the tray is seated, whether the jam light is on. On my family's fry stand at the county fair, I found that the fryer was where the time went, and splitting order-taking from frying cut waits from around 25 minutes to under 10. If you're trying to get something moving again and don't know where to start, I can tell you where I'd look first.",
+   "after_removal": "Early nitrate readings from a creek jumped around because we sampled at random times, some right after rain. We settled on 7am Tuesdays at one spot, a rain log, and a blank sample each time. At my family's county fair fry stand, I was usually stuck with the line until I had one person take orders and money, so the fryer only cooked, and waits fell from about 25 minutes to under 10. If you're trying to get a line moving, I can tell you what to watch first."
+  },
+  "rewrite": {
+   "title": "The fryer kept stopping to make change",
+   "summary": "I'd been keeping up with the window until I noticed the fryer stopping to take orders and make change. So I had one person walk the line taking orders and money, writing each on the paper boat, and the fryer only had to cook. Waits went from around 25 minutes to under 10.",
+   "quotes": [
+    "I noticed the fryer person was stopping every time they had to take an order and make change",
+    "Waits went from around 25 minutes to under 10"
+   ]
+  }
+ }
+}

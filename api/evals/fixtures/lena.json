@@ -1,0 +1,211 @@
+{
+ "persona": "Lena (senior, dual degree viola and biomedical engineering)",
+ "slug": "lena",
+ "source": "2026-11-06_193306/lena.md",
+ "turns": [
+  {
+   "question": "You're doing biomedical engineering and a viola performance degree at the same time. Think of one specific week last term when both pulled at you. What happened that week?",
+   "answer": "Last term, the week of midterms in my circuits-adjacent lab course, I had a viola jury on the Thursday. I was sleeping maybe four or five hours a night and it was getting ugly. I'd been trying to practice three hours a day and then do problem sets after, and I was just going in circles on the Bach. I ended up cutting practice down to about ninety minutes and making every session count, which helped more than I expected. I still think about how close that week came to just breaking me, though.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Walk me through one of those 90-minute sessions, the day after a four-hour night. What did you do first, and what got cut?",
+   "answer": "Okay, so the morning after a bad night I'd basically be useless if I just started playing through the Bach from the top, so I changed the order. I'd warm up for maybe ten minutes, nothing fancy, and then I'd hit record on my phone and play the passage I'd worked on the day before, straight through, no stopping. Then I'd listen back, which is the part I used to skip because it's uncomfortable. Honestly, on those tired days the recording is brutal, you hear every intonation slip and every rushed bar.\n\nFrom there I'd pick the four bars that sounded worst and only work on those. Everything else got cut, even the stuff I loved playing. No running the whole movement for fun, no scales as a comfort thing. I'd slow those four bars down, figure out what my left hand or bow was actually doing wrong, fix it, and loop it until it held up on a second recording. It felt a bit like debugging, if I'm being honest, which is funny because I was supposed to be doing problem sets afterward.\n\nThe thing that got cut hardest was the time I used to spend just repeating things I already knew. That was the part that was eating me alive before.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "In the hearing lab, what's one task you've done often enough that a newcomer would get it wrong?",
+   "answer": "Honestly, the most common mistake is assuming the listener is hearing what a normal listener hears. When we first set up the pitch and rhythm stimuli for the implant users, I kept wanting to make the melodies more pitch-rich, because that's what I'd been trained to care about. Then I'd realize the participants were basically losing the pitch contour and hanging onto the beat. A newcomer would keep tuning for pitch and get frustrated when the results don't come out how they expect.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "When a classmate or bandmate comes to you with a problem, what do they usually bring you?",
+   "answer": "Usually it's someone who's stuck on a technical thing and doesn't know whether it's a music problem or a brain problem. Friends in the orchestra will ask how to fix a passage that keeps falling apart, and I'm more likely to say \"record it and tell me which four bars are the worst\" than give them a practice tip. Some of my engineering friends come to me when they're panicking about a presentation or a lab report, and I end up helping them figure out what the real failure point is. I think people bring me the stuff where they've been going in circles and need someone to make them slow down and look at the evidence.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Think of the first time the conservatory and the engineering side both had to say yes to your schedule. Who did you have to convince, and what did you bring them?",
+   "answer": "I don't think I had to convince anyone in a formal way at first, because the engineering side mostly just cared that I got the work done and the conservatory side cared that I showed up prepared. The actual first time was sophomore year, when the circuits exam landed the same week as my concerto audition. I went to the professor's office hours expecting to ask for an extension, and I ended up talking to him for most of an hour. He told me he'd played trumpet through his PhD, and that was the moment it stopped feeling like I had to pick one.\n\nWhat I brought him was pretty simple: I told him what I could realistically do that week and asked what the minimum was he needed from me to pass the course. He didn't give me a break, but he worked out a plan with me. On the music side, I went to my teacher with a practice log and a recording from that week, and that helped more than any argument about schedules. She could see I wasn't just vaguely busy, I had a method.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "You said friends now bring you a passage and you tell them to record it and find the four worst bars. Think of the first friend who tried that with you. What did the recording show them that they hadn't heard while playing?",
+   "answer": "Honestly, I don't think there was one clean \"first\" friend I can point to, but the pattern was always the same. Someone in the orchestra was stuck on a passage that kept falling apart, and when they played it live it felt like the whole thing was a mess. Then they'd listen back and realize it was really two or three specific spots, usually a shift or a bow change right before the thing that fell apart, not the whole passage.\n\nThe thing people almost always hear on the recording is that they were rushing into the hard bar. While playing, you're so focused on getting through the difficult part that you don't notice you've already sped up in the bar before it. On playback it's obvious. One friend literally said \"oh, I've been blaming my fingers and it's my bow speed.\" That's the moment they usually get it.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When a friend hears the rushing on playback, what exactly do you have them change in the next run before they play it again?",
+   "answer": "Usually I have them slow the bar before the hard spot way down, like half tempo or slower, and play just the two or three bars leading in. The goal is to make the bow speed even before they touch the difficult part. Then I have them set a metronome on the beat they're rushing into and play it with the click on, even if it feels painfully slow. Once the bar before sits still, they bring the tempo back up a notch at a time.\n\nI also tell them not to try to fix the fingers at all on that run. If they're thinking about their left hand while the bow is the problem, they just end up rushing harder. One thing to change, one run, then record again so they can hear whether it actually held.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Think of one session where a participant's response made you throw out a melody you'd spent a week building. What did they do in that session that surprised you?",
+   "answer": "Honestly, I don't think I ever threw out a whole melody after a week of work. Most of the rework happened in smaller pieces, like adjusting the rhythmic emphasis or cutting a note that was doing too much pitch work. The participants would tell us a lot through the response forms and the sessions themselves, but it was usually more about what they weren't hearing than anything dramatic.\n\nThe moment that surprised me most was early on, when a participant kept identifying the beat in a passage I'd built to be pitch-rich, and she was consistently right even when the contour was basically blurred for her. I'd assumed the rhythm was secondary for them, so that was a real adjustment in how I thought about the stimuli. I don't remember the exact melody or the session number, so I wouldn't want to make up specifics.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Before that jury week, what was the first sign that the schedule was going to break you?",
+   "answer": "I think it was the Bach. I'd been playing the same movement over and over for almost two weeks and it wasn't getting better, but I kept telling myself it would once I put in more hours. Then one night I caught myself reading the same problem set question three times without absorbing a word, and I realized I'd been running on fumes for days. That was the first real sign. I just didn't want to admit it yet.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "What was on that practice log that your teacher could see, which a description of your week would not have shown her?",
+   "answer": "The log had the same four-bar entries every day, with a note for each session on which bar still sounded wrong on the recording. A plain list of hours would have looked like I was just grinding. This showed her the bars I kept coming back to and whether they were getting cleaner, and she could see the problem was narrowing instead of spreading.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "What did you have to give up to keep both going that you'd still miss most if you could get it back?",
+   "answer": "Honestly, the thing I miss most is just playing for fun. Before that week I'd run the whole Bach movement start to finish on a Sunday afternoon with no goal at all, and I haven't really done that since. Now every time I pick up the viola it's to fix something, so the instrument has turned into a kind of project. I'd like that back, even if it's just for twenty minutes.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "What do orchestra players get wrong about listening back to their own recordings that makes you wince?",
+   "answer": "Honestly the thing that makes me wince is when someone listens back once, decides it sounded \"fine,\" and moves on. Or they only listen for whether they got through the hard part, not for what happened in the bars before it. The rushing I mentioned is almost always there, and it's invisible unless you go looking for it.\n\nThe other one is people who won't record themselves at all because they're afraid of how it'll sound. I get that, I skipped it for a long time too. But you can't fix a bow speed you've never heard.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Is this you?",
+   "answer": "Yeah, mostly. The recording-and-four-bars thing and the log are pretty much how I got through that year, and the professor conversation was the real turning point for me. The hearing lab part is accurate too, though I'd put it a bit less neatly: the beat carrying what pitch loses is what we're testing, not something we've proven yet.\n\nThe one thing I'd push back on is \"getting a professor and teacher to work with it.\" The professor was the one who gave me the actual plan. My teacher mostly just saw the log and that I had a method, which I think mattered more to her than any argument I made.",
+   "phase": "shape",
+   "playback": "Recording your own playing and fixing the four worst bars, one change per run, until the problem is narrow enough to fix. Walking into a schedule clash with a method and a log, not an apology, and getting a professor and teacher to work with it. Learning that in the hearing lab the beat carries what the pitch loses."
+  }
+ ],
+ "book": {
+  "titles": [
+   {
+    "title": "Record It and Find the Four Bars",
+    "why": "You told friends to record the passage and find the four bars that sounded worst, and that method got you through that year."
+   },
+   {
+    "title": "The Minimum Your Professor Needed",
+    "why": "You went to office hours expecting an extension and came out with a plan built around what you could realistically do."
+   },
+   {
+    "title": "Two Rooms, One Metronome",
+    "why": "In the hearing lab the beat carries what pitch loses, and in your practice room the fix only starts once you've listened back."
+   }
+  ],
+  "pool": [
+   {
+    "title": "Finding the Four Worst Bars",
+    "summary": "How to record a passage that keeps falling apart, listen back even when it is uncomfortable, and pick the few bars that need work. Useful when practice keeps going in circles and the evidence is needed before any fix.",
+    "quotes": [
+     "Then I'd listen back, which is the part I used to skip because it's uncomfortable.",
+     "From there I'd pick the four bars that sounded worst and only work on those."
+    ]
+   },
+   {
+    "title": "Rushing Into the Hard Bar",
+    "summary": "Why a passage that feels like a mess while playing is often one or two bars where the tempo quietly speeds up just before the difficult spot. Covers how the recording reveals it and a short drill: slow the lead-in bars, use a click, and change one thing per run.",
+    "quotes": [
+     "The thing people almost always hear on the recording is that they were rushing into the hard bar.",
+     "oh, I've been blaming my fingers and it's my bow speed."
+    ]
+   },
+   {
+    "title": "Cutting Practice to Ninety Minutes",
+    "summary": "What to do when sleep drops to four or five hours and the practice plan stops working. Covers the order of a short session, what gets dropped first, and how a week of midterms and a jury nearly broke the schedule.",
+    "quotes": [
+     "I ended up cutting practice down to about ninety minutes and making every session count, which helped more than I expected.",
+     "The thing that got cut hardest was the time I used to spend just repeating things I already knew."
+    ]
+   },
+   {
+    "title": "Asking for the Minimum, Not an Extension",
+    "summary": "How a clash between a circuits exam and a concerto audition became a conversation about what was realistically possible. Covers asking a professor for the minimum a course requires, and bringing a clear account of your week to your teacher.",
+    "quotes": [
+     "I told him what I could realistically do that week and asked what the minimum was he needed from me to pass the course.",
+     "He told me he'd played trumpet through his PhD, and that was the moment it stopped feeling like I had to pick one."
+    ]
+   },
+   {
+    "title": "What Listeners Hang Onto When Pitch Slips",
+    "summary": "Why a melody built to be pitch-rich can miss its mark with implant users, who may hold onto the beat instead. Covers the common mistake of tuning for what a typical listener hears, and what the lab is still testing.",
+    "quotes": [
+     "the most common mistake is assuming the listener is hearing what a normal listener hears.",
+     "Then I'd realize the participants were basically losing the pitch contour and hanging onto the beat."
+    ]
+   },
+   {
+    "title": "A Practice Log That Shows the Problem Narrowing",
+    "summary": "How to keep a daily log of the same few bars so a teacher can see whether a problem is narrowing or spreading. Covers why a plain list of practice hours can hide what is actually happening.",
+    "quotes": [
+     "The log had the same four-bar entries every day, with a note for each session on which bar still sounded wrong on the recording.",
+     "A plain list of hours would have looked like I was just grinding."
+    ]
+   },
+   {
+    "title": "When the Viola Becomes a Project",
+    "summary": "What happens to playing for pleasure when every session is aimed at a fix, and what it can cost. Covers the unplanned full runs that stopped and the wish to get some of that time back.",
+    "quotes": [
+     "Now every time I pick up the viola it's to fix something, so the instrument has turned into a kind of project.",
+     "Before that week I'd run the whole Bach movement start to finish on a Sunday afternoon with no goal at all, and I haven't really done that since."
+    ]
+   },
+   {
+    "title": "Helping a Friend Find the Real Failure Point",
+    "summary": "How to respond when a classmate or bandmate is going in circles and cannot tell whether a problem is musical or mental. Covers slowing down with them to look at the evidence instead of handing over a tip.",
+    "quotes": [
+     "Usually it's someone who's stuck on a technical thing and doesn't know whether it's a music problem or a brain problem.",
+     "I think people bring me the stuff where they've been going in circles and need someone to make them slow down and look at the evidence."
+    ]
+   }
+  ],
+  "title": "Record It and Find the Four Bars",
+  "chapters": [
+   {
+    "title": "Record It and Find the Four Worst Bars",
+    "summary": "Record a passage that keeps falling apart, then listen back even when it is uncomfortable. Pick the few bars that actually need work instead of the whole passage. This helps when practice keeps going in circles and the evidence is needed before any fix.",
+    "quotes": [
+     "Then I'd listen back, which is the part I used to skip because it's uncomfortable.",
+     "From there I'd pick the four bars that sounded worst and only work on those."
+    ]
+   },
+   {
+    "title": "The Rushing Bar Before the Hard Spot",
+    "summary": "A passage that feels like a mess while playing is often one or two bars where the tempo quietly speeds up just before the difficult spot. Playback reveals it. A short drill follows: slow the lead-in bars, play with a click, and change one thing per run before recording again.",
+    "quotes": [
+     "The thing people almost always hear on the recording is that they were rushing into the hard bar.",
+     "oh, I've been blaming my fingers and it's my bow speed."
+    ]
+   },
+   {
+    "title": "Ninety Minutes After a Four-Hour Night",
+    "summary": "When sleep drops to four or five hours, a shorter practice session can work better than a long one. Start with a brief warm-up and a recording of yesterday's passage, then cut everything except the four worst bars. Midterms and a jury week nearly broke the schedule.",
+    "quotes": [
+     "I ended up cutting practice down to about ninety minutes and making every session count, which helped more than I expected.",
+     "The thing that got cut hardest was the time I used to spend just repeating things I already knew."
+    ]
+   },
+   {
+    "title": "Same Four Bars, Logged Daily",
+    "summary": "Keep a daily log of the same few bars, noting which ones still sound wrong on the recording. A teacher can then see whether the problem is narrowing or spreading, which a plain list of practice hours would hide.",
+    "quotes": [
+     "The log had the same four-bar entries every day, with a note for each session on which bar still sounded wrong on the recording.",
+     "A plain list of hours would have looked like I was just grinding."
+    ]
+   }
+  ],
+  "blurbs": {},
+  "rewrite": {
+   "title": "What a Practice Log Showed My Teacher",
+   "summary": "Bringing a teacher a practice log and a recording from a hard week can build more trust than arguing about schedules. The log showed the same few bars coming back and whether they were getting cleaner, which made clear the problem was narrowing rather than spreading.",
+   "quotes": [
+    "On the music side, I went to my teacher with a practice log and a recording from that week, and that helped more than any argument about schedules.",
+    "This showed her the bars I kept coming back to and whether they were getting cleaner, and she could see the problem was narrowing instead of spreading."
+   ]
+  }
+ }
+}

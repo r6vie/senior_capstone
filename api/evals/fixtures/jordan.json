@@ -1,0 +1,206 @@
+{
+ "persona": "Jordan (MBA student, former Army logistics officer, terse)",
+ "slug": "jordan",
+ "source": "2026-11-06_193306/jordan.md",
+ "turns": [
+  {
+   "question": "You went from history to Army logistics and now to an MBA. Think of the first time someone trusted you with a supply problem that mattered. What was it, and who was in the room?",
+   "answer": "I don't know that I'd call it a first. It was a battalion, a lot of fuel and parts, and a commander who wanted everything ordered twice. Me and a supply sergeant named Ortiz, and the S4 when he was around.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Ordering everything twice sounds like a habit someone built for a reason. When did you first see it pay off, or fail?",
+   "answer": "Pretty early. Units over-ordered by about thirty percent because nobody trusted resupply to show up. So they hoarded, and then the shelves were full of things nobody needed while the things they did need ran out. The fix wasn't a better truck schedule. I put up a daily board showing what was arriving and when. Once people could see it, they stopped stockpiling. Took about three weeks.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "When you chose between staying in the Army and starting this MBA, what was the moment you knew, and what did you almost do instead?",
+   "answer": "Honestly there wasn't one moment. I'd been doing the job long enough to see the same problem over and over, and the MBA was the closest thing to a tool for it. Almost stayed in and tried for a staff job at division. Would have been fine. Just not what I wanted to keep doing.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Outside the Army and the MBA, what do people come to you for, even when it isn't part of your job?",
+   "answer": "Mostly résumés, honestly. Veterans in the program send me theirs and ask why recruiters ignore them. Usually it's the same fix: they describe what they did in Army terms, and nobody outside knows what that means. I rewrite it as the problem they solved.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Think of the first morning that board went up. What was on it, and what did the first commander do when he saw it?",
+   "answer": "I don't remember what was on it that first morning, if I'm honest. It was a whiteboard in the S4 shop, a few lines per unit: what was coming, what time, and what it was. Ortiz made sure the times were right, which mattered more than I expected.\n\nThe commander didn't say much. He read it, asked me one question about the fuel timing, and then walked off. Two days later his staff was asking me for the board instead of asking him for more.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "What did Ortiz check on a time before it went up on the board?",
+   "answer": "Whether the convoy actually left when the sheet said it would. If the time on the board was a guess, people stopped trusting it by the second day, so he'd call the transport section and get the real departure before anything went up. He also caught things like a fuel truck listed for a gate that was closed at that hour.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Take one veteran résumé you rewrote: what did the Army version say, and what did the problem-solved version say instead?",
+   "answer": "Army version was something like \"Managed $40M inventory across battalion supply operations.\" Problem-solved version: \"Reduced over-ordering across a 900-person battalion by building a shared daily arrivals schedule, so units stopped stockpiling.\" I'd say that's the same job, just with the thing that changed on the page instead of the title.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Pick one ordinary week from the stretch when you were deciding to leave: what did you actually do on a Tuesday to get ready while still in uniform?",
+   "answer": "Honestly, not much that's interesting. Tuesdays were usually a supply review at 0700, then chasing whatever the transport section hadn't confirmed. I'd pull the MBA application checklist up on my phone at lunch and close it when someone walked in. That was about the extent of it.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When a veteran sends you their résumé, what's the first question you ask before you change a word?",
+   "answer": "What's the job actually for, and who was it for. Army résumés describe the mechanics, so I ask what would have broken if they hadn't done it. Usually the answer is the thing I need.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Three weeks in, what did you know about that board that you didn't on the first morning?",
+   "answer": "Mostly that people read it differently than I expected. I thought they'd check it for their own unit. They checked it to see whether anyone else was going to get fuel before them, and that changed what they put on their orders. Once they saw the times were real, the padding stopped on its own. I didn't have to enforce anything.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "You turned down the division staff job. What was the offer on the table, and what did saying no cost you in the room?",
+   "answer": "Not much cost in the room, honestly. It was a staff job at division, a step up on paper. I told the S4 I wanted to go to school, and he said that was a reasonable reason. Nobody made it a thing.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "You studied history before any of this. Is there one moment where that training changed how you read a supply sheet or a résumé?",
+   "answer": "Not really a moment. History mostly taught me to ask who wrote the document and what they wanted it to make someone do. A supply request is an argument, usually for more than the unit needs. Same with a résumé. Once you read it that way you stop taking the numbers at face value.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "If a new S4 walked into a unit that over-orders tomorrow, what's the first thing you'd have him check before he puts anything on a board?",
+   "answer": "Whether the times are real. Before anything goes up, he should call the transport section and get the actual departure for each convoy, not the planned one. If the board says a truck leaves at 0600 and it's really a guess, people will stop trusting it by the second day, and then they'll go back to padding their orders.\n\nOrtiz did that part, and it mattered more than I expected. I'd also have him check that every delivery point is open at the hour it's listed. A fuel truck sent to a closed gate looks fine on paper.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Think of one veteran who pushed back on a rewrite. What did they say the Army version was protecting, and what did you do with that?",
+   "answer": "I don't have a clean example of that. Most of the time the pushback was just \"that sounds like I was bragging,\" and the answer was to point at what would have broken if they hadn't done the job. Usually that settled it.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Think of the last padded request you caught: what was the line item that gave it away?",
+   "answer": "I don't know that I'd call it caught. Usually it was a fuel line that asked for twice what the unit burned the week before, and nobody could say why. The fix was never to argue with them. I'd just pull the last three weeks of actual draw and put it next to the request. Once they saw their own numbers, most of them cut it themselves.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Is this you?",
+   "answer": "Mostly, yes. The board and the padded requests are right. The résumés I'd put a little differently: I don't rewrite them to sound better, I ask what would have broken if the person hadn't done the job, and that's what goes on the page. Also, the thing I'm proudest of is Ortiz getting the departure times right. The board only worked because of him.",
+   "phase": "shape",
+   "playback": "You built a daily arrivals board with real departure times, and units stopped stockpiling. You rewrite veterans' Army résumés around the problem the work solved, and you catch padded requests by setting three weeks of actual draw beside the ask."
+  }
+ ],
+ "book": {
+  "titles": [
+   {
+    "title": "Reading Requests Like Arguments",
+    "why": "You said a supply request is an argument, usually for more than the unit needs, and you read them that way."
+   },
+   {
+    "title": "The Step Up You Turned Down",
+    "why": "You passed on a division staff job, a step up on paper, and the S4 said school was a reasonable reason."
+   },
+   {
+    "title": "What Would Have Broken",
+    "why": "You ask what would have broken if the person hadn't done the job, and that's what goes on the page."
+   }
+  ],
+  "pool": [
+   {
+    "title": "A Whiteboard That Ended Padded Orders",
+    "summary": "How posting a daily board of arrivals ended units stockpiling in about three weeks. What people were really checking on it, and why nobody had to enforce anything.",
+    "quotes": [
+     "I put up a daily board showing what was arriving and when.",
+     "Once they saw the times were real, the padding stopped on its own."
+    ]
+   },
+   {
+    "title": "Checking Departure Times Before They Post",
+    "summary": "The checks to run before any convoy time goes on a board, and why a guessed time loses people's trust by the second day. Includes the delivery point that looks fine on paper but is closed at that hour.",
+    "quotes": [
+     "If the time on the board was a guess, people stopped trusting it by the second day, so he'd call the transport section and get the real departure before anything went up.",
+     "A fuel truck sent to a closed gate looks fine on paper."
+    ]
+   },
+   {
+    "title": "Reading a Supply Request as an Argument",
+    "summary": "How to test a padded request by setting it beside the unit's actual usage, and why most people cut their own number once they see it. Also the habit of asking who wrote a document and what it was meant to make someone do.",
+    "quotes": [
+     "A supply request is an argument, usually for more than the unit needs.",
+     "I'd just pull the last three weeks of actual draw and put it next to the request."
+    ]
+   },
+   {
+    "title": "Rewriting Army Work for Civilian Readers",
+    "summary": "How to rewrite a military record so a reader outside the service can follow it, starting with the question of what would have broken if the job hadn't been done. Covers why the duty list describes mechanics and the problem solved is what matters.",
+    "quotes": [
+     "Army résumés describe the mechanics, so I ask what would have broken if they hadn't done it.",
+     "I rewrite it as the problem they solved."
+    ]
+   },
+   {
+    "title": "Turning Down the Division Staff Job",
+    "summary": "Why a step up on paper wasn't the right move, and how a unit's S4 responded to a request to leave for school. A short story about choosing what you actually want to keep doing.",
+    "quotes": [
+     "Would have been fine. Just not what I wanted to keep doing.",
+     "I told the S4 I wanted to go to school, and he said that was a reasonable reason."
+    ]
+   }
+  ],
+  "title": "Reading Requests Like Arguments",
+  "chapters": [
+   {
+    "title": "Testing a Request Against Actual Usage",
+    "summary": "How to test a padded request by setting it beside the unit's actual draw from the last few weeks, and why most people cut their own number once they see it. Also the habit of asking who wrote a document and what it was meant to make someone do.",
+    "quotes": [
+     "A supply request is an argument, usually for more than the unit needs.",
+     "I'd just pull the last three weeks of actual draw and put it next to the request."
+    ]
+   },
+   {
+    "title": "What a Board Showed People to Check",
+    "summary": "Posting a daily arrivals board ended units stockpiling in about three weeks. People read it to see whether anyone else would get fuel first, and that changed what they put on their orders. Nobody had to enforce anything.",
+    "quotes": [
+     "I put up a daily board showing what was arriving and when.",
+     "Once they saw the times were real, the padding stopped on its own."
+    ]
+   },
+   {
+    "title": "Checking Times Before a Board Goes Up",
+    "summary": "The checks to run before any convoy time is posted, and why a guessed time loses trust by the second day. Includes a delivery point that looks fine on paper but is closed at that hour.",
+    "quotes": [
+     "If the time on the board was a guess, people stopped trusting it by the second day, so he'd call the transport section and get the real departure before anything went up.",
+     "A fuel truck sent to a closed gate looks fine on paper."
+    ]
+   },
+   {
+    "title": "Reading a Military Record as a Request",
+    "summary": "Instead of polishing a record to sound better, ask what would have broken if the job hadn't been done, then put that on the page. The same skeptical reading that exposes a padded request also shows what a duty list leaves out.",
+    "quotes": [
+     "Army résumés describe the mechanics, so I ask what would have broken if they hadn't done it.",
+     "I rewrite it as the problem they solved."
+    ]
+   }
+  ],
+  "blurbs": {},
+  "rewrite": {
+   "title": "Same Job, Different Page",
+   "summary": "Walks through one veteran résumé where the dollar figure gave way to the change the work produced, and how to answer the bragging objection by pointing to what would have broken without the job. Also covers the first question to ask before editing a word: what the job was for and who it served.",
+   "quotes": [
+    "I'd say that's the same job, just with the thing that changed on the page instead of the title.",
+    "What's the job actually for, and who was it for.",
+    "Most of the time the pushback was just \"that sounds like I was bragging,\" and the answer was to point at what would have broken if they hadn't done the job."
+   ]
+  }
+ }
+}
