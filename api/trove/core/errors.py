@@ -9,7 +9,9 @@ from pymongo.errors import PyMongoError
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(PyMongoError)
     async def database_error(request: Request, error: PyMongoError) -> JSONResponse:
-        return JSONResponse(status_code=503, content={"detail": "The database is unavailable."})
+        return JSONResponse(
+            status_code=503, content={"detail": "Something's wrong on our side. Nothing you said is lost."}
+        )
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, error: RequestValidationError) -> JSONResponse:

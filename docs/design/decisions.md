@@ -2,6 +2,85 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-09: close-out of the quality notes for the frames
+
+- **Closed (R5-12):** the line under Chapters on the review and on My book now reads "“Show what you said” opens your own words behind
+  each chapter. Only you see those." on every frame that carries it, matching the build. The old line called the public summaries private.
+- **Everything else tagged Design in rounds 1 to 6 was already applied** to the frames (rounds 1, 2 and 4) or fixed in the build (round 5
+  re-check); round 6 has no Design items.
+- **Copy the build still owes, written here so it is built from one place** (both are UI items, not frame work):
+  - R6-03: when words were left out for a name, say which ones: "I left this out because it named someone or somewhere: Geauga,
+    County, Fair. Change those and I'll try again." "Say it again" opens the field with the member's words in it. My book uses the
+    same sentence above the question panel.
+  - R6-08: the undo question is one sentence for both kinds of change: "Undo these changes? Your book goes back to how it was."
+    Add "I won't suggest them again" only when the changes were additions.
+
+## 2026-11-08: quality round 4 applied to the frames (T40)
+
+- **Interview A:** Shape now has two frames (field empty: the red Yes alone; correction typed: red "Send my correction" and a quiet "Yes,
+  that's me, ignore this"); the exit link has a words-in-the-field frame ("Send this, then show me my book"); "Back to the question"
+  replaces Continue / Continue later; "Saved" no longer sits beside an empty field. New board "A · Other states" draws not enough
+  material, writing after a return, a failed load, answer saved but next question missing, the review after rewriting (go back to
+  the last version; a rewrite that came back too close) and the other two titles. New board "A · Phone" draws start, reveal (title
+  clear of the radio) and review (title, then book at small size, then back cover and stacked quiet links).
+- **My book and the rest:** sparks list under the red button when no book exists (R4-06); finding titles and writing book states; undo
+  copy with the date (R4-05); the reading caption is Plex 14px sentence case (R4-11); the wait and failed panels lose their headings
+  (R4-12); a new chapter hides Now on phones (R4-13); "Nothing from these questions changes your book" (R4-08); a removal's back cover
+  card says "Rewritten without this chapter" (R4-10); the back cover is always open and never underlined (R4-03); G4 note fixed (R4-15).
+- **Samples (R4-18):** the back cover no longer ends "If you're…, I can tell you…", and sample questions ask one thing without "first".
+- **CoverDirections:** it never held the old persona; its sample authors now show full names.
+
+## 2026-11-08: quality round 2 applied to the frames (T39)
+
+- **Applied:** R2-01 (a Removing change type; a back cover that fails says so on its own card, the old one stays, they can still
+  confirm), R2-03 (a quiet "Undo these changes" on the done screen and on My book after an update; the book stores its previous
+  version until the next change), R2-04, R2-05 (no "round" on screen: "For your next questions", "questions in progress"), R2-06 (the
+  reading question is hidden on My book while questions or changes are open), R2-07 (the reason sits under the chip; on a phone
+  Proposed only, with "See what's there now"), R2-08 (sparks listed in the interview-in-progress state; the start screen's extra
+  line only when sparks exist), R2-09 (the spark control is a 14px sentence-case text link, no plus or tick), R2-10, the copy sheet
+  (Changed chapter, "That's enough. Write the changes", a frame for words still in the field, shorter bands, the reading-question
+  variant of "nothing came of it"), R2-11 to R2-15, R2-18, R2-23. R2-16 and R2-17 are in `system.md` Additions.
+- **Not frame work:** R2-19 (slant on the built interview band), R2-20 to R2-22 are UI or API; nothing drawn changes. R2-02 is code.
+- **Judgment:** the shelf line sits once in the proposed-changes note rather than twice; the plus mark on the spark control is
+  dropped at that weight.
+
+## 2026-11-08: the sample member is fully invented
+
+- The earlier sample member was modelled on a real alum's news story. Replaced everywhere in the frames (`GrowingG1`, `G3`, `G5`,
+  `InterviewA`) by Nora Valdez, an invented person with invented material of the same length: first-person chapters, a back cover,
+  the three titles. Nothing in the frames comes from a real person.
+
+## 2026-11-08: growing books and interview frames revised after quality round 1 (T37)
+
+- **Applied from `qc/round-1.md`:** R1-04 (the back cover is a change like any other, written before the confirm step, with its own
+  failed state), R1-32 (Remove this chapter on My book, confirm step), R1-33 (the note under the reading answer), R1-34 (the
+  reading names the reader, to the author only), R1-36 (writing and failed states on My book and in the round), R1-39 (interview in
+  progress and titles waiting), R1-40 (real-length text from a finished book, added words underlined), R1-41, R1-42 (Skip only
+  while the answer is empty, with its own frame), R1-44, R1-45 (44px targets), R1-59, R1-60, R1-61, R1-62, R1-64.
+- **Interview A also:** start screen (R1-18), review screen (R1-19, R1-21, R1-22, with Remove in place per R1-20), phase names
+  First look, Deeper, Check (R1-28), done screen (R1-30). The sample member is now Nora Valdez, a fully invented person (pinball restoration, invented text of real length) so every frame uses real text.
+  Directions B and C are left as drawn.
+- **Design calls:** undecided changes count as not approved and are listed as "Not decided" under "Stays as it is"; "Not now" on the
+  question screen goes back, "No thanks" on My book dismisses; one exit per screen; "the shelf has not changed" once in the band and
+  once on confirm. Route is `/my-book`.
+
+## 2026-11-08: growing books frames (T33), under the suspended gate
+
+- **I4 frames go to build as they stand** (`InterviewA2`: Skip, sharper angle). Josef suspended frame approval for the
+  unattended run, so this is not an approval of the frames. He reviews the built screens afterwards.
+- **T33 frames drawn** on the new canvas page "Growing books", five boards, desktop and phone: My book (no book, draft, on the
+  shelf, a round open, changes waiting), adding to your book (reopen, a question with Skip, the wait), proposed changes
+  (decide, confirm, confirm with nothing approved, done, nothing came of it), "I have one like this" (every state, in three
+  unrelated rows), the reading question (ask, the wait, one proposed change). New patterns in `system.md` Additions.
+- **Design calls:** Approve/Decline is a toggle pair that fills ink, never red. The confirm step lists titles by group with no
+  numbers. The reading question sits beside the book on My book as a quiet panel; Answer is secondary so the one red action
+  stays the book's next step. The wait has no spinner or bar. A round that yields nothing says so and returns to My book.
+
+## 2026-11-07: I4, Skip idea approved; frames under review
+
+- **Josef approved the Skip idea only.** The `InterviewA2` frames (Skip, CHEM 223 angle, student-org angle) are drafts under
+  his review and are not approved yet.
+
 ## 2026-11-07: "Skip" replaces "Ask me another way"
 
 - **Josef (spec b0aa08d):** the button is "Skip". It goes straight to the next question, for one the member would rather not

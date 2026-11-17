@@ -124,7 +124,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   - **"Skip"** is always available, quiet. The member can skip a question they'd rather not answer or have nothing to say to, and the interviewer moves on to the next question. A skip is never shown or counted; the interviewer just takes it as a cue to try other ground.
   - The interview changes angle early instead of reaching the question cap with a thin pool.
   - Signals are internal: never shown, never a score. Grounding is unchanged.
-- **Planned for after the whole loop works, not now** (§9.9):
+- **Built early, waiting on teammates' pieces to run for real** (§9.9; choices in `docs/review/decisions.md`):
   - **Sparks from other books:** while reading someone's book, a member taps "I have one like this" on a chapter. It saves a private prompt for their own next interview, never content.
   - **Each reading grows the book:** after "Did you meet?", the author answers one quick question, "What did they ask you about that surprised you?". The answer can become a new chapter or improve one, with the author's approval (through I3).
 - **On hold until the interview works:** the Librarian reacting in the margins, bursts on strong lines, the card drawer for the sweep, bookmark tabs, the pencil-to-ink spine, the shelf stamp and live cleanup of spoken answers. A practical "how-to" chapter is welcome but not enforced.
@@ -217,14 +217,14 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 
 Everyone at launch is CWRU, so community branches and affiliation badges would carry no information. We can revisit them if Trove expands beyond CWRU.
 
-Membership verification is still open:
+Membership verification (decided 2026-11-16, A2, Daniel):
 
-- **Students:** a case.edu email.
-- **Alumni:** there's no clean check. Options:
-  - an invite link shared through alumni channels
-  - the person states their graduation year, with manual review while the community is small
-  - a partnership with the alumni office
-  - LinkedIn education data, which needs partner access we don't have
+- **Students:** a code sent to their case.edu email. The address must end in exactly `@case.edu`.
+- **Alumni:** an invite link from a verified member. Alumni are reached through members we already have, so no outside check is needed for now.
+  - Each link works once and expires after 14 days; a member can have 5 open at a time; we record who invited whom.
+  - Still open for later: graduation-year review, an alumni-office partnership, and LinkedIn education data (needs partner access we don't have).
+- **Sign-in stays email and password.** The emailed code only proves the address belongs to the person.
+- Accounts that exist before this ships count as verified. Accounts that aren't verified can't sign in.
 
 ### 9.3 Résumé upload (decided)
 

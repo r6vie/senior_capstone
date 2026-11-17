@@ -124,17 +124,17 @@ button.book {
 .shelf-row .shelf-head {
   padding: 0 var(--gutter);
 }
+/* Steps a book at a time by touch, trackpad and wheel (useBookStepping.ts): no CSS snap, which would fight
+   it and settle slowly. pan-y leaves vertical scrolling to the page while the row handles sideways.
+   Contained, so a flick that hits the end doesn't become the browser's back gesture. */
 .shelf-row .shelf-books {
   overflow-x: auto;
-  scroll-snap-type: x proximity;
-  scroll-padding-inline: var(--gutter);
+  overscroll-behavior-x: contain;
+  touch-action: pan-y;
   scrollbar-width: none;
   /* Room for the hover lift and the dot shadow inside the scroller; the ledge covers the bottom. */
   margin: calc(-1 * var(--s-2)) 0 calc(-1 * var(--s-2));
   padding: var(--s-2) calc(var(--gutter) + var(--s-1));
-}
-.shelf-row .book {
-  scroll-snap-align: start;
 }
 .shelf-row .ledge {
   margin-left: calc(var(--gutter) - var(--s-2));
@@ -220,7 +220,6 @@ button.book {
   }
   .shelf-row .shelf-books {
     gap: 20px;
-    scroll-snap-type: x mandatory;
   }
   .shelf-row .book {
     width: 104px;

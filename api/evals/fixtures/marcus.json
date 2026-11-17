@@ -1,0 +1,242 @@
+{
+ "persona": "Marcus (talkative alum, engineer turned physics teacher)",
+ "slug": "marcus",
+ "source": "2026-11-06_194759/marcus.md",
+ "turns": [
+  {
+   "question": "Think of the first day you walked into a classroom as the teacher. What was on the board, and what did a student do that you didn't expect?",
+   "answer": "Oh man, the first day. Okay, so I had this whole plan, right? I'd spent three weekends on a slide deck with the course syllabus, my credentials, a little picture of my dog in a hard hat, which in hindsight was maybe a mistake. The board said something like \"WELCOME, I AM MR. HOLLAND\" in the most nervous handwriting you've ever seen, and I think I misspelled \"physics\" on the second line, which the kids found hilarious and never let go.\n\nWhat they did that I didn't expect: about a third of the class spent the first ten minutes trying to figure out whether I was a real teacher or a guy who'd wandered in from the engineering job fair. One kid, Dante, raised his hand and asked if I'd ever built anything that actually flew. And I said yes, jet engine parts, and he said \"so you're the reason planes fall out of the sky,\" and the whole room lost it. I laughed too. It was not the opening I'd scripted, but honestly it was the first time I felt like they were actually paying attention to me, which, you know, turns out is most of the job. Anyway, the Browns that year were a whole other disaster, and I think half my lesson plans from that fall ended up being about the Browns somehow.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Before the classroom, you spent years designing jet engine parts. Think of the day you decided to leave that job: where were you, and who did you tell first?",
+   "answer": "Oh, that's a good one. Honestly I don't think there was a single day, it was more like a slow leak that finally got bad enough that I couldn't ignore it. I was in a design review, and we'd been going back and forth for something like two weeks about a bracket tolerance, and I think it was 0.2 millimeters, which sounds like nothing, but we treated it like the fate of the free world. Somewhere in there I looked around the table and realized I'd spent more energy on that bracket that year than on basically any person in my life, and that was a bad sign. Anyway, I was in the conference room with bad coffee and my laptop open, I remember that clearly.\n\nWho I told first was my wife, Priya, and she was not surprised, which was humbling. She'd watched me come home and talk about tolerances at dinner for about two years. Then I went and told my dad, who asked if I'd lost my mind, and I said probably, but I'd already applied to the night license program, so it was too late to back out. Best decision I ever made, though my bank account would tell you a different story.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "What did the robotics team look like the first season you coached it?",
+   "answer": "Oh, that first season was chaos with a capital C. We had maybe eleven kids, a budget that was basically the bake sale money and whatever was left in a coffee can in the chem room, and a robot we couldn't get to drive straight. Literally. It pulled hard to the left every time, which, if you're a physics teacher, is a gift, because it's the broken thing you start the whole unit with. The kids spent a week trying to figure out why it veered, and that's where I got them hooked on it.\n\nThe money problem was the real headache, though. Parts cost more than we had, so I went around to local machine shops. I didn't email anybody, because I figured a stranger's email gets deleted but a kid standing in your shop asking a real question sticks with you. So I brought four or five of them down, and they asked the owners how you'd make a bracket, and the owners kind of couldn't say no to that. Three shops said yes to donating machine time. Honestly the team didn't make state until year four, so that first year was mostly us learning which shop foreman had the good coffee and which one had the sad little radio.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Think of the first shop that said yes. What exactly did the kid ask the owner that made him say yes?",
+   "answer": "Oh, that's the part I still think about. It was a shop out past the industrial strip off Quigley, run by an older guy named Walt who had a bench full of lathe chips and a cat that slept on the drill press. I'd told the kids to just be themselves, which is terrible advice for thirteen-year-olds in a stranger's shop.\n\nSo this one kid, Jamal, who was small and had clearly been dreading it the whole drive, walks up to Walt and asks him, \"If we gave you the drawing, how would you know if the hole was in the right spot?\" Walt kind of squinted at him and said something like, \"Well, I'd check it against the drawing.\" And Jamal said, \"But what if the drawing's wrong?\" Walt put his coffee down. He spent the next twenty minutes walking the kids through how he'd measure a hole, what happens when the drill walks, why you'd pick a tolerance at all. I'm pretty sure he forgot we were there, and he said yes before we left.\n\nI didn't script that at all, honestly. I just wanted the kids to see a grown adult get interested in a question. Walt told me later that nobody asks him why anymore, they just ask for a quote.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Three shops said yes, and you've mentioned kids and adults in your building coming to you. What does someone in your building come to you for that they wouldn't expect?",
+   "answer": "Honestly, probably the stuff that has nothing to do with physics. Last spring a senior came to my room during lunch, and I figured it was about a missed quiz. Instead she wanted to talk about whether she should tell her parents she didn't want to do engineering, which, given that I'm literally the guy who left engineering, I thought was a pretty funny thing to end up being asked. We talked for like forty minutes, mostly about her grandmother's sewing machine and how she'd rather fix things with her hands. I don't think I gave her any real advice, I just kept asking her why she liked it. That's most of what I do, honestly, the teacher-with-a-coffee-mug thing.\n\nAnd the custodian, Mr. Ruiz, comes by sometimes to ask me to explain why the ladder in the gym keeps slipping. Which is a physics question, so that one's fair game. Anyway, I think kids and staff both figure out pretty quick that if you ask me a question, I'll get too excited about it and you'll be there a while.",
+   "phase": "sweep",
+   "playback": null
+  },
+  {
+   "question": "Before you walked anyone into a shop, how did you choose which ones to try?",
+   "answer": "Honestly, mostly I just drove around the industrial strip off Quigley with the windows down looking for places that had a hand-painted sign and a dumpster full of scrap metal. If a shop had a dumpster full of interesting-looking stuff, I figured they were making things, and people who make things usually like being asked about them. I also had a rule that I wouldn't go to anywhere that looked like it had a corporate chain feel, because those places have a procurement guy and he's going to say no to anything that isn't on a form.\n\nThe first few stops were rough, to be fair. One guy told me to come back when I had a purchase order, and I said I'd bring one, and then I realized I had no idea what a purchase order was for a high school robotics team. I had to call my old boss at the aerospace place and ask him to walk me through it, which he thought was hilarious. Then I went back to the list, and Walt's shop was on it because the sign said \"Machine Work Since 1974\" and somebody had spray painted a cat on the side. I figured anybody who'd keep a cat near a drill press was probably not going to be a hard sell. Turned out I was right, though I still feel bad that I basically sent a bunch of thirteen-year-olds in there with no plan.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Between that bracket review and your first night class, what was the one step you took that made leaving possible?",
+   "answer": "Oh, that's a big question, and I'd love to say it was one heroic move, but honestly it was just a lot of boring, unglamorous stuff. Saving money was the big thing. Priya and I basically lived like grad students for two years, and I mean that as a compliment to grad students, because they're tougher than I thought. We did a budget spreadsheet that I'm still a little proud of, color-coded and everything.\n\nBut if I had to pick one actual step, I'd say it was the night program application. Once I'd sent that in, I couldn't just sit there complaining about the bracket anymore. It made the whole thing real. I told my dad about it right after, which is how he ended up asking if I'd lost my mind, so I guess that counts as a step too.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "You said the budget spreadsheet was color-coded. Which row did you look at most often, and what did it tell you that you didn't want to hear?",
+   "answer": "Ha, okay, the row I stared at most was the one labeled \"Dad's birthday, retirement fund.\" No, wait, that's not it. It was savings, really. We had this line for the pay cut, and I kept running the numbers, and the number that stung was the one showing that if I took the teaching job at the salary they were offering, we'd be down about 45 percent from what I was making at the aerospace place. Forty-five percent. I remember looking at it and thinking, well, that's a real number now, not a feeling.\n\nWhat I didn't want to hear was that the savings only covered about fourteen months if I was careful, and I'm not a careful person. Priya is. She'd colored that row red and I kept making it green again in my head. We had a few arguments about it, and she was right, which is annoying. So we added a rule that we'd cut back on eating out, and I spent way too long on the question of whether a dog counts as a dependent for the budget, which the spreadsheet did not have a column for.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Of everything you cut to make those fourteen months stretch, what was the first thing you missed?",
+   "answer": "Honestly? Eating out, and it's embarrassing how much. Priya and I had this Thursday thing at a little Vietnamese place near the old office, and when we cut it I kept walking past it on the way home and feeling like I'd lost a friend. The first month I think I ordered takeout from the same place just to sit in the car and eat it, which is a sad thing to admit.\n\nBut if you're asking what I missed that actually hurt, it was not having a reason to buy the good coffee. I'd been drinking the stuff in the conference room, bad coffee and all, and somehow that was fine. Once I was on the budget I got really picky about coffee, which is ironic since I spent years complaining about bad coffee in design reviews and then ended up spending my whole life savings trying to avoid it.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When a shop owner said no at the first stops, what did you say next, word for word?",
+   "answer": "Oh, that's a fun one to remember. The first guy, I think it was at a place near the end of Quigley with a dog asleep by the door, said come back with a purchase order. I said, \"Absolutely, I'll bring one,\" with the confidence of someone who had no idea what a purchase order was. Then I walked back to the car and called my old boss.\n\nHonestly I don't think I had a real line ready. I probably said something like, \"Totally fair, what would you need from us to make that work?\" which was the only thing I could think of that sounded like I knew what I was doing. He gave me a pretty long look and then said \"I'll think about it,\" which in shop language I've since learned means no. The next guy was more blunt and just said no, so I thanked him and got back in the van with the kids before they could see me deflate. I think Dante asked me afterward if we'd been kicked out, and I said no, we were just \"reconsidering our approach,\" which he did not buy for a second.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Engineers who want to leave for teaching often focus on the pay cut, so what do they usually underestimate about the first year in a classroom?",
+   "answer": "Oh, that's a big one, and I could talk about it for an hour. Honestly, I think most engineers figure the hard part is the material. They assume if they know physics cold, the rest will take care of itself. It doesn't. Those first months, I was mostly managing thirty-two teenagers' attention at eight in the morning, and explaining the actual physics was maybe a fifth of the job. The rest is figuring out who's running on no sleep, who's about to start something in the back, and how to get a room to care about a cart that won't roll straight.\n\nAnd the tiredness is different from engineering tired. In a design review you can be exhausted and still be the most prepared person in the room. In a classroom you're on stage for six hours and nobody's grading you on your slides, they're grading you on whether you're still standing there with a good attitude at 2:15. I thought I was fit from years of long meetings. I was not prepared for that.\n\nAlso, you really don't realize how much you rely on being the expert in the room until you're not. Half the time a kid knows more about something than I do, and you have to be okay with that. Dante once corrected my math on a torque problem in front of everyone, and I said \"good catch, you're right,\" and I honestly felt a little proud of him, which is a weird thing to feel when you're supposed to be the one with the answers.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "On the day you first wheeled out the robot that pulled left, what did you hand the kids to try before you told them anything about why it veered?",
+   "answer": "Oh, the left-pulling robot. Okay, so I didn't hand them anything fancy. I just gave them a tape measure, a stopwatch, and a piece of masking tape on the floor marking a start line, and said, \"Make it go straight.\" That was it. No formula, no whiteboard, nothing.\n\nThey tried all the obvious stuff first. One group swapped the wheels around, another kept pushing the thing by hand to see if it was the drivetrain, and Dante insisted it was a ghost. We ran it maybe a dozen times and every run it ended up about two feet to the left of the tape, which by the way is a great way to make thirteen-year-olds feel like scientists. Somebody finally noticed that the left wheel was sitting a little lower on its axle, and then the whole room got quiet in that way you hope for, and I just stood there like I'd planned it. I hadn't. I'd honestly been hoping one of them would find something I'd missed, and that's pretty much what happened.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "If a teacher called you tomorrow needing a shop to donate machine time, what's the first thing you'd tell them to do?",
+   "answer": "Oh, that's an easy one for me, and I'll probably go on too long about it. Don't email anybody. I know it sounds old fashioned, but a stranger's email goes straight into the pile, and a kid standing in the shop asking a real question is what gets people to say yes. Walt said yes to Jamal, not to me.\n\nThen I'd tell them to drive the industrial strip off Quigley with the windows down and look for a hand-painted sign and a dumpster full of scrap. Those places are usually making things, and people who make things like being asked about them. Skip anywhere with a corporate feel, because they've got a procurement guy who says no to anything that isn't on a form.\n\nAnd bring a purchase order, or at least know what one is. I learned that one the hard way and had to call my old boss from the parking lot. Honestly, the best thing you can bring is a kid who's a little nervous and genuinely curious. That's the part nobody can fake.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "The left wheel was the moment, but getting a stuck group there is the real skill. When a group is stuck on a cart like that, what's the first question you ask them before anyone touches a wrench?",
+   "answer": "Honestly, I don't ask them a formula question, which is what everybody expects from a physics teacher. I usually ask something like, \"What did you see it do, exactly?\" And then I make them describe it in words before anyone's allowed to touch a wrench. Half the time someone says \"it goes left\" and I say \"left compared to what?\" and that's when the room starts arguing about the tape line, which is what I want.\n\nThe wrench thing is a rule I stole from a shop foreman, to be fair. If you let kids grab tools first, they start changing things at random and then nobody knows what fixed it. So I make them write down one guess and what they expect to happen if they're right. Then they test it. It's slower for the first five minutes and way faster after that. Also, I'll admit the first time I tried it, Dante wrote down \"ghost\" as his prediction, and I had to take that seriously for a whole class period.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "When Dante wrote down 'ghost' as his prediction and you had to take it seriously, what did that wrong guess teach the room, and what did you change the next day?",
+   "answer": "Ha, Dante's ghost. Okay, so what it taught the room, honestly, was that a wrong guess is still a guess you can test. Nobody was going to get laughed at for writing something down, because I had to take the ghost seriously in front of them. We spent the whole period trying to disprove it. One kid pushed the cart with a fan blowing at it, another tried to get it to veer in an empty hallway, and by the end Dante had talked himself out of the ghost by himself, which I think was more satisfying for him than if I'd just said no.\n\nWhat I changed the next day was small but I still think about it. Before, I'd let them write down a guess and test it, but a lot of the guesses were just \"it's the wheels\" or \"it's the motor,\" and that's not really a prediction, that's a shrug. So I started making them write the expected result in numbers: if it's the left wheel, the cart should drift about two feet in ten meters, and if it doesn't, the guess is dead. Dante complained that this was just more homework, which was fair, and then he was the first one to finish the measurement. I'd like to say I planned that too, but I mostly just got lucky with a kid who wanted to be right.",
+   "phase": "dig",
+   "playback": null
+  },
+  {
+   "question": "Is this you?",
+   "answer": "Yeah, mostly, though you've tidied me up a bit. The shops part is right. Jamal's question is the one that got Walt, and I still think about it. The fourteen months is right too, but I'd say it was \"about fourteen months if I was careful,\" and I'm not careful, Priya is. And the numeric prediction thing is right, though it came from Dante's ghost and me being annoyed that \"it's the wheels\" wasn't a prediction at all.\n\nThe part I'd push back on a little is the \"left aerospace for a classroom\" bit. It sounds like I had a clean plan and a clear exit, and really it was two years of budget spreadsheets, a night license program, and a dad who thought I'd lost it. Also the robot was never really the point, it was the kids sitting at the bench with the tape measure. If you want the one-line version, it's that a kid's question got a grown man to put his coffee down, and that's apparently the thing I keep building my life around.",
+   "phase": "shape",
+   "playback": "You walked a robotics team into machine shops off Quigley and let a nervous kid's question do the asking, so owners said yes. You left aerospace for a classroom on a fourteen-month savings cushion, and you run stuck groups by making them write a numeric prediction before anyone touches a wrench."
+  }
+ ],
+ "book": {
+  "titles": [
+   {
+    "title": "Make It Go Straight",
+    "why": "You never start with a formula; you ask what the cart did, exactly, and let the room argue about the tape line."
+   },
+   {
+    "title": "Point Two Millimeters",
+    "why": "You kept coming back to the 0.2 millimeters that showed you how much of your energy a bracket had taken."
+   },
+   {
+    "title": "Fourteen Months, Color-Coded",
+    "why": "You made a spreadsheet you're still a little proud of, and Priya colored the risky row red."
+   }
+  ],
+  "pool": [
+   {
+    "title": "The Question That Got a Yes",
+    "summary": "Shop owners get asked for quotes, not reasons. One small kid asked how you would know the hole was in the right spot, and what if the drawing's wrong? Coffee down, then twenty minutes on how a drill walks and why you pick a tolerance at all.",
+    "quotes": [
+     "how would you know if the hole was in the right spot?",
+     "I'm pretty sure he forgot we were there, and he said yes before we left."
+    ]
+   },
+   {
+    "title": "Reading a Shop From the Street",
+    "summary": "Drive the industrial strip with the windows down and look for a hand-painted sign and a dumpster full of scrap metal. Places that make things usually like being asked about them. Skip anywhere with a corporate feel, which has a procurement guy who says no to anything that isn't on a form.",
+    "quotes": [
+     "a hand-painted sign and a dumpster full of scrap metal",
+     "people who make things usually like being asked about them"
+    ]
+   },
+   {
+    "title": "The Purchase Order I Didn't Have",
+    "summary": "A shop asked for a purchase order, and the answer 'Absolutely, I'll bring one' came before anyone knew what one was. A call to a former boss from the car started the real lesson, and 'I'll think about it' turned out to mean no.",
+    "quotes": [
+     "Totally fair, what would you need from us to make that work?",
+     "which in shop language I've since learned means no"
+    ]
+   },
+   {
+    "title": "Point Two Millimeters",
+    "summary": "Less a single day than a slow leak: two weeks of going back and forth over a bracket tolerance, treated like the fate of the free world. Looking around the table, that much energy spent on one part was a bad sign.",
+    "quotes": [
+     "it was more like a slow leak that finally got bad enough that I couldn't ignore it",
+     "I'd spent more energy on that bracket that year than on basically any person in my life"
+    ]
+   },
+   {
+    "title": "Too Late to Back Out",
+    "summary": "Once the night license application was in, complaining about the bracket stopped being an option. The spouse was not surprised, which was humbling. The father asked if the decision meant losing one's mind: probably, but too late to back out.",
+    "quotes": [
+     "I said probably, but I'd already applied to the night license program, so it was too late to back out.",
+     "It made the whole thing real."
+    ]
+   },
+   {
+    "title": "Fourteen Months on a Color-Coded Sheet",
+    "summary": "A pay cut of about 45 percent, and savings that covered about fourteen months if careful. The first things cut were the Thursday dinner out and the good coffee, and a budget with no column for a dog.",
+    "quotes": [
+     "that's a real number now, not a feeling.",
+     "it was not having a reason to buy the good coffee."
+    ]
+   },
+   {
+    "title": "Six Hours on Stage",
+    "summary": "Explaining the physics was maybe a fifth of the job. The rest was thirty-two teenagers' attention at eight in the morning, and staying upbeat until 2:15. Half the time a kid knows more than you do, and you have to be okay with that.",
+    "quotes": [
+     "explaining the actual physics was maybe a fifth of the job",
+     "In a classroom you're on stage for six hours",
+     "you really don't realize how much you rely on being the expert in the room until you're not."
+    ]
+   },
+   {
+    "title": "Make It Go Straight",
+    "summary": "A tape measure, a stopwatch and masking tape, and the instruction to make it go straight. Every run drifted about two feet left until someone spotted a lower left wheel. Describe what it did before any wrench, then write one guess with the number it should show.",
+    "quotes": [
+     "a tape measure, a stopwatch, and a piece of masking tape on the floor marking a start line",
+     "What did you see it do, exactly?",
+     "before anyone's allowed to touch a wrench."
+    ]
+   }
+  ],
+  "title": "Make It Go Straight",
+  "chapters": [
+   {
+    "title": "Make It Go Straight",
+    "summary": "A tape measure, a stopwatch, masking tape on the floor, and one instruction: make it go straight. Every run ended about two feet left of the tape until someone noticed the left wheel sat lower on its axle. Before any wrench, describe what it did, then write one guess with the number it should show.",
+    "quotes": [
+     "a tape measure, a stopwatch, and a piece of masking tape on the floor marking a start line",
+     "What did you see it do, exactly?",
+     "before anyone's allowed to touch a wrench."
+    ]
+   },
+   {
+    "title": "Point Two Millimeters",
+    "summary": "Less a single day than a slow leak: two weeks of going back and forth over a bracket tolerance of 0.2 millimeters, treated like the fate of the free world. Looking around the table, more energy had gone into that one part than into nearly any person, and that was a bad sign.",
+    "quotes": [
+     "it was more like a slow leak that finally got bad enough that I couldn't ignore it",
+     "I'd spent more energy on that bracket that year than on basically any person in my life"
+    ]
+   },
+   {
+    "title": "Fourteen Months on a Color-Coded Sheet",
+    "summary": "A pay cut of about 45 percent, and savings that covered about fourteen months if careful. The Thursday dinner out was the first thing cut, and the good coffee was the one that really hurt.",
+    "quotes": [
+     "that's a real number now, not a feeling.",
+     "it was not having a reason to buy the good coffee."
+    ]
+   },
+   {
+    "title": "The Question That Got a Yes",
+    "summary": "A small kid asked how you would know the hole was in the right spot, and what if the drawing's wrong. The coffee went down, and twenty minutes followed on how a drill walks and why you pick a tolerance at all, ending in a yes before the van left.",
+    "quotes": [
+     "how would you know if the hole was in the right spot?",
+     "I'm pretty sure he forgot we were there, and he said yes before we left."
+    ]
+   },
+   {
+    "title": "Six Hours on Stage",
+    "summary": "Explaining the physics was maybe a fifth of the job. The rest was thirty-two teenagers' attention at eight in the morning and staying upbeat at 2:15. Half the time a kid knows more than you do, and being okay with that is part of the job.",
+    "quotes": [
+     "explaining the actual physics was maybe a fifth of the job",
+     "In a classroom you're on stage for six hours",
+     "you really don't realize how much you rely on being the expert in the room until you're not."
+    ]
+   }
+  ],
+  "blurbs": {},
+  "rewrite": {
+   "title": "A Fifth of the Job Was Physics",
+   "summary": "Explaining the physics was maybe a fifth of the job; the rest was thirty-two teenagers at eight in the morning and six hours on stage, still upbeat at 2:15. You rely on being the expert in the room until you're not, and when a student corrects your torque math, you end up proud.",
+   "quotes": [
+    "explaining the actual physics was maybe a fifth of the job",
+    "In a classroom you're on stage for six hours",
+    "you really don't realize how much you rely on being the expert in the room until you're not."
+   ]
+  }
+ }
+}

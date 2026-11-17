@@ -19,6 +19,20 @@ def checkout_requested(
     )
 
 
+def verification_code(code: str, verify_url: str) -> Email:
+    return Email(
+        subject=f"Your Trove code: {code}",
+        heading="Confirm your case.edu email",
+        paragraphs=[
+            f"Your code is {code}.",
+            "It works for 15 minutes. If you didn't sign up for Trove, ignore this email.",
+        ],
+        button_text="Enter your code",
+        button_url=verify_url,
+        show_unsubscribe=False,
+    )
+
+
 def checkout_accepted_for_reader(author_name: str, book_title: str, checkouts_url: str) -> Email:
     # Link only: contact details stay in Trove, not copied into inboxes (C2, docs/trove.md §7).
     return Email(

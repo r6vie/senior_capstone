@@ -2,6 +2,7 @@
 
 import base64
 import binascii
+import re
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -9,10 +10,13 @@ from pymongo import DESCENDING, ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
 
-from trove.auth.service import full_names_of
+from trove.auth.service import full_names_of, on_account_deleted
 from trove.books.models import DEFAULT_COPIES, MyBookResponse
 
 ON_SHELF = "on_shelf"
+# Taken down by its author: not on the shelf, not openable by readers, still theirs to work on.
+OFF_SHELF = "off_shelf"
+PUBLISHED = (ON_SHELF, OFF_SHELF)
 DRAFT = "draft"
 # Books have 3 to 5 chapters (docs/trove.md §4), so removing one stops at three.
 MIN_CHAPTERS = 3
@@ -116,9 +120,20 @@ class BookExists(Exception):
     """The member already has a book; there is one per member."""
 
 
-def my_book_view(book: dict) -> MyBookResponse:
+def my_book_view(book: dict, *, rewrite_unchanged: bool = False, undoable: bool = True) -> MyBookResponse:
     """A member's own book as its author sees it, including the grounding quotes and copies."""
-    return MyBookResponse.model_validate({**book, "id": book["_id"], "blurb": book.get("blurb")})
+    return MyBookResponse.model_validate(
+        {
+            **book,
+            "id": book["_id"],
+            "blurb": book.get("blurb"),
+            "chapters": [{**c, "has_previous": bool(c.get("previous"))} for c in book["chapters"]],
+            "can_undo": undoable and bool(book.get("previous_version")),
+            "revised_at": (book.get("previous_version") or {}).get("applied_at"),
+            "has_previous_blurb": book.get("previous_blurb") is not None,
+            "rewrite_unchanged": rewrite_unchanged,
+        }
+    )
 
 
 async def create_draft_book(
@@ -176,7 +191,8 @@ async def remove_chapter(
             # Checked in the same update, so two quick removals can't go below the minimum.
             f"chapters.{MIN_CHAPTERS}": {"$exists": True},
         },
-        {"$pull": {"chapters": {"id": chapter_id}}, "$set": changes},
+        # The old back cover described a chapter that's gone.
+        {"$pull": {"chapters": {"id": chapter_id}}, "$set": changes, "$unset": {"previous_blurb": ""}},
         return_document=ReturnDocument.AFTER,
     )
     return await _named(database, book)
@@ -192,12 +208,285 @@ async def replace_chapter(database: AsyncDatabase, author_id: str, chapter: dict
     return await _named(database, book)
 
 
+async def set_draft_blurb(
+    database: AsyncDatabase, author_id: str, blurb: str, *, previous: str | None
+) -> dict | None:
+    """Replace the back cover of the author's draft, keeping the old one to go back to. None if they
+    have no draft."""
+    book = await database.books.find_one_and_update(
+        {"author_id": author_id, "status": DRAFT},
+        {"$set": {"blurb": blurb, "previous_blurb": previous, "updated_at": datetime.now(UTC)}},
+        return_document=ReturnDocument.AFTER,
+    )
+    return await _named(database, book)
+
+
+async def restore_draft_blurb(database: AsyncDatabase, author_id: str) -> dict | None:
+    """Go back to the draft's last back cover. None if there isn't one."""
+    book = await database.books.find_one_and_update(
+        {"author_id": author_id, "status": DRAFT, "previous_blurb": {"$type": "string"}},
+        [
+            {"$set": {"blurb": "$previous_blurb", "updated_at": datetime.now(UTC)}},
+            {"$unset": "previous_blurb"},
+        ],
+        return_document=ReturnDocument.AFTER,
+    )
+    return await _named(database, book)
+
+
+async def retitle_draft(
+    database: AsyncDatabase, author_id: str, *, title: str, chapters: list[dict], blurb: str | None
+) -> dict | None:
+    """Replace the author's draft with one finished for another title. None if they have no draft."""
+    book = await database.books.find_one_and_update(
+        {"author_id": author_id, "status": DRAFT},
+        {
+            "$set": {"title": title, "chapters": chapters, "blurb": blurb, "updated_at": datetime.now(UTC)},
+            # The old back cover described the old book.
+            "$unset": {"previous_blurb": ""},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    return await _named(database, book)
+
+
+async def restore_chapter(database: AsyncDatabase, author_id: str, chapter_id: str) -> dict | None:
+    """Go back to a draft chapter's last version. None if there isn't one."""
+    book = await database.books.find_one({"author_id": author_id, "status": DRAFT, "chapters.id": chapter_id})
+    chapter = next((c for c in book["chapters"] if c["id"] == chapter_id), None) if book else None
+    if not chapter or not chapter.get("previous"):
+        return None
+    restored = {key: value for key, value in chapter.items() if key != "previous"}
+    return await replace_chapter(database, author_id, {**restored, **chapter["previous"]})
+
+
+def revised_chapters(
+    chapters: list[dict], *, improved: list[dict], added: list[dict], removed: list[str]
+) -> list[dict]:
+    """The chapters after a revision. `improved` replace the ones with their ids, in place. `added`
+    each go where their `position` says (1 is first), or at the end without one."""
+    replacements = {chapter["id"]: chapter for chapter in improved}
+    result = [
+        replacements.get(chapter["id"], chapter) for chapter in chapters if chapter["id"] not in removed
+    ]
+    for chapter in added:
+        position = chapter.get("position")
+        index = len(result) if position is None else max(0, min(position - 1, len(result)))
+        result.insert(index, {key: value for key, value in chapter.items() if key != "position"})
+    return result
+
+
+async def apply_revision(
+    database: AsyncDatabase,
+    author_id: str,
+    *,
+    improved: list[dict],
+    added: list[dict],
+    removed: list[str],
+    blurb: str | None,
+) -> dict | None:
+    """Apply approved changes to the author's book on the shelf, in one update, keeping what was
+    there so it can be undone. `blurb` None keeps the old one. None if there's no such book, it
+    changed meanwhile, or it would fall below MIN_CHAPTERS.
+
+    `published_at` doesn't change: the shelf isn't a feed, and a revision doesn't bump a book.
+    """
+    book = await database.books.find_one({"author_id": author_id, "status": {"$in": PUBLISHED}})
+    if book is None:
+        return None
+    chapters = revised_chapters(book["chapters"], improved=improved, added=added, removed=removed)
+    if len(chapters) < MIN_CHAPTERS:
+        return None
+    changes: dict = {
+        "chapters": chapters,
+        "previous_version": {
+            "chapters": book["chapters"],
+            "blurb": book.get("blurb"),
+            "applied_at": datetime.now(UTC),
+        },
+        "updated_at": datetime.now(UTC),
+    }
+    if blurb is not None:
+        changes["blurb"] = blurb
+    updated = await database.books.find_one_and_update(
+        # Only if the book hasn't changed since it was read, so two approvals can't lose one.
+        {"_id": book["_id"], "status": book["status"], "updated_at": book["updated_at"]},
+        {"$set": changes},
+        return_document=ReturnDocument.AFTER,
+    )
+    return await _named(database, updated)
+
+
+async def undo_revision(database: AsyncDatabase, author_id: str) -> dict | None:
+    """Put back the chapters and blurb from before the last revision, in one update. None if there's
+    nothing to undo. Never reader-facing: `previous_version` isn't in PUBLIC_FIELDS."""
+    book = await database.books.find_one({"author_id": author_id, "status": {"$in": PUBLISHED}})
+    previous = book.get("previous_version") if book else None
+    if not previous:
+        return None
+    restored = await database.books.find_one_and_update(
+        {"_id": book["_id"], "updated_at": book["updated_at"]},
+        {
+            "$set": {
+                "chapters": previous["chapters"],
+                "blurb": previous["blurb"],
+                # Edits can change the title too; revisions never do.
+                "title": previous.get("title", book["title"]),
+                "updated_at": datetime.now(UTC),
+            },
+            "$unset": {"previous_version": ""},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    return await _named(database, restored)
+
+
 async def put_on_shelf(database: AsyncDatabase, author_id: str) -> dict | None:
     """Publish the author's draft. None if they have no draft."""
     now = datetime.now(UTC)
     book = await database.books.find_one_and_update(
         {"author_id": author_id, "status": DRAFT},
-        {"$set": {"status": ON_SHELF, "published_at": now, "updated_at": now}},
+        # Earlier versions of chapters are for the review only.
+        {
+            "$set": {"status": ON_SHELF, "published_at": now, "updated_at": now},
+            "$unset": {"chapters.$[].previous": "", "previous_blurb": ""},
+        },
         return_document=ReturnDocument.AFTER,
     )
     return await _named(database, book)
+
+
+# The member's own edits (docs/review/decisions.md, rows 30 to 33).
+
+CONTACT_REFUSED = "Contact details are shared only when you accept a checkout, so they can't go on your book."
+_CONTACT = [
+    re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"),
+    re.compile(r"https?://|\bwww\.", re.IGNORECASE),
+    re.compile(r"\b[\w-]+\.(?:com|org|net|edu|io|co|me|dev|app|ly|us|ai|gov|info)\b", re.IGNORECASE),
+    # A phone number: ten digits or more in a run of digits and separators, or 555-0134.
+    re.compile(r"(?:\+?\d[\s().-]*){10,}"),
+    re.compile(r"\b\d{3}[-.]\d{4}\b"),
+]
+
+
+class EditRefused(Exception):
+    """The edit can't be saved. `detail` is said to the member as it is."""
+
+    def __init__(self, status_code: int, detail: str):
+        self.status_code = status_code
+        self.detail = detail
+
+
+def check_text(*texts: str | None) -> None:
+    """Refuse contact details: they're shared only on an accepted checkout (CLAUDE.md)."""
+    if any(text and pattern.search(text) for text in texts for pattern in _CONTACT):
+        raise EditRefused(422, CONTACT_REFUSED)
+
+
+def _snapshot(book: dict) -> dict:
+    """What undo puts back. `kind` says an edit made it, so undo doesn't treat it as a declined change."""
+    return {
+        "chapters": book["chapters"],
+        "blurb": book.get("blurb"),
+        "title": book["title"],
+        "applied_at": datetime.now(UTC),
+        "kind": "edit",
+    }
+
+
+async def _own_book(database: AsyncDatabase, author_id: str) -> dict:
+    book = await database.books.find_one({"author_id": author_id})
+    if book is None:
+        raise EditRefused(404, "You don't have a book yet.")
+    return book
+
+
+async def _save(database: AsyncDatabase, book: dict, changes: dict) -> dict:
+    updated = await database.books.find_one_and_update(
+        # Only if nothing else changed it since it was read, so an edit can't undo another change.
+        {"_id": book["_id"], "updated_at": book["updated_at"]},
+        {"$set": {**changes, "updated_at": datetime.now(UTC)}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if updated is None:
+        raise EditRefused(409, "Your book changed while you were editing. Look at it again, then save.")
+    return await _named(database, updated)
+
+
+async def edit_book(
+    database: AsyncDatabase, author_id: str, *, title: str | None = None, blurb: str | None = None
+) -> dict:
+    """Save the member's own title or back cover. On a draft the old back cover can be restored;
+    on a published book, saved means live, and undo takes it back. `published_at` stays."""
+    check_text(title, blurb)
+    book = await _own_book(database, author_id)
+    changes: dict = {}
+    if title is not None:
+        changes["title"] = title
+    if blurb is not None:
+        changes["blurb"] = blurb
+        if book["status"] == DRAFT:
+            changes["previous_blurb"] = book.get("blurb")
+    if book["status"] != DRAFT:
+        changes["previous_version"] = _snapshot(book)
+    return await _save(database, book, changes)
+
+
+async def edit_chapter(
+    database: AsyncDatabase,
+    author_id: str,
+    chapter_id: str,
+    *,
+    title: str | None = None,
+    summary: str | None = None,
+) -> dict:
+    """Save the member's own chapter title or summary. Its quotes stay. On a draft the last version
+    can be restored, like a rewrite; on a published book, undo takes it back."""
+    check_text(title, summary)
+    book = await _own_book(database, author_id)
+    index = next((n for n, c in enumerate(book["chapters"]) if c["id"] == chapter_id), None)
+    if index is None:
+        raise EditRefused(404, "That chapter isn't in your book.")
+    chapter = book["chapters"][index]
+    edited = {**chapter, "title": title or chapter["title"], "summary": summary or chapter["summary"]}
+    if book["status"] == DRAFT:
+        edited["previous"] = {
+            "title": chapter["title"],
+            "summary": chapter["summary"],
+            "quotes": chapter["quotes"],
+        }
+    changes: dict = {f"chapters.{index}": edited}
+    if book["status"] != DRAFT:
+        changes["previous_version"] = _snapshot(book)
+    return await _save(database, book, changes)
+
+
+async def take_off_shelf(database: AsyncDatabase, author_id: str) -> dict | None:
+    """Take the book down: readers can't find or open it, so no new checkouts. What's already
+    arranged goes ahead. None if the book isn't on the shelf."""
+    return await _named(
+        database,
+        await database.books.find_one_and_update(
+            {"author_id": author_id, "status": ON_SHELF},
+            {"$set": {"status": OFF_SHELF, "updated_at": datetime.now(UTC)}},
+            return_document=ReturnDocument.AFTER,
+        ),
+    )
+
+
+async def put_back_on_shelf(database: AsyncDatabase, author_id: str) -> dict | None:
+    """Put a book that was taken down back. `published_at` stays, so it returns to the same place."""
+    return await _named(
+        database,
+        await database.books.find_one_and_update(
+            {"author_id": author_id, "status": OFF_SHELF},
+            {"$set": {"status": ON_SHELF, "updated_at": datetime.now(UTC)}},
+            return_document=ReturnDocument.AFTER,
+        ),
+    )
+
+
+@on_account_deleted
+async def delete_books_of(database: AsyncDatabase, user_id: str) -> None:
+    """Account deletion: the member's book goes, shelf and all. Safe to run twice."""
+    await database.books.delete_many({"author_id": user_id})

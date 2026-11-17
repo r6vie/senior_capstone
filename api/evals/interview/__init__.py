@@ -14,82 +14,65 @@ persona.
 import re
 from pathlib import Path
 
+from anthropic import transform_schema
+from pydantic import BaseModel
+
 from trove.ai.client import Claude, text_of
 from trove.interview import engine
 from trove.interview.engine import Turn
 
+from ..lints import BANNED, BLURB_META, HYPE, META, OUT_OF_CHARACTER, lint_questions
+from ..usage import CountingClaude, member_client, product_client
 from .personas import PERSONAS
 
 CASES = PERSONAS
 ANSWERER_PROMPT = (Path(__file__).resolve().parent / "answerer.md").read_text(encoding="utf-8").strip()
-# The answerer only plays a part, so it thinks little. It never touches the engine's settings.
+# The answerer only plays a part, so it thinks little, on a cheap model (evals/usage.py).
 ANSWERER_EFFORT = "low"
 
-# Question shapes the spec bans (docs/trove.md §4). A hit is a flag for the reader, not a verdict.
-BANNED = {
-    "tell me about yourself": r"tell me (a bit |a little )?about yourself|walk me through your (background|résumé|resume)",
-    "importance of": r"importance of|why (is|does) .{0,40} matter",
-    "how do you balance": r"\bbalanc(e|ing)\b",
-    "yes/no opener": r"^(do|did|are|were|is|was|have|has|can|could|would|will) you\b",
-    "two questions": r"\?.+\?",
-    # §4, §9.9: thin answers get sharper questions, never small talk or reassurance.
-    "small talk": r"last (saturday|sunday|weekend|week)\b|for fun\b|hobb(y|ies)|how('s| is| was) your (day|week)"
-    r"|what did you do (today|yesterday|this week)",
-    "reassurance": r"anything counts|that'?s (okay|ok|fine|totally fine|great|amazing)|no (wrong|bad) answers?"
-    r"|don'?t worry|no pressure|it'?s (okay|ok|fine)|even (a )?small|great (answer|question)|love that",
-}
 
-
-# Summaries must be the chapter, not a description of it.
-META = r"\b(reader|readers|this chapter|the chapter|conversation|30-minute|talk would|it comes from|covers)\b"
-# The blurb is a back cover: framing about the book, and hype, are both banned.
-BLURB_META = r"\b(this book|in this book|the book|chapters?|readers?|here i share|my story)\b"
-HYPE = r"\b(passionate|passion|journey|unique|incredible|amazing|everything you need|game[- ]chang\w*|unlock\w*)\b"
-
-
-class CountingClaude(Claude):
-    """Passes calls through and adds up tokens, so each case reports what it cost."""
-
-    def __init__(self, inner: Claude):
-        self.model = inner.model
-        self.inner = inner
-        self.input_tokens = self.output_tokens = self.cached_tokens = self.calls = 0
-
-    async def create(self, **params):
-        response = await self.inner.create(**params)
-        usage = response.usage
-        self.calls += 1
-        self.input_tokens += usage.input_tokens + (usage.cache_creation_input_tokens or 0)
-        self.cached_tokens += usage.cache_read_input_tokens or 0
-        self.output_tokens += usage.output_tokens
-        return response
+class MemberReply(BaseModel):
+    answer: str
+    skipped: bool
 
 
 async def answer(
     claude: Claude, persona: dict, turns: list[Turn], question: str, playback: str | None
-) -> str:
+) -> MemberReply:
     asked = f"{playback}\n\n{question}" if playback else question
     asked += '\n\n(A quiet "Skip" button is always on screen.)'
     content = (
         f"<profile>\n{persona['profile'].strip()}\n</profile>\n\n"
         f"{engine._transcript(turns)}\n\n<newest_question>\n{asked}\n</newest_question>"
     )
-    response = await claude.create(
-        max_tokens=4000,
-        system=ANSWERER_PROMPT,
-        thinking={"type": "adaptive"},
-        output_config={"effort": ANSWERER_EFFORT},
-        messages=[{"role": "user", "content": content}],
-    )
-    return text_of(response)
+    for _ in range(2):
+        response = await claude.create(
+            max_tokens=4000,
+            system=ANSWERER_PROMPT,
+            thinking={"type": "adaptive"},
+            output_config={
+                "effort": ANSWERER_EFFORT,
+                "format": {"type": "json_schema", "schema": transform_schema(MemberReply)},
+            },
+            messages=[{"role": "user", "content": content}],
+        )
+        reply = MemberReply.model_validate_json(text_of(response))
+        if not re.search(OUT_OF_CHARACTER, reply.answer, re.I):
+            return reply
+    # A player's reasoning saved as the member's words would become quotable material for the book.
+    raise ValueError(f"The simulated member broke character: {reply.answer[:120]!r}")
 
 
 async def run_case(claude: Claude, case: dict) -> str:
-    counting = CountingClaude(claude)
+    counting = CountingClaude(product_client(claude))
+    member = CountingClaude(member_client(claude))
     turns: list[Turn] = []
+    first_moment = None
     log = []
     while True:
         plan = await engine.plan_turn(counting, turns=turns, resume_text=case["resume"])
+        if first_moment is None and any(t.has_moment for t in plan.threads):
+            first_moment = len(turns)
         ranking = " / ".join(f"{t.thread} ({t.missing})" for t in plan.threads[:4])
         flags = [name for name, pattern in BANNED.items() if re.search(pattern, plan.question, re.I | re.S)]
         if plan.phase == "shape" and plan.playback:
@@ -105,8 +88,9 @@ async def run_case(claude: Claude, case: dict) -> str:
             break
         if engine._running_thin(turns):
             entry.insert(1, "<sub>↻ answers running thin: sharper angle asked for</sub>")
-        reply = (await answer(counting, case, turns, plan.question, plan.playback)).strip()
-        skipped = reply == "SKIP"
+        reply = await answer(member, case, turns, plan.question, plan.playback)
+        skipped = reply.skipped or not reply.answer.strip()
+        reply = reply.answer.strip()
         entry.append("**A:** *(skips)*" if skipped else f"**A:** {reply}")
         log.append("\n\n".join(entry))
         turns.append(Turn(question=plan.question, answer="" if skipped else reply, phase=plan.phase))
@@ -127,10 +111,12 @@ async def run_case(claude: Claude, case: dict) -> str:
         f"**{asked} questions** (sweep {phases.count('sweep')}, dig {phases.count('dig')}, "
         f"shape {phases.count('shape')}); hit the cap: {'⚠️ yes' if asked >= engine.MAX_QUESTIONS else 'no'}; "
         f"skips {sum(not t.answer.strip() for t in turns)}; questions flagged {all_flags}; "
-        f"grounded pool {len(draft.pool)}, finished {len(book)} chapters. {counting.calls} calls, {counting.input_tokens:,} input "
-        f"+ {counting.cached_tokens:,} cached, {counting.output_tokens:,} output tokens.",
+        f"grounded pool {len(draft.pool)}, finished {len(book)} chapters.\n\n"
+        f"Cost: {counting.line()}; member {member.line()}.",
+        f"**First concrete moment:** {first_moment and f'A{first_moment}'}"
+        + (" ⚠️ later than Q6" if not first_moment or first_moment > 6 else ""),
         "**Should surface:**\n" + "\n".join(f"- {item}" for item in case["should_surface"]),
-        "**Repeated after a skip:** " + (", ".join(_repeated_after_skip(turns)) or "none"),
+        "**Lint:**\n" + "\n".join(f"- {f}" for f in lint_questions(turns) if f.rule != "repeated opener"),
         "### Transcript\n\n" + "\n\n---\n\n".join(log),
         "### Titles\n\n" + "\n".join(f"{n}. **{t.title}**: {t.why}" for n, t in enumerate(draft.titles, 1)),
         "### Pool\n\n" + "\n\n".join(_chapter(c) for c in draft.pool),
@@ -165,22 +151,6 @@ def _blurb_check(blurb: str) -> str:
     if not first_person:
         flags.append("not first person")
     return f"{len(blurb)} chars" + (f", ⚠️ {'; '.join(flags)}" if flags else ", ok")
-
-
-def _repeated_after_skip(turns: list[Turn]) -> list[str]:
-    """Skipped questions the interviewer came back to: a later question sharing most of its words."""
-
-    def words(text: str) -> set[str]:
-        return {w for w in re.findall(r"[a-z']+", text.lower()) if len(w) > 3}
-
-    repeats = []
-    for n, turn in enumerate(turns):
-        skipped = words(turn.question)
-        if turn.answer.strip() or not skipped:
-            continue
-        if any(len(skipped & words(later.question)) / len(skipped) > 0.6 for later in turns[n + 1 :]):
-            repeats.append(f"Q{n + 1}")
-    return repeats
 
 
 def _chapter(chapter: engine.DraftChapter) -> str:

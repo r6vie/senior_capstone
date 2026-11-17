@@ -1,0 +1,80 @@
+[
+ {
+  "slug": "ruth",
+  "after": 3,
+  "kind": "door",
+  "note": "Stays in the scene: the daughters went very still. What happened next, who spoke"
+ },
+ {
+  "slug": "ruth",
+  "after": 11,
+  "kind": "door",
+  "note": "They worry saying it plainly will hurt someone. Are they ever right? Has it gone badly?"
+ },
+ {
+  "slug": "ruth",
+  "after": 14,
+  "kind": "door",
+  "note": "The burnout she left out. Did they see it, did it follow her? Not a recap yet"
+ },
+ {
+  "slug": "ruth",
+  "after": 15,
+  "kind": "correction",
+  "note": "A real answer to the playback: the next step follows it"
+ },
+ {
+  "slug": "theo",
+  "after": 12,
+  "kind": "door",
+  "note": "Nobody thought about rain until the numbers looked weird. Stays on the creek"
+ },
+ {
+  "slug": "theo",
+  "after": 18,
+  "kind": "door",
+  "note": "A big deal for us, but not a big thing. Which is it, and why"
+ },
+ {
+  "slug": "theo",
+  "after": 19,
+  "kind": "door",
+  "note": "Mom was skeptical, one night proved it. What happened that night"
+ },
+ {
+  "slug": "theo",
+  "after": 21,
+  "kind": "correction",
+  "note": "He says the slats aren't a big deal and credits the teacher. Doesn't just close"
+ },
+ {
+  "slug": "dana",
+  "after": 21,
+  "kind": "door",
+  "note": "The printer with the sign. How long was it there, who let her open it"
+ },
+ {
+  "slug": "dana",
+  "after": 22,
+  "kind": "door",
+  "note": "My notes from that first semester. What notes, why keep them"
+ },
+ {
+  "slug": "dana",
+  "after": 27,
+  "kind": "correction",
+  "note": "Mostly, yeah, and not that impressive. A hedge isn't a yes"
+ },
+ {
+  "slug": "dana",
+  "after": 4,
+  "kind": "thin",
+  "note": "Quiet answer early: a sharp question anchored in the desk, no invented premise"
+ },
+ {
+  "slug": "jordan",
+  "after": 3,
+  "kind": "door",
+  "note": "Follows his exact last words instead of a stock frame"
+ }
+]

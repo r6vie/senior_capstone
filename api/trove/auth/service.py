@@ -36,6 +36,8 @@ async def ensure_indexes(database: AsyncDatabase) -> None:
     await database.sessions.create_index("token_hash", unique=True, name="sessions_token_unique")
     await database.sessions.create_index("expires_at", expireAfterSeconds=0, name="sessions_expiry")
     await database.auth_attempts.create_index("expires_at", expireAfterSeconds=0, name="attempts_expiry")
+    await database.invites.create_index("token_hash", unique=True, name="invites_token_unique")
+    await database.invites.create_index("inviter_id", name="invites_inviter")
 
 
 def token_digest(token: str) -> str:
@@ -58,6 +60,7 @@ def public_user(user: dict) -> UserResponse:
         full_name=full_name(user),
         email=user["email"],
         email_notifications=user.get("email_notifications", True),
+        verified=user.get("verified", True),
         created_at=user["created_at"],
     )
 
@@ -144,6 +147,12 @@ async def full_names_of(database: AsyncDatabase, user_ids: list[str]) -> dict[st
     return {user["_id"]: full_name(user) async for user in users}
 
 
+async def user_id_by_email(database: AsyncDatabase, email: str) -> str | None:
+    """For development scripts that take a member's email."""
+    user = await database.users.find_one({"email": email.strip().lower()}, {"_id": 1})
+    return user["_id"] if user else None
+
+
 async def email_recipient(database: AsyncDatabase, user_id: str) -> dict | None:
     """The active account's email address and email preference, for the notifications feature."""
     return await database.users.find_one(
@@ -201,4 +210,5 @@ async def delete_account(database: AsyncDatabase, user_id: str) -> None:
     for hook in deletion_hooks:
         await hook(database, user_id)
     await database.sessions.delete_many({"user_id": user_id})
+    await database.invites.delete_many({"inviter_id": user_id})
     await database.users.delete_one({"_id": user_id})

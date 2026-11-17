@@ -6,6 +6,8 @@ import ssl
 from collections.abc import Callable
 from datetime import UTC, datetime
 from email.message import EmailMessage
+from urllib.parse import quote
+from uuid import uuid4
 
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
@@ -165,4 +167,17 @@ async def notify_welcome(database: AsyncDatabase, user_id: str, first_name: str)
         f"welcome:{user_id}",
         user_id,
         templates.welcome(first_name, app_url).render,
+    )
+
+
+async def notify_verification_code(database: AsyncDatabase, user_id: str, code: str, email: str) -> str:
+    """Send a case.edu verification code. Every code is a new email, and it goes out even if the member
+    turned notifications off, since they cannot sign in without it."""
+    verify_url = f"{get_settings().frontend_url.rstrip('/')}/verify?email={quote(email)}"
+    return await notify_once(
+        database,
+        f"verification-code:{uuid4()}",
+        user_id,
+        templates.verification_code(code, verify_url).render,
+        transactional=True,
     )
