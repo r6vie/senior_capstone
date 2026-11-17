@@ -31,6 +31,8 @@ def no_real_email(monkeypatch):
     # where there is no .env, unless the test installs fake_claude.
     monkeypatch.setattr(get_settings(), "anthropic_api_key", "")
     monkeypatch.setattr(get_settings(), "ai_mode", "real")
+    # Most tests sign up with example.com addresses; the verification tests turn this back on.
+    monkeypatch.setattr(get_settings(), "verification_required", False)
     yield
     get_settings.cache_clear()
 

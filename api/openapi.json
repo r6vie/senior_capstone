@@ -11,7 +11,7 @@
           "Accounts"
         ],
         "summary": "Signup",
-        "description": "Create an account. Sign in afterwards with POST /auth/login.",
+        "description": "Create an account. Students use their case.edu email and get a code to enter at POST /auth/verify;\nalumni sign up with an invite from a member. Then sign in with POST /auth/login.",
         "operationId": "signup_auth_signup_post",
         "requestBody": {
           "content": {
@@ -334,6 +334,221 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/auth/verify": {
+      "post": {
+        "tags": [
+          "Verification and invites"
+        ],
+        "summary": "Verify",
+        "description": "Confirm a case.edu email with the 6-digit code we sent. Signs the member in.",
+        "operationId": "verify_auth_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify/resend": {
+      "post": {
+        "tags": [
+          "Verification and invites"
+        ],
+        "summary": "Resend",
+        "description": "Send a new code. Answers the same whether or not the email has an account, and at most one a minute.",
+        "operationId": "resend_auth_verify_resend_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/invites": {
+      "get": {
+        "tags": [
+          "Verification and invites"
+        ],
+        "summary": "My Invites",
+        "description": "Your open invites. The link itself is only shown when you make it.",
+        "operationId": "my_invites_auth_invites_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InviteView"
+                  },
+                  "type": "array",
+                  "title": "Response My Invites Auth Invites Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Verification and invites"
+        ],
+        "summary": "Create Invite",
+        "description": "Make a single-use link for an alum. It lasts 14 days; you can have 5 open at a time.",
+        "operationId": "create_invite_auth_invites_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCreated"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/auth/invites/{invite_id}": {
+      "delete": {
+        "tags": [
+          "Verification and invites"
+        ],
+        "summary": "Cancel Invite",
+        "operationId": "cancel_invite_auth_invites__invite_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invite_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Invite Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/invites/check": {
+      "post": {
+        "tags": [
+          "Verification and invites"
+        ],
+        "summary": "Check Invite",
+        "description": "For the sign-up page: who invited you, if the link still works. Doesn't use it up.",
+        "operationId": "check_invite_auth_invites_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCheckResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/notifications/unsubscribe": {
@@ -3160,6 +3375,90 @@
         ],
         "title": "InterviewResponse"
       },
+      "InviteCheckRequest": {
+        "properties": {
+          "invite": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Invite"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "invite"
+        ],
+        "title": "InviteCheckRequest"
+      },
+      "InviteCheckResponse": {
+        "properties": {
+          "inviter_name": {
+            "type": "string",
+            "title": "Inviter Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inviter_name"
+        ],
+        "title": "InviteCheckResponse"
+      },
+      "InviteCreated": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "link": {
+            "type": "string",
+            "title": "Link"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "expires_at",
+          "link"
+        ],
+        "title": "InviteCreated"
+      },
+      "InviteView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "expires_at"
+        ],
+        "title": "InviteView"
+      },
       "LendingCheckout": {
         "properties": {
           "id": {
@@ -3822,6 +4121,21 @@
         ],
         "title": "RemovalRequest"
       },
+      "ResendRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "ResendRequest"
+      },
       "RevisionChoicesRequest": {
         "properties": {
           "approved": {
@@ -3955,6 +4269,19 @@
             "maxLength": 60,
             "minLength": 1,
             "title": "Last Name"
+          },
+          "invite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invite"
           }
         },
         "additionalProperties": false,
@@ -4167,6 +4494,10 @@
             "type": "boolean",
             "title": "Email Notifications"
           },
+          "verified": {
+            "type": "boolean",
+            "title": "Verified"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -4181,6 +4512,7 @@
           "full_name",
           "email",
           "email_notifications",
+          "verified",
           "created_at"
         ],
         "title": "UserResponse"
@@ -4224,6 +4556,27 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VerifyRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "title": "Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "email",
+          "code"
+        ],
+        "title": "VerifyRequest"
       }
     },
     "securitySchemes": {

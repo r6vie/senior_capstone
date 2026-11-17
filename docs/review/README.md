@@ -9,7 +9,7 @@ Every call we made for him is in [decisions.md](decisions.md).
 python3 scripts/dev.py --scripted-ai
 ```
 
-That runs the app with a free stand-in for the AI, so walking it costs nothing. Drop `--scripted-ai` to use real Claude, which costs money. My book is in the top bar (Daniel's app shell); the interview starts from there.
+That runs the app with a free stand-in for the AI, so walking it costs nothing. Sign-up now needs a case.edu code or an invite (A2), so for a local walk set `VERIFICATION_REQUIRED=false` in `.env`, or sign up with a case.edu address and take the code from the API terminal. Drop `--scripted-ai` to use real Claude, which costs money. My book is in the top bar (Daniel's app shell); the interview starts from there.
 
 - Give a member the question after a reading: `scripts/ask_after_reading.py`
 - See real API spending: `python3 scripts/ai_spend.py`

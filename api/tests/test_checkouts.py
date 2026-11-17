@@ -85,6 +85,7 @@ async def test_check_out_then_author_accepts(client, database, sent):
             "reader_name": "Sam Lee",
             "book_title": "Maya's book",
             "message": "I'd love to hear about this.",
+            "answer_days": 7,
         }
     ]
 
@@ -260,3 +261,19 @@ async def test_a_fully_lent_book_leaves_the_shelf_but_still_opens(client, databa
     assert (await shelf_ids(limit=1)) == (["book-of-sam"], None)
     # A direct link still opens it; only the shelf hides it.
     assert (await client.get("/books/one-copy", headers=sam)).status_code == 200
+
+
+async def test_deleting_an_account_removes_its_checkouts_both_ways(client, database, sent):
+    await database.books.insert_one(book("one-copy", "author-1", copies=1))
+    _, maya = await member(client, database, "Maya")
+    _, sam = await member(client, database, "Sam")
+    await check_out(client, sam, "book-of-maya")
+    await check_out(client, sam, "one-copy")
+    await check_out(client, maya, "book-of-sam")
+
+    response = await client.request("DELETE", "/auth/me", json={"email": "sam@example.com"}, headers=sam)
+    assert response.status_code == 204
+    assert await database.checkouts.count_documents({}) == 0
+    # The copy Sam had taken is free again.
+    assert await fully_checked_out(database, [{"_id": "one-copy", "copies": 1}]) == set()
+    assert (await client.get("/checkouts", headers=maya)).json() == {"reading": [], "lending": []}

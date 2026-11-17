@@ -217,14 +217,14 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 
 Everyone at launch is CWRU, so community branches and affiliation badges would carry no information. We can revisit them if Trove expands beyond CWRU.
 
-Membership verification is still open:
+Membership verification (decided 2026-11-16, A2, Daniel):
 
-- **Students:** a case.edu email.
-- **Alumni:** there's no clean check. Options:
-  - an invite link shared through alumni channels
-  - the person states their graduation year, with manual review while the community is small
-  - a partnership with the alumni office
-  - LinkedIn education data, which needs partner access we don't have
+- **Students:** a code sent to their case.edu email. The address must end in exactly `@case.edu`.
+- **Alumni:** an invite link from a verified member. Alumni are reached through members we already have, so no outside check is needed for now.
+  - Each link works once and expires after 14 days; a member can have 5 open at a time; we record who invited whom.
+  - Still open for later: graduation-year review, an alumni-office partnership, and LinkedIn education data (needs partner access we don't have).
+- **Sign-in stays email and password.** The emailed code only proves the address belongs to the person.
+- Accounts that exist before this ships count as verified. Accounts that aren't verified can't sign in.
 
 ### 9.3 Résumé upload (decided)
 

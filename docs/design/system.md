@@ -267,3 +267,12 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
   "Take your book off the shelf? …" with quiet "Take it off" and "Keep it on the shelf", focus on keeping it. An
   off-shelf book's caption is "Off the shelf", a plain note says what that means, and "Put back on the shelf" is
   the page's red action.
+
+- **Checkout list** (2026-11-15, Ellie, `web/src/features/checkouts/Checkouts.css`). Task: answer or follow
+  checkouts without a feed. Sections under a 3px ink rule; each item is a name or title, the other member's note
+  as `.checkout-note` (a 3px ink rule on the left, Newsreader italic), one line of status, and secondary/quiet
+  buttons. **No red on this page**: no single action is the next step for everyone. Declining asks once, in
+  place ("Decline …? Decline / Keep it"), not in a dialog.
+- **Check out form** (2026-11-15, Ellie, `CheckOutPage.tsx`). The book's title, byline and blurb, then one
+  textarea and the screen's one red button, "Ask to check out", with the note "A thirty-minute video call, if
+  the author says yes."

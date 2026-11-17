@@ -24,6 +24,8 @@ Name = Annotated[NonEmptyText, Field(max_length=60)]
 class SignupRequest(LoginRequest):
     first_name: Name
     last_name: Name
+    # The token from an invite link. Alumni sign up with one instead of a case.edu email.
+    invite: Annotated[str, Field(min_length=1, max_length=100)] | None = None
     password: SecretStr = Field(min_length=12, max_length=128)
 
     @field_validator("password")
@@ -121,6 +123,8 @@ class UserResponse(BaseModel):
     full_name: str
     email: EmailStr
     email_notifications: bool
+    # False until a student enters the code sent to their case.edu email.
+    verified: bool
     created_at: datetime
 
 
@@ -128,3 +132,41 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: Literal["bearer"] = "bearer"
     expires_in: int
+
+
+class VerifyRequest(RequestBody):
+    email: EmailStr
+    code: Annotated[str, Field(pattern=r"^[0-9]{6}$")]
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        return value.casefold()
+
+
+class ResendRequest(RequestBody):
+    email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        return value.casefold()
+
+
+class InviteView(BaseModel):
+    id: str
+    created_at: datetime
+    expires_at: datetime
+
+
+class InviteCreated(InviteView):
+    # Shown once: only a hash of the token is stored.
+    link: str
+
+
+class InviteCheckRequest(RequestBody):
+    invite: Annotated[str, Field(min_length=1, max_length=100)]
+
+
+class InviteCheckResponse(BaseModel):
+    inviter_name: str
