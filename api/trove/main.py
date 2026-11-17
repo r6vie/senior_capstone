@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 
 from trove.auth import service as auth_service
 from trove.auth.router import router as auth_router
+from trove.auth.verify_router import router as verify_router
 from trove.books import service as books_service
 from trove.books.router import router as books_router
 from trove.checkouts import service as checkouts_service
@@ -25,6 +26,7 @@ INDEX_SETUPS = [
 ]
 ROUTERS = [
     auth_router,
+    verify_router,
     notifications_router,
     books_router,
     interview_router,

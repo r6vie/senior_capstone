@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     email_from: str = "Trove <noreply@example.com>"
     email_link_secret: str = ""
 
+    # Sign-up needs a case.edu code or an invite (docs/trove.md §9.2). Turn off only for local work.
+    verification_required: bool = True
+
     frontend_url: str = "http://127.0.0.1:5173"
     api_url: str = "http://127.0.0.1:8000"
 

@@ -25,6 +25,8 @@ def no_real_email(monkeypatch):
     monkeypatch.delenv("SMTP_HOST")
     get_settings.cache_clear()
     monkeypatch.setattr(get_settings(), "smtp_host", "")
+    # Most tests sign up with example.com addresses; the verification tests turn this back on.
+    monkeypatch.setattr(get_settings(), "verification_required", False)
     yield
     get_settings.cache_clear()
 
