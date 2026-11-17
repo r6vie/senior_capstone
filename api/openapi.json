@@ -2087,6 +2087,269 @@
         }
       }
     },
+    "/meetings/{checkout_id}": {
+      "get": {
+        "tags": [
+          "Meetings"
+        ],
+        "summary": "Get Meeting",
+        "description": "The times each of you offered, where they overlap, and the confirmed meeting if there is one.",
+        "operationId": "get_meeting_meetings__checkout_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meetings/{checkout_id}/times": {
+      "put": {
+        "tags": [
+          "Meetings"
+        ],
+        "summary": "Offer Times",
+        "description": "Replace the times you offer (up to five, 30 minutes each). Send none to take them back.",
+        "operationId": "offer_times_meetings__checkout_id__times_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimesUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meetings/{checkout_id}/confirm": {
+      "put": {
+        "tags": [
+          "Meetings"
+        ],
+        "summary": "Confirm",
+        "description": "Settle on one of the offered times. Either of you can.",
+        "operationId": "confirm_meetings__checkout_id__confirm_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meetings/{checkout_id}/details": {
+      "put": {
+        "tags": [
+          "Meetings"
+        ],
+        "summary": "Set Details",
+        "description": "The video link and, if you're both nearby, a place to meet.",
+        "operationId": "set_details_meetings__checkout_id__details_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DetailsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meetings/{checkout_id}/invite.ics": {
+      "get": {
+        "tags": [
+          "Meetings"
+        ],
+        "summary": "Invite",
+        "description": "A calendar file for the confirmed meeting.",
+        "operationId": "invite_meetings__checkout_id__invite_ics_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -2420,6 +2683,21 @@
         ],
         "title": "CheckoutRequest"
       },
+      "ConfirmRequest": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "start"
+        ],
+        "title": "ConfirmRequest"
+      },
       "ContactDetailsResponse": {
         "properties": {
           "email": {
@@ -2523,6 +2801,37 @@
         ],
         "title": "DeleteAccountRequest",
         "description": "Deleting an account cannot be undone, so the member types their email to confirm."
+      },
+      "DetailsUpdate": {
+        "properties": {
+          "video_link": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Link"
+          },
+          "place_note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "DetailsUpdate"
       },
       "FinishRequest": {
         "properties": {
@@ -2971,6 +3280,98 @@
           "expires_in"
         ],
         "title": "LoginResponse"
+      },
+      "MeetingView": {
+        "properties": {
+          "checkout_id": {
+            "type": "string",
+            "title": "Checkout Id"
+          },
+          "book_title": {
+            "type": "string",
+            "title": "Book Title"
+          },
+          "other_name": {
+            "type": "string",
+            "title": "Other Name"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes",
+            "default": 30
+          },
+          "my_times": {
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "type": "array",
+            "title": "My Times"
+          },
+          "their_times": {
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "type": "array",
+            "title": "Their Times"
+          },
+          "shared_times": {
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "type": "array",
+            "title": "Shared Times"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "video_link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Link"
+          },
+          "place_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "checkout_id",
+          "book_title",
+          "other_name",
+          "my_times",
+          "their_times",
+          "shared_times",
+          "start",
+          "video_link",
+          "place_note"
+        ],
+        "title": "MeetingView"
       },
       "MyBookResponse": {
         "properties": {
@@ -3677,6 +4078,25 @@
         "additionalProperties": false,
         "type": "object",
         "title": "StartRequest"
+      },
+      "TimesUpdate": {
+        "properties": {
+          "times": {
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "title": "Times"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "times"
+        ],
+        "title": "TimesUpdate"
       },
       "TitleOption": {
         "properties": {

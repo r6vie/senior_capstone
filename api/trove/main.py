@@ -14,6 +14,7 @@ from trove.core.database import make_lifespan
 from trove.core.errors import register_error_handlers
 from trove.interview import service as interview_service
 from trove.interview.router import router as interview_router
+from trove.meetings.router import router as meetings_router
 from trove.notifications import service as notification_service
 from trove.notifications.router import router as notifications_router
 
@@ -24,7 +25,14 @@ INDEX_SETUPS = [
     interview_service.ensure_indexes,
     checkouts_service.ensure_indexes,
 ]
-ROUTERS = [auth_router, notifications_router, books_router, interview_router, checkouts_router]
+ROUTERS = [
+    auth_router,
+    notifications_router,
+    books_router,
+    interview_router,
+    checkouts_router,
+    meetings_router,
+]
 
 # The app won't start at all with canned AI replies anywhere but on a developer's machine.
 ensure_scripted_allowed(get_settings())

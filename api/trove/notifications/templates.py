@@ -25,3 +25,25 @@ def welcome(first_name: str, app_url: str) -> Email:
         button_text="Open Trove",
         button_url=app_url,
     )
+
+
+def meeting_reminder(
+    other_name: str,
+    book_title: str,
+    when: str,
+    meeting_url: str,
+    video_link: str | None,
+    place_note: str | None,
+) -> Email:
+    paragraphs = [f'You are meeting {other_name} about "{book_title}" on {when}.']
+    if video_link:
+        paragraphs.append(f"Video link: {video_link}")
+    if place_note:
+        paragraphs.append(f"Where: {place_note}")
+    return Email(
+        subject=f"Reminder: you meet {other_name} soon",
+        heading="Your meeting is coming up",
+        paragraphs=paragraphs,
+        button_text="See the details",
+        button_url=meeting_url,
+    )
