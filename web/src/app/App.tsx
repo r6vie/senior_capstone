@@ -14,6 +14,7 @@ import { InterviewPage } from "../features/interview/InterviewPage";
 import { ReadingQuestionPage } from "../features/interview/ReadingQuestionPage";
 import { RemovalPage } from "../features/interview/RemovalPage";
 import { MeetingPage } from "../features/meetings/MeetingPage";
+import { MessagesPage } from "../features/messaging/MessagesPage";
 import { AppShell } from "../ui/AppShell";
 
 // Every page is registered here. Feature folders own their pages; this file only wires URLs.
@@ -37,6 +38,7 @@ export function App() {
             <Route path="/checkouts" element={<CheckoutsPage />} />
             <Route path="/checkouts/new/:bookId" element={<CheckOutPage />} />
             <Route path="/checkouts/:checkoutId/meeting" element={<MeetingPage />} />
+            <Route path="/checkouts/:checkoutId/messages" element={<MessagesPage />} />
             <Route path="/past-meets" element={<PastMeetsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
