@@ -60,6 +60,24 @@ def checkout_accepted_for_author(reader_name: str, book_title: str, checkouts_ur
     )
 
 
+def new_message(sender_name: str, book_title: str, thread_url: str) -> Email:
+    # Who and a link only: the conversation stays in Trove (C3, docs/trove.md §6). No sender means an
+    # app note, such as a confirmed meeting time.
+    if sender_name:
+        subject = f"{sender_name} sent you a message"
+        opening = f'{sender_name} sent you a message about "{book_title}".'
+    else:
+        subject = f'An update about "{book_title}"'
+        opening = f'There\'s an update in your conversation about "{book_title}".'
+    return Email(
+        subject=subject,
+        heading="New in your conversation",
+        paragraphs=[opening, "Open Trove to read it and reply."],
+        button_text="Read it",
+        button_url=thread_url,
+    )
+
+
 def welcome(first_name: str, app_url: str) -> Email:
     return Email(
         subject="Welcome to Trove",

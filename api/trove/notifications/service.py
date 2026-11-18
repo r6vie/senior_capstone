@@ -160,6 +160,25 @@ async def notify_checkout_accepted(
     )
 
 
+async def notify_new_message(
+    database: AsyncDatabase,
+    *,
+    message_id: str,
+    checkout_id: str,
+    recipient_id: str,
+    sender_name: str,
+    book_title: str,
+) -> str:
+    """Tell one member there's something new in a checkout's thread. Messaging decides when (10-minute gap)."""
+    thread_url = f"{get_settings().frontend_url.rstrip('/')}/checkouts/{checkout_id}/messages"
+    return await notify_once(
+        database,
+        f"new-message:{message_id}:{recipient_id}",
+        recipient_id,
+        templates.new_message(sender_name, book_title, thread_url).render,
+    )
+
+
 async def notify_welcome(database: AsyncDatabase, user_id: str, first_name: str) -> str:
     app_url = get_settings().frontend_url
     return await notify_once(
