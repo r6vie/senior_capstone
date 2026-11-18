@@ -13,6 +13,7 @@ from trove.checkouts.models import (
 )
 from trove.checkouts.service import CheckoutRefused
 from trove.core.database import get_database
+from trove.messaging.service import checkouts_with_new_messages
 from trove.notifications.service import notify_checkout_accepted, notify_checkout_requested
 
 router = APIRouter(prefix="/checkouts", tags=["Checkouts"])
@@ -119,10 +120,15 @@ async def my_checkouts(
     database: AsyncDatabase = Depends(get_database),
 ) -> MyCheckouts:
     """Books you've checked out, and open checkouts of your book."""
-    return MyCheckouts(
+    mine = MyCheckouts(
         reading=await reading_views(database, await service.checkouts_of_reader(database, user["_id"])),
         lending=await lending_views(database, await service.open_checkouts_of_author(database, user["_id"])),
     )
+    items = [*mine.reading, *mine.lending]
+    unread = await checkouts_with_new_messages(database, user["_id"], [item.id for item in items])
+    for item in items:
+        item.new_messages = item.id in unread
+    return mine
 
 
 @router.post("/{checkout_id}/cancel", response_model=ReadingCheckout)
