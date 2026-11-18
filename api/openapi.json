@@ -2565,6 +2565,151 @@
         }
       }
     },
+    "/messages/{checkout_id}": {
+      "get": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Thread",
+        "description": "The conversation on an accepted checkout, oldest first, starting with the reader's checkout note.",
+        "operationId": "thread_messages__checkout_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Thread"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Send",
+        "description": "Write in the conversation. The other person is emailed, at most once every 10 minutes.",
+        "operationId": "send_messages__checkout_id__post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/{checkout_id}/read": {
+      "post": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Mark Read",
+        "description": "You've seen everything in this conversation so far. Only you ever know this.",
+        "operationId": "mark_read_messages__checkout_id__read_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -3563,6 +3708,11 @@
                 "type": "null"
               }
             ]
+          },
+          "new_messages": {
+            "type": "boolean",
+            "title": "New Messages",
+            "default": false
           }
         },
         "type": "object",
@@ -3719,6 +3869,66 @@
           "place_note"
         ],
         "title": "MeetingView"
+      },
+      "Message": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "checkout_note",
+              "message",
+              "note"
+            ],
+            "title": "Kind"
+          },
+          "from_me": {
+            "type": "boolean",
+            "title": "From Me"
+          },
+          "sender_name": {
+            "type": "string",
+            "title": "Sender Name"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sent At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "from_me",
+          "sender_name",
+          "text",
+          "sent_at"
+        ],
+        "title": "Message"
+      },
+      "MessageRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "MessageRequest"
       },
       "MyBookResponse": {
         "properties": {
@@ -4112,6 +4322,11 @@
                 "type": "null"
               }
             ]
+          },
+          "new_messages": {
+            "type": "boolean",
+            "title": "New Messages",
+            "default": false
           }
         },
         "type": "object",
@@ -4463,6 +4678,42 @@
         "additionalProperties": false,
         "type": "object",
         "title": "StartRequest"
+      },
+      "Thread": {
+        "properties": {
+          "checkout_id": {
+            "type": "string",
+            "title": "Checkout Id"
+          },
+          "book_title": {
+            "type": "string",
+            "title": "Book Title"
+          },
+          "other_name": {
+            "type": "string",
+            "title": "Other Name"
+          },
+          "can_write": {
+            "type": "boolean",
+            "title": "Can Write"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            },
+            "type": "array",
+            "title": "Messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "checkout_id",
+          "book_title",
+          "other_name",
+          "can_write",
+          "messages"
+        ],
+        "title": "Thread"
       },
       "TimesUpdate": {
         "properties": {
