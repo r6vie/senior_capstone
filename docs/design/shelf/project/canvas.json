@@ -502,6 +502,15 @@
       "title": "B · Inked",
       "page": "elevate",
       "expand": "fill"
+    },
+    "ElevateC.dc.html": {
+      "x": 3760,
+      "y": 0,
+      "w": 1760,
+      "h": 5460,
+      "title": "C · Reading Room",
+      "page": "elevate",
+      "expand": "fill"
     }
   },
   "order": [
@@ -559,7 +568,8 @@
     "InterviewA3.dc.html",
     "InterviewAPhone.dc.html",
     "ElevateA.dc.html",
-    "ElevateB.dc.html"
+    "ElevateB.dc.html",
+    "ElevateC.dc.html"
   ],
   "notes": {
     "head": {

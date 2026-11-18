@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Elevate C, Reading Room</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+/* Trove design system: tokens and base components. Spec and rules: docs/design/system.md.
+   Look: "Manga screentone": black ink on white paper, screentone dots for shade, one burst of
+   lines for emphasis, one red for the one thing to do next.
+   Port target: web/src/ui/styles.css. Components use only the tokens below: no raw colors or
+   pixel sizes in feature code. The --color-* and --space-* aliases keep the current app working. */
+
+:root {
+  /* Color. Roles, not decoration. Red is the primary action and nothing else. */
+  --paper: #fafaf7;
+  --paper-sunk: #f0f0eb;
+  --white: #ffffff;
+  --ink: #111111;
+  --ink-2: #55554f; /* secondary text: 7.2:1 on paper */
+  --ink-3: #8c8c89; /* borders of disabled things. Never text: 3.2:1 */
+  --rule: #c9c9c6; /* hairlines and disabled fills. Text only on ink: 11.4:1 */
+  --red: #d42a27; /* white text 5.0:1 */
+  --red-hover: #b82220;
+  --red-press: #9e1c1a;
+
+  /* Context. Inside .dark these swap, and every component follows. */
+  --fg: var(--ink);
+  --bg: var(--paper);
+
+  /* Type */
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif; /* labels, nav, buttons, shelf names. Caps. */
+  --font-serif: "Newsreader", Georgia, serif; /* book titles, page titles, the Librarian's voice */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif; /* working text */
+
+  /* Space: 4px base. 44px is the page gutter. */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 44px;
+  --s-8: 64px;
+
+  /* Line, radius, size */
+  --line: 2px; /* controls, book outline */
+  --line-heavy: 3px; /* panels, bubbles, dialogs */
+  --radius-pill: 999px; /* search field and avatar only */
+  --radius-bubble: 26px; /* speech bubbles only */
+  --tap: 44px;
+  --control: 48px;
+  --ease: 120ms ease;
+
+  /* Compatibility with the tokens the app already uses */
+  --color-text: var(--ink);
+  --color-muted: var(--ink-2);
+  --color-accent: var(--red);
+  --color-error: var(--ink);
+  --color-border: var(--rule);
+  --color-background: var(--paper);
+  --radius: 0;
+  --space-1: var(--s-1);
+  --space-2: var(--s-2);
+  --space-3: var(--s-4);
+  --space-4: var(--s-6);
+
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.dark {
+  --fg: var(--white);
+  --bg: var(--ink);
+  color: var(--fg);
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: var(--line-heavy) solid var(--fg);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* ---------- Layout helpers ---------- */
+.narrow-page {
+  max-width: 28rem;
+  margin: var(--s-6) auto;
+  padding: 0 var(--s-4);
+}
+.stack {
+  display: grid;
+  gap: var(--s-4);
+}
+.muted {
+  color: var(--ink-2);
+}
+.error {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- Tone: screentone dots. Grounds and shadows, never behind running text. ---------- */
+.tone-fine {
+  background: radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px, var(--paper);
+}
+.tone-mid {
+  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 6px 6px, var(--paper);
+}
+.tone-dense {
+  background: radial-gradient(circle, var(--ink) 1.9px, transparent 2.3px) 0 0 / 6px 6px, var(--paper);
+}
+/* Fade: apply to a tone layer to let it dissolve (add .tone-fade on the element). */
+.tone-fade {
+  -webkit-mask-image: linear-gradient(var(--fade-dir, 180deg), #000, transparent);
+  mask-image: linear-gradient(var(--fade-dir, 180deg), #000, transparent);
+}
+/* Burst: fanned focus lines. Once per screen, behind the Librarian's pick only. Place inside .dark. */
+.burst {
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(from 0deg at var(--fx, 50%) var(--fy, 50%), var(--white) 0 0.8deg, var(--ink) 0.8deg 3deg, var(--white) 3deg 3.5deg, var(--ink) 3.5deg 8deg);
+  -webkit-mask-image: radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), transparent 14%, #000 44%);
+  mask-image: radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), transparent 14%, #000 44%);
+}
+.halo {
+  position: absolute;
+  background: radial-gradient(circle, var(--white) 1.7px, transparent 2.1px) 0 0 / 7px 7px;
+  border-radius: 50%;
+  -webkit-mask-image: radial-gradient(circle, #000 28%, transparent 68%);
+  mask-image: radial-gradient(circle, #000 28%, transparent 68%);
+}
+
+/* ---------- Buttons ---------- */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  min-height: var(--control);
+  padding: 0 26px;
+  white-space: nowrap;
+  border: var(--line) solid var(--fg);
+  border-radius: 0;
+  font: 700 17px/1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--ease), color var(--ease), border-color var(--ease);
+}
+.button-primary {
+  background: var(--red);
+  color: var(--white);
+}
+.button-primary:is(:hover, .is-hover) {
+  background: var(--red-hover);
+}
+.button-primary:is(:active, .is-press) {
+  background: var(--red-press);
+  transform: translateY(1px);
+}
+.button-secondary {
+  background: transparent;
+  color: var(--fg);
+}
+.button-secondary:is(:hover, .is-hover) {
+  background: var(--fg);
+  color: var(--bg);
+}
+.button-secondary:is(:active, .is-press) {
+  background: var(--fg);
+  color: var(--bg);
+  transform: translateY(1px);
+}
+.button-quiet {
+  min-height: var(--tap);
+  padding: 0 var(--s-3);
+  border-color: transparent;
+  background: transparent;
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+.button-quiet:is(:hover, .is-hover) {
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.button:is(:disabled, [aria-disabled="true"]) {
+  background: var(--rule);
+  border-color: var(--ink-3);
+  color: var(--ink-2);
+  cursor: not-allowed;
+  transform: none;
+}
+.button[aria-busy="true"] {
+  cursor: progress;
+  pointer-events: none;
+}
+
+/* ---------- Fields ---------- */
+.field {
+  display: grid;
+  gap: var(--s-2);
+}
+.field > label {
+  font: 600 14px/1.3 var(--font-sans);
+}
+.field :is(input, textarea, select) {
+  min-height: var(--control);
+  padding: 0 14px;
+  border: var(--line) solid var(--ink);
+  border-radius: 0;
+  background: var(--white);
+  color: var(--ink);
+  font: 400 16px/1.4 var(--font-sans);
+}
+.field textarea {
+  min-height: 112px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+.field select {
+  appearance: none;
+  padding-right: 44px;
+  background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10' viewBox='0 0 16 10' fill='none' stroke='%23111' stroke-width='2.4'%3E%3Cpath d='M2 2l6 6 6-6'/%3E%3C/svg%3E") right 16px center / 16px 10px no-repeat;
+}
+.field :is(input, textarea, select)::placeholder {
+  color: var(--ink-2);
+}
+.field :is(input, textarea, select):is(:focus, .is-focus) {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 2px;
+}
+.field .hint {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.field[data-invalid="true"] :is(input, textarea, select) {
+  border-width: var(--line-heavy);
+}
+.field[data-invalid="true"] .hint {
+  display: flex;
+  gap: var(--s-2);
+  color: var(--ink);
+  font-weight: 600;
+}
+.field[data-invalid="true"] .hint::before {
+  content: "!";
+  flex: none;
+  width: 20px;
+  height: 20px;
+  background: var(--ink);
+  color: var(--white);
+  font: 800 14px/20px var(--font-display);
+  text-align: center;
+}
+.field :is(input, textarea, select):disabled {
+  border-color: var(--ink-3);
+  background: var(--paper-sunk);
+  color: var(--ink-2);
+}
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--tap);
+  font-size: 16px;
+}
+.choice input {
+  appearance: none;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+}
+.choice input[type="radio"] {
+  border-radius: 50%;
+}
+.choice input:checked {
+  background: var(--ink);
+  box-shadow: inset 0 0 0 4px var(--white);
+}
+.choice input[type="checkbox"]:checked {
+  background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.4'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E") center / 18px no-repeat;
+  box-shadow: none;
+}
+
+/* ---------- Navigation ---------- */
+.nav {
+  display: flex;
+  gap: 6px;
+  font: 600 17px/1 var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 12px;
+  border-bottom: var(--line-heavy) solid transparent;
+  color: var(--fg);
+  text-decoration: none;
+}
+.nav a:hover {
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.nav a[aria-current="page"] {
+  border-bottom-color: var(--fg);
+}
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 800 28px/1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.wordmark::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: var(--ink);
+  transform: rotate(-6deg);
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 40px;
+  width: 230px;
+  padding: 0 14px;
+  border: var(--line) solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: var(--line) solid var(--fg);
+  border-radius: 50%;
+  font: 700 14px/1 var(--font-display);
+}
+
+/* ---------- Labels, voice, lists ---------- */
+.caption {
+  display: inline-block;
+  padding: 5px 12px;
+  background: var(--fg);
+  color: var(--bg);
+  font: 600 14px/1.2 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.shelf-name {
+  margin: 0;
+  font: 800 30px/1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.page-title {
+  margin: 0;
+  font: 600 48px/1.02 var(--font-serif);
+  letter-spacing: -0.015em;
+}
+.voice {
+  font: italic 400 20px/1.3 var(--font-serif);
+}
+.bubble {
+  position: relative;
+  padding: 14px 20px;
+  border: var(--line-heavy) solid var(--ink);
+  border-radius: var(--radius-bubble);
+  background: var(--white);
+  color: var(--ink);
+  font: italic 400 19px/1.3 var(--font-serif);
+}
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 44px;
+  bottom: -14px;
+  width: 22px;
+  height: 22px;
+  background: var(--white);
+  border-right: var(--line-heavy) solid var(--ink);
+  border-bottom: var(--line-heavy) solid var(--ink);
+  transform: rotate(45deg) skew(8deg, 8deg);
+}
+.contents {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.contents li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+}
+.contents li::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  border-bottom: 2.5px dotted currentColor;
+  transform: translateY(-4px);
+}
+.contents b {
+  font: 700 18px/1 var(--font-display);
+  letter-spacing: 0.06em;
+}
+
+/* ---------- Surfaces ---------- */
+.panel {
+  padding: 22px 24px;
+  border: var(--line-heavy) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.panel > h2,
+.panel > h3 {
+  margin: 0 0 var(--s-4);
+  font: 800 24px/1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.message {
+  display: flex;
+  gap: var(--s-3);
+  padding: 14px 18px;
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.message-error {
+  border-width: var(--line-heavy);
+  background: radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px, var(--white);
+}
+.message-error > :last-child {
+  padding: 2px 8px;
+  margin: -2px 0;
+  background: var(--white);
+  font-weight: 600;
+}
+.empty {
+  padding: var(--s-6);
+  border: var(--line-heavy) dotted var(--ink);
+  color: var(--fg);
+}
+.empty h3 {
+  margin: 0 0 var(--s-2);
+  font: 600 26px/1.1 var(--font-serif);
+}
+.dialog {
+  position: relative;
+  padding: 26px 28px;
+  border: var(--line-heavy) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.dialog::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 8px -8px -8px 8px;
+  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+}
+.scrim {
+  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 6px 6px, var(--paper);
+}
+.skeleton {
+  background: radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px, var(--paper);
+  border: var(--line) solid var(--ink);
+}
+
+/* ---------- Book, shelf, band ---------- */
+.book {
+  position: relative;
+  flex: none;
+  display: block;
+  width: 122px;
+  height: 178px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform var(--ease);
+}
+.book::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  right: -8px;
+  bottom: -8px;
+  background: radial-gradient(circle, var(--fg) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+}
+.book-cover {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 16px 10px 10px 21px;
+  border: var(--line) solid var(--ink);
+  background: linear-gradient(90deg, #e4e4df 0, #f5f5f1 7px, var(--white) 8px 11px, #f2f2ee 12px, var(--white) 16px);
+  overflow: hidden;
+}
+.book-cover::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--ink);
+}
+.book-title {
+  font: 600 13.5px/1.18 var(--font-serif);
+}
+.book-author {
+  margin-top: auto;
+  /* Full names wrap (at the hyphen too) and stop at 4 lines; the aria-label carries the whole name. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  font: 600 9.5px/1.3 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.book:is(:hover, .is-hover) {
+  transform: translateY(-4px);
+}
+.book-lg {
+  width: 236px;
+  height: 344px;
+}
+.book-lg::before {
+  left: 14px;
+  top: 14px;
+  right: -14px;
+  bottom: -14px;
+  background-size: 7px 7px;
+  background-image: radial-gradient(circle, var(--fg) 1.8px, transparent 2.3px);
+}
+.book-lg .book-cover {
+  padding: 30px 18px 18px 40px;
+  border-width: var(--line-heavy);
+}
+.book-lg .book-cover::before {
+  left: 24px;
+  width: 2px;
+}
+.book-lg .book-title {
+  font-size: 27px;
+  line-height: 1.12;
+}
+.book-lg .book-author {
+  font-size: 12px;
+}
+.book-sm {
+  width: 92px;
+  height: 136px;
+}
+.book-sm .book-cover {
+  padding: 12px 6px 6px 16px;
+}
+.book-sm .book-cover::before {
+  left: 9px;
+}
+.book-sm .book-title {
+  font-size: 11.5px;
+}
+.book-sm .book-author {
+  font-size: 8.5px;
+}
+
+.shelf-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-bottom: 18px;
+}
+.shelf-head::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  border-top: 2.5px solid var(--fg);
+}
+.shelf-head a {
+  order: 2;
+  border-bottom: 2.5px solid var(--fg);
+  color: var(--fg);
+  font: 700 15px/1.2 var(--font-display);
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.shelf-books {
+  display: flex;
+  gap: 28px;
+  padding: 0 var(--s-1);
+}
+.ledge {
+  position: relative;
+  height: 14px;
+  background: var(--ink);
+}
+.ledge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 14px;
+  height: 22px;
+  background: radial-gradient(circle, var(--ink) 1.4px, transparent 1.8px) 0 0 / 5px 5px;
+  -webkit-mask-image: linear-gradient(#000, transparent);
+  mask-image: linear-gradient(#000, transparent);
+}
+.band {
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 28px), 0 100%);
+}
+
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{background:#dcdcd6}
+.ev{box-sizing:border-box;width:1760px;padding:56px 64px 64px;font-family:var(--font-sans);color:var(--ink)}
+.ev>header{max-width:980px}
+.ev h1{margin:18px 0 10px;font:600 54px/1.04 var(--font-serif);letter-spacing:-.015em}
+.ev .lede{margin:0;font:400 18px/1.5 var(--font-sans);max-width:900px}
+.ev .flags{margin:22px 0 0;padding:14px 18px;border:3px solid var(--ink);background:#fff;max-width:900px;font-size:15px;line-height:1.5}
+.ev .flags b{font:700 15px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.ev .flags ul{margin:8px 0 0;padding-left:20px}
+.ev .grid{display:grid;grid-template-columns:repeat(2,768px);gap:52px 64px;margin-top:40px;align-items:start}
+.ev .cell{display:grid;gap:12px;align-content:start}
+.ev .t{font:700 17px/1.2 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.ev .frame{overflow:hidden;position:relative;border:2px solid var(--ink);background:#fff}
+.ev .fr{width:1280px;transform:scale(.6);transform-origin:0 0;position:relative;overflow:hidden;background:var(--paper)}
+.ev .pwrap{display:flex;gap:28px;align-items:start}
+.ev .pframe{width:312px;overflow:hidden;position:relative;border:2px solid var(--ink);background:#fff;flex:none}
+.ev .pfr{width:390px;transform:scale(.8);transform-origin:0 0;position:relative;overflow:hidden;background:var(--paper)}
+.ev .n{font:400 14.5px/1.5 var(--font-sans);color:var(--ink-2);max-width:740px;margin:0}
+.ev .n b{color:var(--ink)}
+.ev .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+
+
+/* ===== Direction C · Reading Room: A's details inside a plain, fast app layout. ===== */
+.C{background:var(--paper);isolation:isolate;font-family:var(--font-sans);color:var(--ink)}
+/* page shading: screentone falls from the header, like light off a reading lamp */
+.C::before{content:"";position:absolute;left:0;right:0;top:64px;height:240px;z-index:-1;background:radial-gradient(circle,var(--ink) .55px,transparent .95px) 0 0/9px 9px;-webkit-mask-image:linear-gradient(180deg,#000,transparent);mask-image:linear-gradient(180deg,#000,transparent);opacity:.8}
+.C .wrap{width:1128px;margin:0 auto}
+/* top bar: the standard app bar */
+.C .nb{position:relative;z-index:2;height:64px;background:var(--white);border-bottom:var(--line-heavy) solid var(--ink)}
+.C .nb .wrap{height:100%;display:flex;align-items:center;gap:var(--s-5)}
+.C .nb .sp{flex:1}
+.C .nb .search{width:280px}
+.C .nb .nav a{min-height:64px;border-bottom-width:4px;margin-bottom:-3px}
+.C .steps{display:flex;gap:var(--s-5);font:600 16px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.C .steps b{color:var(--ink);border-bottom:3px solid var(--ink);padding:6px 0 5px}
+.C .steps span{padding:6px 0 8px}
+.C .page{padding:28px 0 56px}
+.C .cols{display:grid;grid-template-columns:740px 360px;gap:28px;align-items:start}
+.C .cols.shelfcols{grid-template-columns:260px 840px}
+.C .stack{display:grid;gap:20px;align-content:start}
+/* a surface: white, 2px ink. Flat unless it is the one focal surface of the screen. */
+.C .cd{position:relative;background:var(--white);border:var(--line) solid var(--ink)}
+.C .cd.fx{isolation:isolate;border-width:var(--line-heavy)}
+.C .cd.fx::before{content:"";position:absolute;z-index:-2;inset:10px -10px -10px 10px;background:radial-gradient(circle,var(--ink) 1.4px,transparent 1.8px) 0 0/6px 6px}
+.C .cd.fx::after{content:"";position:absolute;z-index:-1;inset:0;background:var(--white)}
+/* binding shade: the page curves into the spine */
+.C .cd.fx .bind{position:absolute;left:0;top:0;bottom:0;width:30px;pointer-events:none;background:radial-gradient(circle,var(--ink) 1.1px,transparent 1.5px) 0 0/5px 5px;-webkit-mask-image:linear-gradient(90deg,#000,transparent);mask-image:linear-gradient(90deg,#000,transparent)}
+.C .ch{display:flex;justify-content:space-between;align-items:baseline;gap:var(--s-4);padding:14px 28px 10px;border-bottom:var(--line) solid var(--ink);font:700 15px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.C .ch span:last-child{color:var(--ink-2)}
+.C .fx .ch{padding-left:44px}
+.C .bd{position:relative;padding:26px 28px 28px}
+.C .fx .bd{padding-left:44px}
+/* the question, with its large letter */
+.C .q{margin:0;font:600 42px/1.12 var(--font-serif);letter-spacing:-.015em;text-wrap:pretty}
+.C .q .dc{float:left;font:700 118px/80px var(--font-serif);padding:8px 12px 0 0;letter-spacing:0}
+.C .q.dim{color:var(--ink-2)}
+.C .setting .todo{display:inline-block;width:5.4em;height:.6em;margin-left:.2em;background:radial-gradient(circle,var(--ink) 1.3px,transparent 1.7px) 0 0/5px 5px;vertical-align:baseline}
+/* the answer: an ordinary text box */
+.C .lab{display:flex;justify-content:space-between;align-items:baseline;margin:28px 0 8px;font:600 14px/1.3 var(--font-sans)}
+.C .lab span:last-child{font-weight:400;color:var(--ink-2)}
+.C .ans{min-height:200px;padding:14px 16px;border:var(--line) solid var(--ink);background:var(--white);font:400 18px/1.55 var(--font-sans)}
+.C .ans.focus{outline:var(--line-heavy) solid var(--ink);outline-offset:2px}
+.C .ans.off{background:var(--paper-sunk);color:var(--ink-2);border-color:var(--ink-3)}
+.C .ans .caret{display:inline-block;width:2px;height:22px;background:var(--ink);vertical-align:-4px}
+.C .ans .ph2{color:var(--ink-2)}
+.C .acts{display:flex;align-items:center;gap:var(--s-3);margin-top:20px}
+.C .acts .sp{flex:1}
+.C .keys{margin:12px 0 0;font:400 13.5px/1.4 var(--font-sans);color:var(--ink-2)}
+.C .mic{width:18px;height:18px;margin-right:8px;flex:none}
+.C .button-secondary[aria-label] .mic{margin:0}
+.C .button{display:inline-flex;align-items:center;justify-content:center}
+/* the red button presses into its dot shadow */
+.C .pbw{position:relative;display:inline-block;isolation:isolate}
+.C .pbw::before{content:"";position:absolute;z-index:0;inset:4px -4px -4px 4px;background:radial-gradient(circle,var(--ink) 1.2px,transparent 1.6px) 0 0/5px 5px;transition:inset var(--ease)}
+.C .pbw>.button{position:relative;z-index:1;transition:transform var(--ease),background var(--ease)}
+.C .pbw:is(:hover,.is-hover)>.button{transform:translate(-2px,-2px)}
+.C .pbw:is(:hover,.is-hover)::before{inset:6px -6px -6px 6px}
+.C .pbw:is(:active,.is-press)>.button{transform:translate(4px,4px)}
+.C .pbw.block{display:block}.C .pbw.block>.button{display:flex;width:100%}
+/* the rail list: answers so far */
+.C .al{margin:0;padding:0;list-style:none}
+.C .al li{display:grid;grid-template-columns:14px 1fr;gap:12px;padding:14px 20px;border-top:var(--line) dotted var(--ink);align-items:start}
+.C .al li:first-child{border-top:none}
+.C .al .dot{width:10px;height:10px;margin-top:6px;background:radial-gradient(circle,var(--ink) 1.3px,transparent 1.7px) 0 0/4px 4px;border:2px solid var(--ink)}
+.C .al b{display:block;font:600 16px/1.3 var(--font-serif)}
+.C .al small{display:block;margin-top:3px;font:400 14px/1.4 var(--font-sans);color:var(--ink-2);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.C .al li.hov{background:var(--paper-sunk)}
+.C .al li.hov b{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
+.C .al li.new{outline:var(--line) dashed var(--ink);outline-offset:-6px}
+.C .al li.new b{color:var(--ink-2);font-style:italic;font-weight:400}
+.C .al li.fresh{background:var(--paper-sunk)}
+.C .more{display:block;padding:12px 20px 14px;border-top:var(--line) dotted var(--ink);font:600 15px/1.2 var(--font-sans);color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
+.C .note{margin:0;padding:16px 20px;font:400 14.5px/1.5 var(--font-sans);color:var(--ink-2)}
+/* titles */
+.C .tr{display:grid;grid-template-columns:176px 1fr;gap:36px;align-items:start}
+.C .eyebrow{font:600 13px/1.2 var(--font-sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.C .tt{margin:10px 0 0;font:600 52px/1.04 var(--font-serif);letter-spacing:-.02em;text-wrap:balance}
+.C .by{margin:16px 0 0;font:600 14px/1.3 var(--font-sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.C .why{margin:18px 0 0;font:italic 400 20px/1.4 var(--font-serif);max-width:460px}
+.C .opts{margin:0;padding:0;list-style:none}
+.C .opts li{display:grid;grid-template-columns:22px 1fr;gap:14px;padding:16px 20px;border-top:var(--line) dotted var(--ink);align-items:start}
+.C .opts li:first-child{border-top:none}
+.C .opts .rd{width:20px;height:20px;border:var(--line) solid var(--ink);background:var(--white);margin-top:2px}
+.C .opts .sel .rd{background:radial-gradient(circle,var(--white) 0 3px,var(--ink) 3.5px)}
+.C .opts li.sel{background:var(--paper-sunk);box-shadow:inset 6px 0 0 var(--ink)}
+.C .opts li.hov{background:var(--paper-sunk)}
+.C .opts b{font:600 19px/1.25 var(--font-serif)}
+/* review */
+.C .jk{display:grid;grid-template-columns:176px 1fr;gap:32px;align-items:start}
+.C .book-md{width:176px;height:256px}
+.C .book-md::before{left:11px;top:11px;right:-11px;bottom:-11px;background-size:6px 6px;background-image:radial-gradient(circle,var(--fg) 1.5px,transparent 2px)}
+.C .book-md .book-cover{padding:24px 14px 14px 30px;border-width:var(--line-heavy)}
+.C .book-md .book-cover::before{left:18px;width:2px}
+.C .book-md .book-title{font-size:20px;line-height:1.14}
+.C .book-md .book-author{font-size:10.5px}
+.C .h2t{margin:0;font:600 36px/1.08 var(--font-serif);letter-spacing:-.015em}
+.C .blurb{margin:16px 0 0;font:400 17px/1.6 var(--font-sans);overflow:hidden}
+.C .blurb .dc{float:left;font:700 76px/54px var(--font-serif);padding:6px 10px 0 0}
+.C .chs{margin:0;padding:0;list-style:none}
+.C .chs li{display:grid;grid-template-columns:52px 1fr;gap:4px 12px;padding:20px 28px 16px;border-top:var(--line) dotted var(--ink)}
+.C .chs li:first-child{border-top:none}
+.C .chs .no{font:italic 600 36px/1 var(--font-serif)}
+.C .chs h3{margin:0;font:600 23px/1.2 var(--font-serif)}
+.C .chs p{margin:6px 0 0;font:400 15.5px/1.55 var(--font-sans)}
+.C .chs .tools{display:flex;gap:2px;margin:8px 0 0 -14px}
+.C .chs .tools .button{min-height:var(--tap);font-size:15px}
+.C .chs li.pencil h3,.C .chs li.pencil p{color:var(--ink-2)}
+.C .chs li.pencil p{font-style:italic}
+.C .wip{display:inline-block;margin-top:10px;padding:4px 10px;border:var(--line) dashed var(--ink);font:600 13px/1.2 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.C .dots{height:15px;margin-top:10px;background:radial-gradient(circle,var(--ink) 1.3px,transparent 1.7px) 0 0/6px 6px;width:var(--w,70%)}
+.C .ready p{margin:0 0 18px;font:400 15.5px/1.55 var(--font-sans)}
+.C .ready .pbw{margin-bottom:6px}
+.C .ready .button-quiet{margin:10px 0 0 -14px}
+.C .button[aria-disabled="true"]{cursor:not-allowed}
+/* the stamp */
+.C .slip{position:relative;margin-top:26px;border:var(--line) solid var(--ink);background:var(--white);isolation:isolate}
+.C .slip .hd{padding:12px 20px 9px;border-bottom:var(--line-heavy) solid var(--ink);font:800 20px/1 var(--font-display);letter-spacing:.06em;text-transform:uppercase}
+.C .slip .rw{display:grid;grid-template-columns:130px 1fr;min-height:58px;border-bottom:var(--line) solid var(--ink);align-items:center}
+.C .slip .rw:last-of-type{border-bottom:none}
+.C .slip .rw span:first-child{align-self:stretch;display:flex;align-items:center;padding-left:20px;border-right:var(--line) solid var(--ink);font:600 12px/1.2 var(--font-sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.C .slip .rw span:last-child{padding-left:18px;font:italic 400 20px/1.25 var(--font-serif)}
+.C .slip .rw.big{min-height:128px}
+.C .stamp{position:absolute;right:26px;bottom:16px;transform:rotate(-4deg);padding:10px 22px 8px;border:4px solid var(--ink);outline:2px solid var(--ink);outline-offset:3px;background:var(--white);text-align:center;font:800 40px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase}
+.C .stamp small{display:block;margin-top:5px;padding-top:5px;border-top:3px solid var(--ink);font:700 20px/1 var(--font-display);letter-spacing:.2em}
+.C .stamp.land{transform:rotate(-4deg) translate(-6px,-6px)}
+.C .echo{position:absolute;right:20px;bottom:10px;transform:rotate(-4deg);padding:10px 22px 8px;border:4px dotted var(--ink);color:transparent;text-align:center;font:800 40px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase}
+.C .echo small{display:block;margin-top:5px;padding-top:5px;font:700 20px/1 var(--font-display);letter-spacing:.2em}
+/* shelf */
+.C .hero{position:relative;display:grid;grid-template-columns:1fr 260px;gap:20px;overflow:hidden;padding:28px 36px 30px 36px;min-height:300px;clip-path:polygon(0 0,100% 0,100% calc(100% - 28px),0 100%)}
+.C .hero .burst{position:absolute;inset:0 0 0 58%;opacity:1;--fx:100%;--fy:0%;-webkit-mask-image:radial-gradient(circle at 100% 0,transparent 6%,#000 36%);mask-image:radial-gradient(circle at 100% 0,transparent 6%,#000 36%)}
+.C .hero>*{position:relative}
+.C .hero h1{margin:16px 0 0;font:600 40px/1.06 var(--font-serif);letter-spacing:-.02em;max-width:400px}
+.C .hero .by{color:var(--rule)}
+.C .hero .why2{margin:14px 0 0;font:italic 400 19px/1.4 var(--font-serif);max-width:330px}
+.C .hero .bk{display:grid;justify-items:center;align-content:end;padding-bottom:30px}
+.C .hero .bk .ledge{width:260px}
+.C .shelfcd{padding:22px 28px 26px}
+.C .shelfcd .shelf-head{margin-bottom:18px}
+.C .shelfcd .shelf-books{align-items:flex-end;gap:20px}
+.C .chips{display:flex;gap:var(--s-2);margin-bottom:20px;flex-wrap:wrap}
+.C .chips a{display:inline-flex;align-items:center;min-height:var(--tap);padding:0 14px;border:var(--line) solid var(--ink);background:var(--white);font:600 15px/1 var(--font-sans);color:var(--ink);text-decoration:none}
+.C .chips a[aria-current]{background:var(--ink);color:var(--white)}
+.C .mine{display:grid;grid-template-columns:92px 1fr;gap:16px;padding:20px;align-items:end}
+.C .mine .st{font:700 14px/1.2 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.C .mine p{margin:6px 0 10px;font:600 17px/1.25 var(--font-serif)}
+.C .req{padding:18px 20px 20px}
+.C .req p{margin:0 0 14px;font:400 15.5px/1.5 var(--font-sans)}
+/* checkout card */
+.C .co{width:760px;margin:0 auto}
+.C .co .bd{padding:0}
+.C .co .intro{padding:24px 28px 18px 44px;border-bottom:var(--line-heavy) solid var(--ink)}
+.C .co h2{margin:0;font:800 30px/1 var(--font-display);letter-spacing:.04em;text-transform:uppercase}
+.C .co .intro p{margin:10px 0 0;font:italic 400 22px/1.3 var(--font-serif)}
+.C .co .gr{display:grid;grid-template-columns:160px 1fr;min-height:60px;border-bottom:var(--line) solid var(--ink);align-items:center}
+.C .co .gr span:first-child{align-self:stretch;display:flex;align-items:center;padding-left:44px;border-right:var(--line) solid var(--ink);font:600 12px/1.2 var(--font-sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.C .co .gr span:last-child{padding-left:20px;font:400 18px/1.3 var(--font-sans)}
+.C .co .gr .hand{font:italic 400 22px/1.3 var(--font-serif)}
+.C .co .acts{margin:0;padding:22px 28px 26px 44px}
+/* states */
+.C .spec{display:grid;grid-template-columns:repeat(3,1fr);gap:40px 36px;padding:40px}
+.C .spec .k{display:grid;gap:14px;justify-items:start;align-content:start}
+.C .spec .lb{font:600 14px/1.2 var(--font-sans);color:var(--ink-2)}
+.C .spec .cd{width:100%}
+/* phone */
+.C.ph::before{top:56px;height:170px}
+.C.ph .nb{height:56px}
+.C.ph .nb .wrap{width:auto;padding:0 16px}
+.C.ph .page{padding:18px 0 110px}
+.C.ph .pad{padding:0 16px;display:grid;gap:18px}
+.C.ph .ch{padding:12px 18px 9px}
+.C.ph .fx .ch{padding-left:30px}
+.C.ph .bd,.C.ph .fx .bd{padding:20px 18px 20px 30px}
+.C.ph .fx .bind{width:20px}
+.C.ph .q{font-size:30px}
+.C.ph .q .dc{font-size:88px;line-height:60px;padding:6px 8px 0 0}
+.C.ph .lab{margin-top:22px}
+.C.ph .ans{min-height:150px;font-size:17px}
+.C.ph .dock{position:absolute;left:0;right:0;bottom:0;z-index:3;display:flex;align-items:center;gap:var(--s-2);padding:12px 16px 14px;background:var(--white);border-top:var(--line-heavy) solid var(--ink)}
+.C.ph .dock .pbw{flex:1;margin-right:5px}
+.C.ph .dock .pbw>.button{width:100%;padding:0 10px}
+.C.ph .al li{padding:12px 16px}
+
+</style>
+</helmet>
+<div class="ev">
+<header><span class="caption">Elevate · direction C</span><h1>C · Reading Room</h1><p class="lede">The details of A, in a layout that works like a professional network. Every screen is a top bar, a main column and a side column: cards, an ordinary text box, plain lists, buttons where you expect them. What survives from A is the paper: the screentone falling from the header, the binding shade on the one focal card, the large letter on the question and back cover, the red button pressing into its dot shadow, the ink date stamp and the library card for contact details. No facing pages, no index cards, no ruled-paper text box.</p><div class="flags"><b>Needs Josef’s yes</b><ul><li>The dot shadow now also sits under the one focal card of each screen and under the red button, not only the book object.</li><li>A binding shade (a dot tone fading from the left edge) on that focal card. Still dots, no gradient.</li><li>A large letter (Newsreader, 76 to 118px) on the question and the back cover. The type table stops at 22.</li><li>The date stamp: Barlow Condensed caps at 40px, ink, once.</li><li>Dotted 2px rules between list rows (the rest stay solid 2px ink).</li><li>The answers list grows with each answer, which hints at progress. Decision 26 allows one late sign and no count, so it needs your call. It shows no number.</li></ul></div></header>
+<section class="grid"><div class="cell"><span class="t">1 · Interview question</span><div class="frame" style="height:445px"><div class="fr C" style="height:743px"><header class="nb"><div class="wrap"><span class="wordmark">Trove</span><span class="sp"></span><nav class="steps"><b>First look</b><span>Deeper</span><span>Check</span></nav><span class="sp"></span><a class="button button-quiet" href="#" >Leave for now</a></div></header><div class="page"><div class="wrap cols"><div class="cd fx"><span class="bind"></span><div class="ch"><span>Question</span><span>Skip any you like</span></div><div class="bd"><p class="q"><span class="dc">W</span>hat was the first thing wrong with that machine that nobody had warned you about?</p><div class="lab"><span>Your answer</span><span>Only you see this</span></div><div class="ans focus">The coil stop was bent. Everyone blamed the new coils, so for weeks I kept swapping the coil and the flipper kept dropping the ball. The stop had been<span class="caret"></span></div><div class="acts"><a class="button button-secondary" href="#" ><svg class="mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="9" y="3" width="6" height="11"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>Speak</a><a class="button button-quiet" href="#" >Skip</a><span class="sp"></span><span class="pbw "><a class="button button-primary" href="#" >Send answer</a></span></div><p class="keys">Return starts a new line. Command and Return sends.</p></div></div><div class="stack"><aside class="cd"><div class="ch"><span>Your answers</span><span>Only you</span></div><ul class="al"><li class=""><span class="dot"></span><div><b>When I first opened the machine</b><small>The playfield was already warped along the left edge…</small></div></li><li class=""><span class="dot"></span><div><b>I swapped the coil three times</b><small>Before I stopped trusting the part that was easiest to replace…</small></div></li><li class=""><span class="dot"></span><div><b>The notebook started as a list</b><small>Every odd thing it did, in the order it happened…</small></div></li></ul><a class="more" href="#">Show earlier answers</a></aside></div></div></div></div></div><p class="n">Same job as the original, in an app layout anyone can read in a second: a clear question, an ordinary text box, Speak, Skip and one red Send. The question gets the large letter and the page gets the binding shade. Earlier answers are a plain list at the side, which is how you reread or fix one. Nothing here asks you to learn anything.</p></div><div class="cell"><span class="t">1 · On a phone</span><div class="pwrap"><div class="pframe" style="height:675px"><div class="pfr C ph" style="height:844px"><header class="nb"><div class="wrap" style="display:flex;align-items:center"><span class="wordmark" style="font-size:22px">Trove</span><span class="sp"></span><a class="button button-quiet" href="#" >Leave for now</a></div></header><div class="page"><div class="pad"><div class="cd fx"><span class="bind"></span><div class="ch"><span>Question</span><span>Skip any you like</span></div><div class="bd"><p class="q"><span class="dc">W</span>hat was the first thing wrong with that machine that nobody had warned you about?</p><div class="lab"><span>Your answer</span><span>Only you see this</span></div><div class="ans focus">The coil stop was bent. Everyone blamed the new coils, so for weeks I kept swapping the coil<span class="caret"></span></div></div></div><aside class="cd"><div class="ch"><span>Your answers</span><span>Only you</span></div><ul class="al"><li><span class="dot"></span><div><b>When I first opened the machine</b></div></li><li><span class="dot"></span><div><b>I swapped the coil three times</b></div></li></ul><a class="more" href="#">Show all</a></aside></div></div><div class="dock"><a class="button button-secondary" href="#" aria-label="Speak" style="width:48px;padding:0;flex:none"><svg class="mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="9" y="3" width="6" height="11"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg></a><a class="button button-quiet" href="#" >Skip</a><span class="pbw "><a class="button button-primary" href="#" >Send answer</a></span></div></div></div><p class="n" style="max-width:380px">The question and the box fill the screen. Speak, Skip and Send live in a bar that stays at the thumb. Earlier answers sit under, folded to two lines.</p></div><p class="n">The send bar never scrolls away.</p></div><div class="cell"><span class="t">2 · After Send, 1 of 3: sending</span><div class="frame" style="height:445px"><div class="fr C" style="height:743px"><header class="nb"><div class="wrap"><span class="wordmark">Trove</span><span class="sp"></span><nav class="steps"><b>First look</b><span>Deeper</span><span>Check</span></nav><span class="sp"></span><a class="button button-quiet" href="#" >Leave for now</a></div></header><div class="page"><div class="wrap cols"><div class="cd fx"><span class="bind"></span><div class="ch"><span>Question</span><span>Skip any you like</span></div><div class="bd"><p class="q dim"><span class="dc">W</span>hat was the first thing wrong with that machine that nobody had warned you about?</p><div class="lab"><span>Your answer</span><span>Only you see this</span></div><div class="ans off">The coil stop was bent. Everyone blamed the new coils, so for weeks I kept swapping the coil and the flipper kept dropping the ball. The stop had been</div><div class="acts"><a class="button button-secondary" href="#" aria-disabled=true><svg class="mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="9" y="3" width="6" height="11"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>Speak</a><a class="button button-quiet" href="#" aria-disabled=true>Skip</a><span class="sp"></span><span class="pbw"><a class="button button-primary" href="#" aria-busy=true>Sending</a></span></div><p class="keys">Return starts a new line. Command and Return sends.</p></div></div><div class="stack"><aside class="cd"><div class="ch"><span>Your answers</span><span>Only you</span></div><ul class="al"><li class="new"><span class="dot"></span><div><b>Reading what you said…</b></div></li><li class=""><span class="dot"></span><div><b>When I first opened the machine</b><small>The playfield was already warped along the left edge…</small></div></li><li class=""><span class="dot"></span><div><b>I swapped the coil three times</b><small>Before I stopped trusting the part that was easiest to replace…</small></div></li></ul><a class="more" href="#">Show earlier answers</a></aside></div></div></div></div></div><p class="n">The box greys and keeps what you wrote. Send says “Sending” with the dots moving in place. A dashed row opens at the top of the list: “Reading what you said…”.</p></div><div class="cell"><span class="t">2 · After Send, 2 of 3: the answer is filed, the next question sets in</span><div class="frame" style="height:417px"><div class="fr C" style="height:696px"><header class="nb"><div class="wrap"><span class="wordmark">Trove</span><span class="sp"></span><nav class="steps"><b>First look</b><span>Deeper</span><span>Check</span></nav><span class="sp"></span><a class="button button-quiet" href="#" >Leave for now</a></div></header><div class="page"><div class="wrap cols"><div class="cd fx"><span class="bind"></span><div class="ch"><span>Question</span><span>Skip any you like</span></div><div class="bd"><p class="q setting"><span class="dc">W</span>hat did the new owner<span class="todo"></span></p><div class="lab"><span>Your answer</span><span>Only you see this</span></div><div class="ans off"></div><div class="acts"><a class="button button-secondary" href="#" aria-disabled=true><svg class="mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="9" y="3" width="6" height="11"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>Speak</a><a class="button button-quiet" href="#" aria-disabled=true>Skip</a><span class="sp"></span><span class="pbw"><a class="button button-primary" href="#" aria-disabled=true>Send answer</a></span></div><p class="keys">Return starts a new line. Command and Return sends.</p></div></div><div class="stack"><aside class="cd"><div class="ch"><span>Your answers</span><span>Only you</span></div><ul class="al"><li class="fresh"><span class="dot"></span><div><b>The coil stop was bent</b><small>Everyone blamed the new coils, so for weeks I kept swapping…</small></div></li><li class=""><span class="dot"></span><div><b>When I first opened the machine</b><small>The playfield was already warped along the left edge…</small></div></li><li class=""><span class="dot"></span><div><b>I swapped the coil three times</b><small>Before I stopped trusting the part that was easiest to replace…</small></div></li></ul><a class="more" href="#">Show earlier answers</a></aside></div></div></div></div></div><p class="n">The answer is now a real row at the top of the list. The next question is set a word at a time, and the dots are the part not set yet.</p></div><div class="cell"><span class="t">2 · After Send, 3 of 3: ready</span><div class="frame" style="height:417px"><div class="fr C" style="height:696px"><header class="nb"><div class="wrap"><span class="wordmark">Trove</span><span class="sp"></span><nav class="steps"><b>First look</b><span>Deeper</span><span>Check</span></nav><span class="sp"></span><a class="button button-quiet" href="#" >Leave for now</a></div></header><div class="page"><div class="wrap cols"><div class="cd fx"><span class="bind"></span><div class="ch"><span>Question</span><span>Skip any you like</span></div><div class="bd"><p class="q"><span class="dc">W</span>hen the new owner first played it, what did they say?</p><div class="lab"><span>Your answer</span><span>Only you see this</span></div><div class="ans focus"><span class="caret"></span></div><div class="acts"><a class="button button-secondary" href="#" ><svg class="mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="9" y="3" width="6" height="11"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>Speak</a><a class="button button-quiet" href="#" >Skip</a><span class="sp"></span><span class="pbw "><a class="button button-primary" href="#" >Send answer</a></span></div><p class="keys">Return starts a new line. Command and Return sends.</p></div></div><div class="stack"><aside class="cd"><div class="ch"><span>Your answers</span><span>Only you</span></div><ul class="al"><li class="fresh"><span class="dot"></span><div><b>The coil stop was bent</b><small>Everyone blamed the new coils, so for weeks I kept swapping…</small></div></li><li class=""><span class="dot"></span><div><b>When I first opened the machine</b><small>The playfield was already warped along the left edge…</small></div></li><li class=""><span class="dot"></span><div><b>I swapped the coil three times</b><small>Before I stopped trusting the part that was easiest to replace…</small></div></li></ul><a class="more" href="#">Show earlier answers</a></aside></div></div></div></div></div><p class="n">The box is empty and focused. Nothing to dismiss, nothing to click first.</p></div><div class="cell"><span class="t">3 · Title reveal</span><div class="frame" style="height:348px"><div class="fr C" style="height:581px"><header class="nb"><div class="wrap"><span class="wordmark">Trove</span><span class="sp"></span><nav class="steps"><span>First look</span><b>Deeper</b><span>Check</span></nav><span class="sp"></span><a class="button button-quiet" href="#" >Leave for now</a></div></header><div class="page"><div class="wrap cols"><div class="cd fx"><span class="bind"></span><div class="ch"><span>Your book needs a title</span><span>Pick one</span></div><div class="bd"><div class="tr"><span class="book book-md"><span class="book-cover"><span class="book-title">The Coil Was Never the Problem</span><span class="book-author">Nora Valdez</span></span></span><div><span class="eyebrow">Suggested title</span><h2 class="tt">The Coil Was Never the Problem</h2><p class="by">By Nora Valdez</p><p class="why">Everything you said came back to the one repair that held.</p></div></div><div class="acts" style="margin-top:28px"><a class="button button-quiet" href="#" >Show me another</a><span class="sp"></span><span class="pbw "><a class="button button-primary" href="#" >Use this title</a></span></div></div></div><div class="stack"><aside class="cd"><div class="ch"><span>Titles from your answers</span><span></span></div><ul class="opts"><li class="sel"><span class="rd"></span><b>The Coil Was Never the Problem</b></li><li class=""><span class="rd"></span><b>Fix the Thing Behind the Thing</b></li><li class=""><span class="rd"></span><b>What the Flipper Was Trying to Tell Me</b></li></ul><p class="note" style="border-top:2px dotted var(--ink)">I read your answers as one book. The others are kept until you choose.</p></aside></div></div></div></div></div><p class="n">The suggested title is large, with the real book beside it. The other titles are in a list at the side. One click swaps the big title, and Use this title is the one red button. Seeing all three is faster than turning pages.</p></div><div class="cell"><span class="t">4 · Book review</span><div class="frame" style="height:759px"><div class="fr C" style="height:1265px"><header class="nb"><div class="wrap"><span class="wordmark">Trove</span><span class="sp"></span><nav class="steps"><span>First look</span><span>Deeper</span><b>Check</b></nav><span class="sp"></span><a class="button button-quiet" href="#" >Leave for now</a></div></header><div class="page"><div class="wrap cols"><div class="stack"><div class="cd fx"><span class="bind"></span><div class="ch"><span>Your book</span><span>Not on the shelf yet</span></div><div class="bd"><div class="jk"><span class="book book-md"><span class="book-cover"><span class="book-title">The Coil Was Never the Problem</span><span class="book-author">Nora Valdez</span></span></span><div><h1 class="h2t">The Coil Was Never the Problem</h1><p class="by" style="margin-top:12px">By Nora Valdez</p><p class="blurb"><span class="dc">M</span>ost pinball machines fail somewhere other than where they seem to. I restored them for six years, and the repair that held was almost never the first one I tried.</p><div class="acts" style="margin:14px 0 0 -14px;gap:2px"><a class="button button-quiet" href="#" >Edit the title</a><a class="button button-quiet" href="#" >Rewrite the back cover</a></div></div></div></div></div><section class="cd"><div class="ch"><span>Chapters</span><span>Each one is built from your answers</span></div><ol class="chs"><li><span class="no">1</span><div><h3>Why the New Part Didn’t Help</h3><p>Nearly every machine I bought had a part somebody had already replaced. Replacing it again never fixed it.</p><div class="tools"><a class="button button-quiet" href="#" >Show what you said</a><a class="button button-quiet" href="#" >Rewrite</a><a class="button button-quiet" href="#" >Remove</a></div></div></li><li><span class="no">2</span><div><h3>Reading a Machine Before You Touch It</h3><p>I learned to watch it play for ten minutes first. The ball shows you where the fault lives.</p><div class="tools"><a class="button button-quiet" href="#" >Show what you said</a><a class="button button-quiet" href="#" >Rewrite</a><a class="button button-quiet" href="#" >Remove</a></div></div></li><li><span class="no">3</span><div><h3>The Notebook That Caught the Connector</h3><p>I wrote down every odd behavior. The notes pointed to one loose connector behind most of what I’d called random.</p><div class="tools"><a class="button button-quiet" href="#" >Show what you said</a><a class="button button-quiet" href="#" >Rewrite</a><a class="button button-quiet" href="#" >Remove</a></div></div></li><li><span class="no">4</span><div><h3>Selling the Ones I Couldn’t Fix</h3><p>I kept the machines I understood and sold the rest, with the faults written on a card taped inside the glass.</p><div class="tools"><a class="button button-quiet" href="#" >Show what you said</a><a class="button button-quiet" href="#" >Rewrite</a><a class="button button-quiet" href="#" >Remove</a></div></div></li></ol></section></div><div class="stack"><aside class="cd"><div class="ch"><span>Ready?</span><span></span></div><div class="bd ready" style="padding:20px"><p>Put it on the shelf and other members can find it. You choose who you talk to.</p><span class="pbw block "><a class="button button-primary" href="#" >Put it on the shelf</a></span><a class="button button-quiet" href="#" >Back to the interview</a></div></aside><aside class="cd"><div class="ch"><span>Written from what you said</span><span></span></div><ul class="al"><li><span class="dot"></span><div><b>When I first opened the machine</b></div></li><li><span class="dot"></span><div><b>I swapped the coil three times</b></div></li><li><span class="dot"></span><div><b>The notebook started as a list</b></div></li></ul><a class="more" href="#">Show earlier answers</a></aside></div></div></div></div></div><p class="n">The book first (cover, title, name, back cover with its large letter), then the chapters, each with what it says and the three things you can do. The red Put it on the shelf stays in the side card, so it is always in view.</p></div><div class="cell"><span class="t">4 · While the book is being written</span><div class="frame" style="height:652px"><div class="fr C" style="height:1088px"><header class="nb"><div class="wrap"><span class="wordmark">Trove</span><span class="sp"></span><nav class="steps"><span>First look</span><span>Deeper</span><b>Check</b></nav><span class="sp"></span><a class="button button-quiet" href="#" >Leave for now</a></div></header><div class="page"><div class="wrap cols"><div class="stack"><div class="cd fx"><span class="bind"></span><div class="ch"><span>Your book</span><span>Not on the shelf yet</span></div><div class="bd"><div class="jk"><span class="book book-md"><span class="book-cover"><span class="book-title">The Coil Was Never the Problem</span><span class="book-author">Nora Valdez</span></span></span><div><h1 class="h2t">The Coil Was Never the Problem</h1><p class="by" style="margin-top:12px">By Nora Valdez</p><p class="blurb"><span class="dc">M</span>ost pinball machines fail somewhere other than where they seem to. I restored them for six years, and the repair that held was almost never the first one I tried.</p><div class="acts" style="margin:14px 0 0 -14px;gap:2px"><a class="button button-quiet" href="#" >Edit the title</a><a class="button button-quiet" href="#" >Rewrite the back cover</a></div></div></div></div></div><section class="cd"><div class="ch"><span>Chapters</span><span>Each one is built from your answers</span></div><ol class="chs"><li><span class="no">1</span><div><h3>Why the New Part Didn’t Help</h3><p>Nearly every machine I bought had a part somebody had already replaced. Replacing it again never fixed it.</p></div></li><li><span class="no">2</span><div><h3>Reading a Machine Before You Touch It</h3><p>I learned to watch it play for ten minutes first. The ball shows you where the fault lives.</p></div></li><li class="pencil"><span class="no">3</span><div><h3>The Notebook That Caught the Connector</h3><p>I wrote down every odd behavior. The notes pointed to one loose connector behind most of what I’d called random.</p><span class="wip">Being written</span></div></li><li class="pencil"><span class="no">4</span><div><div class="dots" style="--w:64%"></div><div class="dots" style="--w:90%"></div><div class="dots" style="--w:48%"></div></div></li></ol></section></div><div class="stack"><aside class="cd"><div class="ch"><span>Almost ready</span><span></span></div><div class="bd ready" style="padding:20px"><p>The last chapters are still being written. Nothing is lost if you leave.</p><span class="pbw block "><a class="button button-primary" href="#" aria-disabled=true>Put it on the shelf</a></span></div></aside><aside class="cd"><div class="ch"><span>Written from what you said</span><span></span></div><ul class="al"><li><span class="dot"></span><div><b>When I first opened the machine</b></div></li><li><span class="dot"></span><div><b>I swapped the coil three times</b></div></li><li><span class="dot"></span><div><b>The notebook started as a list</b></div></li></ul><a class="more" href="#">Show earlier answers</a></aside></div></div></div></div></div><p class="n">Finished chapters are ink. The one being written is grey italic with a dashed label, the next one is dots. The red button waits, disabled, and says why.</p></div><div class="cell"><span class="t">5 · On the shelf: the stamp lands</span><div class="frame" style="height:457px"><div class="fr C" style="height:763px"><header class="nb"><div class="wrap"><span class="wordmark">Trove</span><nav class="nav"><a href="#">Shelf</a><a aria-current="page" href="#">My book</a><a href="#">Checkouts</a><a href="#">Past meets</a></nav><span class="sp"></span><span class="search">A topic, a question…</span><span class="avatar">SO</span></div></header><div class="page"><div class="wrap" style="width:900px"><div class="cd fx"><span class="bind"></span><div class="ch"><span>On the shelf</span><span>Visible to members</span></div><div class="bd"><div class="tr" style="grid-template-columns:176px 1fr"><span class="book book-md"><span class="book-cover"><span class="book-title">The Coil Was Never the Problem</span><span class="book-author">Nora Valdez</span></span></span><div><h2 class="q" style="font-size:44px">Your book is on the shelf.</h2><p style="margin:14px 0 0;font:400 17px/1.6 var(--font-sans);max-width:520px">Other members can find it now. When someone asks to check it out, you say yes or no. Your contact details stay private until you say yes.</p><div class="slip"><div class="hd">Inside the back cover</div><div class="rw"><span>Title</span><span>The Coil Was Never the Problem</span></div><div class="rw"><span>Author</span><span>Nora Valdez</span></div><div class="rw big"><span>Date shelved</span><span></span></div><div class="echo">On the shelf<small>17 Nov 2026</small></div><div class="stamp land">On the shelf<small>17 Nov 2026</small></div></div></div></div><div class="acts" style="margin-top:30px"><a class="button button-quiet" href="#" >Go to the shelf</a><span class="sp"></span><span class="pbw "><a class="button button-primary" href="#" >See my book</a></span></div></div></div></div></div></div></div><p class="n">The moment: the date stamp lands on the slip inside the back cover, a hair past its mark, with a dotted echo. Ink, not red, and 120ms.</p></div><div class="cell"><span class="t">5 · On the shelf: at rest</span><div class="frame" style="height:457px"><div class="fr C" style="height:763px"><header class="nb"><div class="wrap"><span class="wordmark">Trove</span><nav class="nav"><a href="#">Shelf</a><a aria-current="page" href="#">My book</a><a href="#">Checkouts</a><a href="#">Past meets</a></nav><span class="sp"></span><span class="search">A topic, a question…</span><span class="avatar">SO</span></div></header><div class="page"><div class="wrap" style="width:900px"><div class="cd fx"><span class="bind"></span><div class="ch"><span>On the shelf</span><span>Visible to members</span></div><div class="bd"><div class="tr" style="grid-template-columns:176px 1fr"><span class="book book-md"><span class="book-cover"><span class="book-title">The Coil Was Never the Problem</span><span class="book-author">Nora Valdez</span></span></span><div><h2 class="q" style="font-size:44px">Your book is on the shelf.</h2><p style="margin:14px 0 0;font:400 17px/1.6 var(--font-sans);max-width:520px">Other members can find it now. When someone asks to check it out, you say yes or no. Your contact details stay private until you say yes.</p><div class="slip"><div class="hd">Inside the back cover</div><div class="rw"><span>Title</span><span>The Coil Was Never the Problem</span></div><div class="rw"><span>Author</span><span>Nora Valdez</span></div><div class="rw big"><span>Date shelved</span><span></span></div><div class="stamp">On the shelf<small>17 Nov 2026</small></div></div></div></div><div class="acts" style="margin-top:30px"><a class="button button-quiet" href="#" >Go to the shelf</a><span class="sp"></span><span class="pbw "><a class="button button-primary" href="#" >See my book</a></span></div></div></div></div></div></div></div><p class="n">The same page a second later. What happens next is one paragraph and two buttons.</p></div><div class="cell"><span class="t">6 · The shelf front page</span><div class="frame" style="height:746px"><div class="fr C" style="height:1244px"><header class="nb"><div class="wrap"><span class="wordmark">Trove</span><nav class="nav"><a aria-current="page" href="#">Shelf</a><a href="#">My book</a><a href="#">Checkouts</a><a href="#">Past meets</a></nav><span class="sp"></span><span class="search">A topic, a question…</span><span class="avatar">SO</span></div></header><div class="page"><div class="wrap cols shelfcols"><div class="stack"><aside class="cd"><div class="ch"><span>Your book</span><span></span></div><div class="mine"><span class="book book-sm"><span class="book-cover"><span class="book-title">The Coil Was Never the Problem</span><span class="book-author">Nora Valdez</span></span></span><div><span class="st">On the shelf</span><p>The Coil Was Never the Problem</p><a class="button button-secondary" href="#" >Open</a></div></div></aside><aside class="cd"><div class="ch"><span>Waiting on you</span><span></span></div><div class="req"><p><b>Sam Okafor</b> asked to check out your book.</p><a class="button button-secondary" href="#" >Review the request</a></div></aside></div><div class="stack"><section class="hero dark"><span class="burst"></span><div><span class="caption" style="background:var(--white);color:var(--ink)">The Librarian recommends</span><h1>Why I Turned Down Grad School Twice</h1><p class="by">By Hana Ito</p><p class="why2">You’re deciding about a PhD. Hana weighed the same choice, twice.</p><div class="acts" style="margin-top:22px"><span class="pbw "><a class="button button-primary" href="#" >Ask to check out</a></span></div></div><div class="bk"><span class="book book-lg"><span class="book-cover"><span class="book-title">Why I Turned Down Grad School Twice</span><span class="book-author">Hana Ito</span></span></span><span class="ledge"></span></div></section><section class="cd shelfcd"><div class="chips"><a aria-current="true" href="#">All</a><a href="#">Changing course</a><a href="#">Starting something</a><a href="#">Coming home</a><a href="#">Craft</a></div><div class="shelf-head"><h2 class="shelf-name">Changing course</h2><a href="#">See the whole shelf</a></div><div class="shelf-books"><span class="book "><span class="book-cover"><span class="book-title">How to Leave a Job Without Burning the Bridge</span><span class="book-author">Dana Whitfield</span></span></span><span class="book "><span class="book-cover"><span class="book-title">Switching Off Pre-Med Before Telling Your Parents</span><span class="book-author">Marcus Bell</span></span></span><span class="book "><span class="book-cover"><span class="book-title">From Orchestra Pit to Product Manager</span><span class="book-author">Kiera Doyle</span></span></span><span class="book "><span class="book-cover"><span class="book-title">Teaching Yourself to Code at Thirty-Four</span><span class="book-author">Luis Ortega</span></span></span><span class="book "><span class="book-cover"><span class="book-title">The First Year Running a Shop Alone</span><span class="book-author">Priya Nair</span></span></span></div><div class="ledge"></div><div style="height:34px"></div><div class="shelf-head"><h2 class="shelf-name">Starting something</h2><a href="#">See the whole shelf</a></div><div class="shelf-books"><span class="book "><span class="book-cover"><span class="book-title">From Orchestra Pit to Product Manager</span><span class="book-author">Kiera Doyle</span></span></span><span class="book "><span class="book-cover"><span class="book-title">Teaching Yourself to Code at Thirty-Four</span><span class="book-author">Luis Ortega</span></span></span><span class="book "><span class="book-cover"><span class="book-title">The First Year Running a Shop Alone</span><span class="book-author">Priya Nair</span></span></span><span class="book "><span class="book-cover"><span class="book-title">What Nobody Said About Moving Abroad</span><span class="book-author">Tomas Novak</span></span></span><span class="book "><span class="book-cover"><span class="book-title">Coming Home After Ten Years Away</span><span class="book-author">Jonah Reyes</span></span></span></div><div class="ledge"></div></section></div></div></div></div></div><p class="n">A familiar home: a side column with your book and anything waiting on you, then the Librarian’s pick, then the shelves with topic filters. The black slanted band and the burst stay. The books keep their dot shadow.</p></div><div class="cell"><span class="t">Contact details: a library checkout card</span><div class="frame" style="height:398px"><div class="fr C" style="height:664px"><header class="nb"><div class="wrap"><span class="wordmark">Trove</span><nav class="nav"><a href="#">Shelf</a><a href="#">My book</a><a aria-current="page" href="#">Checkouts</a><a href="#">Past meets</a></nav><span class="sp"></span><span class="search">A topic, a question…</span><span class="avatar">SO</span></div></header><div class="page"><div class="wrap"><div class="cd fx co"><span class="bind"></span><div class="bd"><div class="intro"><h2>Checkout card</h2><p>Nora said yes. Here is how to reach each other.</p></div><div class="gr"><span>Book</span><span class="hand">The Coil Was Never the Problem</span></div><div class="gr"><span>Author</span><span>Nora Valdez</span></div><div class="gr"><span>Reader</span><span>Sam Okafor</span></div><div class="gr"><span>Reading on</span><span>Thursday 20 Nov, 4:00 pm, video call</span></div><div class="gr"><span>Email</span><span>nora.valdez@example.edu</span></div><div class="acts"><a class="button button-quiet" href="#" >Message Nora</a><span class="sp"></span><span class="pbw "><a class="button button-primary" href="#" >Add to calendar</a></span></div></div></div></div></div></div></div><p class="n">When the author says yes, the details arrive on a checkout card with ruled rows, and the one red button adds the call to a calendar.</p></div><div class="cell"><span class="t">States</span><div class="frame" style="height:447px"><div class="fr C" style="height:746px"><div class="spec"><div class="k"><span class="lb">Red button at rest</span><span class="pbw "><a class="button button-primary" href="#" >Send answer</a></span></div><div class="k"><span class="lb">Hover: lifts, shadow grows</span><span class="pbw is-hover"><a class="button button-primary" href="#" >Send answer</a></span></div><div class="k"><span class="lb">Pressed: sits on its shadow</span><span class="pbw is-press"><a class="button button-primary" href="#" >Send answer</a></span></div><div class="k"><span class="lb">Secondary at rest</span><a class="button button-secondary" href="#" ><svg class="mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="9" y="3" width="6" height="11"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>Speak</a></div><div class="k"><span class="lb">Busy: dots move in place, no spinner</span><span class="pbw"><a class="button button-primary" href="#" aria-busy=true>Sending</a></span></div><div class="k"><span class="lb">Disabled</span><a class="button button-primary" href="#" aria-disabled=true>Send answer</a></div><div class="k"><span class="lb">Answer box, focused</span><div class="ans focus" style="width:100%;min-height:90px">The coil stop was bent<span class="caret"></span></div></div><div class="k"><span class="lb">Answer box, waiting</span><div class="ans off" style="width:100%;min-height:90px"></div></div><div class="k"><span class="lb">Book hover: lifts, shadow grows</span><span class="book is-hover"><span class="book-cover"><span class="book-title">The First Year Running a Shop Alone</span><span class="book-author">Priya Nair</span></span></span></div><div class="k"><span class="lb">Answer row: rest and hover</span><div class="cd" style="width:100%"><ul class="al"><li class=""><span class="dot"></span><div><b>The smell was the first thing</b><small>Before I saw any damage…</small></div></li><li class="hov"><span class="dot"></span><div><b>I swapped the coil three times</b><small>Before I stopped trusting…</small></div></li></ul></div></div><div class="k"><span class="lb">Title option: selected and hover</span><div class="cd" style="width:100%"><ul class="opts"><li class="sel"><span class="rd"></span><b>The Coil Was Never the Problem</b></li><li class="hov"><span class="rd"></span><b>Fix the Thing Behind the Thing</b></li></ul></div></div><div class="k"><span class="lb">Chapter being written</span><div class="cd" style="width:100%"><ol class="chs"><li class="pencil" style="padding:16px 18px"><span class="no">3</span><div><h3>The Notebook That Caught the Connector</h3><span class="wip">Being written</span></div></li></ol></div></div></div></div></div><p class="n">Hover, press, busy, disabled, focus and selected for the parts that appear on every screen.</p></div></section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1760,"height":5460}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

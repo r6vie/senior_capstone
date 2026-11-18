@@ -2,6 +2,22 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-17: direction C, Reading Room (Josef: A's details, but a usable, professional layout)
+
+Josef liked A's details (the page shading, the large letter) and found its cards and lined text box confusing, and wanted a UI that is fast
+to use and feels like a professional network, not a game. Board "C · Reading Room" on the Elevate page. Nothing is decided and no app code changed.
+
+- **Layout:** every screen is a top bar, a main column and a side column. The answer is an ordinary text box with Speak, Skip and one red Send.
+  Earlier answers are a plain list at the side (reread or fix one there). Titles are a radio list beside one large suggested title. The review
+  keeps the red Put it on the shelf in the side card so it is always in view. The shelf has a side column (your book, waiting on you), the
+  Librarian's band, topic filters and the shelves.
+- **Kept from A, used once each:** screentone falling from the header; a binding shade on the one focal card; the large letter on the question
+  and the back cover; the red button pressing into its dot shadow; the ink date stamp; the library checkout card for contact details.
+- **Dropped from A:** facing pages, index cards, the ruled-paper text box, the page-turn.
+- **Needs Josef's yes:** dot shadow under the focal card and the red button; the binding shade; the large letter (76 to 118px, type table stops
+  at 22); the 40px caps stamp word; dotted 2px list rules; and the answers list implying progress (decision 26), shown without a number.
+- **Placeholder copy:** "Skip any you like", "Reading what you said…", "Waiting on you / Sam Okafor asked to check out your book", the topic filters.
+
 ## 2026-11-17: two ways to elevate the Manga screentone look (waiting for Josef's choice)
 
 Boards "A · Bound" and "B · Inked" on the Elevate page. Each draws the interview question (desktop and phone), the wait after Send, the title
