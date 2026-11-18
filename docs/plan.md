@@ -59,6 +59,8 @@ local stub with the same signature and swap it out when the real one merges.
 | `checkouts.get_checkout_for(db, checkout_id, user_id)` | Ellie | The checkout if this user is its reader or author, else `None` | messaging, meetings |
 | `checkouts.fully_checked_out(db, books)` | Ellie | The ids of the books (each with `_id` and `copies`) whose copies are all out, so the shelf can hide them. Never shown to readers as a label or count | books, discovery (the shelf) |
 | `checkouts.past_meets(db, user_id)` | Ellie | People this member has met: checkout id, other person's full name, book id | discovery (recommend to someone you've met) |
+| `messaging.post_note(db, checkout_id, text)` | Ellie | Posts a short app note (up to 300 characters) into an accepted checkout's thread, such as a confirmed meeting time. Returns the note, or `None` if the thread isn't open | meetings (if wanted) |
+| `messaging.email_new_message(db, message)` | Ellie | Emails whoever didn't write the message or note, at most once per 10 minutes per thread each. Run it as a background task | meetings (with `post_note`) |
 
 When you change one of these, tell the people in the "Used by" column.
 
@@ -161,7 +163,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
   chose (`auth.contact_details_of`), at the same moment, and both get an email.
 - Done when: names and contacts are visible only to those two people, and only after accept.
 
-**C3 · Messages inside a checkout** · Ellie · `todo`
+**C3 · Messages inside a checkout** · Ellie · `doing`
 - A plain thread per checkout. No messages outside a checkout (trove.md §9.8).
 - Email notification for new messages, at most one every 10 minutes per thread.
 

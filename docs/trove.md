@@ -175,6 +175,14 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **Messaging lives in the app.** The thread is where you check out a book, coordinate the meeting and share the video link. A member can choose to get communications by email instead.
 - **"Did you meet?" matters:** answering it returns the copy, which frees it for the next reader.
 - **Messaging is a small thread inside each checkout** (§9.8). Messages exist only inside a checkout, so there are no cold DMs.
+- **How messages work** (decided 2026-11-18, C3):
+  - The thread opens when the author accepts. While a checkout waits, the reader's note is the whole ask, so nobody can nudge an author who hasn't decided. The note is the thread's first message.
+  - After the reading ("Did you meet?", C4), the thread stays in Past meets as read-only history.
+  - A message is up to 2,000 characters. Each person can send at most 30 messages an hour in a thread.
+  - The new-message email says who wrote and links to the thread; no message text is copied into it. At most one every 10 minutes per thread, for each person, and it respects the email switch.
+  - The thread has its own page, `/checkouts/<id>/messages`, linked from each accepted checkout.
+  - The app can post short notes into a thread (for example a confirmed meeting time) through the messaging feature. Notes look different from people's messages. Each feature decides whether to post them.
+  - A private "New message" marker on your Checkouts page shows a thread you haven't read since the last message. The other person never learns whether you've read anything, and it is a label, never a count.
 
 ### Open
 
@@ -365,3 +373,7 @@ Membership verification (decided 2026-11-16, A2, Daniel):
 - **2026-11-16, the reveal (C2, Ellie):**
   - On accept, both people see each other's contact details on the Checkouts page (the sign-in email, plus LinkedIn and phone if added), read fresh from Settings.
   - Both get an email that only links to Trove; contact details are never copied into emails. It respects each member's email switch.
+- **2026-11-18, messages (C3, Ellie):**
+  - The thread opens on accept and becomes read-only history after the reading; 2,000 characters a message, 30 an hour per person.
+  - The new-message email names the sender and links to the thread, at most one per 10 minutes per thread; it respects the email switch.
+  - Its own page, app notes other features can post (such as a confirmed meeting time), and a private "New message" marker (§6).
