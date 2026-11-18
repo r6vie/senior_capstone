@@ -142,6 +142,13 @@ def too_many_message() -> str:
     )
 
 
+async def get_checkout(database: AsyncDatabase, checkout_id: str) -> dict | None:
+    """The checkout by id, whoever is asking. Only for the app acting on its own, like messaging's notes;
+    anything done for a member goes through `get_checkout_for`."""
+    await close_expired(database)
+    return await database.checkouts.find_one({"_id": checkout_id})
+
+
 async def get_checkout_for(database: AsyncDatabase, checkout_id: str, user_id: str) -> dict | None:
     """The checkout if this user is its reader or author, else None. For messaging and meetings."""
     await close_expired(database)
