@@ -158,6 +158,22 @@ describe("CheckoutsPage", () => {
     expect(status).toContain("November 22");
   });
 
+  it("links an accepted checkout to its messages, with a private label when something is unread", async () => {
+    api.GET.mockResolvedValue({
+      data: {
+        lending: [{ ...waitingRequest, status: "accepted", expires_at: null, new_messages: true }],
+        reading: [reading("accepted", { new_messages: false })],
+      },
+    });
+    renderPage();
+    const links = await screen.findAllByRole("link", { name: "Messages" });
+    expect(links.map((link) => link.getAttribute("href"))).toEqual([
+      "/checkouts/c1/messages",
+      "/checkouts/r-accepted/messages",
+    ]);
+    expect(screen.getAllByText("New message")).toHaveLength(1);
+  });
+
   it("links an accepted checkout to arranging the reading, for both people", async () => {
     api.GET.mockResolvedValue({
       data: {

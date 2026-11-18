@@ -21,10 +21,15 @@ function Note({ text }: { text: string }) {
   return <blockquote className="checkout-note">{text}</blockquote>;
 }
 
-// After a yes, the next step is the meeting page (M1).
-function ArrangeLink({ id }: { id: string }) {
+// After a yes: the conversation (C3) and arranging the meeting (M1). "New message" is private to you and
+// never a count (docs/trove.md §6).
+function AcceptedActions({ id, newMessages }: { id: string; newMessages: boolean }) {
   return (
     <div className="checkout-actions">
+      <Link className="button button-secondary" to={`/checkouts/${id}/messages`}>
+        Messages
+      </Link>
+      {newMessages && <span className="caption checkout-new">New message</span>}
       <Link className="button button-secondary" to={`/checkouts/${id}/meeting`}>
         Arrange the reading
       </Link>
@@ -89,7 +94,7 @@ function LendingItem({ item, act }: { item: Lending; act: Act }) {
         <>
           <p>You said yes.</p>
           {item.reader_contact && <ContactDetails name={item.reader_name} contact={item.reader_contact} />}
-          <ArrangeLink id={item.id} />
+          <AcceptedActions id={item.id} newMessages={item.new_messages ?? false} />
         </>
       ) : confirming ? (
         <div className="checkout-actions">
@@ -157,7 +162,9 @@ function ReadingItem({ item, act }: { item: Reading; act: Act }) {
       {item.status === "accepted" && item.author_contact && (
         <ContactDetails name={item.author_name} contact={item.author_contact} />
       )}
-      {item.status === "accepted" && <ArrangeLink id={item.id} />}
+      {item.status === "accepted" && (
+        <AcceptedActions id={item.id} newMessages={item.new_messages ?? false} />
+      )}
       {item.status === "waiting" && (
         <div className="checkout-actions">
           <Button variant="quiet" disabled={busy} aria-busy={busy} onClick={cancel}>
