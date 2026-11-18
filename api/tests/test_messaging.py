@@ -7,6 +7,8 @@ from trove.checkouts import router as checkouts_router
 from trove.messaging import service as messaging_service
 from trove.messaging.service import checkouts_with_new_messages, email_new_message, post_note
 
+NOW_ISO = datetime.now(UTC).isoformat()
+
 
 @pytest.fixture(autouse=True)
 def quiet_checkout_emails(monkeypatch):
@@ -42,10 +44,18 @@ async def send(client, headers, checkout_id, text):
     return await client.post(f"/messages/{checkout_id}", json={"text": text}, headers=headers)
 
 
+async def read_all(client, headers, checkout_id):
+    """Do what the page does: mark the thread read up to the newest message it showed."""
+    messages = (await client.get(f"/messages/{checkout_id}", headers=headers)).json()["messages"]
+    return await client.post(
+        f"/messages/{checkout_id}/read", json={"seen_up_to": messages[-1]["sent_at"]}, headers=headers
+    )
+
+
 async def test_messages_require_sign_in(client):
     assert (await client.get("/messages/c1")).status_code == 401
     assert (await client.post("/messages/c1", json={"text": "Hi"})).status_code == 401
-    assert (await client.post("/messages/c1/read")).status_code == 401
+    assert (await client.post("/messages/c1/read", json={"seen_up_to": NOW_ISO})).status_code == 401
 
 
 async def test_the_thread_opens_when_the_author_accepts(client, database, emailed):
@@ -88,7 +98,8 @@ async def test_nobody_else_can_see_or_write(client, database, emailed):
     _, ana = await member(client, database, "Ana")
     assert (await client.get(f"/messages/{checkout_id}", headers=ana)).status_code == 404
     assert (await send(client, ana, checkout_id, "Hello")).status_code == 404
-    assert (await client.post(f"/messages/{checkout_id}/read", headers=ana)).status_code == 404
+    read = await client.post(f"/messages/{checkout_id}/read", json={"seen_up_to": NOW_ISO}, headers=ana)
+    assert read.status_code == 404
     assert await database.messages.count_documents({}) == 0
 
 
@@ -126,6 +137,8 @@ async def test_at_most_30_messages_an_hour_per_person(client, database, emailed)
     )
     response = await send(client, maya, checkout_id, "One more")
     assert response.status_code == 429
+    # The oldest counted message (29 minutes ago) leaves the hour in about 31 minutes.
+    assert 30 * 60 <= int(response.headers["retry-after"]) <= 32 * 60
     # The other person isn't held back, and older messages stop counting.
     assert (await send(client, sam, checkout_id, "Hello!")).status_code == 201
     await database.messages.update_many(
@@ -146,7 +159,7 @@ async def test_new_message_marker_is_private_to_each_person(client, database, em
     # Writing it isn't news to you.
     assert marker(await client.get("/checkouts", headers=maya), "lending") == [False]
 
-    await client.post(f"/messages/{checkout_id}/read", headers=sam)
+    await read_all(client, sam, checkout_id)
     assert marker(await client.get("/checkouts", headers=sam), "reading") == [False]
 
     # An app note is new for both people.
@@ -222,3 +235,44 @@ async def test_a_long_thread_keeps_its_newest_messages(client, database, emailed
     assert texts[0] == "Hi Maya!"  # the checkout note always comes first
     assert texts[1] == "Message 5"  # the five oldest dropped
     assert texts[-1] == f"Message {messaging_service.THREAD_LIMIT + 4}"
+
+
+async def test_marking_read_only_covers_what_was_shown(client, database, emailed):
+    checkout_id, (_, maya), (sam_id, sam) = await accepted_checkout(client, database)
+    await send(client, maya, checkout_id, "First")
+    shown = (await client.get(f"/messages/{checkout_id}", headers=sam)).json()["messages"]
+    # A second message arrives after Sam's page loaded but before it marks the thread read.
+    await send(client, maya, checkout_id, "Second")
+    await client.post(f"/messages/{checkout_id}/read", json={"seen_up_to": shown[-1]["sent_at"]}, headers=sam)
+    assert await checkouts_with_new_messages(database, sam_id, [checkout_id]) == {checkout_id}
+
+    await read_all(client, sam, checkout_id)
+    assert await checkouts_with_new_messages(database, sam_id, [checkout_id]) == set()
+    # An older "seen up to" never un-reads, and writing doesn't mark the other person's messages read.
+    old = (datetime.now(UTC) - timedelta(days=1)).isoformat()
+    await client.post(f"/messages/{checkout_id}/read", json={"seen_up_to": old}, headers=sam)
+    assert await checkouts_with_new_messages(database, sam_id, [checkout_id]) == set()
+
+
+async def test_seen_up_to_cant_reach_into_the_future(client, database, emailed):
+    checkout_id, (_, maya), (sam_id, sam) = await accepted_checkout(client, database)
+    future = (datetime.now(UTC) + timedelta(days=365)).isoformat()
+    await send(client, maya, checkout_id, "Hi")
+    await client.post(f"/messages/{checkout_id}/read", json={"seen_up_to": future}, headers=sam)
+    await send(client, maya, checkout_id, "Still there?")
+    assert await checkouts_with_new_messages(database, sam_id, [checkout_id]) == {checkout_id}
+
+
+async def test_seen_up_to_needs_a_time_zone(client, database, emailed):
+    checkout_id, _, (_, sam) = await accepted_checkout(client, database)
+    naive = datetime.now(UTC).replace(tzinfo=None).isoformat()
+    response = await client.post(f"/messages/{checkout_id}/read", json={"seen_up_to": naive}, headers=sam)
+    assert response.status_code == 422
+
+
+async def test_odd_member_ids_are_refused_as_field_names():
+    from trove.messaging.service import _key
+
+    for bad in ("", "a.b", "$where"):
+        with pytest.raises(ValueError):
+            _key(bad)

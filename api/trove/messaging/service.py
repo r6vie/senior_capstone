@@ -29,10 +29,11 @@ READABLE = {ACCEPTED}
 
 
 class MessageRefused(Exception):
-    def __init__(self, status_code: int, detail: str):
+    def __init__(self, status_code: int, detail: str, *, retry_after: int | None = None):
         super().__init__(detail)
         self.status_code = status_code
         self.detail = detail
+        self.retry_after = retry_after  # seconds, for a 429
 
 
 # Missing, someone else's, or not accepted yet all look the same, so nothing leaks about a checkout.
@@ -45,6 +46,14 @@ async def ensure_indexes(database: AsyncDatabase) -> None:
     )
     await database.messages.create_index("participants", name="messages_participants")
     await database.message_threads.create_index("participants", name="threads_participants")
+
+
+def _key(user_id: str) -> str:
+    # Member ids become field names in `message_threads`. They are UUIDs; refuse anything MongoDB would
+    # read as a path or an operator, so a bad id can never touch another field.
+    if not user_id or "." in user_id or "$" in user_id:
+        raise ValueError("Unexpected member id.")
+    return user_id
 
 
 def as_utc(value: datetime) -> datetime:
@@ -96,7 +105,7 @@ async def _add(database: AsyncDatabase, checkout: dict, *, sender_id: str | None
     await database.message_threads.update_one(
         {"_id": checkout["_id"]},
         {
-            "$set": {f"incoming.{person}": now for person in participants if person != sender_id},
+            "$set": {f"incoming.{_key(person)}": now for person in participants if person != sender_id},
             "$setOnInsert": {"participants": participants},
         },
         upsert=True,
@@ -108,16 +117,24 @@ async def send(database: AsyncDatabase, checkout: dict, sender_id: str, text: st
     """One of the two people writes in the thread. Raises MessageRefused if a rule stops it."""
     if not can_write(checkout):
         raise MessageRefused(409, "This conversation is closed. You can still read it.")
-    since = datetime.now(UTC) - RATE_WINDOW
-    recent = await database.messages.count_documents(
-        {"checkout_id": checkout["_id"], "sender_id": sender_id, "sent_at": {"$gt": since}}
-    )
-    if recent >= RATE_LIMIT:
-        raise MessageRefused(429, "You've sent a lot of messages in the last hour. Please wait a little.")
-    message = await _add(database, checkout, sender_id=sender_id, text=text)
-    # Reading your own thread is implied by writing in it.
-    await mark_read(database, checkout["_id"], sender_id)
-    return message
+    now = datetime.now(UTC)
+    # Counted, not reserved: two messages at the very same moment could both pass at 29. That's fine
+    # for a limit that only stops spam, and keeps sending to one insert.
+    recent = database.messages.find(
+        {"checkout_id": checkout["_id"], "sender_id": sender_id, "sent_at": {"$gt": now - RATE_WINDOW}},
+        {"sent_at": 1},
+    ).sort("sent_at", ASCENDING)
+    sent = await recent.to_list(RATE_LIMIT)
+    if len(sent) >= RATE_LIMIT:
+        retry_after = as_utc(sent[0]["sent_at"]) + RATE_WINDOW - now
+        raise MessageRefused(
+            429,
+            "You've sent a lot of messages in the last hour. Please wait a little.",
+            retry_after=max(1, int(retry_after.total_seconds()) + 1),
+        )
+    # Writing doesn't mark anything read: a message the other person sent a moment ago may not be on
+    # your screen yet. The page marks what it has shown (`mark_read`).
+    return await _add(database, checkout, sender_id=sender_id, text=text)
 
 
 async def post_note(database: AsyncDatabase, checkout_id: str, text: str) -> dict | None:
@@ -157,10 +174,14 @@ async def email_new_message(database: AsyncDatabase, message: dict) -> None:
         )
 
 
-async def mark_read(database: AsyncDatabase, checkout_id: str, user_id: str) -> None:
+async def mark_read(database: AsyncDatabase, checkout_id: str, user_id: str, seen_up_to: datetime) -> None:
+    """This member has seen the thread up to `seen_up_to` (the newest message the page showed).
+
+    Only ever moves forward, and never past now, so a late or odd request can't hide newer messages.
+    """
     await database.message_threads.update_one(
         {"_id": checkout_id, "participants": user_id},
-        {"$set": {f"read.{user_id}": datetime.now(UTC)}},
+        {"$max": {f"read.{_key(user_id)}": min(as_utc(seen_up_to), datetime.now(UTC))}},
     )
 
 
@@ -199,7 +220,7 @@ async def claim_email_slot(database: AsyncDatabase, checkout_id: str, user_id: s
                 {f"emailed.{user_id}": {"$lte": now - EMAIL_GAP}},
             ],
         },
-        {"$set": {f"emailed.{user_id}": now}},
+        {"$set": {f"emailed.{_key(user_id)}": now}},
         return_document=ReturnDocument.AFTER,
     )
     return claimed is not None

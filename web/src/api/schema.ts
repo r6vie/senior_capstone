@@ -1123,7 +1123,7 @@ export interface paths {
         put?: never;
         /**
          * Mark Read
-         * @description You've seen everything in this conversation so far. Only you ever know this.
+         * @description You've seen this conversation up to `seen_up_to`. Only you ever know this.
          */
         post: operations["mark_read_messages__checkout_id__read_post"];
         delete?: never;
@@ -1677,6 +1677,14 @@ export interface components {
             phase: "sweep" | "dig" | "shape" | "adding" | "reading";
             /** Playback */
             playback: string | null;
+        };
+        /** ReadRequest */
+        ReadRequest: {
+            /**
+             * Seen Up To
+             * Format: date-time
+             */
+            seen_up_to: string;
         };
         /** ReaderBook */
         ReaderBook: {
@@ -3831,7 +3839,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             204: {

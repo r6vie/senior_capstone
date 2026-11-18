@@ -2585,6 +2585,7 @@
             "required": true,
             "schema": {
               "type": "string",
+              "maxLength": 100,
               "title": "Checkout Id"
             }
           }
@@ -2631,6 +2632,7 @@
             "required": true,
             "schema": {
               "type": "string",
+              "maxLength": 100,
               "title": "Checkout Id"
             }
           }
@@ -2675,7 +2677,7 @@
           "Messages"
         ],
         "summary": "Mark Read",
-        "description": "You've seen everything in this conversation so far. Only you ever know this.",
+        "description": "You've seen this conversation up to `seen_up_to`. Only you ever know this.",
         "operationId": "mark_read_messages__checkout_id__read_post",
         "security": [
           {
@@ -2689,10 +2691,21 @@
             "required": true,
             "schema": {
               "type": "string",
+              "maxLength": 100,
               "title": "Checkout Id"
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "204": {
             "description": "Successful Response"
@@ -4229,6 +4242,21 @@
           "playback"
         ],
         "title": "Question"
+      },
+      "ReadRequest": {
+        "properties": {
+          "seen_up_to": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Seen Up To"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "seen_up_to"
+        ],
+        "title": "ReadRequest"
       },
       "ReaderBook": {
         "properties": {

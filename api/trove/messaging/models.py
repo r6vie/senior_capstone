@@ -1,7 +1,7 @@
-from datetime import datetime
-from typing import Literal
+from datetime import UTC, datetime
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import AfterValidator, BaseModel, Field
 
 from trove.core.models import NonEmptyText, RequestBody
 
@@ -14,6 +14,19 @@ MessageKind = Literal["checkout_note", "message", "note"]
 
 class MessageRequest(RequestBody):
     text: NonEmptyText = Field(max_length=MAX_MESSAGE)
+
+
+def _with_zone(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        raise ValueError("Include a time zone.")
+    return value.astimezone(UTC)
+
+
+class ReadRequest(RequestBody):
+    # The `sent_at` of the newest message the page showed. Messages that arrive after it stay new, even
+    # if the page is marked read a moment later. Request bodies are strict, which would reject the ISO
+    # text a browser sends for a time, so this one field isn't.
+    seen_up_to: Annotated[datetime, Field(strict=False), AfterValidator(_with_zone)]
 
 
 class Message(BaseModel):

@@ -1,17 +1,21 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Response
 from pymongo.asynchronous.database import AsyncDatabase
 
 from trove.auth.service import full_names_of, get_current_user
 from trove.core.database import get_database
 from trove.messaging import service
-from trove.messaging.models import Message, MessageRequest, Thread
+from trove.messaging.models import Message, MessageRequest, ReadRequest, Thread
 from trove.messaging.service import MessageRefused
 
 router = APIRouter(prefix="/messages", tags=["Messages"])
 
 
+CheckoutId = Path(max_length=100)
+
+
 def refused(error: MessageRefused) -> HTTPException:
-    return HTTPException(status_code=error.status_code, detail=error.detail)
+    headers = {"Retry-After": str(error.retry_after)} if error.retry_after else None
+    return HTTPException(status_code=error.status_code, detail=error.detail, headers=headers)
 
 
 def message_view(message: dict, user_id: str, names: dict[str, str]) -> Message:
@@ -28,7 +32,7 @@ def message_view(message: dict, user_id: str, names: dict[str, str]) -> Message:
 
 @router.get("/{checkout_id}", response_model=Thread)
 async def thread(
-    checkout_id: str,
+    checkout_id: str = CheckoutId,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
 ) -> Thread:
@@ -59,9 +63,9 @@ async def thread(
 
 @router.post("/{checkout_id}", response_model=Message, status_code=201)
 async def send(
-    checkout_id: str,
     data: MessageRequest,
     background_tasks: BackgroundTasks,
+    checkout_id: str = CheckoutId,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
 ) -> Message:
@@ -78,14 +82,15 @@ async def send(
 
 @router.post("/{checkout_id}/read", status_code=204, response_class=Response)
 async def mark_read(
-    checkout_id: str,
+    data: ReadRequest,
+    checkout_id: str = CheckoutId,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
 ) -> Response:
-    """You've seen everything in this conversation so far. Only you ever know this."""
+    """You've seen this conversation up to `seen_up_to`. Only you ever know this."""
     try:
         checkout = await service.readable_checkout(database, checkout_id, user["_id"])
     except MessageRefused as error:
         raise refused(error) from None
-    await service.mark_read(database, checkout["_id"], user["_id"])
+    await service.mark_read(database, checkout["_id"], user["_id"], data.seen_up_to)
     return Response(status_code=204)
