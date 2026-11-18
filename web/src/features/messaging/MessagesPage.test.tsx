@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MessagesPage } from "./MessagesPage";
@@ -57,11 +57,24 @@ function setVisibility(state: "visible" | "hidden") {
 beforeEach(() => {
   vi.resetAllMocks();
   setVisibility("visible");
-  api.GET.mockResolvedValue({ data: thread() });
-  api.POST.mockResolvedValue({ data: {} });
+  api.GET.mockResolvedValue(ok(thread()));
+  api.POST.mockResolvedValue({ data: {}, response: { ok: true, status: 204 } });
 });
 
-afterEach(() => setVisibility("visible"));
+afterEach(() => {
+  setVisibility("visible");
+  vi.useRealTimers();
+});
+
+function ok(data: unknown) {
+  return { data, response: { ok: true, status: 200 } };
+}
+
+function failed(status: number, detail = "Something went wrong.") {
+  return { error: { detail }, response: { ok: false, status } };
+}
+
+const readCalls = () => api.POST.mock.calls.filter(([path]) => path === "/messages/{checkout_id}/read");
 
 describe("MessagesPage", () => {
   it("shows the conversation: the checkout note, people's messages and app notes", async () => {
@@ -119,23 +132,78 @@ describe("MessagesPage", () => {
   it("shows why a message wasn't sent, like the hourly limit", async () => {
     renderPage();
     fireEvent.change(await screen.findByLabelText("Write to Ana Diaz"), { target: { value: "Hi" } });
-    api.POST.mockResolvedValue({ error: { detail: "You've sent a lot of messages in the last hour." } });
+    api.POST.mockResolvedValue(failed(429, "You've sent a lot of messages in the last hour."));
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
     expect((await screen.findByRole("alert")).textContent).toContain("in the last hour");
     expect((screen.getByLabelText("Write to Ana Diaz") as HTMLTextAreaElement).value).toBe("Hi");
   });
 
   it("explains a conversation that isn't open", async () => {
-    api.GET.mockResolvedValue({ error: { detail: "We couldn't find that conversation." } });
+    api.GET.mockResolvedValue(failed(404, "We couldn't find that conversation."));
     renderPage();
     expect(await screen.findByText("This conversation isn't available.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Back to Checkouts" })).toBeTruthy();
   });
 
   it("is read-only once the conversation is closed", async () => {
-    api.GET.mockResolvedValue({ data: thread({ can_write: false }) });
+    api.GET.mockResolvedValue(ok(thread({ can_write: false })));
     renderPage();
     expect(await screen.findByText("This conversation is closed. You can still read it.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Send" })).toBeNull();
+  });
+
+  it("keeps the conversation on screen when a later check fails", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    renderPage();
+    expect(await screen.findByText("Happy to talk!")).toBeTruthy();
+    api.GET.mockResolvedValue(failed(503, "The database is unavailable."));
+    await act(async () => {
+      vi.advanceTimersByTime(20_000);
+    });
+    expect(await screen.findByText(/Couldn't check for new messages/)).toBeTruthy();
+    expect(screen.getByText("Happy to talk!")).toBeTruthy();
+    expect(screen.queryByText("This conversation isn't available.")).toBeNull();
+  });
+
+  it("offers to try again when the first load fails, including a dropped connection", async () => {
+    api.GET.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    renderPage();
+    expect((await screen.findByRole("alert")).textContent).toContain("We couldn't load this conversation.");
+    api.GET.mockResolvedValue(ok(thread()));
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText("Happy to talk!")).toBeTruthy();
+  });
+
+  it("tries marking read again if it didn't work the first time", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    api.POST.mockResolvedValueOnce({ error: {}, response: { ok: false, status: 503 } });
+    renderPage();
+    await waitFor(() => expect(readCalls()).toHaveLength(1));
+    await act(async () => {
+      vi.advanceTimersByTime(20_000);
+    });
+    await waitFor(() => expect(readCalls()).toHaveLength(2));
+    await act(async () => {
+      vi.advanceTimersByTime(20_000);
+    });
+    // Once it worked, the same newest message isn't reported again.
+    await waitFor(() => expect(api.GET).toHaveBeenCalledTimes(3));
+    expect(readCalls()).toHaveLength(2);
+  });
+
+  it("checks for new messages every 20 seconds only while the page is visible", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    renderPage();
+    await waitFor(() => expect(api.GET).toHaveBeenCalledTimes(1));
+    setVisibility("hidden");
+    await act(async () => {
+      vi.advanceTimersByTime(60_000);
+    });
+    expect(api.GET).toHaveBeenCalledTimes(1);
+    setVisibility("visible");
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await waitFor(() => expect(api.GET).toHaveBeenCalledTimes(2));
   });
 });

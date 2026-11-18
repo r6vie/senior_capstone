@@ -50,6 +50,8 @@ export function MessagesPage() {
   const { checkoutId = "" } = useParams();
   const [thread, setThread] = useState<Thread | null>(null);
   const [missing, setMissing] = useState(false);
+  // A failed check (the server restarting, a dropped connection) never hides a conversation already shown.
+  const [loadFailed, setLoadFailed] = useState(false);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,20 +64,39 @@ export function MessagesPage() {
 
   const load = useCallback(async () => {
     const request = ++latest.current;
-    const { data } = await api.GET("/messages/{checkout_id}", {
-      params: { path: { checkout_id: checkoutId } },
-    });
+    let data: Thread | undefined;
+    let notFound = false;
+    try {
+      const result = await api.GET("/messages/{checkout_id}", {
+        params: { path: { checkout_id: checkoutId } },
+      });
+      data = result.data;
+      notFound = result.response.status === 404;
+    } catch {
+      // A dropped connection: treated like any other failed check below.
+    }
     if (request !== latest.current) return;
-    if (!data) return setMissing(true);
+    if (!data) {
+      // Only a real "not found" means there is no conversation; anything else is worth another try.
+      if (notFound) setMissing(true);
+      else setLoadFailed(true);
+      return;
+    }
+    setLoadFailed(false);
     setThread(data);
     const newest = data.messages.at(-1)?.sent_at;
     // Only what is on screen counts as read, and only while someone can see the page.
     if (newest && newest !== reported.current && document.visibilityState === "visible") {
-      reported.current = newest;
-      await api.POST("/messages/{checkout_id}/read", {
-        params: { path: { checkout_id: checkoutId } },
-        body: { seen_up_to: newest },
-      });
+      try {
+        const { response } = await api.POST("/messages/{checkout_id}/read", {
+          params: { path: { checkout_id: checkoutId } },
+          body: { seen_up_to: newest },
+        });
+        // Remembered only once it worked, so a failed attempt is tried again on the next check.
+        if (response.ok) reported.current = newest;
+      } catch {
+        // Tried again on the next check.
+      }
     }
   }, [checkoutId]);
 
@@ -100,10 +121,15 @@ export function MessagesPage() {
     if (!text.trim()) return setError("Write something first.");
     setBusy(true);
     setError(null);
-    const { error: failure } = await api.POST("/messages/{checkout_id}", {
-      params: { path: { checkout_id: checkoutId } },
-      body: { text: text.trim() },
-    });
+    let failure: unknown = null;
+    try {
+      ({ error: failure } = await api.POST("/messages/{checkout_id}", {
+        params: { path: { checkout_id: checkoutId } },
+        body: { text: text.trim() },
+      }));
+    } catch {
+      failure = { detail: "We couldn't send that. Check your connection and try again." };
+    }
     setBusy(false);
     if (failure) return setError(errorMessage(failure));
     setText("");
@@ -125,6 +151,23 @@ export function MessagesPage() {
     );
   }
 
+  if (!thread && loadFailed) {
+    return (
+      <main className="shell-page messages-page">
+        <h1 className="page-title">Messages</h1>
+        <p role="alert" className="message message-error">
+          <span>!</span>
+          <span>
+            We couldn't load this conversation.{" "}
+            <Button variant="quiet" onClick={() => load()}>
+              Try again
+            </Button>
+          </span>
+        </p>
+      </main>
+    );
+  }
+
   if (!thread) {
     return (
       <main className="shell-page messages-page" aria-busy="true">
@@ -141,6 +184,11 @@ export function MessagesPage() {
       <span className="caption">{thread.book_title}</span>
       <h1 className="page-title">Messages with {thread.other_name}</h1>
 
+      {loadFailed && (
+        <p role="status" className="muted">
+          Couldn't check for new messages just now. We'll keep trying.
+        </p>
+      )}
       <ol className="thread" aria-label={`Conversation with ${thread.other_name}`}>
         {thread.messages.map((message) => (
           <MessageItem key={message.id} message={message} otherName={thread.other_name} />
