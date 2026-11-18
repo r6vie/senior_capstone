@@ -2,6 +2,21 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-17: two ways to elevate the Manga screentone look (waiting for Josef's choice)
+
+Boards "A · Bound" and "B · Inked" on the Elevate page. Each draws the interview question (desktop and phone), the wait after Send, the title
+reveal, the book review (and the book being written), "on the shelf" (the moment and at rest), the shelf front page, the checkout contact
+details, and hover, press and busy states. Nothing here is decided and no app code changed.
+
+- **A · Bound (print craft):** an open book on a desk; question and answer are facing pages, answers are filed on index cards, titles are
+  turned like pages, the shelved date is stamped on the back-cover slip. Needs Josef's yes: the book's dot shadow under pages, cards, slips
+  and the red button; a black page inside a white spread for the Librarian's pick; hairline ruled lines on the answer sheet.
+- **B · Inked (graphic novel):** every screen is a comic page; the question is a black panel, the answer a panel, filed answers small panels,
+  titles wipe in along a diagonal, the shelved moment opens the burst. Needs Josef's yes: black panels beyond the band, the band's slant
+  reused, a second burst on the shelved moment, display-size Newsreader italic, a 62px caps stamp word.
+- **Both need a decision on progress:** a stack of cards (A) or a strip of panels (B) grows with each answer. That shows progress without a
+  number, which decision 26 limits to one late sign.
+
 ## 2026-11-09: close-out of the quality notes for the frames
 
 - **Closed (R5-12):** the line under Chapters on the review and on My book now reads "“Show what you said” opens your own words behind
