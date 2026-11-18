@@ -276,3 +276,9 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
 - **Check out form** (2026-11-15, Ellie, `CheckOutPage.tsx`). The book's title, byline and blurb, then one
   textarea and the screen's one red button, "Ask to check out", with the note "A thirty-minute video call, if
   the author says yes."
+- **Conversation** (2026-11-18, Ellie, `web/src/features/messaging/MessagesPage.css`). Task: read and write a short
+  thread inside a checkout. Each message is a `.bubble` (speech is the one rounded shape) in the working face,
+  not the Librarian's italic, because these are people's own words to read. Everything stays left-aligned;
+  your own messages get a fine dot-tone fill instead of moving to the right. App notes (a confirmed time) are a
+  plain line between dotted rules, never a bubble. One red button, "Send". No read receipts, typing dots or
+  counts; the only unread sign is the private "New message" caption on the Checkouts page.
