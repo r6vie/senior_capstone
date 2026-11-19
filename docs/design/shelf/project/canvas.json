@@ -550,8 +550,8 @@
       "x": 9400,
       "y": 0,
       "w": 1760,
-      "h": 5825,
-      "title": "Kit 3 · Folio, v4",
+      "h": 3060,
+      "title": "Kit 3 · Folio, for build",
       "page": "elevate",
       "expand": "fill"
     },
@@ -614,7 +614,7 @@
     },
     "FreshCover1.dc.html": {
       "x": 0,
-      "y": 7800,
+      "y": 9100,
       "w": 600,
       "h": 1090,
       "title": "1 · Marbled paper · the cover",
@@ -622,7 +622,7 @@
     },
     "FreshCover2.dc.html": {
       "x": 0,
-      "y": 9100,
+      "y": 10400,
       "w": 600,
       "h": 1090,
       "title": "2 · Letterpress · the cover",
@@ -694,7 +694,7 @@
     },
     "FreshCover7.dc.html": {
       "x": 0,
-      "y": 10400,
+      "y": 7800,
       "w": 600,
       "h": 1090,
       "title": "7 · Layered cut paper · the cover",
@@ -736,7 +736,7 @@
       "x": 0,
       "y": 0,
       "w": 1760,
-      "h": 3680,
+      "h": 4460,
       "title": "Interview 4 · The Librarian’s notebook, desktop",
       "page": "librarian",
       "expand": "fill"
@@ -754,19 +754,36 @@
       "x": 3760,
       "y": 0,
       "w": 1760,
-      "h": 3130,
+      "h": 4240,
       "title": "Interview 4 · The Librarian: the parts",
       "page": "librarian",
       "expand": "fill"
     },
-    "LibResume.dc.html": {
+    "LibMore.dc.html": {
       "x": 5640,
       "y": 0,
       "w": 1760,
-      "h": 1050,
-      "title": "Interview 4 · The Librarian: coming back",
+      "h": 2620,
+      "title": "Interview 4 · The Librarian: idle, paste and the sign-off",
       "page": "librarian",
       "expand": "fill"
+    },
+    "LibReopened.dc.html": {
+      "x": 7520,
+      "y": 0,
+      "w": 1760,
+      "h": 1110,
+      "title": "Interview 4 · The Librarian: reopened to add to the book",
+      "page": "librarian",
+      "expand": "fill"
+    },
+    "FreshBookCut.dc.html": {
+      "x": 680,
+      "y": 7800,
+      "w": 1440,
+      "h": 1140,
+      "title": "7 · Layered cut paper · the book page",
+      "page": "fresh"
     }
   },
   "order": [
@@ -839,7 +856,8 @@
     "LibDesktop.dc.html",
     "LibPhone.dc.html",
     "LibParts.dc.html",
-    "LibResume.dc.html",
+    "LibMore.dc.html",
+    "LibReopened.dc.html",
     "FreshStrata.dc.html",
     "FreshBookStrata.dc.html",
     "FreshCover5.dc.html",
@@ -852,9 +870,10 @@
     "FreshBookGouache.dc.html",
     "FreshCover3.dc.html",
     "FreshBookBlock.dc.html",
+    "FreshCover7.dc.html",
+    "FreshBookCut.dc.html",
     "FreshCover1.dc.html",
-    "FreshCover2.dc.html",
-    "FreshCover7.dc.html"
+    "FreshCover2.dc.html"
   ],
   "notes": {
     "head": {
