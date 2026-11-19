@@ -188,4 +188,114 @@ describe("CheckoutsPage", () => {
       "/checkouts/r-accepted/meeting",
     ]);
   });
+
+  it('asks "Did you meet?" only once it\'s due', async () => {
+    api.GET.mockResolvedValue({
+      data: {
+        lending: [{ ...waitingRequest, status: "accepted", expires_at: null, did_you_meet: null }],
+        reading: [reading("accepted", { did_you_meet: { can_answer: true, my_answer: null } })],
+      },
+    });
+    renderPage();
+    expect(await screen.findByRole("group", { name: "Did you meet Ana Diaz?" })).toBeTruthy();
+    expect(screen.queryByRole("group", { name: "Did you meet Sam Lee?" })).toBeNull();
+    expect(screen.getByText("Only you see your answer. Yes or No returns the copy.")).toBeTruthy();
+  });
+
+  it("sends a Yes, says the checkout is closed, and shows it as returned", async () => {
+    api.GET.mockResolvedValueOnce({
+      data: {
+        lending: [],
+        reading: [reading("accepted", { did_you_meet: { can_answer: true, my_answer: null } })],
+      },
+    });
+    api.GET.mockResolvedValue({
+      data: {
+        lending: [],
+        reading: [
+          reading("returned", {
+            id: "r-accepted",
+            author_contact: { email: "ana@example.com", linkedin_url: null, phone: null },
+            did_you_meet: { can_answer: false, my_answer: "met" },
+          }),
+        ],
+      },
+    });
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Yes, we met" }));
+    await waitFor(() =>
+      expect(api.POST).toHaveBeenCalledWith("/checkouts/{checkout_id}/met", {
+        params: { path: { checkout_id: "r-accepted" } },
+        body: { answer: "met" },
+      }),
+    );
+    expect(await screen.findByText(/Your checkout with Ana Diaz is closed/)).toBeTruthy();
+    expect(screen.getByText("Returned.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "See Ana Diaz in Past meets" }).getAttribute("href")).toBe(
+      "/past-meets",
+    );
+    expect(screen.queryByRole("group", { name: /Did you meet/ })).toBeNull();
+    // Contacts and the conversation live on Past meets once it's returned.
+    expect(screen.queryByText("ana@example.com")).toBeNull();
+  });
+
+  it("keeps the question after Not yet, and doesn't say it's closed", async () => {
+    api.GET.mockResolvedValueOnce({
+      data: {
+        lending: [
+          {
+            ...waitingRequest,
+            status: "accepted",
+            expires_at: null,
+            did_you_meet: { can_answer: true, my_answer: null },
+          },
+        ],
+        reading: [],
+      },
+    });
+    api.GET.mockResolvedValue({
+      data: {
+        lending: [
+          {
+            ...waitingRequest,
+            status: "accepted",
+            expires_at: null,
+            did_you_meet: { can_answer: true, my_answer: "not_yet" },
+          },
+        ],
+        reading: [],
+      },
+    });
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Not yet" }));
+    expect(await screen.findByText("You said not yet. Answer again once you've met.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Not yet" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.queryByText(/is closed/)).toBeNull();
+  });
+
+  it("shows a returned checkout with no Past meet plainly", async () => {
+    api.GET.mockResolvedValue({
+      data: {
+        lending: [],
+        reading: [reading("returned", { did_you_meet: { can_answer: false, my_answer: "no" } })],
+      },
+    });
+    renderPage();
+    expect(await screen.findByText("Returned.")).toBeTruthy();
+    expect(screen.queryByRole("link", { name: /Past meets/ })).toBeNull();
+  });
+
+  it("shows why an answer failed, and keeps the question", async () => {
+    api.GET.mockResolvedValue({
+      data: {
+        lending: [],
+        reading: [reading("accepted", { did_you_meet: { can_answer: true, my_answer: null } })],
+      },
+    });
+    api.POST.mockResolvedValue({ error: { detail: "It's too early to answer that." } });
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "No" }));
+    expect(await screen.findByText("It's too early to answer that.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "No" })).toBeTruthy();
+  });
 });

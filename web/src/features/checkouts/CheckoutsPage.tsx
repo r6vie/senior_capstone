@@ -4,6 +4,8 @@ import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
+import { ContactDetails } from "./ContactDetails";
+import { DidYouMeet } from "./DidYouMeet";
 import { formatDay } from "./dates";
 import "./Checkouts.css";
 
@@ -14,8 +16,9 @@ import "./Checkouts.css";
 type Mine = components["schemas"]["MyCheckouts"];
 type Lending = components["schemas"]["LendingCheckout"];
 type Reading = components["schemas"]["ReadingCheckout"];
-type Contact = components["schemas"]["Contact"];
 type Act = (path: "accept" | "decline" | "cancel", id: string) => Promise<string | null>;
+// After a Yes or No to "Did you meet?": the checkout closes, so the page says so before it reloads.
+type Answered = (name: string, final: boolean) => Promise<void>;
 
 function Note({ text }: { text: string }) {
   return <blockquote className="checkout-note">{text}</blockquote>;
@@ -37,33 +40,6 @@ function AcceptedActions({ id, newMessages }: { id: string; newMessages: boolean
   );
 }
 
-// The reveal (C2): shown only once the author has said yes, to the two people in the checkout.
-function ContactDetails({ name, contact }: { name: string; contact: Contact }) {
-  return (
-    <div className="checkout-contact">
-      <span className="caption">How to reach {name}</span>
-      <ul>
-        <li>
-          <a href={`mailto:${contact.email}`}>{contact.email}</a>
-        </li>
-        {contact.linkedin_url && (
-          <li>
-            <a href={contact.linkedin_url} target="_blank" rel="noreferrer">
-              LinkedIn profile
-            </a>
-          </li>
-        )}
-        {contact.phone && (
-          <li>
-            {/* Shown as typed; dialled as digits only (and a leading +), which every phone understands. */}
-            <a href={`tel:${contact.phone.replace(/(?!^\+)[^\d]/g, "")}`}>{contact.phone}</a>
-          </li>
-        )}
-      </ul>
-    </div>
-  );
-}
-
 function ItemError({ text }: { text: string | null }) {
   if (!text) return null;
   return (
@@ -74,7 +50,7 @@ function ItemError({ text }: { text: string | null }) {
   );
 }
 
-function LendingItem({ item, act }: { item: Lending; act: Act }) {
+function LendingItem({ item, act, answered }: { item: Lending; act: Act; answered: Answered }) {
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +69,14 @@ function LendingItem({ item, act }: { item: Lending; act: Act }) {
       {item.status === "accepted" ? (
         <>
           <p>You said yes.</p>
+          {item.did_you_meet && (
+            <DidYouMeet
+              checkoutId={item.id}
+              name={item.reader_name}
+              view={item.did_you_meet}
+              onAnswered={(answer) => answered(item.reader_name, answer !== "not_yet")}
+            />
+          )}
           {item.reader_contact && <ContactDetails name={item.reader_name} contact={item.reader_contact} />}
           <AcceptedActions id={item.id} newMessages={item.new_messages ?? false} />
         </>
@@ -138,12 +122,14 @@ function readingStatus(item: Reading): string {
       return "Accepted.";
     case "cancelled":
       return "You cancelled this checkout.";
+    case "returned":
+      return "Returned.";
     default:
       return "This book isn't available right now.";
   }
 }
 
-function ReadingItem({ item, act }: { item: Reading; act: Act }) {
+function ReadingItem({ item, act, answered }: { item: Reading; act: Act; answered: Answered }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -159,6 +145,21 @@ function ReadingItem({ item, act }: { item: Reading; act: Act }) {
       <p className="muted">by {item.author_name}</p>
       <Note text={item.message} />
       <p>{readingStatus(item)}</p>
+      {item.did_you_meet && (
+        <DidYouMeet
+          checkoutId={item.id}
+          name={item.author_name}
+          view={item.did_you_meet}
+          returned={item.status === "returned"}
+          onAnswered={(answer) => answered(item.author_name, answer !== "not_yet")}
+        />
+      )}
+      {/* Contacts on a returned checkout mean it's a Past meet, where they and the conversation now live. */}
+      {item.status === "returned" && item.author_contact && (
+        <p>
+          <Link to="/past-meets">See {item.author_name} in Past meets</Link>
+        </p>
+      )}
       {item.status === "accepted" && item.author_contact && (
         <ContactDetails name={item.author_name} contact={item.author_contact} />
       )}
@@ -187,13 +188,19 @@ export function CheckoutsPage() {
   const checkedOut = justCheckedOut?.checkedOut;
   const [mine, setMine] = useState<Mine | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [closed, setClosed] = useState<string | null>(null);
 
   // Only the newest load may update the page, and none after leaving it: an older, slower response
   // must not overwrite a newer one.
   const latest = useRef(0);
   const load = useCallback(async () => {
     const request = ++latest.current;
-    const { data } = await api.GET("/checkouts");
+    let data: Mine | undefined;
+    try {
+      ({ data } = await api.GET("/checkouts"));
+    } catch {
+      // A dropped connection: shown as a failed load below.
+    }
     if (request !== latest.current) return;
     if (data) setMine(data);
     setLoadFailed(!data);
@@ -222,6 +229,14 @@ export function CheckoutsPage() {
     [load],
   );
 
+  const answered: Answered = useCallback(
+    async (name, final) => {
+      if (final) setClosed(name);
+      await load();
+    },
+    [load],
+  );
+
   return (
     <main className="shell-page checkouts-page">
       <h1 className="page-title">Checkouts</h1>
@@ -233,6 +248,12 @@ export function CheckoutsPage() {
             {justCheckedOut?.answerBy &&
               ` If the author hasn't answered by ${formatDay(justCheckedOut.answerBy)}, it closes on its own.`}
           </span>
+        </p>
+      )}
+      {closed && (
+        <p role="status" className="message">
+          <span>✓</span>
+          <span>Thanks for answering. Your checkout with {closed} is closed and the copy is returned.</span>
         </p>
       )}
       {loadFailed && (
@@ -256,7 +277,7 @@ export function CheckoutsPage() {
             ) : (
               <ul className="checkout-list">
                 {mine.lending.map((item) => (
-                  <LendingItem key={item.id} item={item} act={act} />
+                  <LendingItem key={item.id} item={item} act={act} answered={answered} />
                 ))}
               </ul>
             )}
@@ -276,7 +297,7 @@ export function CheckoutsPage() {
             ) : (
               <ul className="checkout-list">
                 {mine.reading.map((item) => (
-                  <ReadingItem key={item.id} item={item} act={act} />
+                  <ReadingItem key={item.id} item={item} act={act} answered={answered} />
                 ))}
               </ul>
             )}

@@ -223,7 +223,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **Contact details stay available after a meeting**, so people can keep talking through their usual channels.
 - **A private "Did you meet?" check** returns the copy. It is also a quiet signal for spotting no-shows.
 - **How "Did you meet?" works** (decided 2026-11-18, C4):
-  - It's asked once the confirmed meeting time has passed. If no time was confirmed, it's asked 14 days after the author said yes. It shows in the app (on the Checkouts page); there is no email for now.
+  - It's asked once the confirmed meeting time has passed. If no time was confirmed, it's asked 14 days after the author said yes. It shows in the app (on the Checkouts page, and on Past meets for the person who hasn't answered yet); there is no email for now.
   - Each person answers "Yes, we met", "Not yet" or "No". "Not yet" keeps the checkout open to reschedule. The first Yes or No from either person returns the copy, and the book comes back on the shelf if it was fully lent. The other person can still answer afterwards.
   - It's a Past meet when someone said Yes and nobody said No. If the answers disagree, it isn't one. Answers are kept privately as a possible no-show signal; nobody is ever shown them.
   - If nobody answers, the copy returns 14 days after the question is asked, and it isn't a Past meet.
