@@ -74,7 +74,7 @@ def shift(a, dy, dx=0):
     return a[:a.shape[0] - dy, :a.shape[1] - dx]
 
 
-def sheet(field, colour, lift=7, soft=9, dark=0.34, s=0, fibre=0.03):
+def sheet(field, colour, lift=7, soft=9, dark=0.34, s=0, fibre=0.03, shine=30):
     """Lay one sheet: field > 0 is paper. It shades what is behind it, its cut edge catches the light."""
     global img
     a = aa(field)
@@ -86,7 +86,7 @@ def sheet(field, colour, lift=7, soft=9, dark=0.34, s=0, fibre=0.03):
     col = np.clip(colour[None, None, :] * tex[..., None], 0, 255)
     img = img * (1 - a[..., None]) + col * a[..., None]
     edge = np.clip(a - shift(a, 2), 0, 1) * a
-    img = img + edge[..., None] * 30
+    img = img + edge[..., None] * shine
     return a
 
 
@@ -107,19 +107,26 @@ def pines(base, s, hmin, hmax, step, where=None):
     return edge
 
 
-# 1. the back of the sky, with the moon and stars punched through to the glow
-sky = np.minimum(np.hypot(X - mx, Y - my) - 82, 1e3)
+# 1. the back of the sky, with the stars punched through to the glow
+moon = np.hypot(X - mx, Y - my) - 82
+sky = np.minimum(moon, 1e3)
 sr = np.random.default_rng(6)
 for _ in range(60):
-    sxx, syy = sr.uniform(20, WW - 20), sr.uniform(560, 800)
+    sxx, syy = sr.uniform(20, WW - 20), sr.uniform(600, 820)
     if np.hypot(sxx - mx, syy - my) > 130 and not (860 < sxx < 2100 and syy < 800):
         sky = np.minimum(sky, np.hypot(X - sxx, Y - syy) - sr.uniform(1.6, 3.4))
-sheet(sky, rgb("#F2B28E"), lift=5, soft=6, dark=0.28, s=1)
-# 2. two sky sheets in long, easy curves; the nearer is the palest
-c2 = 730 - 170 * g(2780, 420) - 150 * g(120, 380) + 10 * np.sin(xs / 330 + 1)
-c1 = c2 + 62 + 12 * np.sin(xs / 270 + 2)
-sheet(c1[None, :] - Y, rgb("#F7CDAE"), lift=7, soft=10, dark=0.26, s=31)
-sheet(c2[None, :] - Y, rgb("#FCEAD6"), lift=7, soft=10, dark=0.24, s=32, fibre=0.02)
+sheet(sky, rgb("#F4C3A2"), lift=5, soft=6, dark=0.2, s=1)
+# 2. three sky sheets, set well apart in long easy curves, each only a shade paler than the one behind and casting
+# only a faint, wide shadow, so the sky reads as air; the moon is cut through all of them
+for k, (base, amp, wl, ph, col) in enumerate([(790, 34, 600, 3.3, "#F7D0B4"), (560, 44, 690, 2.0, "#F9DBC4"),
+                                              (320, 50, 770, 0.4, "#FBE5D3")]):
+    edge = base + amp * np.sin(xs / wl + ph) + 8 * np.sin(xs / 230 + k)
+    sheet(np.minimum(edge[None, :] - Y, moon), rgb(col), lift=10, soft=20, dark=0.12, s=31 + k, fibre=0.02, shine=14)
+# the moon is one hole through the whole sky, so it gets one soft shadow, not one per sheet
+mm = aa(-moon)[..., None]
+glow = rgb("#FFF8E1") * (1 - t) + rgb("#F8CF93") * t
+img = img * (1 - mm) + glow * mm
+img = img * (1 - 0.22 * blur(shift(aa(moon), 6, 3), 7)[..., None] * mm)
 # 3-4. far ranges, low in the middle of the world, rising toward both ends
 m1 = smooth1(862 - 170 * g(260, 300) - 160 * g(2230, 240) - 60 * g(2760, 200) - 50 * g(700, 220) + n1(40, 11, 7), 5)
 sheet(Y - m1[None, :], rgb("#D992A0"), s=2)
