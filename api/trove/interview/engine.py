@@ -214,6 +214,8 @@ class NextTurn(BaseModel):
     topic: str
     # The spark this question works from, if any.
     spark_id: str | None = None
+    # The notebook entry this question builds on, if any. Checked by the caller against the notebook.
+    builds_on: str | None = None
 
 
 class AddingTurn(BaseModel):
@@ -223,6 +225,7 @@ class AddingTurn(BaseModel):
     topic: str
     done: bool
     spark_id: str | None = Field(None, description="The id of the spark this question works from, if any.")
+    builds_on: str | None = Field(None, description="The id of the notebook entry this builds on, if any.")
 
 
 class DraftChapter(BaseModel):
@@ -299,6 +302,7 @@ class TurnPlan(BaseModel):
     topic: str
     ready_for_reveal: bool
     spark_id: str | None = Field(None, description="The id of the spark this question works from, if any.")
+    builds_on: str | None = Field(None, description="The id of the notebook entry this builds on, if any.")
 
 
 def _fit_summary(summary: str) -> str:
@@ -370,11 +374,17 @@ async def next_turn(
     resume_text: str | None,
     sparks: list[dict] | None = None,
     more_material: bool = False,
+    notebook: list[dict] | None = None,
 ) -> NextTurn:
     """The Librarian's next question, given every turn so far. `more_material` means a draft has just
     found too little, so the interview carries on past its usual limits."""
     plan = await plan_turn(
-        claude, turns=turns, resume_text=resume_text, sparks=sparks, more_material=more_material
+        claude,
+        turns=turns,
+        resume_text=resume_text,
+        sparks=sparks,
+        more_material=more_material,
+        notebook=notebook,
     )
     return NextTurn(
         question=plan.question,
@@ -383,6 +393,7 @@ async def next_turn(
         ready_for_reveal=plan.ready_for_reveal,
         topic=plan.topic,
         spark_id=plan.spark_id,
+        builds_on=plan.builds_on,
     )
 
 
@@ -393,9 +404,10 @@ async def plan_turn(
     resume_text: str | None,
     sparks: list[dict] | None = None,
     more_material: bool = False,
+    notebook: list[dict] | None = None,
 ) -> TurnPlan:
     """next_turn plus the private thread ranking, which the evals read."""
-    blocks = _turn_blocks(turns, resume_text, sparks, more_material)
+    blocks = _turn_blocks(turns, resume_text, sparks, more_material, notebook)
     plan = await _ask(claude, "interview/interviewer", blocks, TurnPlan, QUESTION_EFFORT)
     if plan.phase == "shape" and len((plan.playback or "").split()) > MAX_PLAYBACK_WORDS:
         limit = "\n\n" + load_prompt("interview/retry_playback")
@@ -428,12 +440,13 @@ async def draft_book(
     turns: list[Turn],
     leaks: Callable[[str], bool] = _never,
     spark_titles: list[str] | None = None,
+    clips: list[str] | None = None,
 ) -> Draft:
     """One shared pool of grounded chapters, three titles that read it differently (§9.4), and a
     back-cover blurb. `leaks` says whether text carries a term from outside the member's answers: that
     forces one retry, and after that the item is dropped. Raises NotEnoughMaterial if too few chapters
     survive, because then only more answers can help."""
-    content = f"{_transcript(turns)}\n\nDraft the pool of chapters, the three titles and the blurb."
+    content = f"{_transcript(turns)}{_clips_block(clips)}\n\nDraft the pool of chapters, the three titles and the blurb."
     pool: list[DraftChapter] = []
     for attempt in range(2):
         raw = await _ask(claude, "interview/draft", content, _Draft, BOOK_EFFORT)
@@ -578,6 +591,7 @@ async def next_adding_turn(
     chapters: list[DraftChapter],
     sparks: list[dict],
     off_limits: list[dict] | None = None,
+    notebook: list[dict] | None = None,
 ) -> AddingTurn:
     """The next question of a round of adding to a book on the shelf, or the end of the round."""
     new = turns[round_start:]
@@ -588,7 +602,7 @@ async def next_adding_turn(
     plan = await _ask(
         claude,
         "interview/adding",
-        _adding_blocks(turns, round_start, chapters, sparks, off_limits),
+        _adding_blocks(turns, round_start, chapters, sparks, off_limits, notebook),
         AddingTurn,
         QUESTION_EFFORT,
     )
@@ -610,6 +624,7 @@ async def revise_book(
     member_names: list[str] | None = None,
     spark_titles: list[str] | None = None,
     leaks: Callable[[str], bool] = _never,
+    clips: list[str] | None = None,
 ) -> Revision:
     """Proposed changes to the book from the round's answers. Grounding is checked here: a change
     must quote the member verbatim, and at least once from this round. An empty list is a real
@@ -620,7 +635,7 @@ async def revise_book(
     content = (
         f"{_transcript(turns[:round_start])}\n\n{_new_round(turns, round_start)}\n\n"
         f"<book_chapters>\n{listing}\n</book_chapters>\n\n"
-        f"<current_blurb>{blurb or ''}</current_blurb>\n\n<room>{room}</room>{_off_limits_block(off_limits)}\n\n"
+        f"<current_blurb>{blurb or ''}</current_blurb>\n\n<room>{room}</room>{_off_limits_block(off_limits)}{_clips_block(clips)}\n\n"
         "Propose the changes these new answers earn."
     )
     raw = await _ask(claude, "interview/revise", content, _Revision, BOOK_EFFORT)
@@ -756,6 +771,21 @@ def _new_round(turns: list[Turn], round_start: int) -> str:
     return "\n".join(["<new_round>", *rendered, "</new_round>"])
 
 
+def _notebook_block(notebook: list[dict] | None) -> str:
+    """Open `saving` and `chapter` lines from the Librarian's notebook, which the next question may
+    build on. They're the Librarian's notes on the member's own answers."""
+    if not notebook:
+        return ""
+    listed = "\n".join(f"- [{entry['id']}] {entry['kind']}: {entry['text']}" for entry in notebook)
+    return f"\n\n<notebook>\n{listed}\n</notebook>"
+
+
+def _clips_block(clips: list[str] | None) -> str:
+    if not clips:
+        return ""
+    return "\n\n<clips>\n" + "\n".join(f"- {clip}" for clip in clips) + "\n</clips>"
+
+
 def _sparks_block(sparks: list[dict] | None) -> str:
     """Only titles of other people's chapters, as a cue. The prompts say none of it is about the member."""
     if not sparks:
@@ -770,6 +800,7 @@ def _adding_blocks(
     chapters: list[DraftChapter],
     sparks: list[dict],
     off_limits: list[dict] | None = None,
+    notebook: list[dict] | None = None,
 ) -> list[dict]:
     """The book and the earlier interview, then one block per new turn with a cache breakpoint on
     the newest, so each question of the round reads what came before from the cache."""
@@ -797,7 +828,7 @@ def _adding_blocks(
         status += (
             " The book is at its limit of chapters. Only improve: hunt for what's thin, not for new chapters."
         )
-    tail = f"{status}{_sparks_block(sparks)}{_off_limits_block(off_limits)}"
+    tail = f"{status}{_sparks_block(sparks)}{_off_limits_block(off_limits)}{_notebook_block(notebook)}"
     blocks.append({"type": "text", "text": f"</new_round>\n\n{tail}"})
     return blocks
 
@@ -886,7 +917,11 @@ def _questions_asked(turns: list[Turn]) -> int:
 
 
 def _turn_blocks(
-    turns: list[Turn], resume_text: str | None, sparks: list[dict] | None = None, more_material: bool = False
+    turns: list[Turn],
+    resume_text: str | None,
+    sparks: list[dict] | None = None,
+    more_material: bool = False,
+    notebook: list[dict] | None = None,
 ) -> list[dict]:
     """The transcript as one content block per turn, with a cache breakpoint on the newest turn.
     Each request then extends the previous one's prefix, so the interview so far is read from
@@ -898,7 +933,11 @@ def _turn_blocks(
     blocks += [{"type": "text", "text": _render(n, turn)} for n, turn in enumerate(turns, start=1)]
     blocks[-1]["cache_control"] = {"type": "ephemeral"}
     blocks.append(
-        {"type": "text", "text": f"</interview>\n\n{_status(turns, more_material)}{_sparks_block(sparks)}"}
+        {
+            "type": "text",
+            "text": f"</interview>\n\n{_status(turns, more_material)}{_sparks_block(sparks)}"
+            f"{_notebook_block(notebook)}",
+        }
     )
     return blocks
 

@@ -54,9 +54,10 @@ class FakeEngine:
         self.ready_next = False
         self.fail_next = False
         self.fail_blurb = False
+        self.builds_on_next: str | None = None
 
-    async def next_turn(self, claude, *, turns, resume_text, sparks=None, more_material=False):
-        self.calls.append(("next_turn", {"turns": turns, "resume_text": resume_text}))
+    async def next_turn(self, claude, *, turns, resume_text, sparks=None, more_material=False, notebook=None):
+        self.calls.append(("next_turn", {"turns": turns, "resume_text": resume_text, "notebook": notebook}))
         if self.fail_next:
             self.fail_next = False
             raise anthropic.APIConnectionError(request=None)
@@ -69,16 +70,18 @@ class FakeEngine:
                 ready_for_reveal=False,
                 topic="the second offer you turned down",
             )
+        builds_on, self.builds_on_next = self.builds_on_next, None
         return NextTurn(
             question=f"Question {len(turns) + 1}?",
             phase="sweep" if len(turns) < 5 else "dig",
             playback=None,
             ready_for_reveal=self.ready_next,
             topic=f"topic {len(turns)}",
+            builds_on=builds_on,
         )
 
-    async def draft_book(self, claude, *, turns, **_):
-        self.calls.append(("draft_book", {"turns": turns}))
+    async def draft_book(self, claude, *, turns, clips=None, **_):
+        self.calls.append(("draft_book", {"turns": turns, "clips": clips}))
         return Draft(pool=POOL, titles=TITLES, blurb="I know the pool.")
 
     async def finish_book(self, claude, *, turns, draft, title, **_):
@@ -141,6 +144,7 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
         "text": "Question 1?",
         "phase": "sweep",
         "playback": None,
+        "builds_on": None,
     }
     assert state["can_finish"] is False
     assert state["has_answers"] is False
@@ -161,6 +165,7 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
         "text": "Is this you?",
         "phase": "shape",
         "playback": "You walked away twice.",
+        "builds_on": None,
     }
     # The Shape step takes a confirmation or correction, not an ordinary answer.
     assert (await send_answer(client, headers, "x")).status_code == 409
@@ -902,7 +907,7 @@ async def test_the_closing_line_is_kept_for_the_title_wait(
     await client.post("/interview", json={}, headers=headers)
     await answer_questions(client, headers, engine.MIN_ANSWERS - 1)
 
-    async def closing(claude, *, turns, resume_text, sparks=None, more_material=False):
+    async def closing(claude, *, turns, resume_text, sparks=None, more_material=False, notebook=None):
         return NextTurn(
             question="That's enough for your book.",
             phase="shape",
@@ -927,7 +932,7 @@ async def test_a_question_forced_to_end_the_interview_isnt_a_closing_line(
 ):
     await client.post("/interview", json={}, headers=headers)
 
-    async def forced(claude, *, turns, resume_text, sparks=None, more_material=False):
+    async def forced(claude, *, turns, resume_text, sparks=None, more_material=False, notebook=None):
         return NextTurn(
             question="What came next?", phase="dig", playback=None, ready_for_reveal=True, topic="t"
         )

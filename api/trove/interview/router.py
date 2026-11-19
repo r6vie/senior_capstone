@@ -12,6 +12,8 @@ from trove.interview.models import (
     AnswerRequest,
     FinishRequest,
     InterviewResponse,
+    NotesRequest,
+    NotesResponse,
     ReadingAnswerRequest,
     ReadingQuestionResponse,
     RemovalRequest,
@@ -102,6 +104,20 @@ async def skip(
         return interview_view(await service.skip(database, claude, user, data.question_id))
     except service.StaleQuestion as error:
         return stale_question(error)
+
+
+@router.post("/notes", response_model=NotesResponse)
+async def notes(
+    data: NotesRequest,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+    claude: Claude | None = Depends(optional_claude),
+) -> NotesResponse:
+    """The Librarian reads the answer as it's typed: marks to keep and add, and notebook entries to
+    keep, add, revise and erase. Call on a pause, a finished sentence or about 7 new words, never per
+    keystroke, and drop a reply once the member has moved to another question. It never fails for
+    want of AI: it just adds nothing. 409 if `question_id` isn't the question waiting."""
+    return await service.notes(database, claude, user, data)
 
 
 @router.post("/shape", response_model=InterviewResponse, responses=STALE_QUESTION_RESPONSES)

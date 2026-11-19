@@ -455,6 +455,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/interview/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Notes
+         * @description The Librarian reads the answer as it's typed: marks to keep and add, and notebook entries to
+         *     keep, add, revise and erase. Call on a pause, a finished sentence or about 7 new words, never per
+         *     keystroke, and drop a reply once the member has moved to another question. It never fails for
+         *     want of AI: it just adds nothing. 409 if `question_id` isn't the question waiting.
+         */
+        post: operations["notes_interview_notes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/interview/shape": {
         parameters: {
             query?: never;
@@ -1206,6 +1229,20 @@ export interface components {
              */
             question_id: string;
         };
+        /**
+         * AnsweredTurn
+         * @description An answered or skipped question, with the marks the Librarian left on it, for going back.
+         */
+        AnsweredTurn: {
+            /** Question */
+            question: string;
+            /** Answer */
+            answer: string;
+            /** Marks */
+            marks: components["schemas"]["Mark"][];
+            /** Silent */
+            silent: boolean;
+        };
         /** AuthorChapter */
         AuthorChapter: {
             /** Id */
@@ -1383,6 +1420,39 @@ export interface components {
             /** My Answer */
             my_answer: ("met" | "not_yet" | "no") | null;
         };
+        /**
+         * Entry
+         * @description One line in the notebook. `anchors` are the member's words it was built on; when those words
+         *     leave the answer, the entry is rubbed out. `source_turns` are interview turn numbers, 1 first.
+         */
+        Entry: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "chapter" | "connection" | "saving" | "clip" | "note" | "bet";
+            /** Text */
+            text: string;
+            /** Anchors */
+            anchors: string[];
+            /** Source Turns */
+            source_turns: number[];
+            /**
+             * Status
+             * @default open
+             * @enum {string}
+             */
+            status: "open" | "circled" | "ticked" | "called" | "lost";
+            /**
+             * Struck
+             * @default []
+             */
+            struck: string[];
+            /** Outcome Note */
+            outcome_note?: string | null;
+        };
         /** FinishRequest */
         FinishRequest: {
             /**
@@ -1455,6 +1525,9 @@ export interface components {
             reading_answer: string | null;
             /** Dropped Words */
             dropped_words: string[] | null;
+            librarian?: components["schemas"]["LibrarianState"] | null;
+            /** Sign Off */
+            sign_off?: string | null;
         };
         /** InviteCheckRequest */
         InviteCheckRequest: {
@@ -1534,6 +1607,21 @@ export interface components {
             new_messages: boolean;
             did_you_meet?: components["schemas"]["DidYouMeet"] | null;
         };
+        /**
+         * LibrarianState
+         * @description Everything the Librarian left so far, so going back and resuming show exactly what was there.
+         *     Only while interviewing or adding: it's hidden after the reveal, never deleted.
+         */
+        LibrarianState: {
+            /** Turns */
+            turns: components["schemas"]["AnsweredTurn"][];
+            /** Current Marks */
+            current_marks: components["schemas"]["Mark"][];
+            /** Current Silent */
+            current_silent: boolean;
+            /** Notebook */
+            notebook: components["schemas"]["Entry"][];
+        };
         /** LoginRequest */
         LoginRequest: {
             /**
@@ -1559,6 +1647,41 @@ export interface components {
             token_type: "bearer";
             /** Expires In */
             expires_in: number;
+        };
+        /**
+         * Mark
+         * @description A mark on the member's exact words: `anchor` is a substring of the answer, `occurrence` which
+         *     one (1 is the first). The client places it only while the anchor still matches.
+         */
+        Mark: {
+            /** Id */
+            id: string;
+            /**
+             * Move
+             * @enum {string}
+             */
+            move: "underline" | "strike" | "circle" | "note" | "back_cover";
+            /** Anchor */
+            anchor: string;
+            /** Occurrence */
+            occurrence: number;
+            /** Note */
+            note: string | null;
+            /** Count */
+            count?: number | null;
+            /** Struck Note */
+            struck_note?: string | null;
+        };
+        /** MarksDelta */
+        MarksDelta: {
+            /** Keep */
+            keep: string[];
+            /** Add */
+            add: components["schemas"]["Mark"][];
+            /** Revise */
+            revise: components["schemas"]["Mark"][];
+            /** Erase */
+            erase: string[];
         };
         /** MeetAnswerRequest */
         MeetAnswerRequest: {
@@ -1694,6 +1817,62 @@ export interface components {
             /** Last Name */
             last_name?: string | null;
         };
+        /** NotebookDelta */
+        NotebookDelta: {
+            /** Keep */
+            keep: string[];
+            /** Add */
+            add: components["schemas"]["Entry"][];
+            /** Revise */
+            revise: components["schemas"]["Entry"][];
+            /** Erase */
+            erase: string[];
+        };
+        /**
+         * NotesRequest
+         * @description One look at the answer while the member types. Earlier turns are already on the server.
+         */
+        NotesRequest: {
+            /**
+             * Question Id
+             * @description The `question_id` of the question being answered.
+             */
+            question_id: string;
+            /**
+             * Text
+             * @description The answer as it stands.
+             */
+            text: string;
+            /**
+             * Previous Text
+             * @description The answer at the last call.
+             * @default
+             */
+            previous_text: string;
+            /**
+             * Pasted
+             * @description Whether some of the text was pasted.
+             * @default false
+             */
+            pasted: boolean;
+            /**
+             * Shown
+             * @description Ids of the marks and entries on screen now.
+             */
+            shown?: string[];
+        };
+        /**
+         * NotesResponse
+         * @description What the Librarian does now. Place a mark only while its anchor and occurrence still match the
+         *     text: a late reply is then harmless. On `silent`, rub everything from this answer out and write
+         *     nothing more on it.
+         */
+        NotesResponse: {
+            /** Silent */
+            silent: boolean;
+            marks: components["schemas"]["MarksDelta"];
+            notebook: components["schemas"]["NotebookDelta"];
+        };
         /**
          * NotificationSettingsUpdate
          * @description The one email switch. Account emails, like the welcome message, are sent either way.
@@ -1761,6 +1940,8 @@ export interface components {
             phase: "sweep" | "dig" | "shape" | "adding" | "reading";
             /** Playback */
             playback: string | null;
+            /** Builds On */
+            builds_on?: string | null;
         };
         /** ReadRequest */
         ReadRequest: {
@@ -2870,6 +3051,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StaleQuestionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    notes_interview_notes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotesResponse"];
                 };
             };
             /** @description Validation Error */

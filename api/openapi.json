@@ -1148,6 +1148,53 @@
         ]
       }
     },
+    "/interview/notes": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Notes",
+        "description": "The Librarian reads the answer as it's typed: marks to keep and add, and notebook entries to\nkeep, add, revise and erase. Call on a pause, a finished sentence or about 7 new words, never per\nkeystroke, and drop a reply once the member has moved to another question. It never fails for\nwant of AI: it just adds nothing. 409 if `question_id` isn't the question waiting.",
+        "operationId": "notes_interview_notes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/interview/shape": {
       "post": {
         "tags": [
@@ -2863,6 +2910,38 @@
         ],
         "title": "AnswerRequest"
       },
+      "AnsweredTurn": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "marks": {
+            "items": {
+              "$ref": "#/components/schemas/Mark"
+            },
+            "type": "array",
+            "title": "Marks"
+          },
+          "silent": {
+            "type": "boolean",
+            "title": "Silent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question",
+          "answer",
+          "marks",
+          "silent"
+        ],
+        "title": "AnsweredTurn",
+        "description": "An answered or skipped question, with the marks the Librarian left on it, for going back."
+      },
       "AuthorChapter": {
         "properties": {
           "id": {
@@ -3364,6 +3443,85 @@
         "title": "DidYouMeet",
         "description": "This member's own side of \"Did you meet?\". Never includes the other person's answer."
       },
+      "Entry": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "chapter",
+              "connection",
+              "saving",
+              "clip",
+              "note",
+              "bet"
+            ],
+            "title": "Kind"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "anchors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Anchors"
+          },
+          "source_turns": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Source Turns"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "circled",
+              "ticked",
+              "called",
+              "lost"
+            ],
+            "title": "Status",
+            "default": "open"
+          },
+          "struck": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Struck",
+            "default": []
+          },
+          "outcome_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "text",
+          "anchors",
+          "source_turns"
+        ],
+        "title": "Entry",
+        "description": "One line in the notebook. `anchors` are the member's words it was built on; when those words\nleave the answer, the entry is rubbed out. `source_turns` are interview turn numbers, 1 first."
+      },
       "FinishRequest": {
         "properties": {
           "answer": {
@@ -3659,6 +3817,27 @@
               }
             ],
             "title": "Dropped Words"
+          },
+          "librarian": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LibrarianState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sign_off": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign Off"
           }
         },
         "type": "object",
@@ -3873,6 +4052,44 @@
         "title": "LendingCheckout",
         "description": "A checkout of your book, as its author sees it."
       },
+      "LibrarianState": {
+        "properties": {
+          "turns": {
+            "items": {
+              "$ref": "#/components/schemas/AnsweredTurn"
+            },
+            "type": "array",
+            "title": "Turns"
+          },
+          "current_marks": {
+            "items": {
+              "$ref": "#/components/schemas/Mark"
+            },
+            "type": "array",
+            "title": "Current Marks"
+          },
+          "current_silent": {
+            "type": "boolean",
+            "title": "Current Silent"
+          },
+          "notebook": {
+            "items": {
+              "$ref": "#/components/schemas/Entry"
+            },
+            "type": "array",
+            "title": "Notebook"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turns",
+          "current_marks",
+          "current_silent",
+          "notebook"
+        ],
+        "title": "LibrarianState",
+        "description": "Everything the Librarian left so far, so going back and resuming show exactly what was there.\nOnly while interviewing or adding: it's hidden after the reveal, never deleted."
+      },
       "LoginRequest": {
         "properties": {
           "email": {
@@ -3920,6 +4137,116 @@
           "expires_in"
         ],
         "title": "LoginResponse"
+      },
+      "Mark": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "move": {
+            "type": "string",
+            "enum": [
+              "underline",
+              "strike",
+              "circle",
+              "note",
+              "back_cover"
+            ],
+            "title": "Move"
+          },
+          "anchor": {
+            "type": "string",
+            "title": "Anchor"
+          },
+          "occurrence": {
+            "type": "integer",
+            "title": "Occurrence"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "struck_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Struck Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "move",
+          "anchor",
+          "occurrence",
+          "note"
+        ],
+        "title": "Mark",
+        "description": "A mark on the member's exact words: `anchor` is a substring of the answer, `occurrence` which\none (1 is the first). The client places it only while the anchor still matches."
+      },
+      "MarksDelta": {
+        "properties": {
+          "keep": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keep"
+          },
+          "add": {
+            "items": {
+              "$ref": "#/components/schemas/Mark"
+            },
+            "type": "array",
+            "title": "Add"
+          },
+          "revise": {
+            "items": {
+              "$ref": "#/components/schemas/Mark"
+            },
+            "type": "array",
+            "title": "Revise"
+          },
+          "erase": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Erase"
+          }
+        },
+        "type": "object",
+        "required": [
+          "keep",
+          "add",
+          "revise",
+          "erase"
+        ],
+        "title": "MarksDelta"
       },
       "MeetAnswerRequest": {
         "properties": {
@@ -4276,6 +4603,113 @@
         "title": "NameUpdate",
         "description": "Change the name on the account. Leave out a field to keep it."
       },
+      "NotebookDelta": {
+        "properties": {
+          "keep": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keep"
+          },
+          "add": {
+            "items": {
+              "$ref": "#/components/schemas/Entry"
+            },
+            "type": "array",
+            "title": "Add"
+          },
+          "revise": {
+            "items": {
+              "$ref": "#/components/schemas/Entry"
+            },
+            "type": "array",
+            "title": "Revise"
+          },
+          "erase": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Erase"
+          }
+        },
+        "type": "object",
+        "required": [
+          "keep",
+          "add",
+          "revise",
+          "erase"
+        ],
+        "title": "NotebookDelta"
+      },
+      "NotesRequest": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id",
+            "description": "The `question_id` of the question being answered."
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 5000,
+            "title": "Text",
+            "description": "The answer as it stands."
+          },
+          "previous_text": {
+            "type": "string",
+            "maxLength": 5000,
+            "title": "Previous Text",
+            "description": "The answer at the last call.",
+            "default": ""
+          },
+          "pasted": {
+            "type": "boolean",
+            "title": "Pasted",
+            "description": "Whether some of the text was pasted.",
+            "default": false
+          },
+          "shown": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "title": "Shown",
+            "description": "Ids of the marks and entries on screen now."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "question_id",
+          "text"
+        ],
+        "title": "NotesRequest",
+        "description": "One look at the answer while the member types. Earlier turns are already on the server."
+      },
+      "NotesResponse": {
+        "properties": {
+          "silent": {
+            "type": "boolean",
+            "title": "Silent"
+          },
+          "marks": {
+            "$ref": "#/components/schemas/MarksDelta"
+          },
+          "notebook": {
+            "$ref": "#/components/schemas/NotebookDelta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "silent",
+          "marks",
+          "notebook"
+        ],
+        "title": "NotesResponse",
+        "description": "What the Librarian does now. Place a mark only while its anchor and occurrence still match the\ntext: a late reply is then harmless. On `silent`, rub everything from this answer out and write\nnothing more on it."
+      },
       "NotificationSettingsUpdate": {
         "properties": {
           "email_notifications": {
@@ -4446,6 +4880,17 @@
               }
             ],
             "title": "Playback"
+          },
+          "builds_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Builds On"
           }
         },
         "type": "object",

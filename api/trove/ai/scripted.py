@@ -515,7 +515,41 @@ def _revise(text: str) -> dict:
     return {"changes": changes, "blurb": FINISHED_BLURB}
 
 
+def _between(text: str, tag: str) -> str:
+    match = re.search(rf"<{tag}>\n?(.*?)\n?</{tag}>", text, re.S)
+    return match.group(1) if match else ""
+
+
+def _notes(text: str) -> dict:
+    """A plain stand-in for the Librarian's notes: once an answer has a long enough word in it, an
+    underline with a fixed note on it, and a `saving` entry naming it. Never sharp, always grounded."""
+    answer = _between(text, "answer")
+    number = re.search(r"answer number (\d+)", text)
+    turn = int(number.group(1)) if number else 1
+    words = [w for w in re.findall(r"[A-Za-z]{6,}", answer)]
+    reply = {"silent": False, "keep_marks": [], "marks": [], "keep_entries": [], "revise": [], "erase": []}
+    current = json.loads(_between(text, "current_marks") or "[]")
+    reply["keep_marks"] = [mark["id"] for mark in current]
+    reply["entries"] = []
+    if words and not current:
+        word = max(words, key=len)
+        reply["marks"] = [
+            {"move": "underline", "anchor": word, "occurrence": 1, "note": "a number would help."}
+        ]
+        reply["entries"] = [
+            {
+                "kind": "saving",
+                "text": f"ask: what came after the {word.lower()}?",
+                "anchors": [word],
+                "source_turns": [turn],
+            }
+        ]
+    return reply
+
+
 REPLIES = {
+    "interview/notes": _notes,
+    "interview/sign_off": lambda _text: {"sign_off": "it took some red ink."},
     "interview/adding": _adding,
     "interview/revise": _revise,
     "interview/interviewer": _interviewer,
@@ -554,7 +588,7 @@ class ScriptedClaude:
         name = prompt_name(params.get("system"))
         if name not in REPLIES:
             raise ValueError(f"The scripted AI has no reply for the prompt {name!r}.")
-        asking = name in ("interview/interviewer", "interview/adding")
+        asking = name in ("interview/interviewer", "interview/adding", "interview/notes")
         await asyncio.sleep(self.delay_seconds * (1 if asking else BOOK_STEP_SLOWER))
         text = _text_of(params["messages"][-1]["content"])
         if _triggered_failure(name, text, asking):
