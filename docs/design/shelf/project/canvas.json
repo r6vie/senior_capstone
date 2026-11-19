@@ -624,6 +624,14 @@
       "h": 1090,
       "title": "Three fresh directions · one cover each: marbled paper, letterpress, block print",
       "page": "fresh"
+    },
+    "FreshLand.dc.html": {
+      "x": 1840,
+      "y": 0,
+      "w": 1180,
+      "h": 1090,
+      "title": "Two landscape covers · edge to edge, clearing to white under the title",
+      "page": "fresh"
     }
   },
   "order": [
@@ -694,7 +702,8 @@
     "VoxelValley.dc.html",
     "StrataCover2.dc.html",
     "PaperCells.dc.html",
-    "Fresh.dc.html"
+    "Fresh.dc.html",
+    "FreshLand.dc.html"
   ],
   "notes": {
     "head": {

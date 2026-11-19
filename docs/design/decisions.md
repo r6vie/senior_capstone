@@ -2,6 +2,17 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-19: two landscape covers that clear to white (gouache, coloured pencil), waiting for Josef
+
+- **Josef:** two more directions with environment art in different styles, edge to edge, that fade or cut to white
+  so the title sits on white uninterrupted.
+- **Canvas page "Fresh directions"**, board `FreshLand`, at 472 and 122 px wide:
+  4. **Gouache poster** (`gouache.py`): dawn over a river town; the sky's top band ends in a hard cloud line (the cut).
+  5. **Coloured pencil** (`pencil.py`): a farm road to a lit house; strokes thin out to bare paper (the fade).
+- **Title and name:** the title is the standard Newsreader title on plain white. The name at the foot sits on a
+  white knockout over the art, as on the Strata covers.
+- **Fixed-tier flag, waiting for Josef:** art on the white book object, as with every cover direction so far.
+
 ## 2026-11-19: three fresh cover directions (marbled paper, letterpress, block print), waiting for Josef
 
 - **Josef:** pause the voxel covers. Three other directions tied to paper, books, drawing or painting, one cover
