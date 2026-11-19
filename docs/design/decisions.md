@@ -2,6 +2,39 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-18: cover direction H, round 2: voxel scenes (replaces the 2D Strata look), waiting for Josef
+
+- **Josef on round 1:** too rough and basic. These are book covers, not page art: eventually dozens of designs
+  members pick from, each leaving room for the title. Make it much closer to the reference, a 3D scene of small
+  cubes, polish it, present a book design, and iterate until it is as good as the original.
+- **Now:** the art is a real voxel scene rendered in Blender (`docs/design/art/voxel/`): about 96,000 slab cubes,
+  a raking sun from the left, white sky, rendered on white. Design 1, "the valley", is on the canvas page "Voxel
+  covers", board `VoxelValley`, at 472, 236, 122 and 92 px wide and on a shelf beside white books.
+- **Cover layout:** the top third is empty sky for the title, the art sits in the middle, and the foot is white for
+  the full name. Title and name keep white knockouts for long text at small sizes.
+- **Still open:** everything listed under round 1 (the Fixed-tier yes for art on the book object, who picks a
+  design). The Strata page stays on the canvas for reference.
+
+## 2026-11-18: cover direction H, Strata (stacked-slab landscapes), waiting for Josef
+
+- **Josef:** experiment with the stacked-slab landscape art from his references (mountains, water and trees built
+  from horizontal bars), refined, on the cover and inside the book too, so the white UI lets the art be the hero.
+- **Canvas page "Strata covers"**, boards `StrataBook` (one book opened: the cover is a window onto its landscape,
+  which runs across the top of the book page), `StrataShelf` (nine covers on a shelf, one book at three sizes, how
+  the art is made) and `StrataPlaces` (phone book page, the interview reveal, the checkout once the author says yes,
+  the meeting waiting room). Source: `docs/design/art/strata/`.
+- **Refined from the reference:** one course height per size (4px book page, 2px shelf) instead of mixed noise; seven
+  ink families; light from the left with a clean shadow face; mist made by leaving bricks out, never blur.
+- **Needs Josef's yes (Fixed tier):** the book object is "white, outlined, a dot shadow, title and full name only".
+  Strata keeps all of that and adds art on the cover, so it changes a Fixed rule. Title and name sit on white
+  knockouts where they meet the art.
+- **Product questions for Josef, not decided:** who picks a book's landscape (the member, Trove, or the member from
+  a short set); whether the reveal's three titles share one landscape or each gets its own; whether the art appears
+  beyond the book page (checkout, meeting) at all.
+- **Cover art is not UI:** coral (`#E87457` family) is the warm note and is not the UI red.
+
+Pending Josef's feedback.
+
 ## 2026-11-09: close-out of the quality notes for the frames
 
 - **Closed (R5-12):** the line under Chapters on the review and on My book now reads "“Show what you said” opens your own words behind
