@@ -770,8 +770,9 @@ body{background:#dcdcd6}
 .K3 .hero .in{grid-template-columns:1fr 300px;gap:56px;min-height:372px;padding:48px 72px 48px 64px;align-items:center}
 .K3 .hero h1{font-size:50px;max-width:520px}
 .K3 .hero .bkc{display:grid;justify-items:center;align-items:center}
-/* the burst is Kit 2's: a full fan that starts at the book's edge */
-.K3 .hv-a .burst{inset:0 0 0 52%;opacity:1;--fx:59%;--fy:50%;-webkit-mask-image:radial-gradient(circle at 59% 50%,transparent 14%,#000 46%);mask-image:radial-gradient(circle at 59% 50%,transparent 14%,#000 46%)}
+/* Kit 2's burst: the rays converge on a point right of the block, with a dark faded hole around it. A few fewer rays. */
+.K3 .hv-a .in{padding-right:100px}
+.K3 .hv-a .burst{inset:0 0 0 52%;opacity:1;background:repeating-conic-gradient(from 0deg at 80% 50%,var(--white) 0 .8deg,var(--ink) .8deg 3deg,var(--white) 3deg 3.5deg,var(--ink) 3.5deg 10deg);-webkit-mask-image:radial-gradient(circle at 80% 50%,transparent 14%,#000 46%);mask-image:radial-gradient(circle at 80% 50%,transparent 14%,#000 46%)}
 /* the book on black has no dot shadow: white dots on black next to the rays only add noise */
 .K3 .hv-a .book::before{display:none}
 /* notice bar */
