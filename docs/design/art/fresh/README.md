@@ -21,6 +21,7 @@ one cover each. Shown on the canvas page "Fresh directions" (board `Fresh`), all
 | `pencil3.py` | Coloured pencil, round 3 (on the board): deeper tones, cabin, jetty, firs, reeds | `python3 pencil3.py out.png [seed]` |
 | `wash2.py` | Watercolour, round 2 (on the board): the scene as a handful of brushstrokes | `python3 wash2.py out.png [seed]` |
 | `papercut.py` | Layered cut paper: stacked sheets with shadows; the white cover is the top sheet | `python3 papercut.py out.png [seed]` |
+| `papercut2.py` | Cut paper round 2 (on the board): no white top; cloud banks hang from the top edge, the title sits on the palest | `python3 papercut2.py out.png [seed]` |
 | `stipple.py` | Stippled ink: dots only, two inks, dunes under a moon | `python3 stipple.py out.png [seed]` |
 | `block.py` | Block print: a carved night scene, black plus one second colour | `python3 block.py out.png [seed]` |
 
