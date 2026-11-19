@@ -279,6 +279,21 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
   textarea and the screen's one red button, "Ask to check out", with the note "A thirty-minute video call, if
   the author says yes."
 
+### Folio: the shelf front page look (2026-11-19, design session; screens: canvas page "Elevate", board `ElevateK3` "Kit 3 · Folio, for build")
+
+Task: a more finished, deeper paper look for the shelf front page, replacing the flat Manga-screentone cards and the filter chips. Josef asked for it to be sent for implementation; it changes the fixed tier in the ways below.
+
+- **Card (`.surf`).** A white face with a 2px ink line and a dot shadow under it (offset 12px down-right, `radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0/5px 5px`). Nothing else under it: no stacked page edges. The spine is a cross-hatch on the left,
+  `repeating-linear-gradient(45deg, ink 0 1px, transparent 1px 6px), repeating-linear-gradient(-45deg, ...)`, 60px wide, masked to fade to nothing. Shade is hatching on spines and under shelf ledges; dots are for cast shadows.
+- **Corners.** `--r: 5px` on cards, buttons, fields, the avatar and books (book cover 3px 5px 5px 3px); 8px on the black cover. This replaces the square-corner rule.
+- **Buttons.** A dot shadow `.pbw::before` (inset 5px) that the button presses into on hover and press. A secondary button has a white face and goes ink on hover. No stripes anywhere.
+- **Header.** A square search field (icon, "/" key hint) and a square ink avatar tile with white initials and a dot shadow, both on the same 2px line and 44px height as the buttons.
+- **The Librarian's cover.** Black; the burst from Kit 2 converges on a point to the right of the book (`repeating-conic-gradient(... at 80% 50%)`, masked with a dark faded centre); the book has no dot shadow.
+- **Bookmarked line.** A card with a spine and an ink ribbon bookmark (22 x 64px, notched bottom: `clip-path: polygon(0 0,100% 0,100% 100%,50% 78%,0 100%)`) for the one thing waiting for you, with an eyebrow, a name and one secondary button. A "Your book" block sits beside it. No number.
+- **Shelf.** The shelf name, a 2.5px rule and two square arrow buttons (40px, `aria-label` "Earlier books on <shelf>" and "More books on <shelf>"; the start arrow is disabled at the start of the row), then books standing on one ink ledge (14px) with a light diagonal hatch below.
+  The next book peeks in at the right edge. Arrows scroll the row in place; there is no "See the whole shelf" and no extra page.
+- **Not part of it.** Index tabs and filter chips were dropped from the front page. The interview is the Librarian's notebook (below), not this kit.
+
 ### The Librarian's notebook (2026-11-19, design session; screens: canvas page "Librarian notebook", `LibDesktop`, `LibPhone`, `LibParts`, `LibMore`, `LibReopened`)
 
 Task: while a member types an answer in the interview, the Librarian marks it and keeps a notebook. Approved scope is in `docs/librarian-plan.md`.
