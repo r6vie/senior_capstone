@@ -126,7 +126,8 @@
 }
 .past-meet-bookmark {
   position: absolute;
-  top: 0;
+  /* Level with the name, clear of the dotted rule above. */
+  top: var(--s-4);
   left: 0;
   width: var(--s-4);
   height: var(--s-7);
