@@ -44,6 +44,22 @@
     {
       "id": "growing",
       "name": "Growing books"
+    },
+    {
+      "id": "elevate",
+      "name": "Elevate"
+    },
+    {
+      "id": "strata",
+      "name": "Strata covers"
+    },
+    {
+      "id": "voxel",
+      "name": "Voxel covers"
+    },
+    {
+      "id": "fresh",
+      "name": "Fresh directions"
     }
   ],
   "boards": {
@@ -52,7 +68,7 @@
       "y": 0,
       "w": 1440,
       "h": 2320,
-      "title": "Shelf \u00b7 desktop",
+      "title": "Shelf · desktop",
       "expand": "fill",
       "is_interactive": true
     },
@@ -61,28 +77,28 @@
       "y": 0,
       "w": 390,
       "h": 844,
-      "title": "Shelf \u00b7 phone"
+      "title": "Shelf · phone"
     },
     "PhoneBook.dc.html": {
       "x": 1990,
       "y": 0,
       "w": 390,
       "h": 844,
-      "title": "Open book \u00b7 phone"
+      "title": "Open book · phone"
     },
     "BookObject.dc.html": {
       "x": 1520,
       "y": 964,
       "w": 1200,
       "h": 1080,
-      "title": "The book object \u00b7 states and 3D notes"
+      "title": "The book object · states and 3D notes"
     },
     "ShadowShelf.dc.html": {
       "x": 0,
       "y": 2920,
       "w": 1440,
       "h": 2240,
-      "title": "Light and shadow \u00b7 shelf, desktop",
+      "title": "Light and shadow · shelf, desktop",
       "expand": "fill",
       "is_interactive": true
     },
@@ -91,42 +107,42 @@
       "y": 2920,
       "w": 390,
       "h": 844,
-      "title": "Light and shadow \u00b7 shelf, phone"
+      "title": "Light and shadow · shelf, phone"
     },
     "ShadowSystem.dc.html": {
       "x": 1990,
       "y": 2920,
       "w": 1200,
       "h": 1240,
-      "title": "Light and shadow \u00b7 the system"
+      "title": "Light and shadow · the system"
     },
     "MarbleA.dc.html": {
       "x": 0,
       "y": 5760,
       "w": 1200,
       "h": 640,
-      "title": "Marble A \u00b7 polished Carrara ledge"
+      "title": "Marble A · polished Carrara ledge"
     },
     "MarbleB.dc.html": {
       "x": 1280,
       "y": 5760,
       "w": 1200,
       "h": 640,
-      "title": "Marble B \u00b7 green marble niche"
+      "title": "Marble B · green marble niche"
     },
     "MarbleC.dc.html": {
       "x": 2560,
       "y": 5760,
       "w": 1200,
       "h": 640,
-      "title": "Marble C \u00b7 honed pink slab, block bookends"
+      "title": "Marble C · honed pink slab, block bookends"
     },
     "MarblePage.dc.html": {
       "x": 0,
       "y": 7000,
       "w": 1440,
       "h": 2760,
-      "title": "Carrara \u00b7 shelf page, desktop",
+      "title": "Carrara · shelf page, desktop",
       "expand": "fill",
       "is_interactive": true
     },
@@ -135,7 +151,7 @@
       "y": 10360,
       "w": 1440,
       "h": 1800,
-      "title": "Daylight library \u00b7 shelf page, desktop",
+      "title": "Daylight library · shelf page, desktop",
       "expand": "fill",
       "is_interactive": true
     },
@@ -144,21 +160,21 @@
       "y": 10360,
       "w": 390,
       "h": 844,
-      "title": "Daylight library \u00b7 shelf, phone"
+      "title": "Daylight library · shelf, phone"
     },
     "ScandiNotes.dc.html": {
       "x": 1990,
       "y": 10360,
       "w": 1200,
       "h": 920,
-      "title": "Daylight library \u00b7 the system"
+      "title": "Daylight library · the system"
     },
     "WireA.dc.html": {
       "x": 0,
       "y": 0,
       "w": 1440,
       "h": 1100,
-      "title": "A \u00b7 feature, then shelves",
+      "title": "A · feature, then shelves",
       "page": "wireframes"
     },
     "WireB.dc.html": {
@@ -166,7 +182,7 @@
       "y": 0,
       "w": 1440,
       "h": 1100,
-      "title": "B \u00b7 side rail",
+      "title": "B · side rail",
       "page": "wireframes"
     },
     "WireC.dc.html": {
@@ -174,7 +190,7 @@
       "y": 1220,
       "w": 1440,
       "h": 1100,
-      "title": "C \u00b7 bookcase",
+      "title": "C · bookcase",
       "page": "wireframes"
     },
     "WireD.dc.html": {
@@ -182,7 +198,7 @@
       "y": 1220,
       "w": 1440,
       "h": 1100,
-      "title": "D \u00b7 black split",
+      "title": "D · black split",
       "page": "wireframes"
     },
     "ToolShelf.dc.html": {
@@ -190,7 +206,7 @@
       "y": 0,
       "w": 1440,
       "h": 1120,
-      "title": "A \u00b7 Neutral, shelf desktop",
+      "title": "A · Neutral, shelf desktop",
       "expand": "fill",
       "is_interactive": true,
       "page": "tool"
@@ -200,7 +216,7 @@
       "y": 0,
       "w": 390,
       "h": 844,
-      "title": "Shelf \u00b7 phone",
+      "title": "Shelf · phone",
       "page": "tool"
     },
     "ToolDark.dc.html": {
@@ -208,7 +224,7 @@
       "y": 1240,
       "w": 1440,
       "h": 1300,
-      "title": "B \u00b7 After hours: lamplight on white books",
+      "title": "B · After hours: lamplight on white books",
       "page": "tool"
     },
     "ToolCirc.dc.html": {
@@ -216,7 +232,7 @@
       "y": 1240,
       "w": 1440,
       "h": 1300,
-      "title": "C \u00b7 Circulation desk: ink, stamp and highlighter",
+      "title": "C · Circulation desk: ink, stamp and highlighter",
       "page": "tool"
     },
     "Ident1.dc.html": {
@@ -224,7 +240,7 @@
       "y": 0,
       "w": 1200,
       "h": 940,
-      "title": "01 \u00b7 Four-colour pulp",
+      "title": "01 · Four-colour pulp",
       "page": "identities"
     },
     "Ident2.dc.html": {
@@ -232,7 +248,7 @@
       "y": 0,
       "w": 1200,
       "h": 940,
-      "title": "02 \u00b7 Survey chart",
+      "title": "02 · Survey chart",
       "page": "identities"
     },
     "Ident3.dc.html": {
@@ -240,7 +256,7 @@
       "y": 1020,
       "w": 1200,
       "h": 940,
-      "title": "03 \u00b7 Manga screentone",
+      "title": "03 · Manga screentone",
       "page": "identities"
     },
     "Ident4.dc.html": {
@@ -248,7 +264,7 @@
       "y": 1020,
       "w": 1200,
       "h": 940,
-      "title": "04 \u00b7 Bauhaus primer",
+      "title": "04 · Bauhaus primer",
       "page": "identities"
     },
     "Ident5.dc.html": {
@@ -256,7 +272,7 @@
       "y": 2040,
       "w": 1200,
       "h": 940,
-      "title": "05 \u00b7 Riso zine",
+      "title": "05 · Riso zine",
       "page": "identities"
     },
     "Ident6.dc.html": {
@@ -264,7 +280,7 @@
       "y": 2040,
       "w": 1200,
       "h": 940,
-      "title": "06 \u00b7 Engraved plate",
+      "title": "06 · Engraved plate",
       "page": "identities"
     },
     "MangaA.dc.html": {
@@ -272,7 +288,7 @@
       "y": 0,
       "w": 1440,
       "h": 1100,
-      "title": "A \u00b7 The page \u00b7 Panels on slanted gutters",
+      "title": "A · The page · Panels on slanted gutters",
       "page": "manga"
     },
     "MangaB.dc.html": {
@@ -280,7 +296,7 @@
       "y": 0,
       "w": 1440,
       "h": 1100,
-      "title": "B \u00b7 The strip \u00b7 Black rail, one dark band, long shelves",
+      "title": "B · The strip · Black rail, one dark band, long shelves",
       "page": "manga"
     },
     "MangaC.dc.html": {
@@ -288,7 +304,7 @@
       "y": 0,
       "w": 1440,
       "h": 1100,
-      "title": "C \u00b7 The spread \u00b7 An open book: contents left, shelves right",
+      "title": "C · The spread · An open book: contents left, shelves right",
       "page": "manga"
     },
     "MangaB2.dc.html": {
@@ -296,7 +312,7 @@
       "y": 1180,
       "w": 1440,
       "h": 1100,
-      "title": "B2 \u00b7 The strip, top navigation \u00b7 Navigation across the top like A, banner and shelves from B",
+      "title": "B2 · The strip, top navigation · Navigation across the top like A, banner and shelves from B",
       "page": "manga"
     },
     "MangaBtn.dc.html": {
@@ -304,7 +320,7 @@
       "y": 1180,
       "w": 1440,
       "h": 1040,
-      "title": "Ask to check out \u00b7 four button options",
+      "title": "Ask to check out · four button options",
       "page": "manga"
     },
     "SysShelf.dc.html": {
@@ -312,7 +328,7 @@
       "y": 0,
       "w": 1440,
       "h": 1100,
-      "title": "Reference screen \u00b7 The shelf",
+      "title": "Reference screen · The shelf",
       "page": "system"
     },
     "SysSignIn.dc.html": {
@@ -320,7 +336,7 @@
       "y": 0,
       "w": 1440,
       "h": 900,
-      "title": "Reference screen \u00b7 Sign in",
+      "title": "Reference screen · Sign in",
       "page": "system"
     },
     "SysFoundations.dc.html": {
@@ -328,7 +344,7 @@
       "y": 1180,
       "w": 1440,
       "h": 2900,
-      "title": "1 \u00b7 Foundations: color, type, space, tone, motion",
+      "title": "1 · Foundations: color, type, space, tone, motion",
       "page": "system"
     },
     "SysComponents1.dc.html": {
@@ -336,7 +352,7 @@
       "y": 1180,
       "w": 1440,
       "h": 2700,
-      "title": "2 \u00b7 Components: actions and forms",
+      "title": "2 · Components: actions and forms",
       "page": "system"
     },
     "SysComponents2.dc.html": {
@@ -344,7 +360,7 @@
       "y": 4160,
       "w": 1440,
       "h": 3500,
-      "title": "3 \u00b7 Components: content and structure",
+      "title": "3 · Components: content and structure",
       "page": "system"
     },
     "SysRules.dc.html": {
@@ -352,7 +368,7 @@
       "y": 4160,
       "w": 1440,
       "h": 2600,
-      "title": "4 \u00b7 How to use it: fixed, default, free",
+      "title": "4 · How to use it: fixed, default, free",
       "page": "system"
     },
     "CoverDirections.dc.html": {
@@ -360,7 +376,7 @@
       "y": 0,
       "w": 1440,
       "h": 3000,
-      "title": "Cover directions \u00b7 round 1",
+      "title": "Cover directions · round 1",
       "page": "covers",
       "expand": "fill"
     },
@@ -369,7 +385,7 @@
       "y": 3120,
       "w": 1440,
       "h": 1180,
-      "title": "F \u00b7 Cherry blossom watercolor",
+      "title": "F · Cherry blossom watercolor",
       "page": "covers",
       "expand": "fill"
     },
@@ -378,7 +394,7 @@
       "y": 4420,
       "w": 1440,
       "h": 1500,
-      "title": "G \u00b7 Watercolor landscapes",
+      "title": "G · Watercolor landscapes",
       "page": "covers",
       "expand": "fill"
     },
@@ -387,7 +403,7 @@
       "y": 0,
       "w": 1700,
       "h": 4700,
-      "title": "A \u00b7 The question band",
+      "title": "A · The question band",
       "page": "interview",
       "expand": "fill"
     },
@@ -396,7 +412,7 @@
       "y": 0,
       "w": 1700,
       "h": 2900,
-      "title": "B \u00b7 Comic page",
+      "title": "B · Comic page",
       "page": "interview",
       "expand": "fill"
     },
@@ -405,7 +421,7 @@
       "y": 0,
       "w": 1700,
       "h": 2900,
-      "title": "C \u00b7 Speech bubble",
+      "title": "C · Speech bubble",
       "page": "interview",
       "expand": "fill"
     },
@@ -414,7 +430,7 @@
       "y": 0,
       "w": 1700,
       "h": 1350,
-      "title": "A \u00b7 The interview adapts",
+      "title": "A · The interview adapts",
       "page": "interview",
       "expand": "fill"
     },
@@ -468,7 +484,7 @@
       "y": 0,
       "w": 1700,
       "h": 2900,
-      "title": "A \u00b7 Other states",
+      "title": "A · Other states",
       "page": "interview",
       "expand": "fill"
     },
@@ -477,9 +493,137 @@
       "y": 0,
       "w": 1300,
       "h": 2262,
-      "title": "A \u00b7 Phone",
+      "title": "A · Phone",
       "page": "interview",
       "expand": "fill"
+    },
+    "ElevateA.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1760,
+      "h": 5260,
+      "title": "A · Bound",
+      "page": "elevate",
+      "expand": "fill"
+    },
+    "ElevateB.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 1760,
+      "h": 5400,
+      "title": "B · Inked",
+      "page": "elevate",
+      "expand": "fill"
+    },
+    "ElevateC.dc.html": {
+      "x": 3760,
+      "y": 0,
+      "w": 1760,
+      "h": 5600,
+      "title": "C · Reading Room",
+      "page": "elevate",
+      "expand": "fill"
+    },
+    "ElevateK1.dc.html": {
+      "x": 5640,
+      "y": 0,
+      "w": 1760,
+      "h": 2920,
+      "title": "Kit 1 · Stacked sheets",
+      "page": "elevate",
+      "expand": "fill"
+    },
+    "ElevateK2.dc.html": {
+      "x": 7520,
+      "y": 0,
+      "w": 1760,
+      "h": 2985,
+      "title": "Kit 2 · Relief",
+      "page": "elevate",
+      "expand": "fill"
+    },
+    "ElevateK3.dc.html": {
+      "x": 9400,
+      "y": 0,
+      "w": 1760,
+      "h": 5980,
+      "title": "Kit 3 · Folio, v4",
+      "page": "elevate",
+      "expand": "fill"
+    },
+    "ElevateI1.dc.html": {
+      "x": 11280,
+      "y": 0,
+      "w": 1760,
+      "h": 4130,
+      "title": "Interview 1 · The thread",
+      "page": "elevate",
+      "expand": "fill"
+    },
+    "ElevateI2.dc.html": {
+      "x": 13160,
+      "y": 0,
+      "w": 1760,
+      "h": 3980,
+      "title": "Interview 2 · Question and answer pages",
+      "page": "elevate",
+      "expand": "fill"
+    },
+    "StrataBook.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1140,
+      "title": "Strata · one book, opened: the cover is a window onto its landscape",
+      "page": "strata"
+    },
+    "StrataShelf.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1180,
+      "title": "Strata · on the shelf, and how the art is made",
+      "page": "strata"
+    },
+    "StrataPlaces.dc.html": {
+      "x": 3040,
+      "y": 0,
+      "w": 1440,
+      "h": 2040,
+      "title": "Strata · more places: phone, reveal, checkout, meeting",
+      "page": "strata"
+    },
+    "VoxelValley.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Voxel cover · The valley, round 1",
+      "page": "voxel"
+    },
+    "StrataCover2.dc.html": {
+      "x": 0,
+      "y": 2160,
+      "w": 1440,
+      "h": 1000,
+      "title": "Strata cover · round 2: solid slabs, more detail",
+      "page": "strata"
+    },
+    "PaperCells.dc.html": {
+      "x": 1520,
+      "y": 2160,
+      "w": 1440,
+      "h": 900,
+      "title": "Paper cells · after the reference: shaded cells, one grain per material, layered mist",
+      "page": "strata"
+    },
+    "Fresh.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1760,
+      "h": 1090,
+      "title": "Three fresh directions · one cover each: marbled paper, letterpress, block print",
+      "page": "fresh"
     }
   },
   "order": [
@@ -535,48 +679,63 @@
     "GrowingG4.dc.html",
     "GrowingG5.dc.html",
     "InterviewA3.dc.html",
-    "InterviewAPhone.dc.html"
+    "InterviewAPhone.dc.html",
+    "ElevateA.dc.html",
+    "ElevateB.dc.html",
+    "ElevateC.dc.html",
+    "ElevateK1.dc.html",
+    "ElevateK2.dc.html",
+    "ElevateK3.dc.html",
+    "ElevateI1.dc.html",
+    "ElevateI2.dc.html",
+    "StrataBook.dc.html",
+    "StrataShelf.dc.html",
+    "StrataPlaces.dc.html",
+    "VoxelValley.dc.html",
+    "StrataCover2.dc.html",
+    "PaperCells.dc.html",
+    "Fresh.dc.html"
   ],
   "notes": {
     "head": {
       "x": 0,
       "y": -300,
-      "text": "Direction 1 \u00b7 Cloth and oak",
+      "text": "Direction 1 · Cloth and oak",
       "kind": "title1",
       "maxW": 2380
     },
     "head2": {
       "x": 0,
       "y": 2620,
-      "text": "Direction 2 \u00b7 Light and shadow",
+      "text": "Direction 2 · Light and shadow",
       "kind": "title1",
       "maxW": 3190
     },
     "head3": {
       "x": 0,
       "y": 5460,
-      "text": "Direction 3 \u00b7 Marble: three shelf options",
+      "text": "Direction 3 · Marble: three shelf options",
       "kind": "title1",
       "maxW": 3760
     },
     "head4": {
       "x": 0,
       "y": 6700,
-      "text": "Direction 3 \u00b7 The Carrara shelf page",
+      "text": "Direction 3 · The Carrara shelf page",
       "kind": "title1",
       "maxW": 1440
     },
     "head5": {
       "x": 0,
       "y": 10060,
-      "text": "Direction 4 \u00b7 Daylight library",
+      "text": "Direction 4 · Daylight library",
       "kind": "title1",
       "maxW": 3190
     },
     "wire": {
       "x": 0,
       "y": -300,
-      "text": "Shell homepage \u00b7 four layouts in black and white",
+      "text": "Shell homepage · four layouts in black and white",
       "kind": "title1",
       "maxW": 2960,
       "page": "wireframes"
@@ -584,7 +743,7 @@
     "tool": {
       "x": 0,
       "y": -300,
-      "text": "Direction 5 \u00b7 Working tool: neutral, dense, white books",
+      "text": "Direction 5 · Working tool: neutral, dense, white books",
       "kind": "title1",
       "maxW": 1910,
       "page": "tool"
@@ -592,7 +751,7 @@
     "ident": {
       "x": 0,
       "y": -300,
-      "text": "Identities \u00b7 six printed-media languages to pick from",
+      "text": "Identities · six printed-media languages to pick from",
       "kind": "title1",
       "maxW": 2480,
       "page": "identities"
@@ -600,7 +759,7 @@
     "manga": {
       "x": 0,
       "y": -300,
-      "text": "Manga screentone \u00b7 three layouts of the shelf page",
+      "text": "Manga screentone · three layouts of the shelf page",
       "kind": "title1",
       "maxW": 4400,
       "page": "manga"
@@ -608,7 +767,7 @@
     "system": {
       "x": 0,
       "y": -300,
-      "text": "Trove design system \u00b7 Manga screentone, v1",
+      "text": "Trove design system · Manga screentone, v1",
       "kind": "title1",
       "maxW": 2960,
       "page": "system"
@@ -616,10 +775,42 @@
     "covers": {
       "x": 0,
       "y": -300,
-      "text": "Covers \u00b7 five directions on white, inspired by Japanese art forms",
+      "text": "Covers · five directions on white, inspired by Japanese art forms",
       "kind": "title1",
       "maxW": 1440,
       "page": "covers"
+    },
+    "strata": {
+      "x": 0,
+      "y": -300,
+      "text": "Strata · landscapes laid in slabs, on the cover and in the book",
+      "kind": "title1",
+      "maxW": 4480,
+      "page": "strata"
+    },
+    "voxel": {
+      "x": 0,
+      "y": -300,
+      "text": "Voxel covers · small-cube scenes rendered in 3D",
+      "kind": "title1",
+      "maxW": 1440,
+      "page": "voxel"
+    },
+    "strata2": {
+      "x": 0,
+      "y": 1860,
+      "text": "Round 2 · solid slabs, more detail",
+      "kind": "title1",
+      "maxW": 1440,
+      "page": "strata"
+    },
+    "strata3": {
+      "x": 1520,
+      "y": 1860,
+      "text": "Round 3 · paper cells",
+      "kind": "title1",
+      "maxW": 1440,
+      "page": "strata"
     }
   },
   "designSystems": []

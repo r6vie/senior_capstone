@@ -2,6 +2,23 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-19: three fresh cover directions (marbled paper, letterpress, block print), waiting for Josef
+
+- **Josef:** pause the voxel covers. Three other directions tied to paper, books, drawing or painting, one cover
+  each, each going somewhere different, thinking about what the site should feel like and what the visuals are for.
+- **What the covers are for (my reading, for Josef to correct):** make what a person knows feel like a made object
+  worth picking up; tell books apart on a shelf at 122 px; let a member express themselves by choice, never by
+  status; stay calm beside the white UI and its one red action.
+- **Canvas page "Fresh directions"**, board `Fresh`, each at 472 and 122 px wide on "The Night Shift Knows":
+  1. **Marbled paper** (`marble.py`): a full sheet with the title and name on pasted labels. No two sheets match.
+  2. **Letterpress** (`press.py`): the title in wood type is the picture, in two inks. Art comes only from the
+     author's own words, which fits the grounding rule.
+  3. **Block print** (`block.py`): a carved night scene in black and one second colour.
+- **Fixed-tier flags, waiting for Josef:** all three put art on the white book object. Marbled paper covers the
+  whole cover and moves the title onto a label. Letterpress replaces the Newsreader title with printed display
+  type (the live title stays for screen readers). No cover ink is the UI red.
+- **Open product question:** who picks what (palette, inks, scene), unchanged from direction H.
+
 ## 2026-11-18: cover direction H, round 3: back to Strata, solid and detailed, waiting for Josef
 
 - **Josef:** the 3D voxel look doesn't work well. Go back to the Strata slabs and refine them with more detail and a
