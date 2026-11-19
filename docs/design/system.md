@@ -298,3 +298,12 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
   your own messages get a fine dot-tone fill instead of moving to the right. App notes (a confirmed time) are a
   plain line between dotted rules, never a bubble. One red button, "Send". No read receipts, typing dots or
   counts; the only unread sign is the private "New message" caption on the Checkouts page.
+- **"Did you meet?"** (2026-11-18, Ellie, `web/src/features/checkouts/DidYouMeet.tsx`). Task: answer privately
+  whether the reading happened. A caption "Did you meet <name>?" on the checkout, one muted line ("Only you see your
+  answer. Yes or No returns the copy."), then secondary "Yes, we met" and quiet "Not yet" and "No". A chosen "Not
+  yet" is filled ink, as the toggle pair. Never red, and no confirm step: the line says what a final answer does
+  before the press. Once the copy is back, "Not yet" isn't offered.
+- **Past meets** (2026-11-18, Ellie, `PastMeetsPage.tsx`). Task: find the people you've met again. The checkout list's
+  ruled items, each with a bookmark in the margin (an ink ribbon with a notched tail, `.past-meet-bookmark`, 16 by
+  44px): the other person's name, their book, which book was checked out and when it was returned, the contact
+  panel, and "Your conversation". No counts and no red.

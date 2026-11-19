@@ -181,7 +181,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 ### Wave 3: closing the loop
 
-**C4 · "Did you meet?" and past meets** · Ellie · `doing`
+**C4 · "Did you meet?" and past meets** · Ellie · `done`
 - After the meeting time, both people are asked "Did you meet?". The answer returns the copy, and
   the book comes back on the shelf if it was fully lent.
 - The answer is also stored as a private no-show signal.
