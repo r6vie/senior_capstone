@@ -7,7 +7,7 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 Folio was too busy and its secondary buttons were unreadable. v3: no stripes anywhere (including under buttons); page thickness and the spine are
 shaded with diagonal cross-hatching and dots stay only for cast shadow; tabs are low and the open tab is the page's own paper; the cover is plain
 black with one book on a ledge and a compact burst; shelves are one ink ledge with a light hatch below; the dashboard tiles became one bookmarked line.
-Secondary buttons now have a white face and invert on hover (also fixed on Kits 1 and 2). Needs Josef's yes: cross-hatching as the shade
+Then Josef: a card is only the card and its dot shadow (the hatched page-thickness layers were removed; hatching stays for the spine and under ledges). Secondary buttons now have a white face and invert on hover (also fixed on Kits 1 and 2). Needs Josef's yes: cross-hatching as the shade
 (replaces "dots for shade" in the fixed tier), index tabs, the ribbon bookmark, the large letter.
 
 ## 2026-11-18: Folio chosen to refine (Josef: "looks promising")
