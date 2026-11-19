@@ -355,12 +355,42 @@ async def answer_did_you_meet(database: AsyncDatabase, checkout_id: str, user_id
         if updated is None:
             raise CheckoutRefused(409, "You've already answered.")
 
-    # Kept on the document so Past meets can be found with one query.
-    met = is_past_meet(updated)
-    if updated.get("met") != met and updated["status"] == RETURNED:
-        await database.checkouts.update_one({"_id": checkout_id}, {"$set": {"met": met}})
-        updated["met"] = met
+    if updated["status"] == RETURNED:
+        await recompute_met(database, checkout_id)
+        updated = await database.checkouts.find_one({"_id": checkout_id}) or updated
     return updated
+
+
+async def recompute_met(database: AsyncDatabase, checkout_id: str) -> None:
+    """Set `met` (a Past meet, kept so Past meets are one query) from the answers stored right now.
+
+    Worked out by the database in one update, so when both people answer at the same moment the flag
+    always matches the answers, whichever lands last: a "met" and no "no" (`is_past_meet`).
+    """
+    answers = {
+        "$map": {
+            "input": {"$objectToArray": {"$ifNull": ["$answers", {}]}},
+            "as": "entry",
+            "in": "$$entry.v.answer",
+        }
+    }
+    await database.checkouts.update_one(
+        {"_id": checkout_id, "status": RETURNED},
+        [
+            {
+                "$set": {
+                    "met": {
+                        "$let": {
+                            "vars": {"given": answers},
+                            "in": {
+                                "$and": [{"$in": [MET, "$$given"]}, {"$not": [{"$in": [DIDNT, "$$given"]}]}]
+                            },
+                        }
+                    }
+                }
+            }
+        ],
+    )
 
 
 def my_answer(checkout: dict, user_id: str) -> str | None:

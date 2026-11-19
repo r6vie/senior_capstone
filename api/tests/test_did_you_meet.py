@@ -4,7 +4,7 @@ import pytest
 
 from tests.test_checkouts import check_out, member
 from trove.checkouts import router as checkouts_router
-from trove.checkouts.service import fully_checked_out, past_meets
+from trove.checkouts.service import fully_checked_out, past_meets, recompute_met
 
 NOW = datetime.now(UTC)
 
@@ -188,3 +188,19 @@ async def test_a_waiting_or_declined_checkout_cant_be_answered(client, database)
     assert (await answer(client, sam, checkout_id, "met")).status_code == 404
     await client.post(f"/checkouts/{checkout_id}/decline", headers=maya)
     assert (await answer(client, sam, checkout_id, "met")).status_code == 404
+
+
+async def test_past_meet_flag_always_matches_the_stored_answers(client, database):
+    # Two answers at the same moment can save the flag in either order; recomputing from what is
+    # stored always ends in agreement with the answers.
+    checkout_id, (maya_id, _), (sam_id, _) = await reading(client, database)
+    answers = {sam_id: {"answer": "met", "at": NOW}, maya_id: {"answer": "no", "at": NOW}}
+    await database.checkouts.update_one(
+        {"_id": checkout_id}, {"$set": {"status": "returned", "open": False, "met": True, "answers": answers}}
+    )
+    await recompute_met(database, checkout_id)
+    assert (await database.checkouts.find_one({"_id": checkout_id}))["met"] is False
+
+    await database.checkouts.update_one({"_id": checkout_id}, {"$unset": {f"answers.{maya_id}": ""}})
+    await recompute_met(database, checkout_id)
+    assert (await database.checkouts.find_one({"_id": checkout_id}))["met"] is True
