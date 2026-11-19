@@ -215,6 +215,22 @@ at width−300px, rows scroll horizontally.
 
 Patterns added after v1. Each entry: name, the task it solves, date, owner, snippet or link.
 
+### Opening a reader's book (D1, 2026-11-18, Alvisa)
+
+- A modal book spread covers the whole app, with an ink backdrop at 94% opacity. This stronger
+  dimming and the slower opening are Alvisa's explicit choices for focusing on the selected book.
+- The closed cover starts at the selected book's position. Growth and its leftward hinge rotation
+  overlap, settling into a two-page spread. This action-triggered opening is an exception to the
+  usual 120ms motion; reduced-motion preferences remove the travel and page turns entirely.
+- The left page carries the title and full name. The right page starts with Contents; chapter
+  titles are measured at the actual page width and paginated to fit, never truncated to fit more.
+  Selecting an entry turns to its summary. Back to contents and previous/next page controls are
+  quiet; Ask to check out is the one red action. Escape or Back to shelf closes the reader.
+- The spread stays two pages on small screens, with smaller gutters, wrapping text and scrollable
+  page content when necessary. Native modal focus containment keeps the background inert.
+- Implementation: `web/src/features/discovery/BookReader.tsx` and `BookReader.css`. The static
+  Librarian example remains; its preview identifies itself as an example and cannot be checked out.
+
 ### Growing books (T33, 2026-11-08, design session)
 
 Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop and phone width.

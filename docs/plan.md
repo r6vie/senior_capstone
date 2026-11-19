@@ -143,7 +143,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Screens first, approved by Josef, then the engine, API and UI.
 - Evals: the quiet personas (e.g. Dana) should reach a full book without hitting the cap.
 
-**D1 · The shelf and opening a book** · Alvisa · `todo`
+**D1 · The shelf and opening a book** · Alvisa · `review`
 - The home page shows shelves of books (start with "Recently added" until the categories are
   decided), and a book page opens one.
 - Uses only `books.get_public_book` and `books.list_shelf`.

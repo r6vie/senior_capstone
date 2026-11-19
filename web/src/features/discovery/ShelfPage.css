@@ -309,3 +309,7 @@ button.book {
     height: 340px;
   }
 }
+
+.shelf-feedback {
+  margin: var(--s-6) var(--gutter);
+}
