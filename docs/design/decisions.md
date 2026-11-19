@@ -2,6 +2,14 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-19: one interview redesign, as a conversation (replaces the two earlier ones; waiting for Josef's choice)
+
+Josef removed "The thread" and "Question and answer pages" and asked for a third that is more UX friendly and familiar. Board "Interview 3 · The conversation": the Librarian's
+question is a message on the left, your answers are messages on the right (each with Edit), the thread scrolls, and a composer is docked at the bottom with the field, Speak and one
+red Send. Skip is a quiet "Skip this question" under the question. Phases stay as index tabs.
+- Needs Josef's yes: Return sends and Shift and Return starts a new line (the earlier boards had Command and Return send); the current question at 26px with no leading letter;
+  earlier messages stay on the page, which hints at progress (decision 26); a square ink "L" tile for the Librarian.
+
 ## 2026-11-19: Folio front page: shelves out of the folder, "My book" beside the bookmark (Josef: no large folder)
 
 On Kit 3's example page the two shelves no longer sit in a tabbed folio card. They are Kit 1's shelf: a name, a rule and "See the whole shelf" over a
