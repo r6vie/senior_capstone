@@ -2,6 +2,22 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-19: typography for each cover direction, waiting for Josef
+
+- **Josef:** adapt the typography on each cover so it looks polished and well rounded.
+- **Done on the canvas page "Fresh directions"** (boards `Fresh`, `FreshLand`, `FreshNew`), in CSS on the live
+  title and name, still only the three house faces. Each cover has its own setting:
+  marbled paper, one bookbinder's label holding the centred title and the name under a short rule; letterpress, the
+  name now tracked rule to rule under a heavy and a hairline rule (`press2.py`), so it reads on the shelf;
+  block print, title and name centred on the block; gouache, the title in Barlow Condensed caps in the poster's navy
+  and the name reversed out of a navy strip; coloured pencil, a lighter Newsreader in graphite with the name under the
+  title; watercolour, Newsreader italic in the indigo of the washes, centred, name under it; cut paper, centred navy
+  title and the name in cream on the dark paper at the foot; stipple, the title in spaced caps and three gold dots
+  above the name. Titles use balanced line breaks.
+- **Fixed-tier flag:** the book title is fixed as Newsreader 600 in ink, top left, and the name as Plex caps at the
+  foot. These covers change face, weight, case, colour, alignment and the name's place. Needs Josef's yes before any
+  of it goes into the app. The cover inks are art colours taken from each picture; none is the UI red.
+
 ## 2026-11-19: two more directions (cut paper, stipple) and three touch-ups, waiting for Josef
 
 - **Josef:** the watercolour is too realistic, like a photograph, so it reads cheap; the coloured pencil is too
