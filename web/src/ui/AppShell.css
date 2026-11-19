@@ -15,12 +15,12 @@
   margin-left: auto;
 }
 .top-bar .avatar {
-  background: var(--white);
-  color: var(--fg);
   text-decoration: none;
 }
+/* On Settings, the avatar shows where you are with an outline, as a focused control does. */
 .top-bar .avatar[aria-current="page"] {
-  border-width: var(--line-heavy);
+  outline: var(--line) solid var(--ink);
+  outline-offset: 3px;
 }
 .top-bar .search {
   position: relative;
@@ -29,6 +29,9 @@
   flex: none;
   stroke: var(--ink);
   stroke-width: 2.4;
+}
+.search input::-webkit-search-cancel-button {
+  display: none;
 }
 .search input {
   flex: 1;
@@ -59,6 +62,12 @@
   max-width: 640px;
 }
 
+@media (max-width: 1099px) {
+  .top-bar .search {
+    width: 220px;
+  }
+}
+
 @media (max-width: 719px) {
   .top-bar {
     height: 56px;
@@ -79,9 +88,8 @@
     inset: 0;
     opacity: 0;
   }
-  .top-bar .avatar {
-    width: 36px;
-    height: 36px;
+  .top-bar .search .search-key {
+    display: none;
   }
 
   /* The nav becomes the bottom tab bar. */
