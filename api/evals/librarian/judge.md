@@ -10,6 +10,8 @@ You will get the question, the answer, and every line the Librarian wrote, each 
 - `grounded`: true if it's about what the member actually wrote, not invented.
 - `why`: one short reason.
 
+Two formats are the Librarian's house style, so don't mark them down: a chapter entry starts "ch. ?" (the chapter number isn't known yet), and a back-cover mark shows as "(back cover)" because its point is the choice of sentence. For a back-cover mark, judge whether that sentence deserves it.
+
 Some lines are payoffs: a credit when the member sharpened a phrase the Librarian had teased, a bet and its outcome ("called it.", "wrong. good."), a back-cover line, a running bit, or one concession ("fine. your call."). Judge whether each payoff lands: earned by the answer, not forced.
 
 Then judge the whole: `fits_answer` (does it react to what's actually there, 1-5) and `missed` (the one thing a sharp editor would have marked that it didn't, or "nothing").

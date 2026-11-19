@@ -578,3 +578,15 @@ async def test_the_eval_cases_run_end_to_end_on_the_scripted_stand_in():
     for case in CASES:
         typed = await _typed(ScriptedClaude(), case)
         assert typed["silent"] is (case["expect"] == "silent"), case["name"]
+
+
+async def test_a_chapter_entry_always_reads_ch_question_mark():
+    chapter = {
+        "kind": "chapter",
+        "text": "ch. 1 nine pages nobody read",
+        "anchors": ["nine pages"],
+        "source_turns": [2],
+    }
+    claude = FakeClaude([text_message(notes_reply(entries=[chapter]))])
+    notes = await librarian.look(claude, context(TURNS[2]))
+    assert [e.text for e in notes.added_entries] == ["ch. ? nine pages nobody read"]

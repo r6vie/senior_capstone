@@ -30,6 +30,8 @@ from trove.interview.engine import Turn
 from .cases import CASES
 
 JUDGE_PROMPT = (Path(__file__).resolve().parent / "judge.md").read_text(encoding="utf-8").strip()
+# The organization limits concurrent requests, so cases run a few at a time.
+CONCURRENT_CASES = 3
 # About 90 Haiku looks across the cases (a few retry), and one Opus judge call per case that wrote anything.
 ESTIMATE = "about $0.90 a run: Haiku notes about $0.12, the Opus judge about $0.025 a case"
 
@@ -117,7 +119,11 @@ def _lines(marks, entries, settled) -> list[dict]:
         if m.count:
             line["running_bit_count"] = m.count
         lines.append(line)
-    lines += [{"id": e.id, "kind": f"notebook {e.kind}", "text": e.text} for e in entries]
+    # Lines the code writes word for word ("this goes on the back cover.") are the plan's, not the model's.
+    fixed = {librarian.BACK_COVER_NOTE, librarian.CONCESSION_NOTE}
+    lines += [
+        {"id": e.id, "kind": f"notebook {e.kind}", "text": e.text} for e in entries if e.text not in fixed
+    ]
     lines += [
         {"id": b.id, "kind": f"bet {b.status}", "text": f"{b.text} / {b.outcome_note}"} for b in settled
     ]
@@ -169,7 +175,9 @@ async def run_case(notes: Claude, judge: Claude, case: dict) -> dict:
     return result
 
 
-def _report(results: list[dict]) -> str:
+def _report(everything: list[dict]) -> str:
+    failed = [r for r in everything if "failed" in r]
+    results = [r for r in everything if "failed" not in r]
     silent_cases = [r for r in results if r["case"]["expect"] == "silent"]
     talking = [r for r in results if r["case"]["expect"] != "silent"]
     verdicts = [line for r in results for line in r.get("verdict", {}).get("lines", [])]
@@ -189,6 +197,7 @@ def _report(results: list[dict]) -> str:
         f"- Would screenshot: {sum(v['screenshot'] for v in verdicts)}/{len(verdicts)} lines",
         f"- Notes cases with a notebook entry: {sum(bool(r['entries']) for r in notes_cases)}/{len(notes_cases)}",
         f"- Payoffs that landed: {sum(r['payoff'] for r in payoffs)}/{len(payoffs)}",
+        f"- Cases that failed to run: {len(failed)} {[r['case']['name'] for r in failed]}",
         "",
     ]
     for r in results:
@@ -228,7 +237,17 @@ async def main(names: list[str]) -> None:
     claude = get_claude()
     notes = CountingClaude(librarian.on_notes_model(claude))
     judge = CountingClaude(product_client(claude))
-    results = await asyncio.gather(*(run_case(notes, judge, case) for case in chosen))
+    gate = asyncio.Semaphore(CONCURRENT_CASES)
+
+    async def one(case: dict) -> dict:
+        async with gate:
+            try:
+                return await run_case(notes, judge, case)
+            except Exception as error:  # one case failing shouldn't lose the run
+                print(f"failed: {case['name']}: {type(error).__name__}: {error}", flush=True)
+                return {"case": case, "failed": f"{type(error).__name__}"}
+
+    results = [r for r in await asyncio.gather(*(one(case) for case in chosen))]
     folder = OUT_DIR / "librarian"
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{datetime.now():%Y-%m-%d_%H%M%S}.md"

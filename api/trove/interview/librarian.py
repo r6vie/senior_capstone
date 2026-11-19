@@ -419,7 +419,8 @@ def mark_problems(mark: _NewMark, *, answer: str, earlier: list[str], member_tex
             problems.append("a back_cover anchor must be one whole sentence of the answer, copied exactly")
     elif not anchor_holds(answer, mark.anchor, mark.occurrence):
         problems.append(f"the anchor {mark.anchor!r} isn't 1-8 whole words of the answer at that occurrence")
-    if mark.move in ("strike", "note") and not (mark.note or "").strip():
+    if mark.move != "back_cover" and not (mark.note or "").strip():
+        # An underline with nothing written is a mark the member can't read anything into.
         problems.append(f"a {mark.move} needs its note")
     if mark.note:
         problems += line_problems(mark.note, limit=NOTE_CHARS, member_text=member_text)
@@ -771,10 +772,15 @@ def _apply(raw: _Notes, context: Context) -> Notes:
             continue
         if new.kind == "bet" and bets_open >= MAX_OPEN_BETS:
             continue
+        text = new.text.strip()
+        if new.kind == "chapter":
+            # A chapter's number isn't known until the book is written, so it's always "ch. ?".
+            text = re.sub(r"^(ch\.?\s*)?(\d+|\?)?[.:]?\s*", "", text, flags=re.I)
+            text = f"ch. ? {text}"
         entry = Entry(
-            id=entry_id(new.kind, context.question_number, new.text),
+            id=entry_id(new.kind, context.question_number, text),
             kind=new.kind,
-            text=new.text.strip(),
+            text=text,
             anchors=[a.strip() for a in new.anchors],
             source_turns=sorted(set(new.source_turns)),
         )
