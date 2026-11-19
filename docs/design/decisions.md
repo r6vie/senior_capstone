@@ -2,6 +2,21 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-19: two more directions (cut paper, stipple) and three touch-ups, waiting for Josef
+
+- **Josef:** the watercolour is too realistic, like a photograph, so it reads cheap; the coloured pencil is too
+  simple; the gouache poster is too childish and its shapes too simple. Two new polished directions, and touch up
+  those three.
+- **Touch-ups, board `FreshLand`:** gouache round 2 (`gouache2.py`: an alpine lake drawn like a travel poster, with
+  shaded peaks, streak clouds and framing pines); pencil round 3 (`pencil3.py`: deeper tones, a cabin and jetty, a
+  far shore of firs, reeds, two more pencils); watercolour round 2 (`wash2.py`: the scene as single brushstrokes
+  with bare paper between them, not a rendered view).
+- **New, board `FreshNew`:** 7. **Layered cut paper** (`papercut.py`): the white cover is the top sheet of a stack,
+  cut away to show the layers; moon, stars and window are holes to a glow. 8. **Stippled ink** (`stipple.py`): dots
+  only, in two inks, the site's dot shading taken all the way.
+- **Flag:** the cut-paper cover uses soft shadows between sheets. The system rule is dot tone for shade, never
+  blur; that rule is about the UI, but Josef should decide whether cover art may break it.
+
 ## 2026-11-19: two landscape covers that clear to white (gouache, coloured pencil), waiting for Josef
 
 - **Josef:** two more directions with environment art in different styles, edge to edge, that fade or cut to white

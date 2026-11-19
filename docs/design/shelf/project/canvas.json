@@ -632,6 +632,14 @@
       "h": 1090,
       "title": "Three landscape covers · edge to edge, clearing to white under the title",
       "page": "fresh"
+    },
+    "FreshNew.dc.html": {
+      "x": 0,
+      "y": 1210,
+      "w": 1180,
+      "h": 1090,
+      "title": "Two more directions · layered cut paper and stippled ink",
+      "page": "fresh"
     }
   },
   "order": [
@@ -703,7 +711,8 @@
     "StrataCover2.dc.html",
     "PaperCells.dc.html",
     "Fresh.dc.html",
-    "FreshLand.dc.html"
+    "FreshLand.dc.html",
+    "FreshNew.dc.html"
   ],
   "notes": {
     "head": {

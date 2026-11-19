@@ -11,6 +11,11 @@ one cover each. Shown on the canvas page "Fresh directions" (board `Fresh`), all
 | `pencil.py` | Coloured pencil landscape: short strokes that thin out to bare white paper | `python3 pencil.py out.png [seed]` |
 | `pencil2.py` | Coloured pencil, round 2 (the one on the board): four muted pencils, one hatching direction, a lake at dusk | `python3 pencil2.py out.png [seed]` |
 | `wash.py` | Loose watercolour: a wet-in-wet dusk sky over still water; pigment pools at edges, granulates and blooms | `python3 wash.py out.png [seed]` |
+| `gouache2.py` | Gouache, round 2 (on the board): an alpine lake drawn like a travel poster | `python3 gouache2.py out.png [seed]` |
+| `pencil3.py` | Coloured pencil, round 3 (on the board): deeper tones, cabin, jetty, firs, reeds | `python3 pencil3.py out.png [seed]` |
+| `wash2.py` | Watercolour, round 2 (on the board): the scene as a handful of brushstrokes | `python3 wash2.py out.png [seed]` |
+| `papercut.py` | Layered cut paper: stacked sheets with shadows; the white cover is the top sheet | `python3 papercut.py out.png [seed]` |
+| `stipple.py` | Stippled ink: dots only, two inks, dunes under a moon | `python3 stipple.py out.png [seed]` |
 | `block.py` | Block print: a carved night scene, black plus one second colour | `python3 block.py out.png [seed]` |
 
 Each writes a 944 x 1376 image (the 472 x 688 cover at 2x). `press.py` uses fonts that ship with macOS.
