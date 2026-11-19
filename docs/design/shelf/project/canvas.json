@@ -511,6 +511,33 @@
       "title": "C · Reading Room",
       "page": "elevate",
       "expand": "fill"
+    },
+    "ElevateK1.dc.html": {
+      "x": 5640,
+      "y": 0,
+      "w": 1760,
+      "h": 2920,
+      "title": "Kit 1 · Stacked sheets",
+      "page": "elevate",
+      "expand": "fill"
+    },
+    "ElevateK2.dc.html": {
+      "x": 7520,
+      "y": 0,
+      "w": 1760,
+      "h": 2985,
+      "title": "Kit 2 · Relief",
+      "page": "elevate",
+      "expand": "fill"
+    },
+    "ElevateK3.dc.html": {
+      "x": 9400,
+      "y": 0,
+      "w": 1760,
+      "h": 3000,
+      "title": "Kit 3 · Folio",
+      "page": "elevate",
+      "expand": "fill"
     }
   },
   "order": [
@@ -569,7 +596,10 @@
     "InterviewAPhone.dc.html",
     "ElevateA.dc.html",
     "ElevateB.dc.html",
-    "ElevateC.dc.html"
+    "ElevateC.dc.html",
+    "ElevateK1.dc.html",
+    "ElevateK2.dc.html",
+    "ElevateK3.dc.html"
   ],
   "notes": {
     "head": {

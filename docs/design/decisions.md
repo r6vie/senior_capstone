@@ -2,6 +2,19 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-18: three depth kits for C (Josef: flat and boring, rectangles read as placeholders, drop the diagonal)
+
+Boards "Kit 1 · Stacked sheets", "Kit 2 · Relief" and "Kit 3 · Folio" on the Elevate page. Each is a small UI kit (buttons with hover, press and
+disabled, fields, filters or tabs, list rows, surfaces, shelf and books) plus the shelf front page built from it. The Librarian's band is a
+plain rectangle in all three; the diagonal is gone. Nothing is decided and no app code changed.
+
+- **Kit 1, stacked sheets:** each important surface and button is the top sheet of a stack of outlined sheets with dot tone beneath; the pick's
+  book steps out over the band's top edge. Needs Josef's yes: outlined stacked sheets as a depth cue (7px and 14px offsets); a book overlapping a frame.
+- **Kit 2, relief:** raised surfaces and keycap buttons with a solid ink edge and a growing dot shadow; shelves and fields are recessed wells.
+  Needs Josef's yes: the hard ink edge (5 to 6px) and recessed paper-sunk wells with inner dot shade.
+- **Kit 3, folio:** thick folios with a hatched fore-edge, spine shade, index tabs and a hardcover pick with a printed frame. Needs Josef's yes:
+  the hatched fore-edge (line art), tabs in place of filter chips, the printed frame inside the black cover.
+
 ## 2026-11-17: direction C, Reading Room (Josef: A's details, but a usable, professional layout)
 
 Josef liked A's details (the page shading, the large letter) and found its cards and lined text box confusing, and wanted a UI that is fast

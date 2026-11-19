@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kit 2 · Relief</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+/* Trove design system: tokens and base components. Spec and rules: docs/design/system.md.
+   Look: "Manga screentone": black ink on white paper, screentone dots for shade, one burst of
+   lines for emphasis, one red for the one thing to do next.
+   Port target: web/src/ui/styles.css. Components use only the tokens below: no raw colors or
+   pixel sizes in feature code. The --color-* and --space-* aliases keep the current app working. */
+
+:root {
+  /* Color. Roles, not decoration. Red is the primary action and nothing else. */
+  --paper: #fafaf7;
+  --paper-sunk: #f0f0eb;
+  --white: #ffffff;
+  --ink: #111111;
+  --ink-2: #55554f; /* secondary text: 7.2:1 on paper */
+  --ink-3: #8c8c89; /* borders of disabled things. Never text: 3.2:1 */
+  --rule: #c9c9c6; /* hairlines and disabled fills. Text only on ink: 11.4:1 */
+  --red: #d42a27; /* white text 5.0:1 */
+  --red-hover: #b82220;
+  --red-press: #9e1c1a;
+
+  /* Context. Inside .dark these swap, and every component follows. */
+  --fg: var(--ink);
+  --bg: var(--paper);
+
+  /* Type */
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif; /* labels, nav, buttons, shelf names. Caps. */
+  --font-serif: "Newsreader", Georgia, serif; /* book titles, page titles, the Librarian's voice */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif; /* working text */
+
+  /* Space: 4px base. 44px is the page gutter. */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 44px;
+  --s-8: 64px;
+
+  /* Line, radius, size */
+  --line: 2px; /* controls, book outline */
+  --line-heavy: 3px; /* panels, bubbles, dialogs */
+  --radius-pill: 999px; /* search field and avatar only */
+  --radius-bubble: 26px; /* speech bubbles only */
+  --tap: 44px;
+  --control: 48px;
+  --ease: 120ms ease;
+
+  /* Compatibility with the tokens the app already uses */
+  --color-text: var(--ink);
+  --color-muted: var(--ink-2);
+  --color-accent: var(--red);
+  --color-error: var(--ink);
+  --color-border: var(--rule);
+  --color-background: var(--paper);
+  --radius: 0;
+  --space-1: var(--s-1);
+  --space-2: var(--s-2);
+  --space-3: var(--s-4);
+  --space-4: var(--s-6);
+
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.dark {
+  --fg: var(--white);
+  --bg: var(--ink);
+  color: var(--fg);
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: var(--line-heavy) solid var(--fg);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* ---------- Layout helpers ---------- */
+.narrow-page {
+  max-width: 28rem;
+  margin: var(--s-6) auto;
+  padding: 0 var(--s-4);
+}
+.stack {
+  display: grid;
+  gap: var(--s-4);
+}
+.muted {
+  color: var(--ink-2);
+}
+.error {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- Tone: screentone dots. Grounds and shadows, never behind running text. ---------- */
+.tone-fine {
+  background: radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px, var(--paper);
+}
+.tone-mid {
+  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 6px 6px, var(--paper);
+}
+.tone-dense {
+  background: radial-gradient(circle, var(--ink) 1.9px, transparent 2.3px) 0 0 / 6px 6px, var(--paper);
+}
+/* Fade: apply to a tone layer to let it dissolve (add .tone-fade on the element). */
+.tone-fade {
+  -webkit-mask-image: linear-gradient(var(--fade-dir, 180deg), #000, transparent);
+  mask-image: linear-gradient(var(--fade-dir, 180deg), #000, transparent);
+}
+/* Burst: fanned focus lines. Once per screen, behind the Librarian's pick only. Place inside .dark. */
+.burst {
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(from 0deg at var(--fx, 50%) var(--fy, 50%), var(--white) 0 0.8deg, var(--ink) 0.8deg 3deg, var(--white) 3deg 3.5deg, var(--ink) 3.5deg 8deg);
+  -webkit-mask-image: radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), transparent 14%, #000 44%);
+  mask-image: radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), transparent 14%, #000 44%);
+}
+.halo {
+  position: absolute;
+  background: radial-gradient(circle, var(--white) 1.7px, transparent 2.1px) 0 0 / 7px 7px;
+  border-radius: 50%;
+  -webkit-mask-image: radial-gradient(circle, #000 28%, transparent 68%);
+  mask-image: radial-gradient(circle, #000 28%, transparent 68%);
+}
+
+/* ---------- Buttons ---------- */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  min-height: var(--control);
+  padding: 0 26px;
+  white-space: nowrap;
+  border: var(--line) solid var(--fg);
+  border-radius: 0;
+  font: 700 17px/1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--ease), color var(--ease), border-color var(--ease);
+}
+.button-primary {
+  background: var(--red);
+  color: var(--white);
+}
+.button-primary:is(:hover, .is-hover) {
+  background: var(--red-hover);
+}
+.button-primary:is(:active, .is-press) {
+  background: var(--red-press);
+  transform: translateY(1px);
+}
+.button-secondary {
+  background: transparent;
+  color: var(--fg);
+}
+.button-secondary:is(:hover, .is-hover) {
+  background: var(--fg);
+  color: var(--bg);
+}
+.button-secondary:is(:active, .is-press) {
+  background: var(--fg);
+  color: var(--bg);
+  transform: translateY(1px);
+}
+.button-quiet {
+  min-height: var(--tap);
+  padding: 0 var(--s-3);
+  border-color: transparent;
+  background: transparent;
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+.button-quiet:is(:hover, .is-hover) {
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.button:is(:disabled, [aria-disabled="true"]) {
+  background: var(--rule);
+  border-color: var(--ink-3);
+  color: var(--ink-2);
+  cursor: not-allowed;
+  transform: none;
+}
+.button[aria-busy="true"] {
+  cursor: progress;
+  pointer-events: none;
+}
+
+/* ---------- Fields ---------- */
+.field {
+  display: grid;
+  gap: var(--s-2);
+}
+.field > label {
+  font: 600 14px/1.3 var(--font-sans);
+}
+.field :is(input, textarea, select) {
+  min-height: var(--control);
+  padding: 0 14px;
+  border: var(--line) solid var(--ink);
+  border-radius: 0;
+  background: var(--white);
+  color: var(--ink);
+  font: 400 16px/1.4 var(--font-sans);
+}
+.field textarea {
+  min-height: 112px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+.field select {
+  appearance: none;
+  padding-right: 44px;
+  background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10' viewBox='0 0 16 10' fill='none' stroke='%23111' stroke-width='2.4'%3E%3Cpath d='M2 2l6 6 6-6'/%3E%3C/svg%3E") right 16px center / 16px 10px no-repeat;
+}
+.field :is(input, textarea, select)::placeholder {
+  color: var(--ink-2);
+}
+.field :is(input, textarea, select):is(:focus, .is-focus) {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 2px;
+}
+.field .hint {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.field[data-invalid="true"] :is(input, textarea, select) {
+  border-width: var(--line-heavy);
+}
+.field[data-invalid="true"] .hint {
+  display: flex;
+  gap: var(--s-2);
+  color: var(--ink);
+  font-weight: 600;
+}
+.field[data-invalid="true"] .hint::before {
+  content: "!";
+  flex: none;
+  width: 20px;
+  height: 20px;
+  background: var(--ink);
+  color: var(--white);
+  font: 800 14px/20px var(--font-display);
+  text-align: center;
+}
+.field :is(input, textarea, select):disabled {
+  border-color: var(--ink-3);
+  background: var(--paper-sunk);
+  color: var(--ink-2);
+}
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--tap);
+  font-size: 16px;
+}
+.choice input {
+  appearance: none;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+}
+.choice input[type="radio"] {
+  border-radius: 50%;
+}
+.choice input:checked {
+  background: var(--ink);
+  box-shadow: inset 0 0 0 4px var(--white);
+}
+.choice input[type="checkbox"]:checked {
+  background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.4'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E") center / 18px no-repeat;
+  box-shadow: none;
+}
+
+/* ---------- Navigation ---------- */
+.nav {
+  display: flex;
+  gap: 6px;
+  font: 600 17px/1 var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 12px;
+  border-bottom: var(--line-heavy) solid transparent;
+  color: var(--fg);
+  text-decoration: none;
+}
+.nav a:hover {
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.nav a[aria-current="page"] {
+  border-bottom-color: var(--fg);
+}
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 800 28px/1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.wordmark::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: var(--ink);
+  transform: rotate(-6deg);
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 40px;
+  width: 230px;
+  padding: 0 14px;
+  border: var(--line) solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: var(--line) solid var(--fg);
+  border-radius: 50%;
+  font: 700 14px/1 var(--font-display);
+}
+
+/* ---------- Labels, voice, lists ---------- */
+.caption {
+  display: inline-block;
+  padding: 5px 12px;
+  background: var(--fg);
+  color: var(--bg);
+  font: 600 14px/1.2 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.shelf-name {
+  margin: 0;
+  font: 800 30px/1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.page-title {
+  margin: 0;
+  font: 600 48px/1.02 var(--font-serif);
+  letter-spacing: -0.015em;
+}
+.voice {
+  font: italic 400 20px/1.3 var(--font-serif);
+}
+.bubble {
+  position: relative;
+  padding: 14px 20px;
+  border: var(--line-heavy) solid var(--ink);
+  border-radius: var(--radius-bubble);
+  background: var(--white);
+  color: var(--ink);
+  font: italic 400 19px/1.3 var(--font-serif);
+}
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 44px;
+  bottom: -14px;
+  width: 22px;
+  height: 22px;
+  background: var(--white);
+  border-right: var(--line-heavy) solid var(--ink);
+  border-bottom: var(--line-heavy) solid var(--ink);
+  transform: rotate(45deg) skew(8deg, 8deg);
+}
+.contents {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.contents li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+}
+.contents li::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  border-bottom: 2.5px dotted currentColor;
+  transform: translateY(-4px);
+}
+.contents b {
+  font: 700 18px/1 var(--font-display);
+  letter-spacing: 0.06em;
+}
+
+/* ---------- Surfaces ---------- */
+.panel {
+  padding: 22px 24px;
+  border: var(--line-heavy) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.panel > h2,
+.panel > h3 {
+  margin: 0 0 var(--s-4);
+  font: 800 24px/1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.message {
+  display: flex;
+  gap: var(--s-3);
+  padding: 14px 18px;
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.message-error {
+  border-width: var(--line-heavy);
+  background: radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px, var(--white);
+}
+.message-error > :last-child {
+  padding: 2px 8px;
+  margin: -2px 0;
+  background: var(--white);
+  font-weight: 600;
+}
+.empty {
+  padding: var(--s-6);
+  border: var(--line-heavy) dotted var(--ink);
+  color: var(--fg);
+}
+.empty h3 {
+  margin: 0 0 var(--s-2);
+  font: 600 26px/1.1 var(--font-serif);
+}
+.dialog {
+  position: relative;
+  padding: 26px 28px;
+  border: var(--line-heavy) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.dialog::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 8px -8px -8px 8px;
+  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+}
+.scrim {
+  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 6px 6px, var(--paper);
+}
+.skeleton {
+  background: radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px, var(--paper);
+  border: var(--line) solid var(--ink);
+}
+
+/* ---------- Book, shelf, band ---------- */
+.book {
+  position: relative;
+  flex: none;
+  display: block;
+  width: 122px;
+  height: 178px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform var(--ease);
+}
+.book::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  right: -8px;
+  bottom: -8px;
+  background: radial-gradient(circle, var(--fg) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+}
+.book-cover {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 16px 10px 10px 21px;
+  border: var(--line) solid var(--ink);
+  background: linear-gradient(90deg, #e4e4df 0, #f5f5f1 7px, var(--white) 8px 11px, #f2f2ee 12px, var(--white) 16px);
+  overflow: hidden;
+}
+.book-cover::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--ink);
+}
+.book-title {
+  font: 600 13.5px/1.18 var(--font-serif);
+}
+.book-author {
+  margin-top: auto;
+  /* Full names wrap (at the hyphen too) and stop at 4 lines; the aria-label carries the whole name. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  font: 600 9.5px/1.3 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.book:is(:hover, .is-hover) {
+  transform: translateY(-4px);
+}
+.book-lg {
+  width: 236px;
+  height: 344px;
+}
+.book-lg::before {
+  left: 14px;
+  top: 14px;
+  right: -14px;
+  bottom: -14px;
+  background-size: 7px 7px;
+  background-image: radial-gradient(circle, var(--fg) 1.8px, transparent 2.3px);
+}
+.book-lg .book-cover {
+  padding: 30px 18px 18px 40px;
+  border-width: var(--line-heavy);
+}
+.book-lg .book-cover::before {
+  left: 24px;
+  width: 2px;
+}
+.book-lg .book-title {
+  font-size: 27px;
+  line-height: 1.12;
+}
+.book-lg .book-author {
+  font-size: 12px;
+}
+.book-sm {
+  width: 92px;
+  height: 136px;
+}
+.book-sm .book-cover {
+  padding: 12px 6px 6px 16px;
+}
+.book-sm .book-cover::before {
+  left: 9px;
+}
+.book-sm .book-title {
+  font-size: 11.5px;
+}
+.book-sm .book-author {
+  font-size: 8.5px;
+}
+
+.shelf-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-bottom: 18px;
+}
+.shelf-head::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  border-top: 2.5px solid var(--fg);
+}
+.shelf-head a {
+  order: 2;
+  border-bottom: 2.5px solid var(--fg);
+  color: var(--fg);
+  font: 700 15px/1.2 var(--font-display);
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.shelf-books {
+  display: flex;
+  gap: 28px;
+  padding: 0 var(--s-1);
+}
+.ledge {
+  position: relative;
+  height: 14px;
+  background: var(--ink);
+}
+.ledge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 14px;
+  height: 22px;
+  background: radial-gradient(circle, var(--ink) 1.4px, transparent 1.8px) 0 0 / 5px 5px;
+  -webkit-mask-image: linear-gradient(#000, transparent);
+  mask-image: linear-gradient(#000, transparent);
+}
+.band {
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 28px), 0 100%);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{background:#dcdcd6}
+
+.KK{background:var(--paper);isolation:isolate;position:relative;font-family:var(--font-sans);color:var(--ink)}
+.KK .nb{position:relative;z-index:5;height:64px;background:var(--white);border-bottom:var(--line-heavy) solid var(--ink)}
+.KK .nb .wrap{width:1128px;margin:0 auto;height:100%;display:flex;align-items:center;gap:var(--s-5)}
+.KK .nb .nav a{min-height:64px;border-bottom-width:4px;margin-bottom:-3px}
+.KK .nb .search{width:280px}
+.KK .sp{flex:1}
+.KK .home{width:1128px;margin:0 auto;padding:48px 0 72px;position:relative}
+.KK .button{display:inline-flex;align-items:center;justify-content:center}
+.KK .mic{width:18px;height:18px;margin-right:8px;flex:none}
+.KK .acts{display:flex;align-items:center;gap:var(--s-3)}
+/* a surface: layers l3,l2,l1 sit under the face .in (later = higher) */
+.KK .surf{position:relative;isolation:isolate;display:flex;flex-direction:column}
+.KK .surf>.in{flex:1}
+.KK .surf .in{position:relative;background:var(--white);border:var(--line) solid var(--ink)}
+.KK .surf>i{position:absolute;z-index:-1;pointer-events:none}
+.KK .surf .in.dark{background:var(--ink);color:var(--paper)}
+.KK .sh{display:flex;justify-content:space-between;align-items:baseline;padding:14px 24px 10px;border-bottom:var(--line) solid var(--ink);font:700 15px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.KK .sh span:last-child{color:var(--ink-2)}
+.KK .bd{padding:22px 24px 24px}
+.KK .eyebrow{font:700 13px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+/* hero */
+.KK .hero .in{overflow:hidden;min-height:340px;padding:44px 64px 52px;display:grid;grid-template-columns:1fr 360px;align-items:center}
+.KK .hero .burst{position:absolute;inset:0 0 0 54%;opacity:1;--fx:80%;--fy:50%;-webkit-mask-image:radial-gradient(circle at 80% 50%,transparent 14%,#000 46%);mask-image:radial-gradient(circle at 80% 50%,transparent 14%,#000 46%)}
+.KK .hero .in>*{position:relative}
+.KK .hero .in>.burst{position:absolute}
+.KK .hero h1{margin:18px 0 0;font:600 54px/1.04 var(--font-serif);letter-spacing:-.02em;max-width:540px;text-wrap:balance}
+.KK .hero .by{margin:16px 0 0;font:600 14px/1.3 var(--font-sans);letter-spacing:.14em;text-transform:uppercase;color:var(--rule)}
+.KK .hero .why{margin:14px 0 0;font:italic 400 21px/1.4 var(--font-serif);max-width:480px}
+.KK .hero .acts{margin-top:26px}
+/* status */
+.KK .two{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:44px}
+.KK .two .in{display:flex;align-items:center;gap:20px;padding:20px 24px}
+.KK .two .book{zoom:.72}
+.KK .two p{margin:0;flex:1;font:400 16px/1.4 var(--font-sans)}
+.KK .two p b{display:block;font:600 18px/1.25 var(--font-serif)}
+.KK .chips{display:flex;gap:var(--s-2);flex-wrap:wrap}
+.KK .chips a{display:inline-flex;align-items:center;min-height:var(--tap);padding:0 16px;border:var(--line) solid var(--ink);background:var(--white);font:600 15px/1 var(--font-sans);color:var(--ink);text-decoration:none}
+/* shelf */
+.KK .shelf3{margin-top:46px;position:relative}
+.KK .shelf3 .shelf-head{margin-bottom:22px}
+.KK .shelf3 .shelf-books{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:-7px}
+.KK .slab{position:relative;height:34px}
+.KK .slab .top{position:absolute;left:0;right:0;top:0;height:16px;background:radial-gradient(circle,var(--ink) 1.2px,transparent 1.6px) 0 0/5px 5px;border-top:var(--line) solid var(--ink)}
+.KK .slab .front{position:absolute;left:0;right:0;top:16px;height:18px;background:var(--white);border:var(--line) solid var(--ink)}
+/* pressable wrapper */
+.KK .pbw{position:relative;display:inline-block;isolation:isolate}
+.KK .pbw>.button{position:relative;z-index:1;transition:transform var(--ease),box-shadow var(--ease),background var(--ease)}
+.KK .pbw.block{display:block}.KK .pbw.block>.button{display:flex;width:100%}
+.KK .field{display:grid;gap:6px;width:100%}
+.KK .field .inp{min-height:var(--control);padding:0 14px;display:flex;align-items:center;border:var(--line) solid var(--ink);background:var(--white);font:400 16px/1.4 var(--font-sans);color:var(--ink-2)}
+.KK .field .inp.on{outline:var(--line-heavy) solid var(--ink);outline-offset:2px;color:var(--ink)}
+.KK .field .ta{min-height:96px;padding:12px 14px;border:var(--line) solid var(--ink);background:var(--white);font:400 17px/1.5 var(--font-sans)}
+.KK .field label{font:600 14px/1.3 var(--font-sans)}
+.KK .caret{display:inline-block;width:2px;height:20px;background:var(--ink);vertical-align:-4px}
+.KK .rows{margin:0;padding:0;list-style:none}
+.KK .rows li{display:grid;grid-template-columns:14px 1fr;gap:12px;padding:13px 20px;border-top:var(--line) dotted var(--ink);align-items:start}
+.KK .rows li:first-child{border-top:none}
+.KK .rows .dot{width:10px;height:10px;margin-top:6px;background:radial-gradient(circle,var(--ink) 1.3px,transparent 1.7000000000000002px) 0 0/4px 4px;border:2px solid var(--ink)}
+.KK .rows b{display:block;font:600 16px/1.3 var(--font-serif)}
+.KK .rows small{display:block;margin-top:3px;font:400 14px/1.4 var(--font-sans);color:var(--ink-2)}
+.KK .rows li.hov{background:var(--paper-sunk)}
+.KK .rows li.hov b{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
+.KK .rows li.sel{background:var(--paper-sunk);box-shadow:inset 6px 0 0 var(--ink)}
+/* kit board furniture */
+.kitwrap{box-sizing:border-box;width:1760px;padding:56px 64px 72px;font-family:var(--font-sans);color:var(--ink)}
+.kitwrap h1{margin:18px 0 10px;font:600 54px/1.04 var(--font-serif);letter-spacing:-.015em}
+.kitwrap .lede{margin:0;font:400 18px/1.5 var(--font-sans);max-width:940px}
+.kitwrap .flags{margin:22px 0 0;padding:14px 18px;border:3px solid var(--ink);background:#fff;max-width:940px;font-size:15px;line-height:1.5}
+.kitwrap .flags b{font:700 15px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.kitwrap .flags ul{margin:8px 0 0;padding-left:20px}
+.kitwrap h2.sec{margin:52px 0 18px;font:700 20px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.kitwrap .specgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.kitwrap .scell{padding:26px 28px 30px;display:grid;gap:20px;align-content:start;border:2px dashed var(--ink-3)}
+.kitwrap .scell>.lb{font:700 15px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.kitwrap .sub{display:grid;gap:8px;justify-items:start}
+.kitwrap .sub>.cap{font:600 13px/1.2 var(--font-sans);color:var(--ink-2)}
+.kitwrap .flex{display:flex;gap:30px;flex-wrap:wrap;align-items:flex-start}
+.kitwrap .pagerow{display:flex;gap:56px;align-items:flex-start}
+.kitwrap .pframe{width:1152px;flex:none;overflow:hidden;position:relative;border:2px solid var(--ink);background:#fff}
+.kitwrap .pframe>.fr{width:1280px;transform:scale(.9);transform-origin:0 0;position:relative;overflow:hidden}
+.kitwrap .notes{flex:1;display:grid;gap:18px;font:400 15px/1.55 var(--font-sans);color:var(--ink-2)}
+.kitwrap .notes b{color:var(--ink)}
+.kitwrap .notes h3{margin:0;font:700 15px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+
+
+.K2 .surf.raised .l1{inset:10px -10px -10px 10px;background:radial-gradient(circle,var(--ink) 1.5px,transparent 1.9px) 0 0/6px 6px}
+.K2 .surf.raised .l2{inset:6px -6px -6px 6px;background:var(--ink)}
+.K2 .surf.raised .l3{display:none}
+.K2 .surf.raised.r1 .l1{inset:8px -8px -8px 8px;background:radial-gradient(circle,var(--ink) 1.3px,transparent 1.7000000000000002px) 0 0/5px 5px}
+.K2 .surf.raised.r1 .l2{inset:4px -4px -4px 4px}
+.K2 .surf.hero.raised .l1{inset:22px -22px -22px 22px;background:radial-gradient(circle,var(--ink) 1.7px,transparent 2.1px) 0 0/7px 7px}
+.K2 .surf.hero.raised .l2{inset:9px -9px -9px 9px}
+.K2 .surf.flat>i{display:none}
+.K2 .in.dark{border-width:var(--line-heavy)}
+.K2 .pickbook{position:absolute;right:88px;top:-34px;z-index:3}
+.K2 .pickbook .book{filter:none}
+.K2 .pbw::before{content:"";position:absolute;z-index:0;inset:12px 4px -8px 4px;background:radial-gradient(circle,var(--ink) 1.2px,transparent 1.6px) 0 0/5px 5px}
+.K2 .pbw>.button-primary,.K2 .pbw>.button-secondary{box-shadow:0 5px 0 var(--ink)}
+.K2 .pbw:is(:hover,.is-hover)>.button{transform:translateY(-2px);box-shadow:0 7px 0 var(--ink)}
+.K2 .pbw:is(:active,.is-press)>.button{transform:translateY(5px);box-shadow:0 0 0 var(--ink)}
+.K2 .pbw>.button[aria-disabled="true"]{box-shadow:0 5px 0 var(--ink-3)}
+.K2 .dark .pbw::before{background:radial-gradient(circle,var(--white) 1.2px,transparent 1.6px) 0 0/5px 5px}
+.K2 .dark .pbw>.button-primary{box-shadow:0 5px 0 var(--white)}
+.K2 .dark .pbw:is(:hover,.is-hover)>.button{box-shadow:0 7px 0 var(--white)}
+.K2 .chips .pbw::before{display:none}
+.K2 .chips .pbw>.button{min-height:var(--tap)}
+.K2 .field .ta,.K2 .field .inp{background:var(--paper-sunk);box-shadow:inset 0 4px 0 var(--ink),inset 4px 0 0 var(--ink)}
+.K2 .field .ta{padding-top:16px;padding-left:18px}.K2 .field .inp{padding-left:18px}
+.K2 .tray{position:relative;isolation:isolate;padding:26px 32px 30px;background:var(--paper-sunk);border:var(--line) solid var(--ink)}
+.K2 .tray::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle,var(--ink) 1.2px,transparent 1.6px) 0 0/5px 5px;-webkit-mask-image:linear-gradient(180deg,#000,transparent 38%);mask-image:linear-gradient(180deg,#000,transparent 38%)}
+.K2 .tray::after{content:"";position:absolute;left:0;top:0;bottom:0;width:60px;z-index:0;pointer-events:none;background:radial-gradient(circle,var(--ink) 1.2px,transparent 1.6px) 0 0/5px 5px;-webkit-mask-image:linear-gradient(90deg,#000,transparent);mask-image:linear-gradient(90deg,#000,transparent)}
+.K2 .tray>*{position:relative;z-index:1}
+.K2 .tray .shelf-head{margin-bottom:20px}
+.K2 .slab .top{background:radial-gradient(circle,var(--ink) 1.4px,transparent 1.7999999999999998px) 0 0/5px 5px}
+.K2 .slab .front{box-shadow:0 5px 0 var(--ink)}
+.K2 .tray .slab{margin:0 -32px -30px;height:40px}
+.K2 .tray .slab .front{left:-2px;right:-2px;top:20px;height:22px;box-shadow:none}
+.K2 .tray .slab .top{left:-2px;right:-2px;height:20px}
+.K2 .rows li.sel{box-shadow:inset 6px 0 0 var(--ink)}
+
+</style>
+</helmet>
+<div class="kitwrap"><header><span class="caption">Elevate · basic UI kit · 2 of 3</span><h1>Kit 2 · Relief</h1><p class="lede">Depth from height. Things you can use are raised off the paper, and the places things go are sunk into it. Raised surfaces have a solid ink edge and a dot shadow that grows with height. Fields and the shelves are wells: a recessed tray with dot shade falling from the top and left, so the books sit inside the case. Buttons are keycaps that press down into the page.</p><div class="flags"><b>Needs Josef’s yes</b><ul><li>A solid ink edge (a hard 5 to 6px offset) under raised surfaces and buttons, with the dot shadow beyond it. Shade is still dots; the edge is the new part.</li><li>Recessed wells with inner dot shade for the shelves and fields (a lowered paper-sunk ground).</li><li>Three height steps (1, 2, 3) with dot shadows of 8, 12 and 18px.</li><li>The diagonal on the Librarian’s band is gone in all three kits; the band is a plain rectangle.</li></ul></div></header><h2 class="sec">The kit: parts and states</h2><div class="KK K2" style="background:transparent"><div class="specgrid"><div class="scell"><span class="lb">Buttons</span><div class="flex"><div class="sub"><span class="cap">Rest</span><span class="pbw "><a class="button button-primary" href="#" >Send answer</a></span></div><div class="sub"><span class="cap">Hover</span><span class="pbw is-hover"><a class="button button-primary" href="#" >Send answer</a></span></div><div class="sub"><span class="cap">Press</span><span class="pbw is-press"><a class="button button-primary" href="#" >Send answer</a></span></div></div><div class="flex"><div class="sub"><span class="cap">Secondary</span><span class="pbw "><a class="button button-secondary" href="#" >Speak</a></span></div><div class="sub"><span class="cap">Secondary hover</span><span class="pbw is-hover"><a class="button button-secondary" href="#" >Speak</a></span></div><div class="sub"><span class="cap">Quiet</span><a class="button button-quiet" href="#" >Skip</a></div><div class="sub"><span class="cap">Disabled</span><span class="pbw "><a class="button button-primary" href="#" aria-disabled=true>Send answer</a></span></div></div></div><div class="scell"><span class="lb">Fields</span><div class="field"><label>Your answer</label><div class="ta">The coil stop was bent<span class="caret"></span></div></div><div class="field"><label>Search</label><div class="inp">A topic, a question…</div></div><div class="field"><label>Focused</label><div class="inp on">pinball<span class="caret"></span></div></div></div><div class="scell"><span class="lb">Filters</span><div class="sub"><span class="cap">One selected</span><div class="chips"><a class="on" aria-current="true" href="#">All</a><a href="#">Changing course</a><a href="#">Starting something</a><a href="#">Coming home</a><a href="#">Craft</a></div></div></div><div class="scell"><span class="lb">List rows</span><div class="surf flat"><i class="l3"></i><i class="l2"></i><i class="l1"></i><div class="in"><div class="sh"><span>Your answers</span><span>Rest · hover · selected</span></div><ul class="rows"><li><span class="dot"></span><div><b>The smell was the first thing</b><small>Before I saw any damage…</small></div></li><li class="hov"><span class="dot"></span><div><b>I swapped the coil three times</b><small>Before I stopped trusting the part…</small></div></li><li class="sel"><span class="dot"></span><div><b>The notebook started as a list</b><small>Every odd thing it did…</small></div></li></ul></div></div></div><div class="scell"><span class="lb">Surfaces</span><div class="flex" style="gap:44px"><div class="sub"><span class="cap">Flat</span><div class="surf flat"><i class="l3"></i><i class="l2"></i><i class="l1"></i><div class="in"><div class="bd" style="width:130px;padding:14px">A list or a row</div></div></div></div><div class="sub"><span class="cap">Raised</span><div class="surf raised"><i class="l3"></i><i class="l2"></i><i class="l1"></i><div class="in"><div class="bd" style="width:130px;padding:14px">The focal card</div></div></div></div><div class="sub"><span class="cap">Dark</span><div class="surf raised"><i class="l3"></i><i class="l2"></i><i class="l1"></i><div class="in dark"><div class="bd" style="width:130px;padding:14px">The Librarian</div></div></div></div></div></div><div class="scell"><span class="lb">Shelf and books</span><div style="width:100%"><div class="shelf3" style="margin-top:0"><div class="shelf-books" style="gap:22px;justify-content:flex-start"><span class="book "><span class="book-cover"><span class="book-title">The First Year Running a Shop Alone</span><span class="book-author">Priya Nair</span></span></span><span class="book is-hover"><span class="book-cover"><span class="book-title">The First Year Running a Shop Alone</span><span class="book-author">Priya Nair</span></span></span><span class="book "><span class="book-cover"><span class="book-title">Coming Home After Ten Years Away</span><span class="book-author">Jonah Reyes</span></span></span></div><div class="slab"><i class="top"></i><i class="front"></i></div></div></div></div></div></div><h2 class="sec">Example page: the shelf front page</h2><div class="pagerow"><div class="pframe" style="height:1400px"><div class="fr KK K2" style="height:1556px"><header class="nb"><div class="wrap"><span class="wordmark">Trove</span><nav class="nav"><a aria-current="page" href="#">Shelf</a><a href="#">My book</a><a href="#">Checkouts</a><a href="#">Past meets</a></nav><span class="sp"></span><span class="search">A topic, a question…</span><span class="avatar">SO</span></div></header><div class="home"><div class="surf hero raised"><i class="l3"></i><i class="l2"></i><i class="l1"></i><div class="in dark"><span class="burst"></span><div><span class="caption" style="background:var(--white);color:var(--ink)">The Librarian recommends</span><h1>Why I Turned Down Grad School Twice</h1><p class="by">By Hana Ito</p><p class="why">You’re deciding about a PhD. Hana weighed the same choice, twice.</p><div class="acts"><span class="pbw "><a class="button button-primary" href="#" >Ask to check out</a></span><a class="button button-quiet" href="#" >See the book</a></div></div><div style="display:grid;justify-items:center"></div></div><div class="pickbook"><span class="book book-lg"><span class="book-cover"><span class="book-title">Why I Turned Down Grad School Twice</span><span class="book-author">Hana Ito</span></span></span></div></div><div class="two"><div class="surf raised r1"><i class="l3"></i><i class="l2"></i><i class="l1"></i><div class="in"><span class="book book-sm"><span class="book-cover"><span class="book-title">The Coil Was Never the Problem</span><span class="book-author">Nora Valdez</span></span></span><p><span class="eyebrow" style="display:block;margin-bottom:4px">Your book</span><b>The Coil Was Never the Problem</b></p><a class="button button-secondary" href="#" >Open</a></div></div><div class="surf raised r1"><i class="l3"></i><i class="l2"></i><i class="l1"></i><div class="in"><p><span class="eyebrow" style="display:block;margin-bottom:4px">Waiting on you</span><b>Sam Okafor</b>asked to check out your book.</p><a class="button button-secondary" href="#" >Review the request</a></div></div></div><div style="margin-top:52px"><div class="chips"><span class="pbw is-press"><a class="button button-secondary" href="#">All</a></span><span class="pbw "><a class="button button-secondary" href="#">Changing course</a></span><span class="pbw "><a class="button button-secondary" href="#">Starting something</a></span><span class="pbw "><a class="button button-secondary" href="#">Coming home</a></span><span class="pbw "><a class="button button-secondary" href="#">Craft</a></span></div></div><div style="display:grid;gap:36px;margin-top:30px"><section class="tray"><div class="shelf-head"><h2 class="shelf-name">Changing course</h2><a href="#">See the whole shelf</a></div><div class="shelf3" style="margin-top:0"><div class="shelf-books"><span class="book "><span class="book-cover"><span class="book-title">How to Leave a Job Without Burning the Bridge</span><span class="book-author">Dana Whitfield</span></span></span><span class="book "><span class="book-cover"><span class="book-title">Switching Off Pre-Med Before Telling Your Parents</span><span class="book-author">Marcus Bell</span></span></span><span class="book "><span class="book-cover"><span class="book-title">From Orchestra Pit to Product Manager</span><span class="book-author">Kiera Doyle</span></span></span><span class="book "><span class="book-cover"><span class="book-title">Teaching Yourself to Code at Thirty-Four</span><span class="book-author">Luis Ortega</span></span></span><span class="book "><span class="book-cover"><span class="book-title">The First Year Running a Shop Alone</span><span class="book-author">Priya Nair</span></span></span><span class="book "><span class="book-cover"><span class="book-title">What Nobody Said About Moving Abroad</span><span class="book-author">Tomas Novak</span></span></span><span class="book "><span class="book-cover"><span class="book-title">Coming Home After Ten Years Away</span><span class="book-author">Jonah Reyes</span></span></span></div><div class="slab"><i class="top"></i><i class="front"></i></div></div></section><section class="tray"><div class="shelf-head"><h2 class="shelf-name">Starting something</h2><a href="#">See the whole shelf</a></div><div class="shelf3" style="margin-top:0"><div class="shelf-books"><span class="book "><span class="book-cover"><span class="book-title">Teaching Yourself to Code at Thirty-Four</span><span class="book-author">Luis Ortega</span></span></span><span class="book "><span class="book-cover"><span class="book-title">The First Year Running a Shop Alone</span><span class="book-author">Priya Nair</span></span></span><span class="book "><span class="book-cover"><span class="book-title">What Nobody Said About Moving Abroad</span><span class="book-author">Tomas Novak</span></span></span><span class="book "><span class="book-cover"><span class="book-title">Coming Home After Ten Years Away</span><span class="book-author">Jonah Reyes</span></span></span><span class="book "><span class="book-cover"><span class="book-title">How to Leave a Job Without Burning the Bridge</span><span class="book-author">Dana Whitfield</span></span></span><span class="book "><span class="book-cover"><span class="book-title">Switching Off Pre-Med Before Telling Your Parents</span><span class="book-author">Marcus Bell</span></span></span><span class="book "><span class="book-cover"><span class="book-title">From Orchestra Pit to Product Manager</span><span class="book-author">Kiera Doyle</span></span></span></div><div class="slab"><i class="top"></i><i class="front"></i></div></div></section></div></div></div></div><div class="notes"><h3>How the depth works</h3><p style="margin:0"><b>Height has a job.</b> Level 3 is the Librarian’s pick, level 2 the focal card, level 1 the small cards. Everything else is flat on the paper.</p><p style="margin:0"><b>Wells.</b> The shelves are trays cut into the page, light from the top left. That puts the books physically inside a bookcase.</p><p style="margin:0"><b>Keycaps.</b> Buttons and filters have a visible thickness. Hover lifts, press sinks them flush. Selected filters are pressed in and stay in.</p></div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1760,"height":2965}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
