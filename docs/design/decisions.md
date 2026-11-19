@@ -2,6 +2,16 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-18: two new complete interview redesigns on Folio v4 (waiting for Josef's choice)
+
+Boards "Interview 1 · The thread" and "Interview 2 · Question and answer pages" on the Elevate page, each with the question, sending, the next
+question setting in, and a phone. Also: the ribbon bookmark on the front page now has a notched, two-triangle bottom (needs Josef's yes: a diagonal cut).
+- **1, the thread:** earlier questions and answers stack above as plain cards (with Edit); the open question is the one focal folio at the bottom, with the
+  phases as its index tabs and Speak, Skip and Send in its footer. Needs Josef's yes: a growing thread hints at progress (decision 26); 60px leading letter.
+- **2, question and answer pages:** a two-page card, black page with the Librarian's question in Newsreader italic and "Skip this question", white page with a tall
+  answer box, Speak and Send; earlier answers in a row of plain cards below. Needs Josef's yes: a black page inside a card (the system allows black for the
+  Librarian's band only); a growing row of answers hints at progress.
+
 ## 2026-11-18: Folio v4: new header, plain list rows, interview rebuilt (Josef: rows, header and interview did not look right)
 
 - **Corners (Josef: not so sharp):** Kit 3 now has a small corner radius, 5px on cards, buttons, fields, tabs, the avatar and the search; 8px on the black cover; 3 to 5px on book covers (first tried at 8px, 12px, 4 to 8px; Josef asked for smaller). Needs Josef's yes: the fixed tier says square corners.

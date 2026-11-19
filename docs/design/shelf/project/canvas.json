@@ -538,6 +538,24 @@
       "title": "Kit 3 · Folio, v4",
       "page": "elevate",
       "expand": "fill"
+    },
+    "ElevateI1.dc.html": {
+      "x": 11280,
+      "y": 0,
+      "w": 1760,
+      "h": 4130,
+      "title": "Interview 1 · The thread",
+      "page": "elevate",
+      "expand": "fill"
+    },
+    "ElevateI2.dc.html": {
+      "x": 13160,
+      "y": 0,
+      "w": 1760,
+      "h": 3980,
+      "title": "Interview 2 · Question and answer pages",
+      "page": "elevate",
+      "expand": "fill"
     }
   },
   "order": [
@@ -599,7 +617,9 @@
     "ElevateC.dc.html",
     "ElevateK1.dc.html",
     "ElevateK2.dc.html",
-    "ElevateK3.dc.html"
+    "ElevateK3.dc.html",
+    "ElevateI1.dc.html",
+    "ElevateI2.dc.html"
   ],
   "notes": {
     "head": {
