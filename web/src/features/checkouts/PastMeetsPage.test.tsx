@@ -84,6 +84,23 @@ describe("PastMeetsPage", () => {
     expect(await screen.findByText("Nothing here yet")).toBeTruthy();
   });
 
+  it("says when the connection drops, and lets you answer again", async () => {
+    api.GET.mockResolvedValue({ data: [meet({ did_you_meet: { can_answer: true, my_answer: null } })] });
+    api.POST.mockRejectedValue(new TypeError("Failed to fetch"));
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Yes, we met" }));
+    expect(
+      await screen.findByText("We couldn't send your answer. Check your connection and try again."),
+    ).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Yes, we met" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("says when the list can't load because the connection dropped", async () => {
+    api.GET.mockRejectedValue(new TypeError("Failed to fetch"));
+    renderPage();
+    expect(await screen.findByText("We couldn't load your past meets. Please refresh.")).toBeTruthy();
+  });
+
   it("says when the list couldn't load", async () => {
     api.GET.mockResolvedValue({ error: { detail: "nope" } });
     renderPage();

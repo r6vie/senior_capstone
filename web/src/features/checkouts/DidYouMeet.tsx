@@ -32,12 +32,17 @@ export function DidYouMeet({
   async function answer(value: Answer) {
     setBusy(true);
     setError(null);
-    const { error } = await api.POST("/checkouts/{checkout_id}/met", {
-      params: { path: { checkout_id: checkoutId } },
-      body: { answer: value },
-    });
-    if (error) {
-      setError(errorMessage(error));
+    let failure: unknown;
+    try {
+      ({ error: failure } = await api.POST("/checkouts/{checkout_id}/met", {
+        params: { path: { checkout_id: checkoutId } },
+        body: { answer: value },
+      }));
+    } catch {
+      failure = { detail: "We couldn't send your answer. Check your connection and try again." };
+    }
+    if (failure) {
+      setError(errorMessage(failure));
       setBusy(false);
       return;
     }

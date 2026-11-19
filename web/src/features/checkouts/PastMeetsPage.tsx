@@ -51,7 +51,12 @@ export function PastMeetsPage() {
   const latest = useRef(0);
   const load = useCallback(async () => {
     const request = ++latest.current;
-    const { data } = await api.GET("/checkouts/past-meets");
+    let data: Meet[] | undefined;
+    try {
+      ({ data } = await api.GET("/checkouts/past-meets"));
+    } catch {
+      // A dropped connection: shown as a failed load below.
+    }
     if (request !== latest.current) return;
     if (data) setMeets(data);
     setLoadFailed(!data);

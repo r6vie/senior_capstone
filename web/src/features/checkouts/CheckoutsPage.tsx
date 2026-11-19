@@ -195,7 +195,12 @@ export function CheckoutsPage() {
   const latest = useRef(0);
   const load = useCallback(async () => {
     const request = ++latest.current;
-    const { data } = await api.GET("/checkouts");
+    let data: Mine | undefined;
+    try {
+      ({ data } = await api.GET("/checkouts"));
+    } catch {
+      // A dropped connection: shown as a failed load below.
+    }
     if (request !== latest.current) return;
     if (data) setMine(data);
     setLoadFailed(!data);
