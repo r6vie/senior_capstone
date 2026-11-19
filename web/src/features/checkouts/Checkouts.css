@@ -99,3 +99,37 @@
   padding: 0;
   list-style: none;
 }
+
+/* "Did you meet?" (C4): a plain question on the item, with the answer buttons under it. */
+.meet-question {
+  display: grid;
+  gap: var(--s-2);
+  justify-self: start;
+  margin: var(--s-2) 0 0;
+  padding: 0;
+  border: none;
+}
+.meet-question legend {
+  margin-bottom: var(--s-2);
+}
+/* The chosen "Not yet": filled ink, as the toggle pair in Additions (never red). */
+.meet-question .button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--white);
+  border-color: var(--ink);
+}
+
+/* Past meets (C4): each person carries a bookmark, an ink ribbon with a notched tail, in the margin. */
+.past-meet {
+  position: relative;
+  padding-left: var(--s-6);
+}
+.past-meet-bookmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--s-4);
+  height: var(--s-7);
+  background: var(--ink);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%);
+}
