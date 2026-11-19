@@ -19,8 +19,8 @@ Read this before you build or change any UI. Everything here sits beside the pro
   Librarian's notebook".
 - Three faces: **Barlow Condensed** (short caps labels), **Newsreader** (book titles, page titles, the
   Librarian's voice), **IBM Plex Sans** (everything you read to do a task).
-- Square corners. A pill only for the search field and avatar; a rounded bubble only for speech.
-- Shade is made of dots (tone), never a blur, a gradient or a glow.
+- A small 5px corner radius (approved 2026-11-19, Folio); the search field and avatar are square; a rounded bubble only for speech.
+- Shade is made of dots (tone) for cast shadows and diagonal cross-hatching on spines and under ledges (approved 2026-11-19, Folio), never a blur, a gradient or a glow.
 - One focal point and one primary action per screen. Left-aligned.
 - Every state is designed: rest, hover, pressed, focus, disabled, busy, error, empty.
 
@@ -33,7 +33,7 @@ Fixed isn't frozen: when one of these turns out to be a real limit, raise it wit
 
 - The palette and the red rule.
 - The three faces and their jobs; caps only on short display-face labels.
-- Square corners; pill and bubble exceptions as above.
+- 5px corner radius; the search field and avatar are square; the bubble exception as above (Folio, approved 2026-11-19).
 - Dot tone for shade; no blur, gradient or glow.
 - The book object: white, outlined, a dot shadow, title and full name only.
 - Every product rule in `CLAUDE.md` (names, no counts or ratings, no cold messages, no performance features).
@@ -281,7 +281,7 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
 
 ### Folio: the shelf front page look (2026-11-19, design session; screens: canvas page "Elevate", board `ElevateK3` "Kit 3 · Folio, for build")
 
-Task: a more finished, deeper paper look for the shelf front page, replacing the flat Manga-screentone cards and the filter chips. Josef asked for it to be sent for implementation; it changes the fixed tier in the ways below.
+Task: a more finished, deeper paper look for the shelf front page, replacing the flat Manga-screentone cards and the filter chips. **Approved by Josef on 2026-11-19** ("I approve all six", relayed by the orchestrator). It changes the fixed tier in six ways, all approved: cross-hatch shade, the 5px corner radius, the square search field and avatar, the notched bookmark, no dot shadow on the Librarian's black-cover book, and shelf arrows that replace "See the whole shelf" and the tabs and chips.
 
 - **Card (`.surf`).** A white face with a 2px ink line and a dot shadow under it (offset 12px down-right, `radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0/5px 5px`). Nothing else under it: no stacked page edges. The spine is a cross-hatch on the left,
   `repeating-linear-gradient(45deg, ink 0 1px, transparent 1px 6px), repeating-linear-gradient(-45deg, ...)`, 60px wide, masked to fade to nothing. Shade is hatching on spines and under shelf ledges; dots are for cast shadows.

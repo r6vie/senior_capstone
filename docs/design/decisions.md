@@ -2,10 +2,10 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
-## 2026-11-19: Kit 3 "Folio" sent for implementation, without the interview (the interview is the Librarian's notebook)
+## 2026-11-19: Kit 3 "Folio" APPROVED by Josef and sent for implementation, without the interview (the interview is the Librarian's notebook)
 
 Josef asked for the polished Kit 3 direction to be sent for implementation. The Kit 3 board now holds only the parts sheet and the shelf front page; its interview frames are removed, because the interview is the
-Librarian's notebook (canvas page "Librarian notebook"). Changes to the fixed tier this look makes: cross-hatch shade on card spines and under shelf ledges (dots stay for cast shadows); a 5px corner radius
+Librarian's notebook (canvas page "Librarian notebook"). Approved by Josef on 2026-11-19 ("I approve all six", relayed by the orchestrator). The six changes to the fixed tier this look makes: cross-hatch shade on card spines and under shelf ledges (dots stay for cast shadows); a 5px corner radius
 (8px on the black cover, 3 to 5px on the book cover) in place of square corners; a square search field and avatar; a notched ribbon bookmark on the one line that needs you; shelf arrows that scroll each
 shelf in place instead of "See the whole shelf"; the black cover's book has no dot shadow. The genre tabs and filter chips are gone from the front page. Record: docs/design/system.md, Additions, "Folio".
 
