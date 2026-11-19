@@ -2,6 +2,13 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-18: Folio chosen to refine (Josef: "looks promising")
+
+Kit 3 on the Elevate page is now "Folio, refined", with the shelf front page and the interview question built from it. Added: a stitched
+spine, a hatched page edge that wraps the corner, a ribbon bookmark on the one request waiting for the author (no number), a library slip for
+that request, a bookend at the end of each shelf, the pick standing on its own ledge, and the phases as index tabs on the interview folio.
+Still not decided; fixed-tier flags are listed on the board (hatched edge, tabs, stitched spine, ribbon, bookend, printed cover frame, large letter).
+
 ## 2026-11-18: three depth kits for C (Josef: flat and boring, rectangles read as placeholders, drop the diagonal)
 
 Boards "Kit 1 · Stacked sheets", "Kit 2 · Relief" and "Kit 3 · Folio" on the Elevate page. Each is a small UI kit (buttons with hover, press and
