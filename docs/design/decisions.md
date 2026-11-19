@@ -9,6 +9,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 - **Canvas page "Fresh directions"**, board `FreshLand`, at 472 and 122 px wide:
   4. **Gouache poster** (`gouache.py`): dawn over a river town; the sky's top band ends in a hard cloud line (the cut).
   5. **Coloured pencil** (`pencil.py`): a farm road to a lit house; strokes thin out to bare paper (the fade).
+- **Pencil, round 2 (`pencil2.py`):** Josef found round 1 interesting but childlike. Redrawn with four muted
+  pencils, one hatching direction, tone from line density, crisp ridgelines that dissolve into paper, and one warm
+  mark (a lamp and its reflection). The scene is now a lake at dusk. Round 1 (`pencil.py`) is kept for reference.
 - **Title and name:** the title is the standard Newsreader title on plain white. The name at the foot sits on a
   white knockout over the art, as on the Strata covers.
 - **Fixed-tier flag, waiting for Josef:** art on the white book object, as with every cover direction so far.
