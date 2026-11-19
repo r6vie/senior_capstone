@@ -130,3 +130,42 @@ COVER_SCENES = {
     "coast": coast, "ranges": ranges, "islands": islands, "twins": twins,
     "summit": summit, "terraces": terraces, "dusk": dusk,
 }
+
+
+# ---------- round 3: the lake polished. Same place, same window for the cover; the big flat faces are broken up ----------
+HAZE_LIT = ["#C9D6DF", "#B7C7D3", "#A5B8C7"]
+HAZE_DARK = ["#94A8B8", "#8398AA", "#72889C"]
+
+
+def lake3():
+    """lake() with spurs and gullies down every face, a wandering terminator, a pale far range behind the teal
+    peak, a stone cap on its summit, haze at the mountains' feet, and the mountains mirrored in the water."""
+    far = Ridge([(110, 318, 170, 190, 1.15), (470, 340, 150, 170, 1.1), (660, 372, 120, 140, 1.0)], 444,
+                HAZE_LIT, HAZE_DARK, seed=17, rough=4, ribs=0.6, mist=(400, 444))
+    stone = Ridge([(1290, 238, 240, 260, 1.25), (1010, 352, 200, 230, 1.1)], 436, STONE_LIT, STONE_DARK,
+                  seed=11, rough=4, ribs=0.7, mist=(390, 436))
+    coral = Ridge([(1342, 196, 170, 230, 1.2), (1420, 300, 80, 110, 1.1)], 436, CORAL, RUST, seed=12, ribs=0.9,
+                  bands=[(330, 336, STONE_LIT, STONE_DARK)], mist=(392, 436))
+    teal = Ridge([(252, 186, 230, 330, 1.45), (338, 268, 80, 110, 1.2), (-20, 290, 150, 200, 1.1),
+                  (560, 388, 160, 200, 1.0)], 452, TEAL_LIT, TEAL_DARK, seed=13, rough=7, ribs=1.0,
+                 bands=[(176, 214, STONE_LIT, STONE_DARK)], mist=(404, 452))
+    sage = Ridge([(1170, 262, 210, 260, 1.3), (1060, 330, 90, 120, 1.15)], 448, SAGE_LIT, SAGE_DARK, seed=14,
+                 rough=7, ribs=1.0, mist=(400, 448))
+    return [
+        Blob([(300, 236, 42, 42)], CORAL, top_light=False),
+        stone,
+        coral,
+        Blob([(1250, 104, 150, 22), (1350, 86, 110, 18), (1150, 120, 90, 14), (1440, 112, 120, 18)], CLOUD),
+        Blob([(-40, 160, 110, 18), (10, 178, 80, 14)], CLOUD),
+        far,
+        teal,
+        sage,
+        Blob([(760, 420, 170, 16), (900, 428, 140, 12), (1010, 418, 110, 14)], CLOUD),
+        Water(440, 532, -40, 1500, COBALT, GLINT, seed=21, mirror=[far, stone, coral, teal, sage], gaps=(1, 3),
+              squash=0.55),
+        Band(-60, 440, 512, 548, SHORE, seed=31, lens=0.8),
+        trees([10, 70, 135, 195, 255, 320, 380], 524, 17, LEAF, seed=41),
+        Band(1060, 1500, 520, 556, SHORE, seed=32, lens=0.8),
+        trees([1110, 1175, 1240, 1300, 1365, 1430], 532, 16, LEAF, seed=42),
+        Water(556, 600, 420, 1080, COBALT, GLINT, seed=22, taper=0.6),
+    ]

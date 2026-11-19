@@ -58,7 +58,7 @@ class Ridge:
 
     brick = (1.3, 5.0)
 
-    def __init__(self, peaks, base, lit, dark, rough=6, seed=1, lean=0.32, bands=None):
+    def __init__(self, peaks, base, lit, dark, rough=6, seed=1, lean=0.32, bands=None, ribs=0.0, mist=None):
         # peak: (x, top_y, left_half_width, right_half_width, power)
         self.peaks = [p if len(p) == 5 else (p[0], p[1], p[2], p[2], p[3]) for p in peaks]
         self.base = base
@@ -66,6 +66,10 @@ class Ridge:
         self.dark = [hexrgb(c) for c in dark]
         self.seed = seed
         self.lean = lean
+        # ribs > 0: spurs and gullies running down from each summit break the faces up (round 3)
+        self.ribs = ribs
+        # mist: (y_from, y_to) where the foot of the range pales toward the lake haze
+        self.mist = mist
         # bands: (y_top, y_bottom, lit palette, dark palette) — exposed strata of another colour
         self.bands = [(a, b, [hexrgb(c) for c in l], [hexrgb(c) for c in d]) for a, b, l, d in (bands or [])]
         rng = np.random.default_rng(seed)
@@ -96,7 +100,12 @@ class Ridge:
         top = self.top(xa)[0]
         depth = min(1, max(0, (y - top) / max(1, self.base - top)))
         n = vnoise(x, y, 46, self.seed)
-        in_shadow = x > px + (y - ty) * self.lean
+        if self.ribs:
+            # the terminator wanders: spurs reach into the light and the light reaches into gullies
+            wob = (vnoise(y, x * 0.2, 22, self.seed + 9) - 0.5) * self.ribs * 22 * min(1, (y - ty) / 60)
+            in_shadow = x > px + (y - ty) * self.lean + wob
+        else:
+            in_shadow = x > px + (y - ty) * self.lean
         lit, dark = self.lit, self.dark
         for a, b, bl, bd in self.bands:
             wob = (vnoise(x, 0, 30, self.seed + 3) - 0.5) * 10
@@ -106,6 +115,22 @@ class Ridge:
         i = (0.62 * depth + 0.38 * n) * len(pal)
         if rng.random() < 0.12:
             i += rng.choice((-1, 1))
+        if self.ribs:
+            ang = math.atan2(x - px, max(4.0, y - ty))
+            rib = vnoise(ang * 14, (y - ty) / 60, 1, self.seed + 7)
+            if rib > 0.64:      # a spur: catches light, even on the shadow face
+                if in_shadow and rib > 0.72 and rng.random() < 0.75 * self.ribs:
+                    pal = self.lit
+                    i = len(pal) - 1 - rng.random()
+                else:
+                    i -= 1.4 * self.ribs
+            elif rib < 0.34:    # a gully: deeper ink
+                i += 1.3 * self.ribs
+        if self.mist:
+            a, b = self.mist
+            m = min(1, max(0, (y - a) / (b - a)))
+            if m > 0 and rng.random() < m * 0.8:
+                return mix(pal[int(min(len(pal) - 1, max(0, i)))], (233, 236, 236), 0.35 + 0.35 * m)
         # the stepped edge on the shadow side reads as ink
         if in_shadow and self.top(np.array([x + 14]))[0] > y:
             i = len(pal) - 1
@@ -149,7 +174,7 @@ class Water:
 
     brick = (2.5, 9.0)
 
-    def __init__(self, y0, y1, x0, x1, colours, glint, seed=3, taper=0.0, mirror=None):
+    def __init__(self, y0, y1, x0, x1, colours, glint, seed=3, taper=0.0, mirror=None, gaps=(0, 2), squash=0.35):
         self.y0, self.y1, self.x0, self.x1 = y0, y1, x0, x1
         self.c = [hexrgb(c) for c in colours]
         self.g = [hexrgb(c) for c in glint]
@@ -157,6 +182,8 @@ class Water:
         self.rows = {}
         self.taper = taper
         self.mirror = mirror or []  # layers reflected about y0
+        self.gaps = gaps
+        self.squash = squash
 
     def cover(self, x, y):
         if not (self.y0 <= y <= self.y1):
@@ -167,7 +194,7 @@ class Water:
             t = (y - self.y0) / max(1, self.y1 - self.y0)
             a = self.x0 + r.uniform(-60, 60) + self.taper * t * 400
             b = self.x1 + r.uniform(-90, 40) - self.taper * t * 260
-            ngaps = r.randint(0, 2) + (1 if t < 0.08 else 0)
+            ngaps = r.randint(*self.gaps) + (1 if t < 0.08 else 0)
             gaps = [(r.uniform(a, b), r.uniform(20, 110)) for _ in range(ngaps)]
             self.rows[key] = (a, b, gaps)
         a, b, gaps = self.rows[key]
@@ -177,7 +204,7 @@ class Water:
         return m
 
     def colour(self, x, y, rng):
-        my = 2 * self.y0 - y + (y - self.y0) * 0.35  # reflections are a little shorter than the thing
+        my = 2 * self.y0 - y + (y - self.y0) * self.squash  # reflections are a little shorter than the thing
         for layer in reversed(self.mirror):
             if layer.cover(np.array([x]), my)[0] and rng.random() < 0.8 - (y - self.y0) / max(1, self.y1 - self.y0) * 0.5:
                 return mix(layer.colour(x, my, rng), self.c[2], 0.45)

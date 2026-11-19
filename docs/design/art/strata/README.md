@@ -18,6 +18,7 @@ pixels and redrawn for each size it shows at, so the courses stay 4px on the boo
 | `board_round2.py` | Writes the round 2 canvas board (`StrataCover2`) |
 | `hero.py` | The lake panorama at 1440 x 620 and its large cover, cut from the same drawing so the cover lines up with it |
 | `covers.py` | Every cover place at large, shelf and small size, plus a contact sheet |
+| `hero3.py` | Round 3 of the lake (`scenes.lake3()`): spurs and gullies down each face (`Ridge(ribs=…)`), a wandering light line, a far haze range, mist at the mountains' feet (`mist=`) and the peaks mirrored in the water. Writes the panorama and the xl and small covers cut from it, used on the Fresh directions page |
 | `phone.py` | The panorama and cover at three-quarter size for the phone book page |
 | `boards.py` | Writes the three canvas boards (the uploaded image ids are in it) |
 
