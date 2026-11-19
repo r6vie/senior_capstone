@@ -140,6 +140,17 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 
 ### Decided
 
+- **D1 reader (Alvisa, 2026-11-18, updated 2026-11-19):** keep the hardcoded Librarian
+  recommendation for now. Restore the earlier Changing course and Starting over rows using the
+  matching seeded sample books; these are preview groupings, not the final category decision.
+  Recently added loads every published book from the existing books API. Selecting a book lifts
+  it from its shelf position, enlarging it while the front cover opens to the left. Everything
+  behind it, including navigation, is very dim. The settled spread has the title and full author
+  name on the left and the table of contents on the right. Contents continue onto another page
+  when they do not fit; selecting a chapter turns to its summary, with Back to contents available.
+  Close or Escape returns to the shelf. The existing checkout form is reached from the reader.
+  Reduced-motion users get the same reader without the movement.
+
 - **Shelves will be grouped by categories.** The categories are still to be defined, and they will not be genres.
 - **Smart search** finds books relevant to what you're looking for. Never search by name.
 - **"The Librarian recommends":** the AI recommends books to you.

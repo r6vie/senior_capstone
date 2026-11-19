@@ -33,6 +33,7 @@ export function App() {
             }
           >
             <Route path="/" element={<ShelfPage />} />
+            <Route path="/books/:bookId" element={<ShelfPage />} />
             <Route path="/my-book" element={<MyBookPage />} />
             <Route path="/checkouts" element={<CheckoutsPage />} />
             <Route path="/checkouts/new/:bookId" element={<CheckOutPage />} />
