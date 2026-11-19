@@ -58,7 +58,7 @@ local stub with the same signature and swap it out when the real one merges.
 | `auth.contact_details_of(db, user_id)` | Daniel | The contact details the member chose to share on a yes | checkouts (reveal) |
 | `checkouts.get_checkout_for(db, checkout_id, user_id)` | Ellie | The checkout if this user is its reader or author, else `None` | messaging, meetings |
 | `checkouts.fully_checked_out(db, books)` | Ellie | The ids of the books (each with `_id` and `copies`) whose copies are all out, so the shelf can hide them. Never shown to readers as a label or count | books, discovery (the shelf) |
-| `checkouts.past_meets(db, user_id)` | Ellie | People this member has met: checkout id, other person's full name, book id | discovery (recommend to someone you've met) |
+| `checkouts.past_meets(db, user_id)` | Ellie | People this member has met, newest first: `checkout_id`, `other_id`, `other_name` (full name), `book_id` (the book that was checked out) | discovery (recommend to someone you've met) |
 | `messaging.post_note(db, checkout_id, text)` | Ellie | Posts a short app note (up to 300 characters) into an accepted checkout's thread, such as a confirmed meeting time. Returns the note, or `None` if the thread isn't open | meetings (if wanted) |
 | `messaging.email_new_message(db, message)` | Ellie | Emails whoever didn't write the message or note, at most once per 10 minutes per thread each. Run it as a background task | meetings (with `post_note`) |
 
@@ -181,7 +181,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 ### Wave 3: closing the loop
 
-**C4 · "Did you meet?" and past meets** · Ellie · `todo`
+**C4 · "Did you meet?" and past meets** · Ellie · `doing`
 - After the meeting time, both people are asked "Did you meet?". The answer returns the copy, and
   the book comes back on the shelf if it was fully lent.
 - The answer is also stored as a private no-show signal.

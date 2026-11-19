@@ -988,6 +988,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/checkouts/{checkout_id}/met": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Did You Meet
+         * @description Answer "Did you meet?" for yourself. Your answer is never shown to the other person.
+         */
+        post: operations["did_you_meet_checkouts__checkout_id__met_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/checkouts/past-meets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Past Meets
+         * @description The people you've met through checkouts, newest first, with their contact details.
+         */
+        get: operations["past_meets_checkouts_past_meets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/meetings/{checkout_id}": {
         parameters: {
             query?: never;
@@ -1333,6 +1373,16 @@ export interface components {
             /** Place Note */
             place_note?: string | null;
         };
+        /**
+         * DidYouMeet
+         * @description This member's own side of "Did you meet?". Never includes the other person's answer.
+         */
+        DidYouMeet: {
+            /** Can Answer */
+            can_answer: boolean;
+            /** My Answer */
+            my_answer: ("met" | "not_yet" | "no") | null;
+        };
         /** FinishRequest */
         FinishRequest: {
             /**
@@ -1482,6 +1532,7 @@ export interface components {
              * @default false
              */
             new_messages: boolean;
+            did_you_meet?: components["schemas"]["DidYouMeet"] | null;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -1508,6 +1559,14 @@ export interface components {
             token_type: "bearer";
             /** Expires In */
             expires_in: number;
+        };
+        /** MeetAnswerRequest */
+        MeetAnswerRequest: {
+            /**
+             * Answer
+             * @enum {string}
+             */
+            answer: "met" | "not_yet" | "no";
         };
         /** MeetingView */
         MeetingView: {
@@ -1644,6 +1703,31 @@ export interface components {
             email_notifications: boolean;
         };
         /**
+         * PastMeet
+         * @description Someone you met through a checkout (docs/trove.md §8). Both people get one.
+         */
+        PastMeet: {
+            /** Checkout Id */
+            checkout_id: string;
+            /** Book Title */
+            book_title: string;
+            /**
+             * You Were
+             * @enum {string}
+             */
+            you_were: "reader" | "author";
+            /** Other Name */
+            other_name: string;
+            other_book: components["schemas"]["ReaderBook"] | null;
+            contact: components["schemas"]["Contact"] | null;
+            /**
+             * Met On
+             * Format: date-time
+             */
+            met_on: string;
+            did_you_meet: components["schemas"]["DidYouMeet"];
+        };
+        /**
          * PublicBookResponse
          * @description A book as readers see it: the author's full name, but no contacts, copy counts or grounding quotes.
          */
@@ -1717,7 +1801,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "waiting" | "accepted" | "cancelled" | "unavailable";
+            status: "waiting" | "accepted" | "cancelled" | "unavailable" | "returned";
             /**
              * Created At
              * Format: date-time
@@ -1731,6 +1815,7 @@ export interface components {
              * @default false
              */
             new_messages: boolean;
+            did_you_meet?: components["schemas"]["DidYouMeet"] | null;
         };
         /**
          * ReadingQuestionResponse
@@ -3595,6 +3680,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    did_you_meet_checkouts__checkout_id__met_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeetAnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DidYouMeet"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    past_meets_checkouts_past_meets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PastMeet"][];
                 };
             };
         };

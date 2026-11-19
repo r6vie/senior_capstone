@@ -197,7 +197,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 
 ### Open
 
-- How soon a copy returns if nobody confirms a meeting.
+- _None for now._ (How soon a copy returns if nobody answers "Did you meet?" was decided in C4, §8.)
 
 ## 7. The reading
 
@@ -222,6 +222,12 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **Past meets:** a section listing the books whose authors you've met, with a bookmark on each.
 - **Contact details stay available after a meeting**, so people can keep talking through their usual channels.
 - **A private "Did you meet?" check** returns the copy. It is also a quiet signal for spotting no-shows.
+- **How "Did you meet?" works** (decided 2026-11-18, C4):
+  - It's asked once the confirmed meeting time has passed. If no time was confirmed, it's asked 14 days after the author said yes. It shows in the app (on the Checkouts page); there is no email for now.
+  - Each person answers "Yes, we met", "Not yet" or "No". "Not yet" keeps the checkout open to reschedule. The first Yes or No from either person returns the copy, and the book comes back on the shelf if it was fully lent. The other person can still answer afterwards.
+  - It's a Past meet when someone said Yes and nobody said No. If the answers disagree, it isn't one. Answers are kept privately as a possible no-show signal; nobody is ever shown them.
+  - If nobody answers, the copy returns 14 days after the question is asked, and it isn't a Past meet.
+  - Both people get the Past meet: each sees the other's full name and book, their contact details, and a link to the conversation, which is now read-only history.
 
 ## 9. Reasoning behind decisions
 
@@ -388,3 +394,6 @@ Membership verification (decided 2026-11-16, A2, Daniel):
   - The thread opens on accept and becomes read-only history after the reading; 2,000 characters a message, 30 an hour per person.
   - The new-message email names the sender and links to the thread, at most one per 10 minutes per thread; it respects the email switch.
   - Its own page, app notes other features can post (such as a confirmed meeting time), and a private "New message" marker (§6).
+- **2026-11-18, "Did you meet?" and Past meets (C4, Ellie):**
+  - Asked after the confirmed meeting time (or 14 days after the yes); Yes / Not yet / No; the first Yes or No returns the copy; unanswered copies return after 14 days (closing that open question in §6).
+  - A Past meet needs a Yes and no No, and both people get it, with name, book, contacts and the read-only conversation. In the app only for now (§8).
