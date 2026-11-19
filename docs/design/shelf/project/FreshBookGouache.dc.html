@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Three landscape covers that clear to white</title>
+<title>Strata book page</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -671,20 +671,7 @@ body{margin:0}
 .ink-chip{display:inline-block;width:28px;height:10px;margin-right:2px}
 .search{font-family:var(--font-sans)}
 
-</style>
-<style>
-.book-xl{width:472px;height:688px}
-.book-xl::before{left:18px;top:18px;right:-18px;bottom:-18px;background-size:9px 9px;background-image:radial-gradient(circle,var(--fg) 2.3px,transparent 2.9px)}
-.book-xl .book-cover{padding:56px 36px 34px 78px;border-width:4px}
-.book-xl .book-cover::before{left:46px;width:3px}
-.book-xl .book-title{font-size:54px;line-height:1.08}
-.book-xl .book-author{font-size:18px}
-.book-xl .cover-art{left:-4px;top:-4px;width:calc(100% + 8px);height:calc(100% + 8px)}
-</style>
-<style>
-/* Landscape covers. The picture runs off three edges and clears to plain white under the title; the name at the
-   foot sits on a white knockout. The book object itself is unchanged. */
-.col{display:flex;flex-direction:column;gap:18px;width:472px}
+
 /* Cover typography (round 1). Each direction sets its title and name in the house faces, cut to suit the art.
    The colours here are cover inks drawn from each picture, not UI colours; none is the UI red. */
 :is(.cov-marble,.cov-block,.cov-gouache,.cov-pencil,.cov-wash,.cov-cut,.cov-stipple) .book-title{text-wrap:balance}
@@ -738,29 +725,59 @@ body{margin:0}
     radial-gradient(circle,var(--c-gold) 46%,transparent 52%) calc(50% - 1em) top/.6em .6em no-repeat,
     radial-gradient(circle,var(--c-gold) 46%,transparent 52%) calc(50% + 1em) top/.6em .6em no-repeat}
 .cov-stipple.book-xl .book-author{font-size:14px;margin-top:22px}
-
+.cov-strata{--c-ink:#16302e}
+.cov-strata .book-title{text-wrap:balance;text-align:center;color:var(--c-ink);font-weight:600;letter-spacing:-.01em}
+.cov-strata.book-xl .book-title{font-size:52px;line-height:1.06}
+.cov-strata .book-author{align-self:center;text-align:center;color:var(--c-ink);letter-spacing:.16em;padding-top:1.3em;
+  background:linear-gradient(var(--c-ink),var(--c-ink)) calc(50% - .5em) 0/1.6em 2px no-repeat,linear-gradient(var(--c-ink),var(--c-ink)) calc(50% + .5em) .4em/1.6em 2px no-repeat}
+.cov-strata.book-xl .book-author{font-size:15px;letter-spacing:.3em}
+/* Book-page sizes of the cover typography (book-lg, 236 x 344). */
+.book-lg.cov-strata .book-title{font-size:27px;line-height:1.08}
+.book-lg.cov-strata .book-author{font-size:10px;letter-spacing:.26em}
+.book-lg.cov-pencil .book-title{font-size:26px;font-weight:400;line-height:1.12}
+.book-lg.cov-pencil .book-author{font-size:9px;margin-top:12px}
+.book-lg.cov-wash .book-title{font-size:29px;line-height:1.04}
+.book-lg.cov-wash .book-author{font-size:9px;margin-top:10px}
+.book-lg.cov-stipple .book-title{font-size:20px;line-height:1.18}
+.book-lg.cov-stipple .book-author{font-size:9px;margin-top:12px}
+.cov-art-paper{--cover-paper:#f6f3ea}
+.cov-block .ko{background:var(--cover-paper)}
+.book-lg.cov-block .book-title{font-size:25px;line-height:1.08}
+.book-lg.cov-block .book-author{font-size:10px;letter-spacing:.22em}
+.book-lg.cov-gouache .book-title{font-size:31px}
+.book-lg.cov-gouache .book-author{font-size:10px;margin-bottom:-4px}
 </style>
 </helmet>
 
-<div style="width: 1760px; height: 1090px; background: var(--paper); color: var(--ink); font-family: var(--font-sans); padding: 56px 64px; display: flex; gap: 108px; align-items: flex-start; overflow: hidden">
-<div class="col">
-<span class="frame-label">4 · Gouache poster · round 2</span>
-<div><div class="book book-xl cov-gouache" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/f064d27d44fa3f1ad23222f3fd176bb7" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div></div>
-<div style="display: flex; gap: 28px; align-items: flex-start; margin-top: 30px"><div class="book cov-gouache" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/f064d27d44fa3f1ad23222f3fd176bb7" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div><div style="display: flex; flex-direction: column; gap: 10px"><p class="note" style="margin: 0; font-size: 15px; color: var(--ink)">Round 2. An alpine lake at first light, drawn like a travel poster: peaks with lit and shadowed planes and snow, pine-edged hills, a framing stand of pines. Streak clouds thin out into the white.</p><p class="note" style="margin: 0">Member picks: a place and a time of day.</p></div></div>
+<div style="width: 1440px; height: 1140px; background: var(--paper); color: var(--ink); font-family: var(--font-sans); overflow: hidden">
+<header style="display: flex; align-items: center; gap: 36px; height: 48px; padding: 16px 36px 0">
+<span class="wordmark">Trove</span>
+<nav class="nav" aria-label="Main"><a href="#" aria-current="page">Shelf</a><a href="#">My book</a><a href="#">Checkouts</a><a href="#">Past meets</a></nav>
+<input class="search" style="margin-left: auto" type="search" placeholder="Search by topic" aria-label="Search by topic">
+<span class="avatar" aria-label="Your account">J</span>
+</header>
+<section style="position: relative; width: 1440px; height: 620px; margin-top: 16px" aria-labelledby="book-title">
+<img src="/_blob/d75ed130cea05aff965c061ca4addd8a" alt="" style="position: absolute; left: 0; top: 0; width: 1440px; height: 620px; display: block">
+<div style="position: absolute; left: 128px; top: 64px" aria-hidden="true"><div class="book book-lg cov-gouache" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/f064d27d44fa3f1ad23222f3fd176bb7" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div></div>
+<div style="position: absolute; left: 448px; top: 56px; width: 600px; display: flex; flex-direction: column; align-items: flex-start; gap: 16px">
+<a class="button button-quiet" href="#" style="margin-left: -12px">Back to the shelf</a>
+<h1 id="book-title" class="page-title" style="font-size: 54px">The Night Shift Knows</h1>
+<p class="byline" style="margin: 0">by Maya Okafor</p>
+<p style="margin: 0; max-width: 470px; font-size: 17px; line-height: 1.5">What a hospital looks like from the people who keep it running at 3 a.m.</p>
+<div style="display: flex; align-items: center; gap: 20px; margin-top: 8px">
+<a class="button button-primary" href="#">Ask to check out</a>
+<span class="note">A thirty-minute video call, if the author says yes.</span>
 </div>
-<div class="col">
-<span class="frame-label">5 · Coloured pencil · round 3</span>
-<div><div class="book book-xl cov-pencil" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/44e221e431b65fd97ac2bb011b12692a" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div></div>
-<div style="display: flex; gap: 28px; align-items: flex-start; margin-top: 30px"><div class="book cov-pencil" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/44e221e431b65fd97ac2bb011b12692a" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div><div style="display: flex; flex-direction: column; gap: 10px"><p class="note" style="margin: 0; font-size: 15px; color: var(--ink)">Round 3. Deeper tones and more to look at: a cabin and jetty, a far shore of small firs, reeds in the near corners, violet and green worked into the shadows. Still one hatching direction, still fading to paper.</p><p class="note" style="margin: 0">Member picks: a place. The one warm mark (here a lamp) is theirs to place.</p></div></div>
 </div>
-<div class="col">
-<span class="frame-label">6 · Watercolour · round 2, brushstrokes</span>
-<div><div class="book book-xl cov-wash" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/bf227d05c72ce22a5d848159b75e091c" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div></div>
-<div style="display: flex; gap: 28px; align-items: flex-start; margin-top: 30px"><div class="book cov-wash" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/bf227d05c72ce22a5d848159b75e091c" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div><div style="display: flex; flex-direction: column; gap: 10px"><p class="note" style="margin: 0; font-size: 15px; color: var(--ink)">Round 2. No longer a picture of a place: a handful of loaded brushstrokes that add up to one. Sky, land and water are single strokes, glazed where they overlap, with bare paper between them.</p><p class="note" style="margin: 0">Member picks: a palette. Every sheet comes out different.</p></div></div>
+</section>
+<section style="width: 640px; margin: 40px 0 0 448px" aria-labelledby="ch-head">
+<h2 id="ch-head" class="shelf-name" style="font-size: 24px; margin-bottom: 16px">What you could talk about</h2>
+<div class="ch"><h3>Handoffs are where things break</h3><p>Most mistakes she has seen began in the five minutes between shifts, not in the work itself.</p></div><div class="ch"><h3>Charge nurses run the hospital</h3><p>Who actually decides which bed a patient gets, and how to ask them nicely.</p></div><div class="ch"><h3>Learning to sleep in daylight</h3><p>The small routines that got her through two years of nights.</p></div>
+</section>
 </div>
-</div>
+
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1760,"height":1090}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1140}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

@@ -11,6 +11,8 @@ one cover each. Shown on the canvas page "Fresh directions" (board `Fresh`), all
 | `pencil3_band.py` | The coloured-pencil lake as a 1440 x 620 band for the book page, clear under the title | `python3 pencil3_band.py out.png [seed]` |
 | `wash2_band.py` | The watercolour brushstrokes as a 1440 x 620 band for the book page | `python3 wash2_band.py out.png [seed]` |
 | `stipple_band.py` | The stippled dunes as a 1440 x 620 band for the book page | `python3 stipple_band.py out.png [seed]` |
+| `block_band.py` | The block print as a 1440 x 620 band: carved night panels at both ends, one street across | `python3 block_band.py out.png [seed]` |
+| `gouache2_band.py` | The gouache alpine lake as a 1440 x 620 band, cut out on bare paper | `python3 gouache2_band.py out.png [seed]` |
 | `gouache.py` | Gouache poster landscape: flat shapes, dry-brushed edges, a banded dawn sky that cuts to white | `python3 gouache.py out.png [seed]` |
 | `pencil.py` | Coloured pencil landscape: short strokes that thin out to bare white paper | `python3 pencil.py out.png [seed]` |
 | `pencil2.py` | Coloured pencil, round 2 (the one on the board): four muted pencils, one hatching direction, a lake at dusk | `python3 pencil2.py out.png [seed]` |

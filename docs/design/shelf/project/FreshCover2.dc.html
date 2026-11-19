@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Two more directions: cut paper and stipple</title>
+<title>Three fresh cover directions</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -682,8 +682,21 @@ body{margin:0}
 .book-xl .cover-art{left:-4px;top:-4px;width:calc(100% + 8px);height:calc(100% + 8px)}
 </style>
 <style>
-/* Landscape covers. The picture runs off three edges and clears to plain white under the title; the name at the
-   foot sits on a white knockout. The book object itself is unchanged. */
+/* Three fresh directions. The book object is unchanged (outline, hinge, dot shadow, title and full name only);
+   only what is printed on the cover differs. Cover inks are art, not UI: none of them is the UI red. */
+.cov-art-paper{--cover-paper:#f6f3ea}
+.cov-block .ko{background:var(--cover-paper);}
+.cov-marble .ko{background:transparent}
+.cov-block.book-xl .book-title{font-size:50px}
+.cov-block .book-title{font-size:12.5px}
+/* marbled: the title and the name sit on pasted paper labels, as on a bound book */
+.cov-marble .book-title,.cov-marble .book-author{align-self:flex-start;background:var(--cover-paper);color:var(--ink);border:var(--line) solid var(--ink)}
+.cov-marble .book-title{padding:.3em .42em .36em}
+.cov-marble .book-author{padding:.5em .7em;margin-right:0}
+.cov-marble.book-xl .book-title{font-size:46px;border-width:3px;box-shadow:0 0 0 6px var(--cover-paper),0 0 0 9px var(--ink);margin:10px 0 0 6px}
+.cov-marble.book-xl .book-author{border-width:3px;margin-left:-3px}
+/* letterpress: the printed type is the title, so the live title is kept for screen readers only */
+.cov-press .book-title,.cov-press .book-author{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .col{display:flex;flex-direction:column;gap:18px;width:472px}
 /* Cover typography (round 1). Each direction sets its title and name in the house faces, cut to suit the art.
    The colours here are cover inks drawn from each picture, not UI colours; none is the UI red. */
@@ -739,23 +752,19 @@ body{margin:0}
     radial-gradient(circle,var(--c-gold) 46%,transparent 52%) calc(50% + 1em) top/.6em .6em no-repeat}
 .cov-stipple.book-xl .book-author{font-size:14px;margin-top:22px}
 
+.pair{display:flex;align-items:flex-end;gap:44px}
 </style>
 </helmet>
 
-<div style="width: 1180px; height: 1090px; background: var(--paper); color: var(--ink); font-family: var(--font-sans); padding: 56px 64px; display: flex; gap: 108px; align-items: flex-start; overflow: hidden">
+<div style="width: 600px; height: 1090px; background: var(--paper); color: var(--ink); font-family: var(--font-sans); padding: 56px 64px; display: flex; gap: 108px; align-items: flex-start; overflow: hidden">
 <div class="col">
-<span class="frame-label">7 · Layered cut paper</span>
-<div><div class="book book-xl cov-cut" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/e8b76da9786f98a44d8e3319cde7d371" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div></div>
-<div style="display: flex; gap: 28px; align-items: flex-start; margin-top: 30px"><div class="book cov-cut" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/e8b76da9786f98a44d8e3319cde7d371" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div><div style="display: flex; flex-direction: column; gap: 10px"><p class="note" style="margin: 0; font-size: 15px; color: var(--ink)">The white cover is the top sheet of a stack, cut away in one long curve to show the layers beneath. Each sheet shades the one behind it. The moon, the stars and the lit window are holes through to a warm glow.</p><p class="note" style="margin: 0">Member picks: a scene and a run of paper colours.</p></div></div>
-</div>
-<div class="col">
-<span class="frame-label">8 · Stippled ink</span>
-<div><div class="book book-xl cov-stipple" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/1de1c8ff20f8bb8256e28ba474e3e5f8" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div></div>
-<div style="display: flex; gap: 28px; align-items: flex-start; margin-top: 30px"><div class="book cov-stipple" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/1de1c8ff20f8bb8256e28ba474e3e5f8" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div><div style="display: flex; flex-direction: column; gap: 10px"><p class="note" style="margin: 0; font-size: 15px; color: var(--ink)">Nothing but dots, in two inks. Tone is how close the dots sit, so the dunes turn from light to shade with no lines at all, and the sky thins out to nothing under the title. The site’s own dot shading, taken all the way.</p><p class="note" style="margin: 0">Member picks: a scene and the second ink.</p></div></div>
+<span class="frame-label">2 · Letterpress</span>
+<div class="pair"><div class="book book-xl cov-art-paper cov-press" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/dfbf2719e458b6f952e67cf9bca18a08" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div></div>
+<div style="display: flex; gap: 28px; align-items: flex-start; margin-top: 30px"><div class="book  cov-art-paper cov-press" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/dfbf2719e458b6f952e67cf9bca18a08" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div><div style="display: flex; flex-direction: column; gap: 10px"><p class="note" style="margin: 0; font-size: 15px; color: var(--ink)">The words are the picture. The title is set in wood type to the full width and printed in two inks, so the art comes only from what the author said.</p><p class="note" style="margin: 0">Member picks: the two inks and the shape behind the type. The name now runs rule to rule, so it reads on the shelf.</p></div></div>
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1180,"height":1090}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":600,"height":1090}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};
