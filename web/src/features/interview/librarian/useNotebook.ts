@@ -28,6 +28,19 @@ export interface Notebook {
 
 const MARK_MS = 700;
 
+function spokenStatus(entry: NotebookEntry): string {
+  switch (entry.status) {
+    case "ticked":
+      return `Librarian ticked off: ${entry.text}`;
+    case "called":
+      return `Librarian's bet, ${entry.text}: ${entry.outcomeNote ?? "called it."}`;
+    case "lost":
+      return `Librarian crossed out its bet, ${entry.text}: ${entry.outcomeNote ?? "wrong. good."}`;
+    default:
+      return `Librarian circled: ${entry.text}`;
+  }
+}
+
 function isMine(entry: NotebookEntry, turn: number): boolean {
   return entry.sourceTurns.length > 0 && Math.max(...entry.sourceTurns) === turn;
 }
@@ -108,15 +121,21 @@ export function useNotebook(view: LibrarianView | null | undefined, say: (line: 
     for (const entry of view.notebook) {
       const before = known.get(entry.id);
       if (before && before.entry.status === "open" && entry.status !== "open") {
-        say(
-          entry.status === "ticked"
-            ? `Librarian ticked off: ${entry.text}`
-            : `Librarian circled: ${entry.text}`,
-        );
-        later(MARK_MS, () => update(entry.id, (shown) => ({ ...shown, marking: false })));
+        say(spokenStatus(entry));
+        later(MARK_MS + 1500, () => update(entry.id, (shown) => ({ ...shown, marking: false })));
       }
     }
   }, [view, erase, later, say, update]);
+
+  // A bet called or lost, a saving ticked, an entry circled: drawn now, in front of the member.
+  const settle = useCallback(
+    (entry: NotebookEntry, before: NotebookEntry) => {
+      update(entry.id, (shown) => ({ ...shown, entry: { ...entry, struck: before.struck }, marking: true }));
+      say(spokenStatus(entry));
+      later(MARK_MS + 1500, () => update(entry.id, (shown) => ({ ...shown, marking: false })));
+    },
+    [later, say, update],
+  );
 
   const apply = useCallback(
     (delta: NotesReply["notebook"]) => {
@@ -131,7 +150,9 @@ export function useNotebook(view: LibrarianView | null | undefined, say: (line: 
       }
       for (const revised of delta.revise) {
         const before = current.current.find((shown) => shown.entry.id === revised.id);
-        if (!before || before.entry.text === revised.text) continue;
+        if (!before) continue;
+        if (before.entry.status !== revised.status) settle(revised, before.entry);
+        if (before.entry.text === revised.text) continue;
         // The old wording is struck and kept above the new one, which is written fresh.
         const struck = revised.struck.length ? revised.struck : [...before.entry.struck, before.entry.text];
         update(revised.id, () => ({ entry: { ...revised, struck }, life: "writing", marking: false }));
@@ -139,7 +160,7 @@ export function useNotebook(view: LibrarianView | null | undefined, say: (line: 
       }
       for (const id of delta.erase) erase(id);
     },
-    [erase, update, write],
+    [erase, settle, update, write],
   );
 
   const hold = useCallback(

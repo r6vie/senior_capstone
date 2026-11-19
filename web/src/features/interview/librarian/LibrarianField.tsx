@@ -46,7 +46,7 @@ interface Props {
 }
 
 // Notes need room above their words; a circle's note sits a little higher still.
-const OPENS = new Set(["underline", "big", "strike", "circle", "note", "highlight"]);
+const OPENS = new Set(["underline", "back_cover", "strike", "circle", "note", "highlight"]);
 
 export function LibrarianField({
   id,
@@ -70,7 +70,14 @@ export function LibrarianField({
   }));
 
   const spans = useMemo(
-    () => placed.map((p) => ({ id: p.item.id, start: p.start, end: p.end, move: p.item.move })),
+    () =>
+      placed.map((p) => ({
+        id: p.item.id,
+        start: p.start,
+        end: p.end,
+        // A credited edit carries two notes, the struck one and the credit above it: its line opens further.
+        move: p.item.struckNote ? "credit" : p.item.move,
+      })),
     [placed],
   );
   const open = useMemo(() => {

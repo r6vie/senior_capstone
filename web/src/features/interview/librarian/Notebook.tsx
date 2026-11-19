@@ -3,6 +3,7 @@ import type { NotebookEntry } from "../interviewClient";
 import { fold } from "./anchors";
 import { Hand } from "./Hand";
 import { seeded } from "./pen";
+import { strokeOf } from "./shapes";
 import type { ShownEntry } from "./useNotebook";
 import "./Librarian.css";
 
@@ -40,13 +41,43 @@ const SPOKEN: Record<NotebookEntry["status"], string> = {
   open: "",
   circled: " (circled: the question builds on it)",
   ticked: " (ticked off: this is the question)",
+  called: " (a bet, called)",
+  lost: " (a bet, lost)",
 };
+
+/** A revision that changes only a few words is done the way a person would: those words struck, and the
+ * new ones written above them. A bigger one strikes the old line and writes the new one under it. */
+function rewritten(
+  old: string,
+  text: string,
+): { before: string; was: string; now: string; after: string } | null {
+  const a = old.split(" ");
+  const b = text.split(" ");
+  let start = 0;
+  while (start < a.length && start < b.length && a[start] === b[start]) start++;
+  let end = 0;
+  while (end < a.length - start && end < b.length - start && a[a.length - 1 - end] === b[b.length - 1 - end])
+    end++;
+  const was = a.slice(start, a.length - end);
+  const now = b.slice(start, b.length - end);
+  if (!was.length || !now.length || was.length > 3 || now.length > 4 || start + end === 0) return null;
+  return {
+    before: b.slice(0, start).join(" "),
+    was: was.join(" "),
+    now: now.join(" "),
+    after: b.slice(b.length - end).join(" "),
+  };
+}
 
 function Entry({ shown }: { shown: ShownEntry }) {
   const { entry, life, marking } = shown;
   const text = shownText(entry);
   const word = hangsOn(entry, text);
   const old = entry.struck[entry.struck.length - 1];
+  const quote = (line: string) => (entry.kind === "clip" ? `“${line}”` : line);
+  const swap = old && life !== "erasing" ? rewritten(quote(old), text) : null;
+  const ink = life === "erasing" ? "resting" : life;
+  const settled = entry.status === "called" || entry.status === "lost";
   return (
     <li
       className="lib-en"
@@ -59,19 +90,51 @@ function Entry({ shown }: { shown: ShownEntry }) {
       <span className="iv-visually-hidden">
         {text}
         {SPOKEN[entry.status]}
+        {settled && entry.outcomeNote ? ` ${entry.outcomeNote}` : ""}
       </span>
-      {entry.status === "ticked" && <span className="lib-tick" aria-hidden="true" />}
+      {(entry.status === "ticked" || entry.status === "called") && (
+        <span className="lib-tick" aria-hidden="true" />
+      )}
       <span className="lib-en-tx">
-        {old && life !== "erasing" && (
+        {old && life !== "erasing" && !swap && (
           <span className="lib-old" aria-hidden="true">
-            {entry.kind === "clip" ? `“${old}”` : old}
+            {quote(old)}
           </span>
         )}
-        <Hand
-          text={text}
-          life={life === "erasing" ? "resting" : life}
-          underline={word === undefined ? undefined : { word, double: entry.kind === "connection" }}
-        />
+        {swap ? (
+          <span className="lib-line" aria-hidden="true">
+            {swap.before && <Hand text={`${swap.before} `} life="resting" />}
+            <span className="lib-rw">
+              <s>{swap.was}</s>
+              <span className="lib-rw-new">
+                <Hand text={swap.now} life={ink} />
+              </span>
+            </span>
+            {swap.after && <Hand text={` ${swap.after}`} life="resting" />}
+          </span>
+        ) : (
+          <span className="lib-line">
+            <Hand
+              text={text}
+              life={ink}
+              underline={
+                word === undefined
+                  ? undefined
+                  : {
+                      word,
+                      double: entry.kind === "connection",
+                      shape: strokeOf(entry.kind === "connection" ? "double" : "under", entry.id),
+                    }
+              }
+            />
+          </span>
+        )}
+        {settled && entry.outcomeNote && (
+          // Beside the bet, once a later answer settles it.
+          <span className="lib-outcome" aria-hidden="true">
+            <Hand text={entry.outcomeNote} life={marking ? "writing" : "resting"} delay={0.5} />
+          </span>
+        )}
       </span>
     </li>
   );

@@ -266,7 +266,7 @@ export const apiInterviewClient: InterviewClient = {
   async notes(look) {
     return {
       silent: false,
-      marks: { keep: look.shown, add: [] },
+      marks: { keep: look.shown, add: [], revise: [], erase: [] },
       notebook: { keep: look.shown, add: [], revise: [], erase: [] },
     };
   },

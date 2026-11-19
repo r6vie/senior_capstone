@@ -30,7 +30,7 @@ export function Hand({
   delay?: number;
   className?: string;
   /** One word underlined by hand, as the notebook does with the word an entry hangs on. */
-  underline?: { word: number; double: boolean };
+  underline?: { word: number; double: boolean; shape?: string };
 }) {
   const { glyphs } = strokes(text);
   // Words stay whole so a line only ever breaks at a space.
@@ -52,6 +52,11 @@ export function Hand({
           {index > 0 && " "}
           <span
             className={`lib-word${underline?.word === index ? (underline.double ? " lib-u2" : " lib-u") : ""}`}
+            style={
+              underline?.word === index && underline.shape
+                ? ({ "--shape": underline.shape } as CSSProperties)
+                : undefined
+            }
           >
             {word.map((glyph, at) => (
               <span

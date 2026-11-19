@@ -16,7 +16,7 @@ import type {
 
 const QUIET: NotesReply = {
   silent: false,
-  marks: { keep: [], add: [] },
+  marks: { keep: [], add: [], revise: [], erase: [] },
   notebook: { keep: [], add: [], revise: [], erase: [] },
 };
 
@@ -82,6 +82,8 @@ describe("the Librarian", () => {
         marks: {
           keep: [],
           add: [{ id: "m1", move: "strike", anchor: "leveraged", occurrence: 1, note: "used." }],
+          revise: [],
+          erase: [],
         },
         notebook: {
           keep: [],
@@ -123,6 +125,8 @@ describe("the Librarian", () => {
         marks: {
           keep: [],
           add: [{ id: "m1", move: "underline", anchor: "Everyone", occurrence: 1, note: "says who?" }],
+          revise: [],
+          erase: [],
         },
         notebook: {
           ...QUIET.notebook,
@@ -243,5 +247,87 @@ describe("the Librarian", () => {
     };
     renderWith(client({}, reviewing));
     expect(await screen.findByText("Librarian: took some editing.")).toBeTruthy();
+  });
+
+  it("credits an edit: its old note struck in place, the credit written above", async () => {
+    let look = 0;
+    const notes = vi.fn(async (_look: NotesLook): Promise<NotesReply> => {
+      look++;
+      const mark = {
+        id: "m1",
+        move: "underline" as const,
+        anchor: "a long time",
+        occurrence: 1,
+        note: "how long?",
+      };
+      return look === 1
+        ? { ...QUIET, marks: { ...QUIET.marks, add: [mark] } }
+        : {
+            ...QUIET,
+            marks: {
+              ...QUIET.marks,
+              revise: [{ ...mark, anchor: "11 weeks", note: "there it is.", struckNote: "how long?" }],
+            },
+          };
+    });
+    renderWith(client({ notes }));
+    setAnswer(await field(), "It took a long time to find.");
+    await waitFor(() => expect(spoken()).toContain("Librarian: how long?"));
+    setAnswer(await field(), "It took 11 weeks to find.");
+    await waitFor(
+      () => expect(spoken()).toContain("Librarian crossed out its note how long?, wrote there it is."),
+      {
+        timeout: 4000,
+      },
+    );
+    expect(document.querySelector('span[data-mk="m1"]')?.textContent).toBe("11 weeks");
+  });
+
+  it("draws the running bit with its count, and the back-cover line as a double underline", async () => {
+    const notes = vi.fn(
+      async (_look: NotesLook): Promise<NotesReply> => ({
+        ...QUIET,
+        marks: {
+          ...QUIET.marks,
+          add: [
+            {
+              id: "m1",
+              move: "circle",
+              anchor: "whiteboard",
+              occurrence: 1,
+              note: "the whiteboard has tenure.",
+              count: 3,
+            },
+            { id: "m2", move: "back_cover", anchor: "Nobody reads the README.", occurrence: 1, note: null },
+          ],
+        },
+      }),
+    );
+    renderWith(client({ notes }));
+    setAnswer(await field(), "The whiteboard again. Nobody reads the README.");
+    await waitFor(() => expect(spoken()).toContain("Librarian: ×3. the whiteboard has tenure."));
+    expect(document.querySelector('.lib-mark[data-move="back_cover"]')).toBeTruthy();
+  });
+
+  it("settles a bet from an earlier answer: called and ticked, or lost and struck", async () => {
+    const bet = entry("b1", "bet", "betting this ends in a spreadsheet.", { anchors: ["tests"] });
+    const notes = vi.fn(
+      async (_look: NotesLook): Promise<NotesReply> => ({
+        ...QUIET,
+        notebook: {
+          ...QUIET.notebook,
+          keep: ["b1"],
+          revise: [{ ...bet, status: "called", outcomeNote: "called it." }],
+        },
+      }),
+    );
+    renderWith(client({ notes }, asking({ ...SECOND, notebook: [bet] })));
+    setAnswer(await field(), "So I built a spreadsheet of every failure.");
+    await waitFor(() => expect(document.querySelector('.lib-en[data-status="called"]')).toBeTruthy());
+    expect(document.querySelector('.lib-en[data-status="called"] .lib-tick')).toBeTruthy();
+    expect(spoken()).toContain("Librarian's bet, betting this ends in a spreadsheet.: called it.");
+    expect(screen.getByRole("region", { name: "The Librarian’s notebook" }).textContent).toContain(
+      "called it.",
+    );
   });
 });

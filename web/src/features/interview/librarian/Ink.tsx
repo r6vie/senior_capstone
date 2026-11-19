@@ -3,13 +3,22 @@ import { useRef } from "react";
 import type { Rect } from "./AnswerText";
 import { Hand, rubTime } from "./Hand";
 import { seeded } from "./pen";
-import { NOTE_AFTER_S, type ShownMark } from "./useLibrarian";
+import { strokeOf } from "./shapes";
+import { NOTE_AFTER_S, noteOf, type ShownMark } from "./useLibrarian";
 
 // The Librarian's marks, drawn over the answer on their own layer: strokes from left to right, the note
 // at pen pace after them, and rubbed out from the left, line first and then the note. A mark whose
 // words were deleted is rubbed out where they last were.
 
-const STROKED = new Set(["underline", "big", "strike", "circle", "highlight"]);
+const STROKED = new Set(["underline", "back_cover", "strike", "circle", "highlight"]);
+
+// Each mark's own hand-drawn stroke, seeded from its id: never the same line twice, never a ruler.
+const SHAPE: Record<string, "under" | "double" | "strike" | "circle"> = {
+  underline: "under",
+  back_cover: "double",
+  strike: "strike",
+  circle: "circle",
+};
 
 function wobble(id: string) {
   const random = seeded(id);
@@ -32,14 +41,17 @@ export function Ink({ marks, rects }: { marks: ShownMark[]; rects: Map<string, R
         if (!lines || !first)
           return <div key={mark.id} className="lib-mark" data-move={mark.move} data-life={life} />;
         const shape = wobble(mark.id);
+        const kind = SHAPE[mark.move];
+        const note = noteOf(mark);
         const style = {
           "--r": `${shape.stroke.toFixed(2)}deg`,
           "--rub": `${rubTime(mark.anchor)}s`,
+          ...(kind ? { "--shape": strokeOf(kind, mark.id) } : {}),
         } as CSSProperties;
         const strokes =
           mark.move === "circle"
             ? [boxOf(lines)]
-            : mark.move === "highlight" || mark.move === "underline" || mark.move === "big"
+            : mark.move === "highlight" || mark.move === "underline" || mark.move === "back_cover"
               ? lines
               : mark.move === "strike"
                 ? [first]
@@ -62,9 +74,10 @@ export function Ink({ marks, rects }: { marks: ShownMark[]; rects: Map<string, R
                   <i />
                 </span>
               ))}
-            {mark.note && (
+            {mark.struckNote && life !== "erasing" && (
+              // Its own earlier note, struck in place; the credit is written above it.
               <span
-                className="lib-note"
+                className="lib-note lib-note-struck"
                 style={
                   {
                     left: first.left + shape.nudge - 2,
@@ -73,7 +86,21 @@ export function Ink({ marks, rects }: { marks: ShownMark[]; rects: Map<string, R
                   } as CSSProperties
                 }
               >
-                <Hand text={mark.note} life={life} delay={mark.move === "note" ? 0 : NOTE_AFTER_S} />
+                <span className="lib-hand">{mark.struckNote}</span>
+              </span>
+            )}
+            {note && (
+              <span
+                className={`lib-note${mark.struckNote ? " lib-note-above" : ""}`}
+                style={
+                  {
+                    left: first.left + shape.nudge - 2 + (mark.struckNote ? 10 : 0),
+                    top: first.top,
+                    "--rot": `${shape.note.toFixed(2)}deg`,
+                  } as CSSProperties
+                }
+              >
+                <Hand text={note} life={life} delay={mark.move === "note" ? 0 : NOTE_AFTER_S} />
               </span>
             )}
           </div>

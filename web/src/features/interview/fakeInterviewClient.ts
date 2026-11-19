@@ -353,6 +353,8 @@ export function fakeNotes(look: NotesLook, notebook: NotebookEntry[], turn: numb
     marks: {
       keep: marks.filter((mark) => shown.has(mark.id)).map((mark) => mark.id),
       add: marks.filter((mark) => !shown.has(mark.id)),
+      revise: [],
+      erase: [],
     },
     notebook: {
       keep: notebook.map((entry) => entry.id).filter((id) => shown.has(id)),

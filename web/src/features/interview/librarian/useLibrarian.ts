@@ -26,6 +26,10 @@ export interface DrawnMark {
   anchor: string;
   occurrence: number;
   note: string | null;
+  /** The running bit's count, drawn before the note. */
+  count?: number | null;
+  /** Its own earlier note, struck through, under the one that credits an edit. */
+  struckNote?: string | null;
   /** An instant move, made here rather than by the API. */
   scripted?: boolean;
 }
@@ -133,14 +137,22 @@ function scriptedMarks(text: string, pastes: string[]): DrawnMark[] {
   return marks;
 }
 
+/** The note as written: the running bit carries its count ("×3. the whiteboard has tenure."). */
+export function noteOf(mark: DrawnMark): string | null {
+  if (!mark.note) return null;
+  return mark.count ? `×${mark.count}. ${mark.note}` : mark.note;
+}
+
 function drawTime(mark: DrawnMark): number {
   if (reducedMotion()) return 0.3;
-  return mark.note ? NOTE_AFTER_S + writeTime(mark.note) : STROKE_S;
+  const note = noteOf(mark);
+  return note ? NOTE_AFTER_S + writeTime(note) : STROKE_S;
 }
 
 function eraseTime(mark: DrawnMark): number {
   if (reducedMotion()) return 0.2;
-  return rubTime(mark.anchor) + (mark.note ? 0.12 + rubTime(mark.note) : 0);
+  const note = noteOf(mark);
+  return rubTime(mark.anchor) + (note ? 0.12 + rubTime(note) : 0);
 }
 
 interface Options {
@@ -204,20 +216,24 @@ export function useLibrarian({ client, interviewId, questionId, view, notebook, 
   );
 
   const draw = useCallback(
-    (added: DrawnMark[]) => {
+    (added: DrawnMark[], again = false) => {
       const have = new Set(current.current.filter((s) => s.life !== "erasing").map((s) => s.mark.id));
-      const fresh = added.filter((mark) => !have.has(mark.id));
+      // A revised mark has the same id: it's drawn again, in place of the old one.
+      const fresh = again ? added : added.filter((mark) => !have.has(mark.id));
       if (!fresh.length) return;
       setMarks((all) => [
         ...all.filter((shown) => !fresh.some((mark) => mark.id === shown.mark.id)),
         ...fresh.map((mark) => ({ mark, life: "writing" as Life })),
       ]);
       for (const mark of fresh) {
-        if (mark.note)
+        const note = noteOf(mark);
+        if (note)
           say(
-            mark.move === "strike"
-              ? `Librarian crossed out ${mark.anchor}, wrote ${mark.note}`
-              : `Librarian: ${mark.note}`,
+            mark.struckNote
+              ? `Librarian crossed out its note ${mark.struckNote}, wrote ${note}`
+              : mark.move === "strike"
+                ? `Librarian crossed out ${mark.anchor}, wrote ${note}`
+                : `Librarian: ${note}`,
           );
         settle(mark.id, "resting", drawTime(mark));
       }
@@ -307,11 +323,16 @@ export function useLibrarian({ client, interviewId, questionId, view, notebook, 
         setServerSilent(true);
         return;
       }
-      const keep = new Set([...reply.marks.keep, ...reply.marks.add.map((mark) => mark.id)]);
-      rub(current.current.filter((s) => !s.mark.scripted && !keep.has(s.mark.id)).map((s) => s.mark.id));
+      const { keep, add, revise, erase } = reply.marks;
+      const staying = new Set([...keep, ...add.map((mark) => mark.id), ...revise.map((mark) => mark.id)]);
+      rub([
+        ...erase,
+        ...current.current.filter((s) => !s.mark.scripted && !staying.has(s.mark.id)).map((s) => s.mark.id),
+      ]);
       // Placed only while the anchor still matches what's in the field now.
-      const fits = place(latestText.current, reply.marks.add).map((p: Placed<LibMark>) => p.item);
-      draw(fits);
+      const fits = (marks: LibMark[]) => place(latestText.current, marks).map((p: Placed<LibMark>) => p.item);
+      draw(fits(add));
+      draw(fits(revise), true);
       notebook.apply(reply.notebook);
     } catch {
       // The Librarian failing to be funny is never an error: the answer just stays plain.

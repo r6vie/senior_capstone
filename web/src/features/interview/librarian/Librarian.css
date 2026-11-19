@@ -87,15 +87,15 @@
 .lib-u::after {
   bottom: -1px;
   height: 7px;
-  -webkit-mask: var(--lib-small) 0 0 / 100% 100% no-repeat;
-  mask: var(--lib-small) 0 0 / 100% 100% no-repeat;
+  -webkit-mask: var(--shape, var(--lib-small)) 0 0 / 100% 100% no-repeat;
+  mask: var(--shape, var(--lib-small)) 0 0 / 100% 100% no-repeat;
   transform: rotate(-1.4deg);
 }
 .lib-u2::after {
   bottom: -4px;
   height: 12px;
-  -webkit-mask: var(--lib-double) 0 0 / 100% 100% no-repeat;
-  mask: var(--lib-double) 0 0 / 100% 100% no-repeat;
+  -webkit-mask: var(--shape, var(--lib-double)) 0 0 / 100% 100% no-repeat;
+  mask: var(--shape, var(--lib-double)) 0 0 / 100% 100% no-repeat;
   transform: rotate(1deg);
 }
 
@@ -147,6 +147,9 @@
 .lib-at[data-open="true"][data-move="circle"] {
   padding-top: calc(var(--lib-open) + 8px);
 }
+.lib-at[data-open="true"][data-move="credit"] {
+  padding-top: calc(2 * var(--lib-open) - 4px);
+}
 .lib-at[data-move="strike"] {
   color: var(--ink-2);
 }
@@ -175,32 +178,33 @@
   right: -1px;
   bottom: -3px;
   height: 7px;
-  -webkit-mask: var(--lib-under) 0 0 / 100% 100% no-repeat;
-  mask: var(--lib-under) 0 0 / 100% 100% no-repeat;
+  -webkit-mask: var(--shape, var(--lib-under)) 0 0 / 100% 100% no-repeat;
+  mask: var(--shape, var(--lib-under)) 0 0 / 100% 100% no-repeat;
 }
-.lib-mark[data-move="big"] .lib-stroke > i {
+/* The back-cover line: the one big double underline of the interview. */
+.lib-mark[data-move="back_cover"] .lib-stroke > i {
   left: -1px;
   right: -1px;
   bottom: -7px;
   height: 12px;
-  -webkit-mask: var(--lib-double) 0 0 / 100% 100% no-repeat;
-  mask: var(--lib-double) 0 0 / 100% 100% no-repeat;
+  -webkit-mask: var(--shape, var(--lib-double)) 0 0 / 100% 100% no-repeat;
+  mask: var(--shape, var(--lib-double)) 0 0 / 100% 100% no-repeat;
 }
 .lib-mark[data-move="strike"] .lib-stroke > i {
   left: -3px;
   right: -3px;
   top: calc(50% - 4px);
   height: 9px;
-  -webkit-mask: var(--lib-strike) 0 0 / 100% 100% no-repeat;
-  mask: var(--lib-strike) 0 0 / 100% 100% no-repeat;
+  -webkit-mask: var(--shape, var(--lib-strike)) 0 0 / 100% 100% no-repeat;
+  mask: var(--shape, var(--lib-strike)) 0 0 / 100% 100% no-repeat;
 }
 .lib-mark[data-move="circle"] .lib-stroke > i {
   left: -10px;
   right: -10px;
   top: -8px;
   bottom: -9px;
-  -webkit-mask: var(--lib-circle) 0 0 / 100% 100% no-repeat;
-  mask: var(--lib-circle) 0 0 / 100% 100% no-repeat;
+  -webkit-mask: var(--shape, var(--lib-circle)) 0 0 / 100% 100% no-repeat;
+  mask: var(--shape, var(--lib-circle)) 0 0 / 100% 100% no-repeat;
 }
 /* The one fill: red at 20%, multiplied, so the words still read through it. */
 .lib-mark[data-move="highlight"] .lib-stroke > i {
@@ -228,6 +232,15 @@
 }
 .lib-mark[data-move="circle"] .lib-note {
   margin-top: -9px;
+}
+/* Crediting an edit: its old note struck where it was, "better." written just above it. */
+.lib-note-struck .lib-hand {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--lib);
+}
+.lib-note-above {
+  margin-top: calc(-1 * var(--lib-open) + 4px);
 }
 .lib-note .lib-hand {
   font-size: 23px;
@@ -342,6 +355,47 @@
   mask: var(--lib-circle) 0 0 / 100% 100% no-repeat;
   pointer-events: none;
 }
+/* A few words rewritten: struck where they were, the new ones written above, a little askew. */
+.lib-rw {
+  position: relative;
+  display: inline-block;
+}
+.lib-rw > s {
+  font: 600 var(--fs, 23px) / 1.12 var(--font-hand);
+  color: var(--lib);
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--lib);
+}
+.lib-rw-new {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  margin-bottom: -4px;
+  transform: translateX(-50%) rotate(-5deg);
+  white-space: nowrap;
+}
+.lib-rw-new .lib-hand {
+  font-size: calc(var(--fs, 23px) * 0.82);
+}
+.lib-en:has(.lib-rw) {
+  padding-top: 16px;
+}
+/* A bet a later answer contradicted: struck, with the concession beside it. */
+.lib-en[data-status="lost"] .lib-line .lib-hand {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--lib);
+}
+.lib-outcome {
+  margin-top: 2px;
+  margin-left: var(--s-4);
+  transform: rotate(-3deg);
+  transform-origin: 0 100%;
+}
+.lib-outcome .lib-hand {
+  font-size: calc(var(--fs, 23px) - 2px);
+}
+.lib-en[data-status="called"] .lib-en-tx,
 .lib-en[data-status="ticked"] .lib-en-tx {
   padding-left: 28px;
 }

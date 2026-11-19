@@ -46,8 +46,9 @@ export interface ProposedChange {
 
 // ---------- The Librarian (docs/librarian-plan.md) ----------
 
-/** What the Librarian draws on the answer. A strike's note is the better word; "big" is the double underline. */
-export type MarkMove = "underline" | "strike" | "circle" | "note" | "big";
+/** What the Librarian draws on the answer. A strike's note is the better word. "circle" is the running bit,
+ * with its count; "back_cover" is the one big double underline of the interview. */
+export type MarkMove = "underline" | "strike" | "circle" | "note" | "back_cover";
 
 /** A mark on the member's exact words: whole words, `occurrence` 1 for the first. */
 export interface LibMark {
@@ -56,9 +57,13 @@ export interface LibMark {
   anchor: string;
   occurrence: number;
   note: string | null;
+  /** The running bit's count, 3 to 6: drawn as "×3." before the note. */
+  count?: number | null;
+  /** Its own earlier note, struck through, when it credits an edit ("better." written above). */
+  struckNote?: string | null;
 }
 
-export type EntryKind = "chapter" | "connection" | "saving" | "clip" | "note";
+export type EntryKind = "chapter" | "connection" | "saving" | "clip" | "note" | "bet";
 
 /** One line in the Librarian's notebook. Commentary, never a copy of the answer, except a clip. */
 export interface NotebookEntry {
@@ -69,8 +74,11 @@ export interface NotebookEntry {
   anchors: string[];
   /** Interview turns it draws on, 1 first. */
   sourceTurns: number[];
-  /** Circled when a question was built on it; a saving is ticked instead. */
-  status: "open" | "circled" | "ticked";
+  /** Circled when a question was built on it; a saving is ticked instead. A bet is called (ticked) or
+   * lost (struck) when a later answer settles it. */
+  status: "open" | "circled" | "ticked" | "called" | "lost";
+  /** Written beside a settled bet: "called it." or "wrong. good." */
+  outcomeNote?: string | null;
   /** Earlier wordings, oldest first, struck through. */
   struck: string[];
 }
@@ -98,7 +106,8 @@ export interface NotesLook {
 /** What the Librarian does now. Anything on screen that isn't kept or added is rubbed out. */
 export interface NotesReply {
   silent: boolean;
-  marks: { keep: string[]; add: LibMark[] };
+  /** `revise`: same id, changed; rubbed out and drawn again. */
+  marks: { keep: string[]; add: LibMark[]; revise: LibMark[]; erase: string[] };
   notebook: { keep: string[]; add: NotebookEntry[]; revise: NotebookEntry[]; erase: string[] };
 }
 
