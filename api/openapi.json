@@ -2302,6 +2302,95 @@
         }
       }
     },
+    "/checkouts/{checkout_id}/met": {
+      "post": {
+        "tags": [
+          "Checkouts"
+        ],
+        "summary": "Did You Meet",
+        "description": "Answer \"Did you meet?\" for yourself. Your answer is never shown to the other person.",
+        "operationId": "did_you_meet_checkouts__checkout_id__met_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeetAnswerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DidYouMeet"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/checkouts/past-meets": {
+      "get": {
+        "tags": [
+          "Checkouts"
+        ],
+        "summary": "Past Meets",
+        "description": "The people you've met through checkouts, newest first, with their contact details.",
+        "operationId": "past_meets_checkouts_past_meets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PastMeet"
+                  },
+                  "type": "array",
+                  "title": "Response Past Meets Checkouts Past Meets Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/meetings/{checkout_id}": {
       "get": {
         "tags": [
@@ -3244,6 +3333,37 @@
         "type": "object",
         "title": "DetailsUpdate"
       },
+      "DidYouMeet": {
+        "properties": {
+          "can_answer": {
+            "type": "boolean",
+            "title": "Can Answer"
+          },
+          "my_answer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "met",
+                  "not_yet",
+                  "no"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "My Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "can_answer",
+          "my_answer"
+        ],
+        "title": "DidYouMeet",
+        "description": "This member's own side of \"Did you meet?\". Never includes the other person's answer."
+      },
       "FinishRequest": {
         "properties": {
           "answer": {
@@ -3726,6 +3846,16 @@
             "type": "boolean",
             "title": "New Messages",
             "default": false
+          },
+          "did_you_meet": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DidYouMeet"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -3790,6 +3920,25 @@
           "expires_in"
         ],
         "title": "LoginResponse"
+      },
+      "MeetAnswerRequest": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "enum": [
+              "met",
+              "not_yet",
+              "no"
+            ],
+            "title": "Answer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "answer"
+        ],
+        "title": "MeetAnswerRequest"
       },
       "MeetingView": {
         "properties": {
@@ -4142,6 +4291,71 @@
         "title": "NotificationSettingsUpdate",
         "description": "The one email switch. Account emails, like the welcome message, are sent either way."
       },
+      "PastMeet": {
+        "properties": {
+          "checkout_id": {
+            "type": "string",
+            "title": "Checkout Id"
+          },
+          "book_title": {
+            "type": "string",
+            "title": "Book Title"
+          },
+          "you_were": {
+            "type": "string",
+            "enum": [
+              "reader",
+              "author"
+            ],
+            "title": "You Were"
+          },
+          "other_name": {
+            "type": "string",
+            "title": "Other Name"
+          },
+          "other_book": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReaderBook"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Contact"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "met_on": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Met On"
+          },
+          "did_you_meet": {
+            "$ref": "#/components/schemas/DidYouMeet"
+          }
+        },
+        "type": "object",
+        "required": [
+          "checkout_id",
+          "book_title",
+          "you_were",
+          "other_name",
+          "other_book",
+          "contact",
+          "met_on",
+          "did_you_meet"
+        ],
+        "title": "PastMeet",
+        "description": "Someone you met through a checkout (docs/trove.md \u00a78). Both people get one."
+      },
       "PublicBookResponse": {
         "properties": {
           "id": {
@@ -4320,7 +4534,8 @@
               "waiting",
               "accepted",
               "cancelled",
-              "unavailable"
+              "unavailable",
+              "returned"
             ],
             "title": "Status"
           },
@@ -4355,6 +4570,16 @@
             "type": "boolean",
             "title": "New Messages",
             "default": false
+          },
+          "did_you_meet": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DidYouMeet"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
