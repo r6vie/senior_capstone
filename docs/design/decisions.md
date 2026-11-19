@@ -4,7 +4,7 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 
 ## 2026-11-18: Folio v4: new header, plain list rows, interview rebuilt (Josef: rows, header and interview did not look right)
 
-- **Corners (Josef: not so sharp):** Kit 3 now has a small corner radius, 8px on cards, buttons, fields, tabs, the avatar and the search; 12px on the black cover; 4 to 8px on book covers. Needs Josef's yes: the fixed tier says square corners.
+- **Corners (Josef: not so sharp):** Kit 3 now has a small corner radius, 5px on cards, buttons, fields, tabs, the avatar and the search; 8px on the black cover; 3 to 5px on book covers (first tried at 8px, 12px, 4 to 8px; Josef asked for smaller). Needs Josef's yes: the fixed tier says square corners.
 - **Header:** the search field and the avatar are square, 44px, 2px ink, like the buttons (the avatar is an ink tile with white initials and a dot
   shadow; the search has an icon and a "/" key hint). Needs Josef's yes: the system allows a pill for both today.
 - **List rows:** plain ruled rows (title, one line of the answer), no square markers, no dotted rules; the selected row has a full-height bar at the left edge.
