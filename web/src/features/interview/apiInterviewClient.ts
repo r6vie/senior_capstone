@@ -7,7 +7,10 @@ import {
   type InterviewClient,
   InterviewError,
   type InterviewState,
+  type LibMark,
+  type LibrarianView,
   LostError,
+  type NotebookEntry,
   type ProposedChange,
 } from "./interviewClient";
 
@@ -17,6 +20,45 @@ import {
 type MyBookResponse = components["schemas"]["MyBookResponse"];
 type ChangeResponse = components["schemas"]["Change"];
 type InterviewResponse = components["schemas"]["InterviewResponse"];
+type MarkResponse = components["schemas"]["Mark"];
+type EntryResponse = components["schemas"]["Entry"];
+type LibrarianResponse = components["schemas"]["LibrarianState"];
+
+function toMark(mark: MarkResponse): LibMark {
+  return {
+    id: mark.id,
+    move: mark.move,
+    anchor: mark.anchor,
+    occurrence: mark.occurrence,
+    note: mark.note,
+    count: mark.count ?? null,
+    struckNote: mark.struck_note ?? null,
+  };
+}
+
+function toEntry(entry: EntryResponse): NotebookEntry {
+  return {
+    id: entry.id,
+    kind: entry.kind,
+    text: entry.text,
+    anchors: entry.anchors,
+    sourceTurns: entry.source_turns,
+    status: entry.status,
+    struck: entry.struck,
+    outcomeNote: entry.outcome_note ?? null,
+  };
+}
+
+// The notebook in the response already carries the new question's circle or tick (`builds_on`).
+function toLibrarian(librarian: LibrarianResponse | null | undefined): LibrarianView | null {
+  if (!librarian) return null;
+  return {
+    answered: librarian.turns.length,
+    marks: librarian.current_marks.map(toMark),
+    silent: librarian.current_silent,
+    notebook: librarian.notebook.map(toEntry),
+  };
+}
 
 const ID = "me";
 
@@ -128,8 +170,11 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
         stage: "choosing",
         titles: (response.titles ?? []).map((option, index) => ({ id: String(index), ...option })),
       };
-    case "reviewing":
-      return myBook();
+    case "reviewing": {
+      // The Librarian's sign-off comes only on the interview, under the title at the reveal.
+      const state = await myBook();
+      return state.stage === "reviewing" ? { ...state, signOff: response.sign_off ?? null } : state;
+    }
     case "done":
       return response.nothing_new
         ? {
@@ -183,6 +228,7 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
         lastTopic: response.topic,
         needsMore: response.needs_more,
         nearlyDone: response.nearly_done,
+        librarian: toLibrarian(response.librarian),
       };
     }
   }
@@ -261,13 +307,34 @@ export const apiInterviewClient: InterviewClient = {
     const body = { question_id: waitingQuestionId };
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/skip", { body })));
   },
-  // POST /interview/notes isn't in the API yet (Trove AI is building it). Until the generated schema has
-  // it, the Librarian keeps what's on screen and adds nothing, which is also how it fails.
-  async notes(look) {
+  // Never an error for want of AI: past the limits the API keeps what holds and adds nothing. A 409 (the
+  // question moved on) or a dropped call is the same to the screen: nothing new to draw.
+  async notes(look, signal) {
+    const { data } = await api.POST("/interview/notes", {
+      body: {
+        question_id: look.questionId,
+        text: look.text,
+        previous_text: look.previousText,
+        pasted: look.pasted,
+        shown: look.shown,
+      },
+      signal,
+    });
+    if (!data) throw new InterviewError("The Librarian had nothing to add.");
     return {
-      silent: false,
-      marks: { keep: look.shown, add: [], revise: [], erase: [] },
-      notebook: { keep: look.shown, add: [], revise: [], erase: [] },
+      silent: data.silent,
+      marks: {
+        keep: data.marks.keep,
+        add: data.marks.add.map(toMark),
+        revise: data.marks.revise.map(toMark),
+        erase: data.marks.erase,
+      },
+      notebook: {
+        keep: data.notebook.keep,
+        add: data.notebook.add.map(toEntry),
+        revise: data.notebook.revise.map(toEntry),
+        erase: data.notebook.erase,
+      },
     };
   },
   async askAgain() {
