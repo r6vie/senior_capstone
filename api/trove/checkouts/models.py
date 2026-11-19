@@ -39,6 +39,8 @@ class ReadingCheckout(BaseModel):
     expires_at: datetime | None
     # The author's contact details, only once they've accepted.
     author_contact: Contact | None = None
+    # True when the conversation has something you haven't read. Private to you; never a count.
+    new_messages: bool = False
 
 
 class ReaderBook(BaseModel):
@@ -61,6 +63,8 @@ class LendingCheckout(BaseModel):
     expires_at: datetime | None
     # The reader's contact details, only once you've accepted.
     reader_contact: Contact | None = None
+    # True when the conversation has something you haven't read. Private to you; never a count.
+    new_messages: bool = False
 
 
 class MyCheckouts(BaseModel):

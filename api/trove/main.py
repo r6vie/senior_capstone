@@ -16,6 +16,8 @@ from trove.core.errors import register_error_handlers
 from trove.interview import service as interview_service
 from trove.interview.router import router as interview_router
 from trove.meetings.router import router as meetings_router
+from trove.messaging import service as messaging_service
+from trove.messaging.router import router as messaging_router
 from trove.notifications import service as notification_service
 from trove.notifications.router import router as notifications_router
 
@@ -25,6 +27,7 @@ INDEX_SETUPS = [
     books_service.ensure_indexes,
     interview_service.ensure_indexes,
     checkouts_service.ensure_indexes,
+    messaging_service.ensure_indexes,
 ]
 ROUTERS = [
     auth_router,
@@ -34,6 +37,7 @@ ROUTERS = [
     interview_router,
     checkouts_router,
     meetings_router,
+    messaging_router,
 ]
 
 # The app won't start at all with canned AI replies anywhere but on a developer's machine.

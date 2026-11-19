@@ -36,6 +36,8 @@ removing the `/api` prefix. The frontend never talks to MongoDB or Claude direct
 | `auth_attempts` | auth | Rate-limit counters, TTL index |
 | `notifications` | notifications | One document per email sent, `_id` = dedupe key |
 | `checkouts` | checkouts | One per checkout. `open` is true while requested or accepted; unique on reader + book while open. Unanswered ones expire on read, no background job |
+| `messages` | messaging | One per message or app note (`sender_id` null for a note), with the checkout id and both people. The checkout note isn't copied here |
+| `message_threads` | messaging | One per checkout (`_id` = checkout id): each person's last read, latest incoming message and last email, for the private marker and the 10-minute email gap |
 
 Each new feature adds its rows here in the PR that creates its collections.
 

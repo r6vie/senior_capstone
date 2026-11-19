@@ -1088,6 +1088,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/messages/{checkout_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Thread
+         * @description The conversation on an accepted checkout, oldest first, starting with the reader's checkout note.
+         */
+        get: operations["thread_messages__checkout_id__get"];
+        put?: never;
+        /**
+         * Send
+         * @description Write in the conversation. The other person is emailed, at most once every 10 minutes.
+         */
+        post: operations["send_messages__checkout_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/messages/{checkout_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Read
+         * @description You've seen this conversation up to `seen_up_to`. Only you ever know this.
+         */
+        post: operations["mark_read_messages__checkout_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -1433,6 +1477,11 @@ export interface components {
             /** Expires At */
             expires_at: string | null;
             reader_contact?: components["schemas"]["Contact"] | null;
+            /**
+             * New Messages
+             * @default false
+             */
+            new_messages: boolean;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -1485,6 +1534,32 @@ export interface components {
             video_link: string | null;
             /** Place Note */
             place_note: string | null;
+        };
+        /** Message */
+        Message: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "checkout_note" | "message" | "note";
+            /** From Me */
+            from_me: boolean;
+            /** Sender Name */
+            sender_name: string;
+            /** Text */
+            text: string;
+            /**
+             * Sent At
+             * Format: date-time
+             */
+            sent_at: string;
+        };
+        /** MessageRequest */
+        MessageRequest: {
+            /** Text */
+            text: string;
         };
         /**
          * MyBookResponse
@@ -1603,6 +1678,14 @@ export interface components {
             /** Playback */
             playback: string | null;
         };
+        /** ReadRequest */
+        ReadRequest: {
+            /**
+             * Seen Up To
+             * Format: date-time
+             */
+            seen_up_to: string;
+        };
         /** ReaderBook */
         ReaderBook: {
             /** Id */
@@ -1643,6 +1726,11 @@ export interface components {
             /** Expires At */
             expires_at: string | null;
             author_contact?: components["schemas"]["Contact"] | null;
+            /**
+             * New Messages
+             * @default false
+             */
+            new_messages: boolean;
         };
         /**
          * ReadingQuestionResponse
@@ -1788,6 +1876,19 @@ export interface components {
              * @description An optional résumé PDF, base64-encoded. The file isn't kept. Its text is deleted when the interview ends, or 30 days after the last activity, and nothing from it goes into the book.
              */
             resume_pdf?: string | null;
+        };
+        /** Thread */
+        Thread: {
+            /** Checkout Id */
+            checkout_id: string;
+            /** Book Title */
+            book_title: string;
+            /** Other Name */
+            other_name: string;
+            /** Can Write */
+            can_write: boolean;
+            /** Messages */
+            messages: components["schemas"]["Message"][];
         };
         /** TimesUpdate */
         TimesUpdate: {
@@ -3647,6 +3748,105 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    thread_messages__checkout_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Thread"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_messages__checkout_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MessageRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_read_messages__checkout_id__read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
