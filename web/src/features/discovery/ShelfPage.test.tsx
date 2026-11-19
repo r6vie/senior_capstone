@@ -22,6 +22,18 @@ const book = {
   copies: 3,
 };
 const second = { ...book, id: "second", title: "Starting again" };
+const changingCourse = {
+  ...book,
+  id: "changing-course",
+  title: "From Pre-Med to Product",
+  author_name: "Kofi Mensah",
+};
+const startingOver = {
+  ...book,
+  id: "starting-over",
+  title: "Growing Food in the City",
+  author_name: "Leah Szabo",
+};
 function response(data: unknown, status = 200) {
   return { data, response: { status, ok: status < 400 } };
 }
@@ -73,7 +85,9 @@ beforeEach(() => {
     toJSON: () => ({}),
   });
   api.GET.mockImplementation(async (path: string) => {
-    if (path === "/books") return response({ books: [book], next: null });
+    if (path === "/books") {
+      return response({ books: [book, changingCourse, startingOver], next: null });
+    }
     if (path === "/books/{book_id}") return response(book);
     if (path === "/books/me") return response(null, 404);
     if (path === "/interview/sparks") return response([]);
@@ -94,12 +108,24 @@ async function openBook() {
 }
 
 describe("D1 shelf and reader", () => {
-  it("loads real books and retains the Librarian example", async () => {
+  it("loads real books into the restored shelves and retains the Librarian example", async () => {
     renderShelf();
     expect(await screen.findByRole("button", { name: `${book.title}, by ${book.author_name}` })).toBeTruthy();
     expect(screen.getByText("The Librarian recommends")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Why I Turned Down Grad School Twice" })).toBeTruthy();
-    expect(screen.queryByRole("heading", { name: "Changing course" })).toBeNull();
+    const changing = screen.getByRole("region", { name: "Changing course" });
+    expect(
+      within(changing).getByRole("button", {
+        name: `${changingCourse.title}, by ${changingCourse.author_name}`,
+      }),
+    ).toBeTruthy();
+    const starting = screen.getByRole("region", { name: "Starting over" });
+    expect(
+      within(starting).getByRole("button", {
+        name: `${startingOver.title}, by ${startingOver.author_name}`,
+      }),
+    ).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Recently added" })).toBeTruthy();
     expect(api.GET).toHaveBeenCalledWith("/books", { params: { query: { limit: 20 } } });
   });
   it("turns contents pages and reads a chapter without revealing private fields", async () => {

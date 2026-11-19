@@ -7,7 +7,31 @@ import { useShelf } from "./useShelf";
 import "./ShelfPage.css";
 import { useBookStepping } from "./useBookStepping";
 
-// The Librarian remains a hardcoded example until D3. Recently added comes from the books API.
+// The Librarian remains a hardcoded example until D3. These two sample groupings restore the
+// earlier shelf preview; Recently added still contains every published book returned by the API.
+
+const SAMPLE_CATEGORY_SHELVES = [
+  {
+    name: "Changing course",
+    titles: new Set([
+      "Translating for My Parents",
+      "The Quiet Founder",
+      "Teaching Kids Who Hate Math",
+      "From Pre-Med to Product",
+      "The Accidental Data Scientist",
+    ]),
+  },
+  {
+    name: "Starting over",
+    titles: new Set([
+      "Lab Notebooks and Late Buses",
+      "Small Town, Big Contracts",
+      "The Second Language Classroom",
+      "Growing Food in the City",
+      "Fixing Old Buildings",
+    ]),
+  },
+] as const;
 
 const booksById = new Map(sampleBooks.map((book) => [book.id, book]));
 
@@ -60,6 +84,10 @@ export function ShelfPage() {
   const navigationType = useNavigationType();
   const [preview, setPreview] = useState<BookOrigin | null>(null);
   const selected = location.state as { card?: BookCard; origin?: BookOrigin; fromShelf?: boolean } | null;
+  const categoryShelves = SAMPLE_CATEGORY_SHELVES.map((category) => ({
+    name: category.name,
+    books: shelf.books.filter((book) => category.titles.has(book.title)),
+  })).filter((category) => category.books.length > 0);
 
   function bounds(element: HTMLButtonElement): BookOrigin {
     const { x, y, width, height } = element.getBoundingClientRect();
@@ -103,6 +131,24 @@ export function ShelfPage() {
           </div>
           <div className="feature-rule" />
         </section>
+
+        {categoryShelves.map((category) => (
+          <section key={category.name} className="shelf-row" aria-label={category.name}>
+            <div className="shelf-head">
+              <h2 className="shelf-name">{category.name}</h2>
+            </div>
+            <ShelfBooks>
+              {category.books.map((book) => (
+                <Book
+                  key={book.id}
+                  book={{ title: book.title, authorName: book.author_name }}
+                  onOpen={(element) => open(book, element)}
+                />
+              ))}
+            </ShelfBooks>
+            <div className="ledge" />
+          </section>
+        ))}
 
         <section className="shelf-row" aria-label="Recently added" aria-busy={shelf.busy}>
           <div className="shelf-head">
