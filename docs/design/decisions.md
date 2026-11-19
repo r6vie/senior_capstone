@@ -12,6 +12,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 - **Pencil, round 2 (`pencil2.py`):** Josef found round 1 interesting but childlike. Redrawn with four muted
   pencils, one hatching direction, tone from line density, crisp ridgelines that dissolve into paper, and one warm
   mark (a lamp and its reflection). The scene is now a lake at dusk. Round 1 (`pencil.py`) is kept for reference.
+- **6. Loose watercolour (`wash.py`), added at Josef's request:** one wet-in-wet dusk sky over still water, its top
+  edge drying ragged on bare paper. Unlike direction G (sun, three ridges, SVG filters) the sky is the subject and
+  the paint is modelled as pigment on paper (pooled edges, granulation, backruns, dry-brush sparkle).
 - **Title and name:** the title is the standard Newsreader title on plain white. The name at the foot sits on a
   white knockout over the art, as on the Strata covers.
 - **Fixed-tier flag, waiting for Josef:** art on the white book object, as with every cover direction so far.
