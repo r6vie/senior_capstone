@@ -6,6 +6,7 @@ judge on every line written. Only Haiku runs in the app; the judge runs here, in
     uv run python -m evals.librarian grief jargon
     uv run python -m evals.librarian all --effort medium   # try another effort for the notes model
     uv run python -m evals.librarian all --no-judge        # notes only: cheap, for timing a change
+    uv run python -m evals.librarian all --model claude-sonnet-5-5   # try another notes model
 
 Must pass: every silent case stays silent; no line fails the professional-tone test; nothing judged
 ungrounded (entries are also checked in code). Targets: sharp at 3/5 or better on average, some lines worth a
@@ -26,7 +27,7 @@ from anthropic import transform_schema
 from pydantic import BaseModel
 
 from evals.run import OUT_DIR
-from evals.usage import CountingClaude, product_client
+from evals.usage import CountingClaude, on_model, product_client
 from trove.ai.client import Claude, get_claude, text_of
 from trove.interview import librarian, silence
 from trove.interview.engine import Turn
@@ -257,6 +258,10 @@ def _report(everything: list[dict]) -> str:
 
 
 async def main(argv: list[str]) -> None:
+    model = librarian.NOTES_MODEL
+    if "--model" in argv:
+        model = argv[argv.index("--model") + 1]
+        argv = [a for a in argv if a not in ("--model", model)]
     effort = librarian.NOTES_EFFORT
     if "--effort" in argv:
         effort = argv[argv.index("--effort") + 1]
@@ -269,7 +274,7 @@ async def main(argv: list[str]) -> None:
         return
     chosen = CASES if names == ["all"] else [c for c in CASES if any(c["name"].startswith(n) for n in names)]
     claude = get_claude()
-    notes = TimedClaude(librarian.on_notes_model(claude))
+    notes = TimedClaude(on_model(claude, model))
     judge = CountingClaude(product_client(claude)) if judged else None
     gate = asyncio.Semaphore(CONCURRENT_CASES)
 
@@ -285,7 +290,7 @@ async def main(argv: list[str]) -> None:
     folder = OUT_DIR / "librarian"
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{datetime.now():%Y-%m-%d_%H%M%S}.md"
-    header = f"Notes effort: {effort}. Notes latency: {notes.latency()}.\n\n"
+    header = f"Notes model: {model}, effort {effort}. Notes latency: {notes.latency()}.\n\n"
     path.write_text(header + _report(list(results)) + "\n", encoding="utf-8")
     spent = notes.dollars() + (judge.dollars() if judge else 0)
     judging = f"Judge: {judge.line()}. " if judge else ""
