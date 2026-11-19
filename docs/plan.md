@@ -163,7 +163,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
   chose (`auth.contact_details_of`), at the same moment, and both get an email.
 - Done when: names and contacts are visible only to those two people, and only after accept.
 
-**C3 · Messages inside a checkout** · Ellie · `doing`
+**C3 · Messages inside a checkout** · Ellie · `done`
 - A plain thread per checkout. No messages outside a checkout (trove.md §9.8).
 - Email notification for new messages, at most one every 10 minutes per thread.
 
