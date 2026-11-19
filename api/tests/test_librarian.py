@@ -590,3 +590,12 @@ async def test_a_chapter_entry_always_reads_ch_question_mark():
     claude = FakeClaude([text_message(notes_reply(entries=[chapter]))])
     notes = await librarian.look(claude, context(TURNS[2]))
     assert [e.text for e in notes.added_entries] == ["ch. ? nine pages nobody read"]
+
+
+def test_a_prompt_example_with_one_word_swapped_is_still_a_copy():
+    assert librarian.copies_an_example("the kettle is in every scene.")
+    assert librarian.copies_an_example("the van is in every scene.")
+    assert not librarian.copies_an_example("the van keeps getting upgrades.")
+    assert "copies an example" in " ".join(
+        librarian.line_problems("the toaster is in every scene.", limit=32, member_text="")
+    )

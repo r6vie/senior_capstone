@@ -298,10 +298,37 @@ PROMPT_EXAMPLES = {
     "a budget line, not a story.",
     "the deadline did that.",
     "betting this ends in a spreadsheet.",
-    "the van has tenure.",
+    "the kettle is in every scene.",
     "ch. ? the build that broke everyone",
     "a junior would pay for this.",
 }
+
+
+# The plan's own signature lines are the voice, not examples to avoid (docs/librarian-plan.md).
+SIGNATURE_LINES = {
+    "says who?",
+    "a number would help.",
+    "this is the chapter.",
+    "résumé voice.",
+    "buried the lead.",
+    "good. keep that.",
+}
+
+
+def copies_an_example(line: str) -> bool:
+    """An example from the prompt, word for word or with one word swapped ("the van has tenure." for
+    "the whiteboard has tenure."). Swapping the noun keeps the joke, so it's still a copy."""
+    if _fold(line) in SIGNATURE_LINES:
+        return False
+    words = _words(line)
+    for example in PROMPT_EXAMPLES:
+        model = _words(example)
+        if len(model) >= 3 and len(model) == len(words):
+            if sum(a != b for a, b in zip(model, words, strict=True)) <= 1:
+                return True
+        elif words == model:
+            return True
+    return False
 
 
 def _words_of(pattern: str) -> re.Pattern:
@@ -355,7 +382,7 @@ def line_problems(line: str, *, limit: int, member_text: str, clip: bool = False
     ]
     if any(not re.search(rf"\b{re.escape(w)}\b", member_text) for w in capitals):
         problems.append("it isn't lowercase")
-    if _fold(text) in PROMPT_EXAMPLES:
+    if copies_an_example(text):
         problems.append("it copies an example from the instructions")
     return problems
 
@@ -543,7 +570,7 @@ def on_notes_model(claude: Claude) -> Claude:
     return notes
 
 
-async def _ask(claude: Claude, messages: list[dict]) -> tuple[_Notes, str]:
+async def _ask(claude: Claude, messages: list[dict], effort: str = NOTES_EFFORT) -> tuple[_Notes, str]:
     response = await claude.create(
         max_tokens=NOTES_MAX_TOKENS,
         # Cached across every answer of every interview.
@@ -552,7 +579,7 @@ async def _ask(claude: Claude, messages: list[dict]) -> tuple[_Notes, str]:
         ],
         thinking={"type": "adaptive"},
         output_config={
-            "effort": NOTES_EFFORT,
+            "effort": effort,
             "format": {"type": "json_schema", "schema": transform_schema(_Notes)},
         },
         messages=messages,
@@ -605,7 +632,7 @@ def _problems(raw: _Notes, context: Context) -> list[str]:
     return listed
 
 
-async def look(claude: Claude, context: Context) -> Notes:
+async def look(claude: Claude, context: Context, *, effort: str = NOTES_EFFORT) -> Notes:
     """One look at the answer as it stands: what to keep, add, revise and erase. Raises like the
     engine (ClaudeRefused, SDK errors, ValueError); the service degrades to keeping everything."""
     messages = [
@@ -617,7 +644,7 @@ async def look(claude: Claude, context: Context) -> Notes:
             ],
         }
     ]
-    raw, text = await _ask(claude, messages)
+    raw, text = await _ask(claude, messages, effort)
     if not raw.silent and (problems := _problems(raw, context)):
         retry = [
             *messages,
@@ -627,7 +654,7 @@ async def look(claude: Claude, context: Context) -> Notes:
                 "content": load_prompt("interview/notes_retry") + "\n\n- " + "\n- ".join(problems),
             },
         ]
-        raw, _ = await _ask(claude, retry)
+        raw, _ = await _ask(claude, retry, effort)
     return _apply(raw, context)
 
 

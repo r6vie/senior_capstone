@@ -4,6 +4,8 @@ judge on every line written. Only Haiku runs in the app; the judge runs here, in
     uv run python -m evals.librarian            # lists the cases and the cost of a run; spends nothing
     uv run python -m evals.librarian all        # runs every case (costs money: see ESTIMATE)
     uv run python -m evals.librarian grief jargon
+    uv run python -m evals.librarian all --effort medium   # try another effort for the notes model
+    uv run python -m evals.librarian all --no-judge        # notes only: cheap, for timing a change
 
 Must pass: every silent case stays silent; no line fails the professional-tone test; nothing judged
 ungrounded (entries are also checked in code). Targets: sharp at 3/5 or better on average, some lines worth a
@@ -14,7 +16,9 @@ bets called and lost, the back-cover line, the running bit) landing. Output: eva
 import asyncio
 import json
 import re
+import statistics
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -34,6 +38,28 @@ JUDGE_PROMPT = (Path(__file__).resolve().parent / "judge.md").read_text(encoding
 CONCURRENT_CASES = 3
 # About 90 Haiku looks across the cases (a few retry), and one Opus judge call per case that wrote anything.
 ESTIMATE = "about $0.90 a run: Haiku notes about $0.12, the Opus judge about $0.025 a case"
+
+
+class TimedClaude(CountingClaude):
+    """Counts like CountingClaude, and keeps each call's wall-clock time."""
+
+    def __init__(self, inner: Claude):
+        super().__init__(inner)
+        self.seconds: list[float] = []
+
+    async def create(self, **params):
+        started = time.monotonic()
+        try:
+            return await super().create(**params)
+        finally:
+            self.seconds.append(time.monotonic() - started)
+
+    def latency(self) -> str:
+        if not self.seconds:
+            return "no calls"
+        ordered = sorted(self.seconds)
+        p90 = ordered[min(len(ordered) - 1, round(0.9 * (len(ordered) - 1)))]
+        return f"median {statistics.median(ordered):.1f}s, p90 {p90:.1f}s over {len(ordered)} calls"
 
 
 class LineVerdict(BaseModel):
@@ -78,7 +104,7 @@ def _looks(case: dict) -> list[str]:
     return [parts[0], case["answer"]] if len(parts) > 1 else [case["answer"]]
 
 
-async def _typed(notes: Claude, case: dict) -> dict:
+async def _typed(notes: Claude, case: dict, effort: str = librarian.NOTES_EFFORT) -> dict:
     """The answer typed look by look, as the service runs it: server silence first, marks whose words
     left the answer offered for credit, and bets from earlier answers open to settle."""
     marks, entries, credits, settled, conceded = [], [], [], [], False
@@ -89,7 +115,9 @@ async def _typed(notes: Claude, case: dict) -> dict:
         held = librarian.marks_that_hold(marks, text)
         lost = [m for m in marks if m not in held]
         entries = librarian.entries_that_hold(entries, text)
-        looked = await librarian.look(notes, _context(case, text, held, entries, notebook, lost, conceded))
+        looked = await librarian.look(
+            notes, _context(case, text, held, entries, notebook, lost, conceded), effort=effort
+        )
         if looked.silent:
             return {"silent": True, "how": "model"}
         marks, entries = looked.marks, looked.entries
@@ -152,8 +180,8 @@ async def _judge(judge: Claude, case: dict, lines: list[dict]) -> Verdict:
     return Verdict.model_validate_json(text_of(response))
 
 
-async def run_case(notes: Claude, judge: Claude, case: dict) -> dict:
-    typed = await _typed(notes, case)
+async def run_case(notes: Claude, judge: Claude | None, case: dict, effort: str) -> dict:
+    typed = await _typed(notes, case, effort)
     marks, entries, settled = typed.get("marks", []), typed.get("entries", []), typed.get("settled", [])
     written = " ".join([*(m.note or "" for m in marks), *(e.text for e in entries)]).lower()
     moves = {m.move for m in marks} | {b.status for b in settled}
@@ -170,7 +198,7 @@ async def run_case(notes: Claude, judge: Claude, case: dict) -> dict:
         "forbidden": [w for w in case.get("must_not", []) if re.search(rf"\b{re.escape(w)}\b", written)],
     }
     lines = _lines(marks, entries, settled)
-    if not typed["silent"] and lines:
+    if judge is not None and not typed["silent"] and lines:
         result["verdict"] = (await _judge(judge, case, lines)).model_dump()
     return result
 
@@ -228,21 +256,27 @@ def _report(everything: list[dict]) -> str:
     return "\n".join(lines)
 
 
-async def main(names: list[str]) -> None:
+async def main(argv: list[str]) -> None:
+    effort = librarian.NOTES_EFFORT
+    if "--effort" in argv:
+        effort = argv[argv.index("--effort") + 1]
+        argv = [a for a in argv if a not in ("--effort", effort)]
+    judged = "--no-judge" not in argv
+    names = [a for a in argv if a != "--no-judge"]
     if not names:
         print("\n".join(f"{c['name']}: {c['expect']}" for c in CASES))
         print(f"\nA run of all {len(CASES)} cases costs {ESTIMATE}. Nothing was spent.")
         return
     chosen = CASES if names == ["all"] else [c for c in CASES if any(c["name"].startswith(n) for n in names)]
     claude = get_claude()
-    notes = CountingClaude(librarian.on_notes_model(claude))
-    judge = CountingClaude(product_client(claude))
+    notes = TimedClaude(librarian.on_notes_model(claude))
+    judge = CountingClaude(product_client(claude)) if judged else None
     gate = asyncio.Semaphore(CONCURRENT_CASES)
 
     async def one(case: dict) -> dict:
         async with gate:
             try:
-                return await run_case(notes, judge, case)
+                return await run_case(notes, judge, case, effort)
             except Exception as error:  # one case failing shouldn't lose the run
                 print(f"failed: {case['name']}: {type(error).__name__}: {error}", flush=True)
                 return {"case": case, "failed": f"{type(error).__name__}"}
@@ -251,9 +285,12 @@ async def main(names: list[str]) -> None:
     folder = OUT_DIR / "librarian"
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{datetime.now():%Y-%m-%d_%H%M%S}.md"
-    path.write_text(_report(list(results)) + "\n", encoding="utf-8")
+    header = f"Notes effort: {effort}. Notes latency: {notes.latency()}.\n\n"
+    path.write_text(header + _report(list(results)) + "\n", encoding="utf-8")
+    spent = notes.dollars() + (judge.dollars() if judge else 0)
+    judging = f"Judge: {judge.line()}. " if judge else ""
     print(
-        f"Saved {path}. Notes: {notes.line()}. Judge: {judge.line()}. Total: ${notes.dollars() + judge.dollars():.2f}"
+        f"Saved {path}. Effort {effort}. Notes: {notes.line()}; {notes.latency()}. {judging}Total: ${spent:.2f}"
     )
 
 
