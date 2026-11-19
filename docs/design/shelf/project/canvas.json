@@ -556,7 +556,7 @@
       "x": 0,
       "y": 0,
       "w": 1760,
-      "h": 3680,
+      "h": 4460,
       "title": "Interview 4 · The Librarian’s notebook, desktop",
       "page": "librarian",
       "expand": "fill"
@@ -574,17 +574,26 @@
       "x": 3760,
       "y": 0,
       "w": 1760,
-      "h": 3130,
+      "h": 4240,
       "title": "Interview 4 · The Librarian: the parts",
       "page": "librarian",
       "expand": "fill"
     },
-    "LibResume.dc.html": {
+    "LibMore.dc.html": {
       "x": 5640,
       "y": 0,
       "w": 1760,
-      "h": 1050,
-      "title": "Interview 4 · The Librarian: coming back",
+      "h": 2620,
+      "title": "Interview 4 · The Librarian: idle, paste and the sign-off",
+      "page": "librarian",
+      "expand": "fill"
+    },
+    "LibReopened.dc.html": {
+      "x": 7520,
+      "y": 0,
+      "w": 1760,
+      "h": 1110,
+      "title": "Interview 4 · The Librarian: reopened to add to the book",
       "page": "librarian",
       "expand": "fill"
     }
@@ -653,7 +662,8 @@
     "LibDesktop.dc.html",
     "LibPhone.dc.html",
     "LibParts.dc.html",
-    "LibResume.dc.html"
+    "LibMore.dc.html",
+    "LibReopened.dc.html"
   ],
   "notes": {
     "head": {

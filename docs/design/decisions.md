@@ -2,14 +2,15 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
-## 2026-11-19: the Librarian's notebook (Interview 4; waiting for Josef's choice)
+## 2026-11-19: the Librarian's notebook, round 2 (Interview 4; waiting for Josef's approval)
 
-A new page "Librarian notebook" with four boards: desktop (three moments and a red variant), phone, the parts, and coming back to an earlier answer. The Librarian reads over the
-member's shoulder: it marks the answer in a pencil hand (underline, double underline, strike and replace, loose circle, a note above a phrase) and keeps a notebook on the right
-(thread, quote and note entries; each can be writing, resting, revised or erasing). Erasing is a rub-out, never a fade. Voice: a dry senior editor ("says who?", "a number would help.").
-- **Ink:** graphite (the system's secondary ink) is proposed. A red variant is drawn and flagged; it would share red with Send, which breaks "red is the primary action and nothing else".
-- Needs Josef's yes: the handwriting face (Caveat, a fourth typeface); the notebook, marks and phone sheet as new components (Additions); notebook quotes may be offered to the book (plan, Q).
-- **Phone:** the notebook is a sheet that lifts from a one-line peek above the composer.
+Scope answers came from Josef through the orchestrator: red ink (approved as an exception to "red is the primary action and nothing else"), a commentary notebook (chapter, connection, saving,
+clip, note), the next question circling or ticking its source, the notebook hidden after the reveal and returning trimmed when the author reopens the interview, and the extras: pasted and
+résumé-speak highlight, idle lines, the handwritten sign-off. Out: doodles, swear strikes, the self-correcting question, the short-answer hold.
+Josef then asked, directly: red marker, no bullets in the notebook, text starting just after the spine, a messier and more human notebook (things underlined and rewritten above), and no footer line,
+"Only you see this" or "Command and Return sends".
+- Canvas page "Librarian notebook": `LibDesktop` (five moments), `LibPhone`, `LibParts`, `LibMore` (idle, paste, sign-off), `LibReopened`. The red exception is recorded in `docs/design/system.md`.
+- Needs Josef's yes: the handwriting face Caveat (a fourth typeface); the notebook, marks and phone sheet as new components.
 
 ## 2026-11-19: one interview redesign, as a conversation (replaces the two earlier ones; waiting for Josef's choice)
 

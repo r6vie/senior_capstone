@@ -13,8 +13,10 @@ Read this before you build or change any UI. Everything here sits beside the pro
 
 - Ink (`--ink`) on paper (`--paper`). White (`--white`) is for things you can pick up: books, fields,
   bubbles, panels.
-- **Red is the primary action and nothing else.** One red button per screen. Errors, success and
-  selection are never red.
+- **Red is the primary action, and the Librarian's hand.** One red button per screen. Errors, success and
+  selection are never red. The one exception (2026-11-19, Josef): the Librarian's handwriting and marks in the
+  interview are red, as thin line-work only, never a filled shape, button, tag or state. See Additions, "The
+  Librarian's notebook".
 - Three faces: **Barlow Condensed** (short caps labels), **Newsreader** (book titles, page titles, the
   Librarian's voice), **IBM Plex Sans** (everything you read to do a task).
 - Square corners. A pill only for the search field and avatar; a rounded bubble only for speech.
@@ -276,3 +278,18 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
 - **Check out form** (2026-11-15, Ellie, `CheckOutPage.tsx`). The book's title, byline and blurb, then one
   textarea and the screen's one red button, "Ask to check out", with the note "A thirty-minute video call, if
   the author says yes."
+
+### The Librarian's notebook (2026-11-19, design session; screens: canvas page "Librarian notebook", `LibDesktop`, `LibPhone`, `LibParts`, `LibMore`, `LibReopened`)
+
+Task: while a member types an answer in the interview, the Librarian marks it and keeps a notebook. Approved scope is in `docs/librarian-plan.md`.
+
+- **Ink exception.** The Librarian writes in `--red` (white ground 5.0:1). This is an approved exception to "red is the primary action and nothing else": handwriting
+  and marks only, thin line-work only, never a filled shape, button, tag or state. The one fill is the paste highlight (red at 20%, multiplied). `--lib: var(--red)`.
+- **The hand.** Caveat 600, 23px, tilted -2 degrees, lowercase, ending in a full stop; at most 32 characters on the answer and 60 in the notebook. A fourth face,
+  used only for the Librarian's writing (needs Josef's yes). Marks are masks of hand-drawn SVG strokes, so they take the ink colour: `mask: url(wobbly-underline.svg) 0 0/100% 100%`.
+- **Marks on the answer (`.mk`).** Anchored to exact words: underline, double underline, strike with a replacement above, loose circle, note only, and the highlight.
+  A mark is written (stroke clips in left to right), rests, and is rubbed out (the clip closes from the left), never faded. Only the marked word's line opens (about 30px, 0.35s); the cursor's line, the question and the buttons never move.
+- **The notebook (`.nbook`).** A card like the others, with the cross-hatch spine. Text starts just after the spine, with no bullets. Entries: chapter, connection, saving, clip, note.
+  Each sits a little off-level (rotation, left offset and size vary per entry) and may carry its own underline or a word rewritten above. A revised entry is struck with a line and rewritten;
+  an erased one is rubbed out. A question built on an entry circles it, or ticks a saving.
+- **Phone.** The notebook is a sheet that lifts from a one-line peek above the composer; the dot scrim sits behind it.
