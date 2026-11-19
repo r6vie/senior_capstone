@@ -28,12 +28,17 @@ function wobble(id: string) {
 export function Ink({ marks, rects }: { marks: ShownMark[]; rects: Map<string, Rect[]> }) {
   // Where each mark last was, so a mark can still be rubbed out after its words are gone.
   const last = useRef(new Map<string, Rect[]>());
+  // A note near the right edge is written a little further left, so it stays on the page. The layer's
+  // width is read as it renders, which is after the field was measured.
+  const layer = useRef<HTMLDivElement>(null);
+  const room = layer.current?.clientWidth ?? Number.POSITIVE_INFINITY;
+  const fit = (left: number, note: string) => Math.max(2, Math.min(left, room - note.length * 9.6 - 6));
   for (const [id, lines] of rects) if (lines.length) last.current.set(id, lines);
   for (const id of last.current.keys())
     if (!marks.some((shown) => shown.mark.id === id)) last.current.delete(id);
 
   return (
-    <div className="lib-ink" aria-hidden="true">
+    <div className="lib-ink" aria-hidden="true" ref={layer}>
       {marks.map(({ mark, life }) => {
         const lines = rects.get(mark.id)?.length ? (rects.get(mark.id) as Rect[]) : last.current.get(mark.id);
         // Nothing to draw until the field has been laid out; the mark is still there.
@@ -80,7 +85,7 @@ export function Ink({ marks, rects }: { marks: ShownMark[]; rects: Map<string, R
                 className="lib-note lib-note-struck"
                 style={
                   {
-                    left: first.left + shape.nudge - 2,
+                    left: fit(first.left + shape.nudge - 2, mark.struckNote),
                     top: first.top,
                     "--rot": `${shape.note.toFixed(2)}deg`,
                   } as CSSProperties
@@ -94,7 +99,7 @@ export function Ink({ marks, rects }: { marks: ShownMark[]; rects: Map<string, R
                 className={`lib-note${mark.struckNote ? " lib-note-above" : ""}`}
                 style={
                   {
-                    left: first.left + shape.nudge - 2 + (mark.struckNote ? 10 : 0),
+                    left: fit(first.left + shape.nudge - 2 + (mark.struckNote ? 10 : 0), note),
                     top: first.top,
                     "--rot": `${shape.note.toFixed(2)}deg`,
                   } as CSSProperties
