@@ -2,6 +2,15 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-18: Folio v4: new header, plain list rows, interview rebuilt (Josef: rows, header and interview did not look right)
+
+- **Header:** the search field and the avatar are square, 44px, 2px ink, like the buttons (the avatar is an ink tile with white initials and a dot
+  shadow; the search has an icon and a "/" key hint). Needs Josef's yes: the system allows a pill for both today.
+- **List rows:** plain ruled rows (title, one line of the answer), no square markers, no dotted rules; the selected row has a full-height bar at the left edge.
+- **Interview question, rebuilt from scratch:** one composed card (the question with a smaller two-line leading letter, an ordinary answer box, a footer
+  strip with Speak, Skip, the hint and the one red Send), phases as index tabs, earlier answers in a plain card beside it. Frames: ask, sending,
+  next question setting in, and a phone. Needs Josef's yes: the 68px leading letter (type table stops at 22).
+
 ## 2026-11-18: Folio v3 (Josef: too busy, no stripes, shade with cross-hatching)
 
 Folio was too busy and its secondary buttons were unreadable. v3: no stripes anywhere (including under buttons); page thickness and the spine are
