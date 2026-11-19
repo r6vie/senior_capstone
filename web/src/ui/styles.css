@@ -16,6 +16,8 @@
   --red: #d42a27; /* white text 5.0:1 */
   --red-hover: #b82220;
   --red-press: #9e1c1a;
+  /* The Librarian's ink: the system red, as thin line-work and handwriting only. */
+  --lib: var(--red);
 
   /* Context. Inside .dark these swap, and every component follows. */
   --fg: var(--ink);
@@ -26,6 +28,8 @@
     "Barlow Condensed", "Arial Narrow", sans-serif; /* labels, nav, buttons, shelf names. Caps. */
   --font-serif: "Newsreader", Georgia, serif; /* book titles, page titles, the Librarian's voice */
   --font-sans: "IBM Plex Sans", system-ui, sans-serif; /* working text */
+  /* The Librarian's hand in the interview, and nothing else (system.md, Additions). */
+  --font-hand: "Caveat", "Segoe Print", cursive;
 
   /* Space: 4px base. 44px is the page gutter. */
   --s-1: 4px;

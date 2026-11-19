@@ -5,7 +5,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, readDraft, takeOrphanDrafts } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
 import { EditForm, editKeyFor, hasEditDraft } from "./EditInPlace";
-import { ErrorMessage, Frame, RetryContext, SmallBook, Waiting } from "./InterviewFrame";
+import { AskFrame, ErrorMessage, Frame, RetryContext, SmallBook, Waiting } from "./InterviewFrame";
 import {
   type BookEdit,
   type ChapterEdit,
@@ -24,6 +24,10 @@ import {
   STARTED_FOR_EARLIER,
   useSavedLine,
 } from "./LeftoverWords";
+import { Hand } from "./librarian/Hand";
+import { Notebook } from "./librarian/Notebook";
+import { useAnnouncer } from "./librarian/useAnnouncer";
+import { useNotebook } from "./librarian/useNotebook";
 import { ChangesScreen, WaitBox } from "./ProposedChanges";
 import { UndoChanges } from "./UndoChanges";
 
@@ -145,6 +149,9 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   };
   const [hasSparks, setHasSparks] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  // The Librarian's notebook lives for the whole interview, so the next question can circle an entry.
+  const announcer = useAnnouncer();
+  const notebook = useNotebook(state?.stage === "asking" ? state.librarian : undefined, announcer.say);
   const savedLine = useSavedLine();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: loadAttempt is what asks for another try
@@ -231,7 +238,10 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     document.documentElement.scrollTop = 0;
     const asking = place.startsWith("asking:") && !welcomedBack;
     const hasKeyboard = window.matchMedia?.("(hover: hover)").matches;
-    const field = asking && hasKeyboard ? document.querySelector<HTMLElement>(".iv-answer textarea") : null;
+    const field =
+      asking && hasKeyboard
+        ? document.querySelector<HTMLElement>(".iv-answer textarea, .iv-answer [role=textbox]")
+        : null;
     (field ?? document.querySelector<HTMLElement>(".iv-say"))?.focus({ preventScroll: true });
   }, [place, loaded, loadFailed, welcomedBack]);
 
@@ -457,7 +467,12 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           );
         }
         return (
-          <Frame phase={phase} say={say(state.question)} busy={Boolean(busy)}>
+          <AskFrame
+            eyebrow={inAdding ? "Adding to your book" : "Question"}
+            question={say(state.question)}
+            busy={Boolean(busy)}
+            aside={<Notebook entries={notebook.entries} />}
+          >
             <ErrorMessage message={error} />
             {notice && (
               <p className="iv-note" role="status">
@@ -507,8 +522,17 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
                     }
                   : undefined
               }
+              librarian={{
+                client,
+                interviewId: state.id,
+                questionId: state.questionId ?? state.question,
+                view: state.librarian,
+                notebook,
+                say: announcer.say,
+              }}
             />
-          </Frame>
+            {announcer.region}
+          </AskFrame>
         );
       }
       case "shaping": {
@@ -567,6 +591,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         return (
           <ReviewScreen
             book={state.book}
+            signOff={state.signOff ?? null}
             userId={userId}
             onEditBook={async (edit) => {
               const book = await client.editBook(edit);
@@ -1214,6 +1239,7 @@ function ChapterRow({
 
 function ReviewScreen({
   book,
+  signOff,
   userId,
   onEditBook,
   onEditChapter,
@@ -1229,6 +1255,8 @@ function ReviewScreen({
   onShelve,
 }: {
   book: DraftBook;
+  /** The Librarian's one line under the title, in its hand. */
+  signOff: string | null;
   userId: string;
   onEditBook: (edit: BookEdit) => Promise<void>;
   onEditChapter: (chapterId: string, edit: ChapterEdit) => Promise<void>;
@@ -1296,6 +1324,7 @@ function ReviewScreen({
           ) : (
             <h2>{book.title}</h2>
           )}
+          {signOff && !editingBook && <SignOff line={signOff} />}
           <p className="iv-by">by {book.authorName}</p>
           {/* On a phone the book comes after the title, at the small size, on its own row. */}
           <SmallBook title={book.title} author={book.authorName} />
@@ -1393,6 +1422,29 @@ function ReviewScreen({
 }
 
 // ---------- Done ----------
+
+// Written once, at pen pace, the first time the book is shown; at rest after that.
+function SignOff({ line }: { line: string }) {
+  const [life, setLife] = useState<"writing" | "resting">(() =>
+    sessionStorage.getItem(`trove_signoff:${line}`) ? "resting" : "writing",
+  );
+  useEffect(() => {
+    if (life !== "writing") return;
+    try {
+      sessionStorage.setItem(`trove_signoff:${line}`, "1");
+    } catch {
+      // It just writes again next time.
+    }
+    const timer = setTimeout(() => setLife("resting"), 4000);
+    return () => clearTimeout(timer);
+  }, [life, line]);
+  return (
+    <p className="lib-signoff">
+      <span className="iv-visually-hidden">Librarian: {line}</span>
+      <Hand text={line} life={life} delay={0.4} />
+    </p>
+  );
+}
 
 function DoneScreen({ book }: { book: DraftBook }) {
   return (

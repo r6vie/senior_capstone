@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import { api, session } from "../../api/client";
 import { AuthProvider } from "../auth/AuthProvider";
 import { clearAllDrafts, draftKeyFor } from "./AnswerPanel";
+import { answerOf, setAnswer } from "./answerField.testing";
 import { createFakeInterviewClient, resetFakeInterview } from "./fakeInterviewClient";
 import { InterviewPage } from "./InterviewPage";
 import {
@@ -66,7 +67,7 @@ function settled() {
 }
 
 async function type(text: string) {
-  fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: text } });
+  setAnswer(await screen.findByLabelText("Your answer"), text);
 }
 
 async function answer(text: string) {
@@ -163,12 +164,13 @@ describe("InterviewPage", () => {
       expect(document.body.textContent).not.toMatch(/\b10\b/);
     }, 20_000);
 
-    it("names the steps in plain words, as a list, and says when it's mostly done", async () => {
+    it("asks on a plain page: the question as words, the answer card, and when it's mostly done", async () => {
       renderWith(at({ ...asking, phase: "dig", canFinish: true, nearlyDone: true }));
       await screen.findByLabelText("Your answer");
-      const steps = screen.getByRole("list", { name: "Where we are" });
-      expect(steps.textContent).toBe("First lookDeeperCheck");
-      expect(steps.querySelector('[aria-current="step"]')?.textContent).toBe("Deeper");
+      // LibDesktop: no band and no step names on the question screen.
+      expect(screen.queryByRole("list", { name: "Where we are" })).toBeNull();
+      expect(screen.getByText("Question")).toBeTruthy();
+      expect(screen.getByRole("heading", { level: 1, name: asking.question })).toBeTruthy();
       expect(screen.getByText("Most of the way there.")).toBeTruthy();
     });
 
@@ -211,7 +213,7 @@ describe("InterviewPage", () => {
       expect(screen.getByText(/longer than I can take in one go/)).toBeTruthy();
       const send = screen.getByRole("button", { name: "Send answer" }) as HTMLButtonElement;
       expect(send.disabled).toBe(true);
-      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe(long);
+      expect(answerOf(screen.getByLabelText("Your answer"))).toBe(long);
     });
 
     it("sends with Ctrl or Cmd and Enter", async () => {
@@ -363,7 +365,7 @@ describe("InterviewPage", () => {
       expect(await screen.findByText("The next question?")).toBeTruthy();
       expect(screen.getByText("Your answer was saved.")).toBeTruthy();
       expect(screen.queryByRole("alert")).toBeNull();
-      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("");
+      expect(answerOf(screen.getByLabelText("Your answer"))).toBe("");
       expect(localStorage.getItem(draftKeyFor("anon", asking.question))).toBeNull();
     });
 
@@ -374,7 +376,7 @@ describe("InterviewPage", () => {
       expect(await screen.findByText("The next question?")).toBeTruthy();
       expect(screen.getByText(/already moved past that question on another screen/)).toBeTruthy();
       expect(screen.queryByText("Your answer was saved.")).toBeNull();
-      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("My careful answer");
+      expect(answerOf(screen.getByLabelText("Your answer"))).toBe("My careful answer");
       expect(localStorage.getItem(draftKeyFor("anon", next.question))).toBe("My careful answer");
     });
 
@@ -389,7 +391,7 @@ describe("InterviewPage", () => {
       await type("My last words");
       fireEvent.click(screen.getByRole("button", { name: "Send this, then show me my book" }));
       expect(await screen.findByText("The next question?")).toBeTruthy();
-      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("My last words");
+      expect(answerOf(screen.getByLabelText("Your answer"))).toBe("My last words");
     });
 
     const lost = () => new TypeError("Failed to fetch");
@@ -437,7 +439,7 @@ describe("InterviewPage", () => {
       fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
       expect(await screen.findByText("The next question?")).toBeTruthy();
       expect(screen.getByText(/Your first version was saved. Your changes are still here/)).toBeTruthy();
-      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("New better words");
+      expect(answerOf(screen.getByLabelText("Your answer"))).toBe("New better words");
       expect(send).toHaveBeenCalledTimes(1);
     });
 
@@ -447,9 +449,7 @@ describe("InterviewPage", () => {
       renderWith(client);
       await type("My answer");
       fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
-      await waitFor(() =>
-        expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe(""),
-      );
+      await waitFor(() => expect(answerOf(screen.getByLabelText("Your answer"))).toBe(""));
     });
 
     it("says so when asking for the next question fails again", async () => {

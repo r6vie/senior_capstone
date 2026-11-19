@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Button } from "../../ui/Button";
+import { type LibrarianContext, LibrarianField, type LibrarianFieldHandle } from "./librarian/LibrarianField";
 import { speechSupported, useSpeech } from "./useSpeech";
 
 // The member's answer to one question: typed, or spoken and then corrected before sending.
@@ -53,9 +54,21 @@ interface Props {
   /** One line under the panel on how far along this is. Never a count. */
   progress?: string;
   exit?: AnswerExit;
+  /** The Librarian reads this answer as it's typed, and marks it. */
+  librarian?: LibrarianContext;
 }
 
-export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, progress, exit }: Props) {
+export function AnswerPanel({
+  draftKey,
+  busy,
+  onSend,
+  onSkip,
+  note,
+  aside,
+  progress,
+  exit,
+  librarian,
+}: Props) {
   const [mode, setMode] = useState<Mode>("typing");
   const [text, setText] = useState(() => readDraft(draftKey));
   const [draftSaved, setDraftSaved] = useState(false);
@@ -64,6 +77,9 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, progr
   const canSpeak = speechSupported();
   const fieldId = useId();
   const field = useRef<HTMLTextAreaElement>(null);
+  const marked = useRef<LibrarianFieldHandle>(null);
+  const labelId = useId();
+  const focusField = () => (librarian ? marked.current?.focus() : field.current?.focus());
   const stopButton = useRef<HTMLButtonElement>(null);
   const previousMode = useRef<Mode>(mode);
   // What was in the field when Speak was pressed, and what the last recording added to it.
@@ -98,11 +114,12 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, progr
   }, [mode, speech.listening, speech.transcript, speech.dropped]);
 
   // Speak, Stop and Cancel unmount as the mode changes; keep keyboard focus where the member is working.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only a change of mode moves focus
   useEffect(() => {
     if (previousMode.current === mode) return;
     previousMode.current = mode;
     if (mode === "recording") stopButton.current?.focus();
-    else field.current?.focus();
+    else focusField();
   }, [mode]);
 
   function record() {
@@ -127,9 +144,11 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, progr
   function send() {
     if (tooLong) return;
     if (empty) {
-      field.current?.focus();
+      focusField();
       return;
     }
+    // The Librarian has something to say before these words go: the field stays, and the next Send sends.
+    if (marked.current?.holdSend(text)) return;
     onSend(text.trim());
   }
 
@@ -166,28 +185,47 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, progr
     );
   }
 
-  return (
+  const fieldBlock = (
     <>
       <div
-        className={`field iv-answer${mode === "transcript" ? " iv-answer-edit" : ""}`}
+        className={`field iv-answer${mode === "transcript" ? " iv-answer-edit" : ""}${librarian ? " lib-answer" : ""}`}
         data-invalid={tooLong || undefined}
       >
-        <label htmlFor={fieldId} className="iv-visually-hidden">
+        <label htmlFor={fieldId} id={labelId} className="iv-visually-hidden">
           Your answer
         </label>
-        <textarea
-          id={fieldId}
-          ref={field}
-          value={text}
-          placeholder="Say it in your own words"
-          onChange={(event) => setText(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-              event.preventDefault();
-              send();
-            }
-          }}
-        />
+        {librarian ? (
+          <LibrarianField
+            id={fieldId}
+            labelId={labelId}
+            handle={marked}
+            value={text}
+            placeholder="Say it in your own words"
+            invalid={tooLong}
+            librarian={librarian}
+            onChange={setText}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                event.preventDefault();
+                send();
+              }
+            }}
+          />
+        ) : (
+          <textarea
+            id={fieldId}
+            ref={field}
+            value={text}
+            placeholder="Say it in your own words"
+            onChange={(event) => setText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                event.preventDefault();
+                send();
+              }
+            }}
+          />
+        )}
         {tooLong && (
           <span className="hint" role="status">
             That's longer than I can take in one go. Trim it, or send the first part and I'll ask for the
@@ -195,6 +233,10 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, progr
           </span>
         )}
       </div>
+    </>
+  );
+  const messages = (
+    <>
       {note && <p className="iv-note">{note}</p>}
       {mode === "transcript" && text.includes(lastHeard.current) && (
         <p className="iv-note">
@@ -213,35 +255,51 @@ export function AnswerPanel({ draftKey, busy, onSend, onSkip, note, aside, progr
           The microphone stopped before I heard anything. You can try again or type your answer.
         </p>
       )}
-      <div className="iv-row">
-        {canSpeak && (
-          <Button variant="secondary" onClick={record}>
-            <MicIcon /> {mode === "transcript" ? "Record again" : "Speak"}
-          </Button>
-        )}
-        {mode === "transcript" && (
-          <button type="button" className="button button-quiet" onClick={() => setMode("typing")}>
-            Type instead
-          </button>
-        )}
-        {/* Only while the field is empty: a mis-tap beside Send must never cost the member their words. */}
-        {empty && onSkip && (
-          <button type="button" className="button button-quiet" onClick={onSkip}>
-            Skip
-          </button>
-        )}
-        {aside}
-        <span className="iv-grow" />
-        {draftSaved && <span className="iv-saved">Saved</span>}
-        <Button
-          onClick={send}
-          disabled={tooLong}
-          aria-busy={busy}
-          aria-keyshortcuts="Meta+Enter Control+Enter"
-        >
-          Send answer
+    </>
+  );
+  const buttons = (
+    <div className={librarian ? "iv-row lib-afoot" : "iv-row"}>
+      {canSpeak && (
+        <Button variant="secondary" onClick={record}>
+          <MicIcon /> {mode === "transcript" ? "Record again" : "Speak"}
         </Button>
-      </div>
+      )}
+      {mode === "transcript" && (
+        <button type="button" className="button button-quiet" onClick={() => setMode("typing")}>
+          Type instead
+        </button>
+      )}
+      {/* Only while the field is empty: a mis-tap beside Send must never cost the member their words. */}
+      {empty && onSkip && (
+        <button type="button" className="button button-quiet" onClick={onSkip}>
+          Skip
+        </button>
+      )}
+      {aside}
+      <span className="iv-grow" />
+      {draftSaved && <span className="iv-saved">Saved</span>}
+      <Button onClick={send} disabled={tooLong} aria-busy={busy} aria-keyshortcuts="Meta+Enter Control+Enter">
+        Send answer
+      </Button>
+    </div>
+  );
+
+  return (
+    <>
+      {librarian ? (
+        // The answer card (LibDesktop): "Your answer", the field, and Speak, Skip and Send in its footer.
+        <div className="surf lib-card">
+          <p className="lib-card-lab" aria-hidden="true">
+            Your answer
+          </p>
+          {fieldBlock}
+          {buttons}
+        </div>
+      ) : (
+        fieldBlock
+      )}
+      {messages}
+      {!librarian && buttons}
       {(exit || progress) && (
         <div className="iv-exit">
           {progress && <p className="iv-note">{progress}</p>}

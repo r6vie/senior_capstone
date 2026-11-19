@@ -477,4 +477,108 @@ describe("apiInterviewClient", () => {
     } as never);
     await expect(apiInterviewClient.putOnShelf("me")).rejects.toThrow("A book needs at least 3 chapters.");
   });
+
+  it("brings the Librarian's marks and notebook with the question, the circle already on its source", async () => {
+    vi.spyOn(api, "GET").mockResolvedValue(
+      ok(
+        interview({
+          librarian: {
+            turns: [{ question: "First?", answer: "The build broke.", marks: [], silent: false }],
+            current_marks: [
+              { id: "m_1", move: "circle", anchor: "whiteboard", occurrence: 1, note: "tenure.", count: 3 },
+            ],
+            current_silent: false,
+            notebook: [
+              {
+                id: "n_1",
+                kind: "bet",
+                text: "betting this ends in a spreadsheet.",
+                anchors: ["build"],
+                source_turns: [1],
+                status: "called",
+                struck: [],
+                outcome_note: "called it.",
+              },
+            ],
+          },
+        }),
+      ),
+    );
+    const state = await apiInterviewClient.current();
+    expect(state?.stage === "asking" && state.librarian).toEqual({
+      answered: 1,
+      marks: [
+        {
+          id: "m_1",
+          move: "circle",
+          anchor: "whiteboard",
+          occurrence: 1,
+          note: "tenure.",
+          count: 3,
+          struckNote: null,
+        },
+      ],
+      silent: false,
+      notebook: [
+        {
+          id: "n_1",
+          kind: "bet",
+          text: "betting this ends in a spreadsheet.",
+          anchors: ["build"],
+          sourceTurns: [1],
+          status: "called",
+          struck: [],
+          outcomeNote: "called it.",
+        },
+      ],
+    });
+  });
+
+  it("sends a look at the answer and maps what the Librarian does", async () => {
+    const post = vi.spyOn(api, "POST").mockResolvedValue(
+      ok({
+        silent: false,
+        marks: {
+          keep: ["m_0"],
+          add: [],
+          revise: [
+            {
+              id: "m_1",
+              move: "underline",
+              anchor: "11 weeks",
+              occurrence: 1,
+              note: "better.",
+              struck_note: "how long?",
+            },
+          ],
+          erase: ["m_2"],
+        },
+        notebook: { keep: [], add: [], revise: [], erase: ["n_3"] },
+      }),
+    );
+    const reply = await apiInterviewClient.notes({
+      questionId: "q4",
+      text: "It took 11 weeks.",
+      previousText: "It took a long time.",
+      pasted: false,
+      shown: ["m_0", "m_1", "m_2", "n_3"],
+    });
+    expect(post).toHaveBeenCalledWith("/interview/notes", {
+      body: {
+        question_id: "q4",
+        text: "It took 11 weeks.",
+        previous_text: "It took a long time.",
+        pasted: false,
+        shown: ["m_0", "m_1", "m_2", "n_3"],
+      },
+      signal: undefined,
+    });
+    expect(reply.marks.revise[0]).toMatchObject({
+      anchor: "11 weeks",
+      note: "better.",
+      struckNote: "how long?",
+    });
+    expect(reply.marks.erase).toEqual(["m_2"]);
+    expect(reply.notebook.erase).toEqual(["n_3"]);
+  });
 });

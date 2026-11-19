@@ -1,6 +1,7 @@
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../ui/Button";
+import { useAuth } from "../auth/AuthProvider";
 import type { Phase } from "./interviewClient";
 import { LeftoverWords } from "./LeftoverWords";
 import "./InterviewPage.css";
@@ -85,6 +86,72 @@ export function Frame({
       <LeftoverWords />
       <main className="iv-act" tabIndex={-1} inert={busy} aria-busy={busy}>
         {children}
+      </main>
+    </div>
+  );
+}
+
+/** The question screen with the Librarian (LibDesktop, LibPhone): a plain header, the question as words
+ * on the page, the answer card under it, and the Librarian's notebook beside them. */
+export function AskFrame({
+  eyebrow,
+  question,
+  busy,
+  aside,
+  children,
+}: {
+  /** "Question", or "Adding to your book" in a round on a shelved book. */
+  eyebrow: string;
+  question: ReactNode;
+  busy?: boolean;
+  /** The notebook. */
+  aside?: ReactNode;
+  children?: ReactNode;
+}) {
+  const { user } = useAuth();
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    setSlow(false);
+    if (!busy) return;
+    const timer = setTimeout(() => setSlow(true), SLOW_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, [busy]);
+
+  return (
+    <div className="interview iv-ask">
+      <header className="iv-top">
+        <span className="wordmark">Trove</span>
+        <span className="iv-grow" />
+        <Link to="/my-book" className="button button-quiet">
+          Leave for now
+        </Link>
+        {user && (
+          <Link to="/settings" className="avatar" aria-label="Settings">
+            {user.first_name.charAt(0)}
+            {user.last_name?.charAt(0)}
+          </Link>
+        )}
+      </header>
+      {/* Outside the part that goes inert during a wait: these words have to stay selectable. */}
+      <LeftoverWords />
+      <main className="iv-act" tabIndex={-1} inert={busy} aria-busy={busy}>
+        <div className="lib-cols">
+          <div className="lib-main">
+            <div className="iv-question">
+              <p className="iv-qeye">{eyebrow}</p>
+              <h1 className="iv-say iv-q" tabIndex={-1} aria-live="polite">
+                {question}
+              </h1>
+              {slow && (
+                <p className="iv-still" role="status">
+                  Still working. Your answers are saved.
+                </p>
+              )}
+            </div>
+            {children}
+          </div>
+          {aside}
+        </div>
       </main>
     </div>
   );
