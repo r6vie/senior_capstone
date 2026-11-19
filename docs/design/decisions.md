@@ -2,6 +2,12 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-19: Folio front page: shelves out of the folder, "My book" beside the bookmark (Josef: no large folder)
+
+On Kit 3's example page the two shelves no longer sit in a tabbed folio card. They are Kit 1's shelf: a name, a rule and "See the whole shelf" over a
+row of books standing on one ink ledge with a hatch cast, straight on the page. The genre tabs are gone from this page. Under the hero are two equal
+blocks: the bookmarked "Review the request" and a new "Your book" block (small cover, title, Open), as in Kit 2. Waiting for Josef's choice.
+
 ## 2026-11-18: two new complete interview redesigns on Folio v4 (waiting for Josef's choice)
 
 Boards "Interview 1 · The thread" and "Interview 2 · Question and answer pages" on the Elevate page, each with the question, sending, the next
