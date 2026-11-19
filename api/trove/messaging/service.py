@@ -13,7 +13,7 @@ from pymongo import ASCENDING, DESCENDING, ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
 
 from trove.auth.service import full_names_of, on_account_deleted
-from trove.checkouts.service import ACCEPTED, get_checkout, get_checkout_for
+from trove.checkouts.service import ACCEPTED, RETURNED, get_checkout, get_checkout_for
 from trove.notifications.service import notify_new_message
 
 RATE_LIMIT = 30  # messages per person per thread...
@@ -22,10 +22,10 @@ EMAIL_GAP = timedelta(minutes=10)  # at most one new-message email per thread pe
 MAX_NOTE = 300
 THREAD_LIMIT = 500  # messages returned for one thread; threads are short in practice
 
-# A thread can be read while the checkout is in one of these states, and written to in the first.
-# When C4 adds "Did you meet?", the returned state belongs in READABLE only: read-only history.
+# A thread can be read while the checkout is in one of these states, and written to only while accepted.
+# After "Did you meet?" returns the copy, it's read-only history (docs/trove.md §6, §8).
 WRITABLE = {ACCEPTED}
-READABLE = {ACCEPTED}
+READABLE = {ACCEPTED, RETURNED}
 
 
 class MessageRefused(Exception):
