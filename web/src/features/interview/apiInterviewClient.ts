@@ -261,6 +261,15 @@ export const apiInterviewClient: InterviewClient = {
     const body = { question_id: waitingQuestionId };
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/skip", { body })));
   },
+  // POST /interview/notes isn't in the API yet (Trove AI is building it). Until the generated schema has
+  // it, the Librarian keeps what's on screen and adds nothing, which is also how it fails.
+  async notes(look) {
+    return {
+      silent: false,
+      marks: { keep: look.shown, add: [] },
+      notebook: { keep: look.shown, add: [], revise: [], erase: [] },
+    };
+  },
   async askAgain() {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/question")));
   },

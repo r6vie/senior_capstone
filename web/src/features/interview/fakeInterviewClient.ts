@@ -3,7 +3,11 @@ import type {
   DraftBook,
   InterviewClient,
   InterviewState,
+  LibMark,
   MyBook,
+  NotebookEntry,
+  NotesLook,
+  NotesReply,
   Phase,
   ProposedChange,
   ReadingQuestion,
@@ -159,6 +163,9 @@ interface Stored {
   previous?: DraftBook;
   sparks?: Spark[];
   reading?: ReadingQuestion[];
+  /** The Librarian's notebook, and its marks on the answer being written. */
+  notebook?: NotebookEntry[];
+  marks?: LibMark[];
 }
 
 function scripted(index: number) {
@@ -227,6 +234,12 @@ function view(stored: Stored, authorName: string): InterviewState {
         nearlyDone: answered(stored) >= CAN_FINISH_AFTER,
         hasAnswers: answered(stored) > 0,
         lastTopic: stored.answers.length > 0 ? previous.topic : null,
+        librarian: {
+          answered: stored.answers.length,
+          marks: stored.marks ?? [],
+          silent: false,
+          notebook: stored.notebook ?? [],
+        },
       };
     }
     case "shaping":
@@ -244,6 +257,13 @@ function view(stored: Stored, authorName: string): InterviewState {
       return { id, stage: "drafting", about: "book" };
     case "notEnough":
       return { id, stage: "notEnough" };
+    case "reviewing":
+      return {
+        id,
+        stage: "reviewing",
+        book: stored.book ?? emptyBook(authorName),
+        signOff: "took some editing.",
+      };
     default:
       return { id, stage: stored.stage, book: stored.book ?? emptyBook(authorName) };
   }
@@ -287,6 +307,62 @@ function stageOf(stored: Stored | null): BookStage {
   }
 }
 
+// A stand-in Librarian with no AI: a few fixed reactions, so the screen can be tried and tested free.
+const SCRIPT: { anchor: string; move: LibMark["move"]; note: string }[] = [
+  { anchor: "leveraged", move: "strike", note: "used." },
+  { anchor: "everyone", move: "underline", note: "says who?" },
+  { anchor: "a long time", move: "underline", note: "how long?" },
+  { anchor: "stale cache", move: "circle", note: "this is the chapter." },
+];
+
+function fakeId(...parts: string[]): string {
+  let hash = 0;
+  for (const char of parts.join("|")) hash = (Math.imul(hash, 31) + char.charCodeAt(0)) | 0;
+  return `lib-${(hash >>> 0).toString(36)}`;
+}
+
+export function fakeNotes(look: NotesLook, notebook: NotebookEntry[], turn: number): NotesReply {
+  const lower = look.text.toLowerCase();
+  const marks = SCRIPT.filter((line) => new RegExp(`\\b${line.anchor}\\b`).test(lower)).map(
+    (line): LibMark => ({
+      id: fakeId(line.move, line.anchor),
+      move: line.move,
+      anchor: look.text.slice(lower.indexOf(line.anchor), lower.indexOf(line.anchor) + line.anchor.length),
+      occurrence: 1,
+      note: line.note,
+    }),
+  );
+  const words = look.text.match(/[A-Za-z]{5,}/g) ?? [];
+  const mine = notebook.filter((entry) => entry.sourceTurns.includes(turn));
+  const add: NotebookEntry[] = [];
+  const first = words[0];
+  if (first && words.length >= 6 && !mine.some((entry) => entry.kind === "chapter")) {
+    add.push({
+      id: fakeId("chapter", String(turn), first),
+      kind: "chapter",
+      text: `ch. ? the ${first.toLowerCase()} story`,
+      anchors: [first],
+      sourceTurns: [turn],
+      status: "open",
+      struck: [],
+    });
+  }
+  const shown = new Set(look.shown);
+  return {
+    silent: false,
+    marks: {
+      keep: marks.filter((mark) => shown.has(mark.id)).map((mark) => mark.id),
+      add: marks.filter((mark) => !shown.has(mark.id)),
+    },
+    notebook: {
+      keep: notebook.map((entry) => entry.id).filter((id) => shown.has(id)),
+      add,
+      revise: [],
+      erase: [],
+    },
+  };
+}
+
 export function createFakeInterviewClient(authorName: string, delay = 1200): InterviewClient {
   function mutate(id: string, change: (stored: Stored) => void): Promise<InterviewState> {
     return wait(delay).then(() => {
@@ -324,6 +400,7 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
     },
     answer: (id, text) =>
       mutate(id, (stored) => {
+        stored.marks = [];
         if (stored.stage === "adding") {
           stored.addingAnswers = (stored.addingAnswers ?? 0) + 1;
           return;
@@ -331,8 +408,21 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
         stored.answers.push(text);
         if (stored.answers.length >= QUESTIONS.length) stored.stage = "shaping";
       }),
+    async notes(look) {
+      await wait(delay);
+      const stored = load();
+      if (!stored) throw new Error("This interview has ended.");
+      const notebook = stored.notebook ?? [];
+      const reply = fakeNotes(look, notebook, stored.answers.length + 1);
+      const kept = (stored.marks ?? []).filter((mark) => reply.marks.keep.includes(mark.id));
+      stored.marks = [...kept, ...reply.marks.add];
+      stored.notebook = [...notebook, ...reply.notebook.add];
+      save(stored);
+      return reply;
+    },
     skip: (id) =>
       mutate(id, (stored) => {
+        stored.marks = [];
         if (stored.stage === "adding") return;
         stored.answers.push("");
         if (stored.answers.length >= QUESTIONS.length) stored.stage = "shaping";

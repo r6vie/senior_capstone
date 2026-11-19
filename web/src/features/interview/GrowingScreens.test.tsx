@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "../auth/AuthProvider";
+import { answerOf, setAnswer } from "./answerField.testing";
 import { createFakeInterviewClient, resetFakeInterview } from "./fakeInterviewClient";
 import { InterviewPage } from "./InterviewPage";
 import {
@@ -136,7 +137,7 @@ describe("adding to a book", () => {
     localStorage.setItem("trove_interview_seen:anon", String(Date.now()));
     const finish = vi.fn(async (): Promise<InterviewState> => ({ id: "me", stage: "writing" }));
     show(client(inRound, { finish }));
-    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "My words" } });
+    setAnswer(await screen.findByLabelText("Your answer"), "My words");
     press("Send this, then write the changes");
     expect(finish).toHaveBeenCalledWith("me", "My words");
   });
@@ -336,9 +337,7 @@ describe("words that can't go where they were meant", () => {
     async (_, now) => {
       localStorage.setItem("trove_interview_seen:anon", String(Date.now()));
       show(moved(now));
-      fireEvent.change(await screen.findByLabelText("Your answer"), {
-        target: { value: "My careful words" },
-      });
+      setAnswer(await screen.findByLabelText("Your answer"), "My careful words");
       press("Send answer");
       expect(await screen.findByText("My careful words")).toBeTruthy();
       expect(
@@ -353,7 +352,7 @@ describe("words that can't go where they were meant", () => {
   it("the words stay usable during a wait, and the wait doesn't claim everything was saved", async () => {
     localStorage.setItem("trove_interview_seen:anon", String(Date.now()));
     show(moved({ id: "me", stage: "drafting", about: "titles" }));
-    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "My careful words" } });
+    setAnswer(await screen.findByLabelText("Your answer"), "My careful words");
     press("Send answer");
     const words = await screen.findByText("My careful words");
     expect(words.closest("[inert]")).toBeNull();
@@ -367,10 +366,10 @@ describe("words that can't go where they were meant", () => {
     vi.spyOn(c, "current").mockResolvedValueOnce(inRound).mockResolvedValue({ id: "me", stage: "writing" });
     const answer = vi.spyOn(c, "answer").mockRejectedValueOnce(new TypeError("Failed to fetch"));
     show(c);
-    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "First." } });
+    setAnswer(await screen.findByLabelText("Your answer"), "First.");
     press("Send answer");
     await screen.findByRole("alert");
-    fireEvent.change(screen.getByLabelText("Your answer"), { target: { value: "Better." } });
+    setAnswer(screen.getByLabelText("Your answer"), "Better.");
     press("Send answer");
     expect(await screen.findByText("Better.")).toBeTruthy();
     expect(screen.getByText(/Your first version was saved/)).toBeTruthy();
@@ -645,7 +644,7 @@ describe("the reading question", () => {
       ),
       "/interview/reading/r1",
     );
-    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "They asked why." } });
+    setAnswer(await screen.findByLabelText("Your answer"), "They asked why.");
     press("Send answer");
     expect(await screen.findByText("I'm checking whether this belongs in your book.")).toBeTruthy();
     expect(answer).toHaveBeenCalledWith("r1", "They asked why.");
@@ -665,7 +664,7 @@ describe("the reading question", () => {
       ),
       "/interview/reading/r1",
     );
-    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "They asked why." } });
+    setAnswer(await screen.findByLabelText("Your answer"), "They asked why.");
     press("Send answer");
     expect(await screen.findByText("Your answer was saved.")).toBeTruthy();
     expect(screen.getByText("I'm checking whether this belongs in your book.")).toBeTruthy();
@@ -682,12 +681,12 @@ describe("the reading question", () => {
       }),
       "/interview/reading/r1",
     );
-    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "My words." } });
+    setAnswer(await screen.findByLabelText("Your answer"), "My words.");
     press("Send answer");
     expect((await screen.findByRole("alert")).textContent).toMatch(/these words weren't saved/);
     expect(asked).toHaveBeenCalled();
     expect(screen.queryByText("Your answer was saved.")).toBeNull();
-    expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("My words.");
+    expect(answerOf(screen.getByLabelText("Your answer"))).toBe("My words.");
   });
 
   it("a refusal that says this answer arrived goes on and says it was saved", async () => {
@@ -704,7 +703,7 @@ describe("the reading question", () => {
       ),
       "/interview/reading/r1",
     );
-    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "My words." } });
+    setAnswer(await screen.findByLabelText("Your answer"), "My words.");
     press("Send answer");
     expect(await screen.findByText("Your answer was saved.")).toBeTruthy();
   });
@@ -723,10 +722,10 @@ describe("the reading question", () => {
       client({ id: "me", stage: "writing" }, { readingQuestions: asked, answerReading: answer }),
       "/interview/reading/r1",
     );
-    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "First." } });
+    setAnswer(await screen.findByLabelText("Your answer"), "First.");
     press("Send answer");
     await screen.findByRole("alert");
-    fireEvent.change(screen.getByLabelText("Your answer"), { target: { value: "Better." } });
+    setAnswer(screen.getByLabelText("Your answer"), "Better.");
     press("Send answer");
     expect(await screen.findByText("Better.")).toBeTruthy();
     expect(screen.getByText(/Your first version was saved/)).toBeTruthy();
@@ -742,10 +741,10 @@ describe("the reading question", () => {
       }),
       "/interview/reading/r1",
     );
-    fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: "They asked why." } });
+    setAnswer(await screen.findByLabelText("Your answer"), "They asked why.");
     press("Send answer");
     expect((await screen.findByRole("alert")).textContent).toMatch(/Your answer is still here/);
-    expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("They asked why.");
+    expect(answerOf(screen.getByLabelText("Your answer"))).toBe("They asked why.");
   });
 
   it("says so when the question isn't waiting any more", async () => {
