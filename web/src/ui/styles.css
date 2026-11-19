@@ -534,21 +534,34 @@ body {
 }
 
 /* ---------- Surfaces ---------- */
-/* Folio's card: a white face, a 2px ink line, a small radius and a dot shadow under it. Nothing else. */
+/* Folio's card: a white face, a 2px ink line, a small radius and a dot shadow under it. Nothing else.
+   The face is its own layer above the shadow, inside the card's stacking, so a button on the card can
+   still cast its own shadow onto the face. */
 .panel,
 .surf {
   position: relative;
+  isolation: isolate;
   padding: 22px 24px;
+  border: var(--line) solid transparent;
+  border-radius: var(--r);
+  color: var(--ink);
+}
+.panel::before,
+.surf::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: calc(-1 * var(--line));
   border: var(--line) solid var(--ink);
   border-radius: var(--r);
-  background: var(--white);
-  color: var(--ink);
+  background: var(--face, var(--white));
+  pointer-events: none;
 }
 .panel::after,
 .surf::after {
   content: "";
   position: absolute;
-  z-index: -1;
+  z-index: -2;
   inset: 9px -11px -11px 9px;
   border-radius: var(--r);
   background: var(--dots);
@@ -559,32 +572,17 @@ body {
   padding-left: 62px;
 }
 .surf-spine::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 44px;
-  border-radius: var(--r) 0 0 var(--r);
-  background-image: var(--hatch);
-  -webkit-mask-image: linear-gradient(90deg, #000 0, rgb(0 0 0 / 0.45) 35%, transparent 85%);
-  mask-image: linear-gradient(90deg, #000 0, rgb(0 0 0 / 0.45) 35%, transparent 85%);
-  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / 0) 0, rgb(255 255 255 / 0.55) 15px, var(--white) 37px) 0 0 / 44px
+    100% no-repeat,
+    repeating-linear-gradient(45deg, var(--ink) 0 1px, transparent 1px 6px) 0 0 / 44px 100% no-repeat,
+    repeating-linear-gradient(-45deg, var(--ink) 0 1px, transparent 1px 6px) 0 0 / 44px 100% no-repeat,
+    var(--white);
 }
-/* Cards and boxes hold their own shadows, so a button's shadow inside one stays visible. */
-.panel,
-.surf,
+/* Boxes with a face of their own hold their buttons' shadows, so those stay visible. */
 .message,
-.dialog,
 .empty {
   isolation: isolate;
-}
-.panel > h2,
-.panel > h3 {
-  margin: 0 0 var(--s-4);
-  font: 800 24px / 1 var(--font-display);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 .message {
   display: flex;
