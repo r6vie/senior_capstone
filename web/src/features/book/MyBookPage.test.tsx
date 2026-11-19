@@ -298,7 +298,8 @@ describe("MyBookPage", () => {
     show(client("shelf"));
     expect(await screen.findByText("My careful words")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "I've got them" }));
-    expect(screen.queryByText("My careful words")).toBeNull();
+    // The page may still be loading its book; the words go once the update lands.
+    await waitFor(() => expect(screen.queryByText("My careful words")).toBeNull());
     expect(localStorage.getItem("trove_interview_draft:leftover:anon")).toBeNull();
   });
 

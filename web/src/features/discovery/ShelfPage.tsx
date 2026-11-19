@@ -1,7 +1,8 @@
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { type BookCard, type BookOrigin, BookReader } from "./BookReader";
+import { FrontDesk } from "./FrontDesk";
 import { type SampleBook, sampleBooks, sampleFeatured } from "./sampleBooks";
 import { useShelf } from "./useShelf";
 import "./ShelfPage.css";
@@ -65,13 +66,100 @@ function Book({
   );
 }
 
-function ShelfBooks({ children }: { children: ReactNode }) {
+function Arrow({ back }: { back?: boolean }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.6"
+      aria-hidden="true"
+    >
+      <path d={back ? "M15 5l-7 7 7 7" : "M9 5l7 7-7 7"} />
+    </svg>
+  );
+}
+
+/** A shelf: its name and rule, arrows that move the row in place a book at a time, and the books on
+ * one ink ledge. The next book peeks in at the edge. There is no separate "whole shelf" page. */
+function ShelfRow({ name, children, busy }: { name: string; children: ReactNode; busy?: boolean }) {
   const row = useRef<HTMLDivElement>(null);
   useBookStepping(row);
+  const [ends, setEnds] = useState({ start: true, end: true });
+
+  const look = useCallback(() => {
+    const element = row.current;
+    if (!element) return;
+    const max = element.scrollWidth - element.clientWidth;
+    setEnds({ start: element.scrollLeft <= 1, end: element.scrollLeft >= max - 1 });
+  }, []);
+
+  useEffect(() => {
+    const element = row.current;
+    if (!element) return;
+    look();
+    element.addEventListener("scroll", look, { passive: true });
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(look);
+    observer?.observe(element);
+    return () => {
+      element.removeEventListener("scroll", look);
+      observer?.disconnect();
+    };
+  }, [look]);
+  // Books arrive after the first look, so look again when they do.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: children changing is what calls for a new look
+  useEffect(look, [children]);
+
+  function step(direction: 1 | -1) {
+    const element = row.current;
+    if (!element) return;
+    const padding = Number.parseFloat(getComputedStyle(element).paddingLeft) || 0;
+    const left = element.getBoundingClientRect().left;
+    const stops = [...element.children].map(
+      (child) => child.getBoundingClientRect().left - left + element.scrollLeft - padding,
+    );
+    const at = element.scrollLeft;
+    const target =
+      direction > 0
+        ? stops.find((stop) => stop > at + 1)
+        : [...stops].reverse().find((stop) => stop < at - 1);
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    element.scrollTo({
+      left: Math.max(0, target ?? (direction > 0 ? at : 0)),
+      behavior: reduce ? "auto" : "smooth",
+    });
+  }
+
   return (
-    <div className="shelf-books" ref={row}>
-      {children}
-    </div>
+    <section className="shelf-row" aria-label={name} aria-busy={busy}>
+      <div className="shelf-head">
+        <h2 className="shelf-name">{name}</h2>
+        <div className="shelf-nav">
+          <button
+            type="button"
+            aria-label={`Earlier books on ${name}`}
+            disabled={ends.start}
+            onClick={() => step(-1)}
+          >
+            <Arrow back />
+          </button>
+          <button
+            type="button"
+            aria-label={`More books on ${name}`}
+            disabled={ends.end}
+            onClick={() => step(1)}
+          >
+            <Arrow />
+          </button>
+        </div>
+      </div>
+      <div className="shelf-books" ref={row}>
+        {children}
+      </div>
+      <div className="ledge" />
+    </section>
   );
 }
 
@@ -108,36 +196,30 @@ export function ShelfPage() {
   return (
     <div className="shelf-page">
       <main>
-        <section className="feature" aria-labelledby="feature-title">
-          <div className="band dark">
-            <div className="burst" />
-            <div className="feature-fade" />
-            <div className="feature-text">
-              <span className="caption">The Librarian recommends</span>
-              <h1 id="feature-title" className="page-title">
-                {featured.title}
-              </h1>
-              <p className="feature-author">by {featured.authorName}</p>
-              <p className="voice feature-reason">{sampleFeatured.reason}</p>
-            </div>
-            <div className="feature-book">
-              <div className="halo" />
-              <Book book={featured} size="lg" onOpen={(element) => setPreview(bounds(element))} />
-            </div>
+        <section className="feature surf dark" aria-labelledby="feature-title">
+          <div className="burst" />
+          <div className="feature-text">
+            <span className="caption">The Librarian recommends</span>
+            <h1 id="feature-title" className="page-title">
+              {featured.title}
+            </h1>
+            <p className="feature-author">by {featured.authorName}</p>
+            <p className="voice feature-reason">{sampleFeatured.reason}</p>
             <div className="feature-action">
               <Button onClick={(event) => setPreview(bounds(event.currentTarget))}>Ask to check out</Button>
               <span className="feature-note">A thirty-minute video call</span>
             </div>
           </div>
-          <div className="feature-rule" />
+          <div className="feature-book">
+            <Book book={featured} size="lg" onOpen={(element) => setPreview(bounds(element))} />
+          </div>
         </section>
 
-        {categoryShelves.map((category) => (
-          <section key={category.name} className="shelf-row" aria-label={category.name}>
-            <div className="shelf-head">
-              <h2 className="shelf-name">{category.name}</h2>
-            </div>
-            <ShelfBooks>
+        <FrontDesk />
+
+        <div className="shelves">
+          {categoryShelves.map((category) => (
+            <ShelfRow key={category.name} name={category.name}>
               {category.books.map((book) => (
                 <Book
                   key={book.id}
@@ -145,16 +227,10 @@ export function ShelfPage() {
                   onOpen={(element) => open(book, element)}
                 />
               ))}
-            </ShelfBooks>
-            <div className="ledge" />
-          </section>
-        ))}
+            </ShelfRow>
+          ))}
 
-        <section className="shelf-row" aria-label="Recently added" aria-busy={shelf.busy}>
-          <div className="shelf-head">
-            <h2 className="shelf-name">Recently added</h2>
-          </div>
-          <ShelfBooks>
+          <ShelfRow name="Recently added" busy={shelf.busy}>
             {shelf.books.map((book) => (
               <Book
                 key={book.id}
@@ -162,8 +238,7 @@ export function ShelfPage() {
                 onOpen={(element) => open(book, element)}
               />
             ))}
-          </ShelfBooks>
-          <div className="ledge" />
+          </ShelfRow>
           <div className="shelf-feedback">
             {shelf.busy && <p role="status">Loading books…</p>}
             {shelf.error && (
@@ -194,7 +269,7 @@ export function ShelfPage() {
               </Button>
             )}
           </div>
-        </section>
+        </div>
       </main>
       {bookId && (
         <BookReader

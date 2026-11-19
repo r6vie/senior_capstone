@@ -164,7 +164,8 @@ describe("D1 shelf and reader", () => {
   });
   it("retries pagination without losing or duplicating books", async () => {
     let calls = 0;
-    api.GET.mockImplementation(async () => {
+    api.GET.mockImplementation(async (path: string) => {
+      if (path !== "/books") return response(null, 404);
       calls += 1;
       if (calls === 1) return response({ books: [book], next: "cursor" });
       if (calls === 2) throw new Error("Connection lost");
@@ -179,7 +180,10 @@ describe("D1 shelf and reader", () => {
       await screen.findByRole("button", { name: `${second.title}, by ${second.author_name}` }),
     ).toBeTruthy();
     expect(screen.getAllByRole("button", { name: `${book.title}, by ${book.author_name}` })).toHaveLength(1);
-    expect(api.GET).toHaveBeenLastCalledWith("/books", { params: { query: { limit: 20, after: "cursor" } } });
+    expect(api.GET.mock.calls.filter(([path]) => path === "/books").at(-1)).toEqual([
+      "/books",
+      { params: { query: { limit: 20, after: "cursor" } } },
+    ]);
     expect(screen.queryByRole("button", { name: "Load more books" })).toBeNull();
   });
   it("refreshes an empty shelf", async () => {
@@ -226,5 +230,51 @@ describe("D1 shelf and reader", () => {
     const chapter = within(dialog).getByRole("article", { name: "The first offer" });
     expect(within(chapter).getByText("This example includes chapter titles only.")).toBeTruthy();
     expect(api.GET.mock.calls.some(([path]) => path === "/books/{book_id}")).toBe(false);
+  });
+  it("puts the one request waiting on you, and your own book, under the cover", async () => {
+    api.GET.mockImplementation(async (path: string) => {
+      if (path === "/checkouts")
+        return response({
+          reading: [],
+          lending: [
+            { id: "c2", reader_name: "Priya Nair", status: "waiting", created_at: "2026-11-18T10:00:00Z" },
+            { id: "c1", reader_name: "Sam Okafor", status: "waiting", created_at: "2026-11-17T10:00:00Z" },
+            { id: "c0", reader_name: "Jonah Reyes", status: "accepted", created_at: "2026-11-10T10:00:00Z" },
+          ],
+        });
+      if (path === "/books/me")
+        return response({ title: "The Coil Was Never the Problem", author_name: "Nora Valdez" });
+      return response({ books: [book], next: null });
+    });
+    renderShelf();
+    const waiting = await screen.findByRole("region", { name: "Waiting on you" });
+    // The oldest request, by name, and never a count.
+    expect(waiting.textContent).toContain("Sam Okafor asked to check out your book.");
+    expect(within(waiting).getByRole("link", { name: "Review request" }).getAttribute("href")).toBe(
+      "/checkouts",
+    );
+    const mine = await screen.findByRole("region", { name: "Your book" });
+    expect(mine.textContent).toContain("The Coil Was Never the Problem");
+    expect(within(mine).getByRole("link", { name: "Open" }).getAttribute("href")).toBe("/my-book");
+  });
+  it("leaves the request block out when nothing is waiting", async () => {
+    api.GET.mockImplementation(async (path: string) => {
+      if (path === "/checkouts") return response({ reading: [], lending: [] });
+      if (path === "/books/me") return response(null, 404);
+      return response({ books: [book], next: null });
+    });
+    renderShelf();
+    expect(await screen.findByRole("region", { name: "Your book" })).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Waiting on you" })).toBeNull();
+  });
+  it("gives each shelf arrows that move it in place, with the start arrow off at the start", async () => {
+    api.GET.mockResolvedValue(response({ books: [book], next: null }));
+    renderShelf();
+    await screen.findByRole("button", { name: `${book.title}, by ${book.author_name}` });
+    expect(
+      (screen.getByRole("button", { name: "Earlier books on Recently added" }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect(screen.getByRole("button", { name: "More books on Recently added" })).toBeTruthy();
+    expect(screen.queryByText(/See the whole shelf/)).toBeNull();
   });
 });
