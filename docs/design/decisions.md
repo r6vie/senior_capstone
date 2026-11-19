@@ -2,6 +2,18 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-18: cover direction H, round 3: back to Strata, solid and detailed, waiting for Josef
+
+- **Josef:** the 3D voxel look doesn't work well. Go back to the Strata slabs and refine them with more detail and a
+  more solid feel. The voxel page stays on the canvas for reference only.
+- **Now (`docs/design/art/strata/`):** courses sit tight with no paper between them; each slab has a lit top edge, a
+  shaded underside and occasional seams, so it reads as laid stone. Courses are finer (2px on the shelf, 1.5px on
+  small books). New detail: strata bands on a peak, a pale far ridge for depth, water that mirrors the peaks above it,
+  and groves standing on trunks. Mist pales slabs toward paper before any go missing.
+- **Shown:** canvas page "Strata covers", board `StrataCover2`: design 1 ("the lake", `cover_lake.py`) at four sizes,
+  and the seven other designs redrawn with the same renderer.
+- **Still open:** the Fixed-tier yes for art on the book object, and who picks a design.
+
 ## 2026-11-18: cover direction H, round 2: voxel scenes (replaces the 2D Strata look), waiting for Josef
 
 - **Josef on round 1:** too rough and basic. These are book covers, not page art: eventually dozens of designs

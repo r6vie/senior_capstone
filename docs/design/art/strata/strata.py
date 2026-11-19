@@ -56,9 +56,9 @@ class Ridge:
     """A mountain range: peaks composed by max. Light comes from the left: each peak's shadow face starts
     on a line leaning down-right from its summit, and the course ends on the shadow edge are inked darkest."""
 
-    brick = (1.6, 7.0)
+    brick = (1.3, 5.0)
 
-    def __init__(self, peaks, base, lit, dark, rough=6, seed=1, lean=0.32):
+    def __init__(self, peaks, base, lit, dark, rough=6, seed=1, lean=0.32, bands=None):
         # peak: (x, top_y, left_half_width, right_half_width, power)
         self.peaks = [p if len(p) == 5 else (p[0], p[1], p[2], p[2], p[3]) for p in peaks]
         self.base = base
@@ -66,6 +66,8 @@ class Ridge:
         self.dark = [hexrgb(c) for c in dark]
         self.seed = seed
         self.lean = lean
+        # bands: (y_top, y_bottom, lit palette, dark palette) — exposed strata of another colour
+        self.bands = [(a, b, [hexrgb(c) for c in l], [hexrgb(c) for c in d]) for a, b, l, d in (bands or [])]
         rng = np.random.default_rng(seed)
         self.noise_x = np.linspace(-400, 2400, 900)
         ny = np.cumsum(rng.normal(0, 1, 900))
@@ -95,9 +97,14 @@ class Ridge:
         depth = min(1, max(0, (y - top) / max(1, self.base - top)))
         n = vnoise(x, y, 46, self.seed)
         in_shadow = x > px + (y - ty) * self.lean
-        pal = self.dark if in_shadow else self.lit
-        i = (0.5 * depth + 0.5 * n) * len(pal)
-        if rng.random() < 0.18:
+        lit, dark = self.lit, self.dark
+        for a, b, bl, bd in self.bands:
+            wob = (vnoise(x, 0, 30, self.seed + 3) - 0.5) * 10
+            if a + wob <= y <= b + wob:
+                lit, dark = bl, bd
+        pal = dark if in_shadow else lit
+        i = (0.62 * depth + 0.38 * n) * len(pal)
+        if rng.random() < 0.12:
             i += rng.choice((-1, 1))
         # the stepped edge on the shadow side reads as ink
         if in_shadow and self.top(np.array([x + 14]))[0] > y:
@@ -140,15 +147,16 @@ class Blob:
 class Water:
     """A band of water: long ragged runs with paper gaps; glints gather in calm patches."""
 
-    brick = (3.0, 14.0)
+    brick = (2.5, 9.0)
 
-    def __init__(self, y0, y1, x0, x1, colours, glint, seed=3, taper=0.0):
+    def __init__(self, y0, y1, x0, x1, colours, glint, seed=3, taper=0.0, mirror=None):
         self.y0, self.y1, self.x0, self.x1 = y0, y1, x0, x1
         self.c = [hexrgb(c) for c in colours]
         self.g = [hexrgb(c) for c in glint]
         self.rng = random.Random(seed)
         self.rows = {}
         self.taper = taper
+        self.mirror = mirror or []  # layers reflected about y0
 
     def cover(self, x, y):
         if not (self.y0 <= y <= self.y1):
@@ -159,8 +167,8 @@ class Water:
             t = (y - self.y0) / max(1, self.y1 - self.y0)
             a = self.x0 + r.uniform(-60, 60) + self.taper * t * 400
             b = self.x1 + r.uniform(-90, 40) - self.taper * t * 260
-            ngaps = r.randint(0, 2) + (3 if t < 0.12 else 0)
-            gaps = [(r.uniform(a, b), r.uniform(30, 160) * (2.5 if t < 0.12 else 1)) for _ in range(ngaps)]
+            ngaps = r.randint(0, 2) + (1 if t < 0.08 else 0)
+            gaps = [(r.uniform(a, b), r.uniform(20, 110)) for _ in range(ngaps)]
             self.rows[key] = (a, b, gaps)
         a, b, gaps = self.rows[key]
         m = (x >= a) & (x <= b)
@@ -169,6 +177,10 @@ class Water:
         return m
 
     def colour(self, x, y, rng):
+        my = 2 * self.y0 - y + (y - self.y0) * 0.35  # reflections are a little shorter than the thing
+        for layer in reversed(self.mirror):
+            if layer.cover(np.array([x]), my)[0] and rng.random() < 0.8 - (y - self.y0) / max(1, self.y1 - self.y0) * 0.5:
+                return mix(layer.colour(x, my, rng), self.c[2], 0.45)
         n = vnoise(x, y * 3, 90, 77)
         if n > 0.72 and rng.random() < 0.55:
             return self.g[int(rng.random() * len(self.g))]
@@ -219,6 +231,27 @@ class Grove(Blob):
         return self.c[int(k * len(self.c))]
 
 
+class Trunks:
+    """Thin dark trunks under a grove; drawn as narrow slabs so the canopy reads as standing on them."""
+
+    brick = (0.3, 0.6)
+    ragged = 0
+
+    def __init__(self, posts, colour):
+        self.posts = posts  # (x, top, bottom, half_width)
+        self.c = hexrgb(colour)
+
+    def cover(self, x, y):
+        m = np.zeros_like(x, dtype=bool)
+        for px, t, b, hw in self.posts:
+            if t <= y <= b:
+                m |= np.abs(x - px) <= hw
+        return m
+
+    def colour(self, x, y, rng):
+        return shade(self.c, rng.uniform(-0.1, 0.1))
+
+
 def trees(cx_list, ground_y, size, colours, seed=9, spread=1.0):
     """A grove: overlapping crowns standing on the ground line, back ones higher."""
     r = random.Random(seed)
@@ -230,6 +263,20 @@ def trees(cx_list, ground_y, size, colours, seed=9, spread=1.0):
             y = ground_y - s * (1.9 - j * 0.35) - r.uniform(0, size * 0.4)
             e.append((x, y, s * 1.15, s * 0.8))
     return Grove(e, colours)
+
+
+def grove(cx_list, ground_y, size, colours, trunk="#5B3B2A", seed=9, spread=1.0, trunk_h=1.0):
+    """Trees with trunks: crowns held up on visible trunks, the reference's bonsai-like groves."""
+    r = random.Random(seed + 1)
+    posts, e = [], []
+    for cx in cx_list:
+        h = size * r.uniform(1.1, 1.8) * trunk_h
+        top = ground_y - h
+        posts.append((cx + r.uniform(-2, 2), top, ground_y, max(0.9, size * 0.09)))
+        for j in range(4):
+            s = size * r.uniform(0.55, 1.0)
+            e.append((cx + r.uniform(-size, size) * spread, top - s * (0.45 + j * 0.15) + r.uniform(-2, 2), s * 1.2, s * 0.72))
+    return [Trunks(posts, trunk), Grove(e, colours)]
 
 
 # ---------- rendering ----------
@@ -246,7 +293,7 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
     sy = (wy1 - wy0) / H
     img = Image.new("RGB", (W, H), paper)
     dr = ImageDraw.Draw(img)
-    gap = gap if gap is not None else max(1, round(course / 6))
+    gap = gap if gap is not None else 0
     rng = random.Random(seed)
     xs_out = np.arange(W) + 0.5
     xs_world = wx0 + xs_out * sx
@@ -278,8 +325,9 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
             idx = np.flatnonzero(np.diff(np.concatenate([[0], m.astype(int), [0]])))
             for a, b in zip(idx[::2], idx[1::2]):
                 # ragged ends: the course steps out or in by part of a brick
-                a = max(0, a + rng.randint(-2, 2) * course // 2)
-                b = min(W, b + rng.randint(-2, 2) * course // 2)
+                step = getattr(layer, "ragged", 1)
+                a = max(0, a + rng.randint(-step, step) * course // 2)
+                b = min(W, b + rng.randint(-step, step) * course // 2)
                 x = a
                 while x < b:
                     ln = max(2, int(course * rng.uniform(*getattr(layer, "brick", brick))))
@@ -289,15 +337,20 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
                     c = shade(c, rng.uniform(-0.05, 0.05))
                     f = fade_amount((x + x2) / 2, row_top + course / 2)
                     if f > 0:
-                        if _h(x, row_top, 99) < f * 0.9:
+                        # mist: slabs pale toward paper first, and only the palest ones go missing
+                        if f > 0.55 and _h(x, row_top, 99) < (f - 0.55) * 2.2:
                             x = x2
                             continue
-                        c = mix(c, paper, f * 0.7)
+                        c = mix(c, paper, f * 0.8)
                     h = course - gap
                     dr.rectangle([x, row_top, x2 - 1, row_top + h - 1], fill=c)
-                    if slab_shade and course >= 6:
-                        # the lower part of each slab sits a little darker: a stacked edge, not a shadow
-                        lo = max(1, course // 4)
-                        dr.rectangle([x, row_top + h - lo, x2 - 1, row_top + h - 1], fill=shade(c, -0.12))
+                    if slab_shade and course >= 4:
+                        # a laid slab: light catches its top edge, its underside sits in shadow, and the
+                        # joint to the next slab is a faint darker seam
+                        lw = max(1, course // 6)
+                        dr.rectangle([x, row_top, x2 - 1, row_top + lw - 1], fill=shade(c, 0.10))
+                        dr.rectangle([x, row_top + h - lw, x2 - 1, row_top + h - 1], fill=shade(c, -0.22))
+                        if x2 - x > course * 2 and _h(x, row_top, 5) < 0.55:
+                            dr.rectangle([x2 - lw, row_top + lw, x2 - 1, row_top + h - lw - 1], fill=shade(c, -0.10))
                     x = x2
     return img
