@@ -226,10 +226,18 @@ Josef asked for these early. Both are built on `josef/full-build` against stubs,
 - After "Did you meet?" (C4), the author answers one question: "What did they ask you about that
   surprised you?". The answer can become or improve a chapter, with the author's approval (I3).
 
+**L1 · The Librarian** · Josef · `in progress`
+- While the member types, the Librarian marks the answer in red and keeps a notebook beside it, and the
+  notebook drives the next question. The plan is `docs/librarian-plan.md`, adapted from
+  `docs/LIBRARIAN_SPEC.md`.
+- The backend is on main: `POST /interview/notes`, the notebook on the interview, `builds_on` and the sign-off.
+- The frontend is waiting to be wired to the generated client.
+- The eval (`evals/librarian`) needs Josef's yes before each run.
+
 ## Open questions waiting on the team
 
 Cross-feature questions to settle at the next sync:
 
 - Shelf categories (trove.md §5).
 - Whether books show a seniority or stage marker (trove.md §3).
-- The Librarian's tone. (The visual design is decided: `docs/design/system.md`.)
+- The Librarian's tone is decided: a sharp senior editor (`docs/librarian-plan.md`). Its visual design is in `docs/design/system.md`.

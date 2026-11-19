@@ -127,7 +127,14 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **Built early, waiting on teammates' pieces to run for real** (§9.9; choices in `docs/review/decisions.md`):
   - **Sparks from other books:** while reading someone's book, a member taps "I have one like this" on a chapter. It saves a private prompt for their own next interview, never content.
   - **Each reading grows the book:** after "Did you meet?", the author answers one quick question, "What did they ask you about that surprised you?". The answer can become a new chapter or improve one, with the author's approval (through I3).
-- **On hold until the interview works:** the Librarian reacting in the margins, bursts on strong lines, the card drawer for the sweep, bookmark tabs, the pencil-to-ink spine, the shelf stamp and live cleanup of spoken answers. A practical "how-to" chapter is welcome but not enforced.
+- **The Librarian reads over the member's shoulder** (decided 2026-11-19; L1; `docs/librarian-plan.md`).
+  - While the member types, it marks the answer in red handwriting and keeps a notebook beside it. The notebook holds chapters taking shape, connections, questions it's saving, bets, and short clips of the member's own words.
+  - The notebook drives the next question.
+  - Its voice is a sharp senior editor: dry and wry, teasing the writing, never the person. It goes silent on sensitive topics.
+  - Only clips, which are the member's own words, can reach the book.
+  - The notebook is hidden after the reveal and comes back, trimmed, when the author adds to the book.
+  - It runs on Haiku 5.5.
+- **On hold until the interview works:** bursts on strong lines, the card drawer for the sweep, bookmark tabs, the pencil-to-ink spine, the shelf stamp and live cleanup of spoken answers. A practical "how-to" chapter is welcome but not enforced.
 
 ### Open
 
