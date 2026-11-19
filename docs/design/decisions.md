@@ -2,7 +2,7 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
-## 2026-11-19: the Librarian's notebook, round 2 (Interview 4; waiting for Josef's approval)
+## 2026-11-19: the Librarian's notebook, round 2 (Interview 4; APPROVED by Josef, 2026-11-19, canvas v127)
 
 Scope answers came from Josef through the orchestrator: red ink (approved as an exception to "red is the primary action and nothing else"), a commentary notebook (chapter, connection, saving,
 clip, note), the next question circling or ticking its source, the notebook hidden after the reveal and returning trimmed when the author reopens the interview, and the extras: pasted and
@@ -10,7 +10,7 @@ résumé-speak highlight, idle lines, the handwritten sign-off. Out: doodles, sw
 Josef then asked, directly: red marker, no bullets in the notebook, text starting just after the spine, a messier and more human notebook (things underlined and rewritten above), and no footer line,
 "Only you see this" or "Command and Return sends".
 - Canvas page "Librarian notebook": `LibDesktop` (five moments), `LibPhone`, `LibParts`, `LibMore` (idle, paste, sign-off), `LibReopened`. The red exception is recorded in `docs/design/system.md`.
-- Needs Josef's yes: the handwriting face Caveat (a fourth typeface); the notebook, marks and phone sheet as new components.
+- Approved with the screen: red ink for the Librarian (exception to the red rule), the handwriting face Caveat (a fourth typeface, Librarian's hand only), and the notebook, marks and phone sheet as new components. Josef approved the screen as drawn; he did not list these separately.
 
 ## 2026-11-19: one interview redesign, as a conversation (replaces the two earlier ones; waiting for Josef's choice)
 
