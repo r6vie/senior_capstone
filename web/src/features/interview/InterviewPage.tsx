@@ -5,7 +5,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, readDraft, takeOrphanDrafts } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
 import { EditForm, editKeyFor, hasEditDraft } from "./EditInPlace";
-import { ErrorMessage, Frame, RetryContext, SmallBook, Waiting } from "./InterviewFrame";
+import { AskFrame, ErrorMessage, Frame, RetryContext, SmallBook, Waiting } from "./InterviewFrame";
 import {
   type BookEdit,
   type ChapterEdit,
@@ -467,72 +467,72 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           );
         }
         return (
-          <Frame phase={phase} say={say(state.question)} busy={Boolean(busy)}>
-            <div className="lib-cols">
-              <div className="lib-main">
-                <ErrorMessage message={error} />
-                {notice && (
-                  <p className="iv-note" role="status">
-                    {notice}
-                  </p>
-                )}
-                {state.needsMore && (
-                  <p className="iv-note iv-note-big">I need a little more before I can write your book.</p>
-                )}
-                <AnswerPanel
-                  key={draftKey}
-                  draftKey={draftKey}
-                  busy={Boolean(busy)}
-                  onSend={(text) => moveOn("answer", text, () => client.answer(state.id, text))}
-                  onSkip={() => moveOn("skip", undefined, () => client.skip(state.id))}
-                  progress={state.nearlyDone ? "Most of the way there." : undefined}
-                  exit={
-                    state.canFinish
-                      ? {
-                          label: inAdding
-                            ? "That's enough. Write the changes"
-                            : "I've said enough. Show me my book",
-                          labelWithWords: inAdding
-                            ? "Send this, then write the changes"
-                            : "Send this, then show me my book",
-                          onFinish: (words) =>
-                            run(
-                              inAdding
-                                ? "The Librarian is writing the changes…"
-                                : "The Librarian is gathering what you said…",
-                              () => lookThenSend(words, () => client.finish(state.id, words)),
-                              {
-                                lost: words ? LOST_ANSWER : LOST_DEFAULT,
-                                noRetry: Boolean(words),
-                                onLost: () => {
-                                  if (words) unsure.current = words;
-                                },
-                                onSuccess: () => {
-                                  unsure.current = null;
-                                  clearDraft(draftKey);
-                                },
-                                onMoved: onMoved(words),
-                                // After a 502 the words are already saved, so a second try sends none.
-                                retryWith: () => client.finish(state.id),
-                              },
-                            ),
-                        }
-                      : undefined
-                  }
-                  librarian={{
-                    client,
-                    interviewId: state.id,
-                    questionId: state.questionId ?? state.question,
-                    view: state.librarian,
-                    notebook,
-                    say: announcer.say,
-                  }}
-                />
-              </div>
-              <Notebook entries={notebook.entries} />
-            </div>
+          <AskFrame
+            eyebrow={inAdding ? "Adding to your book" : "Question"}
+            question={say(state.question)}
+            busy={Boolean(busy)}
+            aside={<Notebook entries={notebook.entries} />}
+          >
+            <ErrorMessage message={error} />
+            {notice && (
+              <p className="iv-note" role="status">
+                {notice}
+              </p>
+            )}
+            {state.needsMore && (
+              <p className="iv-note iv-note-big">I need a little more before I can write your book.</p>
+            )}
+            <AnswerPanel
+              key={draftKey}
+              draftKey={draftKey}
+              busy={Boolean(busy)}
+              onSend={(text) => moveOn("answer", text, () => client.answer(state.id, text))}
+              onSkip={() => moveOn("skip", undefined, () => client.skip(state.id))}
+              progress={state.nearlyDone ? "Most of the way there." : undefined}
+              exit={
+                state.canFinish
+                  ? {
+                      label: inAdding
+                        ? "That's enough. Write the changes"
+                        : "I've said enough. Show me my book",
+                      labelWithWords: inAdding
+                        ? "Send this, then write the changes"
+                        : "Send this, then show me my book",
+                      onFinish: (words) =>
+                        run(
+                          inAdding
+                            ? "The Librarian is writing the changes…"
+                            : "The Librarian is gathering what you said…",
+                          () => lookThenSend(words, () => client.finish(state.id, words)),
+                          {
+                            lost: words ? LOST_ANSWER : LOST_DEFAULT,
+                            noRetry: Boolean(words),
+                            onLost: () => {
+                              if (words) unsure.current = words;
+                            },
+                            onSuccess: () => {
+                              unsure.current = null;
+                              clearDraft(draftKey);
+                            },
+                            onMoved: onMoved(words),
+                            // After a 502 the words are already saved, so a second try sends none.
+                            retryWith: () => client.finish(state.id),
+                          },
+                        ),
+                    }
+                  : undefined
+              }
+              librarian={{
+                client,
+                interviewId: state.id,
+                questionId: state.questionId ?? state.question,
+                view: state.librarian,
+                notebook,
+                say: announcer.say,
+              }}
+            />
             {announcer.region}
-          </Frame>
+          </AskFrame>
         );
       }
       case "shaping": {

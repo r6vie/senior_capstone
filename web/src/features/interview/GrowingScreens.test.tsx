@@ -354,9 +354,13 @@ describe("words that can't go where they were meant", () => {
     show(moved({ id: "me", stage: "drafting", about: "titles" }));
     setAnswer(await screen.findByLabelText("Your answer"), "My careful words");
     press("Send answer");
-    const words = await screen.findByText("My careful words");
-    expect(words.closest("[inert]")).toBeNull();
     expect(await screen.findByText("Everything else you've said is saved.")).toBeTruthy();
+    // The answer field holds the words too; the kept copy is the one outside it.
+    const words = screen
+      .getAllByText("My careful words")
+      .find((element) => !element.closest('[role="textbox"]'));
+    expect(words).toBeTruthy();
+    expect(words?.closest("[inert]")).toBeNull();
     expect(screen.queryByText("Everything you've said is saved.")).toBeNull();
   });
 

@@ -182,7 +182,7 @@ export function Notebook({ entries }: { entries: ShownEntry[] }) {
 
   return (
     <>
-      <section className="lib-nbook" aria-labelledby={heading}>
+      <section className="lib-nbook surf surf-spine" aria-labelledby={heading}>
         <h2 id={heading} className="lib-nbh">
           The Librarian’s notebook
         </h2>

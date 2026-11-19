@@ -185,7 +185,7 @@ export function AnswerPanel({
     );
   }
 
-  return (
+  const fieldBlock = (
     <>
       <div
         className={`field iv-answer${mode === "transcript" ? " iv-answer-edit" : ""}${librarian ? " lib-answer" : ""}`}
@@ -233,6 +233,10 @@ export function AnswerPanel({
           </span>
         )}
       </div>
+    </>
+  );
+  const messages = (
+    <>
       {note && <p className="iv-note">{note}</p>}
       {mode === "transcript" && text.includes(lastHeard.current) && (
         <p className="iv-note">
@@ -251,35 +255,51 @@ export function AnswerPanel({
           The microphone stopped before I heard anything. You can try again or type your answer.
         </p>
       )}
-      <div className="iv-row">
-        {canSpeak && (
-          <Button variant="secondary" onClick={record}>
-            <MicIcon /> {mode === "transcript" ? "Record again" : "Speak"}
-          </Button>
-        )}
-        {mode === "transcript" && (
-          <button type="button" className="button button-quiet" onClick={() => setMode("typing")}>
-            Type instead
-          </button>
-        )}
-        {/* Only while the field is empty: a mis-tap beside Send must never cost the member their words. */}
-        {empty && onSkip && (
-          <button type="button" className="button button-quiet" onClick={onSkip}>
-            Skip
-          </button>
-        )}
-        {aside}
-        <span className="iv-grow" />
-        {draftSaved && <span className="iv-saved">Saved</span>}
-        <Button
-          onClick={send}
-          disabled={tooLong}
-          aria-busy={busy}
-          aria-keyshortcuts="Meta+Enter Control+Enter"
-        >
-          Send answer
+    </>
+  );
+  const buttons = (
+    <div className={librarian ? "iv-row lib-afoot" : "iv-row"}>
+      {canSpeak && (
+        <Button variant="secondary" onClick={record}>
+          <MicIcon /> {mode === "transcript" ? "Record again" : "Speak"}
         </Button>
-      </div>
+      )}
+      {mode === "transcript" && (
+        <button type="button" className="button button-quiet" onClick={() => setMode("typing")}>
+          Type instead
+        </button>
+      )}
+      {/* Only while the field is empty: a mis-tap beside Send must never cost the member their words. */}
+      {empty && onSkip && (
+        <button type="button" className="button button-quiet" onClick={onSkip}>
+          Skip
+        </button>
+      )}
+      {aside}
+      <span className="iv-grow" />
+      {draftSaved && <span className="iv-saved">Saved</span>}
+      <Button onClick={send} disabled={tooLong} aria-busy={busy} aria-keyshortcuts="Meta+Enter Control+Enter">
+        Send answer
+      </Button>
+    </div>
+  );
+
+  return (
+    <>
+      {librarian ? (
+        // The answer card (LibDesktop): "Your answer", the field, and Speak, Skip and Send in its footer.
+        <div className="surf lib-card">
+          <p className="lib-card-lab" aria-hidden="true">
+            Your answer
+          </p>
+          {fieldBlock}
+          {buttons}
+        </div>
+      ) : (
+        fieldBlock
+      )}
+      {messages}
+      {!librarian && buttons}
       {(exit || progress) && (
         <div className="iv-exit">
           {progress && <p className="iv-note">{progress}</p>}

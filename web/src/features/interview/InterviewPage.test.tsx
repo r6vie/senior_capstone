@@ -164,12 +164,13 @@ describe("InterviewPage", () => {
       expect(document.body.textContent).not.toMatch(/\b10\b/);
     }, 20_000);
 
-    it("names the steps in plain words, as a list, and says when it's mostly done", async () => {
+    it("asks on a plain page: the question as words, the answer card, and when it's mostly done", async () => {
       renderWith(at({ ...asking, phase: "dig", canFinish: true, nearlyDone: true }));
       await screen.findByLabelText("Your answer");
-      const steps = screen.getByRole("list", { name: "Where we are" });
-      expect(steps.textContent).toBe("First lookDeeperCheck");
-      expect(steps.querySelector('[aria-current="step"]')?.textContent).toBe("Deeper");
+      // LibDesktop: no band and no step names on the question screen.
+      expect(screen.queryByRole("list", { name: "Where we are" })).toBeNull();
+      expect(screen.getByText("Question")).toBeTruthy();
+      expect(screen.getByRole("heading", { level: 1, name: asking.question })).toBeTruthy();
       expect(screen.getByText("Most of the way there.")).toBeTruthy();
     });
 
