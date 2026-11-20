@@ -13,12 +13,14 @@ Read this before you build or change any UI. Everything here sits beside the pro
 
 - Ink (`--ink`) on paper (`--paper`). White (`--white`) is for things you can pick up: books, fields,
   bubbles, panels.
-- **Red is the primary action and nothing else.** One red button per screen. Errors, success and
-  selection are never red.
+- **Red is the primary action, and the Librarian's hand.** One red button per screen. Errors, success and
+  selection are never red. The one exception (2026-11-19, Josef): the Librarian's handwriting and marks in the
+  interview are red, as thin line-work only, never a filled shape, button, tag or state. See Additions, "The
+  Librarian's notebook".
 - Three faces: **Barlow Condensed** (short caps labels), **Newsreader** (book titles, page titles, the
   Librarian's voice), **IBM Plex Sans** (everything you read to do a task).
-- Square corners. A pill only for the search field and avatar; a rounded bubble only for speech.
-- Shade is made of dots (tone), never a blur, a gradient or a glow.
+- A small 5px corner radius (approved 2026-11-19, Folio); the search field and avatar are square; a rounded bubble only for speech.
+- Shade is made of dots (tone) for cast shadows and diagonal cross-hatching on spines and under ledges (approved 2026-11-19, Folio), never a blur, a gradient or a glow.
 - One focal point and one primary action per screen. Left-aligned.
 - Every state is designed: rest, hover, pressed, focus, disabled, busy, error, empty.
 
@@ -31,7 +33,7 @@ Fixed isn't frozen: when one of these turns out to be a real limit, raise it wit
 
 - The palette and the red rule.
 - The three faces and their jobs; caps only on short display-face labels.
-- Square corners; pill and bubble exceptions as above.
+- 5px corner radius; the search field and avatar are square; the bubble exception as above (Folio, approved 2026-11-19).
 - Dot tone for shade; no blur, gradient or glow.
 - The book object: white, outlined, a dot shadow, title and full name only.
 - Every product rule in `CLAUDE.md` (names, no counts or ratings, no cold messages, no performance features).
@@ -307,3 +309,33 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
   ruled items, each with a bookmark in the margin (an ink ribbon with a notched tail, `.past-meet-bookmark`, 16 by
   44px): the other person's name, their book, which book was checked out and when it was returned, the contact
   panel, and "Your conversation". No counts and no red.
+
+### Folio: the shelf front page look (2026-11-19, design session; screens: canvas page "Elevate", board `ElevateK3` "Kit 3 · Folio, for build")
+
+Task: a more finished, deeper paper look for the shelf front page, replacing the flat Manga-screentone cards and the filter chips. **Approved by Josef on 2026-11-19** ("I approve all six", relayed by the orchestrator). It changes the fixed tier in six ways, all approved: cross-hatch shade, the 5px corner radius, the square search field and avatar, the notched bookmark, no dot shadow on the Librarian's black-cover book, and shelf arrows that replace "See the whole shelf" and the tabs and chips.
+
+- **Card (`.surf`).** A white face with a 2px ink line and a dot shadow under it (offset 12px down-right, `radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0/5px 5px`). Nothing else under it: no stacked page edges. The spine is a cross-hatch on the left,
+  `repeating-linear-gradient(45deg, ink 0 1px, transparent 1px 6px), repeating-linear-gradient(-45deg, ...)`, 60px wide, masked to fade to nothing. Shade is hatching on spines and under shelf ledges; dots are for cast shadows.
+- **Corners.** `--r: 5px` on cards, buttons, fields, the avatar and books (book cover 3px 5px 5px 3px); 8px on the black cover. This replaces the square-corner rule.
+- **Buttons.** A dot shadow `.pbw::before` (inset 5px) that the button presses into on hover and press. A secondary button has a white face and goes ink on hover. No stripes anywhere.
+- **Header.** A square search field (icon, "/" key hint) and a square ink avatar tile with white initials and a dot shadow, both on the same 2px line and 44px height as the buttons.
+- **The Librarian's cover.** Black; the burst from Kit 2 converges on a point to the right of the book (`repeating-conic-gradient(... at 80% 50%)`, masked with a dark faded centre); the book has no dot shadow.
+- **Bookmarked line.** A card with a spine and an ink ribbon bookmark (22 x 64px, notched bottom: `clip-path: polygon(0 0,100% 0,100% 100%,50% 78%,0 100%)`) for the one thing waiting for you, with an eyebrow, a name and one secondary button. A "Your book" block sits beside it. No number.
+- **Shelf.** The shelf name, a 2.5px rule and two square arrow buttons (40px, `aria-label` "Earlier books on <shelf>" and "More books on <shelf>"; the start arrow is disabled at the start of the row), then books standing on one ink ledge (14px) with a light diagonal hatch below.
+  The next book peeks in at the right edge. Arrows scroll the row in place; there is no "See the whole shelf" and no extra page.
+- **Not part of it.** Index tabs and filter chips were dropped from the front page. The interview is the Librarian's notebook (below), not this kit.
+
+### The Librarian's notebook (2026-11-19, design session; screens: canvas page "Librarian notebook", `LibDesktop`, `LibPhone`, `LibParts`, `LibMore`, `LibReopened`)
+
+Task: while a member types an answer in the interview, the Librarian marks it and keeps a notebook. Approved scope is in `docs/librarian-plan.md`.
+
+- **Ink exception.** The Librarian writes in `--red` (white ground 5.0:1). This is an approved exception to "red is the primary action and nothing else": handwriting
+  and marks only, thin line-work only, never a filled shape, button, tag or state. The one fill is the paste highlight (red at 20%, multiplied). `--lib: var(--red)`.
+- **The hand.** Caveat 600, 23px, tilted -2 degrees, lowercase, ending in a full stop; at most 32 characters on the answer and 60 in the notebook. A fourth face,
+  used only for the Librarian's writing (needs Josef's yes). Marks are masks of hand-drawn SVG strokes, so they take the ink colour: `mask: url(wobbly-underline.svg) 0 0/100% 100%`.
+- **Marks on the answer (`.mk`).** Anchored to exact words: underline, double underline, strike with a replacement above, loose circle, note only, and the highlight.
+  A mark is written (stroke clips in left to right), rests, and is rubbed out (the clip closes from the left), never faded. Only the marked word's line opens (about 30px, 0.35s); the cursor's line, the question and the buttons never move.
+- **The notebook (`.nbook`).** A card like the others, with the cross-hatch spine. Text starts just after the spine, with no bullets. Entries: chapter, connection, saving, clip, note.
+  Each sits a little off-level (rotation, left offset and size vary per entry) and may carry its own underline or a word rewritten above. A revised entry is struck with a line and rewritten;
+  an erased one is rubbed out. A question built on an entry circles it, or ticks a saving.
+- **Phone.** The notebook is a sheet that lifts from a one-line peek above the composer; the dot scrim sits behind it.
