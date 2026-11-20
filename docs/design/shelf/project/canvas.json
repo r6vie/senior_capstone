@@ -792,14 +792,6 @@
    "h": 2020,
    "title": "Book screen B · the book opens",
    "page": "fresh"
-  },
-  "FreshReaderPanel.dc.html": {
-   "x": 3740,
-   "y": 0,
-   "w": 1440,
-   "h": 1090,
-   "title": "Book screen C · pulled from the shelf",
-   "page": "fresh"
   }
  },
  "order": [
@@ -890,8 +882,7 @@
   "FreshBookCut.dc.html",
   "FreshCover1.dc.html",
   "FreshCover2.dc.html",
-  "FreshReaderOpen.dc.html",
-  "FreshReaderPanel.dc.html"
+  "FreshReaderOpen.dc.html"
  ],
  "notes": {
   "head": {
@@ -1020,9 +1011,9 @@
   "freshbook": {
    "x": 2220,
    "y": -300,
-   "text": "Book screen · three ways to show one book: A the book page (left), B the book opens, C pulled from the shelf",
+   "text": "Book screen · two ways to show one book: A the book page (left), B the book opens",
    "kind": "title1",
-   "maxW": 2960,
+   "maxW": 1440,
    "page": "fresh"
   }
  },

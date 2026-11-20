@@ -1,4 +1,4 @@
-"""Book screen B (the book opens) and C (pulled from the shelf). Head CSS is taken from FreshBookStrata."""
+"""Book screen B (the book opens). Head CSS is taken from FreshBookStrata."""
 import re, sys
 SRC = sys.argv[1]; OUT = sys.argv[2]
 src = open(SRC).read()
@@ -283,35 +283,3 @@ bodyB = ('<div style="position:relative;height:100%">'
          + "</div>")
 open(f"{OUT}/FreshReaderOpen.dc.html", "w").write(board("Book screen B: the book opens", 1440, 2020, bodyB))
 
-# ---------------- C ----------------
-acc = '<ol class="acc">'
-for i, (t, s) in enumerate(CH, 1):
-    if i == 1:
-        acc += (f'<li><div class="row"><b>{i}</b><h3>{t}</h3><i>–</i></div><div class="open"><p>{s}</p>'
-                '</div></li>')
-    else:
-        acc += f'<li><div class="row"><b>{i}</b><h3>{t}</h3><i>+</i></div></li>'
-acc += "</ol>"
-panel = ('<aside class="pn" aria-labelledby="pn-title">'
-         '<div class="pn-bar"><a class="button button-quiet" href="#">‹ Previous</a><a class="button button-quiet" href="#">Next ›</a>'
-         '<span class="sp"></span><a class="button button-quiet" href="#">Close ✕</a></div>'
-         f'<div class="pn-hero"><div class="art"><img class="band" src="{BAND}" alt=""></div>'
-         + cover("cov-strata", COVER_SM, T, A) +
-         f'<div class="pn-head"><h1 id="pn-title">{T}</h1><p class="byline">by {A}</p></div></div>'
-         f'<div class="pn-body"><p>{BLURB}</p>'
-         '<div class="pn-act"><a class="button button-primary" href="#">Ask to check out</a></div>'
-         '<h2 class="shelf-name" style="font-size:20px;margin-top:6px">What you could talk about</h2>' + acc + '</div>'
-         '<div class="pn-full" style="justify-content:flex-end"><a class="button button-quiet" href="#" style="font-size:15px">Open the full page ›</a></div>'
-         '</aside>')
-C_NOTE = ("Book screen C · pulled from the shelf. For browsing: the book slides out to a reading panel and the shelf "
-          "stays where it was, shaded in dots, with the book's place left open. Previous and Next step along the same shelf "
-          "(and the arrow keys), so a member can read ten books without losing their place. The chapters open in place; "
-          "Ask to check out is in reach without scrolling. The full book page (A) stays as the page a link opens.")
-bodyC = ('<div style="position:relative;height:100%">'
-         f'<div class="board-head"><span class="frame-label">C · Pulled from the shelf</span><p class="note">{C_NOTE}</p></div>'
-         '<div style="position:absolute;left:0;top:190px"><span class="frame-label scr-label">On the shelf, Next steps to the next book</span>'
-         '<div class="scr sh"><header class="sh-top"><span class="wordmark">Trove</span><nav class="nav" aria-label="Main"><a href="#" aria-current="page">Shelf</a><a href="#">My book</a><a href="#">Checkouts</a><a href="#">Past meets</a></nav>'
-         '<input class="search" style="margin-left:auto" type="search" placeholder="Search by topic" aria-label="Search by topic"><span class="avatar">J</span></header>'
-         + shelf("Shift work", SHELF1, 110) + shelf("Starting out", SHELF2, 420) +
-         '<div class="sh-dim" aria-hidden="true"></div>' + panel + '</div></div></div>')
-open(f"{OUT}/FreshReaderPanel.dc.html", "w").write(board("Book screen C: pulled from the shelf", 1440, 1090, bodyC))

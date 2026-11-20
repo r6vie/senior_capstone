@@ -25,6 +25,7 @@ Decisions Josef has made about Trove's look and feel. Newest first.
     author says yes."). Good UI should not need a sentence for each interaction. Removed from B and C.
   - **Ask to check out is never under a chapter** (Josef: it reads as checking out that one chapter). In B it sits on
     the title page and under the contents on the left page, so it always belongs to the whole book.
+  - **Josef removed C** (pulled from the shelf). The choice is now between A and B.
   - **C, pulled from the shelf** (`FreshReaderPanel`): a side panel over the shelf, which stays in place shaded in
     dots with the book's slot left open. Previous and Next step along the shelf; chapters open in place; a link to
     the full page (A).
