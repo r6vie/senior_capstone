@@ -37,6 +37,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   sky. Skylines from smooth noise (`Ridge(smooth=True)`), calmer tone flicker, the snow cap a snowline under the
   summit, no stripe on the small peaks, clean feet (the cover's art ends on a straight line, the page's runs off
   the page). Checked by zoom on the summit, sun edge, middle peak and foot before publishing.
+- **Cover typography (Josef):** the title set left, the full name right under it at the top (class `cov-final`), so
+  the art fills the rest of the cover and runs off its foot. The art is recomposed for the taller space. Fixed-tier
+  flag as before: the system sets the name at the foot; this moves it under the title.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

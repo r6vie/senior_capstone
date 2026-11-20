@@ -47,22 +47,22 @@ def page():
 
 
 def cover():
-    """Title on paper above y 118; name on paper below y 304; the art ends on a clean line at y 298."""
-    teal = Ridge([(112, 130, 98, 88, 1.15), (62, 200, 54, 44, 1.0), (188, 198, 46, 64, 1.15)], 256, TEAL_LIT,
-                 TEAL_DARK, seed=13, rough=3, ribs=0.9, cap=CAP, mist=(236, 256), **CALM)
-    far = Ridge([(18, 214, 70, 80, 1.1), (218, 212, 60, 70, 1.1)], 250, HAZE_LIT, HAZE_DARK, seed=17, rough=2,
-                ribs=0.5, mist=(230, 250), **CALM)
-    sage = Ridge([(-14, 216, 70, 84, 1.25)], 258, SAGE_LIT, SAGE_DARK, seed=14, rough=2, ribs=0.8, mist=(244, 258),
+    """Title and name set left at the top (to about y 100); the art fills the rest and runs off the foot."""
+    teal = Ridge([(126, 126, 118, 104, 1.15), (64, 220, 62, 50, 1.0), (206, 216, 54, 74, 1.15)], 288, TEAL_LIT,
+                 TEAL_DARK, seed=13, rough=3, ribs=0.9, cap=(24, STONE_LIT, STONE_DARK), mist=(266, 288), **CALM)
+    far = Ridge([(16, 236, 78, 88, 1.1), (224, 232, 66, 78, 1.1)], 280, HAZE_LIT, HAZE_DARK, seed=17, rough=2,
+                ribs=0.5, mist=(258, 280), **CALM)
+    sage = Ridge([(-14, 240, 82, 96, 1.25)], 292, SAGE_LIT, SAGE_DARK, seed=14, rough=2, ribs=0.8, mist=(276, 292),
                  **CALM)
     return [
-        Blob([(150, 160, 26, 26)], CORAL, top_light=False),
+        Blob([(166, 160, 30, 30)], CORAL, top_light=False),
         far,
-        Blob([(52, 238, 42, 4)], CLOUD),
+        Blob([(52, 266, 46, 4)], CLOUD),
         teal,
         sage,
-        Water(256, 298, -20, 260, COBALT, GLINT, seed=21, mirror=[teal], gaps=(1, 2), squash=0.55),
-        Band(-30, 96, 284, 298, SHORE, seed=31, lens=0.5),
-        trees([6, 28, 50, 72], 292, 7, LEAF, seed=41),
+        Water(288, 352, -20, 260, COBALT, GLINT, seed=21, mirror=[teal], gaps=(1, 2), squash=0.55),
+        Band(-30, 104, 318, 352, SHORE, seed=31, lens=0.5),
+        trees([6, 30, 54, 78], 328, 8, LEAF, seed=41),
     ]
 
 
