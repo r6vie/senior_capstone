@@ -474,7 +474,12 @@ export function BookReader({
                   <strong>{title}</strong>
                   <span>{author}</span>
                 </div>
-                <div className="br-cover-back" />
+                {/* The cover's inside is the left of the spread: the board, the page edge and the title page,
+                    so the book opens into itself rather than fading in. */}
+                <div className="br-cover-back" inert>
+                  <div className="br-cover-edge" />
+                  <div className="br-page br-left br-cover-page">{pageOf(0, "left")}</div>
+                </div>
               </div>
             </>
           )}

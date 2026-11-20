@@ -243,7 +243,7 @@ describe("D1 shelf and reader", () => {
       screen.getByRole("button", { name: "Why I Turned Down Grad School Twice, by Hana Sato" }),
     );
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText("Example book")).toBeTruthy();
+    expect(within(dialog.querySelector(".br-static") as HTMLElement).getByText("Example book")).toBeTruthy();
     expect(within(dialog).queryByRole("link", { name: "Ask to check out" })).toBeNull();
     fireEvent.click(within(dialog).getByRole("button", { name: "The first offer" }));
     const chapter = await within(dialog).findByRole("article", { name: "The first offer" });

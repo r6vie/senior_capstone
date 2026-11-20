@@ -414,9 +414,25 @@ button.book {
 
 /* ---------- A book open in front of the shelf (BookReader.css) ---------- */
 /* The shelf stays where it is at 60%, under the reader's dots; the open book's place stays empty. */
+.shelf-page main {
+  transform-origin: var(--zx, 50%) var(--zy, 50%);
+  /* The same time and easing as the book coming forward (BookReader.css), so they read as one move. */
+  transition:
+    transform 1100ms cubic-bezier(0.5, 0, 0.2, 1),
+    opacity 1100ms cubic-bezier(0.5, 0, 0.2, 1);
+}
 .shelf-page[data-reading] main {
   opacity: 0.6;
 }
+/* The view zooms in on the book where it stands, while the reader lifts it out and opens it. */
+.shelf-page[data-zoom] main {
+  transform: scale(var(--zoom, 1.6));
+}
 .book[data-out] {
   visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .shelf-page[data-zoom] main {
+    transform: none;
+  }
 }

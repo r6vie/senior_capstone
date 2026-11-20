@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { type CSSProperties, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { type BookCard, type BookOrigin, BookReader } from "./BookReader";
@@ -33,6 +33,9 @@ const SAMPLE_CATEGORY_SHELVES = [
     ]),
   },
 ] as const;
+
+/** How far the view zooms in on a book before it opens. */
+const ZOOM = 1.35;
 
 const booksById = new Map(sampleBooks.map((book) => [book.id, book]));
 
@@ -181,8 +184,16 @@ export function ShelfPage() {
     books: shelf.books.filter((book) => category.titles.has(book.title)),
   })).filter((category) => category.books.length > 0);
 
+  // Opening a book zooms the view in on it where it stands while the book comes forward and opens, as one
+  // movement (Motion, "Handoff: the open book"). The zoom centres on the book, so the shelf moves in around
+  // it as the reader lifts it out from its place.
+  const page = useRef<HTMLDivElement>(null);
+  const [zoomAt, setZoomAt] = useState<{ x: number; y: number } | null>(null);
   function bounds(element: HTMLButtonElement): BookOrigin {
     const { x, y, width, height } = element.getBoundingClientRect();
+    const main = page.current?.querySelector("main")?.getBoundingClientRect();
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (main && !still) setZoomAt({ x: x + width / 2 - main.left, y: y + height / 2 - main.top });
     return { x, y, width, height };
   }
 
@@ -192,13 +203,28 @@ export function ShelfPage() {
     });
   }
 
+  const reading = Boolean(bookId || preview);
+  useEffect(() => {
+    if (!reading) setZoomAt(null);
+  }, [reading]);
+
   function dismiss() {
     if (selected?.fromShelf) navigate(-1);
     else navigate("/", { replace: true });
   }
 
   return (
-    <div className="shelf-page" data-reading={Boolean(bookId || preview) || undefined}>
+    <div
+      className="shelf-page"
+      ref={page}
+      data-reading={reading || undefined}
+      data-zoom={(reading && zoomAt && true) || undefined}
+      style={
+        zoomAt
+          ? ({ "--zx": `${zoomAt.x}px`, "--zy": `${zoomAt.y}px`, "--zoom": ZOOM } as CSSProperties)
+          : undefined
+      }
+    >
       <main>
         <section className="feature surf dark" aria-labelledby="feature-title">
           <div className="burst" />
