@@ -93,6 +93,17 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   screen to the right (`FinalCover`/`FinalBook`, then desert, coast, autumn hills). One book screen per book: the
   title-page art is reused inside the chapters, so no second variant (the contents band) is drawn. `FinalBookMore`
   is gone. Desert page: no clouds. Autumn page: clouds lower and on both sides, clear of the text.
+- **Four new strata places, covers only for now (Josef picked all four of the proposed sceneries; book screens
+  later).** `art/strata/covers_new.py`, boards `FinalCoverKarst`, `FinalCoverAurora`, `FinalCoverTerraces`,
+  `FinalCoverLagoon` on "Covers: Strata", one row each under the autumn hills, the book-screen slot to the right
+  left empty. Karst: one tall rounded tower, paler towers stepping back by value, a sampan on a calm river. Winter
+  night: the night sky starts exactly at the aurora's upper edge, plain paper above it (Josef), a tall snow peak, a
+  frozen lake, a cabin with the one warm window, firs. Rice terraces, rethought after Josef rejected the striped
+  ridge: shelves seen from the front, each a flooded pool holding the dawn sky (rose high up, gold low down) with a
+  thin dark bank below, the banks bending in a slow wave like contour lines, the low sun on the left. Volcanic
+  lagoon: a green cone lit from the left with a short plume clear of the title, a muted teal lagoon, a sandbar and
+  two palms. Each round went through a fresh critic with every approved cover and page as reference (Josef: show it
+  all the approved pieces, not only the original strata).
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
