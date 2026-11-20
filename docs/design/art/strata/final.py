@@ -65,25 +65,30 @@ def page():
 
 
 def cover():
-    """The cover, world 236 x 344: title on paper above y 118, the name on paper below y 300."""
-    hero = calm(Ridge([(150, 142, 64, 48, 1.5), (120, 186, 46, 34, 0.75), (202, 176, 34, 44, 1.2)], 262,
-                      TEAL_L, TEAL_D, seed=34, rough=2.5,
-                      ribs=0.9, lean=0.2, mist=(240, 262), bands=[(142, 154, STONE_L, STONE_D)]))
-    haze = calm(Ridge([(20, 214, 70, 70, 1.1), (80, 206, 60, 60, 0.95)], 246, HAZE_L, HAZE_D, seed=31, rough=2,
-                      ribs=0.5, mist=(230, 246)))
-    sage = calm(Ridge([(-14, 200, 80, 96, 1.2), (50, 228, 30, 34, 0.85)], 264, SAGE_L, SAGE_D, seed=33, rough=3,
-                      ribs=0.9, lean=0.3, mist=(250, 264)))
-    lake = Water(262, 300, -20, 260, WATER, GLINT, seed=36, mirror=[hero], gaps=(1, 3), squash=0.6)
-    lake.path = (98, 7)
+    """The cover is the centrepiece, composed for its own portrait shape (world 236 x 344): the title on paper above
+    y 118, the name on paper below y 304. One massif, centred and big, its summit just under the title; a large sun
+    behind the summit like a halo; haze ranges low on both sides; a still lake that mirrors the peak, with the glint
+    path straight down the middle; a low near shore with two small firs at the right. Few things, each large."""
+    hero = calm(Ridge([(122, 142, 90, 80, 1.5), (140, 156, 22, 24, 1.0), (78, 184, 50, 38, 0.72), (186, 190, 44, 64, 1.15)], 252, TEAL_L,
+                      TEAL_D, seed=44, rough=3, ribs=1.0, lean=0.2, mist=(232, 252),
+                      bands=[(142, 158, STONE_L, STONE_D)]))
+    left = calm(Ridge([(-6, 200, 60, 70, 1.1), (40, 214, 40, 44, 0.9)], 248, HAZE_L, HAZE_D, seed=41, rough=2,
+                      ribs=0.5, mist=(228, 248)))
+    right = calm(Ridge([(230, 206, 50, 60, 1.1)], 248, HAZE_L, HAZE_D, seed=42, rough=2, ribs=0.5, mist=(228, 248)))
+    sage = calm(Ridge([(-20, 222, 70, 80, 1.0)], 256, SAGE_L, SAGE_D, seed=43, rough=2, ribs=0.8, lean=0.3,
+                      mist=(244, 256)))
+    lake = Water(254, 302, -20, 260, WATER, GLINT, seed=46, mirror=[hero], gaps=(1, 2), squash=0.55)
+    lake.path = (116, 7)
     return [
-        Blob([(98, 190, 14, 14)], SUN, top_light=False),
-        haze,
-        Blob([(80, 236, 54, 4)], MIST),
+        Blob([(116, 160, 34, 34)], SUN, top_light=False),
+        left,
+        right,
+        Blob([(60, 230, 50, 3), (196, 234, 40, 3)], MIST),
         hero,
         sage,
         lake,
-        Band(150, 260, 284, 300, SHORE, seed=37, lens=0.7),
-        Firs([(184, 292, 38, 8), (200, 294, 56, 10), (216, 293, 42, 8), (230, 295, 28, 6)], FIR_L, FIR_D, tiers=6),
+        Band(160, 280, 288, 304, SHORE, seed=47, lens=0.7),
+        Firs([(206, 298, 30, 6), (220, 300, 22, 5)], FIR_L, FIR_D, tiers=5),
     ]
 
 
@@ -93,6 +98,6 @@ if __name__ == "__main__":
     S = 2
     render(page(), (0, 0, 570, 684), (1140, 1368), 8, fade=[("y", 1344, 1368)], seed=11, **OPTS).save("out/final-title.png")
     render(page(), (-60, 230, 630, 684), (1140, 752), 8, fade=[("y", 736, 752)], seed=11, **OPTS).save("out/final-contents.png")
-    render(cover(), (0, 0, 236, 344), (472, 688), 6, fade=[("y", 596, 604)], seed=5, paper=(255, 255, 255), **OPTS).save("out/final-cover-xl.png")
-    render(cover(), (0, 0, 236, 344), (244, 356), 3, fade=[("y", 308, 312)], seed=5, paper=(255, 255, 255),
+    render(cover(), (0, 0, 236, 344), (944, 1376), 8, fade=[("y", 1200, 1216)], seed=5, paper=(255, 255, 255), **OPTS).save("out/final-cover-xl.png")
+    render(cover(), (0, 0, 236, 344), (244, 356), 3, fade=[("y", 310, 314)], seed=5, paper=(255, 255, 255),
            **dict(OPTS, gap=0)).save("out/final-cover-sm.png")

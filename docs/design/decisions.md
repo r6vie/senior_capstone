@@ -15,6 +15,10 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   A masonry rewrite of the blocks was tried and rejected. Kept the round 1 finish; round 3's inks are back; the
   massif is a broad summit with a rounded shoulder and a second summit, the sun in the notch, a coral peak in the
   middle distance; firs laid without ragged ends.
+- **Round 3, the cover first (Josef: members pick a cover; the inside scenery follows it, so the cover must be loved).**
+  The cover is now composed for its own shape: one big centred massif with a notched summit and a stone cap, a large
+  sun behind it like a halo, haze low on both sides, a still lake mirroring the peak, two small firs. Drawn at 2x.
+  The book's inside pages are to follow from the cover (not yet redone to match).
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
