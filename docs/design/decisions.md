@@ -18,6 +18,11 @@ Decisions Josef has made about Trove's look and feel. Newest first.
     tabs as running heads, page turns at the feet, Ask to check out on the title page and on each chapter page.
   - **Josef removed "I have one like this" (sparks)** from the book screens (B and C). `docs/trove.md` still plans
     sparks (I5); that product change is the orchestrator's to make in the plan.
+  - **Round 4, B built as a book** to be animated as paper: cover boards in the book's own ink, a spine at head and
+    foot, stacked page edges, top pages bowing into the gutter (shaded in dots). No page feet (the tabs at the head do
+    that job), no redundant page labels, and the shelf behind at 60% opacity.
+  - **Josef's rule, from now on:** no explanatory sentences in the UI (such as "A thirty-minute video call, if the
+    author says yes."). Good UI should not need a sentence for each interaction. Removed from B and C.
   - **C, pulled from the shelf** (`FreshReaderPanel`): a side panel over the shelf, which stays in place shaded in
     dots with the book's slot left open. Previous and Next step along the shelf; chapters open in place; a link to
     the full page (A).

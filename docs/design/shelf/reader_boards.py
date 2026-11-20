@@ -79,7 +79,7 @@ CSS = """
 .toc.compact b{font-size:18px}
 .toc li[aria-current]{background:var(--ink);color:var(--white)}
 .toc li[aria-current] i{color:var(--white)}
-.ch-num{font:800 120px/.8 var(--font-display);margin:6px 0 18px}
+.ch-num{font:800 120px/.8 var(--font-display);margin:0 0 18px}
 .ch-title{margin:0;font:600 38px/1.1 var(--font-serif);letter-spacing:-.01em;text-wrap:balance}
 .ch-body{margin:22px 0 0;font:400 19px/1.55 var(--font-serif);max-width:420px}
 .spark{display:flex;flex-direction:column;gap:8px;margin-top:30px;padding-top:22px;border-top:2.5px dotted var(--ink)}
@@ -142,6 +142,29 @@ CSS = """
 .rd-ask-ch{margin-top:30px;padding-top:22px;border-top:2.5px dotted var(--ink)}
 .rd-book{top:124px}
 .rd-art{height:250px;bottom:-12px;left:0}
+
+/* the shelf behind the open book steps back */
+.rd .sh-row{opacity:.6}
+/* B round 4: a real book. Two cover boards and a spine under a block of pages; the top pages bow down into the
+   gutter, and the page edges stack at the fore-edge and foot. Flat ink and paper, shade in dots, no blur.
+   Geometry (book box 1180 x 724, gutter at x 590) is shared by the SVG and the clip paths below. */
+.rd-book{left:130px;top:114px;width:1180px;height:724px;display:block}
+.rd-book::before,.rd-book::after{content:none}
+.rd-book svg{position:absolute;inset:0;width:1180px;height:724px;overflow:visible}
+.rd-book .bk-front{z-index:3;pointer-events:none}
+.rd-page{position:absolute;top:0;height:724px;width:590px;border:0;background:var(--paper);padding:100px 56px 0 84px}
+.rd-left{left:0;clip-path:path("M 28,30 C 200,20 470,16 560,28 Q 584,36 590,54 L 590,712 Q 584,700 560,694 C 470,686 200,690 28,696 Z")}
+.rd-right{left:590px;padding:100px 84px 0 64px;clip-path:path("M 562,30 C 390,20 120,16 30,28 Q 6,36 0,54 L 0,712 Q 6,700 30,694 C 120,686 390,690 562,696 Z")}
+.rd-head{top:34px;left:76px;right:76px}
+.rd-head-r{left:60px}
+.rd-foot{bottom:40px;padding:0 84px 0 76px}
+.rd-right .rd-foot{padding:0 84px 0 56px}
+.rd-art{left:28px;bottom:24px;height:250px}
+.rd-art.short{left:28px;bottom:24px;height:250px}
+.rd-gutter{top:56px;bottom:14px;left:calc(50% - 30px);width:60px;z-index:2}
+.rd-gutter::after{content:none}
+.rd-curl{right:28px;bottom:28px;width:40px;height:40px;
+  background:linear-gradient(-45deg,var(--white) 0 49%,transparent 50%),radial-gradient(circle,var(--ink) 1px,transparent 1.4px) 0 0/4px 4px,var(--paper-sunk)}
 </style>
 """
 
@@ -193,7 +216,7 @@ def head_r(cur):
 
 def ask(note=True):
     return ('<div class="rd-ask"><a class="button button-primary" href="#">Ask to check out</a>'
-            + ('<span class="note">A thirty-minute video call, if the author says yes.</span>' if note else "") + '</div>')
+            + '</div>')
 
 def toc(active=None, hover=None, compact=False, summaries=True):
     out = f'<ol class="toc{" compact" if compact else ""}">'
@@ -208,38 +231,52 @@ spread1 = (
     f'<p class="rd-blurb">{BLURB}</p>' + ask() +
     f'<img class="rd-art" src="{BAND}" alt="">'
     '</section>'
-    '<section class="rd-page rd-right" aria-label="Contents">' + head_r(0) +
-    '<span class="frame-label" style="color:var(--ink)">Contents</span>'
+    '<section class="rd-page rd-right" aria-label="Contents">' + head_r(0)
     + toc(hover=2) +
-    '<div class="rd-foot"><span class="rd-folio">i</span><a href="#">Chapter 1 <span aria-hidden="true">›</span></a></div>'
     '<div class="rd-curl" aria-hidden="true"></div>'
     '</section><div class="rd-gutter" aria-hidden="true"></div>')
 
 spread2 = (
-    '<section class="rd-page rd-left" aria-label="Contents">' + HEAD_L +
-    '<span class="frame-label" style="color:var(--ink)">Contents</span>'
+    '<section class="rd-page rd-left" aria-label="Contents">' + HEAD_L
     + toc(active=2, compact=True, summaries=False) +
     f'<img class="rd-art short" src="{BAND}" alt="">'
-    '<div class="rd-foot"><a href="#"><span aria-hidden="true">‹</span> Title page</a><span class="rd-folio">2</span></div>'
     '</section>'
     '<section class="rd-page rd-right" aria-label="Chapter 2">' + head_r(2) +
-    '<span class="frame-label" style="color:var(--ink)">Chapter</span>'
     f'<div class="ch-num" aria-hidden="true">2</div><h2 class="ch-title">{CH[1][0]}</h2>'
     f'<p class="ch-body">{CH[1][1]}</p>'
-    '<div class="rd-ask rd-ask-ch"><p class="note" style="color:var(--ink)">Want to hear this one first-hand?</p>' + ask()[len('<div class="rd-ask">'):] +
-    '<div class="rd-foot"><span class="rd-folio">3</span><a href="#">Chapter 3 <span aria-hidden="true">›</span></a></div>'
+    '<div class="rd-ask rd-ask-ch">' + ask()[len('<div class="rd-ask">'):] +
     '<div class="rd-curl" aria-hidden="true"></div>'
     '</section><div class="rd-gutter" aria-hidden="true"></div>')
 
-B_NOTE = ("Book screen B · the book opens. The page keeps the library's header; under it the shelf stays where it was, "
-          "shaded in dots with the book's place left open, and the cover you clicked swings open over it. Everything for "
-          "the book is inside the book: Close at the head of the left page, the page tabs at the head of the right, page "
-          "turns at the foot of each page (and the arrow keys, a swipe, the lifted corner). The title page carries the blurb "
-          "and Ask to check out; choosing a chapter turns the page, the contents move to the left, and the chapter page "
-          "carries Ask to check out under the chapter, so the action is on every spread.")
+B_NOTE = ("Book screen B · the book opens over the shelf, under the library's header. Everything for the book is in the "
+          "book: Close and the page tabs at the head of the pages, Ask to check out on the title page and on every chapter. "
+          "Built as a book, to be animated as paper: cover boards, a spine at head and foot, stacked page edges, pages bowing "
+          "into the gutter.")
+
+LP = "M 28,30 C 200,20 470,16 560,28 Q 584,36 590,54 L 590,712 Q 584,700 560,694 C 470,686 200,690 28,696 Z"
+RP = "M 1152,30 C 980,20 710,16 620,28 Q 596,36 590,54 L 590,712 Q 596,700 620,694 C 710,686 980,690 1152,696 Z"
+COVER = "#16302e"   # the book's own cover ink (strata), never the UI red
+def _stack(path, dx):
+    # the page block: the same page, stepped out at the fore-edge and down at the foot
+    return "".join(f'<path d="{path}" transform="translate({dx*k},{3*k})" fill="var(--white)" stroke="var(--ink)" stroke-width="1.5"/>'
+                   for k in (4, 3, 2, 1))
+BOOK_BACK = (
+    '<svg class="bk-back" viewBox="0 0 1180 724" aria-hidden="true">'
+    # the spine, seen at head and foot where the boards wrap round it
+    f'<path d="M 560,8 Q 590,-6 620,8 L 620,720 Q 590,740 560,720 Z" fill="{COVER}" stroke="var(--ink)" stroke-width="2"/>'
+    # the two boards, a little larger than the pages
+    f'<path d="M 590,12 L 14,12 Q 4,12 4,22 L 4,708 Q 4,718 14,718 L 590,722 Z" fill="{COVER}" stroke="var(--ink)" stroke-width="2"/>'
+    f'<path d="M 590,12 L 1166,12 Q 1176,12 1176,22 L 1176,708 Q 1176,718 1166,718 L 590,722 Z" fill="{COVER}" stroke="var(--ink)" stroke-width="2"/>'
+    + _stack(LP, -4) + _stack(RP, 4) + '</svg>')
+BOOK_FRONT = (
+    '<svg class="bk-front" viewBox="0 0 1180 724" aria-hidden="true">'
+    f'<path d="{LP}" fill="none" stroke="var(--ink)" stroke-width="2"/><path d="{RP}" fill="none" stroke="var(--ink)" stroke-width="2"/>'
+    # the gutter: where the two pages meet the spine
+    '<path d="M 590,54 L 590,712" stroke="var(--ink)" stroke-width="2"/></svg>')
+
 def b_screen(label, spread, top):
     return (f'<div style="position:absolute;left:0;top:{top}px"><span class="frame-label scr-label">{label}</span>'
-            f'<div class="scr rd">{HEADER}{SHELF_BG}<div class="sh-dim full" aria-hidden="true"></div><div class="rd-book">{spread}</div></div></div>')
+            f'<div class="scr rd">{HEADER}{SHELF_BG}<div class="sh-dim full" aria-hidden="true"></div><div class="rd-book">{BOOK_BACK}{spread}{BOOK_FRONT}</div></div></div>')
 bodyB = ('<div style="position:relative;height:100%">'
          f'<div class="board-head"><span class="frame-label">B · The book opens</span><p class="note">{B_NOTE}</p></div>'
          + b_screen("Opened: title page and contents", spread1, 190)
@@ -263,9 +300,9 @@ panel = ('<aside class="pn" aria-labelledby="pn-title">'
          + cover("cov-strata", COVER_SM, T, A) +
          f'<div class="pn-head"><h1 id="pn-title">{T}</h1><p class="byline">by {A}</p></div></div>'
          f'<div class="pn-body"><p>{BLURB}</p>'
-         '<div class="pn-act"><a class="button button-primary" href="#">Ask to check out</a><span class="note">A thirty-minute video call, if the author says yes.</span></div>'
+         '<div class="pn-act"><a class="button button-primary" href="#">Ask to check out</a></div>'
          '<h2 class="shelf-name" style="font-size:20px;margin-top:6px">What you could talk about</h2>' + acc + '</div>'
-         '<div class="pn-full"><p class="note">This book has its own page to share.</p><a class="button button-quiet" href="#" style="font-size:15px">Open the full page ›</a></div>'
+         '<div class="pn-full" style="justify-content:flex-end"><a class="button button-quiet" href="#" style="font-size:15px">Open the full page ›</a></div>'
          '</aside>')
 C_NOTE = ("Book screen C · pulled from the shelf. For browsing: the book slides out to a reading panel and the shelf "
           "stays where it was, shaded in dots, with the book's place left open. Previous and Next step along the same shelf "
