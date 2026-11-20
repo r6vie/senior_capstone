@@ -20,27 +20,38 @@ TERRA_L = ["#E7A174", "#DD8A60", "#CE744D"]
 TERRA_D = ["#8E4433", "#6E3329", "#4C2422", "#2F1A20"]
 PLUM_L = ["#D3B2BC", "#C4A0AD", "#B38E9E"]
 PLUM_D = ["#987080", "#83606F", "#6F515E"]
-GOLD = ["#F29A6C", "#EC8556", "#E27043"]   # a saturated coral-orange sun
+GOLD = ["#F7C08A", "#F4B07A", "#F2A06A"]   # a light coral-gold sun, apart from the rock
 ROSE = ["#EBA08C", "#E38E7E"]
-DUSK = ["#B49AB4", "#A688A6", "#977898"]
-DUSK_D = ["#7E6280", "#6B526D", "#59445B"]
+DUSK = ["#F0D3BD", "#EAC6AC", "#E2B99C"]   # far mesas in warm haze, not purple
+DUSK_D = ["#D6A78A", "#C9997D", "#BB8B70"]
 SANDS = ["#F2DDB6", "#EBCE9E", "#E3C08A", "#C98A5E", "#A86A47"]
 
 
+HAZE_PEACH = ["#EDC0A7", "#E8B49A", "#E1A88D"]
+HAZE_PEACH_D = ["#D59A80", "#CB8E74", "#BF8268"]
+MAROON = ["#5A2A24", "#4A2220", "#3A1C1C"]
+UMBER = ["#6B3A2A", "#5E3324"]
+SAND_CALM = ["#F2DDB6", "#EDD3A6", "#E7C997"]
+
+
 def desert():
-    """The critic's round: one flat-capped butte about 45% of the width, sheer walls then a talus skirt, its shade
-    side a stepped diagonal down to near-black aubergine; the coral sun behind its upper right shoulder; a long low
-    dusty-violet mesa line behind; sand only in the bottom fifth, in broken courses with thin rust shadows."""
-    hero = Mesa(98, 168, 52, 84, 296, TERRA_L, TERRA_D, ledges=3, bed=8, seed=53, talus=True, top_tint=ROSE,
-                shadow_slope=0.35, flicker=0.03)
-    sand = Water(290, 352, -40, 280, SANDS, ["#F7EAD0", "#F1E1C2"], seed=57, gaps=(1, 2), squash=0.5)
+    """Critic round 2 (polish): sheer walls with one ledge, a clean three-step maroon shadow side, a lit face without
+    speckle; a light coral-gold sun raised and set behind the butte's right wall; a full-width peach haze band behind
+    at 40% of the butte's height with the small butte pushed into it; calm sand at the foot over two dark umber
+    courses that run off the bottom; the whole picture lifted to meet the title block."""
+    hero = Mesa(100, 168, 72, 72, 292, TERRA_L, MAROON, ledges=1, bed=8, seed=53, top_tint=ROSE, wall_ledge=6,
+                wobble=0, speckle=0.25, shadow_steps=3, ragged=0, flicker=0.01)
     return [
-        Blob([(168, 176, 28, 28)], GOLD, top_light=False),
-        Mesa(70, 246, 76, 92, 292, DUSK, DUSK_D, ledges=1, bed=6, seed=50, mist=(278, 292), flicker=0.03),
-        Mesa(200, 262, 16, 26, 292, TERRA_L, TERRA_D, ledges=1, bed=7, seed=52, talus=True, shadow_slope=0.3,
-             flicker=0.03),
+        Blob([(180, 170, 28, 28)], GOLD, top_light=False),
+        Mesa(30, 234, 70, 76, 292, HAZE_PEACH, HAZE_PEACH_D, ledges=1, bed=8, seed=50, wall_ledge=4, wobble=0,
+             speckle=0.3, ragged=0, flicker=0.01),
+        Mesa(200, 246, 64, 68, 292, HAZE_PEACH, HAZE_PEACH_D, ledges=1, bed=8, seed=51, wall_ledge=4, wobble=0,
+             speckle=0.3, ragged=0, flicker=0.01),
+        Mesa(212, 224, 8, 12, 292, HAZE_PEACH, HAZE_PEACH_D, ledges=1, bed=8, seed=52, wall_ledge=3, wobble=0,
+             speckle=0.3, ragged=0, flicker=0.01),
         hero,
-        sand,
+        Band(-60, 300, 288, 328, SAND_CALM, seed=58, lens=0.0),
+        Band(-60, 300, 328, 360, UMBER, seed=59, lens=0.0),
     ]
 
 
@@ -114,5 +125,6 @@ SCENES = {"desert": desert, "coast": coast, "valley": valley}
 
 if __name__ == "__main__":
     for name, fn in SCENES.items():
-        render(fn(), (0, 0, 236, 344), (472, 688), 8, paper=(255, 255, 255), clean=True).save(f"out/more-{name}-xl.png")
-        render(fn(), (0, 0, 236, 344), (244, 356), 3, paper=(255, 255, 255), clean=True).save(f"out/more-{name}-sm.png")
+        j = 0.017 if name == "desert" else 0.05    # the desert's faces are calm: a third of the usual jitter
+        render(fn(), (0, 0, 236, 344), (472, 688), 8, paper=(255, 255, 255), clean=True, jitter=j).save(f"out/more-{name}-xl.png")
+        render(fn(), (0, 0, 236, 344), (244, 356), 3, paper=(255, 255, 255), clean=True, jitter=j).save(f"out/more-{name}-sm.png")

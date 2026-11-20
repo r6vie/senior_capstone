@@ -61,6 +61,12 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   deep forest in front); a clump of four tapering dark poplars on the front crest as the focal point; the title in
   forest green. Renderer: `Ridge(round=True)` for domes; a layer can allow narrower pieces (`min_run`) so trees
   taper to a tip.
+- **Desert refinement (Josef: one more pass; no purple).** The violet back plane is now warm peach haze. A fresh
+  critic then asked for polish: sheer walls with one ledge, a clean three-step maroon shadow side, no speckle on the
+  lit face, a lighter coral-gold sun raised and set behind the right wall, full-width peach haze mesas behind with
+  the small butte pushed into them, calm sand over a dark umber base, the picture lifted to meet the type. Done,
+  then rebalanced by eye (a broad butte, not a tower). Renderer: `Mesa(wall_ledge, wobble, speckle, shadow_steps,
+  ragged)`, `render(jitter)` per cover.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

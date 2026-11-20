@@ -310,7 +310,8 @@ class Mesa:
     brick = (1.3, 5.0)
 
     def __init__(self, cx, top, tw, bw, base, lit, dark, ledges=3, bed=8, seed=1, mist=None, flicker=0.04,
-                 talus=False, top_tint=None, shadow_slope=0.0):
+                 talus=False, top_tint=None, shadow_slope=0.0, wall_ledge=None, wobble=6, speckle=0.8,
+                 shadow_steps=None, ragged=1):
         self.cx, self.top_y, self.tw, self.bw, self.base = cx, top, tw, bw, base
         self.lit = [hexrgb(c) for c in lit]
         self.dark = [hexrgb(c) for c in dark]
@@ -319,9 +320,15 @@ class Mesa:
         self.talus = talus
         self.top_tint = [hexrgb(c) for c in top_tint] if top_tint else None
         self.shadow_slope = shadow_slope
+        # wall_ledge: sheer walls with one ledge of this width two thirds down; shadow_steps: the shade edge in this
+        # many clean steps; wobble and speckle: how much the walls and the lit face vary course to course
+        self.wall_ledge, self.wobble, self.speckle, self.shadow_steps = wall_ledge, wobble, speckle, shadow_steps
+        self.ragged = ragged
 
     def _half(self, y):
         t = np.clip((y - self.top_y) / max(1, self.base - self.top_y), 0, 1)
+        if self.wall_ledge is not None:
+            return self.tw + np.where(t > 0.66, self.wall_ledge, 0.0)
         if self.talus:
             wall = 0.66
             skirt = np.clip((t - wall) / (1 - wall), 0, 1)
@@ -336,19 +343,24 @@ class Mesa:
         if not (self.top_y <= y <= self.base):
             return np.zeros_like(x, dtype=bool)
         hw = self._half(y)
-        wob = (np.array([vnoise(v, y, 26, self.seed) for v in np.atleast_1d(x)]) - 0.5) * 6
+        wob = (np.array([vnoise(v, y, 26, self.seed) for v in np.atleast_1d(x)]) - 0.5) * self.wobble
         return np.abs(x - self.cx) <= hw + wob
 
     def colour(self, x, y, rng):
         hw = float(self._half(y))
         # the shadow edge: a stepped diagonal falling to the right, one step per bed
         steps = (y - self.top_y) // self.bed
-        shadow = x > self.cx + hw * 0.18 + self.shadow_slope * steps * self.bed
+        if self.shadow_steps:
+            t = min(0.999, max(0, (y - self.top_y) / max(1, self.base - self.top_y)))
+            k = int(t * self.shadow_steps)
+            shadow = x > self.cx + hw * (0.42 - 0.2 * k / max(1, self.shadow_steps - 1))
+        else:
+            shadow = x > self.cx + hw * 0.18 + self.shadow_slope * steps * self.bed
         pal = self.dark if shadow else self.lit
         if self.top_tint and not shadow and y - self.top_y < 2 * self.bed:
             pal = self.top_tint            # dusk light on the top courses
         bed = int((y - self.top_y) // self.bed)
-        i = (bed % 2) * 1.0 + 0.8 * vnoise(x, y, 40, self.seed + 1)
+        i = (bed % 2) * 1.0 + self.speckle * vnoise(x, y, 40, self.seed + 1)
         if y - self.top_y < self.bed * 0.6:
             i = 0 if not shadow else 0.5      # the flat top catches the light
         if not shadow and abs(x - (self.cx - hw)) < 6:
