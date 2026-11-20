@@ -39,23 +39,32 @@
 }
 
 /* ---------- The book object ---------- */
+/* How thick the page block is. Closed and in flight it has real depth; it settles flat as it opens. */
+@property --depth {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 1px;
+}
 .br-fit {
   position: relative;
   width: calc(1180px * var(--k));
   height: calc(724px * var(--k));
   perspective: 4200px;
 }
+/* Centred on the spine, so it scales, travels and turns about the spine, as a book would. */
 .br-book {
   --reader-x: 0px;
   --reader-y: 0px;
   --reader-scale-x: 1;
   --reader-scale-y: 1;
+  --depth: 1px;
+  --cover-t: 10px;
   position: absolute;
-  left: 0;
-  top: 0;
+  left: calc(50% - 590px);
+  top: calc(50% - 362px);
   width: 1180px;
   height: 724px;
-  transform-origin: 0 0;
+  transform-origin: 50% 50%;
   transform: scale(var(--k));
   transform-style: preserve-3d;
 }
@@ -65,6 +74,7 @@
   inset: 8px 6px;
   border-radius: 4px;
   background: var(--ink);
+  transform: translateZ(calc(-1 * var(--depth)));
 }
 .br-board::before {
   content: "";
@@ -82,6 +92,37 @@
   inset: 16px 14px;
   border: 1.5px solid var(--ink);
   background: var(--white);
+  transform: translateZ(calc(-1 * var(--depth) + 0.5px));
+}
+/* The page block's fore-edge, head and foot: stacked leaves, from the board up to the top page. */
+.br-block {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid var(--ink);
+  background-color: var(--white);
+}
+.br-block-side {
+  top: 16px;
+  height: 692px;
+  left: calc(1166px - var(--depth) / 2);
+  width: var(--depth);
+  background-image: repeating-linear-gradient(90deg, transparent 0 2px, var(--rule) 2px 3px);
+  transform: translateZ(calc(var(--depth) / -2)) rotateY(90deg);
+}
+.br-block-head,
+.br-block-foot {
+  left: 590px;
+  width: 576px;
+  height: var(--depth);
+  background-image: repeating-linear-gradient(0deg, transparent 0 2px, var(--rule) 2px 3px);
+}
+.br-block-head {
+  top: calc(16px - var(--depth) / 2);
+  transform: translateZ(calc(var(--depth) / -2)) rotateX(90deg);
+}
+.br-block-foot {
+  top: calc(708px - var(--depth) / 2);
+  transform: translateZ(calc(var(--depth) / -2)) rotateX(-90deg);
 }
 
 /* ---------- Pages: flat planes, each carrying all of its own content ---------- */
@@ -398,7 +439,8 @@
   }
 }
 
-/* ---------- Opening: grows from its place on the shelf, the cover swings open ---------- */
+/* ---------- Opening: the book travels from the shelf to the foreground, turning, as its cover opens ---------- */
+/* The cover is a slab with thickness: an outside, an inside and three rims, hinged at the spine. */
 .br-cover {
   position: absolute;
   z-index: 6;
@@ -417,6 +459,34 @@
   inset: 0;
   border-radius: 4px;
   backface-visibility: hidden;
+}
+.br-cover-front {
+  transform: translateZ(calc(var(--cover-t) / 2));
+}
+.br-cover-rim {
+  position: absolute;
+  background: var(--ink);
+}
+.br-cover-side {
+  top: 0;
+  bottom: 0;
+  left: calc(100% - var(--cover-t) / 2);
+  width: var(--cover-t);
+  transform: rotateY(90deg);
+}
+.br-cover-head,
+.br-cover-foot {
+  left: 0;
+  right: 0;
+  height: var(--cover-t);
+}
+.br-cover-head {
+  top: calc(var(--cover-t) / -2);
+  transform: rotateX(90deg);
+}
+.br-cover-foot {
+  bottom: calc(var(--cover-t) / -2);
+  transform: rotateX(-90deg);
 }
 /* The closed book looks like the book on the shelf, so the hand-off from the shelf is seamless. */
 .br-cover-front {
@@ -455,7 +525,7 @@
   text-transform: uppercase;
 }
 .br-cover-back {
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) translateZ(calc(var(--cover-t) / 2));
   background: var(--ink);
 }
 /* Laid out where the left half of the open book is: the board from x 6, the page edge from 14, the page from 20. */
@@ -473,10 +543,14 @@
   left: 14px;
   top: 12px;
 }
-/* From its place on the shelf the book lifts forward; the cover starts to swing a moment in, and has
-   opened flat as the book settles. */
+/* One motion of one object. From exactly where it stood on the shelf, the book travels to the foreground and
+   grows (move), turns to show its depth and back (tilt), and its block settles flat (flatten), while the cover
+   swings open about the spine (open). */
 .br-book[data-arrive] {
-  animation: br-arrive var(--open-time) var(--open-ease) both;
+  animation:
+    br-move var(--open-time) var(--open-ease) both,
+    br-tilt var(--open-time) linear both,
+    br-flatten var(--open-time) cubic-bezier(0.55, 0, 0.45, 1) both;
 }
 .br-book[data-arrive] .br-cover {
   display: block;
@@ -492,25 +566,48 @@
 .br-book[data-arrive] .br-gutter {
   animation: br-half var(--open-time) both;
 }
-@keyframes br-arrive {
+@keyframes br-move {
   from {
-    transform: scale(var(--k)) translate(var(--reader-x), var(--reader-y))
-      scale(var(--reader-scale-x), var(--reader-scale-y));
+    translate: var(--reader-x) var(--reader-y);
+    scale: var(--reader-scale-x) var(--reader-scale-y);
   }
   to {
-    transform: scale(var(--k));
+    translate: 0 0;
+    scale: 1 1;
   }
 }
+@keyframes br-tilt {
+  0% {
+    rotate: 0.35 -1 0 0deg;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  45% {
+    rotate: 0.35 -1 0 26deg;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  100% {
+    rotate: 0.35 -1 0 0deg;
+  }
+}
+@keyframes br-flatten {
+  from {
+    --depth: 26px;
+  }
+  to {
+    --depth: 1px;
+  }
+}
+/* Its inside lands exactly on the left half of the spread; the real one then takes over, unseen. */
 @keyframes br-open {
   0%,
-  10% {
-    transform: rotateY(0deg);
+  12% {
+    transform: rotateY(0deg) translateZ(calc(var(--cover-t) / 2));
   }
-  99% {
+  99.9% {
     visibility: visible;
   }
   100% {
-    transform: rotateY(-180deg);
+    transform: rotateY(-180deg) translateZ(calc(var(--cover-t) / 2));
     visibility: hidden;
   }
 }

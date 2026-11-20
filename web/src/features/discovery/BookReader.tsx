@@ -101,7 +101,8 @@ export function BookReader({
     return () => window.removeEventListener("resize", measure);
   }, []);
 
-  // ---------- Opening: the book grows from its place on the shelf, and the cover swings open ----------
+  // ---------- Opening: one move. The book, a 3D object with a cover and a page block, travels from its place
+  // on the shelf to the foreground, turning to show its depth as it comes, while its cover swings open. ----------
   // biome-ignore lint/correctness/useExhaustiveDependencies: it opens once; a later change of width doesn't replay it
   useLayoutEffect(() => {
     const modal = dialog.current;
@@ -111,21 +112,30 @@ export function BookReader({
     modal.showModal();
     document.body.style.overflow = "hidden";
     const element = object.current;
+    // Measured at rest: a second run (React's development double-run) would otherwise measure the book
+    // where the opening has parked it, on the shelf. Clearing first also restarts the opening cleanly.
+    if (element) {
+      delete element.dataset.arrive;
+      for (const name of ["--reader-x", "--reader-y", "--reader-scale-x", "--reader-scale-y"])
+        element.style.removeProperty(name);
+    }
     const target = element?.getBoundingClientRect();
-    const k = fit.current ? fit.current.getBoundingClientRect().width / BOOK_W || 1 : 1;
     if (element && target && origin && target.width && target.height && !narrow) {
-      // Before the cover swings left, the closed book is the right half. Offsets are in the book's own
-      // (unscaled) space, because the move happens inside the scaled frame.
+      // Closed, the book is its right half (the cover over the page block), and it starts exactly where the
+      // book stood on the shelf, at its size. The move and the scale are about the spine, the book's centre.
+      const scaleX = origin.width / (target.width / 2);
+      const scaleY = origin.height / target.height;
+      const spine = target.x + target.width / 2;
       element.style.setProperty(
         "--reader-x",
-        `${(origin.x + origin.width / 2 - (target.x + target.width * 0.75)) / k}px`,
+        `${origin.x + origin.width / 2 - (spine + (scaleX * target.width) / 4)}px`,
       );
       element.style.setProperty(
         "--reader-y",
-        `${(origin.y + origin.height / 2 - (target.y + target.height / 2)) / k}px`,
+        `${origin.y + origin.height / 2 - (target.y + target.height / 2)}px`,
       );
-      element.style.setProperty("--reader-scale-x", String(origin.width / (target.width / 2)));
-      element.style.setProperty("--reader-scale-y", String(origin.height / target.height));
+      element.style.setProperty("--reader-scale-x", String(scaleX));
+      element.style.setProperty("--reader-scale-y", String(scaleY));
       element.dataset.arrive = "true";
     }
     return () => {
@@ -426,6 +436,10 @@ export function BookReader({
             <>
               <div className="br-board" aria-hidden="true" />
               <div className="br-edge" aria-hidden="true" />
+              {/* The page block's own edges, so the closed book has depth. Edge-on, and thin, once open. */}
+              <div className="br-block br-block-side" aria-hidden="true" />
+              <div className="br-block br-block-head" aria-hidden="true" />
+              <div className="br-block br-block-foot" aria-hidden="true" />
             </>
           )}
           {narrow ? (
@@ -470,6 +484,9 @@ export function BookReader({
               )}
               <div className="br-gutter" aria-hidden="true" />
               <div className="br-cover" aria-hidden="true">
+                <div className="br-cover-rim br-cover-side" />
+                <div className="br-cover-rim br-cover-head" />
+                <div className="br-cover-rim br-cover-foot" />
                 <div className="br-cover-front">
                   <strong>{title}</strong>
                   <span>{author}</span>
