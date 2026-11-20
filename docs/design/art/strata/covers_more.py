@@ -50,8 +50,11 @@ def desert():
     sun.ragged = 0     # a clean disc
     return [
         sun,
-        Mesa(4, 238, 34, 40, 292, HAZE_PEACH, HAZE_PEACH_D, ledges=1, bed=8, seed=50, wall_ledge=4, wobble=0,
-             speckle=0.3, ragged=0, flicker=0.01),
+        # the back cliff runs the full width as one line of flat tops at slightly different heights
+        *[Mesa(cx, top, hw, hw + 4, 292, HAZE_PEACH, HAZE_PEACH_D, ledges=1, bed=8, seed=50 + i, wall_ledge=4, wobble=0,
+               speckle=0.3, ragged=0, flicker=0.01)
+          for i, (cx, top, hw) in enumerate([(14, 238, 40), (84, 246, 34), (148, 241, 34), (210, 234, 38),
+                                             (262, 244, 30)])],
         hero,
         Band(-60, 300, 288, 334, SAND_CALM, seed=58, lens=0.0),
         near,
