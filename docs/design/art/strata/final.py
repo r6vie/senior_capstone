@@ -93,7 +93,7 @@ def cover():
 
 
 # slabs read as slightly raised: a faint lit top edge, a soft underside, a faint joint; quieter than round 3's bevel
-OPTS = dict(slab_shade=True, slab=(0.07, 0.13, 0.06), gap=1, joint=1, jitter=0.015, brick=(2.2, 9.0))
+OPTS = dict(slab_shade=True, slab=(0.07, 0.13, 0.06), gap=1, joint=1, seam=0.45, jitter=0.015, brick=(2.2, 9.0))
 
 if __name__ == "__main__":
     S = 2

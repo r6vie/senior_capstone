@@ -25,6 +25,7 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 - **Then: slabs stay slightly 3D, with small uniform joints.** Each slab has a faint lit top edge, a soft underside
   and a faint end shade, and a uniform hairline joint (1px at 2x, half a CSS px) under every course and at the end of
   every slab, so each reads as its own piece. Holes and uneven gaps stay out; the joint is the same everywhere.
+  Then (Josef: too much white) the joint is no longer bare paper but the slab's own ink lightened 45% toward paper.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

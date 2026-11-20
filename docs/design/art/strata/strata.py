@@ -349,7 +349,7 @@ def grove(cx_list, ground_y, size, colours, trunk="#5B3B2A", seed=9, spread=1.0,
 
 
 def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fade=None, brick=(1.6, 7.5), paper=PAPER,
-           jitter=0.05, touch=True, slab=(0.10, 0.22, 0.10), joint=0):
+           jitter=0.05, touch=True, slab=(0.10, 0.22, 0.10), joint=0, seam=1.0):
     """Draw the viewport (wx0, wy0, wx1, wy1) of the scene at size (W, H) with course height in output px.
 
     fade: list of (edge, start, end) in output px; bricks thin out and pale toward paper across it.
@@ -429,6 +429,9 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
                     h = course - gap
                     # joint: a small uniform paper line at the end of every slab, so each reads as its own piece
                     xe = x2 - 1 - joint if x2 - x > joint + 1 else x2 - 1
+                    if seam < 1.0 and (joint or gap):
+                        # the joint is the slab's own ink lightened toward paper: a fine seam, not a white line
+                        dr.rectangle([x, row_top, x2 - 1, row_top + course - 1], fill=mix(c, paper, seam))
                     dr.rectangle([x, row_top, xe, row_top + h - 1], fill=c)
                     if slab_shade and course >= 4:
                         # a laid slab: light catches its top edge, its underside sits in shadow, and the

@@ -8,7 +8,8 @@ Every landscape is cut into courses (rows) of one height and laid in bricks of r
 share one boundary, so a step on one side is matched on the other and no hole opens. Spacing is a design choice a
 layer makes on purpose (water breaks, mist between ridges, the edge against open sky), never a by-product.
 Slabs stay slightly raised (a faint lit top, a soft underside) with one small uniform joint between them
-(`render(gap=1, joint=1, slab=(0.07, 0.13, 0.06))` at 2x). Edges step
+(`render(gap=1, joint=1, seam=0.45, slab=(0.07, 0.13, 0.06))` at 2x); the joint is the slab's ink lightened toward
+paper, not bare paper. Edges step
 instead of curving. Light comes from the left, and each peak has a lit face and a shadow face. Mist is made by
 leaving bricks out and paling them toward paper, never by a blur or gradient. A place is defined once in world
 pixels and redrawn for each size it shows at, so the courses stay 4px on the book page and 2px on the shelf.
