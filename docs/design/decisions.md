@@ -73,6 +73,12 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   tilt): cap no wider than the body, pale gold sun as a clean disc, the foreground cliff at 70% height with three
   clean shade steps, no pink sliver, darker bedding courses on the lit face, warm haze in place of the last mauve,
   a thinner umber base and warmer sand slabs.
+- **Book pages follow each cover (Josef: "make the book screen pages follow these covers").** Desert, coast and
+  autumn hills each get title-page and contents art (`art/strata/pages_more.py`): the cover's place seen wider at
+  the cover's slab size, the hero on the right third, the text over open paper. A fresh critic then asked for more
+  presence and framing: heroes raised, a low cliff framing the desert's left, the headland running off the edge with
+  bigger stacks and a dark rock at the foot, the gold hill flattened so it reads as a hill and not a rising sun.
+  Board `FinalBookMore`: each book opened and on a chapter, the cover's ink on the boards.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

@@ -836,6 +836,14 @@
    "h": 1090,
    "title": "Strata · autumn hills",
    "page": "final"
+  },
+  "FinalBookMore.dc.html": {
+   "x": 2200,
+   "y": 0,
+   "w": 2960,
+   "h": 3030,
+   "title": "Book screen · the pages follow the cover",
+   "page": "final"
   }
  },
  "order": [
