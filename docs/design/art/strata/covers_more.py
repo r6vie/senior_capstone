@@ -53,8 +53,10 @@ def desert():
         # the back cliff runs the full width as one line of flat tops at slightly different heights
         *[Mesa(cx, top, hw, hw + 4, 292, HAZE_PEACH, HAZE_PEACH_D, ledges=1, bed=8, seed=50 + i, wall_ledge=4, wobble=0,
                speckle=0.3, ragged=0, flicker=0.01)
-          for i, (cx, top, hw) in enumerate([(14, 238, 40), (84, 246, 34), (148, 241, 34), (210, 234, 38),
-                                             (262, 244, 30)])],
+          # a section every ~26 px, each one or two slabs (4 or 8 px) above or below its neighbour
+          for i, (cx, top, hw) in enumerate([(-6, 240, 14), (20, 236, 14), (46, 240, 14), (72, 244, 14),
+                                             (98, 240, 14), (124, 236, 14), (150, 240, 14), (176, 244, 14),
+                                             (202, 240, 14), (228, 232, 14), (254, 236, 14)])],
         hero,
         Band(-60, 300, 288, 334, SAND_CALM, seed=58, lens=0.0),
         near,
