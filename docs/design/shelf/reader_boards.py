@@ -165,6 +165,19 @@ CSS = """
 .rd-gutter::after{content:none}
 .rd-curl{right:28px;bottom:28px;width:40px;height:40px;
   background:linear-gradient(-45deg,var(--white) 0 49%,transparent 50%),radial-gradient(circle,var(--ink) 1px,transparent 1.4px) 0 0/4px 4px,var(--paper-sunk)}
+
+/* B round 5: minimal, built for 3D. Each page is one flat plane that carries its own content, so a turn rotates the
+   plane about the spine and everything on it moves with it. Under the planes: one board in the book's ink, the spine
+   showing at head and foot, one sheet of page edge. No curves, no clip paths. */
+.rd-page{top:20px;height:684px;width:570px;clip-path:none;background:var(--paper);border:var(--line) solid var(--ink)}
+.rd-left{left:20px;border-right-width:1px;padding:84px 56px 0 64px}
+.rd-right{left:590px;border-left-width:1px;padding:84px 64px 0 56px}
+.rd-head{top:22px;left:56px;right:56px}
+.rd-head-r{left:56px}
+.rd-art{left:0;bottom:0;height:250px}
+.rd-art.short{left:0;bottom:0;height:250px}
+.rd-gutter{top:22px;bottom:22px;left:calc(50% - 18px);width:36px}
+.rd-curl{right:0;bottom:0}
 </style>
 """
 
@@ -249,8 +262,8 @@ spread2 = (
 
 B_NOTE = ("Book screen B · the book opens over the shelf, under the library's header. Everything for the book is in the "
           "book: Close and the page tabs at the head of the pages, Ask to check out on the title page and under the contents, always about the whole book. "
-          "Built as a book, to be animated as paper: cover boards, a spine at head and foot, stacked page edges, pages bowing "
-          "into the gutter.")
+          "Built for 3D: each page is a flat plane carrying its own content, turned about the spine; under them one board "
+          "in the book's ink, the spine at head and foot, one sheet of page edge.")
 
 LP = "M 28,30 C 200,20 470,16 560,28 Q 584,36 590,54 L 590,712 Q 584,700 560,694 C 470,686 200,690 28,696 Z"
 RP = "M 1152,30 C 980,20 710,16 620,28 Q 596,36 590,54 L 590,712 Q 596,700 620,694 C 710,686 980,690 1152,696 Z"
@@ -272,6 +285,15 @@ BOOK_FRONT = (
     f'<path d="{LP}" fill="none" stroke="var(--ink)" stroke-width="2"/><path d="{RP}" fill="none" stroke="var(--ink)" stroke-width="2"/>'
     # the gutter: where the two pages meet the spine
     '<path d="M 590,54 L 590,712" stroke="var(--ink)" stroke-width="2"/></svg>')
+
+
+BOOK_BACK = (
+    '<svg class="bk-back" viewBox="0 0 1180 724" aria-hidden="true">'
+    f'<rect x="578" y="0" width="24" height="724" rx="3" fill="{COVER}"/>'
+    f'<rect x="6" y="8" width="1168" height="708" rx="4" fill="{COVER}"/>'
+    '<rect x="14" y="16" width="1152" height="692" fill="var(--white)" stroke="var(--ink)" stroke-width="1.5"/>'
+    '</svg>')
+BOOK_FRONT = ''
 
 def b_screen(label, spread, top):
     return (f'<div style="position:absolute;left:0;top:{top}px"><span class="frame-label scr-label">{label}</span>'

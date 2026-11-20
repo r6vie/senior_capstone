@@ -26,6 +26,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   - **Ask to check out is never under a chapter** (Josef: it reads as checking out that one chapter). In B it sits on
     the title page and under the contents on the left page, so it always belongs to the whole book.
   - **Josef removed C** (pulled from the shelf). The choice is now between A and B.
+  - **Round 5, B made minimal for 3D:** each page is one flat plane carrying its own content, so a turn rotates the
+    plane about the spine and the content moves with it. Under the pages, one board in the book's ink, the spine at
+    head and foot, one sheet of page edge. The round 4 curves and stacked edges are gone.
   - **C, pulled from the shelf** (`FreshReaderPanel`): a side panel over the shelf, which stays in place shaded in
     dots with the book's slot left open. Previous and Next step along the shelf; chapters open in place; a link to
     the full page (A).
