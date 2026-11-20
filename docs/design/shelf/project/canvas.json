@@ -812,6 +812,30 @@
    "h": 2020,
    "title": "Book screen · the book opens",
    "page": "final"
+  },
+  "FinalCoverDesert.dc.html": {
+   "x": 0,
+   "y": 2200,
+   "w": 600,
+   "h": 1090,
+   "title": "Strata · desert mesas at dusk",
+   "page": "final"
+  },
+  "FinalCoverCoast.dc.html": {
+   "x": 680,
+   "y": 2200,
+   "w": 600,
+   "h": 1090,
+   "title": "Strata · sea cliffs by moonlight",
+   "page": "final"
+  },
+  "FinalCoverValley.dc.html": {
+   "x": 1360,
+   "y": 2200,
+   "w": 600,
+   "h": 1090,
+   "title": "Strata · an autumn valley",
+   "page": "final"
   }
  },
  "order": [
@@ -904,7 +928,10 @@
   "FreshCover2.dc.html",
   "FreshReaderOpen.dc.html",
   "FinalCover.dc.html",
-  "FinalBook.dc.html"
+  "FinalBook.dc.html",
+  "FinalCoverDesert.dc.html",
+  "FinalCoverCoast.dc.html",
+  "FinalCoverValley.dc.html"
  ],
  "notes": {
   "head": {
@@ -1044,6 +1071,14 @@
    "text": "Final designs · strata, finished",
    "kind": "title1",
    "maxW": 2120,
+   "page": "final"
+  },
+  "final2": {
+   "x": 0,
+   "y": 1960,
+   "text": "More strata covers · three new places",
+   "kind": "title1",
+   "maxW": 2000,
    "page": "final"
   }
  },

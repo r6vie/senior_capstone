@@ -27,6 +27,7 @@ pixels and redrawn for each size it shows at, so the courses stay 4px on the boo
 | `book_b.py` | Art drawn for book screen B's pages (`FreshReaderOpen`): the title page (570 x 684, full page under the text; the land climbs the right edge, a lake across the foot, groves framing it) and the same place from further back for the foot of the contents page |
 | `final.py` | (current) Final designs art: round 3's look laid with `render(clean=True)`, `Ridge(smooth=True, cap=...)` |
 | `final.py` (history) | Final round, on the canvas page "Final designs": the same slabs finished (no bevel, a paper seam between courses, calm colour), one muted family of inks, a composed scene (hero peak on the right third, sun set against its flank, planes stepping back into haze, firs in a cluster) for B's title page, its contents page, and the cover |
+| `covers_more.py` | Three more covers in the final style, each its own place and palette: desert mesas at dusk, sea cliffs by moonlight, an autumn terraced valley. Uses the new `Mesa` and `Terraces` layers in `strata.py` |
 | `phone.py` | The panorama and cover at three-quarter size for the phone book page |
 | `boards.py` | Writes the three canvas boards (the uploaded image ids are in it) |
 

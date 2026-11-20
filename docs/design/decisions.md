@@ -40,6 +40,11 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 - **Cover typography (Josef):** the title set left, the full name right under it at the top (class `cov-final`), so
   the art fills the rest of the cover and runs off its foot. The art is recomposed for the taller space. Fixed-tier
   flag as before: the system sets the name at the foot; this moves it under the title.
+- **Three more strata covers (Josef: start building variety).** Same style and type, each its own terrain and palette,
+  each cover ink taken from its art: desert mesas at dusk (terracotta, sand, plum, gold sun), sea cliffs by
+  moonlight (chalk, indigo, teal sea, pale moon), an autumn terraced valley (gold, olive, rust, violet haze, a
+  river). Boards `FinalCoverDesert`, `FinalCoverCoast`, `FinalCoverValley`. A long name that meets the art sits on
+  the system's white knockout (seen at shelf size on the desert cover).
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
