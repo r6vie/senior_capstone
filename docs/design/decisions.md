@@ -2,6 +2,16 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-19: strata, finished (canvas page "Final designs"), waiting for Josef
+
+- **Josef:** strata has potential but the execution felt unpolished, game-like, and the arrangement not thoughtful.
+  An engraved-line evolution was tried and rejected ("much closer to the original blocky strata").
+- **Done** (`docs/design/art/strata/final.py`): the same slabs, finished. No bevel; a hairline paper seam between
+  courses; little colour jitter. One muted family of inks, the sun the only warm note. Composed: one hero peak on the
+  right third with shoulders, the sun set against its flank, sage framing the left, stone and haze stepping back,
+  mist between planes, a calm lake with a glint path under the sun, firs built from courses in a varied cluster.
+  Boards `FinalCover` and `FinalBook` (book screen B with the art).
+
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
 - **Josef approved book screen B** (`FreshReaderOpen`) and asked for it to go to implementation **without art**: the art

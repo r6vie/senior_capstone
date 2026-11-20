@@ -64,6 +64,10 @@
   {
    "id": "librarian",
    "name": "Librarian notebook"
+  },
+  {
+   "id": "final",
+   "name": "Final designs"
   }
  ],
  "boards": {
@@ -792,6 +796,22 @@
    "h": 2020,
    "title": "Book screen B · the book opens",
    "page": "fresh"
+  },
+  "FinalCover.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 600,
+   "h": 1090,
+   "title": "Strata · the cover",
+   "page": "final"
+  },
+  "FinalBook.dc.html": {
+   "x": 680,
+   "y": 0,
+   "w": 1440,
+   "h": 2020,
+   "title": "Book screen · the book opens",
+   "page": "final"
   }
  },
  "order": [
@@ -882,7 +902,9 @@
   "FreshBookCut.dc.html",
   "FreshCover1.dc.html",
   "FreshCover2.dc.html",
-  "FreshReaderOpen.dc.html"
+  "FreshReaderOpen.dc.html",
+  "FinalCover.dc.html",
+  "FinalBook.dc.html"
  ],
  "notes": {
   "head": {
@@ -1015,6 +1037,14 @@
    "kind": "title1",
    "maxW": 1440,
    "page": "fresh"
+  },
+  "final": {
+   "x": 0,
+   "y": -300,
+   "text": "Final designs · strata, finished",
+   "kind": "title1",
+   "maxW": 2120,
+   "page": "final"
   }
  },
  "designSystems": []

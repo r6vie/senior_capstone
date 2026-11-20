@@ -113,7 +113,7 @@ class Ridge:
                 lit, dark = bl, bd
         pal = dark if in_shadow else lit
         i = (0.62 * depth + 0.38 * n) * len(pal)
-        if rng.random() < 0.12:
+        if rng.random() < getattr(self, "flicker", 0.12):
             i += rng.choice((-1, 1))
         if self.ribs:
             ang = math.atan2(x - px, max(4.0, y - ty))
@@ -209,6 +209,9 @@ class Water:
             if layer.cover(np.array([x]), my)[0] and rng.random() < 0.8 - (y - self.y0) / max(1, self.y1 - self.y0) * 0.5:
                 return mix(layer.colour(x, my, rng), self.c[2], 0.45)
         n = vnoise(x, y * 3, 90, 77)
+        path = getattr(self, "path", None)
+        if path and abs(x - path[0]) < path[1] * (0.5 + (y - self.y0) / max(1, self.y1 - self.y0)) and rng.random() < 0.6:
+            return self.g[int(rng.random() * len(self.g))]
         if n > 0.72 and rng.random() < 0.55:
             return self.g[int(rng.random() * len(self.g))]
         t = (y - self.y0) / max(1, self.y1 - self.y0)
@@ -279,6 +282,41 @@ class Trunks:
         return shade(self.c, rng.uniform(-0.1, 0.1))
 
 
+class Firs:
+    """Conifers built from courses: each tier steps out and back, lit on the left of the trunk line, inked on the right.
+    trees: (x, base_y, height, half_width)."""
+
+    brick = (0.6, 2.4)
+
+    def __init__(self, trees, lit, dark, tiers=6):
+        self.t = trees
+        self.lit = [hexrgb(c) for c in lit]
+        self.dark = [hexrgb(c) for c in dark]
+        self.tiers = tiers
+
+    def _half(self, tree, y):
+        x, base, h, w = tree
+        up = base - y
+        if up < 0 or up > h:
+            return -1
+        f = up / h
+        saw = 1 - ((f * self.tiers) % 1)
+        return max(0.7, w * (1 - f) ** 0.9 * (0.4 + 0.6 * saw ** 0.8))
+
+    def cover(self, x, y):
+        m = np.zeros_like(x, dtype=bool)
+        for tr in self.t:
+            hw = self._half(tr, y)
+            if hw > 0:
+                m |= np.abs(x - tr[0]) <= hw
+        return m
+
+    def colour(self, x, y, rng):
+        best = min(self.t, key=lambda tr: abs(x - tr[0]) if self._half(tr, y) > 0 else 1e9)
+        pal = self.lit if x < best[0] - 0.3 else self.dark
+        return pal[int(rng.random() * len(pal))]
+
+
 def trees(cx_list, ground_y, size, colours, seed=9, spread=1.0):
     """A grove: overlapping crowns standing on the ground line, back ones higher."""
     r = random.Random(seed)
@@ -309,7 +347,8 @@ def grove(cx_list, ground_y, size, colours, trunk="#5B3B2A", seed=9, spread=1.0,
 # ---------- rendering ----------
 
 
-def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fade=None, brick=(1.6, 7.5), paper=PAPER):
+def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fade=None, brick=(1.6, 7.5), paper=PAPER,
+           jitter=0.05):
     """Draw the viewport (wx0, wy0, wx1, wy1) of the scene at size (W, H) with course height in output px.
 
     fade: list of (edge, start, end) in output px; bricks thin out and pale toward paper across it.
@@ -361,7 +400,7 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
                     x2 = min(b, x + ln)
                     cxw = wx0 + ((x + x2) / 2) * sx
                     c = layer.colour(cxw, yc, rng)
-                    c = shade(c, rng.uniform(-0.05, 0.05))
+                    c = shade(c, rng.uniform(-jitter, jitter))
                     f = fade_amount((x + x2) / 2, row_top + course / 2)
                     if f > 0:
                         # mist: slabs pale toward paper first, and only the palest ones go missing

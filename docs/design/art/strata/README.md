@@ -20,6 +20,7 @@ pixels and redrawn for each size it shows at, so the courses stay 4px on the boo
 | `covers.py` | Every cover place at large, shelf and small size, plus a contact sheet |
 | `hero3.py` | Round 3 of the lake (`scenes.lake3()`): spurs and gullies down each face (`Ridge(ribs=…)`), a wandering light line, a far haze range, mist at the mountains' feet (`mist=`) and the peaks mirrored in the water. Writes the panorama and the xl and small covers cut from it, used on the Fresh directions page |
 | `book_b.py` | Art drawn for book screen B's pages (`FreshReaderOpen`): the title page (570 x 684, full page under the text; the land climbs the right edge, a lake across the foot, groves framing it) and the same place from further back for the foot of the contents page |
+| `final.py` | Final round, on the canvas page "Final designs": the same slabs finished (no bevel, a paper seam between courses, calm colour), one muted family of inks, a composed scene (hero peak on the right third, sun set against its flank, planes stepping back into haze, firs in a cluster) for B's title page, its contents page, and the cover |
 | `phone.py` | The panorama and cover at three-quarter size for the phone book page |
 | `boards.py` | Writes the three canvas boards (the uploaded image ids are in it) |
 
