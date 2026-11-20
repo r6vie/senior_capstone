@@ -15,7 +15,7 @@ Decisions Josef has made about Trove's look and feel. Newest first.
     under the book, the same on every page. Round 2: the open book sits over the shelf shaded in dots, as in C,
     instead of the dark backdrop; the top bar and the button strip are paper.
     Round 3: the page keeps the library's header, and everything for the book is inside the book: Close and the page
-    tabs as running heads, page turns at the feet, Ask to check out on the title page and on each chapter page.
+    tabs as running heads, page turns at the feet, Ask to check out on the title page and under the contents.
   - **Josef removed "I have one like this" (sparks)** from the book screens (B and C). `docs/trove.md` still plans
     sparks (I5); that product change is the orchestrator's to make in the plan.
   - **Round 4, B built as a book** to be animated as paper: cover boards in the book's own ink, a spine at head and
@@ -23,6 +23,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
     that job), no redundant page labels, and the shelf behind at 60% opacity.
   - **Josef's rule, from now on:** no explanatory sentences in the UI (such as "A thirty-minute video call, if the
     author says yes."). Good UI should not need a sentence for each interaction. Removed from B and C.
+  - **Ask to check out is never under a chapter** (Josef: it reads as checking out that one chapter). In B it sits on
+    the title page and under the contents on the left page, so it always belongs to the whole book.
   - **C, pulled from the shelf** (`FreshReaderPanel`): a side panel over the shelf, which stays in place shaded in
     dots with the book's slot left open. Previous and Next step along the shelf; chapters open in place; a link to
     the full page (A).

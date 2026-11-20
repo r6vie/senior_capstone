@@ -238,18 +238,17 @@ spread1 = (
 
 spread2 = (
     '<section class="rd-page rd-left" aria-label="Contents">' + HEAD_L
-    + toc(active=2, compact=True, summaries=False) +
+    + toc(active=2, compact=True, summaries=False) + ask() +
     f'<img class="rd-art short" src="{BAND}" alt="">'
     '</section>'
     '<section class="rd-page rd-right" aria-label="Chapter 2">' + head_r(2) +
     f'<div class="ch-num" aria-hidden="true">2</div><h2 class="ch-title">{CH[1][0]}</h2>'
     f'<p class="ch-body">{CH[1][1]}</p>'
-    '<div class="rd-ask rd-ask-ch">' + ask()[len('<div class="rd-ask">'):] +
     '<div class="rd-curl" aria-hidden="true"></div>'
     '</section><div class="rd-gutter" aria-hidden="true"></div>')
 
 B_NOTE = ("Book screen B · the book opens over the shelf, under the library's header. Everything for the book is in the "
-          "book: Close and the page tabs at the head of the pages, Ask to check out on the title page and on every chapter. "
+          "book: Close and the page tabs at the head of the pages, Ask to check out on the title page and under the contents, always about the whole book. "
           "Built as a book, to be animated as paper: cover boards, a spine at head and foot, stacked page edges, pages bowing "
           "into the gutter.")
 
