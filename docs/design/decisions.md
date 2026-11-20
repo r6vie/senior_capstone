@@ -11,6 +11,10 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   right third with shoulders, the sun set against its flank, sage framing the left, stone and haze stepping back,
   mist between planes, a calm lake with a glint path under the sun, firs built from courses in a varied cluster.
   Boards `FinalCover` and `FinalBook` (book screen B with the art).
+- **Round 2 (Josef: sloppy, pyramids, prefers round 3's colours; then: keep the style, improve only the scene).**
+  A masonry rewrite of the blocks was tried and rejected. Kept the round 1 finish; round 3's inks are back; the
+  massif is a broad summit with a rounded shoulder and a second summit, the sun in the notch, a coral peak in the
+  middle distance; firs laid without ragged ends.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

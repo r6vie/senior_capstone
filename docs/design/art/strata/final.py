@@ -17,21 +17,13 @@ import sys
 sys.path.insert(0, ".")
 from strata import Ridge, Blob, Water, Band, Firs, render
 
-SUN = ["#F0A88A", "#EA9473", "#E2805F"]
-HAZE_L = ["#D6DFE4", "#C9D4DB", "#BCCAD2"]
-HAZE_D = ["#AEBDC7", "#A0B1BD", "#92A5B3"]
-STONE_L = ["#ECE6DB", "#E2DACC", "#D6CCBB"]
-STONE_D = ["#B9AE9C", "#A49886", "#8E8271"]
-TEAL_L = ["#86A6AC", "#7497A0", "#638892", "#547983"]
-TEAL_D = ["#33545B", "#294950", "#203E45", "#18333A"]
-SAGE_L = ["#AFBAA9", "#9DAA97", "#8C9A86"]
-SAGE_D = ["#617164", "#516155", "#425146"]
-MIST = ["#F2F2EE", "#E9EAE6", "#DFE1DD"]
-WATER = ["#CEDCE5", "#BBCDDA", "#A7BFCF", "#93AFC4", "#7F9FB8"]
-GLINT = ["#F6F5F0", "#ECEEEC", "#E1E7EA"]
-SHORE = ["#CDD0B3", "#C0C5A4", "#B2B995"]
-FIR_L = ["#4D6858", "#43604F"]
-FIR_D = ["#24372E", "#1D2E26"]
+# round 3's inks (scenes.py), which read better than a muted set
+from scenes import CORAL as SUN, HAZE_LIT as HAZE_L, HAZE_DARK as HAZE_D, STONE_LIT as STONE_L, STONE_DARK as STONE_D, \
+    TEAL_LIT as TEAL_L, TEAL_DARK as TEAL_D, SAGE_LIT as SAGE_L, SAGE_DARK as SAGE_D, CLOUD, COBALT as WATER, GLINT, \
+    SHORE, LEAF, RUST
+MIST = CLOUD[:3]
+FIR_L = LEAF[3:5]
+FIR_D = LEAF[4:6]
 
 
 def calm(layer, flicker=0.04):
@@ -41,18 +33,22 @@ def calm(layer, flicker=0.04):
 
 def page():
     """B's title page, world 570 x 684. The text holds the upper left (to x 480, down to y 390)."""
-    hero = calm(Ridge([(452, 318, 150, 110, 1.5), (386, 414, 64, 56, 1.1), (552, 416, 80, 90, 1.2)], 590, TEAL_L,
-                      TEAL_D, seed=24, rough=6, ribs=0.9, lean=0.18, mist=(556, 590)))
-    haze = calm(Ridge([(40, 486, 120, 130, 1.1), (190, 470, 130, 120, 1.1), (318, 492, 90, 100, 1.05)], 552,
-                      HAZE_L, HAZE_D, seed=21, rough=3, ribs=0.5, mist=(520, 552)))
-    stone = calm(Ridge([(236, 500, 96, 110, 1.2)], 566, STONE_L, STONE_D, seed=22, rough=3, ribs=0.7,
-                       mist=(536, 566)))
-    sage = calm(Ridge([(-30, 452, 190, 210, 1.35), (120, 520, 60, 70, 1.15)], 594, SAGE_L, SAGE_D, seed=23,
-                      rough=5, ribs=0.9, lean=0.3, mist=(566, 594)))
+    # the massif: a sharp main summit, a rounded shoulder and a ledge stepping down its left flank, a saddle, and a
+    # lower second summit to the right, so its outline is a range and not a pyramid
+    hero = calm(Ridge([(470, 316, 132, 100, 1.5), (414, 404, 96, 70, 0.75), (558, 380, 72, 90, 1.2)], 590,
+                      TEAL_L, TEAL_D, seed=24, rough=4,
+                      ribs=0.9, lean=0.2, mist=(556, 590),
+                      bands=[(316, 344, STONE_L, STONE_D)]))
+    haze = calm(Ridge([(30, 492, 110, 120, 1.05), (150, 474, 100, 110, 0.9), (250, 488, 80, 90, 1.15),
+                       (330, 500, 70, 80, 1.0)], 552, HAZE_L, HAZE_D, seed=21, rough=5, ribs=0.5, mist=(520, 552)))
+    stone = calm(Ridge([(200, 498, 70, 80, 1.35), (240, 522, 40, 44, 0.85)], 566, SUN, RUST, seed=22, rough=4,
+                       ribs=0.8, mist=(540, 566)))
+    sage = calm(Ridge([(-20, 468, 150, 170, 1.2), (110, 528, 60, 64, 0.85)], 594, SAGE_L, SAGE_D, seed=23,
+                      rough=6, ribs=0.9, lean=0.3, mist=(566, 594)))
     lake = Water(592, 684, -40, 620, WATER, GLINT, seed=26, mirror=[hero], gaps=(1, 3), squash=0.6)
-    lake.path = (404, 14)
+    lake.path = (392, 14)
     return [
-        Blob([(404, 400, 26, 26)], SUN, top_light=False),
+        Blob([(392, 414, 26, 26)], SUN, top_light=False),
         haze,
         Blob([(250, 528, 120, 6), (150, 534, 70, 5)], MIST),
         stone,
@@ -70,16 +66,17 @@ def page():
 
 def cover():
     """The cover, world 236 x 344: title on paper above y 118, the name on paper below y 300."""
-    hero = calm(Ridge([(150, 144, 80, 62, 1.5), (118, 196, 34, 30, 1.1), (206, 196, 46, 50, 1.2)], 262, TEAL_L, TEAL_D, seed=34,
-                      rough=3, ribs=0.9, lean=0.22, mist=(240, 262)))
-    haze = calm(Ridge([(20, 214, 70, 70, 1.1), (96, 206, 70, 66, 1.1)], 246, HAZE_L, HAZE_D, seed=31, rough=2,
+    hero = calm(Ridge([(150, 142, 64, 48, 1.5), (120, 186, 46, 34, 0.75), (202, 176, 34, 44, 1.2)], 262,
+                      TEAL_L, TEAL_D, seed=34, rough=2.5,
+                      ribs=0.9, lean=0.2, mist=(240, 262), bands=[(142, 154, STONE_L, STONE_D)]))
+    haze = calm(Ridge([(20, 214, 70, 70, 1.1), (80, 206, 60, 60, 0.95)], 246, HAZE_L, HAZE_D, seed=31, rough=2,
                       ribs=0.5, mist=(230, 246)))
-    sage = calm(Ridge([(-14, 200, 80, 96, 1.3)], 264, SAGE_L, SAGE_D, seed=33, rough=3, ribs=0.9, lean=0.3,
-                      mist=(250, 264)))
+    sage = calm(Ridge([(-14, 200, 80, 96, 1.2), (50, 228, 30, 34, 0.85)], 264, SAGE_L, SAGE_D, seed=33, rough=3,
+                      ribs=0.9, lean=0.3, mist=(250, 264)))
     lake = Water(262, 300, -20, 260, WATER, GLINT, seed=36, mirror=[hero], gaps=(1, 3), squash=0.6)
-    lake.path = (112, 8)
+    lake.path = (98, 7)
     return [
-        Blob([(112, 186, 15, 15)], SUN, top_light=False),
+        Blob([(98, 190, 14, 14)], SUN, top_light=False),
         haze,
         Blob([(80, 236, 54, 4)], MIST),
         hero,

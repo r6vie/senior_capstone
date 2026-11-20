@@ -286,7 +286,8 @@ class Firs:
     """Conifers built from courses: each tier steps out and back, lit on the left of the trunk line, inked on the right.
     trees: (x, base_y, height, half_width)."""
 
-    brick = (0.6, 2.4)
+    brick = (1.4, 4.0)
+    ragged = 0
 
     def __init__(self, trees, lit, dark, tiers=6):
         self.t = trees
