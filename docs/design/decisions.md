@@ -67,6 +67,12 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   the small butte pushed into them, calm sand over a dark umber base, the picture lifted to meet the type. Done,
   then rebalanced by eye (a broad butte, not a tower). Renderer: `Mesa(wall_ledge, wobble, speckle, shadow_steps,
   ragged)`, `render(jitter)` per cover.
+- **Desert, back to the tilt (Josef: the block was worse; wants more of the earlier tilt, plus a smaller foreground
+  cliff).** The butte leans right (`Mesa(lean)`), walls stepping out gently down to a four-ledge scree skirt, the
+  shade edge a stepped diagonal; a smaller darker cliff in the right foreground. A critic's polish (told to keep the
+  tilt): cap no wider than the body, pale gold sun as a clean disc, the foreground cliff at 70% height with three
+  clean shade steps, no pink sliver, darker bedding courses on the lit face, warm haze in place of the last mauve,
+  a thinner umber base and warmer sand slabs.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

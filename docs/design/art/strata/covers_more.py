@@ -17,10 +17,10 @@ CALM = dict(smooth=True, flicker=0.05)
 SAND_L = ["#F2DDB6", "#EBCE9E", "#E1BD85"]
 SAND_D = ["#C99B69", "#B08254", "#946A42"]
 TERRA_L = ["#E7A174", "#DD8A60", "#CE744D"]
-TERRA_D = ["#8E4433", "#6E3329", "#4C2422", "#2F1A20"]
+TERRA_D = ["#8E4433", "#6E3329", "#5A2A20", "#6B2A1E"]
 PLUM_L = ["#D3B2BC", "#C4A0AD", "#B38E9E"]
 PLUM_D = ["#987080", "#83606F", "#6F515E"]
-GOLD = ["#F7C08A", "#F4B07A", "#F2A06A"]   # a light coral-gold sun, apart from the rock
+GOLD = ["#F7DCA0", "#F3CF8C", "#F0C27A"]   # pale gold, apart from the rock
 ROSE = ["#EBA08C", "#E38E7E"]
 DUSK = ["#F0D3BD", "#EAC6AC", "#E2B99C"]   # far mesas in warm haze, not purple
 DUSK_D = ["#D6A78A", "#C9997D", "#BB8B70"]
@@ -28,30 +28,34 @@ SANDS = ["#F2DDB6", "#EBCE9E", "#E3C08A", "#C98A5E", "#A86A47"]
 
 
 HAZE_PEACH = ["#EDC0A7", "#E8B49A", "#E1A88D"]
-HAZE_PEACH_D = ["#D59A80", "#CB8E74", "#BF8268"]
+HAZE_PEACH_D = ["#E7B9A0", "#DDAA90", "#D19C82"]
 MAROON = ["#5A2A24", "#4A2220", "#3A1C1C"]
 UMBER = ["#6B3A2A", "#5E3324"]
-SAND_CALM = ["#F2DDB6", "#EDD3A6", "#E7C997"]
+NEAR_L = ["#B5583A", "#A94F33", "#9C482E"]
+NEAR_D = ["#7A2E22", "#6B281E", "#5C221A"]
+SAND_CALM = ["#F2DDB6", "#EDD3A6", "#E7C997", "#F2DDB6", "#EBCB98"]
 
 
 def desert():
-    """Critic round 2 (polish): sheer walls with one ledge, a clean three-step maroon shadow side, a lit face without
-    speckle; a light coral-gold sun raised and set behind the butte's right wall; a full-width peach haze band behind
-    at 40% of the butte's height with the small butte pushed into it; calm sand at the foot over two dark umber
-    courses that run off the bottom; the whole picture lifted to meet the title block."""
-    hero = Mesa(100, 168, 72, 72, 292, TERRA_L, MAROON, ledges=1, bed=8, seed=53, top_tint=ROSE, wall_ledge=6,
-                wobble=0, speckle=0.25, shadow_steps=3, ragged=0, flicker=0.01)
+    """Back to the tilted butte (Josef preferred it to the sheer block): a talus skirt stepping out at the foot, the
+    shade edge a stepped diagonal, and now a lean, so the cap sits right of its base; rose dusk light on the cap; the
+    coral-gold sun behind the upper right shoulder; warm peach haze mesas behind (no purple); a smaller, nearer cliff
+    in the right foreground in deeper terracotta, leaning the same way; calm sand over a dark umber base."""
+    hero = Mesa(92, 162, 44, 70, 292, TERRA_L, TERRA_D, ledges=4, bed=8, seed=53, talus=True, top_tint=ROSE,
+                shadow_slope=0.35, wobble=0, speckle=0.4, flicker=0.02, lean=0.12, flare=6,
+                bedding=([190, 225, 258], "#D9845A"))
+    near = Mesa(206, 262, 24, 40, 318, NEAR_L, NEAR_D, ledges=2, bed=8, seed=54, talus=True, top_tint=ROSE,
+                wobble=0, speckle=0.4, flicker=0.02, lean=0.12, flare=3, shadow_steps=3)
+    sun = Blob([(166, 183, 28, 28)], GOLD, top_light=False)
+    sun.ragged = 0     # a clean disc
     return [
-        Blob([(180, 170, 28, 28)], GOLD, top_light=False),
-        Mesa(30, 234, 70, 76, 292, HAZE_PEACH, HAZE_PEACH_D, ledges=1, bed=8, seed=50, wall_ledge=4, wobble=0,
-             speckle=0.3, ragged=0, flicker=0.01),
-        Mesa(200, 246, 64, 68, 292, HAZE_PEACH, HAZE_PEACH_D, ledges=1, bed=8, seed=51, wall_ledge=4, wobble=0,
-             speckle=0.3, ragged=0, flicker=0.01),
-        Mesa(212, 224, 8, 12, 292, HAZE_PEACH, HAZE_PEACH_D, ledges=1, bed=8, seed=52, wall_ledge=3, wobble=0,
+        sun,
+        Mesa(4, 238, 34, 40, 292, HAZE_PEACH, HAZE_PEACH_D, ledges=1, bed=8, seed=50, wall_ledge=4, wobble=0,
              speckle=0.3, ragged=0, flicker=0.01),
         hero,
-        Band(-60, 300, 288, 328, SAND_CALM, seed=58, lens=0.0),
-        Band(-60, 300, 328, 360, UMBER, seed=59, lens=0.0),
+        Band(-60, 300, 288, 334, SAND_CALM, seed=58, lens=0.0),
+        near,
+        Band(-60, 300, 334, 360, UMBER, seed=59, lens=0.0),
     ]
 
 

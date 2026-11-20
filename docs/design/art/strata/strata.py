@@ -311,7 +311,7 @@ class Mesa:
 
     def __init__(self, cx, top, tw, bw, base, lit, dark, ledges=3, bed=8, seed=1, mist=None, flicker=0.04,
                  talus=False, top_tint=None, shadow_slope=0.0, wall_ledge=None, wobble=6, speckle=0.8,
-                 shadow_steps=None, ragged=1):
+                 shadow_steps=None, ragged=1, lean=0.0, flare=0.0, bedding=None):
         self.cx, self.top_y, self.tw, self.bw, self.base = cx, top, tw, bw, base
         self.lit = [hexrgb(c) for c in lit]
         self.dark = [hexrgb(c) for c in dark]
@@ -324,6 +324,10 @@ class Mesa:
         # many clean steps; wobble and speckle: how much the walls and the lit face vary course to course
         self.wall_ledge, self.wobble, self.speckle, self.shadow_steps = wall_ledge, wobble, speckle, shadow_steps
         self.ragged = ragged
+        self.lean = lean      # the centre slides this much per unit of depth: the butte tilts
+        self.flare = flare    # the walls step out by this much (world px) from cap to the top of the skirt
+        # bedding: (list of world y, colour): darker beds across the lit face
+        self.bedding = (bedding[0], hexrgb(bedding[1])) if bedding else None
 
     def _half(self, y):
         t = np.clip((y - self.top_y) / max(1, self.base - self.top_y), 0, 1)
@@ -332,8 +336,10 @@ class Mesa:
         if self.talus:
             wall = 0.66
             skirt = np.clip((t - wall) / (1 - wall), 0, 1)
-            steps = np.floor(skirt * 3) / 3 + (skirt * 3 % 1) ** 2 / 3
-            return self.tw + (self.bw - self.tw) * (0.06 * np.minimum(t / wall, 1) + 0.94 * steps)
+            L = max(1, self.ledges)
+            steps = np.floor(skirt * L) / L + (skirt * L % 1) ** 2 / L
+            body = self.flare * np.minimum(t / wall, 1)
+            return self.tw + body + (self.bw - self.tw - self.flare) * steps
         L = self.ledges
         # a staircase: each tier a steep cliff, then a short shelf
         f = np.floor(t * L) / L + ((t * L) % 1) ** 3 / L
@@ -344,10 +350,21 @@ class Mesa:
             return np.zeros_like(x, dtype=bool)
         hw = self._half(y)
         wob = (np.array([vnoise(v, y, 26, self.seed) for v in np.atleast_1d(x)]) - 0.5) * self.wobble
-        return np.abs(x - self.cx) <= hw + wob
+        return np.abs(x - self._cx(y)) <= hw + wob
+
+    def _cx(self, y):
+        return self.cx + self.lean * (y - self.top_y)
 
     def colour(self, x, y, rng):
         hw = float(self._half(y))
+        cx0 = self.cx
+        self.cx = self._cx(y)
+        try:
+            return self._colour(x, y, rng, hw)
+        finally:
+            self.cx = cx0
+
+    def _colour(self, x, y, rng, hw):
         # the shadow edge: a stepped diagonal falling to the right, one step per bed
         steps = (y - self.top_y) // self.bed
         if self.shadow_steps:
@@ -359,6 +376,8 @@ class Mesa:
         pal = self.dark if shadow else self.lit
         if self.top_tint and not shadow and y - self.top_y < 2 * self.bed:
             pal = self.top_tint            # dusk light on the top courses
+        if self.bedding and not shadow and any(abs(y - b) < 2.5 for b in self.bedding[0]):
+            return self.bedding[1]         # a darker bed of rock across the lit face
         bed = int((y - self.top_y) // self.bed)
         i = (bed % 2) * 1.0 + self.speckle * vnoise(x, y, 40, self.seed + 1)
         if y - self.top_y < self.bed * 0.6:
