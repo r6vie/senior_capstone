@@ -12,7 +12,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   - **B, the book opens** (`FreshReaderOpen`): the current `BookReader` mechanic rebuilt. Title page with the art
     on the left, contents with one-line summaries on the right; choosing a chapter turns the page and moves the
     contents to the left page. Chapter tabs in the top bar, arrow keys, a lifted page corner. Ask to check out sits
-    under the book, the same on every page.
+    under the book, the same on every page. Round 2: the open book sits over the shelf shaded in dots, as in C,
+    instead of the dark backdrop; the top bar and the button strip are paper.
   - **C, pulled from the shelf** (`FreshReaderPanel`): a side panel over the shelf, which stays in place shaded in
     dots with the book's slot left open. Previous and Next step along the shelf; chapters open in place; a link to
     the full page (A).

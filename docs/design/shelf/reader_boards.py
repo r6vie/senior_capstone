@@ -25,20 +25,22 @@ CSS = """
 .board-head{display:flex;flex-direction:column;gap:8px;padding:28px 44px 0;height:150px;box-sizing:border-box}
 .board-head .note{max-width:1100px;margin:0}
 .scr{position:relative;width:1440px;height:880px;overflow:hidden}
+.scr.rd::after{content:"";position:absolute;z-index:10;inset:0;border:var(--line) solid var(--ink);pointer-events:none}
 .scr-label{position:absolute;left:44px;top:-30px}
 
 /* ---------- B: the book opens ---------- */
-.rd{background:var(--ink);color:var(--paper)}
+.rd{background:var(--paper);color:var(--ink)}
 /* the backdrop is the shelf gone dark: fine dots in paper, very sparse, never a blur */
-.rd::before{content:"";position:absolute;inset:0;background:radial-gradient(circle,#2a2a28 1px,transparent 1.4px) 0 0/6px 6px}
-.rd-bar{position:absolute;left:0;right:0;top:0;height:64px;display:flex;align-items:center;gap:24px;padding:0 32px}
-.rd-bar .button-quiet{color:var(--paper)}
+/* B over the shelf: the shelf stays where it was, shaded in dots as in C; the bars that carry text are paper */
+.sh-dim.full{right:0}
+.rd-bar{position:absolute;z-index:6;left:0;right:0;top:0;height:64px;background:var(--paper);border-bottom:var(--line) solid var(--ink);display:flex;align-items:center;gap:24px;padding:0 32px}
+.rd-bar .button-quiet{color:var(--ink)}
 .rd-tabs{display:flex;gap:4px;margin:0 auto;font:600 15px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase}
-.rd-tabs a{display:inline-grid;place-items:center;min-width:44px;height:44px;padding:0 12px;color:var(--rule);text-decoration:none;border-bottom:3px solid transparent}
-.rd-tabs a[aria-current]{color:var(--paper);border-bottom-color:var(--paper)}
-.rd-keys{font:400 13px/1 var(--font-sans);color:var(--rule);width:220px;text-align:right}
-.rd-keys kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;margin:0 2px;border:1.5px solid var(--rule);font:600 11px/1 var(--font-sans)}
-.rd-book{position:absolute;left:140px;top:84px;width:1160px;height:668px;display:grid;grid-template-columns:1fr 1fr}
+.rd-tabs a{display:inline-grid;place-items:center;min-width:44px;height:44px;padding:0 12px;color:var(--ink-2);text-decoration:none;border-bottom:3px solid transparent}
+.rd-tabs a[aria-current]{color:var(--ink);border-bottom-color:var(--ink)}
+.rd-keys{font:400 13px/1 var(--font-sans);color:var(--ink-2);width:220px;text-align:right}
+.rd-keys kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;margin:0 2px;border:1.5px solid var(--ink-2);font:600 11px/1 var(--font-sans)}
+.rd-book{position:absolute;z-index:5;left:140px;top:86px;width:1160px;height:668px;display:grid;grid-template-columns:1fr 1fr}
 /* the page block: two sheets of edge under the open pages */
 .rd-book::before,.rd-book::after{content:"";position:absolute;border:var(--line) solid var(--ink)}
 .rd-book::before{inset:10px -10px -10px 10px;background:var(--paper-sunk)}
@@ -61,7 +63,7 @@ CSS = """
 .rd-folio{font:500 13px/1 var(--font-serif);letter-spacing:0;text-transform:none;color:var(--ink-2)}
 /* the corner of the right page lifts: the page can be turned */
 .rd-curl{position:absolute;z-index:3;right:0;bottom:0;width:44px;height:44px;
-  background:linear-gradient(-45deg,var(--ink) 0 49%,transparent 50%),radial-gradient(circle,var(--ink) 1px,transparent 1.4px) 0 0/4px 4px,var(--paper-sunk)}
+  background:linear-gradient(-45deg,var(--paper) 0 49%,transparent 50%),radial-gradient(circle,var(--ink) 1px,transparent 1.4px) 0 0/4px 4px,var(--paper-sunk)}
 .rd-curl::after{content:"";position:absolute;inset:0;background:linear-gradient(-45deg,transparent 48.5%,var(--ink) 49%,var(--ink) 51%,transparent 51.5%)}
 .toc{list-style:none;margin:20px 0 0;padding:0;display:grid}
 .toc li{display:grid;grid-template-columns:40px 1fr 24px;gap:0 6px;align-items:baseline;padding:16px 10px 16px 12px;margin:0 -10px 0 -12px;border-top:2.5px dotted var(--ink)}
@@ -83,8 +85,8 @@ CSS = """
 .spark{display:flex;flex-direction:column;gap:8px;margin-top:30px;padding-top:22px;border-top:2.5px dotted var(--ink)}
 .spark .button{align-self:flex-start;min-height:44px;font-size:15px;padding:0 18px}
 .spark .note{margin:0;font-size:13px}
-.rd-act{position:absolute;left:0;right:0;bottom:30px;display:flex;justify-content:center;align-items:center;gap:20px}
-.rd-act .note{color:var(--rule)}
+.rd-act{position:absolute;z-index:6;left:0;right:0;bottom:0;height:96px;background:var(--paper);border-top:var(--line) solid var(--ink);display:flex;justify-content:center;align-items:center;gap:20px}
+.rd-act .note{color:var(--ink-2)}
 .rd-act .button-primary{border-color:var(--red)}
 
 /* ---------- C: pulled from the shelf ---------- */
@@ -138,6 +140,26 @@ def board(title, w, h, body):
             f"<script type=\"text/x-dc\" data-dc-script data-props='{{\"$preview\":{{\"width\":{w},\"height\":{h}}}}}'>\n"
             "class Component extends DCLogic {\nrenderVals() {\nreturn {};\n}\n}\n</script>\n</body>\n</html>\n")
 
+# ---------------- the shelf behind B and C ----------------
+SHELF1 = [("cov-pencil", "/_blob/44e221e431b65fd97ac2bb011b12692a", "Cold Calls That Worked", "Daniel Reyes-Whitfield"),
+          None,
+          ("cov-wash", "/_blob/bf227d05c72ce22a5d848159b75e091c", "Field Notes From a Food Truck", "Priya Raman"),
+          ("cov-cut", "/_blob/e6735f1a2d0f8252ddcd9aec399cfe7e", "What Bridges Remember", "Tom Abernathy"),
+          ("cov-stipple", "/_blob/1de1c8ff20f8bb8256e28ba474e3e5f8", "Desert Survey Season", "Lena Okonkwo"),
+          ("cov-gouache", "/_blob/f064d27d44fa3f1ad23222f3fd176bb7", "The Last Lab Rotation", "Sam Lindqvist")]
+SHELF2 = [("cov-stipple", "/_blob/1de1c8ff20f8bb8256e28ba474e3e5f8", "Teaching Kids to Code", "Ana Beltrán"),
+          ("cov-gouache", "/_blob/f064d27d44fa3f1ad23222f3fd176bb7", "Starting a Clinic From Zero", "Kofi Mensah"),
+          ("cov-pencil", "/_blob/44e221e431b65fd97ac2bb011b12692a", "Two Years in Patent Law", "Grace Liu"),
+          ("cov-cut", "/_blob/e6735f1a2d0f8252ddcd9aec399cfe7e", "Night Classes", "Marcus Bell"),
+          ("cov-wash", "/_blob/bf227d05c72ce22a5d848159b75e091c", "The Quiet Startup", "Hana Sato"),
+          ("cov-pencil", "/_blob/44e221e431b65fd97ac2bb011b12692a", "Mapping the Lake", "Jonah Price")]
+def shelf(name, books, top):
+    bs = "".join('<div class="slot" aria-label="The book you are reading came from here">Out<br>reading</div>' if b is None
+                 else cover(*b) for b in books)
+    return (f'<div class="sh-row" style="top:{top}px"><div class="shelf-head"><h2 class="shelf-name">{name}</h2><a href="#">See all</a></div>'
+            f'<div class="shelf-books">{bs}</div><div class="ledge" style="margin-top:0"></div></div>')
+
+SHELF_BG = shelf("Shift work", SHELF1, 110) + shelf("Starting out", SHELF2, 420)
 # ---------------- B ----------------
 def rd_bar(cur):
     tabs = "".join(f'<a href="#"{" aria-current=\"page\"" if cur == k else ""}>{lab}</a>'
@@ -188,14 +210,14 @@ spread2 = (
     '</section><div class="rd-gutter" aria-hidden="true"></div>')
 
 B_NOTE = ("Book screen B · the book opens. The current app's mechanic, rebuilt: the cover you clicked swings open "
-          "in place over the darkened shelf. The left page is the title page with the book's own landscape at its foot; "
+          "in place over the shelf, which stays where it was, shaded in dots with the book's place left open. The left page is the title page with the book's own landscape at its foot; "
           "the right page is the contents, each chapter with its one-line summary so you can choose before you turn. "
           "Choosing a chapter turns the page, and the contents move to the left page, so they are always one glance away. "
           "Every page can also be reached from the tabs at the top, the arrow keys, a swipe, or the lifted corner. "
           "Ask to check out sits under the book, the same on every page, so the one action never moves.")
 def b_screen(label, spread, cur, top):
     return (f'<div style="position:absolute;left:0;top:{top}px"><span class="frame-label scr-label">{label}</span>'
-            f'<div class="scr rd">{rd_bar(cur)}<div class="rd-book">{spread}</div>{ACT}</div></div>')
+            f'<div class="scr rd">{SHELF_BG}<div class="sh-dim full" aria-hidden="true"></div>{rd_bar(cur)}<div class="rd-book">{spread}</div>{ACT}</div></div>')
 bodyB = ('<div style="position:relative;height:100%">'
          f'<div class="board-head"><span class="frame-label">B · The book opens</span><p class="note">{B_NOTE}</p></div>'
          + b_screen("Opened: title page and contents", spread1, 0, 190)
@@ -204,23 +226,6 @@ bodyB = ('<div style="position:relative;height:100%">'
 open(f"{OUT}/FreshReaderOpen.dc.html", "w").write(board("Book screen B: the book opens", 1440, 2020, bodyB))
 
 # ---------------- C ----------------
-SHELF1 = [("cov-pencil", "/_blob/44e221e431b65fd97ac2bb011b12692a", "Cold Calls That Worked", "Daniel Reyes-Whitfield"),
-          None,
-          ("cov-wash", "/_blob/bf227d05c72ce22a5d848159b75e091c", "Field Notes From a Food Truck", "Priya Raman"),
-          ("cov-cut", "/_blob/e6735f1a2d0f8252ddcd9aec399cfe7e", "What Bridges Remember", "Tom Abernathy"),
-          ("cov-stipple", "/_blob/1de1c8ff20f8bb8256e28ba474e3e5f8", "Desert Survey Season", "Lena Okonkwo"),
-          ("cov-gouache", "/_blob/f064d27d44fa3f1ad23222f3fd176bb7", "The Last Lab Rotation", "Sam Lindqvist")]
-SHELF2 = [("cov-stipple", "/_blob/1de1c8ff20f8bb8256e28ba474e3e5f8", "Teaching Kids to Code", "Ana Beltrán"),
-          ("cov-gouache", "/_blob/f064d27d44fa3f1ad23222f3fd176bb7", "Starting a Clinic From Zero", "Kofi Mensah"),
-          ("cov-pencil", "/_blob/44e221e431b65fd97ac2bb011b12692a", "Two Years in Patent Law", "Grace Liu"),
-          ("cov-cut", "/_blob/e6735f1a2d0f8252ddcd9aec399cfe7e", "Night Classes", "Marcus Bell"),
-          ("cov-wash", "/_blob/bf227d05c72ce22a5d848159b75e091c", "The Quiet Startup", "Hana Sato"),
-          ("cov-pencil", "/_blob/44e221e431b65fd97ac2bb011b12692a", "Mapping the Lake", "Jonah Price")]
-def shelf(name, books, top):
-    bs = "".join('<div class="slot" aria-label="The book you are reading came from here">Out<br>reading</div>' if b is None
-                 else cover(*b) for b in books)
-    return (f'<div class="sh-row" style="top:{top}px"><div class="shelf-head"><h2 class="shelf-name">{name}</h2><a href="#">See all</a></div>'
-            f'<div class="shelf-books">{bs}</div><div class="ledge" style="margin-top:0"></div></div>')
 acc = '<ol class="acc">'
 for i, (t, s) in enumerate(CH, 1):
     if i == 1:
