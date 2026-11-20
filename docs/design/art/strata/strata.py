@@ -349,7 +349,7 @@ def grove(cx_list, ground_y, size, colours, trunk="#5B3B2A", seed=9, spread=1.0,
 
 
 def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fade=None, brick=(1.6, 7.5), paper=PAPER,
-           jitter=0.05, touch=True):
+           jitter=0.05, touch=True, slab=(0.10, 0.22, 0.10), joint=0):
     """Draw the viewport (wx0, wy0, wx1, wy1) of the scene at size (W, H) with course height in output px.
 
     fade: list of (edge, start, end) in output px; bricks thin out and pale toward paper across it.
@@ -427,14 +427,17 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
                             continue
                         c = mix(c, paper, f * 0.8)
                     h = course - gap
-                    dr.rectangle([x, row_top, x2 - 1, row_top + h - 1], fill=c)
+                    # joint: a small uniform paper line at the end of every slab, so each reads as its own piece
+                    xe = x2 - 1 - joint if x2 - x > joint + 1 else x2 - 1
+                    dr.rectangle([x, row_top, xe, row_top + h - 1], fill=c)
                     if slab_shade and course >= 4:
                         # a laid slab: light catches its top edge, its underside sits in shadow, and the
                         # joint to the next slab is a faint darker seam
                         lw = max(1, course // 6)
-                        dr.rectangle([x, row_top, x2 - 1, row_top + lw - 1], fill=shade(c, 0.10))
-                        dr.rectangle([x, row_top + h - lw, x2 - 1, row_top + h - 1], fill=shade(c, -0.22))
+                        top_l, under, joint_d = slab
+                        dr.rectangle([x, row_top, xe, row_top + lw - 1], fill=shade(c, top_l))
+                        dr.rectangle([x, row_top + h - lw, xe, row_top + h - 1], fill=shade(c, -under))
                         if x2 - x > course * 2 and _h(x, row_top, 5) < 0.55:
-                            dr.rectangle([x2 - lw, row_top + lw, x2 - 1, row_top + h - lw - 1], fill=shade(c, -0.10))
+                            dr.rectangle([xe - lw + 1, row_top + lw, xe, row_top + h - lw - 1], fill=shade(c, -joint_d))
                     x = x2
     return img

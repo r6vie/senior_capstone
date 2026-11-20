@@ -22,6 +22,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 - **Josef's rule: blocks touch by default.** No paper seam between courses and no holes where two forms meet (they
   share one boundary in the renderer, `render(touch=True)`). Spacing is allowed only as a design choice: the sparse
   river or lake, mist between ridges, an edge against open sky.
+- **Then: slabs stay slightly 3D, with small uniform joints.** Each slab has a faint lit top edge, a soft underside
+  and a faint end shade, and a uniform hairline joint (1px at 2x, half a CSS px) under every course and at the end of
+  every slab, so each reads as its own piece. Holes and uneven gaps stay out; the joint is the same everywhere.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

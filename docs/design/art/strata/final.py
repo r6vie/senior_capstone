@@ -92,7 +92,8 @@ def cover():
     ]
 
 
-OPTS = dict(slab_shade=False, gap=0, jitter=0.015, brick=(2.2, 9.0))
+# slabs read as slightly raised: a faint lit top edge, a soft underside, a faint joint; quieter than round 3's bevel
+OPTS = dict(slab_shade=True, slab=(0.07, 0.13, 0.06), gap=1, joint=1, jitter=0.015, brick=(2.2, 9.0))
 
 if __name__ == "__main__":
     S = 2
@@ -100,4 +101,4 @@ if __name__ == "__main__":
     render(page(), (-60, 230, 630, 684), (1140, 752), 8, fade=[("y", 736, 752)], seed=11, **OPTS).save("out/final-contents.png")
     render(cover(), (0, 0, 236, 344), (944, 1376), 8, fade=[("y", 1200, 1216)], seed=5, paper=(255, 255, 255), **OPTS).save("out/final-cover-xl.png")
     render(cover(), (0, 0, 236, 344), (244, 356), 3, fade=[("y", 310, 314)], seed=5, paper=(255, 255, 255),
-           **dict(OPTS, gap=0)).save("out/final-cover-sm.png")
+           **dict(OPTS, gap=0, joint=0)).save("out/final-cover-sm.png")
