@@ -216,9 +216,9 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 ### Later: after the whole loop works
 
-Josef asked for these early. Both are built on `josef/full-build` against stubs, and neither runs for real until its teammate's piece lands: I5 needs `SparkButton` mounted on D1's book page, and I6 needs C4 to call `interview.service.ask_after_reading`.
+Josef asked for these early. I6 runs for real now: C4 calls `interview.service.ask_after_reading` after "Did you meet?".
 
-**I5 · Sparks from other books** · Josef · `done`
+**I5 · Sparks from other books** · Josef · `dropped` (2026-11-19: Josef removed "I have one like this" from the book screen and dropped sparks entirely; the backend stays unused until it's removed)
 - On a chapter of someone else's book, "I have one like this" saves a private prompt for the
   reader's own next interview (I3). Never content, never visible to the other author.
 

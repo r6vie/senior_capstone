@@ -125,7 +125,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   - The interview changes angle early instead of reaching the question cap with a thin pool.
   - Signals are internal: never shown, never a score. Grounding is unchanged.
 - **Built early, waiting on teammates' pieces to run for real** (§9.9; choices in `docs/review/decisions.md`):
-  - **Sparks from other books:** while reading someone's book, a member taps "I have one like this" on a chapter. It saves a private prompt for their own next interview, never content.
+  - **Sparks from other books: dropped** (2026-11-19). The book screen no longer has "I have one like this", and sparks are not part of Trove.
   - **Each reading grows the book:** after "Did you meet?", the author answers one quick question, "What did they ask you about that surprised you?". The answer can become a new chapter or improve one, with the author's approval (through I3).
 - **The Librarian reads over the member's shoulder** (decided 2026-11-19; L1; `docs/librarian-plan.md`).
   - While the member types, it marks the answer in red handwriting and keeps a notebook beside it. The notebook holds chapters taking shape, connections, questions it's saving, bets, and short clips of the member's own words.
