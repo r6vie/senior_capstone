@@ -26,6 +26,11 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   and a faint end shade, and a uniform hairline joint (1px at 2x, half a CSS px) under every course and at the end of
   every slab, so each reads as its own piece. Holes and uneven gaps stay out; the joint is the same everywhere.
   Then (Josef: too much white) the joint is no longer bare paper but the slab's own ink lightened 45% toward paper.
+- **Round 4 (Josef: preferred the Fresh directions strata).** The finish experiments (touching blocks, joints, tinted
+  seams, muted inks) are set aside for this art: `final.py` now draws with round 3's renderer settings, inks and
+  elements exactly (bevelled slabs, jitter, ragged ends, groves, `render(touch=False)`), and only the scenes are
+  new: the cover's single clean summit with the sun beside it, and the title page's massif, coral peak, sage slope
+  and groves. The renderer options added along the way stay available but off for this art.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
