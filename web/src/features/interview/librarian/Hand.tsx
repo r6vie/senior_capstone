@@ -49,6 +49,9 @@ function useGlyphs(wanted: boolean): Glyphs | null {
 
 // Wide enough that tracing the outline covers the letter's whole thickness as it goes.
 const PEN_WIDTH = 140;
+// The mask reaches well past the letter's box on every side: a stroke that swings above the ascender,
+// below the descender or past the next letter (Caveat's loops do) is never cut off.
+const ROOM = 600;
 
 /** One letter, drawn along its outline: a mask of the outline's own stroke, revealed by its dash. */
 function DrawnLetter({ char, glyphs, id }: { char: string; glyphs: Glyphs; id: string }) {
@@ -71,10 +74,10 @@ function DrawnLetter({ char, glyphs, id }: { char: string; glyphs: Glyphs; id: s
       <mask
         id={id}
         maskUnits="userSpaceOnUse"
-        x={-PEN_WIDTH}
-        y={-top}
-        width={advance + 2 * PEN_WIDTH}
-        height={height}
+        x={-ROOM}
+        y={-top - ROOM}
+        width={advance + 2 * ROOM}
+        height={height + 2 * ROOM}
       >
         <path
           className="lib-pen-path"
