@@ -305,14 +305,24 @@ class Mesa:
 
     brick = (1.3, 5.0)
 
-    def __init__(self, cx, top, tw, bw, base, lit, dark, ledges=3, bed=8, seed=1, mist=None, flicker=0.04):
+    def __init__(self, cx, top, tw, bw, base, lit, dark, ledges=3, bed=8, seed=1, mist=None, flicker=0.04,
+                 talus=False, top_tint=None, shadow_slope=0.0):
         self.cx, self.top_y, self.tw, self.bw, self.base = cx, top, tw, bw, base
         self.lit = [hexrgb(c) for c in lit]
         self.dark = [hexrgb(c) for c in dark]
         self.ledges, self.bed, self.seed, self.mist, self.flicker = ledges, bed, seed, mist, flicker
+        # talus: sheer walls for the top two thirds, then a skirt of scree stepping out to the base
+        self.talus = talus
+        self.top_tint = [hexrgb(c) for c in top_tint] if top_tint else None
+        self.shadow_slope = shadow_slope
 
     def _half(self, y):
         t = np.clip((y - self.top_y) / max(1, self.base - self.top_y), 0, 1)
+        if self.talus:
+            wall = 0.66
+            skirt = np.clip((t - wall) / (1 - wall), 0, 1)
+            steps = np.floor(skirt * 3) / 3 + (skirt * 3 % 1) ** 2 / 3
+            return self.tw + (self.bw - self.tw) * (0.06 * np.minimum(t / wall, 1) + 0.94 * steps)
         L = self.ledges
         # a staircase: each tier a steep cliff, then a short shelf
         f = np.floor(t * L) / L + ((t * L) % 1) ** 3 / L
@@ -327,8 +337,12 @@ class Mesa:
 
     def colour(self, x, y, rng):
         hw = float(self._half(y))
-        shadow = x > self.cx + hw * 0.18
+        # the shadow edge: a stepped diagonal falling to the right, one step per bed
+        steps = (y - self.top_y) // self.bed
+        shadow = x > self.cx + hw * 0.18 + self.shadow_slope * steps * self.bed
         pal = self.dark if shadow else self.lit
+        if self.top_tint and not shadow and y - self.top_y < 2 * self.bed:
+            pal = self.top_tint            # dusk light on the top courses
         bed = int((y - self.top_y) // self.bed)
         i = (bed % 2) * 1.0 + 0.8 * vnoise(x, y, 40, self.seed + 1)
         if y - self.top_y < self.bed * 0.6:
@@ -349,11 +363,18 @@ class Terraces(Ridge):
     """A hill cut into terraces: a Ridge whose face is laid in level beds of two alternating inks, each bed's edge
     lit, so the hill reads as steps."""
 
-    def __init__(self, peaks, base, ink_a, ink_b, bed=10, **kw):
+    def __init__(self, peaks, base, ink_a, ink_b, bed=10, beds=None, lip=None, **kw):
         super().__init__(peaks, base, ink_a, ink_b, **kw)
         self.a = [hexrgb(c) for c in ink_a]
         self.b = [hexrgb(c) for c in ink_b]
         self.bed = bed
+        # beds: one palette per terrace from the top down (each terrace one solid colour); lip: the pale course on
+        # each terrace's edge
+        self.beds = [[hexrgb(c) for c in p] for p in beds] if beds else None
+        self.lip = [hexrgb(c) for c in lip] if lip else None
+
+    def _crest_y(self):
+        return min(p[1] for p in self.peaks)
 
     def top(self, x):
         # the skyline steps down bed by bed, like the terraces themselves
@@ -366,6 +387,13 @@ class Terraces(Ridge):
         k = int(self._cands(xa)[:, 0].argmin())
         px = self.peaks[k][0]
         n = int((y - top) // self.bed)
+        if self.beds:
+            # terraces counted from the hill's own top, so each terrace is one colour band across the slope
+            n = int((y - self._crest_y()) // self.bed)
+            pal = self.beds[min(len(self.beds) - 1, max(0, n))]
+            if self.lip and (y - top) % self.bed < 4.5:
+                return self.lip[int(rng.random() * len(self.lip))]
+            return pal[int(min(len(pal) - 1, max(0, 0.6 * vnoise(x, y, 80, self.seed) * len(pal))))]
         pal = self.a if n % 2 == 0 else self.b
         lit = x < px
         i = (0 if lit else 1) + 0.4 * vnoise(x, y, 70, self.seed)
@@ -379,6 +407,38 @@ class Terraces(Ridge):
             if m > 0 and rng.random() < m * 0.8:
                 return mix(pal[int(min(len(pal) - 1, max(0, i)))], (236, 236, 230), 0.35 + 0.35 * m)
         return pal[int(min(len(pal) - 1, max(0, i)))]
+
+
+class River:
+    """A river winding toward the viewer: narrow where it leaves the far hills, wide at the foot, its line swinging
+    side to side. Calm long runs, a few glints."""
+
+    brick = (2.5, 9.0)
+
+    def __init__(self, y0, y1, cx, amp, w0, w1, colours, glint, swings=1.2, phase=0.0, seed=5):
+        self.y0, self.y1, self.cx, self.amp, self.w0, self.w1 = y0, y1, cx, amp, w0, w1
+        self.c = [hexrgb(c) for c in colours]
+        self.g = [hexrgb(c) for c in glint]
+        self.swings, self.phase, self.seed = swings, phase, seed
+
+    def _line(self, y):
+        t = min(1, max(0, (y - self.y0) / max(1, self.y1 - self.y0)))
+        c = self.cx + self.amp * math.sin(t * math.pi * self.swings + self.phase) * (0.3 + 0.7 * t)
+        w = self.w0 + (self.w1 - self.w0) * t ** 1.4
+        return c, w, t
+
+    def cover(self, x, y):
+        if not (self.y0 <= y <= self.y1):
+            return np.zeros_like(x, dtype=bool)
+        c, w, _ = self._line(y)
+        return np.abs(x - c) <= w / 2
+
+    def colour(self, x, y, rng):
+        c, w, t = self._line(y)
+        if vnoise(x, y * 3, 40, self.seed) > 0.74 and rng.random() < 0.6:
+            return self.g[int(rng.random() * len(self.g))]
+        k = min(0.999, max(0, 0.15 + 0.5 * t + 0.25 * abs(x - c) / max(1, w / 2) + rng.uniform(-0.1, 0.1)))
+        return self.c[int(k * len(self.c))]
 
 
 class Firs:

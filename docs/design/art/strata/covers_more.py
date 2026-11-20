@@ -9,7 +9,7 @@ terrain and palette; each cover ink is taken from its art, never the UI red.
 python3 covers_more.py -> out/more-{desert,coast,valley}-{xl,sm}.png"""
 import sys
 sys.path.insert(0, ".")
-from strata import Ridge, Blob, Water, Band, Mesa, Terraces, trees, render
+from strata import Ridge, Blob, Water, Band, Mesa, Terraces, River, trees, grove, render
 
 CALM = dict(smooth=True, flicker=0.05)
 
@@ -17,23 +17,30 @@ CALM = dict(smooth=True, flicker=0.05)
 SAND_L = ["#F2DDB6", "#EBCE9E", "#E1BD85"]
 SAND_D = ["#C99B69", "#B08254", "#946A42"]
 TERRA_L = ["#E7A174", "#DD8A60", "#CE744D"]
-TERRA_D = ["#A2533A", "#86432F", "#6A3525"]
+TERRA_D = ["#8E4433", "#6E3329", "#4C2422", "#2F1A20"]
 PLUM_L = ["#D3B2BC", "#C4A0AD", "#B38E9E"]
 PLUM_D = ["#987080", "#83606F", "#6F515E"]
-GOLD = ["#F7DC97", "#F3CB79", "#EEBA5E"]
+GOLD = ["#F29A6C", "#EC8556", "#E27043"]   # a saturated coral-orange sun
+ROSE = ["#EBA08C", "#E38E7E"]
+DUSK = ["#B49AB4", "#A688A6", "#977898"]
+DUSK_D = ["#7E6280", "#6B526D", "#59445B"]
+SANDS = ["#F2DDB6", "#EBCE9E", "#E3C08A", "#C98A5E", "#A86A47"]
 
 
 def desert():
+    """The critic's round: one flat-capped butte about 45% of the width, sheer walls then a talus skirt, its shade
+    side a stepped diagonal down to near-black aubergine; the coral sun behind its upper right shoulder; a long low
+    dusty-violet mesa line behind; sand only in the bottom fifth, in broken courses with thin rust shadows."""
+    hero = Mesa(98, 168, 52, 84, 296, TERRA_L, TERRA_D, ledges=3, bed=8, seed=53, talus=True, top_tint=ROSE,
+                shadow_slope=0.35, flicker=0.03)
+    sand = Water(290, 352, -40, 280, SANDS, ["#F7EAD0", "#F1E1C2"], seed=57, gaps=(1, 2), squash=0.5)
     return [
-        Blob([(176, 196, 30, 30)], GOLD, top_light=False),
-        Ridge([(30, 244, 70, 60, 0.35), (200, 240, 60, 70, 0.4)], 272, PLUM_L, PLUM_D, seed=51, rough=2, ribs=0.3,
-              mist=(256, 272), **CALM),
-        Mesa(204, 214, 24, 40, 276, TERRA_L, TERRA_D, ledges=2, bed=6, seed=52, mist=(262, 276)),
-        Mesa(92, 150, 46, 104, 290, TERRA_L, TERRA_D, ledges=3, bed=8, seed=53, mist=(276, 290)),
-        Band(-40, 280, 276, 352, SAND_L, seed=56, lens=0.0),
-        Ridge([(40, 284, 120, 110, 0.9), (190, 296, 110, 120, 0.85)], 352, SAND_L, SAND_D, seed=54, rough=3,
-              ribs=0.4, lean=0.5, **CALM),
-        Ridge([(150, 318, 140, 130, 0.8)], 352, SAND_L, SAND_D, seed=55, rough=3, ribs=0.4, lean=0.5, **CALM),
+        Blob([(168, 176, 28, 28)], GOLD, top_light=False),
+        Mesa(70, 246, 76, 92, 292, DUSK, DUSK_D, ledges=1, bed=6, seed=50, mist=(278, 292), flicker=0.03),
+        Mesa(200, 262, 16, 26, 292, TERRA_L, TERRA_D, ledges=1, bed=7, seed=52, talus=True, shadow_slope=0.3,
+             flicker=0.03),
+        hero,
+        sand,
     ]
 
 
@@ -76,16 +83,29 @@ RIVER = ["#A9C3CF", "#91B0C0", "#7A9CAF", "#668AA0"]
 CREAM = ["#FBEFD5", "#F6E3BD", "#F0D6A4"]
 
 
+TERR_BEDS = [["#7B8443", "#727B3C"], ["#9C9A4C", "#918F45"], ["#C9A24A", "#BF9742"], ["#DB963F", "#D08A38"],
+             ["#C8693A", "#BC5F34"], ["#A9522D", "#9C4A29"]]
+LIP = ["#F3E7C6", "#EEDFB6"]
+PINE_L = ["#4E6A4E", "#445F45", "#3A543C"]
+PINE_D = ["#24372B", "#1B2B22", "#121E18"]
+AMBER = ["#F4B04F", "#EFA03E", "#E68E31"]
+
+
 def valley():
-    river = Band(30, 250, 262, 352, RIVER, seed=75, lens=0.97)   # narrow in the distance, wide at the foot
+    """The critic's rethink: the terraces are the hero, a big stepped hillside rising from the bottom left to about
+    half the art's height, each terrace one solid colour from deep olive at the top through ochre and amber to rust
+    at the foot, a pale lip on each; a dark pine ridge behind on the right with a near-black shadow flank; an amber
+    sun partly behind its shoulder; a river along the foot in broken blue courses. No lilac hills."""
+    pine = Ridge([(200, 178, 110, 80, 1.1)], 312, PINE_L, PINE_D, seed=72, rough=3, ribs=0.8, lean=0.15,
+                 mist=(296, 312), **CALM)
+    hill = Terraces([(-20, 184, 30, 250, 0.7)], 320, GOLD_L, OLIVE, bed=16, beds=TERR_BEDS, lip=LIP, seed=74,
+                    rough=2, smooth=True, flicker=0.0)
+    river = Water(320, 352, -20, 280, RIVER, ["#F4F3EE", "#E4ECEF"], seed=75, gaps=(1, 2), squash=0.5, taper=0.2)
     return [
-        Blob([(186, 168, 18, 18)], CREAM, top_light=False),
-        Ridge([(60, 222, 90, 90, 1.0), (180, 210, 90, 100, 1.05)], 262, VIOLET_L, VIOLET_D, seed=71, rough=3,
-              ribs=0.5, mist=(244, 262), **CALM),
-        Ridge([(220, 200, 100, 70, 1.15)], 300, FOREST_L, FOREST_D, seed=72, rough=4, ribs=0.8, mist=(284, 300), **CALM),
-        Terraces([(-6, 182, 150, 160, 0.95)], 352, GOLD_L, OLIVE, bed=12, seed=74, rough=2, **CALM),
+        Blob([(170, 200, 24, 24)], AMBER, top_light=False),
+        pine,
+        hill,
         river,
-        trees([188, 206, 224, 240], 340, 12, RUSTT, seed=76),
     ]
 
 

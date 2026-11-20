@@ -45,6 +45,15 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   moonlight (chalk, indigo, teal sea, pale moon), an autumn terraced valley (gold, olive, rust, violet haze, a
   river). Boards `FinalCoverDesert`, `FinalCoverCoast`, `FinalCoverValley`. A long name that meets the art sits on
   the system's white knockout (seen at shelf size on the desert cover).
+- **Josef: sea cliffs good; desert and valley reworked. New process rule:** after every art round a fresh critic
+  subagent reviews the new art against the approved strata cover and book-screen art, its fixes are implemented,
+  and only then is the art placed on the canvas. Round 1 of that: desert ("ship after fixes"): a flat-capped butte
+  with sheer walls and a talus skirt, a stepped near-black aubergine shadow edge, a coral sun behind its upper
+  shoulder, rose dusk light on the cap, a joined violet back plane, sand only at the foot in broken courses.
+  Valley ("needs a rethink"): now autumn terraces as the hero, a stepped hillside with one colour per terrace from
+  olive to rust and a pale lip on each, a near-black pine ridge with an amber sun behind its shoulder, the river in
+  broken courses at the foot, no lilac hills. New renderer pieces: `River`, `Mesa(talus, top_tint, shadow_slope)`,
+  `Terraces(beds, lip)`.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
