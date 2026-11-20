@@ -58,7 +58,8 @@ class Ridge:
 
     brick = (1.3, 5.0)
 
-    def __init__(self, peaks, base, lit, dark, rough=6, seed=1, lean=0.32, bands=None, ribs=0.0, mist=None):
+    def __init__(self, peaks, base, lit, dark, rough=6, seed=1, lean=0.32, bands=None, ribs=0.0, mist=None,
+                 smooth=False, cap=None, flicker=0.12):
         # peak: (x, top_y, left_half_width, right_half_width, power)
         self.peaks = [p if len(p) == 5 else (p[0], p[1], p[2], p[2], p[3]) for p in peaks]
         self.base = base
@@ -76,6 +77,16 @@ class Ridge:
         self.noise_x = np.linspace(-400, 2400, 900)
         ny = np.cumsum(rng.normal(0, 1, 900))
         self.noise_y = (ny - np.convolve(ny, np.ones(31) / 31, "same")) * rough / 3
+        if smooth:
+            # a calm skyline: only broad ledges and dips, nothing narrower than a few slabs
+            w = rng.normal(0, 1, 900)
+            a = np.convolve(w, np.ones(19) / 19, "same")
+            b = np.convolve(w[::-1], np.ones(7) / 7, "same")
+            self.noise_y = (a / (a.std() + 1e-9) * 0.75 + b / (b.std() + 1e-9) * 0.25) * rough / 2
+        self.flicker = flicker
+        # cap: (depth, lit, dark): a snowline `depth` below the highest summit, wavering gently; above it every slab
+        # is laid in the cap's inks (lit or shaded as the face is)
+        self.cap = (cap[0], [hexrgb(c) for c in cap[1]], [hexrgb(c) for c in cap[2]]) if cap else None
 
     def _cands(self, x):
         out = []
@@ -111,6 +122,11 @@ class Ridge:
             wob = (vnoise(x, 0, 30, self.seed + 3) - 0.5) * 10
             if a + wob <= y <= b + wob:
                 lit, dark = bl, bd
+        if self.cap and not hasattr(self, "_summit"):
+            px0 = min(self.peaks, key=lambda p: p[1])[0]
+            self._summit = float(self.top(np.linspace(px0 - 60, px0 + 60, 241)).min())
+        if self.cap and y - self._summit < self.cap[0] + (vnoise(x, 0, 22, self.seed + 8) - 0.5) * 5:
+            lit, dark = self.cap[1], self.cap[2]
         pal = dark if in_shadow else lit
         i = (0.62 * depth + 0.38 * n) * len(pal)
         if rng.random() < getattr(self, "flicker", 0.12):
@@ -120,7 +136,7 @@ class Ridge:
             rib = vnoise(ang * 14, (y - ty) / 60, 1, self.seed + 7)
             if rib > 0.64:      # a spur: catches light, even on the shadow face
                 if in_shadow and rib > 0.72 and rng.random() < 0.75 * self.ribs:
-                    pal = self.lit
+                    pal = lit
                     i = len(pal) - 1 - rng.random()
                 else:
                     i -= 1.4 * self.ribs
@@ -349,7 +365,7 @@ def grove(cx_list, ground_y, size, colours, trunk="#5B3B2A", seed=9, spread=1.0,
 
 
 def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fade=None, brick=(1.6, 7.5), paper=PAPER,
-           jitter=0.05, touch=True, slab=(0.10, 0.22, 0.10), joint=0, seam=1.0):
+           jitter=0.05, touch=True, slab=(0.10, 0.22, 0.10), joint=0, seam=1.0, clean=False):
     """Draw the viewport (wx0, wy0, wx1, wy1) of the scene at size (W, H) with course height in output px.
 
     fade: list of (edge, start, end) in output px; bricks thin out and pale toward paper across it.
@@ -384,6 +400,24 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
         for k in range(len(scene) - 1, -1, -1):
             m = scene[k].cover(xs_world, yc) & (owner < 0)
             owner[m] = k
+        minrun = int(1.5 * course) if clean else 2
+        if clean:
+            # no slivers or specks: a piece shorter than a slab and a half goes to the nearer form it touches, or
+            # away if it touches none
+            for _ in range(3):
+                e = np.flatnonzero(np.diff(np.concatenate([[-2], owner, [-2]])))
+                changed = False
+                for i in range(len(e) - 1):
+                    a0, b0 = e[i], e[i + 1]
+                    k = owner[a0]
+                    if k < 0 or b0 - a0 >= minrun:
+                        continue
+                    left = owner[a0 - 1] if a0 > 0 else -1
+                    right = owner[b0] if b0 < W else -1
+                    owner[a0:b0] = max(left, right)
+                    changed = True
+                if not changed:
+                    break
         edges = np.flatnonzero(np.diff(np.concatenate([[-2], owner, [-2]])))
         segs = [(edges[i], edges[i + 1], owner[edges[i]]) for i in range(len(edges) - 1) if owner[edges[i]] >= 0]
         # blocks touch by default: where two forms meet they share one boundary, and if it steps, both sides step
@@ -395,7 +429,8 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
                 nb = segs[i + 1]
                 step = min(getattr(scene[k], "ragged", 1), getattr(scene[nb[2]], "ragged", 1))
                 d = rng.randint(-step, step) * course // 2
-                d = max(-(b0 - a0 - 2), min(nb[1] - nb[0] - 2, d))
+                d = max(-(b0 - a0 - minrun), min(nb[1] - nb[0] - minrun, d))
+                d = d if (b0 - a0 > minrun and nb[1] - nb[0] > minrun) else 0
                 bounds[b0] = b0 + d
         runs = []
         for i, (a0, b0, k) in enumerate(segs):
@@ -409,13 +444,18 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
                 b = bounds[b0]
             else:
                 b = min(W, b0 + rng.randint(-step, step) * course // 2)
-            runs.append((layer, a, b))
+            if clean and b - a < minrun:
+                a, b = (a0, b0) if b0 - a0 >= minrun else (a, a)
+            if b > a:
+                runs.append((layer, a, b))
         for layer, a, b in runs:
             if True:
                 x = a
                 while x < b:
-                    ln = max(2, int(course * rng.uniform(*getattr(layer, "brick", brick))))
+                    ln = max(minrun, int(course * rng.uniform(*getattr(layer, "brick", brick))))
                     x2 = min(b, x + ln)
+                    if clean and b - x2 < minrun:
+                        x2 = b    # a short remainder joins this slab instead of standing alone
                     cxw = wx0 + ((x + x2) / 2) * sx
                     c = layer.colour(cxw, yc, rng)
                     c = shade(c, rng.uniform(-jitter, jitter))

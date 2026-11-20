@@ -19,62 +19,60 @@ from scenes import TEAL_LIT, TEAL_DARK, CORAL, RUST, STONE_LIT, STONE_DARK, SAGE
     CLOUD, SHORE, LEAF, HAZE_LIT, HAZE_DARK
 
 
+CAP = (22, STONE_LIT, STONE_DARK)
+CALM = dict(smooth=True, flicker=0.05)
+
+
 def page():
-    teal = Ridge([(470, 316, 132, 100, 1.45), (492, 342, 26, 28, 1.0), (414, 404, 90, 70, 1.1), (560, 380, 72, 90, 1.2)],
-                 590, TEAL_LIT, TEAL_DARK, seed=13, rough=7, ribs=1.0, bands=[(316, 348, STONE_LIT, STONE_DARK)],
-                 mist=(552, 590))
-    far = Ridge([(40, 486, 120, 130, 1.1), (200, 470, 120, 120, 1.05), (330, 494, 80, 90, 1.0)], 556,
-                HAZE_LIT, HAZE_DARK, seed=17, rough=4, ribs=0.6, mist=(524, 556))
-    coral = Ridge([(210, 482, 70, 84, 1.3)], 566, CORAL, RUST, seed=12, ribs=0.9,
-                  bands=[(530, 535, STONE_LIT, STONE_DARK)], mist=(544, 566))
-    sage = Ridge([(-20, 470, 150, 170, 1.25), (110, 528, 60, 64, 1.1)], 594, SAGE_LIT, SAGE_DARK, seed=14, rough=7,
-                 ribs=1.0, mist=(568, 594))
+    teal = Ridge([(470, 316, 136, 100, 1.2), (414, 410, 92, 70, 1.05), (566, 392, 76, 90, 1.2)], 590, TEAL_LIT,
+                 TEAL_DARK, seed=13, rough=6, ribs=0.9, cap=(34, STONE_LIT, STONE_DARK), mist=(552, 590), **CALM)
+    far = Ridge([(40, 488, 120, 130, 1.1), (200, 472, 120, 120, 1.05), (330, 496, 80, 90, 1.0)], 556,
+                HAZE_LIT, HAZE_DARK, seed=17, rough=4, ribs=0.5, mist=(524, 556), **CALM)
+    coral = Ridge([(212, 484, 72, 86, 1.3)], 566, CORAL, RUST, seed=12, rough=3, ribs=0.5, mist=(544, 566), **CALM)
+    sage = Ridge([(-20, 470, 150, 170, 1.25), (112, 530, 62, 66, 1.1)], 594, SAGE_LIT, SAGE_DARK, seed=14, rough=5,
+                 ribs=0.8, mist=(568, 594), **CALM)
     return [
-        Blob([(392, 420, 34, 34)], CORAL, top_light=False),
+        Blob([(386, 424, 34, 34)], CORAL, top_light=False),
         far,
         coral,
-        Blob([(300, 548, 90, 6), (120, 552, 60, 5)], CLOUD),
+        Blob([(312, 550, 84, 6)], CLOUD),
         teal,
         sage,
-        Water(590, 652, -40, 620, COBALT, GLINT, seed=21, mirror=[far, coral, teal, sage], gaps=(1, 3), squash=0.55),
-        Band(-60, 230, 636, 668, SHORE, seed=31, lens=0.8),
-        trees([10, 50, 90, 130, 170], 650, 15, LEAF, seed=41),
-        Band(380, 640, 648, 690, SHORE, seed=32, lens=0.8),
-        trees([420, 470, 520, 560], 666, 17, LEAF, seed=42),
+        Water(590, 700, -40, 620, COBALT, GLINT, seed=21, mirror=[teal, coral], gaps=(1, 2), squash=0.55),
+        Band(-60, 230, 640, 700, SHORE, seed=31, lens=0.5),
+        trees([16, 58, 100, 142, 182], 654, 15, LEAF, seed=41),
+        Band(390, 640, 652, 700, SHORE, seed=32, lens=0.5),
+        trees([430, 478, 526, 568], 668, 16, LEAF, seed=42),
     ]
 
 
 def cover():
-    teal = Ridge([(112, 128, 96, 86, 1.45), (64, 200, 50, 40, 1.0), (190, 198, 40, 62, 1.15)],
-                 256, TEAL_LIT, TEAL_DARK, seed=13, rough=2.5, ribs=1.0, bands=[(128, 150, STONE_LIT, STONE_DARK)],
-                 mist=(236, 256))
-    far = Ridge([(20, 214, 70, 80, 1.1), (216, 210, 60, 70, 1.1)], 250, HAZE_LIT, HAZE_DARK, seed=17, rough=3,
-                ribs=0.6, mist=(230, 250))
-    coral = Ridge([(198, 204, 36, 46, 1.2)], 252, CORAL, RUST, seed=12, rough=3, ribs=0.9,
-                  bands=[(226, 229, STONE_LIT, STONE_DARK)], mist=(238, 252))
-    sage = Ridge([(-14, 214, 70, 84, 1.3)], 258, SAGE_LIT, SAGE_DARK, seed=14, rough=4, ribs=1.0, mist=(244, 258))
+    """Title on paper above y 118; name on paper below y 304; the art ends on a clean line at y 298."""
+    teal = Ridge([(112, 130, 98, 88, 1.15), (62, 200, 54, 44, 1.0), (188, 198, 46, 64, 1.15)], 256, TEAL_LIT,
+                 TEAL_DARK, seed=13, rough=3, ribs=0.9, cap=CAP, mist=(236, 256), **CALM)
+    far = Ridge([(18, 214, 70, 80, 1.1), (218, 212, 60, 70, 1.1)], 250, HAZE_LIT, HAZE_DARK, seed=17, rough=2,
+                ribs=0.5, mist=(230, 250), **CALM)
+    sage = Ridge([(-14, 216, 70, 84, 1.25)], 258, SAGE_LIT, SAGE_DARK, seed=14, rough=2, ribs=0.8, mist=(244, 258),
+                 **CALM)
     return [
-        Blob([(146, 158, 26, 26)], CORAL, top_light=False),
+        Blob([(150, 160, 26, 26)], CORAL, top_light=False),
         far,
-        coral,
-        Blob([(60, 234, 40, 5), (200, 238, 34, 4)], CLOUD),
+        Blob([(52, 238, 42, 4)], CLOUD),
         teal,
         sage,
-        Water(256, 302, -20, 260, COBALT, GLINT, seed=21, mirror=[far, coral, teal, sage], gaps=(1, 3), squash=0.55),
-        Band(-30, 96, 286, 302, SHORE, seed=31, lens=0.8),
-        trees([4, 26, 48, 70], 294, 7, LEAF, seed=41),
+        Water(256, 298, -20, 260, COBALT, GLINT, seed=21, mirror=[teal], gaps=(1, 2), squash=0.55),
+        Band(-30, 96, 284, 298, SHORE, seed=31, lens=0.5),
+        trees([6, 28, 50, 72], 292, 7, LEAF, seed=41),
     ]
 
 
-OLD = dict(touch=False)   # round 3's rules exactly: the renderer's defaults, with the old independent ragged ends
+# round 3's look (bevelled slabs, colour jitter, default brick lengths, round 3's inks), laid clean: no slivers,
+# no holes between forms, no specks, ragged steps only against open sky
+CLEAN = dict(clean=True)
 
 if __name__ == "__main__":
     P = page()
-    render(P, (0, 0, 570, 684), (1140, 1368), 8, fade=[("y", 1330, 1368)], **OLD).save("out/final-title.png")
-    render(P, (-50, 260, 620, 684), (1140, 722), 8, fade=[("y", 690, 722)], **OLD).save("out/final-contents.png")
-    k = 2
-    render(cover(), (0, 0, 236, 344), (472, 688), 8, fade=[("y", 296 * k, 308 * k)], paper=(255, 255, 255),
-           **OLD).save("out/final-cover-xl.png")
-    k = 356 / 344
-    render(cover(), (0, 0, 236, 344), (244, 356), 3, fade=[("y", 296 * k, 308 * k)], paper=(255, 255, 255),
-           **OLD).save("out/final-cover-sm.png")
+    render(P, (0, 0, 570, 684), (1140, 1368), 8, **CLEAN).save("out/final-title.png")
+    render(P, (-50, 260, 620, 684), (1140, 722), 8, **CLEAN).save("out/final-contents.png")
+    render(cover(), (0, 0, 236, 344), (472, 688), 8, paper=(255, 255, 255), **CLEAN).save("out/final-cover-xl.png")
+    render(cover(), (0, 0, 236, 344), (244, 356), 3, paper=(255, 255, 255), **CLEAN).save("out/final-cover-sm.png")

@@ -31,6 +31,12 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   elements exactly (bevelled slabs, jitter, ragged ends, groves, `render(touch=False)`), and only the scenes are
   new: the cover's single clean summit with the sun beside it, and the title page's massif, coral peak, sage slope
   and groves. The renderer options added along the way stay available but off for this art.
+- **Round 5, laid clean (Josef: messy, weird shapes; plan it properly).** Same look and inks; a `clean` mode in the
+  renderer: no slab shorter than a slab and a half, touching forms share one boundary (no holes, no slivers of the
+  form behind), tiny leftovers merge into a neighbour and lone specks are dropped, ragged steps only against open
+  sky. Skylines from smooth noise (`Ridge(smooth=True)`), calmer tone flicker, the snow cap a snowline under the
+  summit, no stripe on the small peaks, clean feet (the cover's art ends on a straight line, the page's runs off
+  the page). Checked by zoom on the summit, sun edge, middle peak and foot before publishing.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
