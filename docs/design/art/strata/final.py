@@ -92,7 +92,7 @@ def cover():
     ]
 
 
-OPTS = dict(slab_shade=False, gap=1, jitter=0.015, brick=(2.2, 9.0))
+OPTS = dict(slab_shade=False, gap=0, jitter=0.015, brick=(2.2, 9.0))
 
 if __name__ == "__main__":
     S = 2

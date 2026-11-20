@@ -19,6 +19,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   The cover is now composed for its own shape: one big centred massif with a notched summit and a stone cap, a large
   sun behind it like a halo, haze low on both sides, a still lake mirroring the peak, two small firs. Drawn at 2x.
   The book's inside pages are to follow from the cover (not yet redone to match).
+- **Josef's rule: blocks touch by default.** No paper seam between courses and no holes where two forms meet (they
+  share one boundary in the renderer, `render(touch=True)`). Spacing is allowed only as a design choice: the sparse
+  river or lake, mist between ridges, an edge against open sky.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

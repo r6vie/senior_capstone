@@ -349,7 +349,7 @@ def grove(cx_list, ground_y, size, colours, trunk="#5B3B2A", seed=9, spread=1.0,
 
 
 def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fade=None, brick=(1.6, 7.5), paper=PAPER,
-           jitter=0.05):
+           jitter=0.05, touch=True):
     """Draw the viewport (wx0, wy0, wx1, wy1) of the scene at size (W, H) with course height in output px.
 
     fade: list of (edge, start, end) in output px; bricks thin out and pale toward paper across it.
@@ -379,22 +379,39 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
 
     for row_top in range(0, H, course):
         yc = wy0 + (row_top + course / 2) * sy
-        claimed = np.zeros(W, dtype=bool)
-        # front to back so nearer layers win; draw back to front afterwards
-        runs_by_layer = []
-        for layer in reversed(scene):
-            m = layer.cover(xs_world, yc) & ~claimed
-            claimed |= m
-            runs_by_layer.append((layer, m))
-        for layer, m in reversed(runs_by_layer):
-            if not m.any():
-                continue
-            idx = np.flatnonzero(np.diff(np.concatenate([[0], m.astype(int), [0]])))
-            for a, b in zip(idx[::2], idx[1::2]):
-                # ragged ends: the course steps out or in by part of a brick
-                step = getattr(layer, "ragged", 1)
-                a = max(0, a + rng.randint(-step, step) * course // 2)
-                b = min(W, b + rng.randint(-step, step) * course // 2)
+        # who owns each pixel of this course: the nearest layer that covers it
+        owner = np.full(W, -1)
+        for k in range(len(scene) - 1, -1, -1):
+            m = scene[k].cover(xs_world, yc) & (owner < 0)
+            owner[m] = k
+        edges = np.flatnonzero(np.diff(np.concatenate([[-2], owner, [-2]])))
+        segs = [(edges[i], edges[i + 1], owner[edges[i]]) for i in range(len(edges) - 1) if owner[edges[i]] >= 0]
+        # blocks touch by default: where two forms meet they share one boundary, and if it steps, both sides step
+        # with it, so no hole opens between them. Only an edge against open paper steps on its own (that is the
+        # silhouette). Spacing is a design choice a layer makes (water breaks, mist), never a by-product.
+        bounds = {}
+        for i, (a0, b0, k) in enumerate(segs):
+            if i + 1 < len(segs) and segs[i + 1][0] == b0 and touch:
+                nb = segs[i + 1]
+                step = min(getattr(scene[k], "ragged", 1), getattr(scene[nb[2]], "ragged", 1))
+                d = rng.randint(-step, step) * course // 2
+                d = max(-(b0 - a0 - 2), min(nb[1] - nb[0] - 2, d))
+                bounds[b0] = b0 + d
+        runs = []
+        for i, (a0, b0, k) in enumerate(segs):
+            layer = scene[k]
+            step = getattr(layer, "ragged", 1)
+            if a0 in bounds:
+                a = bounds[a0]
+            else:
+                a = max(0, a0 + rng.randint(-step, step) * course // 2)
+            if b0 in bounds:
+                b = bounds[b0]
+            else:
+                b = min(W, b0 + rng.randint(-step, step) * course // 2)
+            runs.append((layer, a, b))
+        for layer, a, b in runs:
+            if True:
                 x = a
                 while x < b:
                     ln = max(2, int(course * rng.uniform(*getattr(layer, "brick", brick))))
