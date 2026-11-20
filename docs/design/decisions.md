@@ -14,6 +14,10 @@ Decisions Josef has made about Trove's look and feel. Newest first.
     contents to the left page. Chapter tabs in the top bar, arrow keys, a lifted page corner. Ask to check out sits
     under the book, the same on every page. Round 2: the open book sits over the shelf shaded in dots, as in C,
     instead of the dark backdrop; the top bar and the button strip are paper.
+    Round 3: the page keeps the library's header, and everything for the book is inside the book: Close and the page
+    tabs as running heads, page turns at the feet, Ask to check out on the title page and on each chapter page.
+  - **Josef removed "I have one like this" (sparks)** from the book screens (B and C). `docs/trove.md` still plans
+    sparks (I5); that product change is the orchestrator's to make in the plan.
   - **C, pulled from the shelf** (`FreshReaderPanel`): a side panel over the shelf, which stays in place shaded in
     dots with the book's slot left open. Previous and Next step along the shelf; chapters open in place; a link to
     the full page (A).

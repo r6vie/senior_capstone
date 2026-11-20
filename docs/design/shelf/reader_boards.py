@@ -126,6 +126,22 @@ CSS = """
 .acc .open .button{justify-self:start;min-height:40px;padding:0 14px;font-size:14px}
 .pn-full{margin-top:auto;padding:14px 40px 18px;border-top:var(--line) solid var(--ink);display:flex;justify-content:space-between;align-items:center}
 .pn-full .note{margin:0;font-size:13px}
+
+/* B round 3: the book carries its own controls */
+.sh-dim.full{top:64px}
+.rd-head{position:absolute;top:10px;left:22px;right:22px;height:44px;display:flex;align-items:center}
+.rd-head-r{justify-content:flex-end;left:30px}
+.rd-close{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;margin-left:-8px;color:var(--ink);text-decoration:none;font:600 14px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.rd-close span{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.rd .rd-tabs{margin:0;font-size:14px}
+.rd .rd-tabs a{min-width:36px;height:40px;padding:0 9px}
+.rd-page{padding-top:76px}
+.rd-title{font-size:42px}
+.rd-ask{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-top:22px}
+.rd-ask .note{margin:0;font-size:13px}
+.rd-ask-ch{margin-top:30px;padding-top:22px;border-top:2.5px dotted var(--ink)}
+.rd-book{top:124px}
+.rd-art{height:250px;bottom:-12px;left:0}
 </style>
 """
 
@@ -161,15 +177,23 @@ def shelf(name, books, top):
 
 SHELF_BG = shelf("Shift work", SHELF1, 110) + shelf("Starting out", SHELF2, 420)
 # ---------------- B ----------------
-def rd_bar(cur):
-    tabs = "".join(f'<a href="#"{" aria-current=\"page\"" if cur == k else ""}>{lab}</a>'
-                   for k, lab in [(0, "Contents")] + [(i, str(i)) for i in range(1, 5)])
-    return (f'<div class="rd-bar"><a class="button button-quiet" href="#">‹ Back to the shelf</a>'
-            f'<nav class="rd-tabs" aria-label="Pages of this book">{tabs}</nav>'
-            f'<span class="rd-keys"><kbd>←</kbd><kbd>→</kbd> turn &nbsp; <kbd>Esc</kbd> close</span></div>')
+HEADER = ('<header class="sh-top"><span class="wordmark">Trove</span><nav class="nav" aria-label="Main"><a href="#" aria-current="page">Shelf</a>'
+          '<a href="#">My book</a><a href="#">Checkouts</a><a href="#">Past meets</a></nav>'
+          '<input class="search" style="margin-left:auto" type="search" placeholder="Search by topic" aria-label="Search by topic"><span class="avatar">J</span></header>')
 
-ACT = ('<div class="rd-act"><a class="button button-primary" href="#">Ask to check out</a>'
-       '<span class="note">A thirty-minute video call, if the author says yes.</span></div>')
+def tabs(cur):
+    t = "".join(f'<a href="#"{" aria-current=\"page\"" if cur == k else ""}>{lab}</a>'
+                for k, lab in [(0, "Contents")] + [(i, str(i)) for i in range(1, 5)])
+    return f'<nav class="rd-tabs" aria-label="Pages of this book">{t}</nav>'
+
+# the book's own controls are its running heads: close on the left page, the page tabs on the right
+HEAD_L = '<div class="rd-head"><a href="#" class="rd-close">✕ <span>Close the book</span></a></div>'
+def head_r(cur):
+    return f'<div class="rd-head rd-head-r">{tabs(cur)}</div>'
+
+def ask(note=True):
+    return ('<div class="rd-ask"><a class="button button-primary" href="#">Ask to check out</a>'
+            + ('<span class="note">A thirty-minute video call, if the author says yes.</span>' if note else "") + '</div>')
 
 def toc(active=None, hover=None, compact=False, summaries=True):
     out = f'<ol class="toc{" compact" if compact else ""}">'
@@ -179,49 +203,47 @@ def toc(active=None, hover=None, compact=False, summaries=True):
     return out + "</ol>"
 
 spread1 = (
-    '<section class="rd-page rd-left" aria-label="Title page">'
-    '<span class="caption" style="align-self:flex-start">A Trove book</span>'
-    f'<h1 class="rd-title" style="margin-top:22px">{T}</h1><p class="byline" style="margin:14px 0 0">by {A}</p>'
-    f'<p class="rd-blurb">{BLURB}</p>'
+    '<section class="rd-page rd-left" aria-label="Title page">' + HEAD_L +
+    f'<h1 class="rd-title">{T}</h1><p class="byline" style="margin:14px 0 0">by {A}</p>'
+    f'<p class="rd-blurb">{BLURB}</p>' + ask() +
     f'<img class="rd-art" src="{BAND}" alt="">'
     '</section>'
-    '<section class="rd-page rd-right" aria-label="Contents">'
+    '<section class="rd-page rd-right" aria-label="Contents">' + head_r(0) +
     '<span class="frame-label" style="color:var(--ink)">Contents</span>'
     + toc(hover=2) +
-    '<div class="rd-foot" style="left:0"><span class="rd-folio">i</span><a href="#">Chapter 1 <span aria-hidden="true">›</span></a></div>'
+    '<div class="rd-foot"><span class="rd-folio">i</span><a href="#">Chapter 1 <span aria-hidden="true">›</span></a></div>'
     '<div class="rd-curl" aria-hidden="true"></div>'
     '</section><div class="rd-gutter" aria-hidden="true"></div>')
 
 spread2 = (
-    '<section class="rd-page rd-left" aria-label="Contents">'
+    '<section class="rd-page rd-left" aria-label="Contents">' + HEAD_L +
     '<span class="frame-label" style="color:var(--ink)">Contents</span>'
     + toc(active=2, compact=True, summaries=False) +
     f'<img class="rd-art short" src="{BAND}" alt="">'
     '<div class="rd-foot"><a href="#"><span aria-hidden="true">‹</span> Title page</a><span class="rd-folio">2</span></div>'
     '</section>'
-    '<section class="rd-page rd-right" aria-label="Chapter 2">'
+    '<section class="rd-page rd-right" aria-label="Chapter 2">' + head_r(2) +
     '<span class="frame-label" style="color:var(--ink)">Chapter</span>'
     f'<div class="ch-num" aria-hidden="true">2</div><h2 class="ch-title">{CH[1][0]}</h2>'
     f'<p class="ch-body">{CH[1][1]}</p>'
-    '<div class="spark"><a class="button button-secondary" href="#">I have one like this</a>'
-    '<p class="note">Saves a private prompt for your own next interview. Only you see it.</p></div>'
+    '<div class="rd-ask rd-ask-ch"><p class="note" style="color:var(--ink)">Want to hear this one first-hand?</p>' + ask()[len('<div class="rd-ask">'):] +
     '<div class="rd-foot"><span class="rd-folio">3</span><a href="#">Chapter 3 <span aria-hidden="true">›</span></a></div>'
     '<div class="rd-curl" aria-hidden="true"></div>'
     '</section><div class="rd-gutter" aria-hidden="true"></div>')
 
-B_NOTE = ("Book screen B · the book opens. The current app's mechanic, rebuilt: the cover you clicked swings open "
-          "in place over the shelf, which stays where it was, shaded in dots with the book's place left open. The left page is the title page with the book's own landscape at its foot; "
-          "the right page is the contents, each chapter with its one-line summary so you can choose before you turn. "
-          "Choosing a chapter turns the page, and the contents move to the left page, so they are always one glance away. "
-          "Every page can also be reached from the tabs at the top, the arrow keys, a swipe, or the lifted corner. "
-          "Ask to check out sits under the book, the same on every page, so the one action never moves.")
-def b_screen(label, spread, cur, top):
+B_NOTE = ("Book screen B · the book opens. The page keeps the library's header; under it the shelf stays where it was, "
+          "shaded in dots with the book's place left open, and the cover you clicked swings open over it. Everything for "
+          "the book is inside the book: Close at the head of the left page, the page tabs at the head of the right, page "
+          "turns at the foot of each page (and the arrow keys, a swipe, the lifted corner). The title page carries the blurb "
+          "and Ask to check out; choosing a chapter turns the page, the contents move to the left, and the chapter page "
+          "carries Ask to check out under the chapter, so the action is on every spread.")
+def b_screen(label, spread, top):
     return (f'<div style="position:absolute;left:0;top:{top}px"><span class="frame-label scr-label">{label}</span>'
-            f'<div class="scr rd">{SHELF_BG}<div class="sh-dim full" aria-hidden="true"></div>{rd_bar(cur)}<div class="rd-book">{spread}</div>{ACT}</div></div>')
+            f'<div class="scr rd">{HEADER}{SHELF_BG}<div class="sh-dim full" aria-hidden="true"></div><div class="rd-book">{spread}</div></div></div>')
 bodyB = ('<div style="position:relative;height:100%">'
          f'<div class="board-head"><span class="frame-label">B · The book opens</span><p class="note">{B_NOTE}</p></div>'
-         + b_screen("Opened: title page and contents", spread1, 0, 190)
-         + b_screen("A chapter: contents move left, the chapter faces them", spread2, 2, 1120)
+         + b_screen("Opened: title page and contents", spread1, 190)
+         + b_screen("A chapter: contents move left, the chapter faces them", spread2, 1120)
          + "</div>")
 open(f"{OUT}/FreshReaderOpen.dc.html", "w").write(board("Book screen B: the book opens", 1440, 2020, bodyB))
 
@@ -230,7 +252,7 @@ acc = '<ol class="acc">'
 for i, (t, s) in enumerate(CH, 1):
     if i == 1:
         acc += (f'<li><div class="row"><b>{i}</b><h3>{t}</h3><i>–</i></div><div class="open"><p>{s}</p>'
-                '<a class="button button-quiet" href="#" style="margin-left:-12px">I have one like this</a></div></li>')
+                '</div></li>')
     else:
         acc += f'<li><div class="row"><b>{i}</b><h3>{t}</h3><i>+</i></div></li>'
 acc += "</ol>"
