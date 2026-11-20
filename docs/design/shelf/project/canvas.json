@@ -840,8 +840,8 @@
   "FinalBookMore.dc.html": {
    "x": 2200,
    "y": 0,
-   "w": 2960,
-   "h": 3030,
+   "w": 4480,
+   "h": 1110,
    "title": "Book screen · the pages follow the cover",
    "page": "final"
   }

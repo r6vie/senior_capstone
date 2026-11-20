@@ -1,8 +1,7 @@
-"""Final designs: book screen B for the desert, coast and autumn-hills covers. The inside follows the cover: each row
-is one book opened (title page and contents) and on a chapter, with that cover's page art (art/strata/pages_more.py)
-and that cover's ink on the boards. Built from FinalBook.dc.html.
+"""Final designs: book screen B for the desert, coast and autumn-hills covers, each book opened on its title page with
+its own page art (art/strata/pages_more.py) and its cover's ink on the boards. Built from FinalBook.dc.html.
 
-python3 final_book_more.py <root> desert_title=<blob> desert_contents=<blob> coast_title=... valley_contents=..."""
+python3 final_book_more.py <root> desert_title=<blob> coast_title=<blob> valley_title=<blob>"""
 import sys, re
 ROOT, IDS = sys.argv[1], dict(a.split("=") for a in sys.argv[2:])
 P = f"{ROOT}/project"
@@ -64,22 +63,17 @@ def swap(html, b):
         html = html.replace(ot, nt).replace(ob, nb)
     html = html.replace(f'fill="{OLD["ink"]}"', f'fill="{b["ink"]}"')
     html = html.replace(OLD["title_blob"], IDS[f'{b["key"]}_title'])
-    return html.replace(OLD["contents_blob"], IDS[f'{b["key"]}_contents'])
+    return html
 
 
-ROW, TOP = 960, 190
-rows = []
-for r, b in enumerate(BOOKS):
-    y = TOP + r * ROW
-    rows.append(f'<div style="position:absolute;left:0;top:{y}px">{swap(opened, b)}</div>'
-                .replace('Opened: title page and contents</span>', f'{b["label"]} · opened</span>'))
-    rows.append(f'<div style="position:absolute;left:1520px;top:{y}px">{swap(chapter, b)}</div>'
-                .replace('A chapter: contents move left, the chapter faces them</span>', f'{b["label"]} · a chapter</span>'))
-W, H = 2960, TOP + 3 * ROW - 40
+TOP, COL = 190, 1520
+rows = [f'<div style="position:absolute;left:{c * COL}px;top:{TOP}px">{swap(opened, b)}</div>'
+        .replace('Opened: title page and contents</span>', f'{b["label"]}</span>') for c, b in enumerate(BOOKS)]
+W, H = 3 * COL - 80, TOP + 920
 board = (f'<div style="width:{W}px;height:{H}px;background:var(--paper);color:var(--ink);font-family:var(--font-sans);'
          f'overflow:hidden"><div style="position:relative;height:100%"><div class="board-head"><span class="frame-label">'
-         f'Book screen · the pages follow the cover</span><p class="note">Each cover\'s place, seen wider: the hero on '
-         f'the right third, the text over open paper, the cover\'s ink on the boards.</p></div>{"".join(rows)}</div></div>\n')
+         f'Book screen · the pages follow the cover</span><p class="note">Each cover\'s place opened up into a full scene on '
+         f'the title page, the cover\'s ink on the boards.</p></div>{"".join(rows)}</div></div>\n')
 head = re.sub(r"<title>.*?</title>", "<title>Final: book pages for each cover</title>", head)
 tail = tail.replace('"width":1440,"height":2020', f'"width":{W},"height":{H}')
 open(f"{P}/FinalBookMore.dc.html", "w").write(head + board + tail)

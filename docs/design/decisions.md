@@ -79,6 +79,16 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   presence and framing: heroes raised, a low cliff framing the desert's left, the headland running off the edge with
   bigger stacks and a dark rock at the foot, the gold hill flattened so it reads as a hill and not a rising sun.
   Board `FinalBookMore`: each book opened and on a chapter, the cover's ink on the boards.
+- **Pages are full scenes, not zooms of the cover (Josef: the reference page adds far more scenery; one page is
+  enough; much more elaborate, cooler environments; redo the desert, its hero not a tower).** Only the title page
+  gets art now. Coast: a lighthouse and keeper's cottage on the headland, an arch, a broken line of stacks and a
+  misted far stack, headlands receding left, foam at the feet, the moon low under cloud with its path on the sea,
+  cloud banks, rocks in both lower corners. Autumn hills: two lilac tiers in mist, a striped gold field beside a
+  smaller gold hill, an olive slope with an orange grove, a river with poplars winding out between the rust hill
+  and the forest, a cumulus and streaks of cloud. Desert, rebuilt: a wide low mesa and its bench with the sun
+  setting behind the right shoulder under cloud streaks, the stepped haze cliff, buttes, pinnacles, an arch, a dry
+  wash between dunes, scrub. A fresh critic reviewed the first draft (too few planes, a tower, flat fields); its
+  fixes are in. Board `FinalBookMore`: one opened book per cover. The covers are unchanged.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
