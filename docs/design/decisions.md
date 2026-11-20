@@ -2,7 +2,13 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
-## 2026-11-19: three ways to show one book (the book screen), waiting for Josef
+## 2026-11-19: the book screen is B, the book opens (approved)
+
+- **Josef approved book screen B** (`FreshReaderOpen`) and asked for it to go to implementation **without art**: the art
+  inside the book and on the covers is still to be decided. The build spec is in `docs/design/system.md`,
+  "Handoff: the open book (book screen B)".
+
+## 2026-11-19: three ways to show one book (the book screen)
 
 - **Josef:** not yet sure how the book focus screen should work. Besides the full book page, two more UI approaches,
   one of them the current app's mechanic (the book opens to its pages) optimised and polished.

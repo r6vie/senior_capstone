@@ -211,6 +211,38 @@ Breakpoint: below 720px. Same parts, rearranged:
 Desktop layout with 24px gutters, the search shrinks to 180px, band title 40px, the feature book stays on the right
 at width−300px, rows scroll horizontally.
 
+## Handoff: the open book (book screen B)
+
+**Approved by Josef, 2026-11-19.** Build this in place of the current `BookReader` look. Source of truth:
+`docs/design/shelf/project/FreshReaderOpen.dc.html` (canvas page "Fresh directions", board "Book screen B · the book
+opens"). **No art for now:** pages are plain `--paper`; the art inside the book and on the covers is still to be decided,
+so leave the art layer out (keep a place for one image under each page's content).
+
+- **Around the book.** The page keeps the shelf's top bar exactly as on the shelf. Below it the shelf stays in place at
+  60% opacity under fine ink dots (`.9px` dots on a 5px grid, opacity .4); the opened book's place on the shelf stays
+  empty. There is no other toolbar, backdrop or button outside the book.
+- **The book.** Centred, 1180 × 724 at 1440 wide. One board in the book's cover colour (use `--ink` until covers are
+  decided), radius 4, 8px larger than the pages all round; the spine shows as a 24px tab at head and foot of the
+  gutter; one sheet of page edge (white, 1.5px ink) 6px proud of the pages. Two pages, each a flat plane 570 × 684,
+  `--paper`, 2px ink outline (1px where they meet at the gutter), and a 36px strip of dot shade down the gutter.
+  No curves, blur or stacked layers: each page is one plane that carries all of its own content.
+- **Controls live in the book.** Left page head: "✕ Close the book" (Esc too). Right page head: page tabs
+  Contents, 1, 2, … (the current one underlined). The lifted corner at the right page's foot turns forward;
+  ← → and swipe turn too. No page numbers or turn links at the feet. No helper sentences anywhere.
+- **Spread 1:** left, the title page: title (Newsreader 600, 42px), "by" full name (byline), blurb, then
+  "Ask to check out" (`.button-primary`). Right, the contents: numbered rows (number, chapter title, one-line summary,
+  ›), dotted rules, hover shades the row `--paper-sunk`.
+- **Spread 2 (a chapter):** left, the contents again, compact (no summaries), the current chapter reversed in ink,
+  and "Ask to check out" under the list. Right, the chapter: a large number (Barlow Condensed 800, 120px), the title
+  (Newsreader 600, 38px), the summary (Newsreader 19px). **Never put Ask to check out under a chapter**: it would
+  read as checking out that chapter.
+- **Motion.** The book opens from the clicked cover, as `BookReader` does now. A page turn rotates a page plane
+  about the spine in 3D (`transform-style: preserve-3d`, the content on the plane turns with it); reduced motion
+  swaps spreads with a short fade.
+- **Removed:** "I have one like this" (sparks) is not on the book screen. `docs/trove.md` still lists sparks; that
+  plan change is the orchestrator's.
+- **Phone:** not drawn yet. Until it is, show one page at a time at full width with the same head controls.
+
 ## Additions
 
 Patterns added after v1. Each entry: name, the task it solves, date, owner, snippet or link.
