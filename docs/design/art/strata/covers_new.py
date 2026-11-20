@@ -44,6 +44,58 @@ def palms(posts, ground, inks, trunk, thick=1.1):
     return [t, Grove(e, inks)]
 
 
+class Blocks:
+    """A crafted object drawn as a few level blocks, the way the approved pages draw the lighthouse and the cottage:
+    each block (x0, y0, x1, y1, inks) is one flat piece; later blocks lie over earlier ones."""
+
+    brick = (1.2, 4.0)
+    ragged = 0
+    min_run = 0.5
+
+    def __init__(self, blocks):
+        from strata import hexrgb
+        self.b = [(x0, y0, x1, y1, [hexrgb(c) for c in inks]) for x0, y0, x1, y1, inks in blocks]
+
+    def cover(self, x, y):
+        import numpy as np
+        m = np.zeros_like(x, dtype=bool)
+        for x0, y0, x1, y1, _ in self.b:
+            if y0 <= y < y1:
+                m |= (x >= x0) & (x < x1)
+        return m
+
+    def colour(self, x, y, rng):
+        inks, best = None, 1e9
+        for x0, y0, x1, y1, c in self.b:
+            if y0 <= y < y1:
+                d = 0 if x0 <= x < x1 else min(abs(x - x0), abs(x - x1))
+                if d <= best:          # inside wins; the last (nearest) block wins ties
+                    inks, best = c, d
+        return inks[int(rng.random() * len(inks))]
+
+
+def block_palms(posts, ground, lit, dark, trunk):
+    """Abstract palms in the strata manner: a trunk of single slabs stepping sideways as it climbs, a crown of three
+    level courses (narrow, wide, then two drooping tips), lit on the left of the trunk line, inked on the right."""
+    b = []
+    for x, h, s, lean in posts:
+        top = ground - h
+        n = int(h // 4)
+        for i in range(n):
+            tx = x + round(lean * i / max(1, n - 1) / 2) * 2   # steps sideways a slab at a time
+            b.append((tx - 2.6, ground - (i + 1) * 4, tx + 2.6, ground - i * 4, trunk))
+        cx = x + lean
+        for (dx0, dx1, dy) in [(-0.3, 0.3, -12), (-0.8, 0.8, -8), (-1.3, 1.3, -4), (-1.65, -0.55, 0),
+                               (0.55, 1.65, 0), (-1.9, -1.3, 4), (1.3, 1.9, 4)]:
+            x0, x1 = cx + dx0 * s, cx + dx1 * s
+            if x0 < cx < x1:
+                b.append((x0, top + dy, cx, top + dy + 4, lit))
+                b.append((cx, top + dy, x1, top + dy + 4, dark))
+            else:
+                b.append((x0, top + dy, x1, top + dy + 4, lit if x1 <= cx else dark))
+    return Blocks(b)
+
+
 # ---- 1 karst river in mist ----
 K_FAR = (["#CDD8D0", "#C6D2C9"], ["#A2B5A9", "#9AAEA1"])
 K_MID = (["#A9BCAB", "#A0B4A3"], ["#728979", "#6A8171"])
@@ -145,59 +197,106 @@ def curtain(x0, x1, y0, amp, waves, depth, inks, n=26):
     return Blob(e, inks, top_light=True)
 
 
-class NightBelow:
-    """The night sky cut off at the aurora: it starts at the curtain's upper edge (paper above), runs edge to edge and
-    down behind the peaks. Darkest overhead."""
+class AuroraSky:
+    """The winter sky as one smooth curve: the aurora's hem sweeps up to the right; below it the night, darkest
+    just under the glow; above it the curtain, green at the hem and teal higher, dissolving into paper (its slabs pale
+    and drop out, never a gradient)."""
 
-    brick = (2.0, 8.0)
+    brick = (2.2, 9.0)
 
-    def __init__(self, aur, base, inks):
-        import numpy as np
+    def __init__(self, hem, base, band, soft, night, curtain, seed=1):
         from strata import hexrgb
-        self.base, self.c = base, [hexrgb(c) for c in inks]
-        xs = np.linspace(-40, 280, 641)
-        top = np.full_like(xs, np.inf)
-        for cx, cy, rx, ry in aur.e:
-            d = np.clip(1 - ((xs - cx) / rx) ** 2, 0, None)
-            top = np.where(d > 0, np.minimum(top, cy - ry * np.sqrt(d)), top)
-        # past the curtain's ends the sky holds the line of its last slab
-        ok = np.isfinite(top)
-        top[~ok] = np.interp(xs[~ok], xs[ok], top[ok])
-        self.xs, self.top_y, self.y0 = xs, top, float(top.min())
+        self.hem, self.base, self.band, self.soft, self.seed = hem, base, band, soft, seed
+        self.night = [hexrgb(c) for c in night]
+        self.cur = [hexrgb(c) for c in curtain]
+
+    def _taper(self, x):
+        import numpy as np
+        return np.clip((np.asarray(x, dtype=float) + 6) / 70.0, 0.15, 1.0)   # the curtain thins out toward the left
 
     def cover(self, x, y):
         import numpy as np
-        return (y >= np.interp(x, self.xs, self.top_y)) & (y <= self.base)
+        from strata import vnoise
+        h = self.hem(x)
+        top = h - (self.band + self.soft) * self._taper(x)
+        m = (y >= top) & (y <= self.base)
+        f = (y - top) / (self.soft * self._taper(x))   # 0 at the top of the dissolve, 1 at the curtain proper
+        n = np.array([vnoise(xx, y, 22, self.seed) for xx in np.atleast_1d(x)])
+        return m & ((f >= 1) | (n < f * 1.2))
 
     def colour(self, x, y, rng):
-        t = min(0.999, max(0, (y - self.y0) / (self.base - self.y0) + rng.uniform(-0.08, 0.08)))
-        return self.c[int(t * len(self.c))]
+        from strata import mix
+        h = float(self.hem(x))
+        d = h - y                            # height above the hem
+        if d > 0:
+            t = min(0.999, max(0, d / (self.band + self.soft) + rng.uniform(-0.08, 0.08)))
+            c = self.cur[int(t * len(self.cur))]
+            f = d / (self.band + self.soft)
+            return mix(c, (255, 255, 255), max(0, min(1, f)) ** 1.3 * 0.9)
+        t = min(0.999, max(0, -d / (self.base - h) + rng.uniform(-0.08, 0.08)))
+        c = self.night[int(t * len(self.night))]
+        if -d < 7 and rng.random() < 0.55:
+            return mix(c, self.cur[0], 0.35)          # the glow just under the hem
+        return c
+
+
+def hem(x):
+    import numpy as np
+    return 198 - 0.2 * x - 6 * np.sin(x / 46.0)
+
+
+CURTAIN = ["#A9E2BF", "#8ED3AC", "#72C3A3", "#5CAEA6", "#5297A0"]   # bright green hem, teal above
+CAB_LOG = ["#A8876D", "#9C7C63"]
+CAB_SIDE = ["#4A3A32", "#41332C"]
+CAB_ROOF_SNOW = ["#F3F5F8", "#E9EDF3"]
+CAB_ROOF_SHADE = ["#8E97B8", "#848DAF"]
+CAB_EAVE = ["#2E2524", "#28201F"]
+CAB_ROOF_LIT = ["#5E4B42", "#55433B"]
+CAB_ROOF_DARK = ["#33282A", "#2D2325"]
+CAB_GOLD = ["#F7DC93", "#F2CC72"]
+
+
+def cabin(x, base):
+    """A log cabin, gable end facing us, laid on whole courses (4 px): a lit gable wall, a dark side wall going back
+    to the right, a shingle roof stepping up to its ridge (lit left of the ridge, dark right) with snow along the top
+    and on each eave step, a chimney with a snow cap, one lit window and a door."""
+    B = base
+    b = [(x + 28, B - 24, x + 52, B, CAB_SIDE),
+         (x, B - 24, x + 28, B, CAB_LOG),
+         (x + 40, B - 52, x + 46, B - 32, CAB_EAVE),
+         (x + 39, B - 56, x + 47, B - 52, CAB_ROOF_SNOW)]
+    ridge = x + 14
+    for j in range(5):
+        y1 = B - 24 - j * 4
+        l, r = x - 4 + 4 * j, x + 56 - 2 * j
+        if j == 4:
+            b.append((l, y1 - 4, r - 4, y1, CAB_ROOF_SNOW))
+            continue
+        b += [(l, y1 - 4, ridge, y1, CAB_ROOF_LIT), (ridge, y1 - 4, r, y1, CAB_ROOF_DARK),
+              (l, y1 - 4, l + 4, y1, CAB_ROOF_SNOW)]
+    b += [(x - 4, B - 24, x + 56, B - 22, CAB_EAVE)]
+    b += [(x + 4, B - 16, x + 12, B - 8, CAB_GOLD), (x + 17, B - 16, x + 24, B, CAB_EAVE)]
+    return Blocks(b)
 
 
 def aurora():
-    peaks = Ridge([(58, 222, 50, 54, 1.0), (166, 146, 66, 72, 1.1)], 276, *SNOW, seed=82, rough=2.5, ribs=0.5,
-                  lean=0.3, smooth=True, flicker=0.04)
+    # low snow hills, soft-shouldered but uneven: a long main hill with a second summit on its shoulder, a smaller
+    # hill to the left, each side a different length
+    peaks = Ridge([(44, 230, 58, 44, 0.8), (84, 244, 26, 34, 0.9), (150, 222, 70, 50, 0.8), (178, 230, 40, 40, 0.85),
+                   (218, 232, 36, 44, 0.9)],
+                  280, *SNOW, seed=82, rough=3.5, ribs=0.4, lean=0.4, smooth=True, flicker=0.04)
     lake = Water(284, 310, -20, 260, ICE, ICE_G, seed=84, gaps=(0, 0), squash=0.5)
     lake.brick = (6.0, 20.0)    # one flat sheet of ice
-    # the curtain thickens toward the right and steps in tiers, with short drops hanging into the dark beneath it
-    aur = Blob(curtain(-10, 250, 152, 7, 1.4, 9, AURORA).e + curtain(110, 250, 128, 6, 1.0, 10, AURORA).e,
-               AURORA, top_light=True)
-    drops = Blob([(150, 166, 3, 10), (176, 160, 3, 13), (200, 150, 3.5, 14), (222, 144, 3, 12), (86, 172, 3, 8)],
-                 ["#7CC9A3", "#5FAFA6", "#4E8F98"], top_light=True)
     return [
-        NightBelow(aur, 290, NIGHT),
-        aur,
-        Ridge([(10, 212, 44, 40, 1.0), (236, 204, 40, 50, 1.0)], 280, *SNOW_FAR, seed=81, rough=2, ribs=0.3,
-              smooth=True, flicker=0.03),
+        AuroraSky(hem, 290, 12, 56, NIGHT, CURTAIN, seed=80),
+        Ridge([(-6, 238, 50, 40, 0.85), (112, 246, 40, 30, 0.9), (244, 228, 50, 60, 0.8)], 282, *SNOW_FAR, seed=81,
+              rough=3, ribs=0.3, smooth=True, flicker=0.03),
         peaks,
-        Band(-60, 300, 270, 288, SNOW[0], seed=83, lens=0.0),
+        Band(-60, 300, 272, 288, SNOW[0], seed=83, lens=0.0),
         lake,
-        Band(40, 170, 296, 300, ["#A6D8BC", "#9CCFB2"], seed=88, lens=0.0),    # the aurora's one green sliver
         Band(-60, 300, 308, 360, SNOW[0], seed=85, lens=0.0),
-        # the cabin on the near shore, its window the one warm light
-        Mesa(124, 300, 20, 20, 322, *CABIN, ledges=1, bed=8, seed=86, wobble=0, speckle=0, ragged=0),
-        Ridge([(124, 282, 29, 29, 1.0)], 301, *ROOF, seed=87, rough=0, smooth=True, flicker=0),
-        Blob([(116, 311, 5, 4)], LAMP, top_light=False),
+        Firs([(158, 308, 44, 10)], F_LIT, F_DARK, tiers=2),      # one fir behind the cabin, so its roof reads
+        cabin(84, 330),
         Firs([(16, 338, 62, 12), (40, 342, 44, 9), (-2, 344, 42, 9), (204, 336, 68, 13), (228, 342, 52, 10),
               (184, 344, 36, 7)], F_LIT, F_DARK, tiers=2),
     ]
@@ -316,19 +415,33 @@ L_PALM = ["#5E9A4E", "#4E8A42", "#3F7836", "#31652B"]
 JUNGLE = ["#5C8E4A", "#4C7E3F", "#3E6D34", "#305B2A"]
 
 
+V_BASALT = (["#5E5A55", "#544F4A"], ["#3A3633", "#312E2B"])      # old lava, darker beds across the flank
+V_SHOULDER = (["#7F9C66", "#728F5A", "#66834F"], ["#45613B", "#3C5634", "#334B2D"])
+P_LIT = ["#5F9A4C", "#548E43"]
+P_DARK = ["#2F5A2C", "#284E26"]
+P_TRUNK = ["#6B5236", "#5E4630"]
+
+
 def lagoon():
-    cone = Ridge([(150, 140, 98, 104, 1.25)], 286, *V_CONE, seed=100, rough=2, ribs=0.55, lean=0.28,
-                 bands=[(140, 166, *V_ASH)], smooth=True, flicker=0.04)
+    """A steeper, broken cone: concave flanks rising to a notched crater, ravines down the faces, two dark beds of
+    old lava and an ash cap; a smaller parasitic cone on its right shoulder; a tall plume leaning downwind."""
+    # lopsided: a long left flank, a short steep right one broken by the crater's lip
+    cone = Ridge([(140, 120, 88, 76, 1.55), (162, 158, 18, 50, 1.1)], 286, *V_CONE, seed=100, rough=3, ribs=0.85, lean=0.22,
+                 bands=[(120, 134, *V_ASH), (134, 172, *V_BASALT)], smooth=True, flicker=0.05)
     return [
-        # the plume rises from the crater and leans downwind
-        Blob([(152, 132, 9, 7), (164, 123, 11, 6), (182, 117, 12, 5), (200, 115, 10, 4)], PLUME, top_light=True),
+        # the plume: a column out of the crater, billowing and bending right, its top clear of the title
+        Blob([(148, 116, 7, 6), (154, 110, 10, 6), (166, 106, 13, 6), (184, 104, 15, 5), (206, 106, 14, 4),
+              (226, 110, 10, 4)], PLUME, top_light=True),
         Ridge([(-4, 240, 40, 46, 1.0)], 284, *V_FAR, seed=101, rough=1, smooth=True, flicker=0.02),
+        Ridge([(222, 206, 34, 40, 1.2)], 286, *V_SHOULDER, seed=106, rough=2, ribs=0.6, lean=0.3,
+              bands=[(206, 214, *V_ASH)], smooth=True, flicker=0.04),
         cone,
-        trees([112, 138, 164, 190, 216, 240], 288, 8, JUNGLE, seed=102, spread=1.1),
+        Blob([(140, 126, 5, 2.5)], ["#E3A061", "#D98E4E"], top_light=False),   # the vent's glow
+        trees([100, 126, 150, 176, 202, 228, 250], 288, 7, JUNGLE, seed=102, spread=1.1),
         Water(282, 352, -20, 260, LAGOON, LAG_G, seed=103, mirror=[cone], gaps=(0, 1), squash=0.5),
         Band(96, 176, 300, 305, SANDBAR, seed=104, lens=0.0),     # a sandbar out in the lagoon
         Band(-80, 150, 314, 352, SANDBAR, seed=105, lens=0.75),
-        *palms([(24, 80, 14), (60, 62, 12)], 330, L_PALM, "#5E4630", thick=2.6),
+        block_palms([(20, 72, 17, 8), (58, 56, 14, 6)], 332, P_LIT, P_DARK, P_TRUNK),
     ]
 
 

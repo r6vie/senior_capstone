@@ -104,6 +104,16 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   lagoon: a green cone lit from the left with a short plume clear of the title, a muted teal lagoon, a sandbar and
   two palms. Each round went through a fresh critic with every approved cover and page as reference (Josef: show it
   all the approved pieces, not only the original strata).
+- **Winter and lagoon revised, and the karst book screen (Josef).** Winter: the hills lower and soft-shouldered but
+  uneven (not domes, "so they don't look like igloos"); the aurora one smooth curve whose curtain and the sky beneath
+  it dissolve upward into paper; a log cabin built of level blocks (lit gable wall, dark side wall, shingle roof with
+  snow along its top and eave steps, chimney, the one warm window, a door). Lagoon: a lopsided cone with a dark
+  barren summit over green skirts, ravines, a small amber vent and a plume clear of the title; palms drawn as blocks
+  in the manner of the desert page (a trunk stepping sideways a slab at a time, a crown of level courses). Karst book
+  screen (`art/strata/pages_new.py`, board `FinalBookKarst` beside its cover): towers in five planes into haze with
+  thin stepped clouds, three tall towers right of the text stepping darker toward us, the water mirroring them with
+  their shade broken on it, stepped paddies, a two-tier pavilion, bamboo, a sampan with its boatman and a far boat.
+  Each went through a fresh critic.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

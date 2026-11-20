@@ -50,6 +50,14 @@ BOOKS = [
              ("Public meetings", "How to explain a hard trade-off to the people who live on the cliff."),
              ("Models and mud", "Where the computer model ends and a site visit begins."),
              ("Managed retreat", "The project he is proudest of, which built almost nothing.")]),
+    dict(key="karst", file="FinalBookKarst", label="Karst river in mist", title="Two Years Upriver", author="Wen Zhao",
+         ink="#2f4637",
+         blurb="Two years teaching in a river town far from any city. How to plan a lesson when nothing goes to plan, "
+               "learning a language by getting it wrong in public, and what a small school taught me about patience.",
+         ch=[("The first week, mostly lost", "What she packed, what she should have, and the bus that never came."),
+             ("Teaching without a shared language", "Pictures, gestures, and the lesson plan that finally worked."),
+             ("Market Chinese", "Learning to bargain, to listen, and to laugh at her own mistakes."),
+             ("Leaving well", "Handing over a classroom, and what she still carries from it.")]),
     dict(key="valley", file="FinalBookValley", label="Autumn hills", title="A Slow Harvest", author="Mei Lin Okada",
          ink="#263a2d",
          blurb="I left consulting to run my family's orchard. A season-by-season account of learning a business "
@@ -71,6 +79,8 @@ def swap(html, b):
 
 W, H = 1440, 1090          # the cover boards are 1090 tall; the labels line up at 56 px
 for b in BOOKS:
+    if f'{b["key"]}_title' not in IDS:
+        continue
     board = (f'<div style="width:{W}px;height:{H}px;background:var(--paper);color:var(--ink);font-family:var(--font-sans);'
              f'overflow:hidden"><div style="position:relative;height:100%"><span class="frame-label" '
              f'style="position:absolute;left:44px;top:56px">Book screen · {b["label"]}</span>'
