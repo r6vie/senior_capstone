@@ -7,6 +7,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 - **Josef approved book screen B** (`FreshReaderOpen`) and asked for it to go to implementation **without art**: the art
   inside the book and on the covers is still to be decided. The build spec is in `docs/design/system.md`,
   "Handoff: the open book (book screen B)".
+- **Josef: opening is 3D.** Clicking a book on the shelf zooms in on it and opens it up in 3D. He wants a demo before
+  anything is pushed, and will likely workshop it with the implementation session.
 
 ## 2026-11-19: three ways to show one book (the book screen)
 
