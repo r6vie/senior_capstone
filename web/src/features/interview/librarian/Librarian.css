@@ -33,22 +33,34 @@
   opacity: var(--o, 1);
   transform: translateY(var(--y, 0)) rotate(var(--r, 0));
 }
-/* Each letter is revealed left to right by a soft, slanted edge. */
-.lib-hand[data-life="writing"] .lib-g {
-  -webkit-mask-image: linear-gradient(100deg, #000 0 45%, transparent 55%);
-  mask-image: linear-gradient(100deg, #000 0 45%, transparent 55%);
-  -webkit-mask-size: 220% 100%;
-  mask-size: 220% 100%;
+/* Each letter is drawn as the pen moves (Hand.tsx): its outline's own stroke, revealed along its dash,
+   uncovers the letter in writing order. Never a fade. */
+.lib-drawn {
+  display: inline-block;
+  overflow: visible;
+  /* The text's own letter-spacing, so the line doesn't move when the drawn letters become text at rest. */
+  margin-right: 0.01em;
+}
+.lib-pen-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
   animation: lib-pen var(--t) cubic-bezier(0.3, 0.1, 0.6, 1) var(--s) both;
 }
 @keyframes lib-pen {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+/* For the moment before the letter shapes have loaded: each letter appears at its time, whole. */
+.lib-hand[data-life="writing"]:not([data-drawn]) .lib-g {
+  animation: lib-appear 0s linear var(--s) both;
+}
+@keyframes lib-appear {
   from {
-    -webkit-mask-position: 100% 0;
-    mask-position: 100% 0;
+    visibility: hidden;
   }
   to {
-    -webkit-mask-position: 0 0;
-    mask-position: 0 0;
+    visibility: visible;
   }
 }
 /* Rubbed out from the left: an eraser edge sweeps across, with the ink still there behind it. */
@@ -605,7 +617,7 @@
 
 /* Reduced motion: handwriting and strokes fade in, erasing is a short fade, lines open at once. */
 @media (prefers-reduced-motion: reduce) {
-  .lib-hand[data-life="writing"] .lib-g,
+  .lib-hand[data-life="writing"]:not([data-drawn]) .lib-g,
   .lib-mark[data-life="writing"] .lib-stroke > i,
   .lib-en[data-marking]::after,
   .lib-en[data-marking] .lib-tick {
