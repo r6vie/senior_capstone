@@ -236,9 +236,12 @@ so leave the art layer out (keep a place for one image under each page's content
   and "Ask to check out" under the list. Right, the chapter: a large number (Barlow Condensed 800, 120px), the title
   (Newsreader 600, 38px), the summary (Newsreader 19px). **Never put Ask to check out under a chapter**: it would
   read as checking out that chapter.
-- **Motion.** The book opens from the clicked cover, as `BookReader` does now. A page turn rotates a page plane
-  about the spine in 3D (`transform-style: preserve-3d`, the content on the plane turns with it); reduced motion
-  swaps spreads with a short fade.
+- **Motion (Josef, 2026-11-19).** Clicking a book on the shelf is a 3D move: the view zooms in on that book where it
+  stands, then the book opens up in 3D, the cover swinging about the spine, into the open spread. A page turn
+  rotates a page plane about the spine in 3D (`transform-style: preserve-3d`, the content on the plane turns with
+  it). Reduced motion swaps states with a short fade.
+- **Demo before anything is pushed.** Josef wants to see a working demo of the open and the turns first and will
+  likely workshop them with the implementation session. Nothing of this screen goes to main until he has.
 - **Removed:** "I have one like this" (sparks) is not on the book screen. `docs/trove.md` still lists sparks; that
   plan change is the orchestrator's.
 - **Phone:** not drawn yet. Until it is, show one page at a time at full width with the same head controls.
