@@ -1,306 +1,463 @@
-/* D1: a selected book grows from its shelf into a two-page reading spread.
-   The slower opening and 94% ink backdrop are Alvisa's choices (system.md, Additions). */
+/* Book screen B, "the book opens" (docs/design/system.md, "Handoff: the open book"; board FreshReaderOpen).
+   The book is drawn at 1180 x 724 and scaled as one object to fit the room under the top bar. No art yet:
+   pages are plain paper, and the cover is ink until covers are decided. */
+
 .book-reader {
+  --bar: 80px;
+  --open-time: 1000ms;
+  --turn-time: 700ms;
   position: fixed;
-  --reader-open-time: 1000ms;
-  --reader-turn-time: 420ms;
-  --reader-page-padding: clamp(var(--s-4), 3vw, var(--s-7));
-  --reader-max-width: calc(var(--s-8) * 18);
-  inset: 0;
+  inset: var(--bar) 0 0;
   width: 100%;
   max-width: none;
-  height: 100dvh;
+  height: auto;
   max-height: none;
   margin: 0;
-  padding: var(--s-4);
+  padding: 0;
   border: 0;
   background: transparent;
   color: var(--ink);
   overflow: hidden;
 }
 .book-reader[open] {
-  display: flex;
-  flex-direction: column;
-}
-.book-reader::backdrop {
-  background: color-mix(in srgb, var(--ink) 94%, transparent);
-}
-.reader-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-4);
-  width: min(100%, var(--reader-max-width));
-  margin: 0 auto;
-  color: var(--paper);
-  font-size: var(--s-3);
-}
-.reader-toolbar .button {
-  color: var(--paper);
-}
-.reader-toolbar .button:focus-visible {
-  outline-color: var(--paper);
-}
-.reader-stage {
-  flex: 1;
-  min-height: 0;
   display: grid;
   place-items: center;
-  perspective: calc(var(--s-8) * 36);
 }
-.reader-spread {
+/* The top bar stays as it is on the shelf; only the room under it is the book's. */
+.book-reader::backdrop {
+  background: transparent;
+}
+/* Fine ink dots over the shelf behind (the shelf itself is at 60%, see ShelfPage.css). */
+.br-dots {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, var(--ink) 0.9px, transparent 1.3px) 0 0 / 5px 5px;
+  opacity: 0.4;
+}
+
+/* ---------- The book object ---------- */
+.br-fit {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  width: min(100%, var(--reader-max-width));
-  height: min(78dvh, calc(var(--s-8) * 12));
-  max-height: 100%;
-  transform-style: preserve-3d;
-  transform-origin: 75% 50%;
+  width: calc(1180px * var(--k));
+  height: calc(724px * var(--k));
+  perspective: 4200px;
+}
+.br-book {
   --reader-x: 0px;
   --reader-y: 0px;
   --reader-scale-x: 1;
   --reader-scale-y: 1;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1180px;
+  height: 724px;
+  transform-origin: 0 0;
+  transform: scale(var(--k));
+  transform-style: preserve-3d;
 }
-.reader-spread::before {
+/* The cover board, 8px larger than the pages all round, with the spine showing at head and foot. */
+.br-board {
+  position: absolute;
+  inset: 8px 6px;
+  border-radius: 4px;
+  background: var(--ink);
+}
+.br-board::before {
   content: "";
   position: absolute;
-  inset: var(--s-2) calc(var(--s-2) * -1) calc(var(--s-2) * -1) var(--s-2);
-  background: var(--paper-sunk);
-  border: var(--line) solid var(--ink);
-  pointer-events: none;
+  left: calc(50% - 12px);
+  top: -8px;
+  bottom: -8px;
+  width: 24px;
+  border-radius: 3px;
+  background: var(--ink);
 }
-.reader-page {
-  position: relative;
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  padding: var(--reader-page-padding);
-  background: var(--white);
-  border: var(--line) solid var(--ink);
-}
-.reader-left {
-  border-right: var(--line-heavy) double var(--rule);
-  background: var(--paper);
-  overflow: auto;
-}
-.reader-right {
-  border-left: 0;
-}
-.reader-title-block {
-  margin: auto 0;
-  padding: var(--s-6) 0;
-}
-.reader-title-block h1 {
-  margin: 0;
-  font: 600 clamp(var(--s-5), 3.8vw, calc(var(--s-7) + var(--s-2))) / 1.1 var(--font-serif);
-  overflow-wrap: anywhere;
-}
-.reader-author {
-  margin: var(--s-5) 0 0;
-  font: 600 var(--s-4) / 1.5 var(--font-sans);
-  overflow-wrap: anywhere;
-}
-.reader-left-footer {
-  padding-top: var(--s-5);
-}
-.reader-left-footer p {
-  font-size: var(--s-3);
-  margin-bottom: 0;
-}
-.reader-left-footer .button {
-  white-space: normal;
-  height: auto;
-  min-height: var(--control);
-}
-.reader-page-heading {
-  margin-bottom: var(--s-5);
-}
-.reader-page-heading h2 {
-  margin: var(--s-3) 0 0;
-  font: 600 clamp(var(--s-5), 2.6vw, var(--s-6)) / 1.15 var(--font-serif);
-  overflow-wrap: anywhere;
-}
-.reader-contents-view,
-.reader-chapter {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-}
-.reader-contents-view[hidden],
-.reader-chapter[hidden] {
-  display: none;
-}
-.reader-contents-space {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-}
-.reader-contents {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.reader-contents li {
-  margin: 0;
-  padding: 0;
-}
-.reader-contents button,
-.reader-measure-entry {
-  display: flex;
-  align-items: baseline;
-  gap: var(--s-3);
-  width: 100%;
-  min-height: var(--tap);
-  padding: var(--s-4) var(--s-1);
-  border: 0;
-  border-bottom: var(--line) dotted var(--rule);
-  background: transparent;
-  color: var(--ink);
-  font: 500 clamp(var(--s-4), 1.6vw, calc(var(--s-4) + var(--s-1))) / 1.45 var(--font-serif);
-  text-align: left;
-  overflow-wrap: anywhere;
-}
-.reader-contents button {
-  cursor: pointer;
-}
-.reader-contents button:hover {
-  background: var(--paper-sunk);
-}
-.reader-contents button:active {
-  background: var(--rule);
-}
-.reader-contents button:focus-visible {
-  outline: var(--line-heavy) solid var(--ink);
-  outline-offset: calc(-1 * var(--line-heavy));
-}
-.reader-chapter-number {
-  flex: none;
-  font: 600 var(--s-3) / 1.5 var(--font-sans);
-  color: var(--ink-2);
-}
-.reader-leader {
-  min-width: var(--s-4);
-  flex: 1;
-  border-bottom: var(--line) dotted var(--rule);
-}
-.reader-measure {
+/* One sheet of page edge, 6px proud of the pages. */
+.br-edge {
   position: absolute;
-  inset: 0 0 auto;
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
-  pointer-events: none;
+  inset: 16px 14px;
+  border: 1.5px solid var(--ink);
+  background: var(--white);
 }
-.reader-pagination {
+
+/* ---------- Pages: flat planes, each carrying all of its own content ---------- */
+.br-page {
+  position: absolute;
+  top: 20px;
+  width: 570px;
+  height: 684px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: var(--line) solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+}
+.br-left {
+  left: 20px;
+  border-right-width: 1px;
+  padding: 84px 56px 0 64px;
+}
+.br-right {
+  left: 590px;
+  border-left-width: 1px;
+  padding: 84px 64px 0 56px;
+}
+@keyframes br-fade {
+  from {
+    opacity: 0.6;
+  }
+}
+/* A strip of dot shade down the gutter. */
+.br-gutter {
+  position: absolute;
+  z-index: 4;
+  top: 22px;
+  bottom: 22px;
+  left: calc(50% - 18px);
+  width: 36px;
+  pointer-events: none;
+  background: radial-gradient(circle, var(--ink) 0.9px, transparent 1.3px) 0 0 / 4px 4px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 50%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 50%, transparent);
+  opacity: 0.55;
+}
+
+/* ---------- The heads: Close on the left page, the tabs on the right ---------- */
+.br-head {
+  position: absolute;
+  top: 22px;
+  left: 56px;
+  right: 56px;
+  height: 44px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--s-2);
-  padding-top: var(--s-4);
-  border-top: var(--line) solid var(--rule);
 }
-.reader-pagination .button,
-.reader-chapter > .button {
-  padding-inline: var(--s-1);
-  font-size: var(--s-3);
-  white-space: normal;
-  height: auto;
+.br-head-right {
+  justify-content: flex-end;
+}
+.br-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-height: var(--tap);
+  margin-left: -8px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+  font: 600 14px / 1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
-.reader-page-number {
-  flex: none;
-  font: 400 var(--s-3) / 1.5 var(--font-sans);
+.br-close-words {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.br-tabs {
+  display: flex;
+  gap: 4px;
+  font: 600 14px / 1 var(--font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.br-tabs button {
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  height: 40px;
+  padding: 0 9px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
   color: var(--ink-2);
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
 }
-.reader-summary {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding-right: var(--s-2);
+.br-tabs button:hover {
+  color: var(--ink);
 }
-.reader-summary p {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  font: 400 var(--s-4) / 1.7 var(--font-sans);
+.br-tabs button[aria-current] {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
 }
-.reader-chapter > .button {
+
+/* ---------- The title page ---------- */
+.br-caption {
   align-self: flex-start;
-  margin-top: var(--s-4);
+  margin-bottom: var(--s-4);
 }
-.reader-cover,
-.reader-turn-sheet {
+.br-title {
+  margin: 0;
+  font: 600 42px / 1.04 var(--font-serif);
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.br-title:focus,
+.br-page-name:focus,
+.br-chapter-title:focus {
+  outline: none;
+}
+.br-byline {
+  margin: 14px 0 0;
+  color: var(--ink-2);
+  font: 600 13px / 1.3 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.br-blurb {
+  max-width: 420px;
+  margin: 18px 0 0;
+  font: 400 16px / 1.55 var(--font-sans);
+}
+.br-ask {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 22px;
+}
+.br-ask-under {
+  margin-top: 30px;
+}
+
+/* ---------- The contents ---------- */
+.br-page-name {
+  margin: 0;
+  font: 800 24px / 1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.br-toc {
+  min-height: 0;
+  margin: 20px 0 0;
+  padding: 0 0 24px;
+  overflow-y: auto;
+  list-style: none;
+}
+.br-toc li {
+  border-top: 2.5px dotted var(--ink);
+}
+.br-toc li:last-child {
+  border-bottom: 2.5px dotted var(--ink);
+}
+.br-toc button {
+  display: grid;
+  grid-template-columns: 40px 1fr 24px;
+  gap: 0 6px;
+  align-items: baseline;
+  width: calc(100% + 22px);
+  margin: 0 -10px 0 -12px;
+  padding: 16px 10px 16px 12px;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.br-toc button:hover {
+  background: var(--paper-sunk);
+}
+.br-toc button:hover .br-toc-title {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.br-toc b {
+  font: 700 22px / 1 var(--font-display);
+}
+.br-toc-title {
+  font: 600 21px / 1.2 var(--font-serif);
+}
+.br-toc i {
+  font: 700 20px / 1 var(--font-display);
+  font-style: normal;
+  text-align: right;
+}
+.br-toc-summary {
+  grid-column: 2;
+  margin-top: 5px;
+  color: var(--ink-2);
+  font: 400 14px / 1.45 var(--font-sans);
+}
+.br-toc-compact button {
+  padding: 11px 10px 11px 12px;
+}
+.br-toc-compact .br-toc-title {
+  font-size: 17px;
+}
+.br-toc-compact b {
+  font-size: 18px;
+}
+/* The chapter that's open, reversed in ink. */
+.br-toc li[aria-current] button {
+  background: var(--ink);
+  color: var(--white);
+}
+
+/* ---------- A chapter ---------- */
+.br-number {
+  display: block;
+  font: 800 120px / 0.9 var(--font-display);
+}
+.br-chapter-title {
+  margin: 18px 0 0;
+  font: 600 38px / 1.08 var(--font-serif);
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+.br-summary {
+  max-width: 440px;
+  margin: 18px 0 0;
+  font: 400 19px / 1.5 var(--font-serif);
+}
+
+/* ---------- The lifted corner turns forward ---------- */
+.br-curl {
   position: absolute;
-  inset: 0 0 0 50%;
+  z-index: 3;
+  right: 0;
+  bottom: 0;
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  background:
+    linear-gradient(-45deg, var(--white) 0 49%, transparent 50%),
+    radial-gradient(circle, var(--ink) 1px, transparent 1.4px) 0 0 / 4px 4px,
+    var(--paper-sunk);
+}
+.br-curl::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(-45deg, transparent 48.5%, var(--ink) 49%, var(--ink) 51%, transparent 51.5%);
+}
+.br-curl:hover {
+  width: 52px;
+  height: 52px;
+}
+
+/* ---------- A page turn: a plane with a page on each face, rotating about the spine ---------- */
+.br-leaf {
+  position: absolute;
+  z-index: 5;
+  top: 20px;
+  width: 570px;
+  height: 684px;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.br-leaf-forward {
+  left: 590px;
+  transform-origin: left center;
+  animation: br-turn-forward var(--turn-time) cubic-bezier(0.45, 0.05, 0.25, 1) both;
+}
+.br-leaf-back {
+  left: 20px;
+  transform-origin: right center;
+  animation: br-turn-back var(--turn-time) cubic-bezier(0.45, 0.05, 0.25, 1) both;
+}
+.br-face {
+  top: 0;
+  left: 0;
+  padding: 84px 64px 0 56px;
+  backface-visibility: hidden;
+}
+.br-leaf-back > .br-face:first-child,
+.br-leaf-forward > .br-face-back {
+  padding: 84px 56px 0 64px;
+}
+.br-face-back {
+  transform: rotateY(180deg);
+}
+@keyframes br-turn-forward {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(-180deg);
+  }
+}
+@keyframes br-turn-back {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(180deg);
+  }
+}
+
+/* ---------- Opening: grows from its place on the shelf, the cover swings open ---------- */
+.br-cover {
+  position: absolute;
+  z-index: 6;
+  display: none;
+  top: 8px;
+  bottom: 8px;
+  left: 590px;
+  right: 6px;
   transform-origin: left center;
   transform-style: preserve-3d;
   pointer-events: none;
 }
-.reader-cover {
-  display: none;
-  z-index: 3;
-}
-.reader-cover-front,
-.reader-cover-back {
+.br-cover-front,
+.br-cover-back {
   position: absolute;
   inset: 0;
+  border-radius: 4px;
+  backface-visibility: hidden;
+}
+.br-cover-front {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: var(--reader-page-padding);
-  border: var(--line-heavy) solid var(--ink);
-  background: var(--white);
-  backface-visibility: hidden;
+  padding: 56px 48px;
+  background: var(--ink);
+  color: var(--white);
 }
-.reader-cover-front::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 var(--s-3);
-  border-left: var(--line) solid var(--rule);
-}
-.reader-cover-front strong {
-  font: 600 clamp(var(--s-5), 3.8vw, calc(var(--s-7) + var(--s-2))) / 1.1 var(--font-serif);
+.br-cover-front strong {
+  font: 600 44px / 1.08 var(--font-serif);
   overflow-wrap: anywhere;
 }
-.reader-cover-front span {
-  font: 600 var(--s-4) / 1.4 var(--font-sans);
-  overflow-wrap: anywhere;
+.br-cover-front span {
+  font: 600 14px / 1.4 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
-.reader-cover-back {
+.br-cover-back {
   transform: rotateY(180deg);
-  background: var(--paper);
+  background: var(--ink);
 }
-.reader-spread[data-arrive] {
-  animation: reader-arrive var(--reader-open-time) cubic-bezier(0.22, 0.7, 0.2, 1) both;
+.br-book[data-arrive] {
+  animation: br-arrive var(--open-time) cubic-bezier(0.22, 0.7, 0.2, 1) both;
 }
-.reader-spread[data-arrive] .reader-cover {
+.br-book[data-arrive] .br-cover {
   display: block;
-  animation: reader-open var(--reader-open-time) cubic-bezier(0.3, 0.1, 0.2, 1) both;
+  animation: br-open var(--open-time) cubic-bezier(0.3, 0.1, 0.2, 1) both;
 }
-.reader-spread[data-arrive] .reader-left {
-  animation: reader-title-reveal var(--reader-open-time) both;
+.br-book[data-arrive] .br-left,
+.br-book[data-arrive] .br-board,
+.br-book[data-arrive] .br-edge {
+  animation: br-reveal var(--open-time) both;
 }
-.reader-spread[data-arrive]::before {
-  animation: reader-pages-reveal var(--reader-open-time) both;
-}
-.reader-turn-sheet {
-  z-index: 2;
-  background: var(--white);
-  border: var(--line) solid var(--rule);
-  animation: reader-turn var(--reader-turn-time) ease-in-out both;
-}
-@keyframes reader-arrive {
+@keyframes br-arrive {
   from {
-    transform: translate(var(--reader-x), var(--reader-y)) scale(var(--reader-scale-x), var(--reader-scale-y));
+    transform: scale(var(--k)) translate(var(--reader-x), var(--reader-y))
+      scale(var(--reader-scale-x), var(--reader-scale-y));
   }
   to {
-    transform: translate(0, 0) scale(1);
+    transform: scale(var(--k));
   }
 }
-@keyframes reader-open {
+@keyframes br-open {
   0%,
   10% {
     transform: rotateY(0deg);
@@ -313,82 +470,87 @@
     visibility: hidden;
   }
 }
-@keyframes reader-title-reveal {
+@keyframes br-reveal {
   0%,
-  60% {
+  45% {
     opacity: 0;
   }
-  100% {
+  to {
     opacity: 1;
   }
 }
-@keyframes reader-pages-reveal {
-  0%,
-  30% {
-    clip-path: inset(0 0 0 50%);
-  }
-  100% {
-    clip-path: inset(0);
-  }
-}
-@keyframes reader-turn {
-  from {
-    transform: rotateY(0deg);
-  }
-  to {
-    transform: rotateY(-180deg);
-  }
-}
+
+/* ---------- Phone: one page at a time, at full width, with the same head controls ---------- */
 @media (max-width: 719px) {
   .book-reader {
-    padding: var(--s-2);
-    --reader-page-padding: var(--s-3);
+    --bar: 56px;
+    /* The tab bar is at the foot of the screen on a phone. */
+    bottom: 64px;
   }
-  .reader-spread {
-    height: 80dvh;
+  .br-fit {
+    width: 100%;
+    height: 100%;
   }
-  .reader-title-block h1,
-  .reader-cover-front strong {
-    font-size: var(--s-5);
+  .br-book {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    transform: none;
   }
-  .reader-author,
-  .reader-cover-front span {
-    font-size: calc(var(--s-3) + var(--line));
+  .br-page.br-phone {
+    position: absolute;
+    inset: var(--s-3) var(--s-3) var(--s-3);
+    width: auto;
+    height: auto;
+    padding: 108px var(--s-5) var(--s-6);
+    border-width: var(--line);
+    border-radius: 4px;
+    overflow-y: auto;
   }
-  .reader-page-heading h2 {
-    font-size: calc(var(--s-4) + var(--s-1));
-  }
-  .reader-pagination {
+  .br-head-phone {
+    top: 10px;
+    left: var(--s-4);
+    right: var(--s-4);
+    height: auto;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 0;
+    justify-content: space-between;
+    row-gap: 2px;
   }
-  .reader-pagination .button {
-    flex: 1;
+  .br-head-phone .br-tabs {
+    flex-wrap: wrap;
   }
-  .reader-contents button,
-  .reader-measure-entry {
-    gap: var(--s-2);
+  .br-title {
+    font-size: 32px;
   }
-  .reader-leader {
-    display: none;
+  .br-number {
+    font-size: 84px;
   }
-  .reader-left-footer .button {
-    padding: var(--s-2);
-    font-size: calc(var(--s-3) + var(--line));
+  .br-chapter-title {
+    font-size: 28px;
   }
-  .reader-toolbar > span {
-    display: none;
+  /* At the page's foot: after the words on a long page, in the corner on a short one. */
+  .br-phone .br-curl {
+    position: relative;
+    align-self: flex-end;
+    margin: auto calc(-1 * var(--s-5) - var(--line)) calc(-1 * var(--s-6)) 0;
+    flex: none;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
-  .reader-spread[data-arrive],
-  .reader-spread[data-arrive] .reader-left,
-  .reader-spread[data-arrive]::before {
+  .br-book[data-arrive],
+  .br-book[data-arrive] .br-left,
+  .br-book[data-arrive] .br-board,
+  .br-book[data-arrive] .br-edge {
     animation: none;
   }
-  .reader-spread[data-arrive] .reader-cover,
-  .reader-turn-sheet {
+  .br-book[data-arrive] .br-cover,
+  .br-leaf {
     display: none;
+  }
+  /* With no turn, a changed spread fades in briefly instead. */
+  .br-static {
+    animation: br-fade 160ms ease-out both;
   }
 }

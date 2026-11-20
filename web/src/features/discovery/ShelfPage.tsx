@@ -45,16 +45,20 @@ function bookById(id: string): SampleBook {
 function Book({
   book,
   size,
+  out,
   onOpen,
 }: {
   book: Pick<SampleBook, "title" | "authorName">;
   size?: "lg";
+  /** Open in front of the shelf: its place stays empty until it's put back. */
+  out?: boolean;
   onOpen: (element: HTMLButtonElement) => void;
 }) {
   return (
     <button
       type="button"
       className={size === "lg" ? "book book-lg" : "book"}
+      data-out={out || undefined}
       aria-label={`${book.title}, by ${book.authorName}`}
       onClick={(event) => onOpen(event.currentTarget)}
     >
@@ -194,7 +198,7 @@ export function ShelfPage() {
   }
 
   return (
-    <div className="shelf-page">
+    <div className="shelf-page" data-reading={Boolean(bookId || preview) || undefined}>
       <main>
         <section className="feature surf dark" aria-labelledby="feature-title">
           <div className="burst" />
@@ -207,11 +211,15 @@ export function ShelfPage() {
             <p className="voice feature-reason">{sampleFeatured.reason}</p>
             <div className="feature-action">
               <Button onClick={(event) => setPreview(bounds(event.currentTarget))}>Ask to check out</Button>
-              <span className="feature-note">A thirty-minute video call</span>
             </div>
           </div>
           <div className="feature-book">
-            <Book book={featured} size="lg" onOpen={(element) => setPreview(bounds(element))} />
+            <Book
+              book={featured}
+              size="lg"
+              out={Boolean(preview)}
+              onOpen={(element) => setPreview(bounds(element))}
+            />
           </div>
         </section>
 
@@ -224,6 +232,7 @@ export function ShelfPage() {
                 <Book
                   key={book.id}
                   book={{ title: book.title, authorName: book.author_name }}
+                  out={book.id === bookId}
                   onOpen={(element) => open(book, element)}
                 />
               ))}
@@ -235,6 +244,7 @@ export function ShelfPage() {
               <Book
                 key={book.id}
                 book={{ title: book.title, authorName: book.author_name }}
+                out={book.id === bookId}
                 onOpen={(element) => open(book, element)}
               />
             ))}
