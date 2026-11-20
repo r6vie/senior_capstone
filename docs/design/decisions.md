@@ -54,6 +54,13 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   olive to rust and a pale lip on each, a near-black pine ridge with an amber sun behind its shoulder, the river in
   broken courses at the foot, no lilac hills. New renderer pieces: `River`, `Mesa(talus, top_tint, shadow_slope)`,
   `Terraces(beds, lip)`.
+- **Josef: the terraced valley is unusable; rethink it.** Now "autumn hills". A first rolling-hills attempt went to a
+  fresh critic ("needs a rethink": the sun merged into the ochre hill, too many inks, flat bands, poplars like
+  ladders, holes, a third disc in the set). Rebuilt to its brief: no disc; three rounded domes on one value ladder
+  (pale gold at the back as the glow, its crest at half the cover's height; rust running off the left in one face;
+  deep forest in front); a clump of four tapering dark poplars on the front crest as the focal point; the title in
+  forest green. Renderer: `Ridge(round=True)` for domes; a layer can allow narrower pieces (`min_run`) so trees
+  taper to a tip.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

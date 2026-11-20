@@ -59,7 +59,7 @@ class Ridge:
     brick = (1.3, 5.0)
 
     def __init__(self, peaks, base, lit, dark, rough=6, seed=1, lean=0.32, bands=None, ribs=0.0, mist=None,
-                 smooth=False, cap=None, flicker=0.12):
+                 smooth=False, cap=None, flicker=0.12, round=False):
         # peak: (x, top_y, left_half_width, right_half_width, power)
         self.peaks = [p if len(p) == 5 else (p[0], p[1], p[2], p[2], p[3]) for p in peaks]
         self.base = base
@@ -84,6 +84,7 @@ class Ridge:
             b = np.convolve(w[::-1], np.ones(7) / 7, "same")
             self.noise_y = (a / (a.std() + 1e-9) * 0.75 + b / (b.std() + 1e-9) * 0.25) * rough / 2
         self.flicker = flicker
+        self.round = round   # a dome: an elliptical crest instead of a peak
         # cap: (depth, lit, dark): a snowline `depth` below the highest summit, wavering gently; above it every slab
         # is laid in the cap's inks (lit or shaded as the face is)
         self.cap = (cap[0], [hexrgb(c) for c in cap[1]], [hexrgb(c) for c in cap[2]]) if cap else None
@@ -93,7 +94,10 @@ class Ridge:
         for px, ty, lw, rw, pw in self.peaks:
             hw = np.where(x < px, lw, rw)
             t = np.abs(x - px) / hw
-            h = (self.base - ty) * np.clip(1 - t, 0, None) ** pw
+            if getattr(self, "round", False):
+                h = (self.base - ty) * np.sqrt(np.clip(1 - t ** 2, 0, None)) ** pw
+            else:
+                h = (self.base - ty) * np.clip(1 - t, 0, None) ** pw
             out.append(np.where(t < 1, self.base - h, np.inf))
         return np.array(out)
 
@@ -447,6 +451,7 @@ class Firs:
 
     brick = (1.4, 4.0)
     ragged = 0
+    min_run = 0.5     # a tree tapers to its tip; its top courses may be narrow
 
     def __init__(self, trees, lit, dark, tiers=6):
         self.t = trees
@@ -553,7 +558,8 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
                 for i in range(len(e) - 1):
                     a0, b0 = e[i], e[i + 1]
                     k = owner[a0]
-                    if k < 0 or b0 - a0 >= minrun:
+                    # a layer may allow narrower pieces (a tree tapering to its tip)
+                    if k < 0 or b0 - a0 >= int(getattr(scene[k], "min_run", 1.5) * course):
                         continue
                     left = owner[a0 - 1] if a0 > 0 else -1
                     right = owner[b0] if b0 < W else -1
@@ -587,17 +593,19 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
                 b = bounds[b0]
             else:
                 b = min(W, b0 + rng.randint(-step, step) * course // 2)
-            if clean and b - a < minrun:
-                a, b = (a0, b0) if b0 - a0 >= minrun else (a, a)
+            mr = int(getattr(layer, "min_run", 1.5) * course) if clean else 2
+            if clean and b - a < mr:
+                a, b = (a0, b0) if b0 - a0 >= mr else (a, a)
             if b > a:
                 runs.append((layer, a, b))
         for layer, a, b in runs:
             if True:
                 x = a
                 while x < b:
-                    ln = max(minrun, int(course * rng.uniform(*getattr(layer, "brick", brick))))
+                    lm = int(getattr(layer, "min_run", 1.5) * course) if clean else minrun
+                    ln = max(lm, int(course * rng.uniform(*getattr(layer, "brick", brick))))
                     x2 = min(b, x + ln)
-                    if clean and b - x2 < minrun:
+                    if clean and b - x2 < lm:
                         x2 = b    # a short remainder joins this slab instead of standing alone
                     cxw = wx0 + ((x + x2) / 2) * sx
                     c = layer.colour(cxw, yc, rng)

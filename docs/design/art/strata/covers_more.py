@@ -9,7 +9,7 @@ terrain and palette; each cover ink is taken from its art, never the UI red.
 python3 covers_more.py -> out/more-{desert,coast,valley}-{xl,sm}.png"""
 import sys
 sys.path.insert(0, ".")
-from strata import Ridge, Blob, Water, Band, Mesa, Terraces, River, trees, grove, render
+from strata import Ridge, Blob, Water, Band, Mesa, Terraces, River, Firs, trees, grove, render
 
 CALM = dict(smooth=True, flicker=0.05)
 
@@ -83,29 +83,30 @@ RIVER = ["#A9C3CF", "#91B0C0", "#7A9CAF", "#668AA0"]
 CREAM = ["#FBEFD5", "#F6E3BD", "#F0D6A4"]
 
 
-TERR_BEDS = [["#7B8443", "#727B3C"], ["#9C9A4C", "#918F45"], ["#C9A24A", "#BF9742"], ["#DB963F", "#D08A38"],
-             ["#C8693A", "#BC5F34"], ["#A9522D", "#9C4A29"]]
-LIP = ["#F3E7C6", "#EEDFB6"]
-PINE_L = ["#4E6A4E", "#445F45", "#3A543C"]
-PINE_D = ["#24372B", "#1B2B22", "#121E18"]
-AMBER = ["#F4B04F", "#EFA03E", "#E68E31"]
+# ---- 3 autumn hills (critic round: no disc; three round domes on a value ladder; a poplar clump as the focus) ----
+H_GOLD = (["#F4DA97", "#EFCD80", "#E8C06B"], ["#D6A95A", "#C2964D", "#AD8341"])
+H_RUST = (["#DA845A", "#CD7049", "#BD5F3B"], ["#9A4A2E", "#803D27", "#663220"])
+H_FOREST = (["#56714F", "#4A6545", "#3F583B"], ["#263A2D", "#1C2C22", "#132018"])
+POPLAR_L = ["#46634A", "#3E5A42"]
+POPLAR_D = ["#152219", "#101A13"]
+
+
+def dome(peaks, base, inks, seed, mist=None):
+    return Ridge(peaks, base, inks[0], inks[1], seed=seed, rough=1.5, ribs=0.2, lean=0.55, mist=mist, smooth=True,
+                 flicker=0.02, round=True)
 
 
 def valley():
-    """The critic's rethink: the terraces are the hero, a big stepped hillside rising from the bottom left to about
-    half the art's height, each terrace one solid colour from deep olive at the top through ochre and amber to rust
-    at the foot, a pale lip on each; a dark pine ridge behind on the right with a near-black shadow flank; an amber
-    sun partly behind its shoulder; a river along the foot in broken blue courses. No lilac hills."""
-    pine = Ridge([(200, 178, 110, 80, 1.1)], 312, PINE_L, PINE_D, seed=72, rough=3, ribs=0.8, lean=0.15,
-                 mist=(296, 312), **CALM)
-    hill = Terraces([(-20, 184, 30, 250, 0.7)], 320, GOLD_L, OLIVE, bed=16, beds=TERR_BEDS, lip=LIP, seed=74,
-                    rough=2, smooth=True, flicker=0.0)
-    river = Water(320, 352, -20, 280, RIVER, ["#F4F3EE", "#E4ECEF"], seed=75, gaps=(1, 2), squash=0.5, taper=0.2)
+    """Rolling autumn hills, no disc: three rounded domes on one value ladder, the pale gold hill at the back
+    (the lightest and warmest, the source of glow, its crest at half the cover's height), rust in the middle running
+    off the left edge, deep forest in front; on the forest crest at 60-75% across, a clump of dark poplars, the
+    tallest reaching the 45% line."""
     return [
-        Blob([(170, 200, 24, 24)], AMBER, top_light=False),
-        pine,
-        hill,
-        river,
+        dome([(150, 172, 150, 140, 1.0)], 300, H_GOLD, 81),
+        dome([(-50, 214, 230, 210, 1.0)], 352, H_RUST, 82),
+        dome([(196, 262, 176, 160, 1.0)], 352, H_FOREST, 83),
+        Firs([(152, 272, 114, 8), (172, 270, 88, 7), (134, 276, 70, 6), (190, 274, 58, 5.5)], POPLAR_L, POPLAR_D,
+             tiers=1),
     ]
 
 
