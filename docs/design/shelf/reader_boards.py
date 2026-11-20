@@ -6,6 +6,8 @@ head = src[: src.index("</helmet>")]
 head = re.sub(r"<title>.*?</title>", "<title>{TITLE}</title>", head)
 BAND = "/_blob/a738d6db7ccf4a04fecfd50298474562"
 COVER_SM = "/_blob/6207834eb207b12eb62aa34a93a8b5bc"
+ART_TITLE = "/_blob/ede1dc6f6fa9f61603504ed3344e31b4"
+ART_CH = "/_blob/ed2bfb959d58c167e78b4ec053a02f42"
 
 T, A = "The Night Shift Knows", "Maya Okafor"
 BLURB = ("I've worked nights on a surgical ward for two years. This is the hospital the day shift never sees: "
@@ -178,6 +180,10 @@ CSS = """
 .rd-art.short{left:0;bottom:0;height:250px}
 .rd-gutter{top:22px;bottom:22px;left:calc(50% - 18px);width:36px}
 .rd-curl{right:0;bottom:0}
+
+/* B round 6: the art is drawn for the page, full page, under the text */
+.rd-art,.rd-art.short{z-index:-1;left:0;top:0;bottom:auto;width:100%;height:100%}
+.rd-art.rd-art-ch{top:auto;bottom:0;height:auto}
 </style>
 """
 
@@ -242,7 +248,7 @@ spread1 = (
     '<section class="rd-page rd-left" aria-label="Title page">' + HEAD_L +
     f'<h1 class="rd-title">{T}</h1><p class="byline" style="margin:14px 0 0">by {A}</p>'
     f'<p class="rd-blurb">{BLURB}</p>' + ask() +
-    f'<img class="rd-art" src="{BAND}" alt="">'
+    f'<img class="rd-art" src="{ART_TITLE}" alt="">'
     '</section>'
     '<section class="rd-page rd-right" aria-label="Contents">' + head_r(0)
     + toc(hover=2) +
@@ -252,7 +258,7 @@ spread1 = (
 spread2 = (
     '<section class="rd-page rd-left" aria-label="Contents">' + HEAD_L
     + toc(active=2, compact=True, summaries=False) + ask() +
-    f'<img class="rd-art short" src="{BAND}" alt="">'
+    f'<img class="rd-art rd-art-ch" src="{ART_CH}" alt="">'
     '</section>'
     '<section class="rd-page rd-right" aria-label="Chapter 2">' + head_r(2) +
     f'<div class="ch-num" aria-hidden="true">2</div><h2 class="ch-title">{CH[1][0]}</h2>'
@@ -263,7 +269,8 @@ spread2 = (
 B_NOTE = ("Book screen B · the book opens over the shelf, under the library's header. Everything for the book is in the "
           "book: Close and the page tabs at the head of the pages, Ask to check out on the title page and under the contents, always about the whole book. "
           "Built for 3D: each page is a flat plane carrying its own content, turned about the spine; under them one board "
-          "in the book's ink, the spine at head and foot, one sheet of page edge.")
+          "in the book's ink, the spine at head and foot, one sheet of page edge. The strata art is drawn for the page: "
+          "the land climbs the right edge beside the text and the lake runs across the foot.")
 
 LP = "M 28,30 C 200,20 470,16 560,28 Q 584,36 590,54 L 590,712 Q 584,700 560,694 C 470,686 200,690 28,696 Z"
 RP = "M 1152,30 C 980,20 710,16 620,28 Q 596,36 590,54 L 590,712 Q 596,700 620,694 C 710,686 980,690 1152,696 Z"

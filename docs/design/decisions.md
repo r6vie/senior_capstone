@@ -29,6 +29,10 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   - **Round 5, B made minimal for 3D:** each page is one flat plane carrying its own content, so a turn rotates the
     plane about the spine and the content moves with it. Under the pages, one board in the book's ink, the spine at
     head and foot, one sheet of page edge. The round 4 curves and stacked edges are gone.
+  - **Round 6, strata art drawn for B** (`docs/design/art/strata/book_b.py`): composed for the title page, not cut from
+    A's panorama. The page's text holds the upper left; the teal peak and sun climb the right edge, ranges step back
+    to a hazy distance, a lake with reflections and an islet crosses the foot, groves frame both shores. The
+    contents spread shows the same place from further back under the list and the button.
   - **C, pulled from the shelf** (`FreshReaderPanel`): a side panel over the shelf, which stays in place shaded in
     dots with the book's slot left open. Previous and Next step along the shelf; chapters open in place; a link to
     the full page (A).
