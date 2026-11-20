@@ -14,5 +14,7 @@ b = b.replace("/_blob/ede1dc6f6fa9f61603504ed3344e31b4", f"/_blob/{IDS['title']}
 b = re.sub(r"<title>.*?</title>", "<title>Final: book screen B</title>", b)
 b = b.replace('<span class="frame-label">B · The book opens</span>', '<span class="frame-label">Book screen · the book opens, with strata</span>')
 b = re.sub(r'<p class="note">Book screen B ·.*?</p>', '<p class="note">Strata, finished: calm slabs on paper seams, one muted family of inks, one hero peak with the sun set against it, planes stepping back into haze, firs built tier by tier.</p>', b, flags=re.S)
-open(f"{P}/FinalBook.dc.html", "w").write(b)
+# the two-screen book board is now only the template for final_book_more.py, which builds one screen per cover
+import os
+open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "book_template.dc.html"), "w").write(b)
 print("ok", IDS)

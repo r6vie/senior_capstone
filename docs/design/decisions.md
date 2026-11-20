@@ -89,6 +89,10 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   setting behind the right shoulder under cloud streaks, the stepped haze cliff, buttes, pinnacles, an arch, a dry
   wash between dunes, scrub. A fresh critic reviewed the first draft (too few planes, a tower, flat fields); its
   fixes are in. Board `FinalBookMore`: one opened book per cover. The covers are unchanged.
+- **The canvas page is now "Covers: Strata", one page per art direction.** Each row is a cover with its book
+  screen to the right (`FinalCover`/`FinalBook`, then desert, coast, autumn hills). One book screen per book: the
+  title-page art is reused inside the chapters, so no second variant (the contents band) is drawn. `FinalBookMore`
+  is gone. Desert page: no clouds. Autumn page: clouds lower and on both sides, clear of the text.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

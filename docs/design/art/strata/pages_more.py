@@ -36,7 +36,6 @@ DUNE_L = ["#F2DDB6", "#EDD3A6", "#E7C997"]
 DUNE_D = ["#D9B27E", "#C99D6B", "#B88A5B"]
 FAR_BUTTE_L = ["#E19A78", "#D98D6B", "#CF8160"]
 FAR_BUTTE_D = ["#A86450", "#985844", "#884D3B"]
-DUSK_CLOUD = ["#F6D9C6", "#F1CDB6", "#EBC0A6"]
 SCRUB = ["#A3A17A", "#8E8F68", "#7A7B58"]
 
 
@@ -44,7 +43,7 @@ WASH = ["#D8B183", "#CBA273", "#BC9264"]
 
 
 def desert():
-    """A wide, low mesa and its bench at sunset, the sun sinking behind its right shoulder under streaks of cloud;
+    """A wide, low mesa and its bench at sunset, the sun sinking behind its right shoulder in a clear sky;
     the stepped haze cliff behind, a tier of misted buttes, a few stout pinnacles, an arch, a dry wash winding out of
     the plain between dunes, scrub along its banks, a low dark mesa framing the right foot."""
     sun = Blob([(524, 420, 36, 36)], GOLD, top_light=False)
@@ -72,9 +71,6 @@ def desert():
                for i, (cx, t, tw, bw) in enumerate([(200, 534, 7, 11), (234, 514, 8, 13), (266, 546, 6, 10)])]
     return [
         sun,
-        strip(470, 344, 90, 6, DUSK_CLOUD),
-        strip(534, 370, 66, 5, DUSK_CLOUD),
-        strip(500, 440, 84, 5, DUSK_CLOUD),
         *haze, *far,
         hero, bench,
         Band(-60, 640, 556, 700, SAND_CALM, seed=58, lens=0.0),
@@ -169,16 +165,18 @@ WOOD = ["#3F5A3C", "#344D33", "#2A402A"]
 def valley():
     """Rolling autumn hills in five tiers: two tiers of lilac hills in mist, a big gold field striped with stubble
     beside a smaller gold hill, an olive slope with an orange grove, a river winding out between the rust hill and the
-    forest, the poplar clump on the forest crest, a second line of poplars along the river, a cumulus and cloud
-    streaks to the right."""
+    forest, the poplar clump on the forest crest, a second line of poplars along the river, low clouds on both
+    sides."""
     gold = Ridge([(500, 456, 280, 190, 1.0)], 700, H_GOLD[0], H_GOLD[1], seed=81, rough=1.5, ribs=0.2, lean=0.55,
                  smooth=True, flicker=0.02, round=True,
                  bands=[(492, 500, *STUBBLE), (524, 532, *STUBBLE), (556, 564, *STUBBLE), (588, 596, *STUBBLE)])
     return [
-        strip(540, 254, 60, 6, CREAM_CLOUD),
-        strip(474, 304, 92, 9, CREAM_CLOUD),
-        strip(392, 346, 58, 7, CREAM_CLOUD),
-        Blob([(522, 404, 42, 16), (494, 414, 30, 11), (552, 414, 30, 11)], CREAM_CLOUD),
+        # clouds kept low, on both sides, clear of the text
+        strip(474, 380, 80, 7, CREAM_CLOUD),
+        Blob([(530, 414, 40, 15), (502, 424, 28, 10), (558, 424, 26, 10)], CREAM_CLOUD),
+        strip(380, 424, 46, 5, CREAM_CLOUD),
+        strip(96, 440, 66, 6, CREAM_CLOUD),
+        strip(206, 452, 46, 5, CREAM_CLOUD),
         dome([(400, 440, 170, 170, 1.0), (560, 452, 120, 120, 1.0)], 560, PALE_LILAC, 79, mist=(528, 560)),
         dome([(60, 486, 150, 140, 1.0), (250, 470, 130, 140, 1.0), (470, 470, 160, 150, 1.0)], 566, FAR_HILL, 80,
              mist=(536, 566)),
