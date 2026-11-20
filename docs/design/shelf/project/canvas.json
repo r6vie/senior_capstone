@@ -1,626 +1,1021 @@
 {
-  "v": 3,
-  "createdOnFiles": {
-    "v": 1,
-    "at": "2026-11-05T16:00:00Z"
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-05T16:00:00Z"
+ },
+ "title": "Trove Shelf",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [
+  {
+   "id": "designs",
+   "name": "Designs"
   },
-  "title": "Trove Shelf",
-  "launch": {
-    "view": "canvas"
+  {
+   "id": "wireframes",
+   "name": "Wireframes"
   },
-  "pages": [
-    {
-      "id": "designs",
-      "name": "Designs"
-    },
-    {
-      "id": "wireframes",
-      "name": "Wireframes"
-    },
-    {
-      "id": "tool",
-      "name": "Working tool"
-    },
-    {
-      "id": "identities",
-      "name": "Identities"
-    },
-    {
-      "id": "manga",
-      "name": "Manga screens"
-    },
-    {
-      "id": "system",
-      "name": "Design system"
-    },
-    {
-      "id": "covers",
-      "name": "Covers"
-    },
-    {
-      "id": "interview",
-      "name": "Interview"
-    },
-    {
-      "id": "growing",
-      "name": "Growing books"
-    }
-  ],
-  "boards": {
-    "Main.dc.html": {
-      "x": 0,
-      "y": 0,
-      "w": 1440,
-      "h": 2320,
-      "title": "Shelf \u00b7 desktop",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "PhoneShelf.dc.html": {
-      "x": 1520,
-      "y": 0,
-      "w": 390,
-      "h": 844,
-      "title": "Shelf \u00b7 phone"
-    },
-    "PhoneBook.dc.html": {
-      "x": 1990,
-      "y": 0,
-      "w": 390,
-      "h": 844,
-      "title": "Open book \u00b7 phone"
-    },
-    "BookObject.dc.html": {
-      "x": 1520,
-      "y": 964,
-      "w": 1200,
-      "h": 1080,
-      "title": "The book object \u00b7 states and 3D notes"
-    },
-    "ShadowShelf.dc.html": {
-      "x": 0,
-      "y": 2920,
-      "w": 1440,
-      "h": 2240,
-      "title": "Light and shadow \u00b7 shelf, desktop",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ShadowPhone.dc.html": {
-      "x": 1520,
-      "y": 2920,
-      "w": 390,
-      "h": 844,
-      "title": "Light and shadow \u00b7 shelf, phone"
-    },
-    "ShadowSystem.dc.html": {
-      "x": 1990,
-      "y": 2920,
-      "w": 1200,
-      "h": 1240,
-      "title": "Light and shadow \u00b7 the system"
-    },
-    "MarbleA.dc.html": {
-      "x": 0,
-      "y": 5760,
-      "w": 1200,
-      "h": 640,
-      "title": "Marble A \u00b7 polished Carrara ledge"
-    },
-    "MarbleB.dc.html": {
-      "x": 1280,
-      "y": 5760,
-      "w": 1200,
-      "h": 640,
-      "title": "Marble B \u00b7 green marble niche"
-    },
-    "MarbleC.dc.html": {
-      "x": 2560,
-      "y": 5760,
-      "w": 1200,
-      "h": 640,
-      "title": "Marble C \u00b7 honed pink slab, block bookends"
-    },
-    "MarblePage.dc.html": {
-      "x": 0,
-      "y": 7000,
-      "w": 1440,
-      "h": 2760,
-      "title": "Carrara \u00b7 shelf page, desktop",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ScandiPage.dc.html": {
-      "x": 0,
-      "y": 10360,
-      "w": 1440,
-      "h": 1800,
-      "title": "Daylight library \u00b7 shelf page, desktop",
-      "expand": "fill",
-      "is_interactive": true
-    },
-    "ScandiPhone.dc.html": {
-      "x": 1520,
-      "y": 10360,
-      "w": 390,
-      "h": 844,
-      "title": "Daylight library \u00b7 shelf, phone"
-    },
-    "ScandiNotes.dc.html": {
-      "x": 1990,
-      "y": 10360,
-      "w": 1200,
-      "h": 920,
-      "title": "Daylight library \u00b7 the system"
-    },
-    "WireA.dc.html": {
-      "x": 0,
-      "y": 0,
-      "w": 1440,
-      "h": 1100,
-      "title": "A \u00b7 feature, then shelves",
-      "page": "wireframes"
-    },
-    "WireB.dc.html": {
-      "x": 1520,
-      "y": 0,
-      "w": 1440,
-      "h": 1100,
-      "title": "B \u00b7 side rail",
-      "page": "wireframes"
-    },
-    "WireC.dc.html": {
-      "x": 0,
-      "y": 1220,
-      "w": 1440,
-      "h": 1100,
-      "title": "C \u00b7 bookcase",
-      "page": "wireframes"
-    },
-    "WireD.dc.html": {
-      "x": 1520,
-      "y": 1220,
-      "w": 1440,
-      "h": 1100,
-      "title": "D \u00b7 black split",
-      "page": "wireframes"
-    },
-    "ToolShelf.dc.html": {
-      "x": 0,
-      "y": 0,
-      "w": 1440,
-      "h": 1120,
-      "title": "A \u00b7 Neutral, shelf desktop",
-      "expand": "fill",
-      "is_interactive": true,
-      "page": "tool"
-    },
-    "ToolPhone.dc.html": {
-      "x": 1520,
-      "y": 0,
-      "w": 390,
-      "h": 844,
-      "title": "Shelf \u00b7 phone",
-      "page": "tool"
-    },
-    "ToolDark.dc.html": {
-      "x": 0,
-      "y": 1240,
-      "w": 1440,
-      "h": 1300,
-      "title": "B \u00b7 After hours: lamplight on white books",
-      "page": "tool"
-    },
-    "ToolCirc.dc.html": {
-      "x": 1520,
-      "y": 1240,
-      "w": 1440,
-      "h": 1300,
-      "title": "C \u00b7 Circulation desk: ink, stamp and highlighter",
-      "page": "tool"
-    },
-    "Ident1.dc.html": {
-      "x": 0,
-      "y": 0,
-      "w": 1200,
-      "h": 940,
-      "title": "01 \u00b7 Four-colour pulp",
-      "page": "identities"
-    },
-    "Ident2.dc.html": {
-      "x": 1280,
-      "y": 0,
-      "w": 1200,
-      "h": 940,
-      "title": "02 \u00b7 Survey chart",
-      "page": "identities"
-    },
-    "Ident3.dc.html": {
-      "x": 0,
-      "y": 1020,
-      "w": 1200,
-      "h": 940,
-      "title": "03 \u00b7 Manga screentone",
-      "page": "identities"
-    },
-    "Ident4.dc.html": {
-      "x": 1280,
-      "y": 1020,
-      "w": 1200,
-      "h": 940,
-      "title": "04 \u00b7 Bauhaus primer",
-      "page": "identities"
-    },
-    "Ident5.dc.html": {
-      "x": 0,
-      "y": 2040,
-      "w": 1200,
-      "h": 940,
-      "title": "05 \u00b7 Riso zine",
-      "page": "identities"
-    },
-    "Ident6.dc.html": {
-      "x": 1280,
-      "y": 2040,
-      "w": 1200,
-      "h": 940,
-      "title": "06 \u00b7 Engraved plate",
-      "page": "identities"
-    },
-    "MangaA.dc.html": {
-      "x": 0,
-      "y": 0,
-      "w": 1440,
-      "h": 1100,
-      "title": "A \u00b7 The page \u00b7 Panels on slanted gutters",
-      "page": "manga"
-    },
-    "MangaB.dc.html": {
-      "x": 1520,
-      "y": 0,
-      "w": 1440,
-      "h": 1100,
-      "title": "B \u00b7 The strip \u00b7 Black rail, one dark band, long shelves",
-      "page": "manga"
-    },
-    "MangaC.dc.html": {
-      "x": 3040,
-      "y": 0,
-      "w": 1440,
-      "h": 1100,
-      "title": "C \u00b7 The spread \u00b7 An open book: contents left, shelves right",
-      "page": "manga"
-    },
-    "MangaB2.dc.html": {
-      "x": 1520,
-      "y": 1180,
-      "w": 1440,
-      "h": 1100,
-      "title": "B2 \u00b7 The strip, top navigation \u00b7 Navigation across the top like A, banner and shelves from B",
-      "page": "manga"
-    },
-    "MangaBtn.dc.html": {
-      "x": 3040,
-      "y": 1180,
-      "w": 1440,
-      "h": 1040,
-      "title": "Ask to check out \u00b7 four button options",
-      "page": "manga"
-    },
-    "SysShelf.dc.html": {
-      "x": 0,
-      "y": 0,
-      "w": 1440,
-      "h": 1100,
-      "title": "Reference screen \u00b7 The shelf",
-      "page": "system"
-    },
-    "SysSignIn.dc.html": {
-      "x": 1520,
-      "y": 0,
-      "w": 1440,
-      "h": 900,
-      "title": "Reference screen \u00b7 Sign in",
-      "page": "system"
-    },
-    "SysFoundations.dc.html": {
-      "x": 0,
-      "y": 1180,
-      "w": 1440,
-      "h": 2900,
-      "title": "1 \u00b7 Foundations: color, type, space, tone, motion",
-      "page": "system"
-    },
-    "SysComponents1.dc.html": {
-      "x": 1520,
-      "y": 1180,
-      "w": 1440,
-      "h": 2700,
-      "title": "2 \u00b7 Components: actions and forms",
-      "page": "system"
-    },
-    "SysComponents2.dc.html": {
-      "x": 0,
-      "y": 4160,
-      "w": 1440,
-      "h": 3500,
-      "title": "3 \u00b7 Components: content and structure",
-      "page": "system"
-    },
-    "SysRules.dc.html": {
-      "x": 1520,
-      "y": 4160,
-      "w": 1440,
-      "h": 2600,
-      "title": "4 \u00b7 How to use it: fixed, default, free",
-      "page": "system"
-    },
-    "CoverDirections.dc.html": {
-      "x": 0,
-      "y": 0,
-      "w": 1440,
-      "h": 3000,
-      "title": "Cover directions \u00b7 round 1",
-      "page": "covers",
-      "expand": "fill"
-    },
-    "CoverWatercolor.dc.html": {
-      "x": 0,
-      "y": 3120,
-      "w": 1440,
-      "h": 1180,
-      "title": "F \u00b7 Cherry blossom watercolor",
-      "page": "covers",
-      "expand": "fill"
-    },
-    "CoverLandscape.dc.html": {
-      "x": 0,
-      "y": 4420,
-      "w": 1440,
-      "h": 1500,
-      "title": "G \u00b7 Watercolor landscapes",
-      "page": "covers",
-      "expand": "fill"
-    },
-    "InterviewA.dc.html": {
-      "x": 0,
-      "y": 0,
-      "w": 1700,
-      "h": 4700,
-      "title": "A \u00b7 The question band",
-      "page": "interview",
-      "expand": "fill"
-    },
-    "InterviewB.dc.html": {
-      "x": 1820,
-      "y": 0,
-      "w": 1700,
-      "h": 2900,
-      "title": "B \u00b7 Comic page",
-      "page": "interview",
-      "expand": "fill"
-    },
-    "InterviewC.dc.html": {
-      "x": 3640,
-      "y": 0,
-      "w": 1700,
-      "h": 2900,
-      "title": "C \u00b7 Speech bubble",
-      "page": "interview",
-      "expand": "fill"
-    },
-    "InterviewA2.dc.html": {
-      "x": 5460,
-      "y": 0,
-      "w": 1700,
-      "h": 1350,
-      "title": "A \u00b7 The interview adapts",
-      "page": "interview",
-      "expand": "fill"
-    },
-    "GrowingG1.dc.html": {
-      "x": 0,
-      "y": 0,
-      "w": 1300,
-      "h": 13363,
-      "title": "My book",
-      "page": "growing",
-      "expand": "fill"
-    },
-    "GrowingG2.dc.html": {
-      "x": 1420,
-      "y": 0,
-      "w": 1300,
-      "h": 3976,
-      "title": "Adding to your book",
-      "page": "growing",
-      "expand": "fill"
-    },
-    "GrowingG3.dc.html": {
-      "x": 2840,
-      "y": 0,
-      "w": 1300,
-      "h": 8122,
-      "title": "Proposed changes",
-      "page": "growing",
-      "expand": "fill"
-    },
-    "GrowingG4.dc.html": {
-      "x": 4260,
-      "y": 0,
-      "w": 1300,
-      "h": 2700,
-      "title": "\"I have one like this\"",
-      "page": "growing",
-      "expand": "fill"
-    },
-    "GrowingG5.dc.html": {
-      "x": 5680,
-      "y": 0,
-      "w": 1300,
-      "h": 2905,
-      "title": "The reading question",
-      "page": "growing",
-      "expand": "fill"
-    },
-    "InterviewA3.dc.html": {
-      "x": 7280,
-      "y": 0,
-      "w": 1700,
-      "h": 2900,
-      "title": "A \u00b7 Other states",
-      "page": "interview",
-      "expand": "fill"
-    },
-    "InterviewAPhone.dc.html": {
-      "x": 9100,
-      "y": 0,
-      "w": 1300,
-      "h": 2262,
-      "title": "A \u00b7 Phone",
-      "page": "interview",
-      "expand": "fill"
-    }
+  {
+   "id": "tool",
+   "name": "Working tool"
   },
-  "order": [
-    "Main.dc.html",
-    "PhoneShelf.dc.html",
-    "PhoneBook.dc.html",
-    "BookObject.dc.html",
-    "ShadowShelf.dc.html",
-    "ShadowPhone.dc.html",
-    "ShadowSystem.dc.html",
-    "MarbleA.dc.html",
-    "MarbleB.dc.html",
-    "MarbleC.dc.html",
-    "MarblePage.dc.html",
-    "ScandiPage.dc.html",
-    "ScandiPhone.dc.html",
-    "ScandiNotes.dc.html",
-    "WireA.dc.html",
-    "WireB.dc.html",
-    "WireC.dc.html",
-    "WireD.dc.html",
-    "ToolShelf.dc.html",
-    "ToolPhone.dc.html",
-    "ToolDark.dc.html",
-    "ToolCirc.dc.html",
-    "Ident1.dc.html",
-    "Ident2.dc.html",
-    "Ident3.dc.html",
-    "Ident4.dc.html",
-    "Ident5.dc.html",
-    "Ident6.dc.html",
-    "MangaA.dc.html",
-    "MangaB.dc.html",
-    "MangaC.dc.html",
-    "MangaB2.dc.html",
-    "MangaBtn.dc.html",
-    "SysShelf.dc.html",
-    "SysSignIn.dc.html",
-    "SysFoundations.dc.html",
-    "SysComponents1.dc.html",
-    "SysComponents2.dc.html",
-    "SysRules.dc.html",
-    "CoverDirections.dc.html",
-    "CoverWatercolor.dc.html",
-    "CoverLandscape.dc.html",
-    "InterviewA.dc.html",
-    "InterviewB.dc.html",
-    "InterviewC.dc.html",
-    "InterviewA2.dc.html",
-    "GrowingG1.dc.html",
-    "GrowingG2.dc.html",
-    "GrowingG3.dc.html",
-    "GrowingG4.dc.html",
-    "GrowingG5.dc.html",
-    "InterviewA3.dc.html",
-    "InterviewAPhone.dc.html"
-  ],
-  "notes": {
-    "head": {
-      "x": 0,
-      "y": -300,
-      "text": "Direction 1 \u00b7 Cloth and oak",
-      "kind": "title1",
-      "maxW": 2380
-    },
-    "head2": {
-      "x": 0,
-      "y": 2620,
-      "text": "Direction 2 \u00b7 Light and shadow",
-      "kind": "title1",
-      "maxW": 3190
-    },
-    "head3": {
-      "x": 0,
-      "y": 5460,
-      "text": "Direction 3 \u00b7 Marble: three shelf options",
-      "kind": "title1",
-      "maxW": 3760
-    },
-    "head4": {
-      "x": 0,
-      "y": 6700,
-      "text": "Direction 3 \u00b7 The Carrara shelf page",
-      "kind": "title1",
-      "maxW": 1440
-    },
-    "head5": {
-      "x": 0,
-      "y": 10060,
-      "text": "Direction 4 \u00b7 Daylight library",
-      "kind": "title1",
-      "maxW": 3190
-    },
-    "wire": {
-      "x": 0,
-      "y": -300,
-      "text": "Shell homepage \u00b7 four layouts in black and white",
-      "kind": "title1",
-      "maxW": 2960,
-      "page": "wireframes"
-    },
-    "tool": {
-      "x": 0,
-      "y": -300,
-      "text": "Direction 5 \u00b7 Working tool: neutral, dense, white books",
-      "kind": "title1",
-      "maxW": 1910,
-      "page": "tool"
-    },
-    "ident": {
-      "x": 0,
-      "y": -300,
-      "text": "Identities \u00b7 six printed-media languages to pick from",
-      "kind": "title1",
-      "maxW": 2480,
-      "page": "identities"
-    },
-    "manga": {
-      "x": 0,
-      "y": -300,
-      "text": "Manga screentone \u00b7 three layouts of the shelf page",
-      "kind": "title1",
-      "maxW": 4400,
-      "page": "manga"
-    },
-    "system": {
-      "x": 0,
-      "y": -300,
-      "text": "Trove design system \u00b7 Manga screentone, v1",
-      "kind": "title1",
-      "maxW": 2960,
-      "page": "system"
-    },
-    "covers": {
-      "x": 0,
-      "y": -300,
-      "text": "Covers \u00b7 five directions on white, inspired by Japanese art forms",
-      "kind": "title1",
-      "maxW": 1440,
-      "page": "covers"
-    }
+  {
+   "id": "identities",
+   "name": "Identities"
   },
-  "designSystems": []
+  {
+   "id": "manga",
+   "name": "Manga screens"
+  },
+  {
+   "id": "system",
+   "name": "Design system"
+  },
+  {
+   "id": "covers",
+   "name": "Covers"
+  },
+  {
+   "id": "interview",
+   "name": "Interview"
+  },
+  {
+   "id": "growing",
+   "name": "Growing books"
+  },
+  {
+   "id": "elevate",
+   "name": "Elevate"
+  },
+  {
+   "id": "strata",
+   "name": "Strata covers"
+  },
+  {
+   "id": "voxel",
+   "name": "Voxel covers"
+  },
+  {
+   "id": "fresh",
+   "name": "Fresh directions"
+  },
+  {
+   "id": "librarian",
+   "name": "Librarian notebook"
+  }
+ ],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 2320,
+   "title": "Shelf · desktop",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "PhoneShelf.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Shelf · phone"
+  },
+  "PhoneBook.dc.html": {
+   "x": 1990,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Open book · phone"
+  },
+  "BookObject.dc.html": {
+   "x": 1520,
+   "y": 964,
+   "w": 1200,
+   "h": 1080,
+   "title": "The book object · states and 3D notes"
+  },
+  "ShadowShelf.dc.html": {
+   "x": 0,
+   "y": 2920,
+   "w": 1440,
+   "h": 2240,
+   "title": "Light and shadow · shelf, desktop",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "ShadowPhone.dc.html": {
+   "x": 1520,
+   "y": 2920,
+   "w": 390,
+   "h": 844,
+   "title": "Light and shadow · shelf, phone"
+  },
+  "ShadowSystem.dc.html": {
+   "x": 1990,
+   "y": 2920,
+   "w": 1200,
+   "h": 1240,
+   "title": "Light and shadow · the system"
+  },
+  "MarbleA.dc.html": {
+   "x": 0,
+   "y": 5760,
+   "w": 1200,
+   "h": 640,
+   "title": "Marble A · polished Carrara ledge"
+  },
+  "MarbleB.dc.html": {
+   "x": 1280,
+   "y": 5760,
+   "w": 1200,
+   "h": 640,
+   "title": "Marble B · green marble niche"
+  },
+  "MarbleC.dc.html": {
+   "x": 2560,
+   "y": 5760,
+   "w": 1200,
+   "h": 640,
+   "title": "Marble C · honed pink slab, block bookends"
+  },
+  "MarblePage.dc.html": {
+   "x": 0,
+   "y": 7000,
+   "w": 1440,
+   "h": 2760,
+   "title": "Carrara · shelf page, desktop",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "ScandiPage.dc.html": {
+   "x": 0,
+   "y": 10360,
+   "w": 1440,
+   "h": 1800,
+   "title": "Daylight library · shelf page, desktop",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "ScandiPhone.dc.html": {
+   "x": 1520,
+   "y": 10360,
+   "w": 390,
+   "h": 844,
+   "title": "Daylight library · shelf, phone"
+  },
+  "ScandiNotes.dc.html": {
+   "x": 1990,
+   "y": 10360,
+   "w": 1200,
+   "h": 920,
+   "title": "Daylight library · the system"
+  },
+  "WireA.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1100,
+   "title": "A · feature, then shelves",
+   "page": "wireframes"
+  },
+  "WireB.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1100,
+   "title": "B · side rail",
+   "page": "wireframes"
+  },
+  "WireC.dc.html": {
+   "x": 0,
+   "y": 1220,
+   "w": 1440,
+   "h": 1100,
+   "title": "C · bookcase",
+   "page": "wireframes"
+  },
+  "WireD.dc.html": {
+   "x": 1520,
+   "y": 1220,
+   "w": 1440,
+   "h": 1100,
+   "title": "D · black split",
+   "page": "wireframes"
+  },
+  "ToolShelf.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1120,
+   "title": "A · Neutral, shelf desktop",
+   "expand": "fill",
+   "is_interactive": true,
+   "page": "tool"
+  },
+  "ToolPhone.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Shelf · phone",
+   "page": "tool"
+  },
+  "ToolDark.dc.html": {
+   "x": 0,
+   "y": 1240,
+   "w": 1440,
+   "h": 1300,
+   "title": "B · After hours: lamplight on white books",
+   "page": "tool"
+  },
+  "ToolCirc.dc.html": {
+   "x": 1520,
+   "y": 1240,
+   "w": 1440,
+   "h": 1300,
+   "title": "C · Circulation desk: ink, stamp and highlighter",
+   "page": "tool"
+  },
+  "Ident1.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1200,
+   "h": 940,
+   "title": "01 · Four-colour pulp",
+   "page": "identities"
+  },
+  "Ident2.dc.html": {
+   "x": 1280,
+   "y": 0,
+   "w": 1200,
+   "h": 940,
+   "title": "02 · Survey chart",
+   "page": "identities"
+  },
+  "Ident3.dc.html": {
+   "x": 0,
+   "y": 1020,
+   "w": 1200,
+   "h": 940,
+   "title": "03 · Manga screentone",
+   "page": "identities"
+  },
+  "Ident4.dc.html": {
+   "x": 1280,
+   "y": 1020,
+   "w": 1200,
+   "h": 940,
+   "title": "04 · Bauhaus primer",
+   "page": "identities"
+  },
+  "Ident5.dc.html": {
+   "x": 0,
+   "y": 2040,
+   "w": 1200,
+   "h": 940,
+   "title": "05 · Riso zine",
+   "page": "identities"
+  },
+  "Ident6.dc.html": {
+   "x": 1280,
+   "y": 2040,
+   "w": 1200,
+   "h": 940,
+   "title": "06 · Engraved plate",
+   "page": "identities"
+  },
+  "MangaA.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1100,
+   "title": "A · The page · Panels on slanted gutters",
+   "page": "manga"
+  },
+  "MangaB.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1100,
+   "title": "B · The strip · Black rail, one dark band, long shelves",
+   "page": "manga"
+  },
+  "MangaC.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 1100,
+   "title": "C · The spread · An open book: contents left, shelves right",
+   "page": "manga"
+  },
+  "MangaB2.dc.html": {
+   "x": 1520,
+   "y": 1180,
+   "w": 1440,
+   "h": 1100,
+   "title": "B2 · The strip, top navigation · Navigation across the top like A, banner and shelves from B",
+   "page": "manga"
+  },
+  "MangaBtn.dc.html": {
+   "x": 3040,
+   "y": 1180,
+   "w": 1440,
+   "h": 1040,
+   "title": "Ask to check out · four button options",
+   "page": "manga"
+  },
+  "SysShelf.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1100,
+   "title": "Reference screen · The shelf",
+   "page": "system"
+  },
+  "SysSignIn.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "title": "Reference screen · Sign in",
+   "page": "system"
+  },
+  "SysFoundations.dc.html": {
+   "x": 0,
+   "y": 1180,
+   "w": 1440,
+   "h": 2900,
+   "title": "1 · Foundations: color, type, space, tone, motion",
+   "page": "system"
+  },
+  "SysComponents1.dc.html": {
+   "x": 1520,
+   "y": 1180,
+   "w": 1440,
+   "h": 2700,
+   "title": "2 · Components: actions and forms",
+   "page": "system"
+  },
+  "SysComponents2.dc.html": {
+   "x": 0,
+   "y": 4160,
+   "w": 1440,
+   "h": 3500,
+   "title": "3 · Components: content and structure",
+   "page": "system"
+  },
+  "SysRules.dc.html": {
+   "x": 1520,
+   "y": 4160,
+   "w": 1440,
+   "h": 2600,
+   "title": "4 · How to use it: fixed, default, free",
+   "page": "system"
+  },
+  "CoverDirections.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 3000,
+   "title": "Cover directions · round 1",
+   "page": "covers",
+   "expand": "fill"
+  },
+  "CoverWatercolor.dc.html": {
+   "x": 0,
+   "y": 3120,
+   "w": 1440,
+   "h": 1180,
+   "title": "F · Cherry blossom watercolor",
+   "page": "covers",
+   "expand": "fill"
+  },
+  "CoverLandscape.dc.html": {
+   "x": 0,
+   "y": 4420,
+   "w": 1440,
+   "h": 1500,
+   "title": "G · Watercolor landscapes",
+   "page": "covers",
+   "expand": "fill"
+  },
+  "InterviewA.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1700,
+   "h": 4700,
+   "title": "A · The question band",
+   "page": "interview",
+   "expand": "fill"
+  },
+  "InterviewB.dc.html": {
+   "x": 1820,
+   "y": 0,
+   "w": 1700,
+   "h": 2900,
+   "title": "B · Comic page",
+   "page": "interview",
+   "expand": "fill"
+  },
+  "InterviewC.dc.html": {
+   "x": 3640,
+   "y": 0,
+   "w": 1700,
+   "h": 2900,
+   "title": "C · Speech bubble",
+   "page": "interview",
+   "expand": "fill"
+  },
+  "InterviewA2.dc.html": {
+   "x": 5460,
+   "y": 0,
+   "w": 1700,
+   "h": 1350,
+   "title": "A · The interview adapts",
+   "page": "interview",
+   "expand": "fill"
+  },
+  "GrowingG1.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1300,
+   "h": 13363,
+   "title": "My book",
+   "page": "growing",
+   "expand": "fill"
+  },
+  "GrowingG2.dc.html": {
+   "x": 1420,
+   "y": 0,
+   "w": 1300,
+   "h": 3976,
+   "title": "Adding to your book",
+   "page": "growing",
+   "expand": "fill"
+  },
+  "GrowingG3.dc.html": {
+   "x": 2840,
+   "y": 0,
+   "w": 1300,
+   "h": 8122,
+   "title": "Proposed changes",
+   "page": "growing",
+   "expand": "fill"
+  },
+  "GrowingG4.dc.html": {
+   "x": 4260,
+   "y": 0,
+   "w": 1300,
+   "h": 2700,
+   "title": "\"I have one like this\"",
+   "page": "growing",
+   "expand": "fill"
+  },
+  "GrowingG5.dc.html": {
+   "x": 5680,
+   "y": 0,
+   "w": 1300,
+   "h": 2905,
+   "title": "The reading question",
+   "page": "growing",
+   "expand": "fill"
+  },
+  "InterviewA3.dc.html": {
+   "x": 7280,
+   "y": 0,
+   "w": 1700,
+   "h": 2900,
+   "title": "A · Other states",
+   "page": "interview",
+   "expand": "fill"
+  },
+  "InterviewAPhone.dc.html": {
+   "x": 9100,
+   "y": 0,
+   "w": 1300,
+   "h": 2262,
+   "title": "A · Phone",
+   "page": "interview",
+   "expand": "fill"
+  },
+  "ElevateA.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1760,
+   "h": 5260,
+   "title": "A · Bound",
+   "page": "elevate",
+   "expand": "fill"
+  },
+  "ElevateB.dc.html": {
+   "x": 1880,
+   "y": 0,
+   "w": 1760,
+   "h": 5400,
+   "title": "B · Inked",
+   "page": "elevate",
+   "expand": "fill"
+  },
+  "ElevateC.dc.html": {
+   "x": 3760,
+   "y": 0,
+   "w": 1760,
+   "h": 5600,
+   "title": "C · Reading Room",
+   "page": "elevate",
+   "expand": "fill"
+  },
+  "ElevateK1.dc.html": {
+   "x": 5640,
+   "y": 0,
+   "w": 1760,
+   "h": 2920,
+   "title": "Kit 1 · Stacked sheets",
+   "page": "elevate",
+   "expand": "fill"
+  },
+  "ElevateK2.dc.html": {
+   "x": 7520,
+   "y": 0,
+   "w": 1760,
+   "h": 2985,
+   "title": "Kit 2 · Relief",
+   "page": "elevate",
+   "expand": "fill"
+  },
+  "ElevateK3.dc.html": {
+   "x": 9400,
+   "y": 0,
+   "w": 1760,
+   "h": 3060,
+   "title": "Kit 3 · Folio, for build",
+   "page": "elevate",
+   "expand": "fill"
+  },
+  "StrataBook.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1140,
+   "title": "Strata · one book, opened: the cover is a window onto its landscape",
+   "page": "strata"
+  },
+  "StrataShelf.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1180,
+   "title": "Strata · on the shelf, and how the art is made",
+   "page": "strata"
+  },
+  "StrataPlaces.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 2040,
+   "title": "Strata · more places: phone, reveal, checkout, meeting",
+   "page": "strata"
+  },
+  "VoxelValley.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "title": "Voxel cover · The valley, round 1",
+   "page": "voxel"
+  },
+  "StrataCover2.dc.html": {
+   "x": 0,
+   "y": 2160,
+   "w": 1440,
+   "h": 1000,
+   "title": "Strata cover · round 2: solid slabs, more detail",
+   "page": "strata"
+  },
+  "PaperCells.dc.html": {
+   "x": 1520,
+   "y": 2160,
+   "w": 1440,
+   "h": 900,
+   "title": "Paper cells · after the reference: shaded cells, one grain per material, layered mist",
+   "page": "strata"
+  },
+  "ElevateI3.dc.html": {
+   "x": 11280,
+   "y": 0,
+   "w": 1760,
+   "h": 4330,
+   "title": "Interview 3 · The conversation",
+   "page": "elevate",
+   "expand": "fill"
+  },
+  "FreshCover1.dc.html": {
+   "x": 0,
+   "y": 9100,
+   "w": 600,
+   "h": 1090,
+   "title": "1 · Marbled paper · the cover",
+   "page": "fresh"
+  },
+  "FreshCover2.dc.html": {
+   "x": 0,
+   "y": 10400,
+   "w": 600,
+   "h": 1090,
+   "title": "2 · Letterpress · the cover",
+   "page": "fresh"
+  },
+  "FreshCover3.dc.html": {
+   "x": 0,
+   "y": 6500,
+   "w": 600,
+   "h": 1090,
+   "title": "3 · Block print · the cover",
+   "page": "fresh"
+  },
+  "FreshBookBlock.dc.html": {
+   "x": 680,
+   "y": 6500,
+   "w": 1440,
+   "h": 1140,
+   "title": "3 · Block print · the book page",
+   "page": "fresh"
+  },
+  "FreshCover4.dc.html": {
+   "x": 0,
+   "y": 5200,
+   "w": 600,
+   "h": 1090,
+   "title": "4 · Gouache poster · the cover",
+   "page": "fresh"
+  },
+  "FreshBookGouache.dc.html": {
+   "x": 680,
+   "y": 5200,
+   "w": 1440,
+   "h": 1140,
+   "title": "4 · Gouache poster · the book page",
+   "page": "fresh"
+  },
+  "FreshCover5.dc.html": {
+   "x": 0,
+   "y": 1300,
+   "w": 600,
+   "h": 1090,
+   "title": "5 · Coloured pencil · the cover",
+   "page": "fresh"
+  },
+  "FreshBookPencil.dc.html": {
+   "x": 680,
+   "y": 1300,
+   "w": 1440,
+   "h": 1140,
+   "title": "5 · Coloured pencil · the book page",
+   "page": "fresh"
+  },
+  "FreshCover6.dc.html": {
+   "x": 0,
+   "y": 2600,
+   "w": 600,
+   "h": 1090,
+   "title": "6 · Watercolour · the cover",
+   "page": "fresh"
+  },
+  "FreshBookWash.dc.html": {
+   "x": 680,
+   "y": 2600,
+   "w": 1440,
+   "h": 1140,
+   "title": "6 · Watercolour · the book page",
+   "page": "fresh"
+  },
+  "FreshCover7.dc.html": {
+   "x": 0,
+   "y": 7800,
+   "w": 600,
+   "h": 1090,
+   "title": "7 · Layered cut paper · the cover",
+   "page": "fresh"
+  },
+  "FreshCover8.dc.html": {
+   "x": 0,
+   "y": 3900,
+   "w": 600,
+   "h": 1090,
+   "title": "8 · Stippled ink · the cover",
+   "page": "fresh"
+  },
+  "FreshBookStipple.dc.html": {
+   "x": 680,
+   "y": 3900,
+   "w": 1440,
+   "h": 1140,
+   "title": "8 · Stippled ink · the book page",
+   "page": "fresh"
+  },
+  "FreshStrata.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 600,
+   "h": 1090,
+   "title": "9 · Strata, round 3 · the cover",
+   "page": "fresh"
+  },
+  "FreshBookStrata.dc.html": {
+   "x": 680,
+   "y": 0,
+   "w": 1440,
+   "h": 1140,
+   "title": "9 · Strata, round 3 · the book page (book screen A)",
+   "page": "fresh"
+  },
+  "LibDesktop.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1760,
+   "h": 4460,
+   "title": "Interview 4 · The Librarian’s notebook, desktop",
+   "page": "librarian",
+   "expand": "fill"
+  },
+  "LibPhone.dc.html": {
+   "x": 1880,
+   "y": 0,
+   "w": 1760,
+   "h": 1240,
+   "title": "Interview 4 · The Librarian’s notebook, phone",
+   "page": "librarian",
+   "expand": "fill"
+  },
+  "LibParts.dc.html": {
+   "x": 3760,
+   "y": 0,
+   "w": 1760,
+   "h": 4240,
+   "title": "Interview 4 · The Librarian: the parts",
+   "page": "librarian",
+   "expand": "fill"
+  },
+  "LibMore.dc.html": {
+   "x": 5640,
+   "y": 0,
+   "w": 1760,
+   "h": 2620,
+   "title": "Interview 4 · The Librarian: idle, paste and the sign-off",
+   "page": "librarian",
+   "expand": "fill"
+  },
+  "LibReopened.dc.html": {
+   "x": 7520,
+   "y": 0,
+   "w": 1760,
+   "h": 1110,
+   "title": "Interview 4 · The Librarian: reopened to add to the book",
+   "page": "librarian",
+   "expand": "fill"
+  },
+  "FreshBookCut.dc.html": {
+   "x": 680,
+   "y": 7800,
+   "w": 1440,
+   "h": 1140,
+   "title": "7 · Layered cut paper · the book page",
+   "page": "fresh"
+  },
+  "FreshReaderOpen.dc.html": {
+   "x": 2220,
+   "y": 0,
+   "w": 1440,
+   "h": 2020,
+   "title": "Book screen B · the book opens",
+   "page": "fresh"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "PhoneShelf.dc.html",
+  "PhoneBook.dc.html",
+  "BookObject.dc.html",
+  "ShadowShelf.dc.html",
+  "ShadowPhone.dc.html",
+  "ShadowSystem.dc.html",
+  "MarbleA.dc.html",
+  "MarbleB.dc.html",
+  "MarbleC.dc.html",
+  "MarblePage.dc.html",
+  "ScandiPage.dc.html",
+  "ScandiPhone.dc.html",
+  "ScandiNotes.dc.html",
+  "WireA.dc.html",
+  "WireB.dc.html",
+  "WireC.dc.html",
+  "WireD.dc.html",
+  "ToolShelf.dc.html",
+  "ToolPhone.dc.html",
+  "ToolDark.dc.html",
+  "ToolCirc.dc.html",
+  "Ident1.dc.html",
+  "Ident2.dc.html",
+  "Ident3.dc.html",
+  "Ident4.dc.html",
+  "Ident5.dc.html",
+  "Ident6.dc.html",
+  "MangaA.dc.html",
+  "MangaB.dc.html",
+  "MangaC.dc.html",
+  "MangaB2.dc.html",
+  "MangaBtn.dc.html",
+  "SysShelf.dc.html",
+  "SysSignIn.dc.html",
+  "SysFoundations.dc.html",
+  "SysComponents1.dc.html",
+  "SysComponents2.dc.html",
+  "SysRules.dc.html",
+  "CoverDirections.dc.html",
+  "CoverWatercolor.dc.html",
+  "CoverLandscape.dc.html",
+  "InterviewA.dc.html",
+  "InterviewB.dc.html",
+  "InterviewC.dc.html",
+  "InterviewA2.dc.html",
+  "GrowingG1.dc.html",
+  "GrowingG2.dc.html",
+  "GrowingG3.dc.html",
+  "GrowingG4.dc.html",
+  "GrowingG5.dc.html",
+  "InterviewA3.dc.html",
+  "InterviewAPhone.dc.html",
+  "ElevateA.dc.html",
+  "ElevateB.dc.html",
+  "ElevateC.dc.html",
+  "ElevateK1.dc.html",
+  "ElevateK2.dc.html",
+  "ElevateK3.dc.html",
+  "ElevateI3.dc.html",
+  "StrataBook.dc.html",
+  "StrataShelf.dc.html",
+  "StrataPlaces.dc.html",
+  "VoxelValley.dc.html",
+  "StrataCover2.dc.html",
+  "PaperCells.dc.html",
+  "LibDesktop.dc.html",
+  "LibPhone.dc.html",
+  "LibParts.dc.html",
+  "LibMore.dc.html",
+  "LibReopened.dc.html",
+  "FreshStrata.dc.html",
+  "FreshBookStrata.dc.html",
+  "FreshCover5.dc.html",
+  "FreshBookPencil.dc.html",
+  "FreshCover6.dc.html",
+  "FreshBookWash.dc.html",
+  "FreshCover8.dc.html",
+  "FreshBookStipple.dc.html",
+  "FreshCover4.dc.html",
+  "FreshBookGouache.dc.html",
+  "FreshCover3.dc.html",
+  "FreshBookBlock.dc.html",
+  "FreshCover7.dc.html",
+  "FreshBookCut.dc.html",
+  "FreshCover1.dc.html",
+  "FreshCover2.dc.html",
+  "FreshReaderOpen.dc.html"
+ ],
+ "notes": {
+  "head": {
+   "x": 0,
+   "y": -300,
+   "text": "Direction 1 · Cloth and oak",
+   "kind": "title1",
+   "maxW": 2380
+  },
+  "head2": {
+   "x": 0,
+   "y": 2620,
+   "text": "Direction 2 · Light and shadow",
+   "kind": "title1",
+   "maxW": 3190
+  },
+  "head3": {
+   "x": 0,
+   "y": 5460,
+   "text": "Direction 3 · Marble: three shelf options",
+   "kind": "title1",
+   "maxW": 3760
+  },
+  "head4": {
+   "x": 0,
+   "y": 6700,
+   "text": "Direction 3 · The Carrara shelf page",
+   "kind": "title1",
+   "maxW": 1440
+  },
+  "head5": {
+   "x": 0,
+   "y": 10060,
+   "text": "Direction 4 · Daylight library",
+   "kind": "title1",
+   "maxW": 3190
+  },
+  "wire": {
+   "x": 0,
+   "y": -300,
+   "text": "Shell homepage · four layouts in black and white",
+   "kind": "title1",
+   "maxW": 2960,
+   "page": "wireframes"
+  },
+  "tool": {
+   "x": 0,
+   "y": -300,
+   "text": "Direction 5 · Working tool: neutral, dense, white books",
+   "kind": "title1",
+   "maxW": 1910,
+   "page": "tool"
+  },
+  "ident": {
+   "x": 0,
+   "y": -300,
+   "text": "Identities · six printed-media languages to pick from",
+   "kind": "title1",
+   "maxW": 2480,
+   "page": "identities"
+  },
+  "manga": {
+   "x": 0,
+   "y": -300,
+   "text": "Manga screentone · three layouts of the shelf page",
+   "kind": "title1",
+   "maxW": 4400,
+   "page": "manga"
+  },
+  "system": {
+   "x": 0,
+   "y": -300,
+   "text": "Trove design system · Manga screentone, v1",
+   "kind": "title1",
+   "maxW": 2960,
+   "page": "system"
+  },
+  "covers": {
+   "x": 0,
+   "y": -300,
+   "text": "Covers · five directions on white, inspired by Japanese art forms",
+   "kind": "title1",
+   "maxW": 1440,
+   "page": "covers"
+  },
+  "strata": {
+   "x": 0,
+   "y": -300,
+   "text": "Strata · landscapes laid in slabs, on the cover and in the book",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "strata"
+  },
+  "voxel": {
+   "x": 0,
+   "y": -300,
+   "text": "Voxel covers · small-cube scenes rendered in 3D",
+   "kind": "title1",
+   "maxW": 1440,
+   "page": "voxel"
+  },
+  "strata2": {
+   "x": 0,
+   "y": 1860,
+   "text": "Round 2 · solid slabs, more detail",
+   "kind": "title1",
+   "maxW": 1440,
+   "page": "strata"
+  },
+  "strata3": {
+   "x": 1520,
+   "y": 1860,
+   "text": "Round 3 · paper cells",
+   "kind": "title1",
+   "maxW": 1440,
+   "page": "strata"
+  },
+  "fresh": {
+   "x": 0,
+   "y": -300,
+   "text": "Fresh directions · each cover on the left, its book page on the right; the ones with book pages first",
+   "kind": "title1",
+   "maxW": 2120,
+   "page": "fresh"
+  },
+  "freshbook": {
+   "x": 2220,
+   "y": -300,
+   "text": "Book screen · two ways to show one book: A the book page (left), B the book opens",
+   "kind": "title1",
+   "maxW": 1440,
+   "page": "fresh"
+  }
+ },
+ "designSystems": []
 }
