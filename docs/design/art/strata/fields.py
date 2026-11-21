@@ -35,7 +35,7 @@ class Land:
     brick = (2.4, 10.0)
     min_run = 1.0
 
-    def __init__(self, horizon, near, x0, x1, swells, strips, seed=1, hedge=HEDGE, power=1.6, cross=(), vx=120, grain=1.0, near_t=0.97):
+    def __init__(self, horizon, near, x0, x1, swells, strips, seed=1, hedge=HEDGE, power=1.6, cross=(), vx=120, grain=1.0, near_t=0.97, hero=None, hero_t0=0.0, row_ink=None, near_ink=None):
         self.h, self.n, self.x0, self.x1 = horizon, near, x0, x1
         self.swells, self.power, self.seed = swells, power, seed
         r = random.Random(seed)
@@ -60,6 +60,12 @@ class Land:
         self.cross, self.vx = cross, vx
         self.near_strip = ([hexrgb(c) for c in DEEP[0]], [hexrgb(c) for c in DEEP[1]])
         self.near_t = near_t
+        self.hero_t0 = hero_t0                 # the field ends here, closed by a hedge across it
+        self.row_ink = hexrgb(row_ink) if row_ink else None
+        if near_ink:
+            self.near_strip = ([hexrgb(c) for c in near_ink[0]], [hexrgb(c) for c in near_ink[1]])
+        # hero: (left x, right x at the near edge, (lit, shade)): one long field running back to the vanishing point
+        self.hero = (hero[0], hero[1], ([hexrgb(c) for c in hero[2][0]], [hexrgb(c) for c in hero[2][1]])) if hero else None
         self.xs = np.arange(x0, x1 + 0.5, 0.5)
         self.ts = np.linspace(0, 1.15, 700)
         X, T = np.meshgrid(self.xs, self.ts)
@@ -108,6 +114,22 @@ class Land:
                 if x > xl:
                     seg += 1
         # shade: the surface falls toward the right
+        if self.hero and t >= self.hero_t0:
+            xl = self.vx + (self.hero[0] - self.vx) * f
+            xr = self.vx + (self.hero[1] - self.vx) * f
+            if abs(x - xl) < 0.6 + 2.2 * t or abs(x - xr) < 0.6 + 2.2 * t:
+                return self.hedge[0]                     # its hedges run all the way back
+            if xl < x < xr and t < self.hero_t0 + 0.012:
+                return self.hedge[0]                     # and one closes its far end
+            if xl < x < xr:
+                pal = self.hero[2][1] if dy > 0.6 else self.hero[2][0]
+                # crop rows converging with the field, a shade deeper, so it reads as a field and not a path
+                u = (x - xl) / (xr - xl) * 9
+                if t > 0.25 and abs(u - round(u)) < 0.12 + 0.06 * t and 0 < round(u) < 9:
+                    if self.row_ink:
+                        return self.row_ink
+                    return self.hero[2][1][0] if dy <= 0.6 else self.hedge[2]
+                return pal[int(rng.random() * len(pal))]
         if self.near_strip is not None and t > self.near_t:
             lit, dark = self.near_strip
         else:
@@ -122,31 +144,36 @@ TREE = ["#5E7446", "#536940", "#475C37", "#3B4E2E"]
 CROPS = [WHEAT, SAGE, GREEN, OCHRE, PLOW, PALE]
 
 
-def lone_tree(x, ground, s, seed):
+def lone_tree(x, ground, s, seed, inks=None):
     r = random.Random(seed)
     e = [(x + r.uniform(-s, s) * 0.6, ground - s * 1.25 - r.uniform(0, s * 0.45), s * r.uniform(0.7, 1.0),
           s * r.uniform(0.55, 0.75)) for _ in range(5)]
     trunk = Trunks([(x, ground - s * 1.3, ground, max(1.1, s * 0.15))], "#4A3A2C")
     trunk.min_run = 0.4          # a trunk is narrower than a slab and a half; clean mode must keep it
-    return [trunk, Grove(e, TREE)]
+    return [trunk, Grove(e, inks or TREE)]
+
+
+RIPE = (["#E9C77E", "#E4BE70"], ["#DDB565", "#D0A752"])        # the hero field: golds only, no muddy browns
+TREE_DARK = ["#3A4D2F", "#2F4026", "#25331E"]
 
 
 def cover():
-    """Long fields at harvest, minimal: a low lilac horizon with the sun just above it on the left; the land rises
-    into one long swell on the right (the only thing above the name line), the strips of wheat, sage, green, ochre
-    and ploughed earth running across it and bending over its shoulder, shaded where it falls away to the right; a
-    lone tree on the crest; the strips widen toward us and the near edge is a broad green field."""
-    # no ploughed strip on the cover: on the crest it sat like a brown cap
-    land = Land(222, 380, -20, 260, [(222, 0.30, 90, 0.26, 52), (30, 0.72, 90, 0.2, 32)],
-                [WHEAT, SAGE, GREEN, OCHRE, PALE], seed=7,
-                cross=[(-40, 0.10, 1.2), (90, 0.1, 1.2), (170, 0.15, 1.2), (250, 0.2, 1.2)], vx=60, grain=1.5)
-    crest_y = float(land.skyline[land._col(214)])
+    """The patient field: one long field of ripe wheat runs from the near edge back over the rolling land and ends at
+    a hedge just below a lone dark tree on the crest of the swell on the right; its crop rows converge on the tree; the
+    low sun sits just left of the tree, so sun and tree are one focal point; the fields either side are greens in
+    broad strips of uneven width, shaded where the land falls away to the right, darkest in the near left corner."""
+    vx = 214
+    land = Land(222, 380, -20, 260, [(222, 0.30, 90, 0.26, 52), (30, 0.72, 90, 0.2, 26), (80, 0.5, 40, 0.1, 6)],
+                [GREEN, SAGE, DEEP], seed=9, cross=[], vx=vx, grain=1.4, hero=(-10, 176, RIPE), hero_t0=0.30,
+                row_ink="#B98F45", near_t=0.9, near_ink=(["#4A6040", "#43593A"], ["#3E5234", "#374A2E"]))
+    crest_y = float(land.skyline[land._col(vx)])
     return [
-        disc(58, 204, 13, SUN),
+        disc(150, 197, 12, SUN),
         Ridge([(40, 208, 90, 80, 1.0), (150, 212, 80, 90, 1.0)], 224, *FAR, seed=301, rough=2, smooth=True,
               flicker=0.02),
         land,
-        *lone_tree(214, crest_y + 2, 11, 302),
+        Blob([(vx + 16, crest_y + 4, 14, 2.2)], ["#4E5F3A", "#465634"], top_light=False),   # the tree's shadow
+        *lone_tree(vx, crest_y + 2, 17, 302, TREE_DARK),
     ]
 
 
