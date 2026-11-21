@@ -758,13 +758,29 @@ body{margin:0}
 .cov-final .book-author .ko{background:var(--white);color:var(--c-ink);padding:0 .3em 0 0;margin:0}
 .cov-final.book-xl .book-author{font-size:16px;margin-top:16px}
 </style>
+<style>
+/* The shelf book at its new size (Josef, 2026-11-21): 176 x 257, a narrow hinge 8px in, the type 18px in, the poster
+   type with the name under the title on a knockout. The large cover is the same book scaled x2.68, so it previews the
+   shelf exactly. */
+.cov-final:not(.book-xl){width:176px;height:257px}
+.cov-final:not(.book-xl) .book-cover{padding:20px 13px 14px 18px}
+.cov-final:not(.book-xl) .book-cover::before{left:8px;width:1.5px}
+.cov-final .book-title{font:800 29px/.92 var(--font-display);letter-spacing:.01em}
+.cov-final .book-author{margin-top:10px;font:700 13px/1.25 var(--font-display);letter-spacing:.16em}
+.cov-final .book-author .ko{background:var(--white);padding:0 3px 1px;margin:0 0 0 -3px}
+.cov-final.book-xl .book-cover{padding:54px 35px 38px 48px}
+.cov-final.book-xl .book-cover::before{left:21px;width:4px}
+.cov-final.book-xl .book-title{font-size:78px}
+.cov-final.book-xl .book-author{font-size:35px;margin-top:27px}
+.cov-final.book-xl .book-author .ko{padding:0 8px 3px;margin-left:-8px}
+</style>
 </helmet>
 
 <div style="width: 600px; height: 1090px; background: var(--paper); color: var(--ink); font-family: var(--font-sans); padding: 56px 64px; display: flex; gap: 108px; align-items: flex-start; overflow: hidden">
 <div class="col">
 <span class="frame-label">Strata · the cover</span>
 <div><div class="book book-xl cov-final" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/0d3aba83ca6b95a037082a747edafeef" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div></div>
-<div style="display: flex; gap: 28px; align-items: flex-start; margin-top: 30px"><div class="book cov-final" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/af326be27e3bdd8b1a9250d40825bd6f" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div></div>
+<div style="display: flex; gap: 28px; align-items: flex-start; margin-top: 16px"><div class="book cov-final" aria-label="The Night Shift Knows, by Maya Okafor"><span class="book-cover"><img class="cover-art" src="/_blob/0d3aba83ca6b95a037082a747edafeef" alt=""><span class="book-title"><span class="ko">The Night Shift Knows</span></span><span class="book-author"><span class="ko">Maya Okafor</span></span></span></div></div>
 </div>
 </div>
 </x-dc>

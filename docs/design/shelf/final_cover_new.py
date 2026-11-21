@@ -12,7 +12,7 @@ import re
 _imgs = re.findall(r'class="cover-art" src="/_blob/([0-9a-f]{32})"', src)    # the desert board's current art
 
 OLD = dict(label="desert mesas at dusk", title="What the Desert Teaches", author="Lucía Hernández-Brooks",
-           ink="#6a3525", xl=_imgs[0], sm=_imgs[1])
+           ink="#6a3525", xl=_imgs[0], sm=_imgs[-1])
 
 COVERS = [
     dict(key="karst", file="FinalCoverKarst", label="karst river in mist", title="Two Years Upriver",
@@ -32,9 +32,10 @@ COVERS = [
 for c in COVERS:
     if f'{c["key"]}_xl' not in IDS:
         continue
-    assert src.count(OLD["xl"]) and src.count(OLD["sm"])
+    # since 2026-11-21 the small (176 px) book shows the large render too, so the board may hold only the xl id
+    assert src.count(OLD["xl"])
     h = (src.replace(OLD["label"], c["label"]).replace(OLD["title"], c["title"]).replace(OLD["author"], c["author"])
          .replace(OLD["ink"], c["ink"]).replace(OLD["xl"], IDS[f'{c["key"]}_xl'])
-         .replace(OLD["sm"], IDS[f'{c["key"]}_sm']))
+         .replace(OLD["sm"], IDS.get(f'{c["key"]}_sm', IDS[f'{c["key"]}_xl'])))
     open(f"{P}/{c['file']}.dc.html", "w").write(h)
 print("ok")
