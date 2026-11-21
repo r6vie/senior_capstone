@@ -148,6 +148,17 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   broad clump across the shaded left slope, smaller ones on both sides.
 - **Desert cover: the butte lowered (Josef: more space for the author).** The butte's top and the sun behind it sit
   16 px lower (world units), leaving a clear band of white under the name.
+- **Book screens for the winter, terraces and lagoon covers (Josef: build them out).** `art/strata/pages_new.py`,
+  boards `FinalBookAurora`, `FinalBookTerraces`, `FinalBookLagoon` beside their covers. Winter: the aurora lying low
+  under the text and sweeping up beside it on the right, hung as separate curtains, night and a few pale stars
+  beneath; a tall snow peak and a long range of soft, uneven hills; a frozen lake with the aurora faint in the ice
+  and two cracks; far firs along the shore, dark groves in both lower corners. Terraces: the left slope low under
+  the text, the right climbing high to the stilted hut; three violet ridges and the sun in the notch over the lake,
+  mist across the left; lips lighter and broken so they read as banks; the slopes meet on a stepped diagonal;
+  bushes and dark trees on the terraces. Lagoon: the volcano on the right (dark summit, glowing vent, plume leaning
+  away), an older island and a small far one, clouds, deep water past a broken line of surf on the reef, pale
+  shallows with coral heads, a sandbar with block palms and an outrigger canoe. A fresh critic reviewed the drafts;
+  its main fixes are in.
 - **Cover typography follows the gouache poster, set left (Josef: "redo the cover typography everywhere to match
   closer to 4 · Gouache poster, keep it left justified and name right under").** A fixed-tier change with Josef's
   yes: on the strata covers (`cov-final`, all eight boards on "Covers: Strata") the title is Barlow Condensed 800 in

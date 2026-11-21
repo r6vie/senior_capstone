@@ -487,7 +487,11 @@ class Paddies:
         if d >= pool_h + 4:
             pal = inks["riser"]
         elif d >= pool_h:
-            pal = inks["lip"]
+            # on the page the lips break every so often, so they read as banks, not ruled lines
+            if getattr(self, "lip_breaks", False) and int((x + i * 53) // 70) % 4 == 0:
+                pal = inks["pool"]
+            else:
+                pal = inks["lip"]
         else:
             pal = inks["pool"]
         return pal[int(rng.random() * len(pal))]

@@ -152,7 +152,196 @@ def karst():
     ]
 
 
-SCENES = {"karst": karst}
+# ---- winter night, aurora ----
+from covers_new import (AuroraSky, NIGHT, CURTAIN, SNOW, SNOW_FAR, F_LIT, F_DARK, ICE, ICE_G, Firs)
+STAR = ["#EFE3B0", "#E8DAA2"]
+SNOW_MID = (["#D3D9E8", "#CBD2E3", "#C3CBDE"], ["#8E97B8", "#848DAF", "#7A84A6"])
+F_FAR = (["#3F5A63", "#38525B"], ["#24363D", "#1E2F35"])       # far firs along the shore, a step paler
+
+
+def winter_hem(x):
+    import numpy as np
+    # the aurora lies low and nearly level under the text, then sweeps up steeply beside it on the right
+    return 490 - 0.04 * x - np.clip(np.asarray(x, dtype=float) - 440, 0, None) * 1.75
+
+
+class CurtainSky(AuroraSky):
+    """The page's aurora: the curtain split into separate hanging curtains by gaps where slabs are left out."""
+
+    gaps = [(98, 122), (196, 216), (300, 318), (400, 414)]
+
+    def cover(self, x, y):
+        import numpy as np
+        m = super().cover(x, y)
+        h = np.asarray(self.hem(x), dtype=float)
+        xa = np.asarray(x, dtype=float)
+        above = y < h
+        for a, b in self.gaps:
+            m &= ~(above & (xa >= a) & (xa <= b))
+        return m
+
+
+def winter():
+    """A winter night in a wide snow valley: the aurora sweeping up the right of the page, its curtain dissolving into
+    paper through gaps; the night sky under it with a few stars; a tall snow peak on the right and a long range of
+    lower, uneven snow hills to the left; a frozen lake with the peaks mirrored in its ice and a bank of mist; far
+    firs along the shore, and dark groves of firs in both lower corners on deep snow."""
+    peaks = Ridge([(520, 300, 92, 84, 0.95), (446, 468, 66, 54, 0.7), (334, 500, 96, 70, 0.65), (276, 514, 40, 50, 0.8),
+                   (180, 492, 100, 76, 0.65), (58, 506, 84, 70, 0.7)], 600, *SNOW, seed=200, rough=5, ribs=0.9,
+                  lean=0.4, smooth=True, flicker=0.04)
+    far = Ridge([(250, 476, 110, 90, 0.7), (110, 480, 100, 80, 0.7), (400, 456, 80, 70, 0.75)], 600, *SNOW_FAR,
+                seed=201, rough=3, ribs=0.3, smooth=True, flicker=0.03)
+    lake = Water(598, 640, -40, 610, ["#7E89B2", "#7680AA", "#6E78A2"], ["#9AA4C8", "#A8B1D2"], seed=202,
+                 mirror=[peaks], gaps=(0, 0), squash=0.5)
+    lake.brick = (6.0, 20.0)
+    stars = Blocks([(x, y, x + 2.5, y + 4, STAR) for x, y in
+                    [(222, 488), (286, 484), (372, 486), (420, 480), (452, 448), (552, 286), (500, 360), (560, 340)]])
+    return [
+        CurtainSky(winter_hem, 610, 14, 70, NIGHT, CURTAIN, seed=203),
+        stars,
+        far,
+        peaks,
+        Ridge([(560, 520, 60, 50, 0.85), (380, 540, 70, 60, 0.8)], 600, *SNOW_MID, seed=204, rough=3, ribs=0.3,
+              smooth=True, flicker=0.03),
+        Band(-60, 640, 592, 602, SNOW[0], seed=205, lens=0.0),
+        Firs([(x, 602, h, w) for x, h, w in [(140, 30, 6), (156, 38, 7), (172, 28, 6), (292, 34, 7), (308, 26, 6),
+                                             (414, 32, 6), (430, 40, 8), (446, 28, 6)]], *F_FAR, tiers=2),
+        lake,
+        # the aurora caught faintly in the ice under its curtains, and two pale cracks
+        Blocks([(x + dx, y, x + dx + 10, y + 4, ["#9FD8BF", "#94CFB5"]) for x, y in [(60, 608), (170, 616), (270, 610),
+                                                                                       (360, 620)] for dx in (0, 16)]),
+        Blocks([(120, 626, 150, 630, ["#8C90B8"]), (330, 612, 360, 616, ["#8C90B8"])]),
+        cloud_band(300, 604, 150),
+        Band(-60, 640, 638, 700, SNOW[0], seed=206, lens=0.0),
+        Band(-60, 640, 664, 700, SNOW[0][1:] + SNOW[1][:1], seed=207, lens=0.2),
+        # dark groves in both lower corners
+        Firs([(10, 676, 96, 16), (40, 680, 74, 13), (70, 684, 56, 11), (-10, 684, 80, 14), (98, 686, 40, 9)],
+             F_LIT, F_DARK, tiers=3),
+        Firs([(470, 680, 90, 15), (500, 676, 118, 18), (532, 680, 100, 16), (560, 684, 84, 14), (444, 686, 50, 10)],
+             F_LIT, F_DARK, tiers=3),
+    ]
+
+
+def cloud_band(x, y, w):
+    """A low bank of mist over the ice: long stepped slabs, ends uneven."""
+    return Blob([(x, y, w, 4), (x - w * 0.5, y + 3, w * 0.45, 3.5), (x + w * 0.45, y - 2, w * 0.4, 3.5)],
+                ["#EEF1F8", "#E6EAF4", "#DDE2EF"], top_light=False)
+
+
+# ---- rice terraces at dawn ----
+from covers_new import (Paddies, PADDY_LEFT, PADDY_RIGHT, SEEDLING, BUTTER, FAR_1, FAR_2, DEEP_LAKE, LAKE_GLINT,
+                        TREE_DARK, THATCH, STILT, PLANTER, BUSH_SHADE, BUSH_LIT, Mesa)
+FAR_3 = (["#C4C0D6", "#BDB9D0"], ["#A9A4C0", "#A29DB9"])     # the furthest ridge, palest
+EGRET = ["#F7F7F2", "#EEEEE8"]
+STEP = ["#B9A77A", "#AD9B6E"]
+
+
+def terraces():
+    """The terraced valley opened up: the left slope stays low beneath the text and steps down to the right; the right
+    slope climbs high beside it; between them the valley runs back through three violet ridges to the butter sun in
+    the notch, over a deep lake with the sun's path on it. The terraces bow like contour lines, the shaded left in
+    violet-grey water on moss, the lit right in butter and peach on olive. Bushes and dark trees stand on the
+    terraces, a stilted hut on the right, a stone stair climbing the right slope, egrets in the near pools."""
+    cx = 330
+    lake = Water(486, 600, -40, 610, DEEP_LAKE, LAKE_GLINT, seed=310, gaps=(0, 0))
+    lake.path = (cx, 9)
+    lake.brick = (4.0, 12.0)
+    # left slope: low, from the left edge stepping down to the meeting point; right slope: high, from the edge down
+    left = [(2, 70), (3, 120), (2, 160), (3, 200), (3, 236), (3, 268), (4, 300), (4, 380), (5, 380), (5, 380),
+            (5, 380)]
+    # the right slope keeps right of the text (about x 470 above y 350) and climbs to the hut
+    right = [(2, 560), (3, 520), (2, 500), (3, 486), (3, 472), (3, 456), (3, 440), (3, 424), (3, 408), (3, 392),
+             (3, 376), (4, 360), (4, 344), (4, 338), (4, 326), (5, 342), (5, 330)]   # the meeting steps, never a ruled line
+    soft_left = dict(PADDY_LEFT, lip=["#4C5A43", "#45523D"])
+    soft_right = dict(PADDY_RIGHT, lip=["#5A5A36", "#525231"])
+    lp = Paddies(420, left, [(1, 10000)], soft_left, soft_right, SEEDLING, cx=10000, dip=8, seed=311)
+    rp = Paddies(244, [(1, -10000)], right, soft_left, soft_right, SEEDLING, cx=cx, dip=8, seed=312)
+    lp.lip_breaks = rp.lip_breaks = True
+    return [
+        Ridge([(400, 450, 120, 140, 1.0)], 520, (["#DCD8E8", "#D6D2E3"], ["#C8C3DC", "#C2BDD6"]), seed=299,
+              rough=2, smooth=True, flicker=0.02) if False else Ridge([(400, 450, 120, 140, 1.0)], 520,
+              ["#DCD8E8", "#D6D2E3"], ["#C8C3DC", "#C2BDD6"], seed=299, rough=2, smooth=True, flicker=0.02),
+        Ridge([(380, 440, 160, 150, 1.0)], 520, *FAR_3, seed=300, rough=2, smooth=True, flicker=0.02),
+        disc(cx, 470, 26, BUTTER),
+        Ridge([(250, 466, 120, 100, 1.0), (430, 456, 110, 120, 1.0)], 520, *FAR_1, seed=301, rough=2, smooth=True,
+              flicker=0.02),
+        Ridge([(220, 484, 110, 90, 1.0), (450, 480, 90, 110, 1.0)], 530, *FAR_2, seed=302, rough=2, smooth=True,
+              flicker=0.02),
+        lake,
+        Blob([(120, 500, 80, 4), (60, 504, 40, 3.5), (190, 498, 40, 3.5)], ["#F4F2F6", "#ECE9F0"], top_light=False),
+        lp, rp,
+        # the stilted hut high on the right
+        Blocks([(526, 252, 529, 268, STILT), (546, 252, 549, 268, STILT)]),
+        Mesa(538, 234, 13, 13, 252, *THATCH, ledges=1, bed=8, seed=313, wobble=0, speckle=0, ragged=0),
+        Ridge([(538, 216, 22, 22, 1.0)], 235, *THATCH, seed=314, rough=0, smooth=True, flicker=0),
+        Blocks([(534, 240, 541, 252, PLANTER)]),
+        trees([566, 580], 252, 12, TREE_DARK, seed=315, spread=0.5),
+        # bushes and trees on the terraces
+        trees([30, 52, 74], 440, 12, BUSH_SHADE, seed=316, spread=0.7),
+        trees([146], 482, 9, BUSH_SHADE, seed=317, spread=0.6),
+        trees([20, 40], 548, 10, TREE_DARK, seed=318, spread=0.6),
+        trees([226, 250], 520, 8, BUSH_SHADE, seed=319, spread=0.6),
+        trees([492], 330, 9, BUSH_LIT, seed=320, spread=0.6),
+        trees([540, 560], 380, 10, BUSH_LIT, seed=321, spread=0.6),
+        trees([420, 446], 470, 9, BUSH_LIT, seed=322, spread=0.6),
+        trees([520], 560, 11, BUSH_LIT, seed=323, spread=0.6),
+    ]
+
+
+# ---- volcanic lagoon ----
+from covers_new import (V_CONE, V_ASH, V_BASALT, V_SHOULDER, V_FAR, PLUME, LAGOON, LAG_G, SANDBAR, P_LIT, P_DARK,
+                        P_TRUNK, JUNGLE, block_palms)
+REEF = ["#3E8A94", "#357C86", "#2F6F79"]           # the deep water past the reef
+FOAM_L = ["#F4F8F6", "#E6F0EE"]
+CORAL = ["#4C9A97", "#438E8B"]                     # darker heads of coral in the shallows
+CANOE = ["#6B4A32", "#5E412C"]
+OUTRIG = ["#8A6A48", "#7C5F40"]
+CLOUD_W = ["#F4F4F2", "#ECECE8", "#E2E2DE"]
+
+
+def lagoon_page():
+    """The island from the lagoon: the volcano on the right rising highest beside the text, a dark barren summit over
+    green skirts, its vent glowing, the plume rising and leaning away; a second, older island low on the left; the
+    lagoon in bands, deep blue past the reef, a line of breaking foam, turquoise shallows with darker coral heads;
+    a sandbar island with palms and an outrigger canoe drawn up on it in front; jungle along the volcano's foot."""
+    # kept right of the text (about x 470 above y 350): a steep left flank, a shoulder low on the left below the text
+    cone = Ridge([(510, 210, 96, 100, 0.72), (420, 400, 70, 50, 0.85), (590, 300, 40, 70, 0.85)], 520, *V_CONE,
+                 seed=400, rough=5, ribs=0.85, lean=0.3,
+                 bands=[(206, 226, *V_ASH), (226, 262, *V_BASALT)], smooth=True, flicker=0.05)
+    old = Ridge([(70, 470, 110, 90, 0.8), (190, 490, 60, 50, 0.9)], 528, *V_FAR, seed=401, rough=3, ribs=0.4,
+                smooth=True, flicker=0.03)
+    lagoon = Water(560, 700, -40, 610, ["#9DD0C9", "#8CC7C0", "#7DBBB5", "#6FAFAA"], LAG_G, seed=402, gaps=(0, 1))
+    return [
+        # the plume, rising from the vent and leaning away to the right, clear of the text
+        Blob([(510, 196, 10, 8), (518, 184, 13, 8), (532, 172, 16, 8), (550, 162, 16, 7), (566, 156, 14, 6)], PLUME,
+             top_light=True),
+        Blob([(548, 300, 26, 5), (530, 306, 16, 4)], CLOUD_W, top_light=False),
+        old,
+        # a smaller island far out in the haze, and two cloud strips in the open middle
+        Ridge([(300, 500, 50, 44, 0.85)], 528, ["#BCCDC0", "#B4C6B8"], ["#A2B5A7", "#9AAE9F"], seed=411, rough=2,
+              smooth=True, flicker=0.02, mist=(512, 528)),
+        Blob([(300, 432, 70, 4), (250, 436, 30, 3.5)], ["#DFE3E6", "#D6DADE"], top_light=False),
+        Blob([(380, 452, 60, 4), (424, 456, 30, 3.5)], ["#DFE3E6", "#D6DADE"], top_light=False),
+        Ridge([(560, 360, 50, 60, 1.1)], 520, *V_SHOULDER, seed=403, rough=2, ribs=0.6, lean=0.3, smooth=True,
+              flicker=0.04),
+        cone,
+        Blob([(510, 214, 8, 3)], ["#E3A061", "#D98E4E"], top_light=False),         # the vent's glow
+        trees([300, 330, 362, 396, 430, 466, 500, 536, 566], 522, 11, JUNGLE, seed=404, spread=1.0),
+        trees([40, 76, 110, 150, 190], 530, 8, JUNGLE, seed=405, spread=1.0),
+        Water(522, 560, -40, 610, REEF, LAG_G, seed=406, gaps=(0, 1)),
+        Water(552, 564, -40, 610, FOAM_L, FOAM_L, seed=407, gaps=(2, 4)),          # the surf breaking on the reef
+        lagoon,
+        Blob([(90, 604, 30, 4), (380, 630, 40, 4), (520, 612, 26, 4)], CORAL, top_light=False),
+        # the sandbar island in front, palms, a canoe drawn up
+        Band(-80, 300, 620, 700, SANDBAR, seed=410, lens=0.6),
+        Band(-80, 290, 618, 624, ["#D9C49A", "#D1BB8F"], seed=412, lens=0.6),          # the wet sand at the edge
+        block_palms([(40, 72, 30, 14), (96, 62, 26, 12), (150, 52, 22, 9)], 680, P_LIT, P_DARK, P_TRUNK),
+        Blocks([(186, 660, 286, 668, CANOE), (180, 656, 190, 660, CANOE), (282, 656, 292, 660, CANOE),
+                (196, 648, 276, 652, OUTRIG), (206, 652, 210, 660, OUTRIG), (262, 652, 266, 660, OUTRIG)]),
+    ]
+
+
+SCENES = {"karst": karst, "winter": winter, "terraces": terraces, "lagoon": lagoon_page}
 
 if __name__ == "__main__":
     for name in sys.argv[1:] or list(SCENES):

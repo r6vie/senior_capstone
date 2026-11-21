@@ -29,7 +29,7 @@ pixels and redrawn for each size it shows at, so the courses stay 4px on the boo
 | `final.py` (history) | Final round, on the canvas page "Final designs": the same slabs finished (no bevel, a paper seam between courses, calm colour), one muted family of inks, a composed scene (hero peak on the right third, sun set against its flank, planes stepping back into haze, firs in a cluster) for B's title page, its contents page, and the cover |
 | `covers_more.py` | Three more covers in the final style, each its own place and palette: desert mesas at dusk, sea cliffs by moonlight, an autumn terraced valley. Uses the new `Mesa` and `Terraces` layers in `strata.py` |
 | `covers_new.py` | Four more covers, the places Josef picked on 2026-11-20: a karst river in mist, a winter night with the aurora (the night sky cut off at the aurora), flooded rice terraces at dawn (`Shelves`) and a volcanic lagoon |
-| `pages_new.py` | Book screen B's title-page art for the `covers_new.py` covers, each a full scene (karst so far) |
+| `pages_new.py` | Book screen B's title-page art for the `covers_new.py` covers, each a full scene (karst, winter, terraces, lagoon) |
 | `pages_more.py` | Book screen B's title-page art for each `covers_more.py` cover: the cover's place opened up into a full scene (adds `Arch`) |
 | `phone.py` | The panorama and cover at three-quarter size for the phone book page |
 | `boards.py` | Writes the three canvas boards (the uploaded image ids are in it) |
