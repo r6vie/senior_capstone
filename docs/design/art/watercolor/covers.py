@@ -419,6 +419,19 @@ def Yw_():
     return _YY / S
 
 
+def spline(pts, n=12):
+    """Catmull-Rom through the points: a smooth curve instead of a polyline's corners."""
+    P = [pts[0]] + list(pts) + [pts[-1]]
+    out = []
+    for i in range(1, len(P) - 2):
+        (x0, y0), (x1, y1), (x2, y2), (x3, y3) = P[i - 1], P[i], P[i + 1], P[i + 2]
+        for t in np.linspace(0, 1, n, endpoint=False):
+            t2, t3 = t * t, t * t * t
+            out.append((0.5 * (2 * x1 + (x2 - x0) * t + (2 * x0 - 5 * x1 + 4 * x2 - x3) * t2 + (3 * x1 - x0 - 3 * x2 + x3) * t3),
+                        0.5 * (2 * y1 + (y2 - y0) * t + (2 * y0 - 5 * y1 + 4 * y2 - y3) * t2 + (3 * y1 - y0 - 3 * y2 + y3) * t3)))
+    return out + [pts[-1]]
+
+
 def fir(p, x, base, h, w, rng):
     """A dark fir: ragged tiers wider toward the ground, painted in one go wet-in-wet, lit faintly on the left."""
     m = np.zeros((H, W), np.float32)
@@ -471,13 +484,14 @@ def autumn():
     # 3 the river: it leaves the arch narrow and winds toward us, widening
     rl = [(101, 254), (96, 264), (104, 276), (116, 290), (110, 304), (84, 320), (46, 336), (6, 352)]
     rr = [(135, 254), (142, 264), (150, 276), (162, 290), (168, 304), (162, 320), (168, 336), (186, 352)]
-    river = p.soften(p.rough(p.poly(rl + rr[::-1]), 0.6, 6, fine=0.3), 0.5)
+    rl, rr = spline(rl), spline(rr)              # smooth curving banks, no jagged corners
+    river = p.soften(p.rough(p.poly(rl + rr[::-1]), 0.35, 16, fine=0.0), 0.4)
     p.wash(river, GOLD, 0.6, rim=0.3, flow=0.4, blotch=0.04)                       # it holds the sky
     p.wash(river, SHADOW, 0.75, rim=0.2, flow=0.45, blotch=0.06, vary=ramp_y(262, 344, 0.15, 1.2))
     p.wash(river, ULTRA, 0.3, rim=0, flow=0.4, vary=ramp_y(300, 344, 0.0, 1.0))
     # 4 banks: raw sienna, warmer and deeper toward us; they overlap the water so no paper shows at the seam
-    lbank = p.rough(p.poly([(-20, 252), (104, 252)] + rl[1:] + [(-20, 352)]), 0.8, 5, fine=0.5)
-    rbank = p.rough(p.poly([(132, 252), (260, 250), (260, 352)] + rr[::-1][:-1]), 0.8, 5, fine=0.5)
+    lbank = p.rough(p.poly([(-20, 252), (104, 252)] + rl[1:] + [(-20, 352)]), 0.35, 16, fine=0.0)
+    rbank = p.rough(p.poly([(132, 252), (260, 250), (260, 352)] + rr[::-1][:-1]), 0.35, 16, fine=0.0)
     lbank = np.clip(blur(lbank, 1.0 * S) * 2.2, 0, 1)
     rbank = np.clip(blur(rbank, 1.0 * S) * 2.2, 0, 1)
     for bank in (lbank, rbank):

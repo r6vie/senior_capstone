@@ -357,6 +357,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   row of white dashes along the cover's bottom edge (the lighthouse has it too; it is fixed there only when that
   cover is re-rendered). Two Josef-eye critic rounds; the second still asked for more (fewer stain-ring edges in
   the oak's clumps, a darker overall value range); its main points were applied and not re-reviewed.
+  Then (Josef: river edges "more smooth and not jagged"): both banks are Catmull-Rom curves through the river's
+  points, with only a slow wobble and no fine ragging on the water's edge.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
