@@ -911,6 +911,30 @@
    "h": 1090,
    "title": "Cover · Autumn river",
    "page": "watercolor"
+  },
+  "WCCoverLighthouse2.dc.html": {
+   "x": 0,
+   "y": 1200,
+   "w": 600,
+   "h": 1090,
+   "title": "Cover · Lighthouse at dusk (painted to the top)",
+   "page": "watercolor"
+  },
+  "WCCoverHarbor2.dc.html": {
+   "x": 680,
+   "y": 1200,
+   "w": 600,
+   "h": 1090,
+   "title": "Cover · Harbor morning (painted to the top)",
+   "page": "watercolor"
+  },
+  "WCCoverAutumn2.dc.html": {
+   "x": 1360,
+   "y": 1200,
+   "w": 600,
+   "h": 1090,
+   "title": "Cover · Autumn river, golden haze (painted to the top)",
+   "page": "watercolor"
   }
  },
  "createdOnFiles": {
@@ -1191,7 +1215,10 @@
   "FinalBookForest.dc.html",
   "WCCoverLighthouse.dc.html",
   "WCCoverHarbor.dc.html",
-  "WCCoverAutumn.dc.html"
+  "WCCoverAutumn.dc.html",
+  "WCCoverLighthouse2.dc.html",
+  "WCCoverHarbor2.dc.html",
+  "WCCoverAutumn2.dc.html"
  ],
  "pages": [
   {

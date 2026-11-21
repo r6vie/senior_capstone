@@ -6,12 +6,14 @@ first three and obsess over them, only covers, not book screens yet"). Shown on 
 Illustrated watercolour, not a photograph (an earlier photographic wash was rejected as reading cheap) and not
 abstract strokes: a clear subject built from transparent glazes, wet-in-wet skies, pooled hard edges, granulation,
 and bare paper doing every white. Same cover object and type as the strata set (the 176 x 257 shelf book, the narrow
-hinge, the poster type with the name under the title); the name's knockout takes the paper's warm off-white.
+hinge, the poster type with the name under the title). Round 1 left the top as bare paper; round 2 paints the whole
+cover and lets the title's colour follow the paint (`ink.py`), so the library varies from light to dark tops.
 
 | File | What |
 |---|---|
 | `paint.py` | The engine: pigment glazed onto cold-press paper (Beer-Lambert glazing, two-scale ragged edges, pooled rims, uneven settling with faint backruns, granulation, dry brush, lifting, wet-in-wet softening, `loose()` for building any shape from overlapping wet patches like foliage) |
-| `covers.py` | The covers: `lighthouse`, `harbor`, `autumn` (`python3 covers.py [name ...]` -> `out/<name>-xl.png` 944 x 1376 and `-sm.png`) |
+| `covers.py` | The covers: `lighthouse`, `harbor`, `autumn` (`python3 covers.py [name ...]` -> `out/<name>-xl.png` 944 x 1376 and `-sm.png`). Round 2: painted edge to edge. Round 1 (white tops) is commit 5813d6b |
+| `ink.py` | The title adjusts by itself: cream on a dark top, the book's dark ink on a light one, by measured contrast |
 
 Layout rule as for strata: the title and name sit on bare paper at the top; left of world x ~200 the paint stays below
 y ~180, only the right edge rises higher.

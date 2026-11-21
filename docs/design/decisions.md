@@ -333,6 +333,17 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   headland behind with a small campanile. Autumn: a river under a stone arch bridge, golden crowns flowered at their
   edges, the big tree on the right. Same cover object and type as strata. Two Josef-eye critic rounds, their fixes
   applied but not re-reviewed; the critics found the objects stiffer than the washes, so this is round 1 for Josef.
+  Then (Josef: "all look pretty, push all, but this time, we wont make the top of the cover white, it can be some
+  light (or even dark) color and title will adjust by itself so that there is some variety in the library"; and keep
+  round 1 on the board): round 2 is painted edge to edge, on new boards `WCCover{Lighthouse,Harbor,Autumn}2` in a row
+  under round 1, which stays as it was (its code is in commit 5813d6b). The lighthouse at dusk (indigo melting to
+  rose and gold, the lantern glowing), the harbor under a light morning sky (smaller boats on their reflections,
+  muted roofs, a masthead and stay), the autumn river in a golden haze (it now meanders, reflects the sky and runs
+  under a real stone arch). **The title adjusts by itself:** `art/watercolor/ink.py` measures the paint behind the
+  title (world x 18-200, y 20-175) and picks cream (#f6efe0) on a dark top or the book's dark ink on a light one,
+  whichever contrasts more (here 7.2, 6.1 and 6.7 to 1); the name has no knockout, it sits on the paint. This changes
+  the fixed cover type's colour rule for these covers, with Josef's yes. One Josef-eye critic round on round 2, its
+  fixes applied.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
