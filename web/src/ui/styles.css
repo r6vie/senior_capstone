@@ -678,13 +678,14 @@ body {
   padding: 16px 10px 10px 21px;
   border: var(--line) solid var(--ink);
   border-radius: var(--r-book);
+  /* --crease is where the paper folds at the hinge, so the shade around the hinge line follows it. */
   background: linear-gradient(
     90deg,
     #e4e4df 0,
-    #f5f5f1 7px,
-    var(--white) 8px 11px,
-    #f2f2ee 12px,
-    var(--white) 16px
+    #f5f5f1 calc(var(--crease, 12px) - 5px),
+    var(--white) calc(var(--crease, 12px) - 4px) calc(var(--crease, 12px) - 1px),
+    #f2f2ee var(--crease, 12px),
+    var(--white) calc(var(--crease, 12px) + 4px)
   );
   overflow: hidden;
 }
@@ -760,6 +761,34 @@ body {
   font-size: 8.5px;
 }
 
+/* The desktop shelf book (Josef, 2026-11-21): larger, so the cover and its type read better; a narrow hinge
+   (the line 8px in, the type 18px in); strata cover type, the name right under the title. The phone and the
+   other sizes keep the book above until they are decided. */
+@media (min-width: 720px) {
+  .book:not(.book-lg, .book-sm, .book-xs) {
+    width: 176px;
+    height: 257px;
+  }
+  .book:not(.book-lg, .book-sm, .book-xs) .book-cover {
+    --crease: 8px;
+    padding: 23px 14px 14px 18px;
+  }
+  .book:not(.book-lg, .book-sm, .book-xs) .book-cover::before {
+    left: 8px;
+  }
+  .book:not(.book-lg, .book-sm, .book-xs) .book-title {
+    font: 800 29px / 0.92 var(--font-display);
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+  .book:not(.book-lg, .book-sm, .book-xs) .book-author {
+    margin-top: 10px;
+    font: 700 13px / 1.15 var(--font-display);
+    letter-spacing: 0.16em;
+    color: var(--ink);
+  }
+}
+
 .shelf-head {
   display: flex;
   align-items: center;
@@ -783,7 +812,7 @@ body {
 }
 .shelf-books {
   display: flex;
-  gap: 28px;
+  gap: 36px;
   padding: 0 var(--s-1);
 }
 .ledge {
