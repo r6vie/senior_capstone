@@ -192,9 +192,11 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Reopen the interview from your book at any time. New material is rewritten into the book
   (not just appended), and the author approves the changes.
 
-**D3 · The Librarian recommends** · Alvisa · `todo`
+**D3 · The Librarian recommends** · Alvisa · `doing`
 - One recommended book at a time, each with a one-line reason for why you two should talk.
 - Quietly favors books that are checked out less (trove.md §9.6).
+- **Waiting on Ellie:** a server-only checkout-load contract so discovery can apply that preference
+  without reading the checkouts collection or exposing counts to members.
 
 **D4 · Recommend a book to someone** · Alvisa · `todo`
 - Recommend a book to someone in your Past meets, inside the app (uses `checkouts.past_meets`),

@@ -1195,6 +1195,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/discovery/recommendation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recommendation
+         * @description The Librarian's one current pick, based only on this member's own book.
+         */
+        get: operations["recommendation_discovery_recommendation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -1606,6 +1626,20 @@ export interface components {
              */
             new_messages: boolean;
             did_you_meet?: components["schemas"]["DidYouMeet"] | null;
+        };
+        /**
+         * LibrarianRecommendation
+         * @description What the shelf's Librarian cover shows for this signed-in member.
+         */
+        LibrarianRecommendation: {
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "create_book" | "finish_book" | "recommendation" | "empty_shelf" | "unavailable";
+            book?: components["schemas"]["BookCard"] | null;
+            /** Reason */
+            reason?: string | null;
         };
         /**
          * LibrarianState
@@ -4213,6 +4247,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recommendation_discovery_recommendation_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibrarianRecommendation"];
                 };
             };
         };

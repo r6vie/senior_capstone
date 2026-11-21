@@ -2859,6 +2859,33 @@
         }
       }
     },
+    "/discovery/recommendation": {
+      "get": {
+        "tags": [
+          "Discovery"
+        ],
+        "summary": "Recommendation",
+        "description": "The Librarian's one current pick, based only on this member's own book.",
+        "operationId": "recommendation_discovery_recommendation_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibrarianRecommendation"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -4051,6 +4078,48 @@
         ],
         "title": "LendingCheckout",
         "description": "A checkout of your book, as its author sees it."
+      },
+      "LibrarianRecommendation": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "create_book",
+              "finish_book",
+              "recommendation",
+              "empty_shelf",
+              "unavailable"
+            ],
+            "title": "State"
+          },
+          "book": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BookCard"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state"
+        ],
+        "title": "LibrarianRecommendation",
+        "description": "What the shelf's Librarian cover shows for this signed-in member."
       },
       "LibrarianState": {
         "properties": {

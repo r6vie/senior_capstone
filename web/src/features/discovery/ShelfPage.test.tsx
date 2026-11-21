@@ -45,6 +45,8 @@ function renderShelf(path = "/") {
         <Route path="/" element={<ShelfPage />} />
         <Route path="/books/:bookId" element={<ShelfPage />} />
         <Route path="/checkouts/new/:bookId" element={<p>Checkout form</p>} />
+        <Route path="/interview" element={<p>Book interview</p>} />
+        <Route path="/my-book" element={<p>My book page</p>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -91,6 +93,8 @@ beforeEach(() => {
     }
     if (path === "/books/{book_id}") return response(book);
     if (path === "/books/me") return response(null, 404);
+    if (path === "/discovery/recommendation")
+      return response({ state: "create_book", book: null, reason: null });
     if (path === "/interview/sparks") return response([]);
     throw new Error(`Unexpected path ${path}`);
   });
@@ -110,11 +114,11 @@ async function openBook() {
 }
 
 describe("D1 shelf and reader", () => {
-  it("loads real books into the restored shelves and retains the Librarian example", async () => {
+  it("loads real books and invites a member without a book to create one", async () => {
     renderShelf();
     expect(await screen.findByRole("button", { name: `${book.title}, by ${book.author_name}` })).toBeTruthy();
     expect(screen.getByText("The Librarian recommends")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Why I Turned Down Grad School Twice" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Your story belongs here" })).toBeTruthy();
     const changing = screen.getByRole("region", { name: "Changing course" });
     expect(
       within(changing).getByRole("button", {
@@ -129,6 +133,8 @@ describe("D1 shelf and reader", () => {
     ).toBeTruthy();
     expect(screen.getByRole("region", { name: "Recently added" })).toBeTruthy();
     expect(api.GET).toHaveBeenCalledWith("/books", { params: { query: { limit: 20 } } });
+    fireEvent.click(screen.getByRole("button", { name: "Create your book" }));
+    expect(await screen.findByText("Book interview")).toBeTruthy();
   });
   it("takes out only the copy that was opened when a book stands on two shelves", async () => {
     renderShelf();
@@ -203,6 +209,8 @@ describe("D1 shelf and reader", () => {
   it("retries pagination without losing or duplicating books", async () => {
     let calls = 0;
     api.GET.mockImplementation(async (path: string) => {
+      if (path === "/discovery/recommendation")
+        return response({ state: "create_book", book: null, reason: null });
       if (path !== "/books") return response(null, 404);
       calls += 1;
       if (calls === 1) return response({ books: [book], next: "cursor" });
@@ -255,20 +263,43 @@ describe("D1 shelf and reader", () => {
     fireEvent.click(await within(dialog).findByRole("button", { name: "Try again" }));
     expect(await within(dialog).findByRole("button", { name: "Conversation 1" })).toBeTruthy();
   });
-  it("previews the example without fabricating summaries or a checkout", async () => {
+  it("opens a real Librarian recommendation in the existing reader", async () => {
+    const original = api.GET.getMockImplementation();
+    api.GET.mockImplementation(async (path: string) => {
+      if (path === "/discovery/recommendation")
+        return response({
+          state: "recommendation",
+          book: {
+            id: second.id,
+            title: second.title,
+            author_name: second.author_name,
+            cover_style: second.cover_style,
+            blurb: second.blurb,
+          },
+          reason: "You both learned how to begin again without discarding what came before.",
+        });
+      if (path === "/books/{book_id}") return response(second);
+      return original?.(path);
+    });
     renderShelf();
-    await screen.findByRole("button", { name: `${book.title}, by ${book.author_name}` });
-    fireEvent.click(
-      screen.getByRole("button", { name: "Why I Turned Down Grad School Twice, by Hana Sato" }),
+    expect(await screen.findByRole("heading", { name: second.title })).toBeTruthy();
+    expect(screen.getByText(/begin again without discarding/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: `${second.title}, by ${second.author_name}` }));
+    const dialog = await screen.findByRole("dialog", { name: second.title });
+    expect(await within(dialog).findByRole("button", { name: "Conversation 1" })).toBeTruthy();
+    expect(within(dialog).getByRole("link", { name: "Ask to check out" })).toBeTruthy();
+  });
+  it("sends a member with a draft back to finish their book", async () => {
+    const original = api.GET.getMockImplementation();
+    api.GET.mockImplementation(async (path: string) =>
+      path === "/discovery/recommendation"
+        ? response({ state: "finish_book", book: null, reason: null })
+        : original?.(path),
     );
-    const dialog = screen.getByRole("dialog");
-    expect(within(dialog.querySelector(".br-static") as HTMLElement).getByText("Example book")).toBeTruthy();
-    expect(within(dialog).queryByRole("link", { name: "Ask to check out" })).toBeNull();
-    fireEvent.click(within(dialog).getByRole("button", { name: "The first offer" }));
-    const chapter = await within(dialog).findByRole("article", { name: "The first offer" });
-    // No summary is invented, and no sentence explains why there isn't one.
-    expect(chapter.querySelector(".br-summary")).toBeNull();
-    expect(api.GET.mock.calls.some(([path]) => path === "/books/{book_id}")).toBe(false);
+    renderShelf();
+    expect(await screen.findByRole("heading", { name: "Your story is almost ready" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Finish your book" }));
+    expect(await screen.findByText("My book page")).toBeTruthy();
   });
   it("puts the one request waiting on you, and your own book, under the cover", async () => {
     api.GET.mockImplementation(async (path: string) => {
