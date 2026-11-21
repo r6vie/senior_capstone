@@ -279,12 +279,24 @@ def page():
                 cross_w=(1.4, 3.5), closed=True, grain=1.3)
     hx, ht = 252, 0.43
     hy = float(land._y(np.array([float(hx)]), np.array([ht]))[0])
-    k = 1.9
-    house = Blocks([(hx + a * k, hy + b * k, hx + c * k, hy + d * k, ink) for a, b, c, d, ink in
-                    [(-14, -12, 4, 0, HOUSE_W[0]), (4, -12, 14, 0, HOUSE_W[1]),
-                     # one broad, low gable that overhangs both walls; one door on the lit face
-                     (-18, -15, 18, -12, ROOF), (-14, -18, 14, -15, ROOF), (-9, -20, 9, -18, ROOF),
-                     (-7, -7, -3, 0, ["#5E4436"])]])
+    # a small farmhouse built row by row on the page's slab grid (rows are 4 world px tall), so every detail is a
+    # whole slab and survives: chimney and ridge, roof, a dark eave, then two wall rows: the lit gable with a door
+    # and a window, the shaded side with a small window
+    hy = round(hy / 4) * 4
+    EAVE = ["#5A3E30", "#523829"]
+    GLASS = ["#7E8C96", "#76848E"]
+    DOOR = ["#5E4436", "#563E31"]
+    def part(*rects):
+        return Blocks([(hx + a, hy + b, hx + c, hy + d, ink) for a, b, c, d, ink in rects])
+    # each part is its own layer: within one layer a slab takes a single colour, which would swallow a small door
+    house = [
+        part((-15, -8, 4, 0, HOUSE_W[0])), part((4, -8, 15, 0, HOUSE_W[1])),       # lit gable, shaded side
+        part((-11, -8, -7, 0, DOOR)), part((-3, -8, 1, -4, GLASS)),                 # a door two rows tall, a window
+        part((8, -8, 11, -4, ["#7A7468", "#726C60"])),                              # a window on the shaded side
+        part((-18, -12, 18, -8, EAVE)),                                             # the eave overhangs both walls
+        part((-15, -16, 15, -12, ROOF), (-11, -20, 8, -16, ROOF), (-6, -24, 6, -20, ROOF)),
+        part((8, -24, 11, -16, ["#8C8070", "#837767"])),                            # the chimney
+    ]
     crest = [(496, 13, 405), (534, 9, 407), (470, 6, 408)]
     trees_on_crest = []
     for cx, size, seed in crest:
@@ -298,8 +310,8 @@ def page():
               seed=401, rough=2, smooth=True, flicker=0.02),
         land,
         Lane(land, [(254, 0.43), (276, 0.54), (228, 0.74), (262, 1.12)], (4, 16), LANE),
-        *lone_tree(hx + 30, hy + 1, 13, 402, TREE_DARK),        # one dark tree behind the house's shaded side
-        house,
+        *lone_tree(hx + 22, hy - 2, 11, 402, TREE_DARK),        # one dark tree behind the house's shaded side
+        *house,
         *page_joins(land, 402),
         *trees_on_crest,
     ]
