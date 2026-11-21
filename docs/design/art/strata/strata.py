@@ -544,7 +544,7 @@ def grove(cx_list, ground_y, size, colours, trunk="#5B3B2A", seed=9, spread=1.0,
 
 
 def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fade=None, brick=(1.6, 7.5), paper=PAPER,
-           jitter=0.05, touch=True, slab=(0.10, 0.22, 0.10), joint=0, seam=1.0, clean=False):
+           jitter=0.05, touch=True, slab=(0.10, 0.22, 0.10), joint=0, seam=1.0, clean=False, flush=False):
     """Draw the viewport (wx0, wy0, wx1, wy1) of the scene at size (W, H) with course height in output px.
 
     fade: list of (edge, start, end) in output px; bricks thin out and pale toward paper across it.
@@ -613,6 +613,7 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
                 d = d if (b0 - a0 > minrun and nb[1] - nb[0] > minrun) else 0
                 bounds[b0] = b0 + d
         runs = []
+        edges_fill = []     # flush: (source column, x0, x1) to fill out to the page edge after the row is laid
         for i, (a0, b0, k) in enumerate(segs):
             layer = scene[k]
             step = getattr(layer, "ragged", 1)
@@ -629,6 +630,10 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
                 a, b = (a0, b0) if b0 - a0 >= mr else (a, a)
             if b > a:
                 runs.append((layer, a, b))
+                if flush and a0 == 0 and a > 0:
+                    edges_fill.append((a, 0, a))
+                if flush and b0 == W and b < W:
+                    edges_fill.append((b - 1, b, W))
         for layer, a, b in runs:
             if True:
                 x = a
@@ -665,4 +670,9 @@ def render(scene, viewport, size, course, seed=7, gap=None, slab_shade=True, fad
                         if x2 - x > course * 2 and _h(x, row_top, 5) < 0.55:
                             dr.rectangle([xe - lw + 1, row_top + lw, xe, row_top + h - lw - 1], fill=shade(c, -joint_d))
                     x = x2
+        # a run that reaches the side of the page stays flush with it (no uneven paper notches): its outermost
+        # column is stretched to the edge after the fact, so the random draws and every other slab stay as they were
+        for src, x0, x1 in edges_fill:
+            col = img.crop((src, row_top, src + 1, min(H, row_top + course)))
+            img.paste(col.resize((x1 - x0, col.height)), (x0, row_top))
     return img

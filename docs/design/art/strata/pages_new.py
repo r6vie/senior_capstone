@@ -447,5 +447,5 @@ SCENES = {"karst": karst, "winter": winter, "terraces": terraces, "lagoon": lago
 
 if __name__ == "__main__":
     for name in sys.argv[1:] or list(SCENES):
-        render(SCENES[name](), (0, 0, 570, 684), (1140, 1368), 8, clean=True, jitter=0.04).save(
+        render(SCENES[name](), (0, 0, 570, 684), (1140, 1368), 8, clean=True, jitter=0.04, flush=True).save(
             f"out/page-{name}-title.png")

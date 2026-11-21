@@ -241,6 +241,17 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   meadow with the trail, a meandering creek under a plank footbridge, a copse out in the meadow, the old fir on the
   right edge, young firs, a boulder and ferns in the lower left. Two Josef-eye critic rounds. Pages render a little
   past both edges and are cropped, so no slab start jitters off the page edge.
+  Then (Josef: more detail on the city's buildings): facades as a detail layer over each tower's faces: punched
+  window grids on most (the shaded face's windows one value darker than its wall), ribbon windows on two with a
+  blank spandrel every fourth floor and a base band, vertical fins on the main tower and two others, a sky-lobby band
+  and a podium on the main tower, rooftop boxes and masts, and lit windows only in a few groups of two or three in a
+  muted warm ink. One Josef-eye critic pass (it caught noisy shaded faces, cake-like ribbons, a jagged overlap and
+  stray yellow specks).
+- **Book pages flush to the page edge (Josef: apply the city and forest fix to all book screens).** The renderer
+  used to jitter where a run starts and ends, also at the page's sides, which left small uneven paper notches along
+  the left and right edges. `render(..., flush=True)` stretches a run's outermost column to the edge after the row
+  is laid, so it consumes the same random draws: the lake, desert, coast, valley, karst, winter, terraces and lagoon
+  pages are pixel-identical inside and only their side edges changed (checked by diff).
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

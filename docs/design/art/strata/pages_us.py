@@ -37,19 +37,69 @@ T_SHADE = ["#5E6A86", "#57627E"]
 T_CAP = ["#D6B8AC", "#CFB0A4"]
 
 
-def slab_tower(x0, x1, top, base=500, steps=()):
+WIN_LIT = ["#A6877E", "#9F8178"]         # windows on the lit face: a deeper mauve than the wall
+WIN_SHADE = ["#4D5873", "#4A5570"]       # windows on the shaded face: one value darker than the wall
+WIN_WARM = ["#E3C48E", "#DDBC86"]
+PIER_LIT = ["#A27F75", "#9C796F"]
+ROOFTOP = ["#4A4F63", "#43485C"]
+
+
+def slab_tower(x0, x1, top, base=500, steps=(), style="grid", lights=0, seed=0, roof=()):
     """A tower as clean blocks: lit warm on its left two thirds, slate in shade on its right third, a pale cap course
-    on top; steps: setbacks (inset, height) stacked on top, each narrower."""
+    on top; steps: setbacks (inset, height) stacked on top, each narrower. Its facade in one of three styles, as a
+    detail layer over the faces: "grid" (punched windows), "bands" (ribbon windows every other floor), "piers"
+    (vertical fins on the lit face); a few windows lit warm; roof: rooftop boxes and masts (x0, y0, x1, y1)."""
     out = []
+    r = random.Random(seed)
+    def facade(a, b, t, bt):
+        split = a + (b - a) * 0.66
+        y0 = int((t + 8) // 4 * 4)
+        if style == "grid":
+            for y in range(y0, int(bt) - 6, 8):
+                x = a + 3
+                while x + 3 <= split - 2:
+                    out.append(("detail", x, y, x + 3, y + 4, WIN_LIT))
+                    x += 6
+                x = split + 2
+                while x + 3 <= b - 2:
+                    out.append(("detail", x, y, x + 3, y + 4, WIN_SHADE))
+                    x += 6
+        elif style == "bands":
+            for i, y in enumerate(range(y0, int(bt) - 14, 8)):
+                if i % 4 == 3:
+                    continue                      # a blank spandrel every fourth floor breaks the rhythm
+                out.extend([("detail", a + 2, y, split, y + 4, WIN_LIT), ("detail", split, y, b - 2, y + 4, WIN_SHADE)])
+            out.extend([("detail", a, bt - 8, split, bt, PIER_LIT), ("detail", split, bt - 8, b, bt, WIN_SHADE)])
+        elif style == "piers":
+            x = a + 4
+            while x + 2 <= split - 2:
+                out.append(("detail", x, t + 6, x + 2.5, bt - 4, PIER_LIT))
+                x += 7
+            x = split + 3
+            while x + 2 <= b - 2:
+                out.append(("detail", x, t + 6, x + 2.5, bt - 4, WIN_SHADE))
+                x += 7
     def body(a, b, t, bt):
         split = a + (b - a) * 0.66
         out.extend([(a, t, split, bt, T_LIT), (a, t, split, t + 3, T_CAP), ("shade", split, t, b, bt)])
+        facade(a, b, t, bt)
     body(x0, x1, top, base)
     t, a, b = top, x0, x1
     for inset, h in steps:
         a, b = a + inset, b - inset
         body(a, b, t - h, t)
         t -= h
+    # a few groups of two or three lit windows side by side, on the lit face, in a muted warm ink
+    split = x0 + (x1 - x0) * 0.66
+    cols = max(1, int((split - x0 - 5) // 6))
+    for _ in range(lights):
+        n = min(cols, r.choice((2, 3)))
+        c0 = r.randrange(max(1, cols - n + 1))
+        y = int((top + 8) // 4 * 4) + 8 * r.randrange(max(1, int((base - top - 14) // 8)))
+        for c in range(n):
+            x = x0 + 3 + 6 * (c0 + c)
+            out.append(("detail", x, y, x + 3, y + 4, WIN_WARM))
+    out += [("detail", *bx, ROOFTOP) for bx in roof]
     return out
 
 
@@ -59,14 +109,23 @@ def city_page():
     the left into a pale far skyline with the sun half set into it; pink dusk clouds; the lake wide with the main
     tower's warm reflection; a breakwater running out from the left to a small lighthouse; three sailboats coming
     home; in front, the lakefront park: a promenade, lamps, and trees on trunks in groups."""
-    main = slab_tower(488, 536, 196, steps=((5, 22), (7, 18))) + [(510, 120, 514, 160, LIGHT_D)]
+    main = (slab_tower(488, 536, 196, steps=((5, 22), (7, 18)), style="piers", seed=1) +
+            [(510, 120, 514, 160, LIGHT_D), (504, 150, 508, 156, LIGHT_D), (516, 150, 520, 156, LIGHT_D),
+             # a sky-lobby band partway up and a podium band at the foot give the long shaft some structure
+             ("detail", 488, 332, 520, 340, T_CAP), ("detail", 520, 332, 536, 340, WIN_SHADE),
+             ("detail", 488, 484, 520, 500, PIER_LIT), ("detail", 520, 484, 536, 500, WIN_SHADE)])
     # the rest in three groups of uneven width with a gap at x 320-346 where the far skyline shows through; only the
     # main tower is tall
-    rest = (slab_tower(546, 576, 380) +
-            slab_tower(440, 484, 384, steps=((6, 14), (6, 10))) + slab_tower(416, 446, 432) +
-            slab_tower(398, 418, 410) + slab_tower(368, 402, 452) + slab_tower(346, 372, 470) +
-            slab_tower(282, 320, 418, steps=((7, 16),)) + slab_tower(262, 286, 452) + slab_tower(236, 264, 440) +
-            slab_tower(200, 238, 470) + slab_tower(186, 204, 482))
+    rest = (slab_tower(546, 576, 380, style="bands", seed=2, roof=[(552, 372, 562, 380)]) +
+            slab_tower(440, 484, 384, steps=((6, 14), (6, 10)), lights=2, seed=3, roof=[(461, 344, 463, 360)]) +
+            slab_tower(414, 440, 432, seed=4) +
+            slab_tower(398, 418, 410, style="piers", seed=5, roof=[(402, 404, 410, 410)]) +
+            slab_tower(368, 402, 452, seed=6) + slab_tower(346, 368, 470, style="bands", seed=7) +
+            slab_tower(282, 320, 418, steps=((7, 16),), style="piers", seed=8,
+                       roof=[(300, 386, 302, 402)]) +
+            slab_tower(262, 286, 452, seed=9) + slab_tower(236, 264, 440, seed=10,
+                                                                  roof=[(240, 434, 250, 440)]) +
+            slab_tower(200, 238, 470, lights=1, seed=11) + slab_tower(186, 204, 482, style="piers", seed=12))
     r = random.Random(11)
     far, x = [], -20
     while x < 600:
@@ -74,14 +133,12 @@ def city_page():
         far.append((x, r.uniform(446, 476), x + w, 500, ["#D9CCD0", "#D2C4C9"] if r.random() < 0.6 else
                     ["#CFC2C8", "#C8BBC1"]))
         x += w
-    windows = [(x, y, x + 3, y + 5, WINDOW) for x, y in
-               [(494, 230), (494, 250), (494, 270), (502, 250), (494, 330), (502, 330), (452, 404), (452, 418),
-                (294, 440), (302, 440)]]
     pieces = rest + main
     # the shaded faces are their own layer, so the edge between light and shade runs clean and straight
-    lit = [p for p in pieces if p[0] != "shade"]
-    shade = [(a, t, b, bt, T_SHADE) for _, a, t, b, bt in (p for p in pieces if p[0] == "shade")]
-    city = Blocks(far), Blocks(lit), Blocks(shade), Blocks(windows)
+    lit = [p for p in pieces if p[0] not in ("shade", "detail")]
+    shade = [(a, t, b, bt, T_SHADE) for _, a, t, b, bt, *_ in (p for p in pieces if p[0] == "shade")]
+    detail = [p[1:] for p in pieces if p[0] == "detail"]
+    city = Blocks(far), Blocks(lit), Blocks(shade), Blocks(detail)
     shore = Blocks([(x, 496 + (i % 2), x + w, 504, ["#4E5268", "#474B60"]) for i, (x, w) in
                     enumerate([(-60, 150), (90, 70), (160, 140), (300, 90), (390, 260)])])
     lake = Water(500, 620, -120, 720, LAKE, ["#9AA6BE", "#A4AFC6"], seed=130, gaps=(0, 0), squash=0.5)

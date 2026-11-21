@@ -207,4 +207,4 @@ SCENES = {"desert": desert, "coast": coast, "valley": valley}
 if __name__ == "__main__":
     for name in sys.argv[1:] or list(SCENES):
         j = 0.017 if name == "desert" else 0.05
-        render(SCENES[name](), (0, 0, 570, 684), (1140, 1368), 8, clean=True, jitter=j).save(f"out/page-{name}-title.png")
+        render(SCENES[name](), (0, 0, 570, 684), (1140, 1368), 8, clean=True, jitter=j, flush=True).save(f"out/page-{name}-title.png")
