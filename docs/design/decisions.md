@@ -182,6 +182,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   ground (peach on the left, a taller gold one on the right with the stilted hut), the sun between violet ridges over
   a small dark lake, wavy fields in front. The volcano cover is lowered for it: the summit, shoulders and bands sit
   32 units lower, the plume starts at the vent and bends right under the name line.
+  Then the rice cover tightened (Josef): drawn through a slightly smaller window of the scene (`VIEW`, the cover's
+  proportions, about 13% closer); the two hills closer together; less of the fields at the foot; the sun higher and
+  larger; the lake's yellow glints and sun path replaced by a paler teal. The name line still clears at shelf size.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

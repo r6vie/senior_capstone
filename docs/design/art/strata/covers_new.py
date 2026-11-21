@@ -525,25 +525,25 @@ def rice():
     column, so everything left of x ~200 stays below y 180; only the right hill and the hut rise higher."""
     from pages_new import (ContourHill, FieldRows, HILL_GOLD, HILL_PEACH, BANK_MOSS, BANK_OLIVE, FAR_1, FAR_3,
                            BUTTER, DEEP_LAKE, LAKE_GLINT, THATCH, PLANTER, TREE_DARK, PADDY_RIGHT)
-    lake = Water(236, 300, -20, 260, DEEP_LAKE, LAKE_GLINT, seed=120, gaps=(0, 0))
-    lake.path = (106, 5)
+    # the lake's glints are a paler teal, not yellow, and it carries no sun path
+    lake = Water(236, 324, -20, 260, DEEP_LAKE, ["#557782", "#5E808B"], seed=120, gaps=(0, 0))
     lake.brick = (4.0, 12.0)
     return [
         Ridge([(150, 206, 110, 100, 1.0), (30, 216, 80, 70, 1.0)], 260, *FAR_3, seed=121, rough=2, smooth=True,
               flicker=0.02),
-        disc(106, 224, 13, BUTTER),
+        disc(110, 212, 16, BUTTER),
         Ridge([(60, 226, 70, 60, 1.0), (170, 214, 70, 80, 1.0)], 262, *FAR_1, seed=122, rough=2, smooth=True,
               flicker=0.02),
         lake,
-        ContourHill([(10, 200, 100, 84, 2.2)], 320, HILL_PEACH, BANK_MOSS, spacing=10, bank_frac=0.42, seed=123,
+        ContourHill([(28, 200, 100, 84, 2.2)], 320, HILL_PEACH, BANK_MOSS, spacing=10, bank_frac=0.42, seed=123,
                     rough=1.5, lean=0.5, flicker=0.02, wave=0),
-        ContourHill([(212, 168, 96, 100, 2.2)], 330, HILL_GOLD, BANK_OLIVE, spacing=13, bank_frac=0.38, seed=124,
+        ContourHill([(198, 168, 96, 100, 2.2)], 330, HILL_GOLD, BANK_OLIVE, spacing=13, bank_frac=0.38, seed=124,
                     rough=1.5, lean=0.5, flicker=0.02, wave=0),
-        Mesa(212, 156, 8, 8, 168, *THATCH, ledges=1, bed=8, seed=125, wobble=0, speckle=0, ragged=0),
-        Ridge([(212, 144, 14, 14, 1.0)], 157, *THATCH, seed=126, rough=0, smooth=True, flicker=0),
-        Blocks([(209, 160, 214, 168, PLANTER)]),
-        trees([16, 32], 212, 8, TREE_DARK, seed=127, spread=0.6),
-        FieldRows(300, [14, 18, 22], [["#E9C77A", "#E3A57E"], PADDY_RIGHT["pool"], ["#EDCB86", "#E6B48C"]],
+        Mesa(198, 156, 8, 8, 168, *THATCH, ledges=1, bed=8, seed=125, wobble=0, speckle=0, ragged=0),
+        Ridge([(198, 144, 14, 14, 1.0)], 157, *THATCH, seed=126, rough=0, smooth=True, flicker=0),
+        Blocks([(195, 160, 200, 168, PLANTER)]),
+        trees([34, 50], 212, 8, TREE_DARK, seed=127, spread=0.6),
+        FieldRows(314, [12, 16, 22], [["#E9C77A", "#E3A57E"], PADDY_RIGHT["pool"], ["#EDCB86", "#E6B48C"]],
                   ["#5A5A36", "#525231"], seed=128),
     ]
 
@@ -596,10 +596,14 @@ def lagoon():
 
 SCENES = {"karst": karst, "aurora": aurora, "terraces": rice, "lagoon": lagoon}
 
+# a scene may be drawn through a smaller window (same proportions as the cover) to come in closer on it
+VIEW = {"terraces": (14, 28, 222, 331)}
+
 if __name__ == "__main__":
     for name in sys.argv[1:] or SCENES:
         fn = SCENES[name]
-        render(fn(), (0, 0, 236, 344), (472, 688), 8, paper=(255, 255, 255), clean=True, jitter=0.04).save(
+        vp = VIEW.get(name, (0, 0, 236, 344))
+        render(fn(), vp, (472, 688), 8, paper=(255, 255, 255), clean=True, jitter=0.04).save(
             f"out/new-{name}-xl.png")
-        render(fn(), (0, 0, 236, 344), (244, 356), 3, paper=(255, 255, 255), clean=True, jitter=0.04).save(
+        render(fn(), vp, (244, 356), 3, paper=(255, 255, 255), clean=True, jitter=0.04).save(
             f"out/new-{name}-sm.png")
