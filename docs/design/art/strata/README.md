@@ -32,6 +32,8 @@ pixels and redrawn for each size it shows at, so the courses stay 4px on the boo
 | `pages_new.py` | Book screen B's title-page art for the `covers_new.py` covers, each a full scene (karst, winter, terraces, lagoon) |
 | `covers_us.py` | Relatable covers: a lakefront city at dusk, a fir forest in morning light (the prairie farm and bay bridge were dropped) |
 | `pages_us.py` | Book-screen title pages for the city and the forest |
+| `fields.py` | Long fields (cover and page), replacing the rice terraces |
+| `set-1/` | **Approved for the app (2026-11-21):** the ten covers and pages, manifest and implementation notes |
 | `CRITIC.md` | Josef's eye, written down: the brief every critic pass uses |
 | `pages_more.py` | Book screen B's title-page art for each `covers_more.py` cover: the cover's place opened up into a full scene (adds `Arch`) |
 | `phone.py` | The panorama and cover at three-quarter size for the phone book page |

@@ -283,6 +283,45 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   Then (Josef: update the cover boards): every cover board on "Covers: Strata" shows the new shelf book (176 x 257,
   the narrow hinge, the new type) under a large cover that is the same book scaled x2.68 (title 78px, name 35px, the
   hinge 21px in), so the large cover previews the shelf exactly. The small book uses the large render to stay crisp.
+- **Long fields replace the rice terraces (Josef, 2026-11-21: "not a fan of the rice terraces actually, can we turn
+  them into long fields instead?").** `art/strata/fields.py`, same boards (`FinalCoverTerraces`, `FinalBookTerraces`,
+  now labelled "long fields at harvest"), same book. The land is a height field seen from above its near edge, so
+  long strips of crops (wheat, sage, green, ochre, pale; ploughed earth on the page only) run across it in perspective
+  and drape over the swells, shaded where they fall away to the right; a few field boundaries converge on the
+  horizon; hedgerows on some strip edges only, never in shade; a low warm sun over a lilac range on the left. Cover:
+  one broad swell on the right with a lone tree, a deep green near field. Page: three swells, a lane winding to a
+  white farmhouse with a low brown gable roof, trees along the hedgerows, a big tree on the right crest, a deep green
+  near field with a tree group. Two Josef-eye critic rounds. The sample blurb still mentions terraces.
+- **Comparison shelves removed (Josef).** The type, size and spine trial boards and their scripts are gone now that
+  the choices are made (176 x 257 book, narrow hinge, poster type with the name under the title); they stay in git
+  history (commits fc05fa5, d22d257, b1882e5).
+- **Fields cover: one clear identity (Josef: the page is better, the cover has no clear identity).** The cover is now
+  one long field of ripe wheat (golds only) running from the near edge back over the green land to a hedge just
+  below a lone dark tree on the crest of the swell; its crop rows converge on the tree; the low sun sits just left of
+  the tree, so the two are one focal point; greens either side in strips of uneven width, darkest in the near left.
+  The page is unchanged. One Josef-eye critic pass (it found the first version read as a dirt road).
+  Then (Josef: no, take the book page as the inspiration: fields clearly separated, bushes in the lines): the single
+  wheat field is gone. The cover is the page's farmland kept small: every near field closed by dark hedges on all
+  sides, three boundaries converging on the horizon, bushes standing where hedgerows meet, one smooth swell on the
+  right with a big tree on its crest, the low sun over the lilac range on the left, a deep green near field. One
+  Josef-eye critic pass (it found the fields read as stripes until the boundaries were drawn wide enough to render).
+  Then (Josef: polish the book page: a nicely curving road, refined fields, the hill's tree too large, maybe add
+  another): the lane is one smooth S-curve (a Catmull-Rom curve through four points) widening from 8 at the house to
+  32 at the near edge; the fields are broader and closed by hedges like the cover, four boundaries converging, bushes
+  where hedgerows meet; the crest carries three trees of clearly different sizes in a dark ink, each with a short
+  shadow; the farmhouse sits a little nearer, whiter, with a broad overhanging rust-brown roof, one door, and a dark
+  tree behind its shaded side. One Josef-eye critic pass.
+  Then (Josef: the house smaller with slightly more detail): about half its old size (36 x 24 world px), built row
+  by row on the page's 4 px slab grid so every piece survives: ridge and chimney, roof, a dark eave overhanging both
+  walls, then the lit gable with a two-row door and a window and the shaded side with a small window. Each part is
+  its own layer, because within one layer a slab takes a single colour and swallowed the door and windows.
+- **Strata art set 1 approved for the app (Josef, 2026-11-21: "this is officially the first set of art ready to be
+  implemented into the app, each book should get one at random so that the sample test libraries have some varying
+  art").** Ten places, each a cover and a title page: lake, desert, coast, valley, karst, winter, fields, lagoon, city,
+  forest. Packaged in `art/strata/set-1/`: the exact canvas files (`covers/`, `pages/`), `manifest.json` (key, name,
+  cover ink, files), a contact sheet, and a README with the implementation spec (176 x 257 shelf book, narrow hinge,
+  poster type with the name under the title, page art behind the opened book's title page). Each book picks its art
+  deterministically from its id, so its cover and page always match and stay the same across reloads.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
