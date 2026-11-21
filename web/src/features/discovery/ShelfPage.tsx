@@ -5,13 +5,13 @@ import { Button } from "../../ui/Button";
 import { type BookCard, type BookOrigin, BookReader } from "./BookReader";
 import { loadBook, loadOwnBook } from "./bookPreload";
 import { FrontDesk } from "./FrontDesk";
-import { type SampleBook, sampleBooks, sampleFeatured } from "./sampleBooks";
 import { useShelf } from "./useShelf";
 import "./ShelfPage.css";
 import { useBookStepping } from "./useBookStepping";
+import { type Recommendation, useRecommendation } from "./useRecommendation";
 
-// The Librarian remains a hardcoded example until D3. These two sample groupings restore the
-// earlier shelf preview; Recently added still contains every published book returned by the API.
+// These two sample groupings restore the earlier shelf preview; Recently added still contains
+// every published book returned by the API. The final category decision remains open.
 
 const SAMPLE_CATEGORY_SHELVES = [
   {
@@ -36,14 +36,6 @@ const SAMPLE_CATEGORY_SHELVES = [
   },
 ] as const;
 
-const booksById = new Map(sampleBooks.map((book) => [book.id, book]));
-
-function bookById(id: string): SampleBook {
-  const book = booksById.get(id);
-  if (!book) throw new Error(`Sample book ${id} is missing.`);
-  return book;
-}
-
 function Book({
   id,
   book,
@@ -54,15 +46,29 @@ function Book({
 }: {
   /** Chooses the book's art (ui/art/bookArt.ts). */
   id: string;
-  book: Pick<SampleBook, "title" | "authorName">;
+  book: { title: string; authorName: string };
   size?: "lg";
   /** Open in front of the shelf: its place stays empty until it's put back. */
   out?: boolean;
-  onOpen: (element: HTMLButtonElement) => void;
+  onOpen?: (element: HTMLButtonElement) => void;
   /** Pointed at or focused: likely to be opened, so its contents can be fetched ahead (bookPreload.ts). */
   onInterest?: () => void;
 }) {
   const art = artFor(id);
+  const cover = (
+    <span className="book-cover" style={coverInk(art)}>
+      <img className="book-art" src={art.cover} alt="" />
+      <span className="book-title">{book.title}</span>
+      <span className="book-author">{book.authorName}</span>
+    </span>
+  );
+  if (!onOpen) {
+    return (
+      <div className={size === "lg" ? "book book-lg" : "book"} aria-hidden="true">
+        {cover}
+      </div>
+    );
+  }
   return (
     <button
       type="button"
@@ -73,13 +79,51 @@ function Book({
       onPointerEnter={onInterest}
       onFocus={onInterest}
     >
-      <span className="book-cover" style={coverInk(art)}>
-        <img className="book-art" src={art.cover} alt="" />
-        <span className="book-title">{book.title}</span>
-        <span className="book-author">{book.authorName}</span>
-      </span>
+      {cover}
     </button>
   );
+}
+
+function promotionFor(recommendation: Recommendation | null, failed: boolean, busy: boolean) {
+  if (busy) {
+    return {
+      title: "The Librarian is looking",
+      reason: "Reading the shelves for a story that belongs beside yours.",
+      action: null,
+      destination: null,
+    };
+  }
+  if (failed || recommendation?.state === "unavailable") {
+    return {
+      title: "The Librarian is still looking",
+      reason: "Your shelves are ready while the Librarian tries again.",
+      action: "Try again",
+      destination: null,
+    };
+  }
+  if (recommendation?.state === "finish_book") {
+    return {
+      title: "Your story is almost ready",
+      reason: "Finish your book so the Librarian can find the person whose story belongs beside yours.",
+      action: "Finish your book",
+      destination: "/my-book",
+    };
+  }
+  if (recommendation?.state === "empty_shelf") {
+    return {
+      title: "The next story is coming",
+      reason: "The Librarian will leave a recommendation here when another available book fits yours.",
+      action: null,
+      destination: null,
+    };
+  }
+  return {
+    title: "Your story belongs here",
+    reason:
+      "Create your book so the Librarian can introduce you to someone whose experience speaks to yours.",
+    action: "Create your book",
+    destination: "/interview",
+  };
 }
 
 function Arrow({ back }: { back?: boolean }) {
@@ -180,13 +224,12 @@ function ShelfRow({ name, children, busy }: { name: string; children: ReactNode;
 }
 
 export function ShelfPage() {
-  const featured = bookById(sampleFeatured.bookId);
   const shelf = useShelf();
+  const librarian = useRecommendation();
   const { bookId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const navigationType = useNavigationType();
-  const [preview, setPreview] = useState<BookOrigin | null>(null);
   const selected = location.state as {
     card?: BookCard;
     origin?: BookOrigin;
@@ -200,6 +243,10 @@ export function ShelfPage() {
     name: category.name,
     books: shelf.books.filter((book) => category.titles.has(book.title)),
   })).filter((category) => category.books.length > 0);
+  const recommendation =
+    librarian.recommendation?.state === "recommendation" ? librarian.recommendation : null;
+  const featured = recommendation?.book;
+  const promotion = promotionFor(librarian.recommendation, Boolean(librarian.error), librarian.busy);
 
   function bounds(element: HTMLButtonElement): BookOrigin {
     const { x, y, width, height } = element.getBoundingClientRect();
@@ -233,28 +280,51 @@ export function ShelfPage() {
   return (
     <div className="shelf-page">
       <main>
-        <section className="feature surf dark" aria-labelledby="feature-title">
+        <section className="feature surf dark" aria-labelledby="feature-title" aria-busy={librarian.busy}>
           <div className="burst" />
           <div className="feature-text">
             <span className="caption">The Librarian recommends</span>
             <h1 id="feature-title" className="page-title">
-              {featured.title}
+              {featured?.title ?? promotion.title}
             </h1>
-            <p className="feature-author">by {featured.authorName}</p>
-            <p className="voice feature-reason">{sampleFeatured.reason}</p>
+            {featured && <p className="feature-author">by {featured.author_name}</p>}
+            <p className="voice feature-reason">{recommendation?.reason ?? promotion.reason}</p>
             <div className="feature-action">
-              <Button onClick={(event) => setPreview(bounds(event.currentTarget))}>Ask to check out</Button>
+              {featured && (
+                <Button
+                  onClick={(event) => open(featured, event.currentTarget, `recommendation/${featured.id}`)}
+                >
+                  Ask to check out
+                </Button>
+              )}
+              {!featured && promotion.action && (
+                <Button
+                  onClick={() =>
+                    promotion.destination ? navigate(promotion.destination) : void librarian.retry()
+                  }
+                >
+                  {promotion.action}
+                </Button>
+              )}
             </div>
           </div>
           <div className="feature-book">
-            <Book
-              id={featured.id}
-              book={featured}
-              size="lg"
-              out={Boolean(preview)}
-              onOpen={(element) => setPreview(bounds(element))}
-              onInterest={() => loadArt(artFor(featured.id))}
-            />
+            {featured ? (
+              <Book
+                id={featured.id}
+                book={{ title: featured.title, authorName: featured.author_name }}
+                size="lg"
+                out={outPlace === `recommendation/${featured.id}`}
+                onOpen={(element) => open(featured, element, `recommendation/${featured.id}`)}
+                onInterest={() => interest(featured.id)}
+              />
+            ) : (
+              <Book
+                id="your-story-belongs-here"
+                book={{ title: "Your story belongs here", authorName: "A book by you" }}
+                size="lg"
+              />
+            )}
           </div>
         </section>
 
@@ -329,25 +399,6 @@ export function ShelfPage() {
           }
           origin={navigationType === "PUSH" ? selected?.origin : undefined}
           onDismiss={dismiss}
-        />
-      )}
-      {preview && (
-        <BookReader
-          bookId={featured.id}
-          origin={preview}
-          onDismiss={() => setPreview(null)}
-          example={{
-            id: featured.id,
-            title: featured.title,
-            author_name: featured.authorName,
-            cover_style: "cover-1",
-            blurb: null,
-            chapters: featured.chapters.map((title, index) => ({
-              id: `example-${index}`,
-              title,
-              summary: "",
-            })),
-          }}
         />
       )}
     </div>

@@ -147,8 +147,8 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 
 ### Decided
 
-- **D1 reader (Alvisa, 2026-11-18, updated 2026-11-19):** keep the hardcoded Librarian
-  recommendation for now. Restore the earlier Changing course and Starting over rows using the
+- **D1 reader (Alvisa, 2026-11-18, updated 2026-11-19):** D1 began with a hardcoded Librarian
+  recommendation. Restore the earlier Changing course and Starting over rows using the
   matching seeded sample books; these are preview groupings, not the final category decision.
   Recently added loads every published book from the existing books API. Selecting a book lifts
   it from its shelf position, enlarging it while the front cover opens to the left. Everything
@@ -161,6 +161,13 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **Shelves will be grouped by categories.** The categories are still to be defined, and they will not be genres.
 - **Smart search** finds books relevant to what you're looking for. Never search by name.
 - **"The Librarian recommends":** the AI recommends books to you.
+- **D3 recommendation (Alvisa, 2026-11-21):** this version stays signed-in. A member without a
+  finished book sees the same large book graphic inviting them to create or finish theirs. Once
+  their book has been published, the Librarian uses only its public title, blurb and chapter text
+  to choose one available book and write one grounded sentence about why the two authors should
+  talk. The pick stays for seven days unless either book changes or the recommended book leaves
+  the shelf. A member's off-shelf book may privately shape their own recommendation, but an
+  off-shelf book is never recommended to somebody else.
 - **Recommend a book:** you can recommend a book in the app to anyone you've met (your Past meets), or to anyone else by sharing a link (§9.5).
 - **No friends or follows.** Meeting someone is the only way to become connected.
 
