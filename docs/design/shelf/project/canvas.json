@@ -855,6 +855,30 @@
    "h": 1090,
    "title": "Book screen · Volcanic lagoon",
    "page": "final"
+  },
+  "FinalCoverCity.dc.html": {
+   "x": 0,
+   "y": 9600,
+   "w": 600,
+   "h": 1090,
+   "title": "Cover · Lakefront city at dusk",
+   "page": "final"
+  },
+  "FinalCoverPrairie.dc.html": {
+   "x": 0,
+   "y": 10800,
+   "w": 600,
+   "h": 1090,
+   "title": "Cover · Prairie farm at harvest",
+   "page": "final"
+  },
+  "FinalCoverBay.dc.html": {
+   "x": 0,
+   "y": 12000,
+   "w": 600,
+   "h": 1090,
+   "title": "Cover · Bay bridge at sunset",
+   "page": "final"
   }
  },
  "createdOnFiles": {
@@ -1128,7 +1152,10 @@
   "FinalBookKarst.dc.html",
   "FinalBookAurora.dc.html",
   "FinalBookTerraces.dc.html",
-  "FinalBookLagoon.dc.html"
+  "FinalBookLagoon.dc.html",
+  "FinalCoverCity.dc.html",
+  "FinalCoverPrairie.dc.html",
+  "FinalCoverBay.dc.html"
  ],
  "pages": [
   {

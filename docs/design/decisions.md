@@ -208,6 +208,18 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   lower right; the dry wash ends under the arch's opening; three lighter scrub clumps.
   Then (Josef: arch better): the arch throws a shadow right across the sand, darker slabs; the foreground cliff is a
   step lighter and wider.
+- **Three relatable covers to finish the collection (Josef picked them: lakefront city at dusk, prairie farm at
+  harvest, bay bridge at sunset).** `art/strata/covers_us.py`, boards `FinalCoverCity`, `FinalCoverPrairie`,
+  `FinalCoverBay` on "Covers: Strata" under the lagoon, covers only for now. Josef asked for a faster polish loop with
+  a critic that judges as he does: his preferences are written down in `art/strata/CRITIC.md` (every rejection made
+  in this collection, as rules), each cover was self-checked against it and then went through two rounds with a
+  critic briefed as Josef. City: one dominant tower with a setback crown on the right, the rest uneven, a pale far
+  skyline with the sun half set into it, warm-lit and slate faces, a warm reflection under the tower, a dark shore
+  wedge. Prairie: the low sun half behind a windbreak in irregular groups, a gambrel barn (rust, never the UI red)
+  with a domed silo, both throwing shadow right, crop rows and furrow lines converging on the barn, a curving road,
+  fence posts at uneven intervals as the dark anchor. Bay: a suspension bridge in muted rust at an angle, the near
+  tower tall on the right, a solid deck, the main cable a clean curve dipping below the sun, soft dark hills, a warm
+  reflection, a low dark bluff in the corner.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
