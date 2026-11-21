@@ -1,7 +1,9 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
+import { artFor, coverInk, loadArt } from "../../ui/art/bookArt";
 import { Button } from "../../ui/Button";
 import { type BookCard, type BookOrigin, BookReader } from "./BookReader";
+import { loadBook, loadOwnBook } from "./bookPreload";
 import { FrontDesk } from "./FrontDesk";
 import { type SampleBook, sampleBooks, sampleFeatured } from "./sampleBooks";
 import { useShelf } from "./useShelf";
@@ -43,22 +45,36 @@ function bookById(id: string): SampleBook {
 }
 
 function Book({
+  id,
   book,
   size,
+  out,
   onOpen,
+  onInterest,
 }: {
+  /** Chooses the book's art (ui/art/bookArt.ts). */
+  id: string;
   book: Pick<SampleBook, "title" | "authorName">;
   size?: "lg";
+  /** Open in front of the shelf: its place stays empty until it's put back. */
+  out?: boolean;
   onOpen: (element: HTMLButtonElement) => void;
+  /** Pointed at or focused: likely to be opened, so its contents can be fetched ahead (bookPreload.ts). */
+  onInterest?: () => void;
 }) {
+  const art = artFor(id);
   return (
     <button
       type="button"
       className={size === "lg" ? "book book-lg" : "book"}
+      data-out={out || undefined}
       aria-label={`${book.title}, by ${book.authorName}`}
       onClick={(event) => onOpen(event.currentTarget)}
+      onPointerEnter={onInterest}
+      onFocus={onInterest}
     >
-      <span className="book-cover">
+      <span className="book-cover" style={coverInk(art)}>
+        <img className="book-art" src={art.cover} alt="" />
         <span className="book-title">{book.title}</span>
         <span className="book-author">{book.authorName}</span>
       </span>
@@ -171,7 +187,15 @@ export function ShelfPage() {
   const location = useLocation();
   const navigationType = useNavigationType();
   const [preview, setPreview] = useState<BookOrigin | null>(null);
-  const selected = location.state as { card?: BookCard; origin?: BookOrigin; fromShelf?: boolean } | null;
+  const selected = location.state as {
+    card?: BookCard;
+    origin?: BookOrigin;
+    fromShelf?: boolean;
+    /** Which copy was opened: a book can stand on more than one shelf, and only that copy leaves its place. */
+    place?: string;
+  } | null;
+  // The copy that is out: the one opened, while its book is open (none for a book opened from a link).
+  const outPlace = bookId && selected?.card?.id === bookId ? selected.place : undefined;
   const categoryShelves = SAMPLE_CATEGORY_SHELVES.map((category) => ({
     name: category.name,
     books: shelf.books.filter((book) => category.titles.has(book.title)),
@@ -182,9 +206,22 @@ export function ShelfPage() {
     return { x, y, width, height };
   }
 
-  function open(book: BookCard, element: HTMLButtonElement) {
+  // Whether a book is the member's own decides its button, so it is known before any book opens.
+  useEffect(() => {
+    loadOwnBook();
+  }, []);
+
+  /** Pointed at or focused: fetch its contents and decode its art ahead of a likely opening. */
+  function interest(id: string) {
+    loadBook(id);
+    loadArt(artFor(id));
+  }
+
+  function open(book: BookCard, element: HTMLButtonElement, place: string) {
+    // On touch there was no pointing first: fetch now, while the book waits closed in its place.
+    interest(book.id);
     navigate(`/books/${encodeURIComponent(book.id)}`, {
-      state: { card: book, origin: bounds(element), fromShelf: true },
+      state: { card: book, origin: bounds(element), fromShelf: true, place },
     });
   }
 
@@ -207,11 +244,17 @@ export function ShelfPage() {
             <p className="voice feature-reason">{sampleFeatured.reason}</p>
             <div className="feature-action">
               <Button onClick={(event) => setPreview(bounds(event.currentTarget))}>Ask to check out</Button>
-              <span className="feature-note">A thirty-minute video call</span>
             </div>
           </div>
           <div className="feature-book">
-            <Book book={featured} size="lg" onOpen={(element) => setPreview(bounds(element))} />
+            <Book
+              id={featured.id}
+              book={featured}
+              size="lg"
+              out={Boolean(preview)}
+              onOpen={(element) => setPreview(bounds(element))}
+              onInterest={() => loadArt(artFor(featured.id))}
+            />
           </div>
         </section>
 
@@ -223,8 +266,11 @@ export function ShelfPage() {
               {category.books.map((book) => (
                 <Book
                   key={book.id}
+                  id={book.id}
                   book={{ title: book.title, authorName: book.author_name }}
-                  onOpen={(element) => open(book, element)}
+                  out={outPlace === `${category.name}/${book.id}`}
+                  onOpen={(element) => open(book, element, `${category.name}/${book.id}`)}
+                  onInterest={() => interest(book.id)}
                 />
               ))}
             </ShelfRow>
@@ -234,8 +280,11 @@ export function ShelfPage() {
             {shelf.books.map((book) => (
               <Book
                 key={book.id}
+                id={book.id}
                 book={{ title: book.title, authorName: book.author_name }}
-                onOpen={(element) => open(book, element)}
+                out={outPlace === `recent/${book.id}`}
+                onOpen={(element) => open(book, element, `recent/${book.id}`)}
+                onInterest={() => interest(book.id)}
               />
             ))}
           </ShelfRow>

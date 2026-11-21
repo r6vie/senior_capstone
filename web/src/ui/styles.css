@@ -667,6 +667,8 @@ body {
   bottom: -8px;
   border-radius: var(--r-book);
   background: radial-gradient(circle, var(--fg) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+  /* Dissolves out and back as the book leaves its shelf and returns (ShelfPage.css, data-out). */
+  transition: opacity 320ms ease-out;
 }
 .book-cover {
   position: relative;
@@ -678,13 +680,14 @@ body {
   padding: 16px 10px 10px 21px;
   border: var(--line) solid var(--ink);
   border-radius: var(--r-book);
+  /* --crease is where the paper folds at the hinge, so the shade around the hinge line follows it. */
   background: linear-gradient(
     90deg,
     #e4e4df 0,
-    #f5f5f1 7px,
-    var(--white) 8px 11px,
-    #f2f2ee 12px,
-    var(--white) 16px
+    #f5f5f1 calc(var(--crease, 12px) - 5px),
+    var(--white) calc(var(--crease, 12px) - 4px) calc(var(--crease, 12px) - 1px),
+    #f2f2ee var(--crease, 12px),
+    var(--white) calc(var(--crease, 12px) + 4px)
   );
   overflow: hidden;
 }
@@ -760,6 +763,79 @@ body {
   font-size: 8.5px;
 }
 
+/* The desktop books (Josef, 2026-11-21; docs/design/art/strata/set-1/README.md): the shelf book larger, so the cover
+   and its type read better, with a narrow hinge and strata cover type, the name right under the title; the large
+   book the same scaled by 1.34. A cover with art (.book-art, from ui/art/bookArt.ts) shows it full-bleed under the
+   outline, its type in the art's ink (--art-ink) and the name on a white knockout. The phone and the other sizes keep
+   the book above until they are decided, so the art is desktop-only too. */
+.book-art {
+  display: none;
+}
+@media (min-width: 720px) {
+  .book:not(.book-lg, .book-sm, .book-xs) {
+    width: 176px;
+    height: 257px;
+  }
+  .book:not(.book-sm, .book-xs) .book-cover {
+    --crease: 8px;
+    padding: 20px 13px 14px 18px;
+  }
+  .book:not(.book-sm, .book-xs) .book-cover::before {
+    z-index: 1;
+    left: 8px;
+  }
+  .book:not(.book-sm, .book-xs) .book-art {
+    display: block;
+    position: absolute;
+    left: calc(-1 * var(--line));
+    top: calc(-1 * var(--line));
+    width: calc(100% + 2 * var(--line));
+    height: calc(100% + 2 * var(--line));
+    object-fit: cover;
+  }
+  .book:not(.book-sm, .book-xs) .book-title {
+    position: relative;
+    z-index: 1;
+    font: 800 29px / 0.92 var(--font-display);
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    text-wrap: balance;
+    color: var(--art-ink, var(--ink));
+  }
+  .book:not(.book-sm, .book-xs) .book-author {
+    position: relative;
+    z-index: 1;
+    align-self: flex-start;
+    margin: 10px 0 0 -3px;
+    padding: 0 3px 1px;
+    background: var(--white);
+    font: 700 13px / 1.15 var(--font-display);
+    letter-spacing: 0.16em;
+    color: var(--art-ink, var(--ink));
+  }
+  .book-lg:not(.book-sm, .book-xs) .book-cover {
+    --crease: 11px;
+    padding: 27px 17px 19px 24px;
+  }
+  .book-lg:not(.book-sm, .book-xs) .book-cover::before {
+    left: 11px;
+    width: 2px;
+  }
+  .book-lg:not(.book-sm, .book-xs) .book-art {
+    left: calc(-1 * var(--line-heavy));
+    top: calc(-1 * var(--line-heavy));
+    width: calc(100% + 2 * var(--line-heavy));
+    height: calc(100% + 2 * var(--line-heavy));
+  }
+  .book-lg:not(.book-sm, .book-xs) .book-title {
+    font-size: 39px;
+  }
+  .book-lg:not(.book-sm, .book-xs) .book-author {
+    margin-top: 13px;
+    font-size: 17px;
+  }
+}
+
 .shelf-head {
   display: flex;
   align-items: center;
@@ -783,7 +859,7 @@ body {
 }
 .shelf-books {
   display: flex;
-  gap: 28px;
+  gap: 36px;
   padding: 0 var(--s-1);
 }
 .ledge {

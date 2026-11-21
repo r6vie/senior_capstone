@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { forgetLoadedBooks } from "./bookPreload";
 import { ShelfPage } from "./ShelfPage";
 
 const api = vi.hoisted(() => ({ GET: vi.fn() }));
@@ -96,6 +97,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  forgetLoadedBooks();
   vi.restoreAllMocks();
 });
 async function openBook() {
@@ -128,29 +130,65 @@ describe("D1 shelf and reader", () => {
     expect(screen.getByRole("region", { name: "Recently added" })).toBeTruthy();
     expect(api.GET).toHaveBeenCalledWith("/books", { params: { query: { limit: 20 } } });
   });
-  it("turns contents pages and reads a chapter without revealing private fields", async () => {
+  it("takes out only the copy that was opened when a book stands on two shelves", async () => {
+    renderShelf();
+    const name = `${changingCourse.title}, by ${changingCourse.author_name}`;
+    const onCategory = within(await screen.findByRole("region", { name: "Changing course" })).getByRole(
+      "button",
+      {
+        name,
+      },
+    );
+    const onRecent = within(screen.getByRole("region", { name: "Recently added" })).getByRole("button", {
+      name,
+    });
+    fireEvent.click(onRecent);
+    await screen.findByRole("dialog");
+    expect(onRecent.hasAttribute("data-out")).toBe(true);
+    expect(onCategory.hasAttribute("data-out")).toBe(false);
+  });
+  it("turns to a chapter and back to the contents, without revealing private fields", async () => {
     renderShelf();
     const { dialog } = await openBook();
     const reader = within(dialog);
-    expect(document.body.style.overflow).toBe("hidden");
-    expect(reader.getByRole("button", { name: "Conversation 2" })).toBeTruthy();
-    expect(reader.queryByRole("button", { name: "Conversation 3" })).toBeNull();
-    fireEvent.click(reader.getByRole("button", { name: "Next page" }));
+    expect(document.documentElement.style.overflow).toBe("hidden");
+    // Everything for the book is in the book: Close, the page tabs, and no helper sentences.
+    expect(reader.getByRole("button", { name: "Close the book" })).toBeTruthy();
+    expect(reader.getByRole("navigation", { name: "Pages of this book" })).toBeTruthy();
+    expect(reader.queryByText(/I have one like this/)).toBeNull();
+    expect(reader.queryByText(/video call|conversation with the author|Esc to close/i)).toBeNull();
     fireEvent.click(reader.getByRole("button", { name: "Conversation 3" }));
-    expect(reader.getByRole("heading", { name: "Conversation 3" })).toBeTruthy();
-    expect(reader.getByText("The story behind conversation 3.")).toBeTruthy();
+    const chapter = await reader.findByRole("article", { name: "Conversation 3" });
+    expect(within(chapter).getByRole("heading", { name: "Conversation 3" })).toBeTruthy();
+    expect(within(chapter).getByText("The story behind conversation 3.")).toBeTruthy();
+    // Ask to check out sits under the contents, never under the chapter.
+    expect(within(chapter).queryByRole("link", { name: "Ask to check out" })).toBeNull();
+    expect(reader.getByRole("link", { name: "Ask to check out" })).toBeTruthy();
     expect(reader.queryByText("Private interview answer")).toBeNull();
     expect(reader.queryByText("private@example.com")).toBeNull();
-    fireEvent.click(reader.getByRole("button", { name: "Back to contents" }));
-    expect(reader.getByRole("button", { name: "Conversation 3" })).toBeTruthy();
-    expect(reader.getByRole("heading", { name: "Contents" })).toBe(document.activeElement);
+    await waitFor(() => expect(dialog.querySelector(".br-leaf")).toBeNull());
+    fireEvent.click(reader.getByRole("button", { name: "Contents" }));
+    await waitFor(() =>
+      expect(reader.getByRole("heading", { name: "Contents" })).toBe(document.activeElement),
+    );
+    expect(reader.queryByRole("article", { name: "Conversation 3" })).toBeNull();
+  });
+  it("turns with the arrow keys", async () => {
+    renderShelf();
+    const { dialog } = await openBook();
+    fireEvent.keyDown(dialog, { key: "ArrowRight" });
+    expect(await within(dialog).findByRole("article", { name: "Conversation 1" })).toBeTruthy();
+    // A turn takes its time; a key pressed mid-turn waits for the next one.
+    await waitFor(() => expect(dialog.querySelector(".br-leaf")).toBeNull());
+    fireEvent.keyDown(dialog, { key: "ArrowLeft" });
+    await waitFor(() => expect(within(dialog).queryByRole("article")).toBeNull());
   });
   it("closes with Escape, restores focus and unlocks the shelf", async () => {
     renderShelf();
     const { dialog, trigger } = await openBook();
     fireEvent(dialog, new Event("cancel", { bubbles: false, cancelable: true }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    expect(document.body.style.overflow).not.toBe("hidden");
+    expect(document.documentElement.style.overflow).not.toBe("hidden");
     expect(document.activeElement).toBe(trigger);
   });
   it("opens a direct link and reaches the existing checkout form", async () => {
@@ -160,7 +198,7 @@ describe("D1 shelf and reader", () => {
     expect(checkout.getAttribute("href")).toBe("/checkouts/new/real-book");
     fireEvent.click(checkout);
     expect(await screen.findByText("Checkout form")).toBeTruthy();
-    expect(document.body.style.overflow).not.toBe("hidden");
+    expect(document.documentElement.style.overflow).not.toBe("hidden");
   });
   it("retries pagination without losing or duplicating books", async () => {
     let calls = 0;
@@ -224,11 +262,12 @@ describe("D1 shelf and reader", () => {
       screen.getByRole("button", { name: "Why I Turned Down Grad School Twice, by Hana Sato" }),
     );
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText("Example book")).toBeTruthy();
+    expect(within(dialog.querySelector(".br-static") as HTMLElement).getByText("Example book")).toBeTruthy();
     expect(within(dialog).queryByRole("link", { name: "Ask to check out" })).toBeNull();
     fireEvent.click(within(dialog).getByRole("button", { name: "The first offer" }));
-    const chapter = within(dialog).getByRole("article", { name: "The first offer" });
-    expect(within(chapter).getByText("This example includes chapter titles only.")).toBeTruthy();
+    const chapter = await within(dialog).findByRole("article", { name: "The first offer" });
+    // No summary is invented, and no sentence explains why there isn't one.
+    expect(chapter.querySelector(".br-summary")).toBeNull();
     expect(api.GET.mock.calls.some(([path]) => path === "/books/{book_id}")).toBe(false);
   });
   it("puts the one request waiting on you, and your own book, under the cover", async () => {
