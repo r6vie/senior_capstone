@@ -4,7 +4,12 @@ An exploration, not approved. It lives on the design canvas, page "Strata covers
 (https://claude.ai/artifact/33uQU8UKZ4gtxcv4ZNof1D), boards `StrataBook`, `StrataShelf` and `StrataPlaces`.
 The decision it waits on is in `docs/design/decisions.md` (2026-11-18).
 
-Every landscape is cut into courses (rows) of one height and laid in bricks of random length. Edges step
+Every landscape is cut into courses (rows) of one height and laid in bricks of random length. **Blocks touch by default** (Josef, 2026-11-19): no seam between courses, and where two forms meet they
+share one boundary, so a step on one side is matched on the other and no hole opens. Spacing is a design choice a
+layer makes on purpose (water breaks, mist between ridges, the edge against open sky), never a by-product.
+Slabs stay slightly raised (a faint lit top, a soft underside) with one small uniform joint between them
+(`render(gap=1, joint=1, seam=0.45, slab=(0.07, 0.13, 0.06))` at 2x); the joint is the slab's ink lightened toward
+paper, not bare paper. Edges step
 instead of curving. Light comes from the left, and each peak has a lit face and a shadow face. Mist is made by
 leaving bricks out and paling them toward paper, never by a blur or gradient. A place is defined once in world
 pixels and redrawn for each size it shows at, so the courses stay 4px on the book page and 2px on the shelf.
@@ -20,6 +25,12 @@ pixels and redrawn for each size it shows at, so the courses stay 4px on the boo
 | `covers.py` | Every cover place at large, shelf and small size, plus a contact sheet |
 | `hero3.py` | Round 3 of the lake (`scenes.lake3()`): spurs and gullies down each face (`Ridge(ribs=…)`), a wandering light line, a far haze range, mist at the mountains' feet (`mist=`) and the peaks mirrored in the water. Writes the panorama and the xl and small covers cut from it, used on the Fresh directions page |
 | `book_b.py` | Art drawn for book screen B's pages (`FreshReaderOpen`): the title page (570 x 684, full page under the text; the land climbs the right edge, a lake across the foot, groves framing it) and the same place from further back for the foot of the contents page |
+| `final.py` | (current) Final designs art: round 3's look laid with `render(clean=True)`, `Ridge(smooth=True, cap=...)` |
+| `final.py` (history) | Final round, on the canvas page "Final designs": the same slabs finished (no bevel, a paper seam between courses, calm colour), one muted family of inks, a composed scene (hero peak on the right third, sun set against its flank, planes stepping back into haze, firs in a cluster) for B's title page, its contents page, and the cover |
+| `covers_more.py` | Three more covers in the final style, each its own place and palette: desert mesas at dusk, sea cliffs by moonlight, an autumn terraced valley. Uses the new `Mesa` and `Terraces` layers in `strata.py` |
+| `covers_new.py` | Four more covers, the places Josef picked on 2026-11-20: a karst river in mist, a winter night with the aurora (the night sky cut off at the aurora), flooded rice terraces at dawn (`Shelves`) and a volcanic lagoon |
+| `pages_new.py` | Book screen B's title-page art for the `covers_new.py` covers, each a full scene (karst so far) |
+| `pages_more.py` | Book screen B's title-page art for each `covers_more.py` cover: the cover's place opened up into a full scene (adds `Arch`) |
 | `phone.py` | The panorama and cover at three-quarter size for the phone book page |
 | `boards.py` | Writes the three canvas boards (the uploaded image ids are in it) |
 
