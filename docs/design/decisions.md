@@ -295,6 +295,11 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 - **Comparison shelves removed (Josef).** The type, size and spine trial boards and their scripts are gone now that
   the choices are made (176 x 257 book, narrow hinge, poster type with the name under the title); they stay in git
   history (commits fc05fa5, d22d257, b1882e5).
+- **Fields cover: one clear identity (Josef: the page is better, the cover has no clear identity).** The cover is now
+  one long field of ripe wheat (golds only) running from the near edge back over the green land to a hedge just
+  below a lone dark tree on the crest of the swell; its crop rows converge on the tree; the low sun sits just left of
+  the tree, so the two are one focal point; greens either side in strips of uneven width, darkest in the near left.
+  The page is unchanged. One Josef-eye critic pass (it found the first version read as a dirt road).
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
