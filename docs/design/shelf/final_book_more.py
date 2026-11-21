@@ -82,6 +82,22 @@ BOOKS = [
              ("Working with fishers, not around them", "Why the people on the water became the research team."),
              ("Grants and tides", "Planning a field season around funding cycles and the ocean's own calendar."),
              ("What grew back", "The corals that returned, and the ones that did not.")]),
+    dict(key="city", file="FinalBookCity", label="Lakefront city at dusk", title="Small Bets, Big City",
+         author="Danielle Owens", ink="#2f3448",
+         blurb="I moved to the city with one suitcase and opened a coffee cart that became three cafés. How to start "
+               "small in an expensive place, what the first lease taught me, and why every bet stayed a small one.",
+         ch=[("One cart, one corner", "Choosing a spot, getting the permit, and the first winter on the street."),
+             ("The lease that almost sank us", "Reading the fine print she skipped the first time."),
+             ("Hiring your first five", "Finding people who care, and keeping them when money is tight."),
+             ("Growing without betting it all", "Why the third café waited two years, and was worth it.")]),
+    dict(key="forest", file="FinalBookForest", label="Fir forest in morning light", title="Room to Grow",
+         author="Noah Bergstrom", ink="#283d2e",
+         blurb="Six seasons as a wildland firefighter and then a forester. How a forest recovers, how crews make "
+               "decisions under pressure, and what tending something slow taught me about my own career.",
+         ch=[("The first fire season", "What the training covered, and what only the line could teach."),
+             ("Decisions with smoke in the air", "How a crew boss weighs safety, time and terrain."),
+             ("Planting for fifty years out", "Choosing trees for a forest he will never see grown."),
+             ("Changing paths", "Leaving the fire line for the slower work of a forester.")]),
     dict(key="valley", file="FinalBookValley", label="Autumn hills", title="A Slow Harvest", author="Mei Lin Okada",
          ink="#263a2d",
          blurb="I left consulting to run my family's orchard. A season-by-season account of learning a business "

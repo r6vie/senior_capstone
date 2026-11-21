@@ -871,6 +871,22 @@
    "h": 1090,
    "title": "Cover · Fir forest in morning light",
    "page": "final"
+  },
+  "FinalBookCity.dc.html": {
+   "x": 680,
+   "y": 9600,
+   "w": 1440,
+   "h": 1090,
+   "title": "Book screen · Lakefront city at dusk",
+   "page": "final"
+  },
+  "FinalBookForest.dc.html": {
+   "x": 680,
+   "y": 10800,
+   "w": 1440,
+   "h": 1090,
+   "title": "Book screen · Fir forest in morning light",
+   "page": "final"
   }
  },
  "createdOnFiles": {
@@ -1146,7 +1162,9 @@
   "FinalBookTerraces.dc.html",
   "FinalBookLagoon.dc.html",
   "FinalCoverCity.dc.html",
-  "FinalCoverForest.dc.html"
+  "FinalCoverForest.dc.html",
+  "FinalBookCity.dc.html",
+  "FinalBookForest.dc.html"
  ],
  "pages": [
   {

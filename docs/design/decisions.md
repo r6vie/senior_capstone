@@ -232,6 +232,15 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   with uneven tiers, a missing and a long bough, its trunk and shadow showing; a mid stand in uneven clumps with one
   tall fir leading; small pale firs in the opening; a fir pair and ferns as the lower-left anchor; the meadow edge
   undulating. Two Josef-eye critic rounds. (A first try of bare trunks dissolving into haze read as poles.)
+  Then (Josef: build the book screens for city and forest): `art/strata/pages_us.py`, boards `FinalBookCity` and
+  `FinalBookForest` right of their covers. City: a long skyline across the lake, the main tower with setbacks and a
+  dark spire on the right, the rest in three groups of uneven width built as clean blocks (lit two thirds, slate
+  third, shade its own layer so the edge runs straight), a pale far skyline with the sun half set into it, a
+  breakwater and lighthouse, three sailboats, the lakefront park with promenade, lamps and trees. Forest: a snow-capped
+  ridge far off on the right, haze firs in clumps, the forest in three groups with an opening where the sun sits, the
+  meadow with the trail, a meandering creek under a plank footbridge, a copse out in the meadow, the old fir on the
+  right edge, young firs, a boulder and ferns in the lower left. Two Josef-eye critic rounds. Pages render a little
+  past both edges and are cropped, so no slab start jitters off the page edge.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
