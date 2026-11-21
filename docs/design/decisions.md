@@ -322,6 +322,17 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   cover ink, files), a contact sheet, and a README with the implementation spec (176 x 257 shelf book, narrow hinge,
   poster type with the name under the title, page art behind the opened book's title page). Each book picks its art
   deterministically from its id, so its cover and page always match and stay the same across reloads.
+- **Watercolor covers, first three (Josef, 2026-11-21: a new page, 10 watercolour books over time, the first three
+  obsessed over, covers only).** New canvas page "Covers: Watercolor", boards `WCCoverLighthouse` ("Keeping the
+  Light", Maren Holt), `WCCoverHarbor` ("Harbor Season", Sofia Marchetti), `WCCoverAutumn` ("The Long Way Home",
+  Emmett Clarke); `art/watercolor/` (engine `paint.py`, scenes `covers.py`). Illustrated watercolour, not photographic
+  (rejected before) and not abstract: glazes, wet-in-wet, pooled edges, granulation, bare paper as white. Every object
+  is painted "loose", built from overlapping wet patches the way foliage is, because clean shapes under a paper
+  texture read as clip-art. Lighthouse: a white tower on a grassy point, surf lifted round three rock groups, a pale
+  sky with clouds left as paper. Harbor: two wooden boats close in the foreground, a white village on its own
+  headland behind with a small campanile. Autumn: a river under a stone arch bridge, golden crowns flowered at their
+  edges, the big tree on the right. Same cover object and type as strata. Two Josef-eye critic rounds plus a third
+  on the fixes; the critics still found the objects stiffer than the washes, so this is round 1 for Josef's eye.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
