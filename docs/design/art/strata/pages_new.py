@@ -397,6 +397,11 @@ def lagoon_page():
         trees([0, 40, 80, 120, 160, 200, 240], 650, 14, JUNGLE, seed=411, spread=0.9),
         Band(-80, 360, 640, 700, SANDBAR, seed=412, lens=0.5),
         Band(-80, 350, 638, 644, ["#D9C49A", "#D1BB8F"], seed=413, lens=0.5),
+        # shade on the sand under the forest: darker slabs pooled at each palm's foot, thrown a little right, away
+        # from the light
+        Blob([(x + lean + s * 0.5, 658, s * 1.5, 5.5) for x, h, s, lean in back]
+             + [(x + lean + s * 0.5, 676, s * 1.6, 6) for x, h, s, lean in front],
+             ["#BFA472", "#B49867", "#A98D5E"], top_light=False),
         *[block_palms([p], 650 + r.choice((0, 4, 8)), P_LIT, P_DARK, P_TRUNK) for p in back],
         trees([20, 90, 170, 230], 664, 9, JUNGLE, seed=414, spread=1.2),
         *[block_palms([p], 666 + r.choice((0, 4, 8, 12)), P_LIT, P_DARK, P_TRUNK) for p in front],
