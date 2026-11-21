@@ -518,36 +518,33 @@ HAT = ["#D9B46A", "#CDA75E"]
 
 
 def rice():
-    """A terraced valley seen head on: flooded terraces stepping down from both edges into a V that closes partway
-    down, so the foreground is paddies; each terrace bowed like a contour line and deeper as it nears; the butter sun
-    half behind two violet ridges in the notch over a small deep lake; seedlings and a bent planter in the near
-    paddies; a dark tree on the left crest, a stilted thatch hut on the right."""
-    cx = 118
-    lake = Water(236, 340, -20, 260, DEEP_LAKE, LAKE_GLINT, seed=99, gaps=(0, 0))
-    lake.path = (cx, 5)
+    """The rice country of the book page, kept minimal: two terraced hills, bell-shaped so they spread into the
+    ground, their terraces following each hill's curve, a peach hill on the left and a taller gold one on the right
+    with the stilted hut on its crest; between them the sun sits between violet ridges over a small dark lake; wavy
+    fields across the foot. At shelf size a three-line title and a one-line name reach world y ~171 in the left
+    column, so everything left of x ~200 stays below y 180; only the right hill and the hut rise higher."""
+    from pages_new import (ContourHill, FieldRows, HILL_GOLD, HILL_PEACH, BANK_MOSS, BANK_OLIVE, FAR_1, FAR_3,
+                           BUTTER, DEEP_LAKE, LAKE_GLINT, THATCH, PLANTER, TREE_DARK, PADDY_RIGHT)
+    lake = Water(236, 300, -20, 260, DEEP_LAKE, LAKE_GLINT, seed=120, gaps=(0, 0))
+    lake.path = (106, 5)
     lake.brick = (4.0, 12.0)
-    # (pool courses, inner edge) per terrace, top down; the edges close on the middle, then the rows run across
-    left = [(2, 40), (2, 58), (3, 74), (3, 90), (3, 104), (4, cx), (4, cx), (5, cx)]
-    right = [(2, 226), (3, 196), (2, 180), (3, 164), (3, 146), (3, 132), (4, cx), (4, cx), (5, cx)]
     return [
-        Ridge([(120, 196, 130, 120, 1.0)], 280, *FAR_1, seed=90, rough=2, smooth=True, flicker=0.02),
-        disc(cx, 214, 18, BUTTER),
-        Ridge([(60, 216, 90, 70, 1.0), (190, 210, 80, 90, 1.0)], 280, *FAR_2, seed=91, rough=2, smooth=True,
+        Ridge([(150, 206, 110, 100, 1.0), (30, 216, 80, 70, 1.0)], 260, *FAR_3, seed=121, rough=2, smooth=True,
+              flicker=0.02),
+        disc(106, 224, 13, BUTTER),
+        Ridge([(60, 226, 70, 60, 1.0), (170, 214, 70, 80, 1.0)], 262, *FAR_1, seed=122, rough=2, smooth=True,
               flicker=0.02),
         lake,
-        Paddies(184, left, right, PADDY_LEFT, PADDY_RIGHT, SEEDLING, cx=cx, dip=6, seed=97),
-        # bushes on the terraces break up the stripes: a large clump on the shaded left slope, smaller ones elsewhere
-        trees([22, 40, 58], 252, 10, BUSH_SHADE, seed=60, spread=0.7),
-        trees([12], 304, 8, BUSH_SHADE, seed=61, spread=0.6),
-        trees([76], 228, 6, BUSH_SHADE, seed=62, spread=0.5),
-        trees([212], 252, 7, BUSH_LIT, seed=63, spread=0.6),
-        trees([228, 216], 300, 8, BUSH_LIT, seed=64, spread=0.6),
-        # the hut on stilts on the right crest
-        Blocks([(203, 192, 206, 206, STILT), (222, 192, 225, 206, STILT)]),
-        Mesa(214, 176, 11, 11, 192, *THATCH, ledges=1, bed=8, seed=95, wobble=0, speckle=0, ragged=0),
-        Ridge([(214, 160, 18, 18, 1.0)], 177, *THATCH, seed=96, rough=0, smooth=True, flicker=0),
-        Blocks([(210, 182, 216, 192, PLANTER)]),
-        trees([2, 16, 30], 196, 10, TREE_DARK, seed=98, spread=0.5),
+        ContourHill([(10, 200, 100, 84, 2.2)], 320, HILL_PEACH, BANK_MOSS, spacing=10, bank_frac=0.42, seed=123,
+                    rough=1.5, lean=0.5, flicker=0.02, wave=0),
+        ContourHill([(212, 168, 96, 100, 2.2)], 330, HILL_GOLD, BANK_OLIVE, spacing=13, bank_frac=0.38, seed=124,
+                    rough=1.5, lean=0.5, flicker=0.02, wave=0),
+        Mesa(212, 156, 8, 8, 168, *THATCH, ledges=1, bed=8, seed=125, wobble=0, speckle=0, ragged=0),
+        Ridge([(212, 144, 14, 14, 1.0)], 157, *THATCH, seed=126, rough=0, smooth=True, flicker=0),
+        Blocks([(209, 160, 214, 168, PLANTER)]),
+        trees([16, 32], 212, 8, TREE_DARK, seed=127, spread=0.6),
+        FieldRows(300, [14, 18, 22], [["#E9C77A", "#E3A57E"], PADDY_RIGHT["pool"], ["#EDCB86", "#E6B48C"]],
+                  ["#5A5A36", "#525231"], seed=128),
     ]
 
 
@@ -576,18 +573,19 @@ def lagoon():
     old lava and an ash cap; a smaller parasitic cone on its right shoulder; a tall plume leaning downwind."""
     # lower and broken up: a blunt summit on bulging slopes (power < 1), a long lumpy shoulder down the left and a
     # higher, steeper one on the right, so the outline steps in and out instead of running straight like a pyramid
-    cone = Ridge([(132, 150, 84, 72, 0.72), (52, 218, 42, 30, 0.85), (204, 194, 30, 44, 0.85)],
+    # kept below the name line: at shelf size a three-line title and a one-line name reach y ~171 left of x ~200
+    cone = Ridge([(132, 182, 84, 72, 0.72), (52, 236, 42, 30, 0.85), (210, 212, 30, 44, 0.85)],
                  286, *V_CONE, seed=100, rough=4, ribs=0.85, lean=0.3,
-                 bands=[(146, 160, *V_ASH), (160, 184, *V_BASALT)], smooth=True, flicker=0.05)
+                 bands=[(178, 192, *V_ASH), (192, 212, *V_BASALT)], smooth=True, flicker=0.05)
     return [
         # the plume: a column out of the crater, billowing and bending right, its top clear of the title
-        Blob([(134, 142, 7, 6), (140, 134, 10, 6), (152, 128, 13, 6), (170, 124, 15, 5), (192, 124, 14, 4),
-              (212, 128, 10, 4)], PLUME, top_light=True),
+        Blob([(140, 180, 6, 3.5), (152, 177, 9, 3.5), (170, 173, 12, 4), (192, 170, 14, 4), (214, 168, 12, 3.5)],
+             PLUME, top_light=True),
         Ridge([(-4, 240, 40, 46, 1.0)], 284, *V_FAR, seed=101, rough=1, smooth=True, flicker=0.02),
-        Ridge([(236, 214, 30, 40, 1.2)], 286, *V_SHOULDER, seed=106, rough=2, ribs=0.6, lean=0.3,
-              bands=[(206, 214, *V_ASH)], smooth=True, flicker=0.04),
+        Ridge([(236, 226, 30, 40, 1.2)], 286, *V_SHOULDER, seed=106, rough=2, ribs=0.6, lean=0.3,
+              bands=[(218, 226, *V_ASH)], smooth=True, flicker=0.04),
         cone,
-        Blob([(132, 154, 5, 2.5)], ["#E3A061", "#D98E4E"], top_light=False),   # the vent's glow
+        Blob([(132, 186, 5, 2.5)], ["#E3A061", "#D98E4E"], top_light=False),   # the vent's glow
         trees([100, 126, 150, 176, 202, 228, 250], 288, 7, JUNGLE, seed=102, spread=1.1),
         Water(282, 352, -20, 260, LAGOON, LAG_G, seed=103, mirror=[cone], gaps=(0, 1), squash=0.5),
         Band(96, 176, 300, 305, SANDBAR, seed=104, lens=0.0),     # a sandbar out in the lagoon

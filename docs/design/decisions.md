@@ -175,6 +175,13 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   sits on the crest.
   Then (Josef: the bottom too straight) the foreground paddies are fields whose edges swell and dip across the page
   (`FieldRows`), each field its own depth, its bank following the wave.
+- **Covers keep room for a one-line name at shelf size (Josef, a rule for every new cover from now on).** Measured
+  on the boards: at shelf size a three-line title and a one-line name reach world y ~171 of the 236 x 344 cover,
+  left of x ~200, so there the art stays below y ~180; only the right edge may rise higher. The rice terraces cover
+  is rebuilt to it and to match its book page, still minimal: two bell-shaped terraced hills spreading into the
+  ground (peach on the left, a taller gold one on the right with the stilted hut), the sun between violet ridges over
+  a small dark lake, wavy fields in front. The volcano cover is lowered for it: the summit, shoulders and bands sit
+  32 units lower, the plume starts at the vent and bends right under the name line.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
