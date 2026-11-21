@@ -54,39 +54,38 @@ def desert():
 
     # the arch, as on the book page: narrow, taller than wide, a tall slim opening through its foot, rounded
     # shoulders (ragged ledges, flare), in the deeper terracotta; on the left third
-    hero = Arch(70, 196, 30, 44, 300, NEAR_L, NEAR_D, ledges=3, bed=8, seed=53, top_tint=ROSE, shadow_slope=0.3,
-                wobble=2, speckle=0.4, flicker=0.02, flare=5, hole=(74, 300, 17, 66),
+    # recomposed after a critic pass: the arch is the one focal mass on the left; the spire a lighter, smaller
+    # partner close beside it; the sun moved right, cradled by the haze, balancing the arch; a low, darker block
+    # anchoring the lower right; the dry wash ending under the arch's opening
+    hero = Arch(70, 190, 34, 38, 288, NEAR_L, NEAR_D, ledges=2, bed=8, seed=53, top_tint=ROSE, shadow_slope=0.3,
+                wobble=2, speckle=0.4, flicker=0.02, flare=3, hole=(69, 290, 13, 64),
                 bedding=([226, 252], "#9C482E"))
-    # one thin spire on the right, and the low sun between them, over the end of the dry wash
-    spire = Mesa(162, 222, 7, 13, 318, NEAR_L, NEAR_D, ledges=2, bed=8, seed=57, talus=True, top_tint=ROSE,
-                 wobble=0, speckle=0.4, flicker=0.02, lean=0.05, flare=2)
-    # a blocky cliff in the right foreground, running off the edge: the nearest layer
-    block = Mesa(222, 268, 30, 42, 344, NEAR_L, NEAR_D, ledges=2, bed=8, seed=65, talus=True, top_tint=ROSE,
-                 wobble=0, speckle=0.4, flicker=0.02, lean=0.08, flare=3, shadow_steps=3)
-    sun = Blob([(140, 222, 20, 20)], GOLD, top_light=False)
+    spire = Mesa(121, 220, 4, 6, 288, TERRA_L, ["#C66B47", "#BD6340", "#B35C3A"], ledges=2, bed=8, seed=57,
+                 wobble=0, speckle=0.4, flicker=0.02, flare=1)
+    block = [Mesa(226, 294, 14, 18, 344, ["#8A4632", "#7E3F2D"], MAROON, ledges=1, bed=8, seed=65,
+                  wobble=0, speckle=0.3, flicker=0.02, ragged=0),
+             Mesa(207, 300, 9, 11, 344, ["#8A4632", "#7E3F2D"], MAROON, ledges=1, bed=8, seed=66,
+                  wobble=0, speckle=0.3, flicker=0.02, ragged=0)]
+    sun = Blob([(208, 212, 17, 17)], GOLD, top_light=False)
     sun.ragged = 0     # a clean disc
     return [
-        # the back cliff runs the full width as one line of flat tops at slightly different heights
-        *[Mesa(cx, top, hw, hw + 4, 292, HAZE_PEACH, HAZE_PEACH_D, ledges=1, bed=8, seed=50 + i, wall_ledge=4, wobble=0,
-               speckle=0.3, ragged=0, flicker=0.01)
-          # a section every ~26 px, each one or two slabs (4 or 8 px) above or below its neighbour
-          for i, (cx, top, hw) in enumerate([(-6, 240, 14), (20, 236, 14), (46, 240, 14), (72, 244, 14),
-                                             (98, 240, 14), (124, 236, 14), (150, 240, 14), (176, 244, 14),
-                                             (202, 240, 14), (228, 232, 14), (254, 236, 14)])],
         sun,
+        # the haze cliff: one pale band, low on the left behind the arch, rising to the right to cradle the sun
+        *[Mesa(cx, round((249 - (cx + 6) * 29 / 260) / 4) * 4, 14, 18, 292, ["#F2D3C2", "#EFCBB8", "#EBC3AE"],
+               ["#E8C3AF", "#E2B9A4", "#DBAF99"], ledges=1, bed=8, seed=50 + i, wall_ledge=4, wobble=0, speckle=0.2,
+               ragged=0, flicker=0.01)
+          for i, cx in enumerate(range(-6, 270, 26))],
         hero,
+        spire,
         Band(-60, 300, 288, 334, SAND_CALM, seed=58, lens=0.0),
-        # the dry wash: a pale bed of darker sand winding from our feet back to the gap under the sun
-        River(292, 340, 136, 22, 6, 74, ["#D8B183", "#CBA273", "#BC9264"], ["#E7CBA1", "#DDBE92"], swings=1.3,
-              phase=2.6, seed=63),
-        # scrub along its banks
-        trees([24, 42], 318, 8, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=60, spread=0.6),
-        trees([126], 326, 7, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=61, spread=0.6),
-        trees([104], 306, 5, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=62, spread=0.6),
-        spire,        # standing on the sand, in front of the haze
-        trees([184], 316, 4, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=64, spread=0.6),
-        block,
-        Band(-60, 300, 334, 360, UMBER, seed=59, lens=0.0),
+        # the dry wash: from the base, narrowing as it winds left and up, ending under the arch's opening
+        River(289, 334, 72, 73, 6, 40, ["#D8B183", "#CBA273", "#BC9264"], ["#E7CBA1", "#DDBE92"], swings=0.5,
+              phase=0.0, seed=63),
+        trees([22, 40], 312, 9, ["#B5B38C", "#A3A17A", "#8E8F68"], seed=60, spread=0.6),
+        trees([170], 312, 7, ["#B5B38C", "#A3A17A", "#8E8F68"], seed=61, spread=0.6),
+        trees([118], 297, 4, ["#B5B38C", "#A3A17A", "#8E8F68"], seed=62, spread=0.6),
+        *block,
+        Band(-60, 300, 332, 360, UMBER, seed=59, lens=0.0),
     ]
 
 

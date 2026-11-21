@@ -201,6 +201,11 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   winding from the foot up toward the sun, scrub along its banks; the near cliff gone.
   Then layered (Josef): the spire moved left and forward, standing on the sand in front of the haze and the sun's
   edge; a blocky cliff in the right foreground running off the edge, so arch, spire and block step toward us.
+  Then rebalanced after a critic pass (Josef: still unbalanced). The critic: three equal dark verticals read as a
+  fence, the sun was wedged between arch and spire, the weight tipped like a seesaw. Now the arch is the one dark
+  focal mass on the left; the spire a lighter, smaller partner close beside it; the sun moved right and set low in a
+  pale haze band that rises from left to right to cradle it; a low, darker umber block with a stepped top anchors the
+  lower right; the dry wash ends under the arch's opening; three lighter scrub clumps.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
