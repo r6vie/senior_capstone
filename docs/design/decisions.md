@@ -114,6 +114,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   thin stepped clouds, three tall towers right of the text stepping darker toward us, the water mirroring them with
   their shade broken on it, stepped paddies, a two-tier pavilion, bamboo, a sampan with its boatman and a far boat.
   Each went through a fresh critic.
+- **Karst page and volcano fixed (Josef).** Karst page: every back plane's foot runs down behind the paddies over a
+  continuous haze floor, so no paper shows under the towers. Volcano redone lower and less sharp: a blunt summit
+  on bulging slopes with a shoulder on each side, so its outline steps in and out instead of running straight.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

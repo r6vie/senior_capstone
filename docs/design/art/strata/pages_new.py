@@ -102,18 +102,20 @@ def karst():
     shade.brick = (2.0, 6.0)
     return [
         disc(318, 434, 22, K_SUN),
-        # plane 5: haze towers, heights varied
+        # the valley floor in haze, behind every tower, so no paper shows between their feet
+        Band(-60, 640, 488, 562, K_HAZE[0], seed=199, lens=0.0),
+        # plane 5: haze towers, heights varied; every plane's foot runs down behind the paddies, so no paper shows
         ptower([(20, 418, 22, 22, 0.45), (84, 444, 18, 20, 0.4), (150, 406, 22, 20, 0.5), (226, 450, 16, 18, 0.4),
                 (290, 428, 22, 24, 0.45), (356, 446, 18, 20, 0.4), (430, 402, 24, 22, 0.5), (548, 392, 24, 26, 0.45)],
-               500, *K_HAZE, seed=176, ribs=0, rough=0.8),
+               562, *K_HAZE, seed=176, ribs=0, rough=0.8),
         cloud(250, 470, 90),
         # plane 4: far towers
         ptower([(40, 452, 22, 20, 0.45), (118, 430, 18, 20, 0.4), (196, 466, 20, 22, 0.45), (262, 440, 16, 18, 0.4),
-                (334, 474, 20, 22, 0.4)], 520, *K_FAR, seed=177, ribs=0, rough=0.8),
+                (334, 474, 20, 22, 0.4)], 562, *K_FAR, seed=177, ribs=0, rough=0.8),
         cloud(110, 500, 70),
         # plane 3: mid towers
         ptower([(-10, 432, 30, 26, 0.4), (64, 470, 18, 20, 0.35), (150, 486, 20, 22, 0.4), (232, 462, 16, 18, 0.4),
-                (318, 494, 18, 20, 0.4)], 540, *K_MID, seed=178, ribs=0, rough=0.8),
+                (318, 494, 18, 20, 0.4)], 562, *K_MID, seed=178, ribs=0, rough=0.8),
         cloud(380, 524, 80),
         # the tall towers on the right, back to front
         left, hero, twin,

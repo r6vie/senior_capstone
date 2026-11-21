@@ -425,18 +425,20 @@ P_TRUNK = ["#6B5236", "#5E4630"]
 def lagoon():
     """A steeper, broken cone: concave flanks rising to a notched crater, ravines down the faces, two dark beds of
     old lava and an ash cap; a smaller parasitic cone on its right shoulder; a tall plume leaning downwind."""
-    # lopsided: a long left flank, a short steep right one broken by the crater's lip
-    cone = Ridge([(140, 120, 88, 76, 1.55), (162, 158, 18, 50, 1.1)], 286, *V_CONE, seed=100, rough=3, ribs=0.85, lean=0.22,
-                 bands=[(120, 134, *V_ASH), (134, 172, *V_BASALT)], smooth=True, flicker=0.05)
+    # lower and broken up: a blunt summit on bulging slopes (power < 1), a long lumpy shoulder down the left and a
+    # higher, steeper one on the right, so the outline steps in and out instead of running straight like a pyramid
+    cone = Ridge([(132, 150, 84, 72, 0.72), (52, 218, 42, 30, 0.85), (204, 194, 30, 44, 0.85)],
+                 286, *V_CONE, seed=100, rough=4, ribs=0.85, lean=0.3,
+                 bands=[(146, 160, *V_ASH), (160, 184, *V_BASALT)], smooth=True, flicker=0.05)
     return [
         # the plume: a column out of the crater, billowing and bending right, its top clear of the title
-        Blob([(148, 116, 7, 6), (154, 110, 10, 6), (166, 106, 13, 6), (184, 104, 15, 5), (206, 106, 14, 4),
-              (226, 110, 10, 4)], PLUME, top_light=True),
+        Blob([(134, 142, 7, 6), (140, 134, 10, 6), (152, 128, 13, 6), (170, 124, 15, 5), (192, 124, 14, 4),
+              (212, 128, 10, 4)], PLUME, top_light=True),
         Ridge([(-4, 240, 40, 46, 1.0)], 284, *V_FAR, seed=101, rough=1, smooth=True, flicker=0.02),
-        Ridge([(222, 206, 34, 40, 1.2)], 286, *V_SHOULDER, seed=106, rough=2, ribs=0.6, lean=0.3,
+        Ridge([(236, 214, 30, 40, 1.2)], 286, *V_SHOULDER, seed=106, rough=2, ribs=0.6, lean=0.3,
               bands=[(206, 214, *V_ASH)], smooth=True, flicker=0.04),
         cone,
-        Blob([(140, 126, 5, 2.5)], ["#E3A061", "#D98E4E"], top_light=False),   # the vent's glow
+        Blob([(132, 154, 5, 2.5)], ["#E3A061", "#D98E4E"], top_light=False),   # the vent's glow
         trees([100, 126, 150, 176, 202, 228, 250], 288, 7, JUNGLE, seed=102, spread=1.1),
         Water(282, 352, -20, 260, LAGOON, LAG_G, seed=103, mirror=[cone], gaps=(0, 1), squash=0.5),
         Band(96, 176, 300, 305, SANDBAR, seed=104, lens=0.0),     # a sandbar out in the lagoon
