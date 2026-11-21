@@ -130,6 +130,14 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   pool is now water, not a layer: pale sky blue in long runs with openings through it, rose and gold glints gathering
   near the sun, a single green bank under each. The cabin's roof vanished, white snow on white snow: it is now a dark
   shingle gable with only a thin line of snow along its top, on walls laid as log beds, so the whole roof reads.
+- **Terraces after two critic rounds (Josef: "too bland, too thin lines", send to the critic twice).** The V stays.
+  Round 1: one value band and pencil-thin banks; fixed with deep terraces (a flooded pool of 2 to 5 courses, a dark
+  lip, a 2-course earth riser), a near-black anchor, a butter sun half behind two violet ridges, a deep ink-teal lake
+  with the sun broken across it. Round 2: it still read as a lake with striped banks; fixed by closing the V partway
+  down so the foreground is paddies, the lake a small wedge in the notch, every terrace bowed down toward the middle
+  like a contour line and deeper as it nears, the shaded slope violet-grey water on moss risers and the lit slope
+  butter and peach water on olive, seedling rows and a bent planter in a straw hat in the near paddies, a stilted
+  thatch hut and a dark tree on the crests (`Paddies`).
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

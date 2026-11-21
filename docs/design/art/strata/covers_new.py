@@ -421,101 +421,117 @@ HUT_W = (["#C9A574", "#BC9866"], ["#8E6A43", "#7E5D3A"])
 R_TREES = ["#5E8448", "#4E733B", "#3F6130", "#33532A"]
 
 
-class StepValley:
-    """A terraced valley seen head on, built from level courses as strata is: terraces step down from both edges
-    toward the middle, each reaching further in than the one above, so the two slopes form a V. Each slope has its own
-    rhythm: terraces of different heights and reach, so neither slope mirrors the other. A terrace is a flooded pool
-    (the dawn in it, rose high up and gold low down, a pale sheen along its top course) over one bank course. Light
-    from the left: the right slope, facing it, is lit and warm; the left slope is laid darker."""
+class Paddies:
+    """A terraced valley seen head on, built from level courses as strata is. Each slope steps down toward the middle
+    in terraces of its own rhythm until the two meet and the foreground is all paddies. A terrace reads top to bottom
+    as a flooded pool, a dark lip (1 course) and an earth riser (2), each pool deeper than the one above as the
+    terraces come nearer, and every terrace bows down toward the middle like a contour line. Light from the left: the
+    left slope faces away (violet-grey water, moss risers), the right is lit (butter and peach water, olive risers).
+    The nearest pools carry rows of seedlings."""
 
     brick = (2.0, 7.0)
 
-    def __init__(self, y0, left, right, pools, bank, bank_deep, sheen, seed=1):
-        from strata import hexrgb
-        self.seed = seed
-        self.pools = [[hexrgb(c) for c in p] for p in pools]
-        self.bank, self.deep = [hexrgb(c) for c in bank], [hexrgb(c) for c in bank_deep]
-        self.sheen = [hexrgb(c) for c in sheen]
+    def __init__(self, y0, left, right, inks_left, inks_right, seedling, cx=118, dip=6, seed=1):
+        self.seed, self.cx, self.dip = seed, cx, dip
         self.sides = []
-        for steps, sign in ((left, 1), (right, -1)):
-            rows, y, n = [], y0, len(steps)
-            for i, (h, edge) in enumerate(steps):
-                rows.append((y, y + h, edge, i / max(1, n - 1)))
+        for steps, sign, inks in ((left, 1, inks_left), (right, -1, inks_right)):
+            rows, y = [], y0
+            for i, (pool, edge) in enumerate(steps):
+                h = (pool + 3) * 4
+                rows.append((y, y + h, pool * 4, edge, i, len(steps)))
                 y += h
-            self.sides.append((rows, sign))
+            self.sides.append((rows, sign, {k: [hexrgb(c) for c in v] for k, v in inks.items()}))
+        self.seedling = [hexrgb(c) for c in seedling]
 
-    def _row(self, side, y):
+    def _bow(self, x):
+        return self.dip * max(0.0, 1 - abs(x - self.cx) / 120)
+
+    def _row(self, side, x, y):
+        yy = y - self._bow(x)
         for r in side[0]:
-            if r[0] <= y < r[1]:
-                return r
-        return None
+            if r[0] <= yy < r[1]:
+                return r, yy
+        return None, yy
+
+    def _inside(self, side, r, x):
+        return (x <= r[3]) if side[1] > 0 else (x >= r[3])
 
     def cover(self, x, y):
         import numpy as np
-        from strata import vnoise
-        m = np.zeros_like(x, dtype=bool)
-        for side in self.sides:
-            r = self._row(side, y)
-            if r:
-                on = (x <= r[2]) if side[1] > 0 else (x >= r[2])
-                if y < r[1] - 4:
-                    # the pool is water, not a layer: long openings run through it, as on the lakes
-                    n = np.array([vnoise(xx * 0.25, y * 2.0, 5, self.seed + int(r[0])) for xx in np.atleast_1d(x)])
-                    on &= n < 0.6
-                m |= on
-        return m
+        out = np.zeros(len(x), dtype=bool)
+        for j, xx in enumerate(x):
+            for side in self.sides:
+                r, _ = self._row(side, xx, y)
+                if r and self._inside(side, r, xx) and (side[1] > 0) == (xx <= self.cx):
+                    out[j] = True
+        return out
 
     def colour(self, x, y, rng):
-        from strata import shade
-        left = self.sides[0]
-        r = self._row(left, y)
-        is_left = bool(r) and x <= r[2]
-        if not is_left:
-            r = self._row(self.sides[1], y)
-        y0, y1, edge, t = r
-        if y >= y1 - 4:                                   # the bank: the bottom course of each terrace
-            pal = self.deep if is_left else self.bank
-            return pal[int(rng.random() * len(pal))]
-        # the water: pale sky in long runs, the dawn caught as rose and gold glints, most of them near the sun
-        near = max(0.0, 1 - abs(x - 118) / 90)
-        if rng.random() < 0.12 + 0.35 * near:
-            pal = self.pools[int(rng.random() * len(self.pools))]
-            c = pal[int(rng.random() * len(pal))]
+        side = self.sides[0] if x <= self.cx else self.sides[1]
+        r, yy = self._row(side, x, y)
+        if r is None:
+            side = self.sides[1] if side is self.sides[0] else self.sides[0]
+            r, yy = self._row(side, x, y)
+        y0, y1, pool_h, edge, i, n = r
+        inks = side[2]
+        d = yy - y0
+        if d >= pool_h + 4:
+            pal = inks["riser"]
+        elif d >= pool_h:
+            pal = inks["lip"]
+        elif i >= n - 3 and int(x // 6) % 3 == 0 and int(d // 4) % 2 == 1:
+            pal = self.seedling                              # rows of seedlings in the nearest paddies
         else:
-            c = self.sheen[int(rng.random() * len(self.sheen))]
-        return shade(c, -0.08) if is_left else c
+            pal = inks["pool"]
+        return pal[int(rng.random() * len(pal))]
 
 
-V_POOL = [["#F2CFC4", "#EEC6BA"], ["#F4D6C2", "#F0CDB6"], ["#F5DDBD", "#F1D4B0"], ["#F4E1BF", "#EFD8B2"]]
-V_BANK = ["#7FA35E", "#749853"]
-V_BANK_DEEP = ["#3F5F35", "#36532E"]
-V_SHEEN = ["#DDE5EC", "#D3DDE6", "#C9D4DF", "#E4EAF0"]       # the pools: pale sky water
-LAKE = ["#DCE3EA", "#D3DCE5", "#CAD4DF"]
-HUT_ROOF = (["#5E4430", "#533B29"], ["#33241A", "#2B1F17"])
+from strata import hexrgb
+
+PADDY_LEFT = dict(riser=["#4E5E3A", "#47563A"], lip=["#24332F", "#1F2D29"], pool=["#8E8AA8", "#8682A1", "#9894B0"])
+PADDY_RIGHT = dict(riser=["#9A8F4E", "#A39858"], lip=["#24332F", "#1F2D29"],
+                   pool=["#E9C77A", "#E6BF70", "#E3A57E", "#E8B888"])
+SEEDLING = ["#3F5A36", "#45623B"]
+BUTTER = ["#F3DCA0", "#F0D493", "#E6C47E"]
+FAR_1 = (["#A7A3BF", "#A09CB9"], ["#8F8AAA", "#8883A4"])
+FAR_2 = (["#7F7AA0", "#77729A"], ["#666189", "#5F5A82"])
+DEEP_LAKE = ["#34505C", "#2E4954", "#2B434D"]
+LAKE_GLINT = ["#E9CF94", "#E2C483"]
+TREE_DARK = ["#2F4030", "#273626", "#1F2A22", "#1A241D"]
+THATCH = (["#A8844A", "#9C7942"], ["#6B5130", "#5E472A"])
+STILT = ["#3A2C20", "#33271C"]
+PLANTER = ["#2B2A33", "#25242C"]
+HAT = ["#D9B46A", "#CDA75E"]
 
 
 def rice():
-    """A terraced valley seen head on: level flooded terraces stepping down from both edges into a V, each slope with
-    its own uneven rhythm; the low sun in the notch over a still lake, its path broken down the water; a hut on the
-    right slope, a lone tree on the left; the far hills pale behind."""
+    """A terraced valley seen head on: flooded terraces stepping down from both edges into a V that closes partway
+    down, so the foreground is paddies; each terrace bowed like a contour line and deeper as it nears; the butter sun
+    half behind two violet ridges in the notch over a small deep lake; seedlings and a bent planter in the near
+    paddies; a dark tree on the left crest, a stilted thatch hut on the right."""
     cx = 118
-    lake = Water(256, 352, -20, 260, LAKE, ["#F6CFAE", "#F2C29C"], seed=99, gaps=(0, 0))
+    lake = Water(230, 310, -20, 260, DEEP_LAKE, LAKE_GLINT, seed=99, gaps=(0, 0))
     lake.path = (cx, 5)
-    lake.brick = (5.0, 16.0)
-    # (height, inner edge) of each terrace, top down; heights are whole courses, the reach uneven
-    left = [(8, 18), (12, 30), (8, 38), (16, 50), (8, 58), (12, 66), (16, 80), (8, 88), (12, 96), (16, 104),
-            (12, 112), (40, 118)]
-    right = [(12, 214), (8, 206), (16, 196), (12, 184), (8, 178), (16, 164), (12, 154), (8, 148), (16, 138),
-             (12, 130), (40, 122)]
+    lake.brick = (4.0, 12.0)
+    # (pool courses, inner edge) per terrace, top down; the edges close on the middle, then the rows run across
+    left = [(2, 40), (2, 58), (3, 74), (3, 90), (3, 104), (4, cx), (4, cx), (5, cx)]
+    right = [(2, 300), (3, 196), (2, 180), (3, 164), (3, 146), (3, 132), (4, cx), (4, cx), (5, cx)]
     return [
-        Ridge([(-10, 182, 90, 100, 1.0), (250, 170, 120, 90, 1.0)], 262, *T_VFAR, seed=90, rough=2, smooth=True,
-              flicker=0.02, mist=(236, 262)),
-        disc(cx, 222, 15, DAWN_SUN),
+        Ridge([(120, 196, 130, 120, 1.0)], 280, *FAR_1, seed=90, rough=2, smooth=True, flicker=0.02),
+        disc(cx, 214, 18, BUTTER),
+        Ridge([(60, 216, 90, 70, 1.0), (190, 210, 80, 90, 1.0)], 280, *FAR_2, seed=91, rough=2, smooth=True,
+              flicker=0.02),
         lake,
-        StepValley(196, left, right, V_POOL, V_BANK, V_BANK_DEEP, V_SHEEN, seed=97),
-        Mesa(212, 200, 7, 8, 212, *HUT_W, ledges=1, bed=8, seed=95, wobble=0, speckle=0, ragged=0),
-        Ridge([(212, 188, 13, 13, 1.0)], 201, *HUT_ROOF, seed=96, rough=0, smooth=True, flicker=0),
-        trees([6, 18], 198, 7, R_TREES, seed=98, spread=0.5),
+        Paddies(150, left, right, PADDY_LEFT, PADDY_RIGHT, SEEDLING, cx=cx, dip=6, seed=97),
+        # a planter bent over the near paddy, in a straw hat
+        Blocks([(52, 296, 58, 308, PLANTER), (54, 292, 62, 298, PLANTER), (52, 288, 64, 292, HAT),
+                (55, 284, 61, 288, HAT)]),
+        # the hut on stilts on the right crest
+        Blocks([(203, 158, 206, 172, STILT), (222, 158, 225, 172, STILT)]),
+        Mesa(214, 142, 11, 11, 158, *THATCH, ledges=1, bed=8, seed=95, wobble=0, speckle=0, ragged=0),
+        Ridge([(214, 126, 18, 18, 1.0)], 143, *THATCH, seed=96, rough=0, smooth=True, flicker=0),
+        Blocks([(210, 148, 216, 158, PLANTER)]),
+        trees([2, 16, 30], 162, 10, TREE_DARK, seed=98, spread=0.5),
     ]
 
 
