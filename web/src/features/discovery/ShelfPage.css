@@ -16,6 +16,8 @@
   padding: var(--s-5) var(--gutter) 0;
 }
 .feature.surf {
+  /* The words measure themselves against the cover's width, so they stop short of the burst (.feature-text). */
+  container-type: inline-size;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
   gap: 56px;
@@ -55,6 +57,11 @@
 .feature-book {
   position: relative;
 }
+/* The words end 24px before the burst, which starts at 52% of the cover: 52% of the cover is 52cqw of its content
+   box plus 52% of its side padding (164px); the words start at its 64px left padding. */
+.feature-text {
+  max-width: calc(52cqw + 0.52 * 164px - 64px - 24px);
+}
 .feature-text .caption {
   background: var(--white);
   color: var(--ink);
@@ -93,6 +100,21 @@
 /* On the black the book has no dot shadow: white dots beside the rays only add noise. */
 .feature-book .book::before {
   display: none;
+}
+/* The Librarian's pick (Josef, 2026-11-21): a little larger than the large book, with type a little larger than
+   the shelf book's but well under the large book's, so a longer title and name fit. */
+@media (min-width: 720px) {
+  .feature-book .book-lg {
+    width: 260px;
+    height: 379px;
+  }
+  .feature-book .book.book-lg .book-title {
+    font-size: 33px;
+  }
+  .feature-book .book.book-lg .book-author {
+    margin-top: 11px;
+    font-size: 15px;
+  }
 }
 
 /* ---------- Under the cover: the one request waiting, and your book ---------- */
@@ -255,9 +277,12 @@ button.book {
     width: 180px;
   }
   .feature.surf {
-    grid-template-columns: minmax(0, 1fr) 236px;
+    grid-template-columns: minmax(0, 1fr) 260px;
     gap: var(--s-6);
     padding: 40px 44px;
+  }
+  .feature-text {
+    max-width: calc(52cqw + 0.52 * 88px - 44px - 24px);
   }
   .feature-text .page-title {
     font-size: 40px;
@@ -356,6 +381,10 @@ button.book {
     min-height: 0;
     padding: var(--s-6) var(--s-5) var(--s-6);
   }
+  /* The burst is under the book here, not beside the words. */
+  .feature-text {
+    max-width: none;
+  }
   /* Behind the book only: the words above it stay on plain black. */
   .feature .burst {
     inset: auto 0 0;
@@ -413,13 +442,16 @@ button.book {
 }
 
 /* ---------- A book open in front of the shelf (BookReader.css) ---------- */
-/* The shelf stays where it is at 60%, under the reader's dots; the open book's place stays empty. */
-.shelf-page main {
-  transition: opacity 1100ms cubic-bezier(0.45, 0, 0.25, 1);
-}
-.shelf-page[data-reading] main {
-  opacity: 0.6;
-}
-.book[data-out] {
+/* The shelf stays where it is, dimmed under the reader's dots (.br-dots); the open book's place stays empty. Its
+   cover goes at once (the book itself is in flight), its shadow dissolves as it lifts off, and dissolves back in
+   while it flies home (data-returning, set by the reader as it closes). */
+.book[data-out] .book-cover {
   visibility: hidden;
+}
+.book[data-out]::before {
+  opacity: 0;
+}
+.book[data-out][data-returning]::before {
+  opacity: 1;
+  transition-duration: 480ms;
 }

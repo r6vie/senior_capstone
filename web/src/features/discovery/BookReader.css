@@ -4,22 +4,37 @@
 
 .book-reader {
   --bar: 80px;
-  /* The book comes forward and opens while the shelf zooms in behind it (ShelfPage.css): one move. */
-  --open-time: 1100ms;
+  /* The book comes forward from its place on the shelf and opens: one move. */
+  --open-time: 850ms;
   --open-ease: cubic-bezier(0.5, 0, 0.2, 1);
+  /* The flight: quick away from the shelf, long and soft into place (it arrives at 78%, then settles). */
+  --fly-ease: cubic-bezier(0.45, 0, 0.15, 1);
+  /* The cover's swing, which the spine follows: it lifts at once and slows all the way into the spread. */
+  --cover-ease: cubic-bezier(0.38, 0, 0.12, 1);
+  --flatten-ease: cubic-bezier(0.55, 0, 0.45, 1);
+  --open-dir: normal;
   --turn-time: 700ms;
+  --turn-ease: cubic-bezier(0.45, 0.05, 0.25, 1);
   position: fixed;
-  inset: var(--bar) 0 0;
+  /* The whole window, so a book starting high on the page, under the top bar, is never clipped in flight;
+     the open book's room is still the space under the bar. */
+  inset: 0;
+  box-sizing: border-box;
+  padding: var(--bar) 0 0;
   width: 100%;
   max-width: none;
   height: auto;
   max-height: none;
   margin: 0;
-  padding: 0;
   border: 0;
   background: transparent;
   color: var(--ink);
   overflow: hidden;
+}
+/* Closing plays the opening backwards (BookReader.tsx, close), and nothing in it can be pressed meanwhile. */
+.book-reader[data-leave] {
+  --open-dir: reverse;
+  pointer-events: none;
 }
 .book-reader[open] {
   display: grid;
@@ -29,22 +44,32 @@
 .book-reader::backdrop {
   background: transparent;
 }
-/* Fine ink dots over the shelf behind (the shelf itself is at 60%, see ShelfPage.css). */
+/* The shelf behind at 45% under a dot tone dark enough that the open book stands clear of it (Josef,
+   2026-11-21: fainter and darker than the first 60%). Paper at 55% over the shelf reads exactly as the shelf at 45%,
+   and doing it here, on one fixed layer the size of the window, means the long shelf page is never repainted
+   or re-layered when a book opens (fading the shelf itself flashed it). It covers the whole window, the top bar
+   too (Josef, 2026-11-21); the book still opens in the room under the bar. */
 .br-dots {
-  position: absolute;
+  position: fixed;
   inset: 0;
   animation: br-dots-in var(--open-time) var(--open-ease) both;
-  background: radial-gradient(circle, var(--ink) 0.9px, transparent 1.3px) 0 0 / 5px 5px;
-  opacity: 0.4;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--ink) 62%, transparent) 1.15px, transparent 1.55px) 0 0 /
+    5px 5px,
+    color-mix(in srgb, var(--paper) 55%, transparent);
+}
+.book-reader[data-leave] .br-dots {
+  animation: br-dots-out var(--open-time) var(--open-ease) both;
+}
+@keyframes br-dots-out {
+  to {
+    opacity: 0;
+  }
 }
 
 /* ---------- The book object ---------- */
-/* How thick the page block is. Closed and in flight it has real depth; it settles flat as it opens. */
-@property --depth {
-  syntax: "<length>";
-  inherits: true;
-  initial-value: 1px;
-}
+/* The page block is built at its full depth in flight (26px) and settled flat by transforms only, never by
+   sizes, so the whole opening runs on the compositor without layout. Open, it is 1px deep. */
 .br-fit {
   position: relative;
   width: calc(1180px * var(--k));
@@ -57,7 +82,6 @@
   --reader-y: 0px;
   --reader-scale-x: 1;
   --reader-scale-y: 1;
-  --depth: 1px;
   --cover-t: 10px;
   position: absolute;
   left: calc(50% - 590px);
@@ -74,17 +98,19 @@
   inset: 8px 6px;
   border-radius: 4px;
   background: var(--ink);
-  transform: translateZ(calc(-1 * var(--depth)));
+  translate: 0 0 -1px;
 }
-.br-board::before {
-  content: "";
+/* The spine, showing as a tab at head and foot between the open boards. It unfolds from the spine line as the cover
+   swings, on the cover's own curve: no width while the book is shut, half at 90 degrees, all of it lying flat. */
+.br-spine {
   position: absolute;
+  top: 0;
+  bottom: 0;
   left: calc(50% - 12px);
-  top: -8px;
-  bottom: -8px;
   width: 24px;
   border-radius: 3px;
   background: var(--ink);
+  translate: 0 0 -1px;
 }
 /* One sheet of page edge, 6px proud of the pages. */
 .br-edge {
@@ -92,7 +118,7 @@
   inset: 16px 14px;
   border: 1.5px solid var(--ink);
   background: var(--white);
-  transform: translateZ(calc(-1 * var(--depth) + 0.5px));
+  translate: 0 0 -0.5px;
 }
 /* The page block's fore-edge, head and foot: stacked leaves, from the board up to the top page. */
 .br-block {
@@ -104,30 +130,46 @@
 .br-block-side {
   top: 16px;
   height: 692px;
-  left: calc(1166px - var(--depth) / 2);
-  width: var(--depth);
+  left: 1153px;
+  width: 26px;
   background-image: repeating-linear-gradient(90deg, transparent 0 2px, var(--rule) 2px 3px);
-  transform: translateZ(calc(var(--depth) / -2)) rotateY(90deg);
+  transform: rotateY(90deg);
+}
+/* The block's bound side at the spine, so nothing opens there while the book turns and its cover swings. */
+.br-block-spine {
+  top: 16px;
+  height: 692px;
+  left: 577px;
+  width: 26px;
+  background: var(--ink);
+  transform: rotateY(90deg);
 }
 .br-block-head,
 .br-block-foot {
   left: 590px;
   width: 576px;
-  height: var(--depth);
+  height: 26px;
   background-image: repeating-linear-gradient(0deg, transparent 0 2px, var(--rule) 2px 3px);
 }
+/* Turned edge-on, a face's depth lies along z: scaling z thins it from 26px to 1px. */
+.br-block {
+  translate: 0 0 -0.5px;
+  scale: 1 1 calc(1 / 26);
+}
 .br-block-head {
-  top: calc(16px - var(--depth) / 2);
-  transform: translateZ(calc(var(--depth) / -2)) rotateX(90deg);
+  top: 3px;
+  transform: rotateX(90deg);
 }
 .br-block-foot {
-  top: calc(708px - var(--depth) / 2);
-  transform: translateZ(calc(var(--depth) / -2)) rotateX(-90deg);
+  top: 695px;
+  transform: rotateX(-90deg);
 }
 
 /* ---------- Pages: flat planes, each carrying all of its own content ---------- */
 .br-page {
   position: absolute;
+  /* Its own stacking context, so art set behind its text (.br-page-art) stays on the page. */
+  isolation: isolate;
   top: 20px;
   width: 570px;
   height: 684px;
@@ -153,19 +195,30 @@
     opacity: 0.6;
   }
 }
-/* A strip of dot shade down the gutter. */
-.br-gutter {
+/* The dot shade down the gutter, printed on each page at its spine edge, so it travels with the page: on a turning
+   leaf, on the cover's inside as the book opens. The two halves meet at the spine on one 4px grid (the right
+   page's starts 1px after its 1px spine-side border). */
+.br-left::after,
+.br-right::after {
+  content: "";
   position: absolute;
-  z-index: 4;
-  top: 22px;
-  bottom: 22px;
-  left: calc(50% - 18px);
-  width: 36px;
+  top: 0;
+  bottom: 0;
+  width: 18px;
   pointer-events: none;
-  background: radial-gradient(circle, var(--ink) 0.9px, transparent 1.3px) 0 0 / 4px 4px;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 50%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 50%, transparent);
   opacity: 0.55;
+}
+.br-left::after {
+  right: 0;
+  background: radial-gradient(circle, var(--ink) 0.9px, transparent 1.3px) 0 0 / 4px 4px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000);
+  mask-image: linear-gradient(90deg, transparent, #000);
+}
+.br-right::after {
+  left: 0;
+  background: radial-gradient(circle, var(--ink) 0.9px, transparent 1.3px) 1px 0 / 4px 4px;
+  -webkit-mask-image: linear-gradient(90deg, #000, transparent);
+  mask-image: linear-gradient(90deg, #000, transparent);
 }
 
 /* ---------- The heads: Close on the left page, the tabs on the right ---------- */
@@ -277,9 +330,11 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+/* Rows reach 12px left and 10px right of the text, so a highlight and its rules have room around the words
+   (board FreshReaderOpen). The list itself reaches out: it scrolls, so it would clip a row that did. */
 .br-toc {
   min-height: 0;
-  margin: 20px 0 0;
+  margin: 20px -10px 0 -12px;
   padding: 0 0 24px;
   overflow-y: auto;
   list-style: none;
@@ -295,8 +350,7 @@
   grid-template-columns: 40px 1fr 24px;
   gap: 0 6px;
   align-items: baseline;
-  width: calc(100% + 22px);
-  margin: 0 -10px 0 -12px;
+  width: 100%;
   padding: 16px 10px 16px 12px;
   border: 0;
   background: none;
@@ -388,8 +442,22 @@
   width: 52px;
   height: 52px;
 }
+/* The same corner at the left page's foot, turning back. */
+.br-curl-back {
+  right: auto;
+  left: 0;
+  background:
+    linear-gradient(45deg, var(--white) 0 49%, transparent 50%),
+    radial-gradient(circle, var(--ink) 1px, transparent 1.4px) 0 0 / 4px 4px,
+    var(--paper-sunk);
+}
+.br-curl-back::after {
+  background: linear-gradient(45deg, transparent 48.5%, var(--ink) 49%, var(--ink) 51%, transparent 51.5%);
+}
 
-/* ---------- A page turn: a plane with a page on each face, rotating about the spine ---------- */
+/* ---------- A page turn: the leaf rotates about the spine and bends as it goes ---------- */
+/* Six strips, each hinged to the one before it, so the paper curls: the free edge leads as it lifts, then trails a
+   little as it lands. Transforms only, so it runs on the compositor; each strip carries its slice of both pages. */
 .br-leaf {
   position: absolute;
   z-index: 5;
@@ -402,25 +470,68 @@
 .br-leaf-forward {
   left: 590px;
   transform-origin: left center;
-  animation: br-turn-forward var(--turn-time) cubic-bezier(0.45, 0.05, 0.25, 1) both;
+  animation:
+    br-turn-forward var(--turn-time) var(--turn-ease) var(--delay, 0ms) both,
+    br-leaf-z var(--turn-time) step-end var(--delay, 0ms) both;
 }
 .br-leaf-back {
   left: 20px;
   transform-origin: right center;
-  animation: br-turn-back var(--turn-time) cubic-bezier(0.45, 0.05, 0.25, 1) both;
+  animation:
+    br-turn-back var(--turn-time) var(--turn-ease) var(--delay, 0ms) both,
+    br-leaf-z var(--turn-time) step-end var(--delay, 0ms) both;
+}
+.br-strip {
+  position: absolute;
+  top: 0;
+  /* A hair wider than a sixth, so no seam opens between strips at the joints. */
+  width: 95.5px;
+  height: 684px;
+  transform-style: preserve-3d;
+}
+.br-leaf-forward .br-strip {
+  left: 95px;
+  transform-origin: left center;
+  animation: br-bend-forward var(--turn-time) ease-in-out var(--delay, 0ms) both;
+}
+.br-leaf-back .br-strip {
+  right: 95px;
+  transform-origin: right center;
+  animation: br-bend-back var(--turn-time) ease-in-out var(--delay, 0ms) both;
+}
+/* The strip at the spine turns with the leaf; only the joints bend. */
+.br-leaf-forward > .br-strip {
+  left: 0;
+  animation: none;
+}
+.br-leaf-back > .br-strip {
+  right: 0;
+  animation: none;
 }
 .br-face {
-  top: 0;
-  left: 0;
-  padding: 84px 64px 0 56px;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
   backface-visibility: hidden;
 }
-.br-leaf-back > .br-face:first-child,
-.br-leaf-forward > .br-face-back {
-  padding: 84px 56px 0 64px;
+.br-face > .br-page {
+  top: 0;
 }
 .br-face-back {
   transform: rotateY(180deg);
+}
+/* Lifted just off the page it lies on: over the leaves still to turn, then (from halfway, when it stands on
+   edge) over the ones already turned. */
+@keyframes br-leaf-z {
+  from {
+    translate: 0 0 var(--z-from, 0.5px);
+  }
+  50% {
+    translate: 0 0 var(--z-to, 0.5px);
+  }
+  to {
+    translate: 0 0 var(--z-to, 0.5px);
+  }
 }
 @keyframes br-turn-forward {
   from {
@@ -436,6 +547,34 @@
   }
   to {
     transform: rotateY(180deg);
+  }
+}
+@keyframes br-bend-forward {
+  0% {
+    transform: rotateY(0deg);
+  }
+  35% {
+    transform: rotateY(-8deg);
+  }
+  72% {
+    transform: rotateY(3deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+@keyframes br-bend-back {
+  0% {
+    transform: rotateY(0deg);
+  }
+  35% {
+    transform: rotateY(8deg);
+  }
+  72% {
+    transform: rotateY(-3deg);
+  }
+  100% {
+    transform: rotateY(0deg);
   }
 }
 
@@ -474,6 +613,14 @@
   width: var(--cover-t);
   transform: rotateY(90deg);
 }
+/* The cover's spine edge, so the slab is closed there as it swings and no gap opens at the spine. */
+.br-cover-spine {
+  top: 0;
+  bottom: 0;
+  left: calc(var(--cover-t) / -2);
+  width: var(--cover-t);
+  transform: rotateY(90deg);
+}
 .br-cover-head,
 .br-cover-foot {
   left: 0;
@@ -488,41 +635,96 @@
   bottom: calc(var(--cover-t) / -2);
   transform: rotateX(-90deg);
 }
-/* The closed book looks like the book on the shelf, so the hand-off from the shelf is seamless. */
+/* The closed book is the desktop shelf book (styles.css, "The desktop books"), so the hand-off from the shelf is
+   seamless: its art, hinge and type. Every size is the shelf book's times the move's start scale: the 584 x 708 cover
+   drawn as 176 x 257, so 3.32 across and 2.75 down. */
 .br-cover-front {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 72px 44px 44px 98px;
+  /* Like the shelf book's, the art stops inside the outline, so the outline stays in flight. */
+  overflow: hidden;
+  /* Set from the shelf book it left (BookReader.tsx, printCover); the fallbacks are the 176 x 257 shelf book's. */
+  padding: var(--print-top, 55px) 0 0 var(--print-left, 60px);
   border: 6px solid var(--ink);
-  background: linear-gradient(
-    90deg,
-    #e4e4df 0,
-    #f5f5f1 33px,
-    var(--white) 37px 50px,
-    #f2f2ee 55px,
-    var(--white) 74px
-  );
-  color: var(--ink);
+  background: var(--white);
+  color: var(--art-ink, var(--ink));
+}
+/* Stretched to the cover, as the cover is to the shelf book's shape at the start. */
+.br-cover-art {
+  position: absolute;
+  left: -6px;
+  top: -6px;
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  object-fit: fill;
 }
 .br-cover-front::before {
   content: "";
   position: absolute;
-  left: 55px;
+  z-index: 1;
+  left: var(--print-hinge, 27px);
   top: 0;
   bottom: 0;
-  width: 7px;
+  width: var(--print-hinge-width, 5px);
   background: var(--ink);
 }
-.br-cover-front strong {
-  font: 600 62px / 1.18 var(--font-serif);
-  overflow-wrap: anywhere;
+/* Set at the across scale so the title wraps exactly as on the shelf, then pressed to the down scale, so at the
+   start it is the shelf book's type, letter for letter. */
+.br-cover-type {
+  /* Exactly the shelf book's sizes times the across scale, unrounded, so every line breaks where it does there. */
+  --sx: var(--print-across, calc(584 / 176));
+  position: relative;
+  z-index: 1;
+  width: var(--print-width, calc(141px * var(--sx)));
+  transform: scaleY(var(--print-squash, 0.83));
+  transform-origin: 0 0;
 }
-.br-cover-front span {
-  color: var(--ink-2);
-  font: 600 44px / 1.3 var(--font-sans);
-  letter-spacing: 0.12em;
+/* The book's own stretch eases out as it flies (its scale goes from the shelf book's proportions to the open
+   book's), so the type eases out of its counter-stretch with it and keeps its shape all the way. */
+:is(.br-book[data-arrive], .book-reader[data-leave] .br-book) .br-cover-type {
+  animation: br-type-shape var(--open-time) var(--open-ease) var(--open-dir) both;
+}
+/* On the flight's own curve (br-move), so the type keeps its shape the whole way. */
+@keyframes br-type-shape {
+  from {
+    transform: scaleY(var(--print-squash, 0.83));
+    animation-timing-function: var(--fly-ease);
+  }
+  78%,
+  to {
+    transform: scaleY(1);
+  }
+}
+/* Each line as the shelf book broke it, and no other break. */
+.br-line {
+  display: block;
+  white-space: nowrap;
+}
+.br-cover-type strong {
+  display: block;
+  font: 800 var(--print-title, calc(29px * var(--sx))) / 0.92 var(--font-display);
+  letter-spacing: 0.01em;
   text-transform: uppercase;
+  text-wrap: balance;
+}
+.br-cover-type > span {
+  display: block;
+  width: fit-content;
+  margin: var(--print-gap, calc(10px * var(--sx))) 0 0 calc(-3px * var(--sx));
+  padding: 0 calc(3px * var(--sx)) calc(1px * var(--sx));
+  background: var(--white);
+  font: 700 var(--print-name, calc(13px * var(--sx))) / 1.15 var(--font-display);
+  overflow-wrap: anywhere;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+/* The title page's art, behind its text, anchored to the foot (docs/design/art/strata/set-1/README.md). */
+.br-page-art {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: bottom;
 }
 .br-cover-back {
   transform: rotateY(180deg) translateZ(calc(var(--cover-t) / 2));
@@ -544,63 +746,128 @@
   top: 12px;
 }
 /* One motion of one object. From exactly where it stood on the shelf, the book travels to the foreground and
-   grows (move), turns to show its depth and back (tilt), and its block settles flat (flatten), while the cover
+   grows (move), turns about its upright axis to show its depth and back (swivel; Josef: the head and foot never
+   tip toward or away from us), and its block settles flat (flatten), while the cover
    swings open about the spine (open). */
-.br-book[data-arrive] {
+:is(.br-book[data-arrive], .book-reader[data-leave] .br-book) {
   animation:
-    br-move var(--open-time) var(--open-ease) both,
-    br-tilt var(--open-time) linear both,
-    br-flatten var(--open-time) cubic-bezier(0.55, 0, 0.45, 1) both;
+    br-move var(--open-time) var(--open-ease) var(--open-dir) both,
+    br-swivel var(--open-time) linear var(--open-dir) both;
 }
-.br-book[data-arrive] .br-cover {
+:is(.br-book[data-arrive], .book-reader[data-leave] .br-book) .br-board {
+  animation:
+    br-half var(--open-time) var(--open-dir) both,
+    br-flatten-board var(--open-time) var(--flatten-ease) var(--open-dir) both;
+}
+:is(.br-book[data-arrive], .book-reader[data-leave] .br-book) .br-edge {
+  animation:
+    br-half var(--open-time) var(--open-dir) both,
+    br-flatten-edge var(--open-time) var(--flatten-ease) var(--open-dir) both;
+}
+:is(.br-book[data-arrive], .book-reader[data-leave] .br-book) .br-block {
+  animation: br-flatten-block var(--open-time) var(--flatten-ease) var(--open-dir) both;
+}
+:is(.br-book[data-arrive], .book-reader[data-leave] .br-book) .br-cover {
   display: block;
-  animation: br-open var(--open-time) cubic-bezier(0.45, 0, 0.3, 1) both;
+  animation: br-open var(--open-time) var(--cover-ease) var(--open-dir) both;
+}
+:is(.br-book[data-arrive], .book-reader[data-leave] .br-book) .br-spine {
+  animation:
+    br-spine-unfold var(--open-time) var(--cover-ease) var(--open-dir) both,
+    br-flatten-board var(--open-time) var(--flatten-ease) var(--open-dir) both;
+}
+@keyframes br-spine-unfold {
+  from {
+    scale: 0 1;
+  }
+}
+
+/* ---------- Closing: swift, and without the landing swell ---------- */
+/* Played backwards like the opening, but on its own curves: a backwards animation runs its easing backwards too,
+   so each is the mirror of the motion wanted (prompt from the first frame, slowing gently onto the shelf). */
+.book-reader[data-leave] {
+  --open-time: 560ms;
+  --cover-ease: cubic-bezier(0.75, 0, 0.7, 1);
+}
+.book-reader[data-leave] .br-book {
+  animation:
+    br-move-plain var(--open-time) cubic-bezier(0.8, 0, 0.7, 1) reverse both,
+    br-swivel-close var(--open-time) ease-in-out reverse both;
+}
+.book-reader[data-leave] .br-book .br-cover-type {
+  animation: br-type-plain var(--open-time) cubic-bezier(0.8, 0, 0.7, 1) reverse both;
+}
+@keyframes br-move-plain {
+  from {
+    translate: var(--reader-x) var(--reader-y);
+    scale: var(--reader-scale-x) var(--reader-scale-y);
+  }
+}
+@keyframes br-type-plain {
+  from {
+    transform: scaleY(var(--print-squash, 0.83));
+  }
+}
+@keyframes br-swivel-close {
+  50% {
+    rotate: 0 1 0 -16deg;
+  }
 }
 /* While it opens, the left of the spread is the cover's inside; the real left half takes over at the end,
    identical, so nothing pops. The spine shows from the start: it's the closed book's spine. */
-.br-book[data-arrive] .br-static.br-left {
-  animation: br-take-over var(--open-time) both;
+:is(.br-book[data-arrive], .book-reader[data-leave] .br-book) .br-static.br-left {
+  animation: br-take-over var(--open-time) var(--open-dir) both;
 }
-.br-book[data-arrive] .br-board,
-.br-book[data-arrive] .br-edge,
-.br-book[data-arrive] .br-gutter {
-  animation: br-half var(--open-time) both;
-}
+/* It lands a touch large and settles, as a book set down rather than snapped into place. */
 @keyframes br-move {
   from {
     translate: var(--reader-x) var(--reader-y);
     scale: var(--reader-scale-x) var(--reader-scale-y);
+    animation-timing-function: var(--fly-ease);
+  }
+  78% {
+    translate: 0 0;
+    scale: 1.012 1.012;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.4, 1);
   }
   to {
     translate: 0 0;
     scale: 1 1;
   }
 }
-@keyframes br-tilt {
+@keyframes br-swivel {
   0% {
-    rotate: 0.35 -1 0 0deg;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+    rotate: 0 1 0 0deg;
+    animation-timing-function: cubic-bezier(0.35, 0, 0.45, 1);
   }
-  45% {
-    rotate: 0.35 -1 0 26deg;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  38% {
+    rotate: 0 1 0 -24deg;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
   }
   100% {
-    rotate: 0.35 -1 0 0deg;
+    rotate: 0 1 0 0deg;
   }
 }
-@keyframes br-flatten {
+@keyframes br-flatten-board {
   from {
-    --depth: 26px;
+    translate: 0 0 -26px;
   }
-  to {
-    --depth: 1px;
+}
+@keyframes br-flatten-edge {
+  from {
+    translate: 0 0 -25.5px;
+  }
+}
+@keyframes br-flatten-block {
+  from {
+    translate: 0 0 -13px;
+    scale: 1 1 1;
   }
 }
 /* Its inside lands exactly on the left half of the spread; the real one then takes over, unseen. */
+/* The cover lifts as soon as the book does and slows the whole way down into the open spread. */
 @keyframes br-open {
-  0%,
-  12% {
+  0% {
     transform: rotateY(0deg) translateZ(calc(var(--cover-t) / 2));
   }
   99.9% {
@@ -628,7 +895,7 @@
 @keyframes br-half {
   0%,
   99.9% {
-    clip-path: inset(-20px -20px -20px calc(50% - 12px));
+    clip-path: inset(-20px -20px -20px 50%);
   }
   100% {
     clip-path: none;
@@ -639,8 +906,9 @@
 @media (max-width: 719px) {
   .book-reader {
     --bar: 56px;
-    /* The tab bar is at the foot of the screen on a phone. */
-    bottom: 64px;
+    /* The tab bar is at the foot of the screen on a phone. There is no flight here, so the room is the box. */
+    inset: var(--bar) 0 64px;
+    padding: 0;
   }
   .br-fit {
     width: 100%;
@@ -694,14 +962,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .br-book[data-arrive],
-  .br-book[data-arrive] .br-static.br-left,
-  .br-book[data-arrive] .br-board,
-  .br-book[data-arrive] .br-edge,
-  .br-book[data-arrive] .br-gutter {
+  :is(.br-book[data-arrive], .book-reader[data-leave] .br-book),
+  :is(.br-book[data-arrive], .book-reader[data-leave] .br-book) .br-static.br-left,
+  :is(.br-book[data-arrive], .book-reader[data-leave] .br-book) .br-board,
+  :is(.br-book[data-arrive], .book-reader[data-leave] .br-book) .br-edge,
+  :is(.br-book[data-arrive], .book-reader[data-leave] .br-book) .br-block,
+  :is(.br-book[data-arrive], .book-reader[data-leave] .br-book) .br-spine,
+  .book-reader[data-leave] .br-book,
+  .book-reader[data-leave] .br-book .br-cover-type {
     animation: none;
   }
-  .br-book[data-arrive] .br-cover,
+  :is(.br-book[data-arrive], .book-reader[data-leave] .br-book) .br-cover,
   .br-leaf {
     display: none;
   }

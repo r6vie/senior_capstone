@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { forgetLoadedBooks } from "./bookPreload";
 import { ShelfPage } from "./ShelfPage";
 
 const api = vi.hoisted(() => ({ GET: vi.fn() }));
@@ -96,6 +97,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  forgetLoadedBooks();
   vi.restoreAllMocks();
 });
 async function openBook() {
@@ -128,11 +130,28 @@ describe("D1 shelf and reader", () => {
     expect(screen.getByRole("region", { name: "Recently added" })).toBeTruthy();
     expect(api.GET).toHaveBeenCalledWith("/books", { params: { query: { limit: 20 } } });
   });
+  it("takes out only the copy that was opened when a book stands on two shelves", async () => {
+    renderShelf();
+    const name = `${changingCourse.title}, by ${changingCourse.author_name}`;
+    const onCategory = within(await screen.findByRole("region", { name: "Changing course" })).getByRole(
+      "button",
+      {
+        name,
+      },
+    );
+    const onRecent = within(screen.getByRole("region", { name: "Recently added" })).getByRole("button", {
+      name,
+    });
+    fireEvent.click(onRecent);
+    await screen.findByRole("dialog");
+    expect(onRecent.hasAttribute("data-out")).toBe(true);
+    expect(onCategory.hasAttribute("data-out")).toBe(false);
+  });
   it("turns to a chapter and back to the contents, without revealing private fields", async () => {
     renderShelf();
     const { dialog } = await openBook();
     const reader = within(dialog);
-    expect(document.body.style.overflow).toBe("hidden");
+    expect(document.documentElement.style.overflow).toBe("hidden");
     // Everything for the book is in the book: Close, the page tabs, and no helper sentences.
     expect(reader.getByRole("button", { name: "Close the book" })).toBeTruthy();
     expect(reader.getByRole("navigation", { name: "Pages of this book" })).toBeTruthy();
@@ -169,7 +188,7 @@ describe("D1 shelf and reader", () => {
     const { dialog, trigger } = await openBook();
     fireEvent(dialog, new Event("cancel", { bubbles: false, cancelable: true }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    expect(document.body.style.overflow).not.toBe("hidden");
+    expect(document.documentElement.style.overflow).not.toBe("hidden");
     expect(document.activeElement).toBe(trigger);
   });
   it("opens a direct link and reaches the existing checkout form", async () => {
@@ -179,7 +198,7 @@ describe("D1 shelf and reader", () => {
     expect(checkout.getAttribute("href")).toBe("/checkouts/new/real-book");
     fireEvent.click(checkout);
     expect(await screen.findByText("Checkout form")).toBeTruthy();
-    expect(document.body.style.overflow).not.toBe("hidden");
+    expect(document.documentElement.style.overflow).not.toBe("hidden");
   });
   it("retries pagination without losing or duplicating books", async () => {
     let calls = 0;
