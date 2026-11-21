@@ -159,6 +159,14 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   away), an older island and a small far one, clouds, deep water past a broken line of surf on the reef, pale
   shallows with coral heads, a sandbar with block palms and an outrigger canoe. A fresh critic reviewed the drafts;
   its main fixes are in.
+- **The three pages reworked (Josef: none great; every main peak lower).** Winter: the tallest peak and the spike
+  on the right are gone, the aurora is one smooth curtain lying low with no gaps, and the lake is now a fjord, dark
+  calm water winding back between steep snow walls through a bright snowfield. Terraces: a whole country of hills,
+  not two striped slopes: far ridges and the sun, two small finely terraced hills, a lake, three more small hills in
+  sage, ochre and peach, a big left hill broken by a forested gully, a right hill of large wide terraces with the
+  hut and a waterfall, broad paddies and coconut palms in front. Lagoon: a lower volcano, misty far islands and a
+  low jungle island, the reef closing the lagoon in an arc of sand and surf with two palm motu on it, a sand shoal,
+  a dense palm forest on the near beach with the canoe. A fresh critic reviewed them; its main fixes are in.
 - **Cover typography follows the gouache poster, set left (Josef: "redo the cover typography everywhere to match
   closer to 4 · Gouache poster, keep it left justified and name right under").** A fixed-tier change with Josef's
   yes: on the strata covers (`cov-final`, all eight boards on "Covers: Strata") the title is Barlow Condensed 800 in
