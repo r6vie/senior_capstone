@@ -353,7 +353,8 @@ def lagoon_page():
                 ["#C3D4C8", "#BCCEC1"], ["#A9BEB0", "#A2B8A9"], seed=401, rough=2, smooth=True, flicker=0.02,
                 mist=(508, 520))
     mid = Ridge([(250, 492, 120, 100, 0.8)], 530, *V_FAR, seed=402, rough=3, ribs=0.4, smooth=True, flicker=0.03)
-    lagoon = Water(566, 700, -40, 610, ["#9DD0C9", "#8CC7C0", "#7DBBB5", "#6FAFAA"], LAG_G, seed=403, gaps=(0, 1))
+    # the water rows run well past both edges and leave no open gaps, so no paper shows through the lagoon
+    lagoon = Water(566, 700, -120, 720, ["#9DD0C9", "#8CC7C0", "#7DBBB5", "#6FAFAA"], LAG_G, seed=403, gaps=(0, 0))
     r = random.Random(7)
     # the forest: palms crowded along the near beach in two loose rows, uneven gaps, every one its own height, crown
     # and lean, so nothing lines up
@@ -374,8 +375,8 @@ def lagoon_page():
         cone,
         Blob([(500, 392, 7, 3)], ["#E3A061", "#D98E4E"], top_light=False),          # the vent's glow
         trees([400, 430, 460, 490, 520, 550, 580], 526, 10, JUNGLE, seed=406, spread=1.0),
-        Water(524, 556, -40, 610, REEF, LAG_G, seed=407, gaps=(0, 1)),
-        Water(552, 566, -40, 610, FOAM_L, FOAM_L, seed=408, gaps=(2, 4)),          # the surf breaking on the reef
+        Water(524, 556, -120, 720, REEF, LAG_G, seed=407, gaps=(0, 0)),
+        Water(552, 566, -120, 720, FOAM_L, FOAM_L, seed=408, gaps=(2, 4)),         # the surf breaking on the reef
         lagoon,
         Blob([(120, 612, 30, 4), (420, 640, 40, 4), (520, 600, 26, 4)], CORAL, top_light=False),
         # the reef closing the lagoon: an arc of sand and surf curving round from the volcano's foot

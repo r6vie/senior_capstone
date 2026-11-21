@@ -177,6 +177,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
   mirrored in it, the aurora faint in the ice, the snow hills in front on either side and a near snow shore.
+- **Lagoon page: water filled (Josef: too much white on the right edge).** The reef and lagoon rows now run well past
+  both edges and leave no open gaps, so only the pale glints remain.
 - **Cover typography follows the gouache poster, set left (Josef: "redo the cover typography everywhere to match
   closer to 4 · Gouache poster, keep it left justified and name right under").** A fixed-tier change with Josef's
   yes: on the strata covers (`cov-final`, all eight boards on "Covers: Strata") the title is Barlow Condensed 800 in
