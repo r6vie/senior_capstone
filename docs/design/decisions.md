@@ -146,6 +146,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 - **Winter without the cabin; terraces lower with bushes (Josef).** The cabin is gone from the winter cover (the firs
   stay). The rice terraces sit 34 px lower, and clumps of leafy bushes stand on the terraces to break the stripes: a
   broad clump across the shaded left slope, smaller ones on both sides.
+- **Desert cover: the butte lowered (Josef: more space for the author).** The butte's top and the sun behind it sit
+  16 px lower (world units), leaving a clear band of white under the name.
 - **Cover typography follows the gouache poster, set left (Josef: "redo the cover typography everywhere to match
   closer to 4 · Gouache poster, keep it left justified and name right under").** A fixed-tier change with Josef's
   yes: on the strata covers (`cov-final`, all eight boards on "Covers: Strata") the title is Barlow Condensed 800 in

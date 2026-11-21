@@ -41,12 +41,12 @@ def desert():
     shade edge a stepped diagonal, and now a lean, so the cap sits right of its base; rose dusk light on the cap; the
     coral-gold sun behind the upper right shoulder; warm peach haze mesas behind (no purple); a smaller, nearer cliff
     in the right foreground in deeper terracotta, leaning the same way; calm sand over a dark umber base."""
-    hero = Mesa(92, 162, 44, 70, 292, TERRA_L, TERRA_D, ledges=4, bed=8, seed=53, talus=True, top_tint=ROSE,
+    hero = Mesa(92, 178, 44, 70, 292, TERRA_L, TERRA_D, ledges=4, bed=8, seed=53, talus=True, top_tint=ROSE,
                 shadow_slope=0.35, wobble=0, speckle=0.4, flicker=0.02, lean=0.12, flare=6,
-                bedding=([190, 225, 258], "#D9845A"))
+                bedding=([204, 234, 262], "#D9845A"))
     near = Mesa(206, 262, 24, 40, 318, NEAR_L, NEAR_D, ledges=2, bed=8, seed=54, talus=True, top_tint=ROSE,
                 wobble=0, speckle=0.4, flicker=0.02, lean=0.12, flare=3, shadow_steps=3)
-    sun = Blob([(166, 183, 28, 28)], GOLD, top_light=False)
+    sun = Blob([(166, 197, 28, 28)], GOLD, top_light=False)
     sun.ragged = 0     # a clean disc
     return [
         sun,
