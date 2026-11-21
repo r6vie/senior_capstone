@@ -183,8 +183,14 @@ def valley():
         gold,
         dome([(250, 520, 150, 130, 1.0)], 700, H_GOLD, 85),
         dome([(110, 540, 200, 170, 1.0)], 640, H_OLIVE, 84, mist=(616, 640)),
-        trees([62, 96, 130], 592, 12, AUTUMN_TREES, seed=45, spread=0.7),
-        River(596, 700, 200, 24, 4, 70, RIVER, CREAM, swings=1.4, phase=0.6, seed=46),
+        # the orange grove scattered over the olive slope, at different heights and sizes, not in a line
+        trees([24], 588, 10, AUTUMN_TREES, seed=45, spread=0.6),
+        trees([80], 578, 10, AUTUMN_TREES, seed=52, spread=0.6),
+        trees([128], 590, 10, AUTUMN_TREES, seed=53, spread=0.6),
+        trees([160], 562, 8, AUTUMN_TREES, seed=54, spread=0.6),
+        trees([50], 608, 8, AUTUMN_TREES, seed=55, spread=0.6),
+        # the river comes out from between the hills at the valley floor and winds down toward us, never up a slope
+        River(626, 700, 206, 14, 5, 70, RIVER, CREAM, swings=0.8, phase=0.0, seed=46),
         Firs([(166, 640, 52, 5), (184, 642, 40, 4.5), (246, 644, 46, 5)], POPLAR_L, POPLAR_D, tiers=1),
         dome([(-40, 616, 250, 230, 1.0)], 700, H_RUST, 82),
         trees([30, 70, 104], 650, 11, RUST_TREES, seed=50, spread=0.7),

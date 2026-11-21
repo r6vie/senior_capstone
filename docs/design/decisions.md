@@ -140,6 +140,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   thatch hut and a dark tree on the crests (`Paddies`).
   Then (Josef: "getting there"): the planter removed, the seedling rows dropped, and each slope's inner edge run as
   one smooth diagonal through the terraces' edges, so the V's profile no longer steps terrace by terrace.
+- **Autumn book page (Josef).** The orange grove on the olive slope is scattered, five trees at different heights and
+  sizes instead of a line; the river now leaves the hills at the valley floor and winds down toward us with a gentler
+  bend, instead of starting up on the slope. The poplars are unchanged.
 - **Cover typography follows the gouache poster, set left (Josef: "redo the cover typography everywhere to match
   closer to 4 · Gouache poster, keep it left justified and name right under").** A fixed-tier change with Josef's
   yes: on the strata covers (`cov-final`, all eight boards on "Covers: Strata") the title is Barlow Condensed 800 in
