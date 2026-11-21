@@ -260,6 +260,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   Plex Sans 600 caps 8.5px. C Label: the title in a thin framed label (Newsreader 600 14px), the name on a paper tab
   cut into the foot of the art. A and B put a paper knockout behind the name where older art rises into it. Not a
   decision yet: Josef picks.
+  Then (Josef: drop B and C): B and C are now A with the name moved. B: the name in the bottom left corner, on a paper
+  knockout over the art. C: the name above the title (three-line titles then run into the taller older art).
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
