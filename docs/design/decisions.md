@@ -2,6 +2,150 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-19: strata, finished (canvas page "Final designs"), waiting for Josef
+
+- **Josef:** strata has potential but the execution felt unpolished, game-like, and the arrangement not thoughtful.
+  An engraved-line evolution was tried and rejected ("much closer to the original blocky strata").
+- **Done** (`docs/design/art/strata/final.py`): the same slabs, finished. No bevel; a hairline paper seam between
+  courses; little colour jitter. One muted family of inks, the sun the only warm note. Composed: one hero peak on the
+  right third with shoulders, the sun set against its flank, sage framing the left, stone and haze stepping back,
+  mist between planes, a calm lake with a glint path under the sun, firs built from courses in a varied cluster.
+  Boards `FinalCover` and `FinalBook` (book screen B with the art).
+- **Round 2 (Josef: sloppy, pyramids, prefers round 3's colours; then: keep the style, improve only the scene).**
+  A masonry rewrite of the blocks was tried and rejected. Kept the round 1 finish; round 3's inks are back; the
+  massif is a broad summit with a rounded shoulder and a second summit, the sun in the notch, a coral peak in the
+  middle distance; firs laid without ragged ends.
+- **Round 3, the cover first (Josef: members pick a cover; the inside scenery follows it, so the cover must be loved).**
+  The cover is now composed for its own shape: one big centred massif with a notched summit and a stone cap, a large
+  sun behind it like a halo, haze low on both sides, a still lake mirroring the peak, two small firs. Drawn at 2x.
+  The book's inside pages are to follow from the cover (not yet redone to match).
+- **Josef's rule: blocks touch by default.** No paper seam between courses and no holes where two forms meet (they
+  share one boundary in the renderer, `render(touch=True)`). Spacing is allowed only as a design choice: the sparse
+  river or lake, mist between ridges, an edge against open sky.
+- **Then: slabs stay slightly 3D, with small uniform joints.** Each slab has a faint lit top edge, a soft underside
+  and a faint end shade, and a uniform hairline joint (1px at 2x, half a CSS px) under every course and at the end of
+  every slab, so each reads as its own piece. Holes and uneven gaps stay out; the joint is the same everywhere.
+  Then (Josef: too much white) the joint is no longer bare paper but the slab's own ink lightened 45% toward paper.
+- **Round 4 (Josef: preferred the Fresh directions strata).** The finish experiments (touching blocks, joints, tinted
+  seams, muted inks) are set aside for this art: `final.py` now draws with round 3's renderer settings, inks and
+  elements exactly (bevelled slabs, jitter, ragged ends, groves, `render(touch=False)`), and only the scenes are
+  new: the cover's single clean summit with the sun beside it, and the title page's massif, coral peak, sage slope
+  and groves. The renderer options added along the way stay available but off for this art.
+- **Round 5, laid clean (Josef: messy, weird shapes; plan it properly).** Same look and inks; a `clean` mode in the
+  renderer: no slab shorter than a slab and a half, touching forms share one boundary (no holes, no slivers of the
+  form behind), tiny leftovers merge into a neighbour and lone specks are dropped, ragged steps only against open
+  sky. Skylines from smooth noise (`Ridge(smooth=True)`), calmer tone flicker, the snow cap a snowline under the
+  summit, no stripe on the small peaks, clean feet (the cover's art ends on a straight line, the page's runs off
+  the page). Checked by zoom on the summit, sun edge, middle peak and foot before publishing.
+- **Cover typography (Josef):** the title set left, the full name right under it at the top (class `cov-final`), so
+  the art fills the rest of the cover and runs off its foot. The art is recomposed for the taller space. Fixed-tier
+  flag as before: the system sets the name at the foot; this moves it under the title.
+- **Three more strata covers (Josef: start building variety).** Same style and type, each its own terrain and palette,
+  each cover ink taken from its art: desert mesas at dusk (terracotta, sand, plum, gold sun), sea cliffs by
+  moonlight (chalk, indigo, teal sea, pale moon), an autumn terraced valley (gold, olive, rust, violet haze, a
+  river). Boards `FinalCoverDesert`, `FinalCoverCoast`, `FinalCoverValley`. A long name that meets the art sits on
+  the system's white knockout (seen at shelf size on the desert cover).
+- **Josef: sea cliffs good; desert and valley reworked. New process rule:** after every art round a fresh critic
+  subagent reviews the new art against the approved strata cover and book-screen art, its fixes are implemented,
+  and only then is the art placed on the canvas. Round 1 of that: desert ("ship after fixes"): a flat-capped butte
+  with sheer walls and a talus skirt, a stepped near-black aubergine shadow edge, a coral sun behind its upper
+  shoulder, rose dusk light on the cap, a joined violet back plane, sand only at the foot in broken courses.
+  Valley ("needs a rethink"): now autumn terraces as the hero, a stepped hillside with one colour per terrace from
+  olive to rust and a pale lip on each, a near-black pine ridge with an amber sun behind its shoulder, the river in
+  broken courses at the foot, no lilac hills. New renderer pieces: `River`, `Mesa(talus, top_tint, shadow_slope)`,
+  `Terraces(beds, lip)`.
+- **Josef: the terraced valley is unusable; rethink it.** Now "autumn hills". A first rolling-hills attempt went to a
+  fresh critic ("needs a rethink": the sun merged into the ochre hill, too many inks, flat bands, poplars like
+  ladders, holes, a third disc in the set). Rebuilt to its brief: no disc; three rounded domes on one value ladder
+  (pale gold at the back as the glow, its crest at half the cover's height; rust running off the left in one face;
+  deep forest in front); a clump of four tapering dark poplars on the front crest as the focal point; the title in
+  forest green. Renderer: `Ridge(round=True)` for domes; a layer can allow narrower pieces (`min_run`) so trees
+  taper to a tip.
+- **Desert refinement (Josef: one more pass; no purple).** The violet back plane is now warm peach haze. A fresh
+  critic then asked for polish: sheer walls with one ledge, a clean three-step maroon shadow side, no speckle on the
+  lit face, a lighter coral-gold sun raised and set behind the right wall, full-width peach haze mesas behind with
+  the small butte pushed into them, calm sand over a dark umber base, the picture lifted to meet the type. Done,
+  then rebalanced by eye (a broad butte, not a tower). Renderer: `Mesa(wall_ledge, wobble, speckle, shadow_steps,
+  ragged)`, `render(jitter)` per cover.
+- **Desert, back to the tilt (Josef: the block was worse; wants more of the earlier tilt, plus a smaller foreground
+  cliff).** The butte leans right (`Mesa(lean)`), walls stepping out gently down to a four-ledge scree skirt, the
+  shade edge a stepped diagonal; a smaller darker cliff in the right foreground. A critic's polish (told to keep the
+  tilt): cap no wider than the body, pale gold sun as a clean disc, the foreground cliff at 70% height with three
+  clean shade steps, no pink sliver, darker bedding courses on the lit face, warm haze in place of the last mauve,
+  a thinner umber base and warmer sand slabs.
+- **Book pages follow each cover (Josef: "make the book screen pages follow these covers").** Desert, coast and
+  autumn hills each get title-page and contents art (`art/strata/pages_more.py`): the cover's place seen wider at
+  the cover's slab size, the hero on the right third, the text over open paper. A fresh critic then asked for more
+  presence and framing: heroes raised, a low cliff framing the desert's left, the headland running off the edge with
+  bigger stacks and a dark rock at the foot, the gold hill flattened so it reads as a hill and not a rising sun.
+  Board `FinalBookMore`: each book opened and on a chapter, the cover's ink on the boards.
+- **Pages are full scenes, not zooms of the cover (Josef: the reference page adds far more scenery; one page is
+  enough; much more elaborate, cooler environments; redo the desert, its hero not a tower).** Only the title page
+  gets art now. Coast: a lighthouse and keeper's cottage on the headland, an arch, a broken line of stacks and a
+  misted far stack, headlands receding left, foam at the feet, the moon low under cloud with its path on the sea,
+  cloud banks, rocks in both lower corners. Autumn hills: two lilac tiers in mist, a striped gold field beside a
+  smaller gold hill, an olive slope with an orange grove, a river with poplars winding out between the rust hill
+  and the forest, a cumulus and streaks of cloud. Desert, rebuilt: a wide low mesa and its bench with the sun
+  setting behind the right shoulder under cloud streaks, the stepped haze cliff, buttes, pinnacles, an arch, a dry
+  wash between dunes, scrub. A fresh critic reviewed the first draft (too few planes, a tower, flat fields); its
+  fixes are in. Board `FinalBookMore`: one opened book per cover. The covers are unchanged.
+- **The canvas page is now "Covers: Strata", one page per art direction.** Each row is a cover with its book
+  screen to the right (`FinalCover`/`FinalBook`, then desert, coast, autumn hills). One book screen per book: the
+  title-page art is reused inside the chapters, so no second variant (the contents band) is drawn. `FinalBookMore`
+  is gone. Desert page: no clouds. Autumn page: clouds lower and on both sides, clear of the text.
+- **Four new strata places, covers only for now (Josef picked all four of the proposed sceneries; book screens
+  later).** `art/strata/covers_new.py`, boards `FinalCoverKarst`, `FinalCoverAurora`, `FinalCoverTerraces`,
+  `FinalCoverLagoon` on "Covers: Strata", one row each under the autumn hills, the book-screen slot to the right
+  left empty. Karst: one tall rounded tower, paler towers stepping back by value, a sampan on a calm river. Winter
+  night: the night sky starts exactly at the aurora's upper edge, plain paper above it (Josef), a tall snow peak, a
+  frozen lake, a cabin with the one warm window, firs. Rice terraces, rethought after Josef rejected the striped
+  ridge: shelves seen from the front, each a flooded pool holding the dawn sky (rose high up, gold low down) with a
+  thin dark bank below, the banks bending in a slow wave like contour lines, the low sun on the left. Volcanic
+  lagoon: a green cone lit from the left with a short plume clear of the title, a muted teal lagoon, a sandbar and
+  two palms. Each round went through a fresh critic with every approved cover and page as reference (Josef: show it
+  all the approved pieces, not only the original strata).
+- **Winter and lagoon revised, and the karst book screen (Josef).** Winter: the hills lower and soft-shouldered but
+  uneven (not domes, "so they don't look like igloos"); the aurora one smooth curve whose curtain and the sky beneath
+  it dissolve upward into paper; a log cabin built of level blocks (lit gable wall, dark side wall, shingle roof with
+  snow along its top and eave steps, chimney, the one warm window, a door). Lagoon: a lopsided cone with a dark
+  barren summit over green skirts, ravines, a small amber vent and a plume clear of the title; palms drawn as blocks
+  in the manner of the desert page (a trunk stepping sideways a slab at a time, a crown of level courses). Karst book
+  screen (`art/strata/pages_new.py`, board `FinalBookKarst` beside its cover): towers in five planes into haze with
+  thin stepped clouds, three tall towers right of the text stepping darker toward us, the water mirroring them with
+  their shade broken on it, stepped paddies, a two-tier pavilion, bamboo, a sampan with its boatman and a far boat.
+  Each went through a fresh critic.
+- **Karst page and volcano fixed (Josef).** Karst page: every back plane's foot runs down behind the paddies over a
+  continuous haze floor, so no paper shows under the towers. Volcano redone lower and less sharp: a blunt summit
+  on bulging slopes with a shoulder on each side, so its outline steps in and out instead of running straight.
+- **Rice terraces, third composition; winter cabin redone (Josef).** The terraces were too uniform; a version
+  borrowing the autumn hills' three domes was rejected as a copy ("the cover must still be deeply original"). Now a
+  terraced valley seen head on: level flooded terraces step down from both edges into a V, each slope with its own
+  uneven heights and reach, the left slope (facing away from the light) darker with deep green banks, the right lit;
+  the low sun sits in the notch over a pale blue-grey lake with its path down the water; a hut on the right slope, a
+  tree on the left (`StepValley`). Winter: the aurora lower, its upper edge fraying into paper through long
+  horizontal gaps, the night a step lighter; the cabin rebuilt larger on a 6 px cell grid (log courses in two tones,
+  a snow-edged gable, a snow roof plane against a stand of dark firs, a stone chimney with grey smoke, a lit window,
+  a door with a snow step, a dimmer side window, a woodpile of pale log ends, drifts).
+- **Terraces texture, cabin roof (Josef).** The stepped valley's shape stays; the terraces "looked like cake", so each
+  pool is now water, not a layer: pale sky blue in long runs with openings through it, rose and gold glints gathering
+  near the sun, a single green bank under each. The cabin's roof vanished, white snow on white snow: it is now a dark
+  shingle gable with only a thin line of snow along its top, on walls laid as log beds, so the whole roof reads.
+- **Terraces after two critic rounds (Josef: "too bland, too thin lines", send to the critic twice).** The V stays.
+  Round 1: one value band and pencil-thin banks; fixed with deep terraces (a flooded pool of 2 to 5 courses, a dark
+  lip, a 2-course earth riser), a near-black anchor, a butter sun half behind two violet ridges, a deep ink-teal lake
+  with the sun broken across it. Round 2: it still read as a lake with striped banks; fixed by closing the V partway
+  down so the foreground is paddies, the lake a small wedge in the notch, every terrace bowed down toward the middle
+  like a contour line and deeper as it nears, the shaded slope violet-grey water on moss risers and the lit slope
+  butter and peach water on olive, seedling rows and a bent planter in a straw hat in the near paddies, a stilted
+  thatch hut and a dark tree on the crests (`Paddies`).
+- **Cover typography follows the gouache poster, set left (Josef: "redo the cover typography everywhere to match
+  closer to 4 · Gouache poster, keep it left justified and name right under").** A fixed-tier change with Josef's
+  yes: on the strata covers (`cov-final`, all eight boards on "Covers: Strata") the title is Barlow Condensed 800 in
+  caps, +0.025em, line-height 0.95 (58 px on the large cover, 19 px on the shelf), set left in the cover's ink on the
+  white knockout; the full name sits right under it in Barlow Condensed 600 caps, +0.24em, as a chip of the cover's
+  ink with white letters (16 px large, 7.5 px shelf). The gouache cover's own rules stay as they were. The design
+  system's type roles note the exception.
+
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
 - **Josef approved book screen B** (`FreshReaderOpen`) and asked for it to go to implementation **without art**: the art
