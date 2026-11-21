@@ -1,0 +1,86 @@
+{
+  "set": "strata-1",
+  "approved": "2026-11-21",
+  "approvedBy": "Josef",
+  "cover": {
+    "file": "472x688 webp, the 236x344 cover world at 2x",
+    "shelfBook": "176x257 CSS px",
+    "largeBook": "236x344 CSS px"
+  },
+  "page": {
+    "file": "1140x1368 webp, the 570x684 title page at 2x",
+    "fills": "the left (title) page of the opened book, behind the text"
+  },
+  "arts": [
+    {
+      "key": "lake",
+      "name": "Mountain lake",
+      "ink": "#16302e",
+      "cover": "covers/lake.webp",
+      "page": "pages/lake.webp"
+    },
+    {
+      "key": "desert",
+      "name": "Desert arch at dusk",
+      "ink": "#6a3525",
+      "cover": "covers/desert.webp",
+      "page": "pages/desert.webp"
+    },
+    {
+      "key": "coast",
+      "name": "Sea cliffs by moonlight",
+      "ink": "#26304f",
+      "cover": "covers/coast.webp",
+      "page": "pages/coast.webp"
+    },
+    {
+      "key": "valley",
+      "name": "Autumn hills",
+      "ink": "#263a2d",
+      "cover": "covers/valley.webp",
+      "page": "pages/valley.webp"
+    },
+    {
+      "key": "karst",
+      "name": "Karst river in mist",
+      "ink": "#2f4637",
+      "cover": "covers/karst.webp",
+      "page": "pages/karst.webp"
+    },
+    {
+      "key": "winter",
+      "name": "Winter night, aurora",
+      "ink": "#252a4c",
+      "cover": "covers/winter.webp",
+      "page": "pages/winter.webp"
+    },
+    {
+      "key": "fields",
+      "name": "Long fields at harvest",
+      "ink": "#3d5a32",
+      "cover": "covers/fields.webp",
+      "page": "pages/fields.webp"
+    },
+    {
+      "key": "lagoon",
+      "name": "Volcanic lagoon",
+      "ink": "#1f4f5a",
+      "cover": "covers/lagoon.webp",
+      "page": "pages/lagoon.webp"
+    },
+    {
+      "key": "city",
+      "name": "Lakefront city at dusk",
+      "ink": "#2f3448",
+      "cover": "covers/city.webp",
+      "page": "pages/city.webp"
+    },
+    {
+      "key": "forest",
+      "name": "Fir forest in morning light",
+      "ink": "#283d2e",
+      "cover": "covers/forest.webp",
+      "page": "pages/forest.webp"
+    }
+  ]
+}

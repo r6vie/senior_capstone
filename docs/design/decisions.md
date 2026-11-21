@@ -315,6 +315,13 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   by row on the page's 4 px slab grid so every piece survives: ridge and chimney, roof, a dark eave overhanging both
   walls, then the lit gable with a two-row door and a window and the shaded side with a small window. Each part is
   its own layer, because within one layer a slab takes a single colour and swallowed the door and windows.
+- **Strata art set 1 approved for the app (Josef, 2026-11-21: "this is officially the first set of art ready to be
+  implemented into the app, each book should get one at random so that the sample test libraries have some varying
+  art").** Ten places, each a cover and a title page: lake, desert, coast, valley, karst, winter, fields, lagoon, city,
+  forest. Packaged in `art/strata/set-1/`: the exact canvas files (`covers/`, `pages/`), `manifest.json` (key, name,
+  cover ink, files), a contact sheet, and a README with the implementation spec (176 x 257 shelf book, narrow hinge,
+  poster type with the name under the title, page art behind the opened book's title page). Each book picks its art
+  deterministically from its id, so its cover and page always match and stay the same across reloads.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
