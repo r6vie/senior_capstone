@@ -751,11 +751,12 @@ body{margin:0}
 /* Final cover typography: the title set left, the full name right under it, so the art below can fill the rest
    of the cover and run off its foot. Cover ink, not a UI colour. */
 .cov-final{--c-ink:#16302e}
-.cov-final .book-title{text-align:left;text-wrap:balance;color:var(--c-ink);font-weight:600;letter-spacing:-.015em;line-height:1.04}
-.cov-final.book-xl .book-title{font-size:52px}
-.cov-final .book-author{margin-top:.55em;align-self:flex-start;text-align:left;color:var(--c-ink);font-weight:600;letter-spacing:.2em;font-size:7.5px}
-.cov-final.book-xl .book-author{font-size:14px;margin-top:16px}
-.cov-final .ko{background:var(--white)}
+.cov-final .book-title{text-align:left;text-wrap:balance;color:var(--c-ink);font:800 19px/.95 var(--font-display);letter-spacing:.025em;text-transform:uppercase}
+.cov-final.book-xl .book-title{font-size:58px}
+.cov-final .book-title .ko{background:var(--white)}
+.cov-final .book-author{margin-top:.75em;align-self:flex-start;text-align:left;font:600 7.5px/1.3 var(--font-display);letter-spacing:.24em;text-transform:uppercase}
+.cov-final .book-author .ko{background:var(--c-ink);color:var(--white);padding:.32em .3em .32em .55em;margin:0}
+.cov-final.book-xl .book-author{font-size:16px;margin-top:18px}
 </style>
 </helmet>
 

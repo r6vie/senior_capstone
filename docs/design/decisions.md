@@ -138,6 +138,13 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   like a contour line and deeper as it nears, the shaded slope violet-grey water on moss risers and the lit slope
   butter and peach water on olive, seedling rows and a bent planter in a straw hat in the near paddies, a stilted
   thatch hut and a dark tree on the crests (`Paddies`).
+- **Cover typography follows the gouache poster, set left (Josef: "redo the cover typography everywhere to match
+  closer to 4 · Gouache poster, keep it left justified and name right under").** A fixed-tier change with Josef's
+  yes: on the strata covers (`cov-final`, all eight boards on "Covers: Strata") the title is Barlow Condensed 800 in
+  caps, +0.025em, line-height 0.95 (58 px on the large cover, 19 px on the shelf), set left in the cover's ink on the
+  white knockout; the full name sits right under it in Barlow Condensed 600 caps, +0.24em, as a chip of the cover's
+  ink with white letters (16 px large, 7.5 px shelf). The gouache cover's own rules stay as they were. The design
+  system's type roles note the exception.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
