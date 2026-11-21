@@ -110,31 +110,53 @@ def prairie():
     LIT, SHADE, ROOFD = ["#8A4A32", "#80442E"], ["#5E3326", "#552E22"], ["#3E3936", "#36322F"]
     # the gambrel gable end facing us: straight walls, then steep lower roof flanks, then a shallow cap; a dark roof
     # edge traces the outline; the side wall goes back to the right in shade under its own roof plane
-    rows = [(240, 140, 176)] * 0 + [(y, 140, 176) for y in range(262, 240, -4)] + \
-           [(240, 141, 175), (236, 142, 174), (232, 144, 172), (228, 148, 168), (224, 153, 163), (220, 156, 160)]
+    # the gambrel gable end facing us, larger so its details read: straight walls, steep lower roof flanks, a shallow
+    # cap; a bold pale trim traces the roof; the side wall goes back to the right in shade under its roof plane
+    rows = [(y, 124, 174) for y in range(262, 232, -4)] + \
+           [(232, 125, 173), (228, 127, 171), (224, 131, 167), (220, 137, 161), (216, 143, 155), (212, 147, 151)]
+    WALLS = 7                          # rows of straight wall before the roof begins
     gable = [(l, y - 4, r, y, LIT) for y, l, r in rows]
-    edge = [(l - 2, y - 4, l + 1, y, ROOFD) for y, l, r in rows[5:]] + [(r - 1, y - 4, r + 2, y, ROOFD)
-                                                                         for y, l, r in rows[5:]]
-    side = [(176, 240, 194, 262, SHADE)]
-    roof_side = [(r, y - 4, r + 18, y, ROOFD) for y, l, r in rows[5:]]
-    door = [(152, 248, 164, 262, SHADE)]
-    barn = Blocks(gable + side + roof_side + edge + door)
+    # the roof edge and its cream trim run continuously: each piece spans from this row's edge back to the one below
+    roof_rows = rows[WALLS - 1:]
+    edge, eave_trim = [], []
+    for (yb, lb, rb), (y, l, r) in zip(roof_rows, roof_rows[1:]):
+        edge += [(min(l, lb) - 3, y - 4, l, y, ROOFD), (r, y - 4, max(r, rb) + 3, y, ROOFD)]
+    for (yb, lb, rb), (y, l, r) in zip(roof_rows, roof_rows[1:]):
+        eave_trim += [(min(l, lb), y - 4, l + 2, y, ["#EDE6D8", "#E3DACB"]),
+                      (r - 2, y - 4, max(r, rb), y, ["#EDE6D8", "#E3DACB"])]
+    side = [(174, 234, 198, 262, SHADE)]
+    roof_side = [(r + 1, y - 4, r + 24, y, ROOFD) for y, l, r in rows[WALLS - 1:]]
+    TRIM = ["#EDE6D8", "#E3DACB"]
+    BOARD = ["#7A4029", "#723C27"]
+    boards = [(x, 234, x + 1.5, 262, BOARD) for x in (130, 137, 161, 168)]
+    # a plain cream frame round one double door, a single dark seam down its middle; a small framed hayloft
+    door = [(138, 240, 160, 262, TRIM), (141, 243, 157, 262, SHADE), (148, 243, 150, 262, ["#3A2A22"])]
+    loft = [(146, 222, 156, 230, TRIM), (148, 224, 154, 230, SHADE)]
+    windows = [(178, 242, 185, 250, ["#3A2A22"]), (188, 242, 195, 250, ["#3A2A22"]),
+               (177, 240, 186, 242, TRIM), (187, 240, 196, 242, TRIM)]
+    cupola = []
+    barn = Blocks(gable + boards + side + roof_side + edge + eave_trim + door + loft + windows + cupola)
     SILO_LB, SILO_DB = ["#9A9890", "#928F88"], ["#6E6C68", "#666461"]
-    silo = Blocks([(198, 196, 205, 262, SILO_LB), (205, 196, 212, 262, SILO_DB),
-                   (199, 192, 211, 196, SILO_LB), (201, 188, 209, 192, SILO_LB), (203, 185, 207, 188, SILO_DB)])
+    silo = Blocks([(202, 196, 209, 262, SILO_LB), (209, 196, 216, 262, SILO_DB),
+                   (203, 192, 215, 196, SILO_LB), (205, 188, 213, 192, SILO_LB), (207, 185, 211, 188, SILO_DB)])
     dome = Blocks([])
     road = River(262, 344, 140, -40, 4, 60, ROAD, ROAD, swings=0.6, phase=0.0, seed=40)
-    # fence posts at uneven intervals, their rails drooping a little between them
-    pts = [(10, 300, 4, 44), (29, 308, 4, 36), (60, 316, 3, 28), (75, 322, 3, 22)]
+    # a fence in perspective from the near corner back toward the road: posts shrinking and closing up with distance
+    # (ground line, height, width), two continuous rails along them
+    # a near fence along the lower left, receding gently: the posts and both rails read as separate pieces
+    pts = [(6, 344, 28, 4), (38, 336, 23, 3.5), (66, 329, 19, 3), (90, 323, 15, 3)]
+    POST, RAIL = ["#4A3A2C", "#40322A"], ["#5A4030", "#523A2B"]
     rails = []
-    for (xa, ya, wa, _), (xb, yb, _, _) in zip(pts, pts[1:]):
-        for k in range(int(xa), int(xb), 6):
-            t = (k - xa) / max(1, xb - xa)
-            sag = 3 * (1 - (2 * t - 1) ** 2)
-            for off in (12, 26):
-                yy = ya + (yb - ya) * t + off + sag
-                rails.append((k, yy, k + 6, yy + 3, ["#5C4A38", "#54442F"]))
-    posts = Blocks(rails + [(x, y, x + w, y + h, ["#4A3A2C", "#40322A"]) for x, y, w, h in pts])
+    for frac in (0.3, 0.65):
+        for (xa, ga, ha, wa), (xb, gb, hb, wb) in zip(pts, pts[1:]):
+            ya, yb = ga - ha * (1 - frac), gb - hb * (1 - frac)
+            th = 2.5
+            for k in range(int(xa), int(xb), 2):
+                t = (k - xa) / (xb - xa)
+                y0 = ya + (yb - ya) * t
+                y1 = ya + (yb - ya) * min(1, t + 2 / (xb - xa))
+                rails.append((k, min(y0, y1) - th / 2, k + 2.5, max(y0, y1) + th / 2, RAIL))
+    posts = Blocks(rails + [(x, g - h, x + w, g, POST) for x, g, h, w in pts])
     return [
         disc(58, 236, 20, SUN_G),
         # the far fields: an uneven low strip, darker under the trees
@@ -150,7 +172,7 @@ def prairie():
         Blob([(118, 344, 160, 18)], ["#9C7A3A", "#94733A", "#8C6C36"], top_light=False),
         road,
         # shadows thrown right by the barn and silo
-        Blob([(206, 266, 28, 4)], ["#B9985E", "#AE8E56"], top_light=False),
+        Blob([(214, 266, 30, 4)], ["#B9985E", "#AE8E56"], top_light=False),
         barn, silo, dome,
         posts,
     ]
@@ -176,40 +198,44 @@ def bay():
     thick; the sun low in the haze between the towers, clear of every cable, its warm reflection beneath; soft hills
     behind, a step darker so the deck separates; a headland with cypresses in the lower left as the near anchor."""
     import math
-    deck_y = lambda x: 242 + (x - 60) * 0.06
-    near = [(208, 124, 216, 256, BRIDGE), (226, 124, 234, 256, BRIDGE_D), (208, 140, 234, 146, BRIDGE_D),
-            (208, 176, 234, 182, BRIDGE_D), (208, 214, 234, 220, BRIDGE_D)]
-    far = [(114, 196, 119, 250, ["#B88A72", "#AE8068"]), (127, 196, 132, 250, ["#9C6E58", "#93664F"]),
-           (114, 204, 132, 208, ["#9C6E58"]), (114, 222, 132, 226, ["#9C6E58"])]
+    # a level deck with a dark underside; two towers (the near one tall on the right, the far one smaller); one
+    # continuous main cable: up from a shore anchor to the far tower's top, sagging below the sun, up to the near
+    # tower's top where it stops; hangers at even spacing between cable and deck
+    DECK_T, DECK_B = 240, 246
+    TF = (121, 194)                    # far tower top (centre)
+    TN = (220, 124)                    # near tower top (centre)
+    LOW = (156, 230)                   # the cable's lowest point, below the sun
 
     def cable_y(x):
-        # a catenary sagging lowest at x 165, below the sun, rising to the near tower's top; never above y 180 left
-        # of x 200
-        if x < 123:
-            return 197 + (123 - x) * 0.45
-        if x < 165:
-            return 232 - 0.0208 * (x - 165) ** 2
-        if x < 221:
-            return 232 - 0.0344 * (x - 165) ** 2
-        return 124 + (x - 221) * 1.1
+        if x <= TF[0]:                                     # from the anchor at the deck's far end up to the far tower
+            return DECK_T + (TF[1] - DECK_T) * (x - 0) / (TF[0] - 0)
+        if x <= LOW[0]:
+            return LOW[1] - (LOW[1] - TF[1]) * ((LOW[0] - x) / (LOW[0] - TF[0])) ** 2
+        # a gentler rise that starts sooner and only meets the tower at its top
+        return LOW[1] - (LOW[1] - TN[1]) * ((x - LOW[0]) / (208 - LOW[0])) ** 1.45
 
-    cable = [(x, cable_y(x + 2) - 3, x + 4, cable_y(x + 2) + 3, BRIDGE_D) for x in range(30, 244, 2)]
-    deck = [(x, deck_y(x), x + 6, deck_y(x) + 4, BRIDGE) for x in range(-10, 250, 6)]
-    under = [(x, deck_y(x) + 4, x + 6, deck_y(x) + 8, ["#4A2A1E"]) for x in range(-10, 250, 6)]
-    hangers = [(x, cable_y(x) + 4, x + 1.5, deck_y(x), BRIDGE_D) for x in range(134, 210, 12)]
-    bridge = Blocks(cable + under + deck + hangers + far + near)
-    hills = Ridge([(30, 222, 90, 80, 0.8), (88, 232, 40, 30, 0.9), (150, 230, 80, 70, 0.85), (196, 240, 40, 40, 0.9)],
-                  258, ["#7A7490", "#726C88"], ["#5E5874", "#57516C"], seed=50, rough=4, smooth=True, flicker=0.02)
+    # each cable piece spans its own slope, so the steep run up to the tower stays one line
+    cable = [(x, min(cable_y(x), cable_y(x + 2)) - 2.5, x + 3, max(cable_y(x), cable_y(x + 2)) + 2.5, BRIDGE_D)
+             for x in range(0, 206, 2)]
+    hangers = [(x, cable_y(x + 1) + 2, x + 2, DECK_T, ["#7A4630"]) for x in range(TF[0] + 12, 204, 10)]
+    deck = [(-20, DECK_T, 260, DECK_T + 3, BRIDGE), (-20, DECK_T + 3, 260, DECK_B, ["#4A2A1E", "#43261B"])]
+    far = [(114, 194, 119, 250, ["#B88A72", "#AE8068"]), (124, 194, 129, 250, ["#9C6E58", "#93664F"]),
+           (114, 204, 129, 208, ["#9C6E58"]), (114, 222, 129, 226, ["#9C6E58"]), (113, 190, 130, 194, ["#9C6E58"])]
+    near = [(208, 124, 216, 256, BRIDGE), (226, 124, 234, 256, BRIDGE_D), (206, 118, 236, 124, BRIDGE_D),
+            (208, 146, 234, 152, BRIDGE_D), (208, 182, 234, 188, BRIDGE_D), (208, 216, 234, 222, BRIDGE_D)]
+    bridge = Blocks(cable + hangers + deck + far + near)
+    # one low continuous far shore just above the deck, no loose bumps
+    hills = Ridge([(40, 232, 160, 140, 0.6), (190, 230, 110, 100, 0.6)], 258, ["#6E6A85", "#68647F"],
+                  ["#5A5672", "#54506B"], seed=50, rough=2, smooth=True, flicker=0.02)
     bay_w = Water(256, 352, -120, 720, BAY, ["#9DACC4", "#A7B5CB"], seed=51, mirror=[hills], gaps=(0, 0),
                   squash=0.5)
     bay_w.brick = (5.0, 14.0)
     return [
-        disc(160, 200, 14, SUN_S),
+        disc(150, 198, 14, SUN_S),
         hills,
-        Ridge([(206, 236, 60, 50, 0.85)], 258, *HILL_MID, seed=52, rough=3, smooth=True, flicker=0.02),
         Band(-60, 300, 254, 260, ["#5E5A72", "#56526A"], seed=53, lens=0.0),
         bay_w,
-        Blob([(160, 270, 9, 3.5), (159, 284, 7, 3.5), (161, 298, 5, 3)], ["#EDC4A6", "#E5B999"], top_light=False),
+        Blob([(150, 270, 9, 3.5), (149, 284, 7, 3.5), (151, 298, 5, 3)], ["#EDC4A6", "#E5B999"], top_light=False),
         bridge,
         # the headland in the lower left, lit on its left shoulder, and its cypresses
         # one low, uneven dark bluff spreading off the lower-left edge

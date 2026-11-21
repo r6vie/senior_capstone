@@ -220,6 +220,11 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   fence posts at uneven intervals as the dark anchor. Bay: a suspension bridge in muted rust at an angle, the near
   tower tall on the right, a solid deck, the main cable a clean curve dipping below the sun, soft dark hills, a warm
   reflection, a low dark bluff in the corner.
+  Then (Josef: city good; barn needs detail, fix the fence; bridge wonky), with a Josef-eye check: the barn larger,
+  a gambrel with one continuous cream trim along its roof, a plain framed double door with a dark seam, a small
+  hayloft, side windows, board seams; the fence a near run along the lower left, four posts and two continuous rails;
+  the bridge rebuilt clean: a level deck with a dark underside, one continuous cable from a shore anchor over the far
+  tower, sagging below the sun and easing up to land on the near tower's top, even hangers, one low continuous shore.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
