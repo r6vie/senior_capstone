@@ -196,6 +196,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 - **Desert cover: an arch (Josef).** The tilted butte is replaced by a great rock arch of the same rock, the low sun
   seen through its opening (drawn in front of the haze cliff and behind the arch), with one thin spire beside it;
   both stay under the shelf-size name line.
+  Then recomposed for balance (Josef): the arch narrower and taller with a tall slim opening, as on the book page, in
+  the deeper terracotta, on the left third; the sun setting in the middle; one thin spire on the right; a dry wash
+  winding from the foot up toward the sun, scrub along its banks; the near cliff gone.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

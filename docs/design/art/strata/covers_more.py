@@ -52,14 +52,15 @@ def desert():
             cx, cy, rx, ry = self.hole
             return super().cover(x, y) & ~(((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1)
 
-    hero = Arch(100, 192, 66, 80, 292, TERRA_L, TERRA_D, ledges=2, bed=8, seed=53, top_tint=ROSE, shadow_slope=0.35,
-                wobble=0, speckle=0.4, flicker=0.02, flare=4, hole=(104, 296, 40, 72),
-                bedding=([214, 236, 258], "#D9845A"))
-    spire = Mesa(196, 196, 7, 12, 296, TERRA_L, TERRA_D, ledges=2, bed=8, seed=57, talus=True, top_tint=ROSE,
-                 wobble=0, speckle=0.4, flicker=0.02, lean=0.06, flare=2)
-    near = Mesa(206, 262, 24, 40, 318, NEAR_L, NEAR_D, ledges=2, bed=8, seed=54, talus=True, top_tint=ROSE,
-                wobble=0, speckle=0.4, flicker=0.02, lean=0.12, flare=3, shadow_steps=3)
-    sun = Blob([(104, 258, 20, 20)], GOLD, top_light=False)      # seen through the arch
+    # the arch, as on the book page: narrow, taller than wide, a tall slim opening through its foot, rounded
+    # shoulders (ragged ledges, flare), in the deeper terracotta; on the left third
+    hero = Arch(70, 196, 30, 44, 300, NEAR_L, NEAR_D, ledges=3, bed=8, seed=53, top_tint=ROSE, shadow_slope=0.3,
+                wobble=2, speckle=0.4, flicker=0.02, flare=5, hole=(74, 300, 17, 66),
+                bedding=([226, 252], "#9C482E"))
+    # one thin spire on the right, and the low sun between them, over the end of the dry wash
+    spire = Mesa(190, 212, 6, 11, 300, NEAR_L, NEAR_D, ledges=2, bed=8, seed=57, talus=True, top_tint=ROSE,
+                 wobble=0, speckle=0.4, flicker=0.02, lean=0.05, flare=2)
+    sun = Blob([(140, 222, 20, 20)], GOLD, top_light=False)
     sun.ragged = 0     # a clean disc
     return [
         # the back cliff runs the full width as one line of flat tops at slightly different heights
@@ -69,15 +70,18 @@ def desert():
           for i, (cx, top, hw) in enumerate([(-6, 240, 14), (20, 236, 14), (46, 240, 14), (72, 244, 14),
                                              (98, 240, 14), (124, 236, 14), (150, 240, 14), (176, 244, 14),
                                              (202, 240, 14), (228, 232, 14), (254, 236, 14)])],
-        sun,          # in front of the haze cliff, behind the arch: it shows through the opening
+        sun,
         hero,
         spire,
         Band(-60, 300, 288, 334, SAND_CALM, seed=58, lens=0.0),
-        # scrub on the sand, as on the book page: low sage-olive clumps
-        trees([20, 40], 316, 8, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=60, spread=0.6),
-        trees([150], 328, 7, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=61, spread=0.6),
-        trees([116], 306, 5, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=62, spread=0.6),
-        near,
+        # the dry wash: a pale bed of darker sand winding from our feet back to the gap under the sun
+        River(292, 340, 136, 22, 6, 74, ["#D8B183", "#CBA273", "#BC9264"], ["#E7CBA1", "#DDBE92"], swings=1.3,
+              phase=2.6, seed=63),
+        # scrub along its banks
+        trees([24, 42], 318, 8, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=60, spread=0.6),
+        trees([196], 324, 7, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=61, spread=0.6),
+        trees([104], 306, 5, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=62, spread=0.6),
+        trees([168], 304, 4, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=64, spread=0.6),
         Band(-60, 300, 334, 360, UMBER, seed=59, lens=0.0),
     ]
 
