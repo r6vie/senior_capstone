@@ -319,7 +319,6 @@ def aurora():
         # a stand of firs behind the cabin, so its snowy roof reads against dark
         Firs([(50, 304, 52, 15), (68, 300, 60, 16), (142, 300, 62, 16), (160, 304, 52, 14)], F_LIT, F_DARK,
              tiers=2),
-        *cabin(100, 324),
         Firs([(16, 338, 62, 12), (40, 342, 44, 9), (-2, 344, 42, 9), (204, 336, 68, 13), (228, 342, 52, 10),
               (184, 344, 36, 7)], F_LIT, F_DARK, tiers=2),
     ]
@@ -506,6 +505,8 @@ FAR_2 = (["#7F7AA0", "#77729A"], ["#666189", "#5F5A82"])
 DEEP_LAKE = ["#34505C", "#2E4954", "#2B434D"]
 LAKE_GLINT = ["#E9CF94", "#E2C483"]
 TREE_DARK = ["#2F4030", "#273626", "#1F2A22", "#1A241D"]
+BUSH_SHADE = ["#7E9A63", "#6B8754", "#587347", "#455E39"]     # bushes on the shaded slope
+BUSH_LIT = ["#6F9550", "#5F8445", "#4F733B", "#3F6131"]       # and on the lit one, olive
 THATCH = (["#A8844A", "#9C7942"], ["#6B5130", "#5E472A"])
 STILT = ["#3A2C20", "#33271C"]
 PLANTER = ["#2B2A33", "#25242C"]
@@ -518,7 +519,7 @@ def rice():
     half behind two violet ridges in the notch over a small deep lake; seedlings and a bent planter in the near
     paddies; a dark tree on the left crest, a stilted thatch hut on the right."""
     cx = 118
-    lake = Water(230, 310, -20, 260, DEEP_LAKE, LAKE_GLINT, seed=99, gaps=(0, 0))
+    lake = Water(236, 340, -20, 260, DEEP_LAKE, LAKE_GLINT, seed=99, gaps=(0, 0))
     lake.path = (cx, 5)
     lake.brick = (4.0, 12.0)
     # (pool courses, inner edge) per terrace, top down; the edges close on the middle, then the rows run across
@@ -530,13 +531,19 @@ def rice():
         Ridge([(60, 216, 90, 70, 1.0), (190, 210, 80, 90, 1.0)], 280, *FAR_2, seed=91, rough=2, smooth=True,
               flicker=0.02),
         lake,
-        Paddies(150, left, right, PADDY_LEFT, PADDY_RIGHT, SEEDLING, cx=cx, dip=6, seed=97),
+        Paddies(184, left, right, PADDY_LEFT, PADDY_RIGHT, SEEDLING, cx=cx, dip=6, seed=97),
+        # bushes on the terraces break up the stripes: a large clump on the shaded left slope, smaller ones elsewhere
+        trees([22, 40, 58], 252, 10, BUSH_SHADE, seed=60, spread=0.7),
+        trees([12], 304, 8, BUSH_SHADE, seed=61, spread=0.6),
+        trees([76], 228, 6, BUSH_SHADE, seed=62, spread=0.5),
+        trees([212], 252, 7, BUSH_LIT, seed=63, spread=0.6),
+        trees([228, 216], 300, 8, BUSH_LIT, seed=64, spread=0.6),
         # the hut on stilts on the right crest
-        Blocks([(203, 158, 206, 172, STILT), (222, 158, 225, 172, STILT)]),
-        Mesa(214, 142, 11, 11, 158, *THATCH, ledges=1, bed=8, seed=95, wobble=0, speckle=0, ragged=0),
-        Ridge([(214, 126, 18, 18, 1.0)], 143, *THATCH, seed=96, rough=0, smooth=True, flicker=0),
-        Blocks([(210, 148, 216, 158, PLANTER)]),
-        trees([2, 16, 30], 162, 10, TREE_DARK, seed=98, spread=0.5),
+        Blocks([(203, 192, 206, 206, STILT), (222, 192, 225, 206, STILT)]),
+        Mesa(214, 176, 11, 11, 192, *THATCH, ledges=1, bed=8, seed=95, wobble=0, speckle=0, ragged=0),
+        Ridge([(214, 160, 18, 18, 1.0)], 177, *THATCH, seed=96, rough=0, smooth=True, flicker=0),
+        Blocks([(210, 182, 216, 192, PLANTER)]),
+        trees([2, 16, 30], 196, 10, TREE_DARK, seed=98, spread=0.5),
     ]
 
 

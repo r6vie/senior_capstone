@@ -143,6 +143,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 - **Autumn book page (Josef).** The orange grove on the olive slope is scattered, five trees at different heights and
   sizes instead of a line; the river now leaves the hills at the valley floor and winds down toward us with a gentler
   bend, instead of starting up on the slope. The poplars are unchanged.
+- **Winter without the cabin; terraces lower with bushes (Josef).** The cabin is gone from the winter cover (the firs
+  stay). The rice terraces sit 34 px lower, and clumps of leafy bushes stand on the terraces to break the stripes: a
+  broad clump across the shaded left slope, smaller ones on both sides.
 - **Cover typography follows the gouache poster, set left (Josef: "redo the cover typography everywhere to match
   closer to 4 · Gouache poster, keep it left justified and name right under").** A fixed-tier change with Josef's
   yes: on the strata covers (`cov-final`, all eight boards on "Covers: Strata") the title is Barlow Condensed 800 in
