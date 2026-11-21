@@ -199,6 +199,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   Then recomposed for balance (Josef): the arch narrower and taller with a tall slim opening, as on the book page, in
   the deeper terracotta, on the left third; the sun setting in the middle; one thin spire on the right; a dry wash
   winding from the foot up toward the sun, scrub along its banks; the near cliff gone.
+  Then layered (Josef): the spire moved left and forward, standing on the sand in front of the haze and the sun's
+  edge; a blocky cliff in the right foreground running off the edge, so arch, spire and block step toward us.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

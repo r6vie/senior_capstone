@@ -58,8 +58,11 @@ def desert():
                 wobble=2, speckle=0.4, flicker=0.02, flare=5, hole=(74, 300, 17, 66),
                 bedding=([226, 252], "#9C482E"))
     # one thin spire on the right, and the low sun between them, over the end of the dry wash
-    spire = Mesa(190, 212, 6, 11, 300, NEAR_L, NEAR_D, ledges=2, bed=8, seed=57, talus=True, top_tint=ROSE,
+    spire = Mesa(162, 222, 7, 13, 318, NEAR_L, NEAR_D, ledges=2, bed=8, seed=57, talus=True, top_tint=ROSE,
                  wobble=0, speckle=0.4, flicker=0.02, lean=0.05, flare=2)
+    # a blocky cliff in the right foreground, running off the edge: the nearest layer
+    block = Mesa(222, 268, 30, 42, 344, NEAR_L, NEAR_D, ledges=2, bed=8, seed=65, talus=True, top_tint=ROSE,
+                 wobble=0, speckle=0.4, flicker=0.02, lean=0.08, flare=3, shadow_steps=3)
     sun = Blob([(140, 222, 20, 20)], GOLD, top_light=False)
     sun.ragged = 0     # a clean disc
     return [
@@ -72,16 +75,17 @@ def desert():
                                              (202, 240, 14), (228, 232, 14), (254, 236, 14)])],
         sun,
         hero,
-        spire,
         Band(-60, 300, 288, 334, SAND_CALM, seed=58, lens=0.0),
         # the dry wash: a pale bed of darker sand winding from our feet back to the gap under the sun
         River(292, 340, 136, 22, 6, 74, ["#D8B183", "#CBA273", "#BC9264"], ["#E7CBA1", "#DDBE92"], swings=1.3,
               phase=2.6, seed=63),
         # scrub along its banks
         trees([24, 42], 318, 8, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=60, spread=0.6),
-        trees([196], 324, 7, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=61, spread=0.6),
+        trees([126], 326, 7, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=61, spread=0.6),
         trees([104], 306, 5, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=62, spread=0.6),
-        trees([168], 304, 4, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=64, spread=0.6),
+        spire,        # standing on the sand, in front of the haze
+        trees([184], 316, 4, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=64, spread=0.6),
+        block,
         Band(-60, 300, 334, 360, UMBER, seed=59, lens=0.0),
     ]
 
