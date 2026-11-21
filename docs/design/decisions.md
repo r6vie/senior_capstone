@@ -145,6 +145,10 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   white knockout; the full name sits right under it in Barlow Condensed 600 caps, +0.24em, as a chip of the cover's
   ink with white letters (16 px large, 7.5 px shelf). The gouache cover's own rules stay as they were. The design
   system's type roles note the exception.
+  Follow-up (Josef: lower edges of some titles clipped; no names in blocks): the clipping came from the title's white
+  knockout, whose box is taller than the 0.95 line, so each line's box covered the foot of the line above. The title
+  has no knockout now (the art never reaches it). The name is plain Barlow Condensed 700 caps, +0.24em, in the
+  cover's ink, on the white knockout only.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
