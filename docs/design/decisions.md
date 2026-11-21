@@ -262,6 +262,11 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   decision yet: Josef picks.
   Then (Josef: drop B and C): B and C are now A with the name moved. B: the name in the bottom left corner, on a paper
   knockout over the art. C: the name above the title (three-line titles then run into the taller older art).
+- **Shelf book size trials (Josef: the books are so pretty they should be larger in the app, which also helps
+  legibility).** Board `SizeTrials` on "Covers: Strata" (`shelf/size_trials.py`): a 1440 px desktop page at actual
+  size with three shelves of the strata covers: today's `.book` 122 x 178 (gap 28), 150 x 219 (gap 32) and 176 x 257
+  (gap 36), the poster type scaled with the book. Book size is fixed tier (system.md "Book"); not changed until Josef
+  picks a size, then the change goes to the design system and the app through the orchestrator.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

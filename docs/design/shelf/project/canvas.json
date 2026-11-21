@@ -895,6 +895,14 @@
    "h": 1290,
    "title": "Cover type trials · actual shelf size",
    "page": "final"
+  },
+  "SizeTrials.dc.html": {
+   "x": 2240,
+   "y": 1400,
+   "w": 1440,
+   "h": 1150,
+   "title": "Shelf book sizes · actual size",
+   "page": "final"
   }
  },
  "createdOnFiles": {
@@ -1173,7 +1181,8 @@
   "FinalCoverForest.dc.html",
   "FinalBookCity.dc.html",
   "FinalBookForest.dc.html",
-  "TypeTrials.dc.html"
+  "TypeTrials.dc.html",
+  "SizeTrials.dc.html"
  ],
  "pages": [
   {
