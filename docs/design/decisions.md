@@ -126,6 +126,10 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   horizontal gaps, the night a step lighter; the cabin rebuilt larger on a 6 px cell grid (log courses in two tones,
   a snow-edged gable, a snow roof plane against a stand of dark firs, a stone chimney with grey smoke, a lit window,
   a door with a snow step, a dimmer side window, a woodpile of pale log ends, drifts).
+- **Terraces texture, cabin roof (Josef).** The stepped valley's shape stays; the terraces "looked like cake", so each
+  pool is now water, not a layer: pale sky blue in long runs with openings through it, rose and gold glints gathering
+  near the sun, a single green bank under each. The cabin's roof vanished, white snow on white snow: it is now a dark
+  shingle gable with only a thin line of snow along its top, on walls laid as log beds, so the whole roof reads.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
