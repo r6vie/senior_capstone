@@ -311,6 +311,10 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   where hedgerows meet; the crest carries three trees of clearly different sizes in a dark ink, each with a short
   shadow; the farmhouse sits a little nearer, whiter, with a broad overhanging rust-brown roof, one door, and a dark
   tree behind its shaded side. One Josef-eye critic pass.
+  Then (Josef: the house smaller with slightly more detail): about half its old size (36 x 24 world px), built row
+  by row on the page's 4 px slab grid so every piece survives: ridge and chimney, roof, a dark eave overhanging both
+  walls, then the lit gable with a two-row door and a window and the shaded side with a small window. Each part is
+  its own layer, because within one layer a slab takes a single colour and swallowed the door and windows.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
