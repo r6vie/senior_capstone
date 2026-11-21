@@ -300,6 +300,11 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   below a lone dark tree on the crest of the swell; its crop rows converge on the tree; the low sun sits just left of
   the tree, so the two are one focal point; greens either side in strips of uneven width, darkest in the near left.
   The page is unchanged. One Josef-eye critic pass (it found the first version read as a dirt road).
+  Then (Josef: no, take the book page as the inspiration: fields clearly separated, bushes in the lines): the single
+  wheat field is gone. The cover is the page's farmland kept small: every near field closed by dark hedges on all
+  sides, three boundaries converging on the horizon, bushes standing where hedgerows meet, one smooth swell on the
+  right with a big tree on its crest, the low sun over the lilac range on the left, a deep green near field. One
+  Josef-eye critic pass (it found the fields read as stripes until the boundaries were drawn wide enough to render).
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
