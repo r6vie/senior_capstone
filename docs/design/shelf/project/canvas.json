@@ -831,6 +831,86 @@
    "h": 1090,
    "title": "Book screen · Karst river in mist",
    "page": "final"
+  },
+  "FinalBookAurora.dc.html": {
+   "x": 680,
+   "y": 6000,
+   "w": 1440,
+   "h": 1090,
+   "title": "Book screen · Winter night, aurora",
+   "page": "final"
+  },
+  "FinalBookTerraces.dc.html": {
+   "x": 680,
+   "y": 7200,
+   "w": 1440,
+   "h": 1090,
+   "title": "Book screen · Rice terraces at dawn",
+   "page": "final"
+  },
+  "FinalBookLagoon.dc.html": {
+   "x": 680,
+   "y": 8400,
+   "w": 1440,
+   "h": 1090,
+   "title": "Book screen · Volcanic lagoon",
+   "page": "final"
+  },
+  "FinalCoverCity.dc.html": {
+   "x": 0,
+   "y": 9600,
+   "w": 600,
+   "h": 1090,
+   "title": "Cover · Lakefront city at dusk",
+   "page": "final"
+  },
+  "FinalCoverForest.dc.html": {
+   "x": 0,
+   "y": 10800,
+   "w": 600,
+   "h": 1090,
+   "title": "Cover · Fir forest in morning light",
+   "page": "final"
+  },
+  "FinalBookCity.dc.html": {
+   "x": 680,
+   "y": 9600,
+   "w": 1440,
+   "h": 1090,
+   "title": "Book screen · Lakefront city at dusk",
+   "page": "final"
+  },
+  "FinalBookForest.dc.html": {
+   "x": 680,
+   "y": 10800,
+   "w": 1440,
+   "h": 1090,
+   "title": "Book screen · Fir forest in morning light",
+   "page": "final"
+  },
+  "TypeTrials.dc.html": {
+   "x": 2240,
+   "y": 0,
+   "w": 1100,
+   "h": 1290,
+   "title": "Cover type trials · actual shelf size",
+   "page": "final"
+  },
+  "SizeTrials.dc.html": {
+   "x": 2240,
+   "y": 1400,
+   "w": 1440,
+   "h": 1150,
+   "title": "Shelf book sizes · actual size",
+   "page": "final"
+  },
+  "SpineTrials.dc.html": {
+   "x": 2240,
+   "y": 2650,
+   "w": 1440,
+   "h": 1650,
+   "title": "Spine options · actual size",
+   "page": "final"
   }
  },
  "createdOnFiles": {
@@ -1101,7 +1181,17 @@
   "FinalCoverAurora.dc.html",
   "FinalCoverTerraces.dc.html",
   "FinalCoverLagoon.dc.html",
-  "FinalBookKarst.dc.html"
+  "FinalBookKarst.dc.html",
+  "FinalBookAurora.dc.html",
+  "FinalBookTerraces.dc.html",
+  "FinalBookLagoon.dc.html",
+  "FinalCoverCity.dc.html",
+  "FinalCoverForest.dc.html",
+  "FinalBookCity.dc.html",
+  "FinalBookForest.dc.html",
+  "TypeTrials.dc.html",
+  "SizeTrials.dc.html",
+  "SpineTrials.dc.html"
  ],
  "pages": [
   {

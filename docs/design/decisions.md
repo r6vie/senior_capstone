@@ -138,6 +138,152 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   like a contour line and deeper as it nears, the shaded slope violet-grey water on moss risers and the lit slope
   butter and peach water on olive, seedling rows and a bent planter in a straw hat in the near paddies, a stilted
   thatch hut and a dark tree on the crests (`Paddies`).
+  Then (Josef: "getting there"): the planter removed, the seedling rows dropped, and each slope's inner edge run as
+  one smooth diagonal through the terraces' edges, so the V's profile no longer steps terrace by terrace.
+- **Autumn book page (Josef).** The orange grove on the olive slope is scattered, five trees at different heights and
+  sizes instead of a line; the river now leaves the hills at the valley floor and winds down toward us with a gentler
+  bend, instead of starting up on the slope. The poplars are unchanged.
+- **Winter without the cabin; terraces lower with bushes (Josef).** The cabin is gone from the winter cover (the firs
+  stay). The rice terraces sit 34 px lower, and clumps of leafy bushes stand on the terraces to break the stripes: a
+  broad clump across the shaded left slope, smaller ones on both sides.
+- **Desert cover: the butte lowered (Josef: more space for the author).** The butte's top and the sun behind it sit
+  16 px lower (world units), leaving a clear band of white under the name.
+- **Book screens for the winter, terraces and lagoon covers (Josef: build them out).** `art/strata/pages_new.py`,
+  boards `FinalBookAurora`, `FinalBookTerraces`, `FinalBookLagoon` beside their covers. Winter: the aurora lying low
+  under the text and sweeping up beside it on the right, hung as separate curtains, night and a few pale stars
+  beneath; a tall snow peak and a long range of soft, uneven hills; a frozen lake with the aurora faint in the ice
+  and two cracks; far firs along the shore, dark groves in both lower corners. Terraces: the left slope low under
+  the text, the right climbing high to the stilted hut; three violet ridges and the sun in the notch over the lake,
+  mist across the left; lips lighter and broken so they read as banks; the slopes meet on a stepped diagonal;
+  bushes and dark trees on the terraces. Lagoon: the volcano on the right (dark summit, glowing vent, plume leaning
+  away), an older island and a small far one, clouds, deep water past a broken line of surf on the reef, pale
+  shallows with coral heads, a sandbar with block palms and an outrigger canoe. A fresh critic reviewed the drafts;
+  its main fixes are in.
+- **The three pages reworked (Josef: none great; every main peak lower).** Winter: the tallest peak and the spike
+  on the right are gone, the aurora is one smooth curtain lying low with no gaps, and the lake is now a fjord, dark
+  calm water winding back between steep snow walls through a bright snowfield. Terraces: a whole country of hills,
+  not two striped slopes: far ridges and the sun, two small finely terraced hills, a lake, three more small hills in
+  sage, ochre and peach, a big left hill broken by a forested gully, a right hill of large wide terraces with the
+  hut and a waterfall, broad paddies and coconut palms in front. Lagoon: a lower volcano, misty far islands and a
+  low jungle island, the reef closing the lagoon in an arc of sand and surf with two palm motu on it, a sand shoal,
+  a dense palm forest on the near beach with the canoe. A fresh critic reviewed them; its main fixes are in.
+  Then (Josef: the lagoon "so much better"; no critic pass): the palm forest broken up into two loose, staggered
+  rows on uneven ground, irregular gaps, each palm its own height, crown and lean, undergrowth between.
+- **Rice page: hills meet the ground (Josef: they looked like eggs).** Every terraced hill now has a bell profile
+  (a round hill with power 2.2, a third wider) whose flanks flare into the ground instead of dropping straight; the
+  coconut palms are replaced by broad shade trees on dark trunks; the waterfall on the right hill is gone; the hut
+  sits on the crest.
+  Then (Josef: the bottom too straight) the foreground paddies are fields whose edges swell and dip across the page
+  (`FieldRows`), each field its own depth, its bank following the wave.
+- **Covers keep room for a one-line name at shelf size (Josef, a rule for every new cover from now on).** Measured
+  on the boards: at shelf size a three-line title and a one-line name reach world y ~171 of the 236 x 344 cover,
+  left of x ~200, so there the art stays below y ~180; only the right edge may rise higher. The rice terraces cover
+  is rebuilt to it and to match its book page, still minimal: two bell-shaped terraced hills spreading into the
+  ground (peach on the left, a taller gold one on the right with the stilted hut), the sun between violet ridges over
+  a small dark lake, wavy fields in front. The volcano cover is lowered for it: the summit, shoulders and bands sit
+  32 units lower, the plume starts at the vent and bends right under the name line.
+  Then the rice cover tightened (Josef): drawn through a slightly smaller window of the scene (`VIEW`, the cover's
+  proportions, about 13% closer); the two hills closer together; less of the fields at the foot; the sun higher and
+  larger; the lake's yellow glints and sun path replaced by a paler teal. The name line still clears at shelf size.
+- **Three fixes (Josef).** Winter cover: the aurora no longer trails off on the left (one even depth edge to edge);
+  "Long Nights, Clear Skies" wraps to four lines at shelf size, so the curtain sits just under that name line and the
+  snow hills come down to leave the night between. Mountain lake page: pale lake water lies behind the mountains'
+  misty feet, so no paper shows between them and the lake. Desert cover: low sage-olive scrub clumps on the sand, as
+  on its book page.
+- **Purple in the aurora (Josef), cover and page.** The curtain runs green at the hem, teal, then violet and a soft
+  purple in its upper body before it dissolves; the colours climb faster than the height and fade less toward paper,
+  so the purple reads.
+- **Desert cover: an arch (Josef).** The tilted butte is replaced by a great rock arch of the same rock, the low sun
+  seen through its opening (drawn in front of the haze cliff and behind the arch), with one thin spire beside it;
+  both stay under the shelf-size name line.
+  Then recomposed for balance (Josef): the arch narrower and taller with a tall slim opening, as on the book page, in
+  the deeper terracotta, on the left third; the sun setting in the middle; one thin spire on the right; a dry wash
+  winding from the foot up toward the sun, scrub along its banks; the near cliff gone.
+  Then layered (Josef): the spire moved left and forward, standing on the sand in front of the haze and the sun's
+  edge; a blocky cliff in the right foreground running off the edge, so arch, spire and block step toward us.
+  Then rebalanced after a critic pass (Josef: still unbalanced). The critic: three equal dark verticals read as a
+  fence, the sun was wedged between arch and spire, the weight tipped like a seesaw. Now the arch is the one dark
+  focal mass on the left; the spire a lighter, smaller partner close beside it; the sun moved right and set low in a
+  pale haze band that rises from left to right to cradle it; a low, darker umber block with a stepped top anchors the
+  lower right; the dry wash ends under the arch's opening; three lighter scrub clumps.
+  Then (Josef: arch better): the arch throws a shadow right across the sand, darker slabs; the foreground cliff is a
+  step lighter and wider.
+- **Three relatable covers to finish the collection (Josef picked them: lakefront city at dusk, prairie farm at
+  harvest, bay bridge at sunset).** `art/strata/covers_us.py`, boards `FinalCoverCity`, `FinalCoverPrairie`,
+  `FinalCoverBay` on "Covers: Strata" under the lagoon, covers only for now. Josef asked for a faster polish loop with
+  a critic that judges as he does: his preferences are written down in `art/strata/CRITIC.md` (every rejection made
+  in this collection, as rules), each cover was self-checked against it and then went through two rounds with a
+  critic briefed as Josef. City: one dominant tower with a setback crown on the right, the rest uneven, a pale far
+  skyline with the sun half set into it, warm-lit and slate faces, a warm reflection under the tower, a dark shore
+  wedge. Prairie: the low sun half behind a windbreak in irregular groups, a gambrel barn (rust, never the UI red)
+  with a domed silo, both throwing shadow right, crop rows and furrow lines converging on the barn, a curving road,
+  fence posts at uneven intervals as the dark anchor. Bay: a suspension bridge in muted rust at an angle, the near
+  tower tall on the right, a solid deck, the main cable a clean curve dipping below the sun, soft dark hills, a warm
+  reflection, a low dark bluff in the corner.
+  Then (Josef: city good; barn needs detail, fix the fence; bridge wonky), with a Josef-eye check: the barn larger,
+  a gambrel with one continuous cream trim along its roof, a plain framed double door with a dark seam, a small
+  hayloft, side windows, board seams; the fence a near run along the lower left, four posts and two continuous rails;
+  the bridge rebuilt clean: a level deck with a dark underside, one continuous cable from a shore anchor over the far
+  tower, sagging below the sun and easing up to land on the near tower's top, even hangers, one low continuous shore.
+  Then (Josef, 2026-11-21: doesn't like the farm and the bridge; remove them, do a forest instead): the prairie and
+  bay covers and their boards are gone; `FinalCoverForest` ("Room to Grow", Noah Bergstrom, ink #283d2e) takes the
+  slot under the city. A fir forest on a bright morning seen from a trail across a meadow: the trail, an opening in
+  the trees and the low sun in it on one axis; one old fir on the right edge, the only thing above the name line,
+  with uneven tiers, a missing and a long bough, its trunk and shadow showing; a mid stand in uneven clumps with one
+  tall fir leading; small pale firs in the opening; a fir pair and ferns as the lower-left anchor; the meadow edge
+  undulating. Two Josef-eye critic rounds. (A first try of bare trunks dissolving into haze read as poles.)
+  Then (Josef: build the book screens for city and forest): `art/strata/pages_us.py`, boards `FinalBookCity` and
+  `FinalBookForest` right of their covers. City: a long skyline across the lake, the main tower with setbacks and a
+  dark spire on the right, the rest in three groups of uneven width built as clean blocks (lit two thirds, slate
+  third, shade its own layer so the edge runs straight), a pale far skyline with the sun half set into it, a
+  breakwater and lighthouse, three sailboats, the lakefront park with promenade, lamps and trees. Forest: a snow-capped
+  ridge far off on the right, haze firs in clumps, the forest in three groups with an opening where the sun sits, the
+  meadow with the trail, a meandering creek under a plank footbridge, a copse out in the meadow, the old fir on the
+  right edge, young firs, a boulder and ferns in the lower left. Two Josef-eye critic rounds. Pages render a little
+  past both edges and are cropped, so no slab start jitters off the page edge.
+  Then (Josef: more detail on the city's buildings): facades as a detail layer over each tower's faces: punched
+  window grids on most (the shaded face's windows one value darker than its wall), ribbon windows on two with a
+  blank spandrel every fourth floor and a base band, vertical fins on the main tower and two others, a sky-lobby band
+  and a podium on the main tower, rooftop boxes and masts, and lit windows only in a few groups of two or three in a
+  muted warm ink. One Josef-eye critic pass (it caught noisy shaded faces, cake-like ribbons, a jagged overlap and
+  stray yellow specks).
+- **Book pages flush to the page edge (Josef: apply the city and forest fix to all book screens).** The renderer
+  used to jitter where a run starts and ends, also at the page's sides, which left small uneven paper notches along
+  the left and right edges. `render(..., flush=True)` stretches a run's outermost column to the edge after the row
+  is laid, so it consumes the same random draws: the lake, desert, coast, valley, karst, winter, terraces and lagoon
+  pages are pixel-identical inside and only their side edges changed (checked by diff).
+- **Cover type trials at true shelf size (Josef: unsure the typography does the art justice; wants three approaches on
+  a shelf at the real in-app scale, will pick one).** Board `TypeTrials` on "Covers: Strata" (`shelf/type_trials.py`):
+  the app's desktop shelf book (122 x 178 CSS px), shelf name, rule and ledge, at 1:1. A first shelf has three arts
+  with one approach each, then one shelf per approach across five covers. A Poster: Barlow Condensed 800 caps 20px,
+  the name in Barlow 700 9px under it. B Literary: Newsreader 600 16.5px (the app's book-title face), the name in
+  Plex Sans 600 caps 8.5px. C Label: the title in a thin framed label (Newsreader 600 14px), the name on a paper tab
+  cut into the foot of the art. A and B put a paper knockout behind the name where older art rises into it. Not a
+  decision yet: Josef picks.
+  Then (Josef: drop B and C): B and C are now A with the name moved. B: the name in the bottom left corner, on a paper
+  knockout over the art. C: the name above the title (three-line titles then run into the taller older art).
+- **Shelf book size trials (Josef: the books are so pretty they should be larger in the app, which also helps
+  legibility).** Board `SizeTrials` on "Covers: Strata" (`shelf/size_trials.py`): a 1440 px desktop page at actual
+  size with three shelves of the strata covers: today's `.book` 122 x 178 (gap 28), 150 x 219 (gap 32) and 176 x 257
+  (gap 36), the poster type scaled with the book. Book size is fixed tier (system.md "Book"); not changed until Josef
+  picks a size, then the change goes to the design system and the app through the orchestrator.
+  Then (Josef, 2026-11-21: "Let's go with largest"): the shelf book is 176 x 257 with a 36px gap (system.md "Book",
+  fixed tier, changed with his yes). The type on the cover scales with it (poster type: title 29px, name 13px). Phone
+  and the smaller sizes are not decided yet. The hinge (spine) is being reconsidered next.
+- **Spine options at 176 x 257 (Josef: should the spine take so much space on the left? three options).** Board
+  `SpineTrials` (`shelf/spine_trials.py`), actual size: today's hinge scaled (line at 17px, type at 29px); A narrow
+  hinge (a thinner line at 8px, type at 18px); B ink spine (no line, a solid 8px strip of the cover's ink along the
+  left edge, type at 18px); C no hinge (outline and dot shadow carry the book, type at 14px). Not decided yet.
+  Then (Josef picked A): the narrow hinge. On the 176 x 257 shelf book, a 1.5px ink line 8px in from the left edge,
+  the type starting 18px in (system.md "Book", fixed tier, changed with his yes).
+- **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
+  toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
+  gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
+  mirrored in it, the aurora faint in the ice, the snow hills in front on either side and a near snow shore.
+- **Lagoon page: water filled (Josef: too much white on the right edge).** The reef and lagoon rows now run well past
+  both edges and leave no open gaps, so only the pale glints remain.
+  Then shade under the palm forest (Josef): darker sand slabs pooled at each palm's foot, thrown a little right, away
+  from the light.
 - **Cover typography follows the gouache poster, set left (Josef: "redo the cover typography everywhere to match
   closer to 4 · Gouache poster, keep it left justified and name right under").** A fixed-tier change with Josef's
   yes: on the strata covers (`cov-final`, all eight boards on "Covers: Strata") the title is Barlow Condensed 800 in
@@ -145,6 +291,10 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   white knockout; the full name sits right under it in Barlow Condensed 600 caps, +0.24em, as a chip of the cover's
   ink with white letters (16 px large, 7.5 px shelf). The gouache cover's own rules stay as they were. The design
   system's type roles note the exception.
+  Follow-up (Josef: lower edges of some titles clipped; no names in blocks): the clipping came from the title's white
+  knockout, whose box is taller than the 0.95 line, so each line's box covered the foot of the line above. The title
+  has no knockout now (the art never reaches it). The name is plain Barlow Condensed 700 caps, +0.24em, in the
+  cover's ink, on the white knockout only.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
