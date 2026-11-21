@@ -275,6 +275,42 @@ FALL = ["#EAF2F4", "#DCE9EE", "#CFE0E8"]
 FOREST = ["#4E7442", "#46693B", "#3C5A33", "#304A29"]
 
 
+class FieldRows:
+    """The flat paddies in front: fields one behind another whose edges swell and dip across the page (two slow waves
+    of different length), each field its own depth, a dark bank along its near edge; never a ruled line."""
+
+    brick = (2.0, 8.0)
+
+    def __init__(self, y0, depths, pools, bank, seed=1):
+        from strata import hexrgb
+        self.y0, self.depths, self.seed = y0, depths, seed
+        self.pools = [[hexrgb(c) for c in p] for p in pools]
+        self.bank = [hexrgb(c) for c in bank]
+
+    def _wave(self, x, i):
+        import numpy as np
+        return 5 * np.sin(x / 61.0 + i * 1.7 + self.seed) + 3 * np.sin(x / 23.0 + i * 0.9)
+
+    def _edges(self, x):
+        out, y = [], self.y0
+        for i, d in enumerate(self.depths):
+            out.append(y + self._wave(x, i))
+            y += d
+        return out
+
+    def cover(self, x, y):
+        import numpy as np
+        return y >= self._edges(np.asarray(x, dtype=float))[0]
+
+    def colour(self, x, y, rng):
+        e = self._edges(float(x)) + [1e9]
+        i = max(k for k in range(len(self.depths)) if y >= e[k])
+        if y >= e[i + 1] - 4:
+            return self.bank[int(rng.random() * len(self.bank))]
+        pal = self.pools[i % len(self.pools)]
+        return pal[int(rng.random() * len(pal))]
+
+
 def terraces():
     """A whole terraced country at dawn, lower and wider than the cover: plain violet ridges far off with the sun
     half behind them; small hills in the middle distance, each finely terraced along its own curve; a still lake
@@ -288,11 +324,8 @@ def terraces():
                            seed=331, rough=2, lean=0.5, flicker=0.02, wave=4)
     big_right = ContourHill([(530, 404, 162, 148, 2.2)], 660, HILL_GOLD, BANK_OLIVE, spacing=20, bank_frac=0.34,
                             seed=332, rough=2, lean=0.5, flicker=0.02, wave=3)
-    paddy_rows = []
-    for i, (y, h) in enumerate([(652, 16), (668, 32)]):
-        paddy_rows.append(Band(-60, 640, y, y + h - 4, PADDY_RIGHT["pool"] if i % 2 else ["#E9C77A", "#E3A57E"],
-                               seed=340 + i, lens=0.0))
-        paddy_rows.append(Band(-60, 640, y + h - 4, y + h, ["#5A5A36", "#525231"], seed=350 + i, lens=0.0))
+    paddy_rows = [FieldRows(650, [16, 24, 20], [["#E9C77A", "#E3A57E"], PADDY_RIGHT["pool"], ["#EDCB86", "#E6B48C"]],
+                            ["#5A5A36", "#525231"], seed=340)]
     return [
         Ridge([(380, 448, 170, 160, 1.0), (120, 460, 140, 120, 1.0)], 540, *FAR_3, seed=300, rough=2, smooth=True,
               flicker=0.02),

@@ -173,6 +173,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   (a round hill with power 2.2, a third wider) whose flanks flare into the ground instead of dropping straight; the
   coconut palms are replaced by broad shade trees on dark trunks; the waterfall on the right hill is gone; the hut
   sits on the crest.
+  Then (Josef: the bottom too straight) the foreground paddies are fields whose edges swell and dip across the page
+  (`FieldRows`), each field its own depth, its bank following the wave.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
