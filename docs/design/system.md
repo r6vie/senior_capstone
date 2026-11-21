@@ -187,8 +187,9 @@ Page ground `--paper`. Four stacked parts:
    six to seven 176px books fit per row). Add 36px of space below the last ledge for its dot shadow.
 
 **Book** (`.book` 176×257 on the shelf, `.book-lg` 236×344, `.book-sm` 92×136; the shelf book was 122×178 until
-2026-11-21, when Josef chose the larger size so the cover art and its type read better; shelf gap 36px): white cover, 2px ink outline (3px on lg), hinge line at
-left 12px, dot shadow offset 8px right and down, title Newsreader 600 13.5px (27px on lg) at top, full name Plex 600
+2026-11-21, when Josef chose the larger size so the cover art and its type read better; shelf gap 36px): white cover, 2px ink outline (3px on lg), a narrow hinge:
+a 1.5px ink line 8px in from the left edge, with the cover's type starting 18px in (Josef, 2026-11-21: the old
+hinge at 12px with type at 21px took too much of the cover), dot shadow offset 8px right and down, title Newsreader 600 13.5px (27px on lg) at top, full name Plex 600
 9.5px caps at bottom. A long name wraps (also at a hyphen) and stops at 4 lines with an ellipsis, so a real full name is never cut (it was 3 until 2026-11-15, when long names hit the limit; Josef approved 4); "ALEXANDRA OKONKWO-BRENNAN" takes 3 lines on `.book` and `.book-sm`, 2 on `.book-lg` (measured in the app with the real fonts). Title and full name only; never a headline, employer, genre, count or badge. Make the book an `<a>`
 (or `<button>`) with `aria-label="<Title>, by <Full name>"`, a focus ring and the hover lift (`translateY(-4px)`).
 

@@ -274,6 +274,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   `SpineTrials` (`shelf/spine_trials.py`), actual size: today's hinge scaled (line at 17px, type at 29px); A narrow
   hinge (a thinner line at 8px, type at 18px); B ink spine (no line, a solid 8px strip of the cover's ink along the
   left edge, type at 18px); C no hinge (outline and dot shadow carry the book, type at 14px). Not decided yet.
+  Then (Josef picked A): the narrow hinge. On the 176 x 257 shelf book, a 1.5px ink line 8px in from the left edge,
+  the type starting 18px in (system.md "Book", fixed tier, changed with his yes).
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
