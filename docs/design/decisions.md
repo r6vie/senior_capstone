@@ -280,6 +280,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   the name right under the title, at the new shelf size: title Barlow Condensed 800 caps 29px, line-height 0.92,
   +0.01em; the name Barlow Condensed 700 caps 13px, +0.16em, 10px under the title, on a white knockout where the art
   rises into it (system.md type roles). Name at the foot and name on top were not chosen.
+  Then (Josef: update the cover boards): every cover board on "Covers: Strata" shows the new shelf book (176 x 257,
+  the narrow hinge, the new type) under a large cover that is the same book scaled x2.68 (title 78px, name 35px, the
+  hinge 21px in), so the large cover previews the shelf exactly. The small book uses the large render to stay crisp.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

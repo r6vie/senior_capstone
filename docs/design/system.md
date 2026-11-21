@@ -83,7 +83,7 @@ ink 18:1; rule on ink 11.4:1.
 | Nav, buttons | Barlow Condensed 600–700, +0.10–0.14em | 17 / 1 | CAPS |
 | Caption chip | Barlow Condensed 600, +0.14em | 14 | CAPS |
 | Book title | Newsreader 600 | 13.5 shelf, 27 feature | Sentence |
-| Book title on a strata cover (Josef, 2026-11-20; sizes 2026-11-21) | Barlow Condensed 800, +0.01em, line-height 0.92, set left | 29 on the 176 shelf book, 58 large | CAPS, no knockout; the full name right under it (10px gap), Barlow Condensed 700 13px caps +0.16em in the cover's ink, on a white knockout where the art rises into it |
+| Book title on a strata cover (Josef, 2026-11-20; sizes 2026-11-21) | Barlow Condensed 800, +0.01em, line-height 0.92, set left | 29 on the 176 shelf book (78 on the 472 board cover, the same book scaled) | CAPS, no knockout; the full name right under it (10px gap), Barlow Condensed 700 13px caps +0.16em in the cover's ink, on a white knockout where the art rises into it |
 | Book author (full name) | Plex Sans 600, +0.12em, line-height 1.3 | 9.5 | CAPS, wraps to 4 lines |
 | The Librarian's voice | Newsreader italic | 19–22 / 1.3 | Sentence |
 | Body, labels | Plex Sans 400/600 | 15–16 / 1.5 | Sentence |
