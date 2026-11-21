@@ -231,10 +231,11 @@ class AuroraSky:
         h = float(self.hem(x))
         d = h - y                            # height above the hem
         if d > 0:
-            t = min(0.999, max(0, d / (self.band + self.soft) + rng.uniform(-0.08, 0.08)))
+            # the colours climb faster than the height, so the violet and purple sit in the body of the curtain
+            t = min(0.999, max(0, (d / (self.band + self.soft)) ** 0.55 + rng.uniform(-0.08, 0.08)))
             c = self.cur[int(t * len(self.cur))]
             f = d / (self.band + self.soft)
-            return mix(c, (255, 255, 255), max(0, min(1, f)) ** 1.5 * 0.6)
+            return mix(c, (255, 255, 255), max(0, min(1, f)) ** 1.5 * 0.45)
         t = min(0.999, max(0, -d / (self.base - h) + rng.uniform(-0.08, 0.08)))
         c = self.night[int(t * len(self.night))]
         if -d < 7 and rng.random() < 0.55:
@@ -250,7 +251,8 @@ def hem(x):
     return 238 - 0.08 * x - 4 * np.sin(x / 46.0)
 
 
-CURTAIN = ["#A9E2BF", "#8ED3AC", "#72C3A3", "#5CAEA6", "#5297A0"]   # bright green hem, teal above
+# bright green at the hem, teal above it, then violet and a soft purple in the upper reaches before it dissolves
+CURTAIN = ["#A9E2BF", "#8ED3AC", "#72C3A3", "#5FA9AB", "#6E97B8", "#8A88C4", "#A483C4"]
 CAB_LOG = ["#A8876D", "#9C7C63"]
 CAB_SIDE = ["#4A3A32", "#41332C"]
 CAB_ROOF_SNOW = ["#F3F5F8", "#E9EDF3"]

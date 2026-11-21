@@ -190,6 +190,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   snow hills come down to leave the night between. Mountain lake page: pale lake water lies behind the mountains'
   misty feet, so no paper shows between them and the lake. Desert cover: low sage-olive scrub clumps on the sand, as
   on its book page.
+- **Purple in the aurora (Josef), cover and page.** The curtain runs green at the hem, teal, then violet and a soft
+  purple in its upper body before it dissolves; the colours climb faster than the height and fade less toward paper,
+  so the purple reads.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
