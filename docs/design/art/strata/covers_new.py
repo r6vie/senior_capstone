@@ -212,7 +212,7 @@ class AuroraSky:
 
     def _taper(self, x):
         import numpy as np
-        return np.clip((np.asarray(x, dtype=float) + 6) / 70.0, 0.15, 1.0)   # the curtain thins out toward the left
+        return np.ones_like(np.asarray(x, dtype=float))     # one even depth from edge to edge (Josef)
 
     def cover(self, x, y):
         import numpy as np
@@ -231,10 +231,11 @@ class AuroraSky:
         h = float(self.hem(x))
         d = h - y                            # height above the hem
         if d > 0:
-            t = min(0.999, max(0, d / (self.band + self.soft) + rng.uniform(-0.08, 0.08)))
+            # the colours climb faster than the height, so the violet and purple sit in the body of the curtain
+            t = min(0.999, max(0, (d / (self.band + self.soft)) ** 0.55 + rng.uniform(-0.08, 0.08)))
             c = self.cur[int(t * len(self.cur))]
             f = d / (self.band + self.soft)
-            return mix(c, (255, 255, 255), max(0, min(1, f)) ** 1.5 * 0.6)
+            return mix(c, (255, 255, 255), max(0, min(1, f)) ** 1.5 * 0.45)
         t = min(0.999, max(0, -d / (self.base - h) + rng.uniform(-0.08, 0.08)))
         c = self.night[int(t * len(self.night))]
         if -d < 7 and rng.random() < 0.55:
@@ -244,10 +245,14 @@ class AuroraSky:
 
 def hem(x):
     import numpy as np
-    return 220 - 0.2 * x - 6 * np.sin(x / 46.0)
+    # low enough that the even curtain's dissolving top stays under the shelf-size name line (world y ~180 on the left)
+    # this title wraps to four lines at shelf size (the name ends near y ~190 in the left column), so the curtain's
+    # dissolving top starts just below that, and the snow hills sit lower to leave the night between
+    return 238 - 0.08 * x - 4 * np.sin(x / 46.0)
 
 
-CURTAIN = ["#A9E2BF", "#8ED3AC", "#72C3A3", "#5CAEA6", "#5297A0"]   # bright green hem, teal above
+# bright green at the hem, teal above it, then violet and a soft purple in the upper reaches before it dissolves
+CURTAIN = ["#A9E2BF", "#8ED3AC", "#72C3A3", "#5FA9AB", "#6E97B8", "#8A88C4", "#A483C4"]
 CAB_LOG = ["#A8876D", "#9C7C63"]
 CAB_SIDE = ["#4A3A32", "#41332C"]
 CAB_ROOF_SNOW = ["#F3F5F8", "#E9EDF3"]
@@ -303,23 +308,22 @@ def cabin(x, base):
 def aurora():
     # low snow hills, soft-shouldered but uneven: a long main hill with a second summit on its shoulder, a smaller
     # hill to the left, each side a different length
-    peaks = Ridge([(44, 230, 58, 44, 0.8), (84, 244, 26, 34, 0.9), (150, 222, 70, 50, 0.8), (178, 230, 40, 40, 0.85),
-                   (218, 232, 36, 44, 0.9)],
+    peaks = Ridge([(44, 252, 58, 44, 0.8), (84, 262, 26, 34, 0.9), (150, 246, 70, 50, 0.8), (178, 252, 40, 40, 0.85),
+                   (218, 254, 36, 44, 0.9)],
                   280, *SNOW, seed=82, rough=3.5, ribs=0.4, lean=0.4, smooth=True, flicker=0.04)
     lake = Water(284, 310, -20, 260, ICE, ICE_G, seed=84, gaps=(0, 0), squash=0.5)
     lake.brick = (6.0, 20.0)    # one flat sheet of ice
     return [
-        AuroraSky(hem, 290, 12, 56, NIGHT, CURTAIN, seed=80),
-        Ridge([(-6, 238, 50, 40, 0.85), (112, 246, 40, 30, 0.9), (244, 228, 50, 60, 0.8)], 282, *SNOW_FAR, seed=81,
+        AuroraSky(hem, 290, 10, 38, NIGHT, CURTAIN, seed=80),
+        Ridge([(-6, 258, 50, 40, 0.85), (112, 264, 40, 30, 0.9), (244, 250, 50, 60, 0.8)], 282, *SNOW_FAR, seed=81,
               rough=3, ribs=0.3, smooth=True, flicker=0.03),
         peaks,
         Band(-60, 300, 272, 288, SNOW[0], seed=83, lens=0.0),
         lake,
         Band(-60, 300, 308, 360, SNOW[0], seed=85, lens=0.0),
         # a stand of firs behind the cabin, so its snowy roof reads against dark
-        Firs([(50, 304, 52, 15), (68, 300, 60, 16), (142, 300, 62, 16), (160, 304, 52, 14)], F_LIT, F_DARK,
+        Firs([(50, 304, 42, 13), (68, 300, 48, 14), (142, 300, 50, 14), (160, 304, 42, 12)], F_LIT, F_DARK,
              tiers=2),
-        *cabin(100, 324),
         Firs([(16, 338, 62, 12), (40, 342, 44, 9), (-2, 344, 42, 9), (204, 336, 68, 13), (228, 342, 52, 10),
               (184, 344, 36, 7)], F_LIT, F_DARK, tiers=2),
     ]
@@ -453,8 +457,18 @@ class Paddies:
                 return r, yy
         return None, yy
 
-    def _inside(self, side, r, x):
-        return (x <= r[3]) if side[1] > 0 else (x >= r[3])
+    def _edge_at(self, side, y):
+        # the slope's inner edge runs as one smooth diagonal through the terraces' edges, course by course, so the
+        # profile of the V does not step terrace by terrace
+        import numpy as np
+        rows = side[0]
+        ys = [r[0] for r in rows] + [rows[-1][1]]
+        es = [r[3] for r in rows] + [rows[-1][3]]
+        return float(np.interp(y, ys, es))
+
+    def _inside(self, side, r, x, y=None):
+        e = self._edge_at(side, y) if y is not None else r[3]
+        return (x <= e) if side[1] > 0 else (x >= e)
 
     def cover(self, x, y):
         import numpy as np
@@ -462,7 +476,7 @@ class Paddies:
         for j, xx in enumerate(x):
             for side in self.sides:
                 r, _ = self._row(side, xx, y)
-                if r and self._inside(side, r, xx) and (side[1] > 0) == (xx <= self.cx):
+                if r and self._inside(side, r, xx, y) and (side[1] > 0) == (xx <= self.cx):
                     out[j] = True
         return out
 
@@ -478,9 +492,11 @@ class Paddies:
         if d >= pool_h + 4:
             pal = inks["riser"]
         elif d >= pool_h:
-            pal = inks["lip"]
-        elif i >= n - 3 and int(x // 6) % 3 == 0 and int(d // 4) % 2 == 1:
-            pal = self.seedling                              # rows of seedlings in the nearest paddies
+            # on the page the lips break every so often, so they read as banks, not ruled lines
+            if getattr(self, "lip_breaks", False) and int((x + i * 53) // 70) % 4 == 0:
+                pal = inks["pool"]
+            else:
+                pal = inks["lip"]
         else:
             pal = inks["pool"]
         return pal[int(rng.random() * len(pal))]
@@ -498,6 +514,8 @@ FAR_2 = (["#7F7AA0", "#77729A"], ["#666189", "#5F5A82"])
 DEEP_LAKE = ["#34505C", "#2E4954", "#2B434D"]
 LAKE_GLINT = ["#E9CF94", "#E2C483"]
 TREE_DARK = ["#2F4030", "#273626", "#1F2A22", "#1A241D"]
+BUSH_SHADE = ["#7E9A63", "#6B8754", "#587347", "#455E39"]     # bushes on the shaded slope
+BUSH_LIT = ["#6F9550", "#5F8445", "#4F733B", "#3F6131"]       # and on the lit one, olive
 THATCH = (["#A8844A", "#9C7942"], ["#6B5130", "#5E472A"])
 STILT = ["#3A2C20", "#33271C"]
 PLANTER = ["#2B2A33", "#25242C"]
@@ -505,33 +523,33 @@ HAT = ["#D9B46A", "#CDA75E"]
 
 
 def rice():
-    """A terraced valley seen head on: flooded terraces stepping down from both edges into a V that closes partway
-    down, so the foreground is paddies; each terrace bowed like a contour line and deeper as it nears; the butter sun
-    half behind two violet ridges in the notch over a small deep lake; seedlings and a bent planter in the near
-    paddies; a dark tree on the left crest, a stilted thatch hut on the right."""
-    cx = 118
-    lake = Water(230, 310, -20, 260, DEEP_LAKE, LAKE_GLINT, seed=99, gaps=(0, 0))
-    lake.path = (cx, 5)
+    """The rice country of the book page, kept minimal: two terraced hills, bell-shaped so they spread into the
+    ground, their terraces following each hill's curve, a peach hill on the left and a taller gold one on the right
+    with the stilted hut on its crest; between them the sun sits between violet ridges over a small dark lake; wavy
+    fields across the foot. At shelf size a three-line title and a one-line name reach world y ~171 in the left
+    column, so everything left of x ~200 stays below y 180; only the right hill and the hut rise higher."""
+    from pages_new import (ContourHill, FieldRows, HILL_GOLD, HILL_PEACH, BANK_MOSS, BANK_OLIVE, FAR_1, FAR_3,
+                           BUTTER, DEEP_LAKE, LAKE_GLINT, THATCH, PLANTER, TREE_DARK, PADDY_RIGHT)
+    # the lake's glints are a paler teal, not yellow, and it carries no sun path
+    lake = Water(236, 324, -20, 260, DEEP_LAKE, ["#557782", "#5E808B"], seed=120, gaps=(0, 0))
     lake.brick = (4.0, 12.0)
-    # (pool courses, inner edge) per terrace, top down; the edges close on the middle, then the rows run across
-    left = [(2, 40), (2, 58), (3, 74), (3, 90), (3, 104), (4, cx), (4, cx), (5, cx)]
-    right = [(2, 300), (3, 196), (2, 180), (3, 164), (3, 146), (3, 132), (4, cx), (4, cx), (5, cx)]
     return [
-        Ridge([(120, 196, 130, 120, 1.0)], 280, *FAR_1, seed=90, rough=2, smooth=True, flicker=0.02),
-        disc(cx, 214, 18, BUTTER),
-        Ridge([(60, 216, 90, 70, 1.0), (190, 210, 80, 90, 1.0)], 280, *FAR_2, seed=91, rough=2, smooth=True,
+        Ridge([(150, 206, 110, 100, 1.0), (30, 216, 80, 70, 1.0)], 260, *FAR_3, seed=121, rough=2, smooth=True,
+              flicker=0.02),
+        disc(110, 212, 16, BUTTER),
+        Ridge([(60, 226, 70, 60, 1.0), (170, 214, 70, 80, 1.0)], 262, *FAR_1, seed=122, rough=2, smooth=True,
               flicker=0.02),
         lake,
-        Paddies(150, left, right, PADDY_LEFT, PADDY_RIGHT, SEEDLING, cx=cx, dip=6, seed=97),
-        # a planter bent over the near paddy, in a straw hat
-        Blocks([(52, 296, 58, 308, PLANTER), (54, 292, 62, 298, PLANTER), (52, 288, 64, 292, HAT),
-                (55, 284, 61, 288, HAT)]),
-        # the hut on stilts on the right crest
-        Blocks([(203, 158, 206, 172, STILT), (222, 158, 225, 172, STILT)]),
-        Mesa(214, 142, 11, 11, 158, *THATCH, ledges=1, bed=8, seed=95, wobble=0, speckle=0, ragged=0),
-        Ridge([(214, 126, 18, 18, 1.0)], 143, *THATCH, seed=96, rough=0, smooth=True, flicker=0),
-        Blocks([(210, 148, 216, 158, PLANTER)]),
-        trees([2, 16, 30], 162, 10, TREE_DARK, seed=98, spread=0.5),
+        ContourHill([(28, 200, 100, 84, 2.2)], 320, HILL_PEACH, BANK_MOSS, spacing=10, bank_frac=0.42, seed=123,
+                    rough=1.5, lean=0.5, flicker=0.02, wave=0),
+        ContourHill([(198, 168, 96, 100, 2.2)], 330, HILL_GOLD, BANK_OLIVE, spacing=13, bank_frac=0.38, seed=124,
+                    rough=1.5, lean=0.5, flicker=0.02, wave=0),
+        Mesa(198, 156, 8, 8, 168, *THATCH, ledges=1, bed=8, seed=125, wobble=0, speckle=0, ragged=0),
+        Ridge([(198, 144, 14, 14, 1.0)], 157, *THATCH, seed=126, rough=0, smooth=True, flicker=0),
+        Blocks([(195, 160, 200, 168, PLANTER)]),
+        trees([34, 50], 212, 8, TREE_DARK, seed=127, spread=0.6),
+        FieldRows(314, [12, 16, 22], [["#E9C77A", "#E3A57E"], PADDY_RIGHT["pool"], ["#EDCB86", "#E6B48C"]],
+                  ["#5A5A36", "#525231"], seed=128),
     ]
 
 
@@ -560,18 +578,19 @@ def lagoon():
     old lava and an ash cap; a smaller parasitic cone on its right shoulder; a tall plume leaning downwind."""
     # lower and broken up: a blunt summit on bulging slopes (power < 1), a long lumpy shoulder down the left and a
     # higher, steeper one on the right, so the outline steps in and out instead of running straight like a pyramid
-    cone = Ridge([(132, 150, 84, 72, 0.72), (52, 218, 42, 30, 0.85), (204, 194, 30, 44, 0.85)],
+    # kept below the name line: at shelf size a three-line title and a one-line name reach y ~171 left of x ~200
+    cone = Ridge([(132, 182, 84, 72, 0.72), (52, 236, 42, 30, 0.85), (210, 212, 30, 44, 0.85)],
                  286, *V_CONE, seed=100, rough=4, ribs=0.85, lean=0.3,
-                 bands=[(146, 160, *V_ASH), (160, 184, *V_BASALT)], smooth=True, flicker=0.05)
+                 bands=[(178, 192, *V_ASH), (192, 212, *V_BASALT)], smooth=True, flicker=0.05)
     return [
         # the plume: a column out of the crater, billowing and bending right, its top clear of the title
-        Blob([(134, 142, 7, 6), (140, 134, 10, 6), (152, 128, 13, 6), (170, 124, 15, 5), (192, 124, 14, 4),
-              (212, 128, 10, 4)], PLUME, top_light=True),
+        Blob([(140, 180, 6, 3.5), (152, 177, 9, 3.5), (170, 173, 12, 4), (192, 170, 14, 4), (214, 168, 12, 3.5)],
+             PLUME, top_light=True),
         Ridge([(-4, 240, 40, 46, 1.0)], 284, *V_FAR, seed=101, rough=1, smooth=True, flicker=0.02),
-        Ridge([(236, 214, 30, 40, 1.2)], 286, *V_SHOULDER, seed=106, rough=2, ribs=0.6, lean=0.3,
-              bands=[(206, 214, *V_ASH)], smooth=True, flicker=0.04),
+        Ridge([(236, 226, 30, 40, 1.2)], 286, *V_SHOULDER, seed=106, rough=2, ribs=0.6, lean=0.3,
+              bands=[(218, 226, *V_ASH)], smooth=True, flicker=0.04),
         cone,
-        Blob([(132, 154, 5, 2.5)], ["#E3A061", "#D98E4E"], top_light=False),   # the vent's glow
+        Blob([(132, 186, 5, 2.5)], ["#E3A061", "#D98E4E"], top_light=False),   # the vent's glow
         trees([100, 126, 150, 176, 202, 228, 250], 288, 7, JUNGLE, seed=102, spread=1.1),
         Water(282, 352, -20, 260, LAGOON, LAG_G, seed=103, mirror=[cone], gaps=(0, 1), squash=0.5),
         Band(96, 176, 300, 305, SANDBAR, seed=104, lens=0.0),     # a sandbar out in the lagoon
@@ -582,10 +601,14 @@ def lagoon():
 
 SCENES = {"karst": karst, "aurora": aurora, "terraces": rice, "lagoon": lagoon}
 
+# a scene may be drawn through a smaller window (same proportions as the cover) to come in closer on it
+VIEW = {"terraces": (14, 28, 222, 331)}
+
 if __name__ == "__main__":
     for name in sys.argv[1:] or SCENES:
         fn = SCENES[name]
-        render(fn(), (0, 0, 236, 344), (472, 688), 8, paper=(255, 255, 255), clean=True, jitter=0.04).save(
+        vp = VIEW.get(name, (0, 0, 236, 344))
+        render(fn(), vp, (472, 688), 8, paper=(255, 255, 255), clean=True, jitter=0.04).save(
             f"out/new-{name}-xl.png")
-        render(fn(), (0, 0, 236, 344), (244, 356), 3, paper=(255, 255, 255), clean=True, jitter=0.04).save(
+        render(fn(), vp, (244, 356), 3, paper=(255, 255, 255), clean=True, jitter=0.04).save(
             f"out/new-{name}-sm.png")

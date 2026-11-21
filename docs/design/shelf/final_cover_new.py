@@ -8,9 +8,11 @@ import sys
 ROOT, IDS = sys.argv[1], dict(a.split("=") for a in sys.argv[2:])
 P = f"{ROOT}/project"
 src = open(f"{P}/FinalCoverDesert.dc.html").read()
+import re
+_imgs = re.findall(r'class="cover-art" src="/_blob/([0-9a-f]{32})"', src)    # the desert board's current art
 
 OLD = dict(label="desert mesas at dusk", title="What the Desert Teaches", author="Lucía Hernández-Brooks",
-           ink="#6a3525", xl="19f6a580046781ab16fceb62df36ba82", sm="4ebc99796f0522a5c2f38111689aca0d")
+           ink="#6a3525", xl=_imgs[0], sm=_imgs[1])
 
 COVERS = [
     dict(key="karst", file="FinalCoverKarst", label="karst river in mist", title="Two Years Upriver",
@@ -21,9 +23,15 @@ COVERS = [
          author="Dewi Santoso", ink="#3d5a32"),
     dict(key="lagoon", file="FinalCoverLagoon", label="volcanic lagoon", title="Island Time Isn’t Slow",
          author="Keoni Akana", ink="#1f4f5a"),
+    dict(key="city", file="FinalCoverCity", label="lakefront city at dusk", title="Small Bets, Big City",
+         author="Danielle Owens", ink="#2f3448"),
+    dict(key="forest", file="FinalCoverForest", label="fir forest in morning light", title="Room to Grow",
+         author="Noah Bergstrom", ink="#283d2e"),
 ]
 
 for c in COVERS:
+    if f'{c["key"]}_xl' not in IDS:
+        continue
     assert src.count(OLD["xl"]) and src.count(OLD["sm"])
     h = (src.replace(OLD["label"], c["label"]).replace(OLD["title"], c["title"]).replace(OLD["author"], c["author"])
          .replace(OLD["ink"], c["ink"]).replace(OLD["xl"], IDS[f'{c["key"]}_xl'])

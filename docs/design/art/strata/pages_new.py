@@ -6,7 +6,7 @@ the art climbs highest on the right.
 python3 pages_new.py [karst ...] -> out/page-{name}-title.png"""
 import sys
 sys.path.insert(0, ".")
-from strata import Ridge, Blob, Water, Band, trees, render
+from strata import Ridge, Blob, Water, Band, River, trees, grove, render
 from covers_new import (tower, disc, mist_strip, Blocks, K_FAR, K_MID, K_NEAR, K_HERO, K_WATER, K_GLINT, K_SUN,
                         K_BAMBOO, K_BOAT, K_MISTS, K_SAGE)
 
@@ -152,9 +152,300 @@ def karst():
     ]
 
 
-SCENES = {"karst": karst}
+# ---- winter night, aurora ----
+from covers_new import (AuroraSky, NIGHT, CURTAIN, SNOW, SNOW_FAR, F_LIT, F_DARK, ICE, ICE_G, Firs)
+STAR = ["#EFE3B0", "#E8DAA2"]
+SNOW_MID = (["#D3D9E8", "#CBD2E3", "#C3CBDE"], ["#8E97B8", "#848DAF", "#7A84A6"])
+F_FAR = (["#3F5A63", "#38525B"], ["#24363D", "#1E2F35"])       # far firs along the shore, a step paler
+
+
+def winter_hem(x):
+    import numpy as np
+    # one smooth curve: low and nearly level under the text, rising gently on the right, no gaps
+    xa = np.asarray(x, dtype=float)
+    return 500 - 0.03 * xa - np.clip(xa - 430, 0, None) * 0.25     # only a slight lift on the right, no spike
+
+
+class EvenAurora(AuroraSky):
+    """The page's aurora: one even depth from edge to edge (the cover's curtain thins toward its left end; this one
+    does not)."""
+
+    def _taper(self, x):
+        import numpy as np
+        return np.ones_like(np.asarray(x, dtype=float))
+
+
+FJORD = ["#5F6A98", "#58628F", "#515B87", "#4A547F"]        # dark water holding the night
+FJORD_G = ["#9FD8BF", "#B6C0DC"]                          # the aurora and the snow caught on it
+CLIFF = (["#C9CFE0", "#BEC5D9", "#B3BBD2"], ["#6E78A0", "#646E96", "#5A648C"])   # the fjord's steep walls
+
+
+def winter():
+    """A winter night over a fjord: the aurora as one smooth curtain lying low under the text and rising gently on
+    the right, dissolving upward into paper; the night beneath it with a few pale stars; soft, uneven snow hills
+    behind; the fjord running back between steep snow walls to the far hills, narrow in the distance and widening
+    toward us, the aurora caught on its dark water; far firs on the shores, dark groves in both lower corners."""
+    hills = Ridge([(470, 452, 90, 80, 0.7), (360, 486, 90, 70, 0.65), (250, 500, 60, 60, 0.8),
+                   (150, 488, 100, 76, 0.65), (40, 500, 84, 70, 0.7), (560, 470, 70, 60, 0.7)], 600, *SNOW, seed=200,
+                  rough=5, ribs=0.9, lean=0.4, smooth=True, flicker=0.04)
+    far = Ridge([(250, 480, 110, 90, 0.7), (110, 484, 100, 80, 0.7), (420, 470, 80, 70, 0.75)], 600, *SNOW_FAR,
+                seed=201, rough=3, ribs=0.3, smooth=True, flicker=0.03)
+    stars = Blocks([(x, y, x + 2.5, y + 4, STAR) for x, y in
+                    [(222, 492), (300, 488), (372, 490), (430, 470), (486, 430), (540, 400), (520, 446)]])
+    # the fjord's walls: a steep snow headland on each side, shaded on the side facing away from the light
+    left_wall = Ridge([(70, 580, 120, 170, 0.5)], 700, *CLIFF, seed=208, rough=4, ribs=0.7, lean=0.5, smooth=True,
+                      flicker=0.04)
+    right_wall = Ridge([(540, 572, 200, 120, 0.5)], 700, *CLIFF, seed=209, rough=4, ribs=0.7, lean=0.2, smooth=True,
+                       flicker=0.04)
+    # the lake: dark night ice between the hills, the hills behind mirrored in it
+    lake = Water(566, 676, -40, 610, ["#7E89B2", "#7680AA", "#6E78A2"], ["#9AA4C8", "#A8B1D2"], seed=210,
+                 mirror=[hills], gaps=(0, 0), squash=0.5)
+    lake.brick = (6.0, 20.0)
+    return [
+        EvenAurora(winter_hem, 610, 14, 96, NIGHT, CURTAIN, seed=203),       # a tall, slow dissolve into paper
+        far,
+        hills,
+        Band(-60, 640, 556, 568, ["#E8ECF4", "#E2E7F1", "#DCE2EE"], seed=211, lens=0.0),     # the far shore
+        lake,
+        # the aurora faint in the ice
+        Blocks([(x + dx, y, x + dx + 10, y + 4, ["#9FD8BF", "#94CFB5"]) for x, y in [(150, 590), (250, 604), (360, 596),
+                                                                                       (300, 630)] for dx in (0, 16)]),
+        # the snow hills in front, either side of the lake, and the near shore
+        left_wall, right_wall,
+        Band(-60, 640, 672, 700, ["#E8ECF4", "#E2E7F1", "#DCE2EE"], seed=212, lens=0.3),
+        Firs([(x, y, h, w) for x, y, h, w in [(60, 566, 26, 6), (76, 568, 32, 7), (92, 570, 24, 6),
+                                              (520, 560, 28, 6), (536, 562, 34, 7), (552, 564, 26, 6)]],
+             *F_FAR, tiers=2),
+        # dark groves in both lower corners
+        Firs([(10, 676, 96, 16), (40, 680, 74, 13), (70, 684, 56, 11), (-10, 684, 80, 14), (98, 686, 40, 9)],
+             F_LIT, F_DARK, tiers=3),
+        Firs([(480, 680, 90, 15), (510, 676, 110, 17), (540, 680, 96, 16), (566, 684, 84, 14), (454, 686, 50, 10)],
+             F_LIT, F_DARK, tiers=3),
+    ]
+
+
+def cloud_band(x, y, w):
+    """A low bank of mist over the ice: long stepped slabs, ends uneven."""
+    return Blob([(x, y, w, 4), (x - w * 0.5, y + 3, w * 0.45, 3.5), (x + w * 0.45, y - 2, w * 0.4, 3.5)],
+                ["#EEF1F8", "#E6EAF4", "#DDE2EF"], top_light=False)
+
+
+# ---- rice terraces at dawn ----
+from covers_new import block_palms, P_LIT, P_DARK, P_TRUNK
+from covers_new import (Paddies, PADDY_LEFT, PADDY_RIGHT, SEEDLING, BUTTER, FAR_1, FAR_2, DEEP_LAKE, LAKE_GLINT,
+                        TREE_DARK, THATCH, STILT, PLANTER, BUSH_SHADE, BUSH_LIT, Mesa)
+FAR_3 = (["#C4C0D6", "#BDB9D0"], ["#A9A4C0", "#A29DB9"])     # the furthest ridge, palest
+EGRET = ["#F7F7F2", "#EEEEE8"]
+STEP = ["#B9A77A", "#AD9B6E"]
+
+
+class ContourHill(Ridge):
+    """A round hill cut into terraces that follow its own shape: each bank runs parallel to the hill's skyline, so the
+    lines bend with the hill. Terraces widen down the slope (they come nearer); a slow wave lets them swell and pinch.
+    Between the banks the flooded pools take the hill's lit or shaded ink."""
+
+    def __init__(self, peaks, base, pool, bank, spacing, grow=0.012, bank_frac=0.3, wave=3.0, **kw):
+        kw.setdefault("round", True)
+        super().__init__(peaks, base, pool[0], pool[1], smooth=True, **kw)
+        from strata import hexrgb
+        self.bank = ([hexrgb(c) for c in bank[0]], [hexrgb(c) for c in bank[1]])
+        self.spacing, self.grow, self.bank_frac, self.wave = spacing, grow, bank_frac, wave
+
+    def colour(self, x, y, rng):
+        import math
+        import numpy as np
+        top = self.top(np.array([x]))[0]
+        d = y - top + self.wave * math.sin(x / 17.0 + self.seed)
+        u = math.log1p(self.grow * max(0.0, d)) / math.log1p(self.grow * self.spacing)
+        if d > 5 and (u % 1) < self.bank_frac:
+            px, ty = self.peaks[0][0], self.peaks[0][1]
+            pal = self.bank[1] if x > px + (y - ty) * self.lean else self.bank[0]
+            return pal[int(rng.random() * len(pal))]
+        return super().colour(x, y, rng)
+
+
+HILL_GOLD = (["#F1D9A4", "#EDCF93", "#E8C584"], ["#C7A672", "#BB9A67", "#AE8E5C"])
+HILL_PEACH = (["#EFC3A6", "#EAB797", "#E4AB88"], ["#B58C7C", "#AA8172", "#9F7768"])
+HILL_LILAC = (["#C9C3DA", "#C1BBD3", "#B9B3CC"], ["#9993B2", "#8F89A9", "#857FA0"])
+BANK_OLIVE = (["#8D9A55", "#82904D"], ["#55623A", "#4C5934"])
+BANK_MOSS = (["#5E7446", "#54693F"], ["#33452D", "#2C3D27"])
+BANK_FAINT = (["#ADA6C4", "#A69FBE"], ["#8A84A4", "#837D9D"])
+ROCK = (["#B7AE9C", "#ADA492", "#A39A88"], ["#7A7266", "#70685C", "#665F54"])
+FALL = ["#EAF2F4", "#DCE9EE", "#CFE0E8"]
+FOREST = ["#4E7442", "#46693B", "#3C5A33", "#304A29"]
+
+
+class FieldRows:
+    """The flat paddies in front: fields one behind another whose edges swell and dip across the page (two slow waves
+    of different length), each field its own depth, a dark bank along its near edge; never a ruled line."""
+
+    brick = (2.0, 8.0)
+
+    def __init__(self, y0, depths, pools, bank, seed=1):
+        from strata import hexrgb
+        self.y0, self.depths, self.seed = y0, depths, seed
+        self.pools = [[hexrgb(c) for c in p] for p in pools]
+        self.bank = [hexrgb(c) for c in bank]
+
+    def _wave(self, x, i):
+        import numpy as np
+        return 5 * np.sin(x / 61.0 + i * 1.7 + self.seed) + 3 * np.sin(x / 23.0 + i * 0.9)
+
+    def _edges(self, x):
+        out, y = [], self.y0
+        for i, d in enumerate(self.depths):
+            out.append(y + self._wave(x, i))
+            y += d
+        return out
+
+    def cover(self, x, y):
+        import numpy as np
+        return y >= self._edges(np.asarray(x, dtype=float))[0]
+
+    def colour(self, x, y, rng):
+        e = self._edges(float(x)) + [1e9]
+        i = max(k for k in range(len(self.depths)) if y >= e[k])
+        if y >= e[i + 1] - 4:
+            return self.bank[int(rng.random() * len(self.bank))]
+        pal = self.pools[i % len(self.pools)]
+        return pal[int(rng.random() * len(pal))]
+
+
+def terraces():
+    """A whole terraced country at dawn, lower and wider than the cover: plain violet ridges far off with the sun
+    half behind them; small hills in the middle distance, each finely terraced along its own curve; a still lake
+    holding the sun; on the left a big terraced hill broken by a forested gully and a rock outcrop; on the right a
+    hill of large, wide terraces with the stilted hut on top; broad flat
+    paddies across the foreground with shade trees on the banks and bushes."""
+    lake = Water(540, 652, -40, 610, DEEP_LAKE, LAKE_GLINT, seed=330, gaps=(0, 0))
+    lake.path = (300, 8)
+    lake.brick = (4.0, 12.0)
+    big_left = ContourHill([(60, 470, 202, 148, 2.2)], 660, HILL_PEACH, BANK_MOSS, spacing=12, bank_frac=0.42,
+                           seed=331, rough=2, lean=0.5, flicker=0.02, wave=4)
+    big_right = ContourHill([(530, 404, 162, 148, 2.2)], 660, HILL_GOLD, BANK_OLIVE, spacing=20, bank_frac=0.34,
+                            seed=332, rough=2, lean=0.5, flicker=0.02, wave=3)
+    paddy_rows = [FieldRows(650, [16, 24, 20], [["#E9C77A", "#E3A57E"], PADDY_RIGHT["pool"], ["#EDCB86", "#E6B48C"]],
+                            ["#5A5A36", "#525231"], seed=340)]
+    return [
+        Ridge([(380, 448, 170, 160, 1.0), (120, 460, 140, 120, 1.0)], 540, *FAR_3, seed=300, rough=2, smooth=True,
+              flicker=0.02),
+        disc(300, 476, 22, BUTTER),
+        Ridge([(220, 480, 120, 100, 1.0), (420, 470, 110, 120, 1.0)], 540, *FAR_1, seed=301, rough=2, smooth=True,
+              flicker=0.02),
+        ContourHill([(180, 500, 94, 81, 2.2)], 560, HILL_LILAC, BANK_FAINT, spacing=7, bank_frac=0.4, seed=333,
+                    rough=1, lean=0.5, flicker=0.02),
+        ContourHill([(400, 494, 108, 94, 2.2)], 560, HILL_GOLD, BANK_OLIVE, spacing=8, bank_frac=0.36, seed=334,
+                    rough=1, lean=0.5, flicker=0.02),
+        lake,
+        # smaller terraced hills between, overlapping, each its own ink
+        ContourHill([(150, 532, 94, 81, 2.2)], 640, (["#B8C48A", "#AEBB80"], ["#8A9765", "#808D5C"]), BANK_MOSS,
+                    spacing=9, bank_frac=0.4, seed=342, rough=1.5, lean=0.5, flicker=0.02, wave=0),
+        ContourHill([(330, 556, 103, 86, 2.2)], 650, HILL_GOLD, (["#7A6A3C", "#706136"], ["#55492A", "#4D4226"]),
+                    spacing=10, bank_frac=0.4, seed=343, rough=1.5, lean=0.5, flicker=0.02, wave=0),
+        ContourHill([(470, 540, 94, 81, 2.2)], 650, HILL_PEACH, BANK_OLIVE, spacing=9, bank_frac=0.4, seed=344,
+                    rough=1.5, lean=0.5, flicker=0.02, wave=0),
+        big_left,
+        # the gully: a forested cleft running down the big left hill, and a rock outcrop beside it
+        trees([150, 166, 178, 192], 560, 11, FOREST, seed=335, spread=0.6),
+        trees([170, 188, 204], 600, 12, FOREST, seed=336, spread=0.6),
+        big_right,
+        Mesa(530, 390, 13, 13, 408, *THATCH, ledges=1, bed=8, seed=313, wobble=0, speckle=0, ragged=0),
+        Ridge([(530, 372, 22, 22, 1.0)], 391, *THATCH, seed=314, rough=0, smooth=True, flicker=0),
+        Blocks([(526, 396, 533, 408, PLANTER)]),
+        trees([566, 584], 414, 12, TREE_DARK, seed=315, spread=0.5),
+        trees([380, 404], 560, 9, BUSH_LIT, seed=338, spread=0.6),
+        *paddy_rows,
+        # broad shade trees on the paddy banks, crowns held up on dark trunks
+        *grove([60, 300, 520], 664, 18, FOREST, trunk="#3E2E22", seed=345, spread=0.8, trunk_h=1.6),
+        trees([150, 176], 670, 9, BUSH_SHADE, seed=339, spread=0.6),
+        trees([430], 668, 8, BUSH_LIT, seed=341, spread=0.6),
+    ]
+
+
+# ---- volcanic lagoon ----
+from covers_new import (V_CONE, V_ASH, V_BASALT, V_SHOULDER, V_FAR, PLUME, LAGOON, LAG_G, SANDBAR, P_LIT, P_DARK,
+                        P_TRUNK, JUNGLE, block_palms)
+REEF = ["#3E8A94", "#357C86", "#2F6F79"]           # the deep water past the reef
+FOAM_L = ["#F4F8F6", "#E6F0EE"]
+CORAL = ["#4C9A97", "#438E8B"]                     # darker heads of coral in the shallows
+CANOE = ["#6B4A32", "#5E412C"]
+OUTRIG = ["#8A6A48", "#7C5F40"]
+CLOUD_W = ["#F4F4F2", "#ECECE8", "#E2E2DE"]
+
+
+def lagoon_page():
+    """An atoll's lagoon, wide and low: a lower volcano on the right, its dark summit and glowing vent, a short plume;
+    misty far islands on the horizon and a low jungle island in the middle distance; deep water outside the reef,
+    surf breaking along it, the turquoise lagoon inside with coral heads; two sandy motu on the reef, each with a
+    cluster of palms; in front, a beach under a dense palm forest, an outrigger canoe drawn up on the sand."""
+    import random
+    cone = Ridge([(500, 388, 112, 90, 0.75), (420, 452, 50, 40, 0.85), (586, 430, 40, 60, 0.85)], 524, *V_CONE,
+                 seed=400, rough=5, ribs=0.85, lean=0.3,
+                 bands=[(384, 400, *V_ASH), (400, 424, *V_BASALT)], smooth=True, flicker=0.05)
+    far = Ridge([(60, 498, 60, 50, 0.8), (190, 506, 40, 36, 0.9), (300, 500, 50, 40, 0.85)], 520,
+                ["#C3D4C8", "#BCCEC1"], ["#A9BEB0", "#A2B8A9"], seed=401, rough=2, smooth=True, flicker=0.02,
+                mist=(508, 520))
+    mid = Ridge([(250, 492, 120, 100, 0.8)], 530, *V_FAR, seed=402, rough=3, ribs=0.4, smooth=True, flicker=0.03)
+    # the water rows run well past both edges and leave no open gaps, so no paper shows through the lagoon
+    lagoon = Water(566, 700, -120, 720, ["#9DD0C9", "#8CC7C0", "#7DBBB5", "#6FAFAA"], LAG_G, seed=403, gaps=(0, 0))
+    r = random.Random(7)
+    # the forest: palms crowded along the near beach in two loose rows, uneven gaps, every one its own height, crown
+    # and lean, so nothing lines up
+    back, front, x = [], [], -14
+    while x < 300:
+        x += r.uniform(12, 30)
+        row = back if r.random() < 0.55 else front
+        row.append((round(x), int(r.uniform(50, 116)), int(r.uniform(15, 30)), int(r.uniform(-12, 12))))
+    return [
+        Blob([(500, 376, 9, 7), (508, 366, 12, 7), (522, 358, 14, 6), (540, 354, 12, 5)], PLUME, top_light=True),
+        Blob([(380, 440, 50, 4), (340, 444, 26, 3.5)], CLOUD_W, top_light=False),
+        Blob([(160, 456, 60, 4), (210, 460, 30, 3.5)], CLOUD_W, top_light=False),
+        far,
+        mid,
+        trees([170, 200, 230, 260, 290, 320], 530, 9, JUNGLE, seed=404, spread=1.0),
+        Ridge([(586, 470, 40, 60, 1.1)], 524, *V_SHOULDER, seed=405, rough=2, ribs=0.6, lean=0.3, smooth=True,
+              flicker=0.04),
+        cone,
+        Blob([(500, 392, 7, 3)], ["#E3A061", "#D98E4E"], top_light=False),          # the vent's glow
+        trees([400, 430, 460, 490, 520, 550, 580], 526, 10, JUNGLE, seed=406, spread=1.0),
+        # a solid course of each water's own ink behind its top rows: the renderer cuts an opening into a water's
+        # first row, and with the rows running full width that opening would show as a long line of paper
+        Band(-60, 640, 522, 534, REEF, seed=415, lens=0.0),
+        Water(524, 556, -120, 720, REEF, LAG_G, seed=407, gaps=(0, 0)),
+        Band(-60, 640, 560, 578, ["#9DD0C9", "#8CC7C0"], seed=416, lens=0.0),
+        Water(552, 566, -120, 720, FOAM_L, FOAM_L, seed=408, gaps=(2, 4)),         # the surf breaking on the reef
+        lagoon,
+        Blob([(120, 612, 30, 4), (420, 640, 40, 4), (520, 600, 26, 4)], CORAL, top_light=False),
+        # the reef closing the lagoon: an arc of sand and surf curving round from the volcano's foot
+        Blob([(x, 566 + (x - 300) ** 2 / 3000, 22, 3.6) for x in range(300, 640, 30)],
+             ["#EFE3C2", "#F7F1E0", "#FFFFFF"], top_light=False),
+        Blob([(500, 660, 60, 8), (560, 650, 40, 6)], ["#BFE0D6", "#B4D9CE"], top_light=False),   # a sand shoal
+        # two motu on the reef, sand and a cluster of palms each
+        Band(320, 400, 556, 566, SANDBAR, seed=409, lens=0.6),
+        block_palms([(340, 40, 14, 4), (360, 50, 16, 6), (380, 36, 13, -2)], 560, P_LIT, P_DARK, P_TRUNK),
+        Band(450, 540, 584, 594, SANDBAR, seed=410, lens=0.6),
+        block_palms([(466, 48, 15, 5), (490, 38, 12, -3), (514, 54, 16, 6), (530, 34, 12, -4)], 588, P_LIT, P_DARK,
+                    P_TRUNK),
+        # the near beach and its forest
+        trees([0, 40, 80, 120, 160, 200, 240], 650, 14, JUNGLE, seed=411, spread=0.9),
+        Band(-80, 360, 640, 700, SANDBAR, seed=412, lens=0.5),
+        Band(-80, 350, 638, 644, ["#D9C49A", "#D1BB8F"], seed=413, lens=0.5),
+        # shade on the sand under the forest: darker slabs pooled at each palm's foot, thrown a little right, away
+        # from the light
+        Blob([(x + lean + s * 0.5, 658, s * 1.5, 5.5) for x, h, s, lean in back]
+             + [(x + lean + s * 0.5, 676, s * 1.6, 6) for x, h, s, lean in front],
+             ["#BFA472", "#B49867", "#A98D5E"], top_light=False),
+        *[block_palms([p], 650 + r.choice((0, 4, 8)), P_LIT, P_DARK, P_TRUNK) for p in back],
+        trees([20, 90, 170, 230], 664, 9, JUNGLE, seed=414, spread=1.2),
+        *[block_palms([p], 666 + r.choice((0, 4, 8, 12)), P_LIT, P_DARK, P_TRUNK) for p in front],
+        Blocks([(250, 668, 330, 676, CANOE), (244, 664, 254, 668, CANOE), (326, 664, 336, 668, CANOE),
+                (258, 656, 322, 660, OUTRIG), (266, 660, 270, 668, OUTRIG), (310, 660, 314, 668, OUTRIG)]),
+    ]
+
+
+SCENES = {"karst": karst, "winter": winter, "terraces": terraces, "lagoon": lagoon_page}
 
 if __name__ == "__main__":
     for name in sys.argv[1:] or list(SCENES):
-        render(SCENES[name](), (0, 0, 570, 684), (1140, 1368), 8, clean=True, jitter=0.04).save(
+        render(SCENES[name](), (0, 0, 570, 684), (1140, 1368), 8, clean=True, jitter=0.04, flush=True).save(
             f"out/page-{name}-title.png")

@@ -33,6 +33,8 @@ def page():
                  ribs=0.8, mist=(568, 594), **CALM)
     return [
         Blob([(386, 424, 34, 34)], CORAL, top_light=False),
+        # pale lake water lying behind the mountains' misty feet, so no paper shows between them and the lake
+        Band(-60, 640, 548, 604, COBALT[:2], seed=22, lens=0.0),
         far,
         coral,
         Blob([(312, 550, 84, 6)], CLOUD),
@@ -72,7 +74,7 @@ CLEAN = dict(clean=True)
 
 if __name__ == "__main__":
     P = page()
-    render(P, (0, 0, 570, 684), (1140, 1368), 8, **CLEAN).save("out/final-title.png")
+    render(P, (0, 0, 570, 684), (1140, 1368), 8, flush=True, **CLEAN).save("out/final-title.png")
     render(P, (-50, 260, 620, 684), (1140, 722), 8, **CLEAN).save("out/final-contents.png")
     render(cover(), (0, 0, 236, 344), (472, 688), 8, paper=(255, 255, 255), **CLEAN).save("out/final-cover-xl.png")
     render(cover(), (0, 0, 236, 344), (244, 356), 3, paper=(255, 255, 255), **CLEAN).save("out/final-cover-sm.png")

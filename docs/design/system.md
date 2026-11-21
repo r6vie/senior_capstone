@@ -85,7 +85,7 @@ ink 18:1; rule on ink 11.4:1.
 | Nav, buttons | Barlow Condensed 600–700, +0.10–0.14em | 17 / 1 | CAPS |
 | Caption chip | Barlow Condensed 600, +0.14em | 14 | CAPS |
 | Book title | Newsreader 600 | 13.5 shelf, 27 feature | Sentence |
-| Book title on a strata cover (Josef, 2026-11-20) | Barlow Condensed 800, +0.025em, line-height 0.95, set left | 19 shelf, 58 large | CAPS; the full name right under it, Barlow Condensed 600 caps +0.24em, white on a chip of the cover's ink |
+| Book title on a strata cover (Josef, 2026-11-20) | Barlow Condensed 800, +0.025em, line-height 0.95, set left | 19 shelf, 58 large | CAPS, no knockout; the full name right under it, Barlow Condensed 700 caps +0.24em in the cover's ink |
 | Book author (full name) | Plex Sans 600, +0.12em, line-height 1.3 | 9.5 | CAPS, wraps to 4 lines |
 | The Librarian's voice | Newsreader italic | 19–22 / 1.3 | Sentence |
 | Body, labels | Plex Sans 400/600 | 15–16 / 1.5 | Sentence |
@@ -186,10 +186,12 @@ Page ground `--paper`. Four stacked parts:
    then `.ledge` that runs full-bleed to the page edge (margin `0 -44px 0 -8px`). Shelf names are placeholders
    ("Changing course", "Starting over").
 4. Row of books overflows horizontally with `overflow-x:auto` and scroll-snap when there are more than fit (at 1440
-   nine 122px books fit per row). Add 36px of space below the last ledge for its dot shadow.
+   six to seven 176px books fit per row). Add 36px of space below the last ledge for its dot shadow.
 
-**Book** (`.book` 122×178, `.book-lg` 236×344, `.book-sm` 92×136): white cover, 2px ink outline (3px on lg), hinge line at
-left 12px, dot shadow offset 8px right and down, title Newsreader 600 13.5px (27px on lg) at top, full name Plex 600
+**Book** (`.book` 176×257 on the shelf, `.book-lg` 236×344, `.book-sm` 92×136; the shelf book was 122×178 until
+2026-11-21, when Josef chose the larger size so the cover art and its type read better; shelf gap 36px): white cover, 2px ink outline (3px on lg), a narrow hinge:
+a 1.5px ink line 8px in from the left edge, with the cover's type starting 18px in (Josef, 2026-11-21: the old
+hinge at 12px with type at 21px took too much of the cover), dot shadow offset 8px right and down, title Newsreader 600 13.5px (27px on lg) at top, full name Plex 600
 9.5px caps at bottom. A long name wraps (also at a hyphen) and stops at 4 lines with an ellipsis, so a real full name is never cut (it was 3 until 2026-11-15, when long names hit the limit; Josef approved 4); "ALEXANDRA OKONKWO-BRENNAN" takes 3 lines on `.book` and `.book-sm`, 2 on `.book-lg` (measured in the app with the real fonts). Title and full name only; never a headline, employer, genre, count or badge. Make the book an `<a>`
 (or `<button>`) with `aria-label="<Title>, by <Full name>"`, a focus ring and the hover lift (`translateY(-4px)`).
 
