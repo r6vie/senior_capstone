@@ -375,7 +375,11 @@ def lagoon_page():
         cone,
         Blob([(500, 392, 7, 3)], ["#E3A061", "#D98E4E"], top_light=False),          # the vent's glow
         trees([400, 430, 460, 490, 520, 550, 580], 526, 10, JUNGLE, seed=406, spread=1.0),
+        # a solid course of each water's own ink behind its top rows: the renderer cuts an opening into a water's
+        # first row, and with the rows running full width that opening would show as a long line of paper
+        Band(-60, 640, 522, 534, REEF, seed=415, lens=0.0),
         Water(524, 556, -120, 720, REEF, LAG_G, seed=407, gaps=(0, 0)),
+        Band(-60, 640, 560, 578, ["#9DD0C9", "#8CC7C0"], seed=416, lens=0.0),
         Water(552, 566, -120, 720, FOAM_L, FOAM_L, seed=408, gaps=(2, 4)),         # the surf breaking on the reef
         lagoon,
         Blob([(120, 612, 30, 4), (420, 640, 40, 4), (520, 600, 26, 4)], CORAL, top_light=False),
