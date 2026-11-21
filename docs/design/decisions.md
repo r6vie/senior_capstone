@@ -331,8 +331,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   texture read as clip-art. Lighthouse: a white tower on a grassy point, surf lifted round three rock groups, a pale
   sky with clouds left as paper. Harbor: two wooden boats close in the foreground, a white village on its own
   headland behind with a small campanile. Autumn: a river under a stone arch bridge, golden crowns flowered at their
-  edges, the big tree on the right. Same cover object and type as strata. Two Josef-eye critic rounds plus a third
-  on the fixes; the critics still found the objects stiffer than the washes, so this is round 1 for Josef's eye.
+  edges, the big tree on the right. Same cover object and type as strata. Two Josef-eye critic rounds, their fixes
+  applied but not re-reviewed; the critics found the objects stiffer than the washes, so this is round 1 for Josef.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
