@@ -167,6 +167,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   hut and a waterfall, broad paddies and coconut palms in front. Lagoon: a lower volcano, misty far islands and a
   low jungle island, the reef closing the lagoon in an arc of sand and surf with two palm motu on it, a sand shoal,
   a dense palm forest on the near beach with the canoe. A fresh critic reviewed them; its main fixes are in.
+  Then (Josef: the lagoon "so much better"; no critic pass): the palm forest broken up into two loose, staggered
+  rows on uneven ground, irregular gaps, each palm its own height, crown and lean, undergrowth between.
 - **Cover typography follows the gouache poster, set left (Josef: "redo the cover typography everywhere to match
   closer to 4 · Gouache poster, keep it left justified and name right under").** A fixed-tier change with Josef's
   yes: on the strata covers (`cov-final`, all eight boards on "Covers: Strata") the title is Barlow Condensed 800 in

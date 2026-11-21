@@ -344,9 +344,13 @@ def lagoon_page():
     mid = Ridge([(250, 492, 120, 100, 0.8)], 530, *V_FAR, seed=402, rough=3, ribs=0.4, smooth=True, flicker=0.03)
     lagoon = Water(566, 700, -40, 610, ["#9DD0C9", "#8CC7C0", "#7DBBB5", "#6FAFAA"], LAG_G, seed=403, gaps=(0, 1))
     r = random.Random(7)
-    # the forest: palms of many heights crowded along the near beach, leaning a little each way
-    forest = [(x, int(r.uniform(56, 110)), int(r.uniform(18, 28)), int(r.uniform(-8, 10)))
-              for x in range(-10, 300, 26)]
+    # the forest: palms crowded along the near beach in two loose rows, uneven gaps, every one its own height, crown
+    # and lean, so nothing lines up
+    back, front, x = [], [], -14
+    while x < 300:
+        x += r.uniform(12, 30)
+        row = back if r.random() < 0.55 else front
+        row.append((round(x), int(r.uniform(50, 116)), int(r.uniform(15, 30)), int(r.uniform(-12, 12))))
     return [
         Blob([(500, 376, 9, 7), (508, 366, 12, 7), (522, 358, 14, 6), (540, 354, 12, 5)], PLUME, top_light=True),
         Blob([(380, 440, 50, 4), (340, 444, 26, 3.5)], CLOUD_W, top_light=False),
@@ -377,7 +381,9 @@ def lagoon_page():
         trees([0, 40, 80, 120, 160, 200, 240], 650, 14, JUNGLE, seed=411, spread=0.9),
         Band(-80, 360, 640, 700, SANDBAR, seed=412, lens=0.5),
         Band(-80, 350, 638, 644, ["#D9C49A", "#D1BB8F"], seed=413, lens=0.5),
-        block_palms(forest, 662, P_LIT, P_DARK, P_TRUNK),
+        *[block_palms([p], 650 + r.choice((0, 4, 8)), P_LIT, P_DARK, P_TRUNK) for p in back],
+        trees([20, 90, 170, 230], 664, 9, JUNGLE, seed=414, spread=1.2),
+        *[block_palms([p], 666 + r.choice((0, 4, 8, 12)), P_LIT, P_DARK, P_TRUNK) for p in front],
         Blocks([(250, 668, 330, 676, CANOE), (244, 664, 254, 668, CANOE), (326, 664, 336, 668, CANOE),
                 (258, 656, 322, 660, OUTRIG), (266, 660, 270, 668, OUTRIG), (310, 660, 314, 668, OUTRIG)]),
     ]
