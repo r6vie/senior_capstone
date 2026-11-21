@@ -292,6 +292,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   one broad swell on the right with a lone tree, a deep green near field. Page: three swells, a lane winding to a
   white farmhouse with a low brown gable roof, trees along the hedgerows, a big tree on the right crest, a deep green
   near field with a tree group. Two Josef-eye critic rounds. The sample blurb still mentions terraces.
+- **Comparison shelves removed (Josef).** The type, size and spine trial boards and their scripts are gone now that
+  the choices are made (176 x 257 book, narrow hinge, poster type with the name under the title); they stay in git
+  history (commits fc05fa5, d22d257, b1882e5).
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
