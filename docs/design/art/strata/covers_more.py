@@ -62,9 +62,11 @@ def desert():
                 bedding=([226, 252], "#9C482E"))
     spire = Mesa(121, 220, 4, 6, 288, TERRA_L, ["#C66B47", "#BD6340", "#B35C3A"], ledges=2, bed=8, seed=57,
                  wobble=0, speckle=0.4, flicker=0.02, flare=1)
-    block = [Mesa(226, 294, 14, 18, 344, ["#8A4632", "#7E3F2D"], MAROON, ledges=1, bed=8, seed=65,
+    BLOCK_L = ["#A45A3E", "#985237", "#8E4C33"]
+    BLOCK_D = ["#6E3329", "#652F26", "#5E2C22"]
+    block = [Mesa(222, 288, 22, 28, 344, BLOCK_L, BLOCK_D, ledges=1, bed=8, seed=65,
                   wobble=0, speckle=0.3, flicker=0.02, ragged=0),
-             Mesa(207, 300, 9, 11, 344, ["#8A4632", "#7E3F2D"], MAROON, ledges=1, bed=8, seed=66,
+             Mesa(194, 298, 13, 15, 344, BLOCK_L, BLOCK_D, ledges=1, bed=8, seed=66,
                   wobble=0, speckle=0.3, flicker=0.02, ragged=0)]
     sun = Blob([(208, 212, 17, 17)], GOLD, top_light=False)
     sun.ragged = 0     # a clean disc
@@ -81,6 +83,8 @@ def desert():
         # the dry wash: from the base, narrowing as it winds left and up, ending under the arch's opening
         River(289, 334, 72, 73, 6, 40, ["#D8B183", "#CBA273", "#BC9264"], ["#E7CBA1", "#DDBE92"], swings=0.5,
               phase=0.0, seed=63),
+        # the arch's shadow, thrown right across the sand (light from the left), laid as darker slabs
+        Blob([(118, 292, 46, 4.5), (100, 296, 30, 3.5)], ["#CBAA78", "#C19F6E", "#B79566"], top_light=False),
         trees([22, 40], 312, 9, ["#B5B38C", "#A3A17A", "#8E8F68"], seed=60, spread=0.6),
         trees([170], 312, 7, ["#B5B38C", "#A3A17A", "#8E8F68"], seed=61, spread=0.6),
         trees([118], 297, 4, ["#B5B38C", "#A3A17A", "#8E8F68"], seed=62, spread=0.6),

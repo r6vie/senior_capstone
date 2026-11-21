@@ -206,6 +206,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   focal mass on the left; the spire a lighter, smaller partner close beside it; the sun moved right and set low in a
   pale haze band that rises from left to right to cradle it; a low, darker umber block with a stepped top anchors the
   lower right; the dry wash ends under the arch's opening; three lighter scrub clumps.
+  Then (Josef: arch better): the arch throws a shadow right across the sand, darker slabs; the foreground cliff is a
+  step lighter and wider.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
