@@ -169,6 +169,10 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   a dense palm forest on the near beach with the canoe. A fresh critic reviewed them; its main fixes are in.
   Then (Josef: the lagoon "so much better"; no critic pass): the palm forest broken up into two loose, staggered
   rows on uneven ground, irregular gaps, each palm its own height, crown and lean, undergrowth between.
+- **Rice page: hills meet the ground (Josef: they looked like eggs).** Every terraced hill now has a bell profile
+  (a round hill with power 2.2, a third wider) whose flanks flare into the ground instead of dropping straight; the
+  coconut palms are replaced by broad shade trees on dark trunks; the waterfall on the right hill is gone; the hut
+  sits on the crest.
 - **Cover typography follows the gouache poster, set left (Josef: "redo the cover typography everywhere to match
   closer to 4 · Gouache poster, keep it left justified and name right under").** A fixed-tier change with Josef's
   yes: on the strata covers (`cov-final`, all eight boards on "Covers: Strata") the title is Barlow Condensed 800 in

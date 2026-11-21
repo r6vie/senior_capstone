@@ -6,7 +6,7 @@ the art climbs highest on the right.
 python3 pages_new.py [karst ...] -> out/page-{name}-title.png"""
 import sys
 sys.path.insert(0, ".")
-from strata import Ridge, Blob, Water, Band, River, trees, render
+from strata import Ridge, Blob, Water, Band, River, trees, grove, render
 from covers_new import (tower, disc, mist_strip, Blocks, K_FAR, K_MID, K_NEAR, K_HERO, K_WATER, K_GLINT, K_SUN,
                         K_BAMBOO, K_BOAT, K_MISTS, K_SAGE)
 
@@ -266,17 +266,15 @@ def terraces():
     """A whole terraced country at dawn, lower and wider than the cover: plain violet ridges far off with the sun
     half behind them; small hills in the middle distance, each finely terraced along its own curve; a still lake
     holding the sun; on the left a big terraced hill broken by a forested gully and a rock outcrop; on the right a
-    hill of large, wide terraces with the stilted hut on top and a waterfall stepping down its terraces; broad flat
-    paddies across the foreground with coconut palms on the banks and bushes."""
+    hill of large, wide terraces with the stilted hut on top; broad flat
+    paddies across the foreground with shade trees on the banks and bushes."""
     lake = Water(540, 652, -40, 610, DEEP_LAKE, LAKE_GLINT, seed=330, gaps=(0, 0))
     lake.path = (300, 8)
     lake.brick = (4.0, 12.0)
-    big_left = ContourHill([(60, 470, 150, 110, 1.0)], 660, HILL_PEACH, BANK_MOSS, spacing=12, bank_frac=0.42,
+    big_left = ContourHill([(60, 470, 202, 148, 2.2)], 660, HILL_PEACH, BANK_MOSS, spacing=12, bank_frac=0.42,
                            seed=331, rough=2, lean=0.5, flicker=0.02, wave=4)
-    big_right = ContourHill([(530, 404, 120, 110, 1.0)], 660, HILL_GOLD, BANK_OLIVE, spacing=20, bank_frac=0.34,
+    big_right = ContourHill([(530, 404, 162, 148, 2.2)], 660, HILL_GOLD, BANK_OLIVE, spacing=20, bank_frac=0.34,
                             seed=332, rough=2, lean=0.5, flicker=0.02, wave=3)
-    # the waterfall: short drops stepping down the right hill's terraces, each a little left of the one above
-    fall = Blocks([(452 - i * 3, 430 + i * 22, 458 - i * 3, 446 + i * 22, FALL) for i in range(8)])
     paddy_rows = []
     for i, (y, h) in enumerate([(652, 16), (668, 32)]):
         paddy_rows.append(Band(-60, 640, y, y + h - 4, PADDY_RIGHT["pool"] if i % 2 else ["#E9C77A", "#E3A57E"],
@@ -288,31 +286,31 @@ def terraces():
         disc(300, 476, 22, BUTTER),
         Ridge([(220, 480, 120, 100, 1.0), (420, 470, 110, 120, 1.0)], 540, *FAR_1, seed=301, rough=2, smooth=True,
               flicker=0.02),
-        ContourHill([(180, 500, 70, 60, 1.0)], 560, HILL_LILAC, BANK_FAINT, spacing=7, bank_frac=0.4, seed=333,
+        ContourHill([(180, 500, 94, 81, 2.2)], 560, HILL_LILAC, BANK_FAINT, spacing=7, bank_frac=0.4, seed=333,
                     rough=1, lean=0.5, flicker=0.02),
-        ContourHill([(400, 494, 80, 70, 1.0)], 560, HILL_GOLD, BANK_OLIVE, spacing=8, bank_frac=0.36, seed=334,
+        ContourHill([(400, 494, 108, 94, 2.2)], 560, HILL_GOLD, BANK_OLIVE, spacing=8, bank_frac=0.36, seed=334,
                     rough=1, lean=0.5, flicker=0.02),
         lake,
         # smaller terraced hills between, overlapping, each its own ink
-        ContourHill([(150, 532, 70, 60, 1.0)], 640, (["#B8C48A", "#AEBB80"], ["#8A9765", "#808D5C"]), BANK_MOSS,
+        ContourHill([(150, 532, 94, 81, 2.2)], 640, (["#B8C48A", "#AEBB80"], ["#8A9765", "#808D5C"]), BANK_MOSS,
                     spacing=9, bank_frac=0.4, seed=342, rough=1.5, lean=0.5, flicker=0.02, wave=0),
-        ContourHill([(330, 556, 76, 64, 1.0)], 650, HILL_GOLD, (["#7A6A3C", "#706136"], ["#55492A", "#4D4226"]),
+        ContourHill([(330, 556, 103, 86, 2.2)], 650, HILL_GOLD, (["#7A6A3C", "#706136"], ["#55492A", "#4D4226"]),
                     spacing=10, bank_frac=0.4, seed=343, rough=1.5, lean=0.5, flicker=0.02, wave=0),
-        ContourHill([(470, 540, 70, 60, 1.0)], 650, HILL_PEACH, BANK_OLIVE, spacing=9, bank_frac=0.4, seed=344,
+        ContourHill([(470, 540, 94, 81, 2.2)], 650, HILL_PEACH, BANK_OLIVE, spacing=9, bank_frac=0.4, seed=344,
                     rough=1.5, lean=0.5, flicker=0.02, wave=0),
         big_left,
         # the gully: a forested cleft running down the big left hill, and a rock outcrop beside it
         trees([150, 166, 178, 192], 560, 11, FOREST, seed=335, spread=0.6),
         trees([170, 188, 204], 600, 12, FOREST, seed=336, spread=0.6),
         big_right,
-        fall,
-        Mesa(510, 392, 13, 13, 410, *THATCH, ledges=1, bed=8, seed=313, wobble=0, speckle=0, ragged=0),
-        Ridge([(510, 374, 22, 22, 1.0)], 393, *THATCH, seed=314, rough=0, smooth=True, flicker=0),
-        Blocks([(506, 398, 513, 410, PLANTER)]),
-        trees([548, 566], 416, 12, TREE_DARK, seed=315, spread=0.5),
+        Mesa(530, 390, 13, 13, 408, *THATCH, ledges=1, bed=8, seed=313, wobble=0, speckle=0, ragged=0),
+        Ridge([(530, 372, 22, 22, 1.0)], 391, *THATCH, seed=314, rough=0, smooth=True, flicker=0),
+        Blocks([(526, 396, 533, 408, PLANTER)]),
+        trees([566, 584], 414, 12, TREE_DARK, seed=315, spread=0.5),
         trees([380, 404], 560, 9, BUSH_LIT, seed=338, spread=0.6),
         *paddy_rows,
-        block_palms([(70, 74, 22, 8), (330, 66, 20, 6), (540, 80, 24, 10)], 672, P_LIT, P_DARK, P_TRUNK),
+        # broad shade trees on the paddy banks, crowns held up on dark trunks
+        *grove([60, 300, 520], 664, 18, FOREST, trunk="#3E2E22", seed=345, spread=0.8, trunk_h=1.6),
         trees([150, 176], 670, 9, BUSH_SHADE, seed=339, spread=0.6),
         trees([430], 668, 8, BUSH_LIT, seed=341, spread=0.6),
     ]
