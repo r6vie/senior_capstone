@@ -117,6 +117,15 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 - **Karst page and volcano fixed (Josef).** Karst page: every back plane's foot runs down behind the paddies over a
   continuous haze floor, so no paper shows under the towers. Volcano redone lower and less sharp: a blunt summit
   on bulging slopes with a shoulder on each side, so its outline steps in and out instead of running straight.
+- **Rice terraces, third composition; winter cabin redone (Josef).** The terraces were too uniform; a version
+  borrowing the autumn hills' three domes was rejected as a copy ("the cover must still be deeply original"). Now a
+  terraced valley seen head on: level flooded terraces step down from both edges into a V, each slope with its own
+  uneven heights and reach, the left slope (facing away from the light) darker with deep green banks, the right lit;
+  the low sun sits in the notch over a pale blue-grey lake with its path down the water; a hut on the right slope, a
+  tree on the left (`StepValley`). Winter: the aurora lower, its upper edge fraying into paper through long
+  horizontal gaps, the night a step lighter; the cabin rebuilt larger on a 6 px cell grid (log courses in two tones,
+  a snow-edged gable, a snow roof plane against a stand of dark firs, a stone chimney with grey smoke, a lit window,
+  a door with a snow step, a dimmer side window, a woodpile of pale log ends, drifts).
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

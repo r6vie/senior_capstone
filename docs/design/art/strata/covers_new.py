@@ -11,7 +11,7 @@ the art and never the UI red.
 python3 covers_new.py [karst|aurora|terraces|lagoon ...] -> out/new-{name}-{xl,sm}.png"""
 import sys
 sys.path.insert(0, ".")
-from strata import Ridge, Blob, Water, Band, Mesa, Terraces, Firs, Grove, Trunks, trees, grove, render
+from strata import Ridge, Blob, Water, Band, Mesa, Terraces, Firs, Grove, Trunks, River, trees, grove, render
 
 CALM = dict(smooth=True, flicker=0.04)
 
@@ -139,7 +139,7 @@ def karst():
 
 
 # ---- 2 winter night, aurora ----
-NIGHT = ["#3B4170", "#424879", "#4A5082", "#535A8C"]   # darkest overhead, a little lighter toward the peaks
+NIGHT = ["#474D7C", "#4F5585", "#585E8E", "#626898"]   # darkest overhead, a little lighter toward the peaks
 AURORA = ["#4E8F98", "#5FAFA6", "#7CC9A3", "#A6E0BC"]   # a curtain: teal above, bright green along its lower hem
 SNOW = (["#F3F5F8", "#E9EDF3", "#DEE4EE"], ["#9AA4C4", "#8892B6", "#7680A8"])
 SNOW_FAR = (["#B4BBD6", "#A8B0CE", "#9CA5C6"], ["#727CA2", "#687298", "#5E688E"])
@@ -221,8 +221,10 @@ class AuroraSky:
         top = h - (self.band + self.soft) * self._taper(x)
         m = (y >= top) & (y <= self.base)
         f = (y - top) / (self.soft * self._taper(x))   # 0 at the top of the dissolve, 1 at the curtain proper
-        n = np.array([vnoise(xx, y, 22, self.seed) for xx in np.atleast_1d(x)])
-        return m & ((f >= 1) | (n < f * 1.2))
+        # the blend into paper is made of gaps: long horizontal openings in each course, more of them higher up,
+        # so the curtain frays into separate slabs and spaces rather than fading as a smear
+        n = np.array([vnoise(xx * 0.35, y * 2.0, 6, self.seed) for xx in np.atleast_1d(x)])
+        return m & ((f >= 1) | (n < f * 1.05 - 0.05))
 
     def colour(self, x, y, rng):
         from strata import mix
@@ -232,7 +234,7 @@ class AuroraSky:
             t = min(0.999, max(0, d / (self.band + self.soft) + rng.uniform(-0.08, 0.08)))
             c = self.cur[int(t * len(self.cur))]
             f = d / (self.band + self.soft)
-            return mix(c, (255, 255, 255), max(0, min(1, f)) ** 1.3 * 0.9)
+            return mix(c, (255, 255, 255), max(0, min(1, f)) ** 1.5 * 0.6)
         t = min(0.999, max(0, -d / (self.base - h) + rng.uniform(-0.08, 0.08)))
         c = self.night[int(t * len(self.night))]
         if -d < 7 and rng.random() < 0.55:
@@ -242,7 +244,7 @@ class AuroraSky:
 
 def hem(x):
     import numpy as np
-    return 198 - 0.2 * x - 6 * np.sin(x / 46.0)
+    return 220 - 0.2 * x - 6 * np.sin(x / 46.0)
 
 
 CURTAIN = ["#A9E2BF", "#8ED3AC", "#72C3A3", "#5CAEA6", "#5297A0"]   # bright green hem, teal above
@@ -256,27 +258,59 @@ CAB_ROOF_DARK = ["#33282A", "#2D2325"]
 CAB_GOLD = ["#F7DC93", "#F2CC72"]
 
 
+LOG_A = ["#A8876D", "#A0805F"]          # the lit gable wall, laid in logs of two tones
+LOG_B = ["#7E5F48", "#765942"]
+SIDE_A = ["#5A473C", "#524035"]         # the side wall in shade
+SIDE_B = ["#4A3A31", "#43342C"]
+STONE_L = ["#A9A6A2", "#9F9C97"]
+STONE_D = ["#6F6C69", "#666360"]
+SNOW_LIT = ["#F7F8FB", "#EEF1F6"]
+SNOW_SHD = ["#B9C0D6", "#AEB6CE"]
+FASCIA = ["#3A2E29", "#332824"]
+GLOW = ["#F8DE96", "#F3CF78"]
+FRAME = ["#3A2E29", "#332824"]
+WOOD_END = ["#E2C49C", "#D8B98F"]
+SMOKE = ["#A9AEC0", "#9DA3B6", "#9298AC"]
+
+
 def cabin(x, base):
-    """A log cabin, gable end facing us, laid on whole courses (4 px): a lit gable wall, a dark side wall going back
-    to the right, a shingle roof stepping up to its ridge (lit left of the ridge, dark right) with snow along the top
-    and on each eave step, a chimney with a snow cap, one lit window and a door."""
+    """A log cabin, gable end toward us, built row by row on whole courses (4 px tall, cells 6 px wide) and drawn with
+    care, like the lighthouse on the coast page: a gable wall of logs in two alternating tones under a snow-edged
+    gable, a mullioned lit window and a door with a snow step; the side wall going back to the right in shade, a
+    dimmer window, the course under its eave darkest; a snow roof plane running back from the ridge, lit on its top
+    course; a stone chimney, lit left, with a snow cap and a thread of smoke; a woodpile of log ends; drifts."""
     B = base
-    b = [(x + 28, B - 24, x + 52, B, CAB_SIDE),
-         (x, B - 24, x + 28, B, CAB_LOG),
-         (x + 40, B - 52, x + 46, B - 32, CAB_EAVE),
-         (x + 39, B - 56, x + 47, B - 52, CAB_ROOF_SNOW)]
-    ridge = x + 14
-    for j in range(5):
-        y1 = B - 24 - j * 4
-        l, r = x - 4 + 4 * j, x + 56 - 2 * j
-        if j == 4:
-            b.append((l, y1 - 4, r - 4, y1, CAB_ROOF_SNOW))
-            continue
-        b += [(l, y1 - 4, ridge, y1, CAB_ROOF_LIT), (ridge, y1 - 4, r, y1, CAB_ROOF_DARK),
-              (l, y1 - 4, l + 4, y1, CAB_ROOF_SNOW)]
-    b += [(x - 4, B - 24, x + 56, B - 22, CAB_EAVE)]
-    b += [(x + 4, B - 16, x + 12, B - 8, CAB_GOLD), (x + 17, B - 16, x + 24, B, CAB_EAVE)]
-    return Blocks(b)
+
+    def C(n):
+        return x + 6 * n
+
+    def R(n):                                            # the top of course n above the base
+        return B - 4 * n
+
+    b = []
+    for i in range(8):                                   # walls: eight log courses, 6 cells wide each face
+        b.append((C(0), R(i + 1), C(6), R(i), LOG_A if i % 2 == 0 else LOG_B))
+        b.append((C(6), R(i + 1), C(12), R(i), FASCIA if i == 7 else (SIDE_A if i % 2 == 0 else SIDE_B)))
+    for j in range(3):                                   # the gable's logs, stepping in a cell a side
+        b.append((C(1 + j), R(9 + j), C(5 - j), R(8 + j), LOG_B if j % 2 == 0 else LOG_A))
+    for j in range(4):                                   # the roof plane running back from the gable
+        b.append((C(6.6 - j), R(9 + j), C(13 - j * 0.5), R(8 + j), SNOW_LIT if j == 3 else SNOW_SHD))
+    for j in range(3):                                   # snow along the gable: lit up the left rake, shaded down the right
+        b.append((C(-0.7 + j), R(9 + j), C(1 + j), R(8 + j), SNOW_LIT))
+        b.append((C(5 - j), R(9 + j), C(6.7 - j), R(8 + j), SNOW_SHD))
+    b += [(C(2), R(12), C(3), R(11), SNOW_LIT), (C(3), R(12), C(4), R(11), SNOW_SHD)]          # ridge cap
+    b += [(C(9), R(14), C(9.7), R(10), STONE_L), (C(9.7), R(14), C(10.4), R(10), STONE_D),
+          (C(8.7), R(15), C(10.7), R(14), SNOW_LIT)]                                            # chimney
+    b += [(C(1), R(5), C(2.5), R(2), GLOW),                                                    # window
+          (C(3.6), R(6), C(5.0), R(0), FRAME),                                                 # door
+          (C(3.0), R(0), C(5.5), B + 4, SNOW_LIT),                                              # step
+          (C(7.5), R(6), C(9.3), R(2), ["#C9A75E", "#BE9B55"])]                                 # side window
+    for r in range(3):                                   # the woodpile against the side wall
+        for c in range(4 - r):
+            b.append((C(12) + c * 5 + r * 2.5, R(r + 1), C(12) + c * 5 + r * 2.5 + 4, R(r), WOOD_END))
+    return [Blocks(b),
+            Blob([(C(9.7), R(17), 4, 3.5), (C(10.5), R(19), 5, 3.5), (C(11.8), R(21), 6, 3.5)], SMOKE, top_light=True),
+            Blob([(C(2), B + 3, 34, 4), (C(10), B + 3, 34, 4)], SNOW_LIT, top_light=True)]
 
 
 def aurora():
@@ -295,8 +329,10 @@ def aurora():
         Band(-60, 300, 272, 288, SNOW[0], seed=83, lens=0.0),
         lake,
         Band(-60, 300, 308, 360, SNOW[0], seed=85, lens=0.0),
-        Firs([(158, 308, 44, 10)], F_LIT, F_DARK, tiers=2),      # one fir behind the cabin, so its roof reads
-        cabin(84, 330),
+        # a stand of firs behind the cabin, so its snowy roof reads against dark
+        Firs([(50, 304, 52, 15), (68, 300, 60, 16), (142, 300, 62, 16), (160, 304, 52, 14)], F_LIT, F_DARK,
+             tiers=2),
+        *cabin(60, 324),
         Firs([(16, 338, 62, 12), (40, 342, 44, 9), (-2, 344, 42, 9), (204, 336, 68, 13), (228, 342, 52, 10),
               (184, 344, 36, 7)], F_LIT, F_DARK, tiers=2),
     ]
@@ -336,6 +372,13 @@ class Shelves:
         self.crest = min(sh[1] for sh in shelves)
         self.cx0 = shelves[0][0]
 
+    def _shadow(self, x, y, pad):
+        # a hill is shaded right of its crest line; a valley (shade_left) on its left slope, which faces away from the
+        # light
+        if getattr(self, "shade_left", False):
+            return x < self.cx0 - pad
+        return x > self.cx0 + pad + (y - self.crest) * self.lean
+
     def _edge(self, sh, x):
         import numpy as np
         cx, y, hw = sh
@@ -367,38 +410,116 @@ class Shelves:
         else:
             sh, e = own
         if y - e < self.pool_h:
-            if self.sun_x is not None and abs(x - self.sun_x) < 9 and rng.random() < 0.85:
+            if self.sun_x is not None and abs(x - self.sun_x) < getattr(self, 'sun_w', 9) and rng.random() < 0.85:
                 return self.g[int(rng.random() * len(self.g))]
             # each pool holds the sky top to bottom: rose along its far edge, gold toward its near edge
             t = (y - e) / self.pool_h + rng.uniform(-0.12, 0.12)
             pal = self.w[int(min(len(self.w) - 1, max(0, t * len(self.w))))]
             c = pal[int(rng.random() * len(pal))]
-            if x > self.cx0 + 20 + (y - self.crest) * self.lean:
+            if self._shadow(x, y, 20):
                 from strata import shade, mix
                 c = shade(mix(c, (170, 150, 160), 0.18), -0.06)      # the shaded side: a greyed rose
             return c
-        shadow = x > self.cx0 + (y - self.crest) * self.lean
+        shadow = self._shadow(x, y, 0)
         pal = self.dark if shadow else self.lit
         k = (y - e - self.pool_h) / 9 + rng.uniform(-0.25, 0.25)
         return pal[int(min(len(pal) - 1, max(0, k * len(pal))))]
 
 
-T_DEEP = (["#4E6E45", "#45643D", "#3C5A36"], ["#2C4429", "#243A23", "#1D301D"])    # the near slope, the dark base
+V_POOL = [["#F4D2C8", "#F0C8BD"], ["#F5D8C3", "#F1D0B8"], ["#F6DEBF", "#F2D6B3"], ["#F5E3C3", "#F1DBB6"]]
+V_BANK = (["#7FA35E", "#749853"], ["#4F7140", "#466638"])
+V_GLINT = ["#FFF4E2", "#FCEBD3"]
+T_VFAR = (["#E7DAE3", "#E0D2DC"], ["#C7B6C4", "#BEADBB"])
+HUT_W = (["#C9A574", "#BC9866"], ["#8E6A43", "#7E5D3A"])
+R_TREES = ["#5E8448", "#4E733B", "#3F6130", "#33532A"]
+
+
+class StepValley:
+    """A terraced valley seen head on, built from level courses as strata is: terraces step down from both edges
+    toward the middle, each reaching further in than the one above, so the two slopes form a V. Each slope has its own
+    rhythm: terraces of different heights and reach, so neither slope mirrors the other. A terrace is a flooded pool
+    (the dawn in it, rose high up and gold low down, a pale sheen along its top course) over one bank course. Light
+    from the left: the right slope, facing it, is lit and warm; the left slope is laid darker."""
+
+    brick = (2.0, 7.0)
+
+    def __init__(self, y0, left, right, pools, bank, bank_deep, sheen, seed=1):
+        from strata import hexrgb
+        self.seed = seed
+        self.pools = [[hexrgb(c) for c in p] for p in pools]
+        self.bank, self.deep = [hexrgb(c) for c in bank], [hexrgb(c) for c in bank_deep]
+        self.sheen = [hexrgb(c) for c in sheen]
+        self.sides = []
+        for steps, sign in ((left, 1), (right, -1)):
+            rows, y, n = [], y0, len(steps)
+            for i, (h, edge) in enumerate(steps):
+                rows.append((y, y + h, edge, i / max(1, n - 1)))
+                y += h
+            self.sides.append((rows, sign))
+
+    def _row(self, side, y):
+        for r in side[0]:
+            if r[0] <= y < r[1]:
+                return r
+        return None
+
+    def cover(self, x, y):
+        import numpy as np
+        m = np.zeros_like(x, dtype=bool)
+        for side in self.sides:
+            r = self._row(side, y)
+            if r:
+                m |= (x <= r[2]) if side[1] > 0 else (x >= r[2])
+        return m
+
+    def colour(self, x, y, rng):
+        from strata import shade
+        left = self.sides[0]
+        r = self._row(left, y)
+        is_left = bool(r) and x <= r[2]
+        if not is_left:
+            r = self._row(self.sides[1], y)
+        y0, y1, edge, t = r
+        if y >= y1 - 4:                                   # the bank: the bottom course of each terrace
+            pal = self.deep if is_left else self.bank
+            return pal[int(rng.random() * len(pal))]
+        if y < y0 + 4 and rng.random() < 0.6:             # a pale sheen on the water's top course
+            return self.sheen[int(rng.random() * len(self.sheen))]
+        pal = self.pools[min(len(self.pools) - 1, int(t * len(self.pools)))]
+        c = pal[int(rng.random() * len(pal))]
+        return shade(c, -0.1) if is_left else c
+
+
+V_POOL = [["#F2CFC4", "#EEC6BA"], ["#F4D6C2", "#F0CDB6"], ["#F5DDBD", "#F1D4B0"], ["#F4E1BF", "#EFD8B2"]]
+V_BANK = ["#7FA35E", "#749853"]
+V_BANK_DEEP = ["#3F5F35", "#36532E"]
+V_SHEEN = ["#E9EEF2", "#E1E8EE"]
+LAKE = ["#DCE3EA", "#D3DCE5", "#CAD4DF"]
+HUT_ROOF = (["#5E4430", "#533B29"], ["#33241A", "#2B1F17"])
 
 
 def rice():
-    # six big shelves 26 px apart, each wider than the one above; the lower ones run off both edges; banks one slab
-    near = [(150 - i * 4, 170 + i * 26, 44 + i * 48) for i in range(7)]
+    """A terraced valley seen head on: level flooded terraces stepping down from both edges into a V, each slope with
+    its own uneven rhythm; the low sun in the notch over a still lake, its path broken down the water; a hut on the
+    right slope, a lone tree on the left; the far hills pale behind."""
+    cx = 118
+    lake = Water(256, 352, -20, 260, LAKE, ["#F6CFAE", "#F2C29C"], seed=99, gaps=(0, 0))
+    lake.path = (cx, 5)
+    lake.brick = (5.0, 16.0)
+    # (height, inner edge) of each terrace, top down; heights are whole courses, the reach uneven
+    left = [(8, 18), (12, 30), (8, 38), (16, 50), (8, 58), (12, 66), (16, 80), (8, 88), (12, 96), (16, 104),
+            (12, 112), (40, 118)]
+    right = [(12, 214), (8, 206), (16, 196), (12, 184), (8, 178), (16, 164), (12, 154), (8, 148), (16, 138),
+             (12, 130), (40, 122)]
     return [
-        disc(58, 184, 17, DAWN_SUN),
-        # a pale lavender ridge the full width behind the terraces
-        Ridge([(-10, 222, 80, 70, 1.0), (120, 232, 60, 70, 1.0), (240, 216, 60, 60, 1.0)], 290, *T_FAR, seed=90,
-              rough=2, smooth=True, flicker=0.02, round=True, mist=(262, 290)),
-        mist_strip(80, 272, 70, 5, T_MISTS),
-        Shelves(near, 360, RISER, SKY_POOL, SUN_GLINT, sun_x=58, bow=26, pool_h=17, seed=97, lean=0.2, wave=6),
-        *grove([150], 172, 9, T_TREE, trunk="#4A3828", seed=98, spread=0.4, trunk_h=0.9),
-        Ridge([(10, 316, 150, 110, 1.0)], 360, *T_DEEP, seed=99, rough=1.5, smooth=True, flicker=0.02, round=True,
-              lean=0.5),
+        Ridge([(-10, 182, 90, 100, 1.0), (250, 170, 120, 90, 1.0)], 262, *T_VFAR, seed=90, rough=2, smooth=True,
+              flicker=0.02, mist=(236, 262)),
+        disc(cx, 222, 15, DAWN_SUN),
+        lake,
+        StepValley(196, left, right, V_POOL, V_BANK, V_BANK_DEEP, V_SHEEN, seed=97),
+        Mesa(212, 200, 7, 8, 212, *HUT_W, ledges=1, bed=8, seed=95, wobble=0, speckle=0, ragged=0),
+        Ridge([(212, 188, 13, 13, 1.0)], 201, *HUT_ROOF, seed=96, rough=0, smooth=True, flicker=0),
+        trees([6, 18], 198, 7, R_TREES, seed=98, spread=0.5),
     ]
 
 
