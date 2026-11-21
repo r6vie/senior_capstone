@@ -283,6 +283,15 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   Then (Josef: update the cover boards): every cover board on "Covers: Strata" shows the new shelf book (176 x 257,
   the narrow hinge, the new type) under a large cover that is the same book scaled x2.68 (title 78px, name 35px, the
   hinge 21px in), so the large cover previews the shelf exactly. The small book uses the large render to stay crisp.
+- **Long fields replace the rice terraces (Josef, 2026-11-21: "not a fan of the rice terraces actually, can we turn
+  them into long fields instead?").** `art/strata/fields.py`, same boards (`FinalCoverTerraces`, `FinalBookTerraces`,
+  now labelled "long fields at harvest"), same book. The land is a height field seen from above its near edge, so
+  long strips of crops (wheat, sage, green, ochre, pale; ploughed earth on the page only) run across it in perspective
+  and drape over the swells, shaded where they fall away to the right; a few field boundaries converge on the
+  horizon; hedgerows on some strip edges only, never in shade; a low warm sun over a lilac range on the left. Cover:
+  one broad swell on the right with a lone tree, a deep green near field. Page: three swells, a lane winding to a
+  white farmhouse with a low brown gable roof, trees along the hedgerows, a big tree on the right crest, a deep green
+  near field with a tree group. Two Josef-eye critic rounds. The sample blurb still mentions terraces.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
