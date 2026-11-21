@@ -244,7 +244,8 @@ so leave the art layer out (keep a place for one image under each page's content
 - **Motion (Josef, 2026-11-19).** Clicking a book on the shelf is a 3D move: the view zooms in on that book where it
   stands, then the book opens up in 3D, the cover swinging about the spine, into the open spread. A page turn
   rotates a page plane about the spine in 3D (`transform-style: preserve-3d`, the content on the plane turns with
-  it). Reduced motion swaps states with a short fade.
+  it). Reduced motion swaps states with a short fade. Built and workshopped with Josef on 2026-11-21: see Additions,
+  "The open book in motion", which replaces the zoom with the book itself flying forward.
 - **Demo before anything is pushed.** Josef wants to see a working demo of the open and the turns first and will
   likely workshop them with the implementation session. Nothing of this screen goes to main until he has.
 - **Removed:** "I have one like this" (sparks) is not on the book screen. `docs/trove.md` still lists sparks; that
@@ -270,6 +271,34 @@ Patterns added after v1. Each entry: name, the task it solves, date, owner, snip
   page content when necessary. Native modal focus containment keeps the background inert.
 - Implementation: `web/src/features/discovery/BookReader.tsx` and `BookReader.css`. The static
   Librarian example remains; its preview identifies itself as an example and cannot be checked out.
+
+### The open book in motion (D1, 2026-11-21, Trove UI with Josef)
+
+Task: open, read and close a book as one physical object. Built in `web/src/features/discovery/BookReader.{tsx,css}`,
+workshopped with Josef frame by frame. Rules it keeps, for any later change:
+
+- **One object, printed.** The book is a 3D object (`preserve-3d`): cover slab with rims on all four sides, page block
+  with fore-edge, head, foot and spine faces, a board and a spine strip. Closed, it is the shelf book exactly: its
+  type, hinge, padding and line breaks are measured from the very copy clicked and frozen (`printCover`,
+  `.br-line`), its art stretched to the cover. Everything on a page is printed on it: the spine's dot shade
+  (`.br-left::after` / `.br-right::after`) and the turned-down corners travel with the paper. Nothing fades,
+  scales or reflows on its own, and nothing appears mid-flight: a book's contents and art load when it is pointed
+  at, and it waits closed in its place (at most 0.6s) until they are in.
+- **Opening (850ms).** It lifts from its shelf place, turns about its upright axis only (head and foot never tip),
+  lands a touch large (1.2%) and settles; the cover lifts at once and slows into the spread; the spine strip
+  unfolds from the spine line on the cover's curve. Only transforms and opacity animate, so it runs on the
+  compositor.
+- **Closing (560ms).** Its own curve, not the opening reversed: prompt from the first frame, no swell, slowing onto
+  the shelf, back to the copy it came from (a book on two shelves leaves only the clicked copy's place empty).
+- **Around it.** One full-window layer of paper at 55% and dots at 62% ink over the shelf (the shelf itself is never
+  faded, which flashed it); the clicked copy's dot shadow dissolves out as it lifts and back as it returns.
+- **Turning.** Each leaf is six hinged strips that curl as it turns (edge leading, then trailing); a jump turns a
+  leaf per spread passed (up to four, 110ms apart), each stacking above the last. Both pages carry a corner:
+  forward at the right page's foot, back at the left's from the first chapter on.
+- **Art inside.** The book's page art lies behind every left page, the title page and each contents page alike,
+  anchored to the foot.
+- **The Librarian's pick** on desktop is 260 x 379 with 33px / 15px cover type, and the words beside it stop 24px
+  before the burst at every width.
 
 ### Growing books (T33, 2026-11-08, design session)
 

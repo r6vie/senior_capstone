@@ -553,7 +553,8 @@ export function BookReader({
     if (side === "left") {
       return (
         <>
-          {at === 0 && <img className="br-page-art" src={art.page} alt="" />}
+          {/* Every left page carries the book's art behind its text, the title page and each contents page. */}
+          <img className="br-page-art" src={art.page} alt="" />
           <div className="br-head">{close}</div>
           {at === 0 ? (
             titlePage
