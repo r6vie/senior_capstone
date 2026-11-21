@@ -173,6 +173,10 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   (a round hill with power 2.2, a third wider) whose flanks flare into the ground instead of dropping straight; the
   coconut palms are replaced by broad shade trees on dark trunks; the waterfall on the right hill is gone; the hut
   sits on the crest.
+- **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
+  toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
+  gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
+  mirrored in it, the aurora faint in the ice, the snow hills in front on either side and a near snow shore.
 - **Cover typography follows the gouache poster, set left (Josef: "redo the cover typography everywhere to match
   closer to 4 · Gouache poster, keep it left justified and name right under").** A fixed-tier change with Josef's
   yes: on the strata covers (`cov-final`, all eight boards on "Covers: Strata") the title is Barlow Condensed 800 in

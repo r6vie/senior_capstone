@@ -166,6 +166,15 @@ def winter_hem(x):
     return 500 - 0.03 * xa - np.clip(xa - 430, 0, None) * 0.25     # only a slight lift on the right, no spike
 
 
+class EvenAurora(AuroraSky):
+    """The page's aurora: one even depth from edge to edge (the cover's curtain thins toward its left end; this one
+    does not)."""
+
+    def _taper(self, x):
+        import numpy as np
+        return np.ones_like(np.asarray(x, dtype=float))
+
+
 FJORD = ["#5F6A98", "#58628F", "#515B87", "#4A547F"]        # dark water holding the night
 FJORD_G = ["#9FD8BF", "#B6C0DC"]                          # the aurora and the snow caught on it
 CLIFF = (["#C9CFE0", "#BEC5D9", "#B3BBD2"], ["#6E78A0", "#646E96", "#5A648C"])   # the fjord's steep walls
@@ -188,18 +197,22 @@ def winter():
                       flicker=0.04)
     right_wall = Ridge([(540, 572, 200, 120, 0.5)], 700, *CLIFF, seed=209, rough=4, ribs=0.7, lean=0.2, smooth=True,
                        flicker=0.04)
-    # the fjord: a channel of dark, calm water cut through bright snow, narrow in the distance, wide at our feet
-    fjord = River(566, 700, 300, 34, 26, 230, ["#4A5480", "#465079", "#424B73"], ["#C9CFE6", "#B9C2DE"],
-                  swings=1.1, phase=0.2, seed=210)
-    fjord.brick = (5.0, 16.0)
+    # the lake: dark night ice between the hills, the hills behind mirrored in it
+    lake = Water(566, 676, -40, 610, ["#7E89B2", "#7680AA", "#6E78A2"], ["#9AA4C8", "#A8B1D2"], seed=210,
+                 mirror=[hills], gaps=(0, 0), squash=0.5)
+    lake.brick = (6.0, 20.0)
     return [
-        AuroraSky(winter_hem, 610, 14, 44, NIGHT, CURTAIN, seed=203),
+        EvenAurora(winter_hem, 610, 14, 96, NIGHT, CURTAIN, seed=203),       # a tall, slow dissolve into paper
         far,
         hills,
-        Band(-60, 640, 560, 700, ["#E8ECF4", "#E2E7F1", "#DCE2EE"], seed=211, lens=0.0),     # the snowfield
-        fjord,
-        # steep snow walls in front of the channel's edges, so the water runs between cliffs
+        Band(-60, 640, 556, 568, ["#E8ECF4", "#E2E7F1", "#DCE2EE"], seed=211, lens=0.0),     # the far shore
+        lake,
+        # the aurora faint in the ice
+        Blocks([(x + dx, y, x + dx + 10, y + 4, ["#9FD8BF", "#94CFB5"]) for x, y in [(150, 590), (250, 604), (360, 596),
+                                                                                       (300, 630)] for dx in (0, 16)]),
+        # the snow hills in front, either side of the lake, and the near shore
         left_wall, right_wall,
+        Band(-60, 640, 672, 700, ["#E8ECF4", "#E2E7F1", "#DCE2EE"], seed=212, lens=0.3),
         Firs([(x, y, h, w) for x, y, h, w in [(60, 566, 26, 6), (76, 568, 32, 7), (92, 570, 24, 6),
                                               (520, 560, 28, 6), (536, 562, 34, 7), (552, 564, 26, 6)]],
              *F_FAR, tiers=2),
