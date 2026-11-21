@@ -267,6 +267,13 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   size with three shelves of the strata covers: today's `.book` 122 x 178 (gap 28), 150 x 219 (gap 32) and 176 x 257
   (gap 36), the poster type scaled with the book. Book size is fixed tier (system.md "Book"); not changed until Josef
   picks a size, then the change goes to the design system and the app through the orchestrator.
+  Then (Josef, 2026-11-21: "Let's go with largest"): the shelf book is 176 x 257 with a 36px gap (system.md "Book",
+  fixed tier, changed with his yes). The type on the cover scales with it (poster type: title 29px, name 13px). Phone
+  and the smaller sizes are not decided yet. The hinge (spine) is being reconsidered next.
+- **Spine options at 176 x 257 (Josef: should the spine take so much space on the left? three options).** Board
+  `SpineTrials` (`shelf/spine_trials.py`), actual size: today's hinge scaled (line at 17px, type at 29px); A narrow
+  hinge (a thinner line at 8px, type at 18px); B ink spine (no line, a solid 8px strip of the cover's ink along the
+  left edge, type at 18px); C no hinge (outline and dot shadow carry the book, type at 14px). Not decided yet.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
