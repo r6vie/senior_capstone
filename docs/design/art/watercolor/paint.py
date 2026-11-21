@@ -103,7 +103,7 @@ class Paper:
         dx = (fbm(scale * S, s, 3) - 0.5) * amount * S * 2 + (fbm(1.2 * S, s + 9, 2) - 0.5) * fine * S * 2
         dy = (fbm(scale * S, s + 1, 3) - 0.5) * amount * S * 2 + (fbm(1.2 * S, s + 8, 2) - 0.5) * fine * S * 2
         out = cv2.remap(m.astype(np.float32), (XX + dx).astype(np.float32), (YY + dy).astype(np.float32),
-                        cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                        cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)   # no paper pulled in at the cover's edge
         return np.clip(blur(out, 0.6), 0, 1)
 
     def soften(self, m, r):

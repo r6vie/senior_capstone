@@ -344,6 +344,19 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   whichever contrasts more (here 7.2, 6.1 and 6.7 to 1); the name has no knockout, it sits on the paint. This changes
   the fixed cover type's colour rule for these covers, with Josef's yes. One Josef-eye critic round on round 2, its
   fixes applied.
+  Then (Josef: "rework the autumn cover, the bridge is kinda half there and half not, cut off, and trees are lazy,
+  polish it all up"): a new board `WCCoverAutumn3` beside round 2's autumn, which stays. The glazes are transparent,
+  so the old bridge let the trees behind show through half of it; the bridge is now lifted back to paper first and
+  built over it: a humped stone bridge with splayed ends sunk into bushes, coursed and single stones, a coping and a
+  ring of voussoirs, the river and its far bank seen through the arch, and the arch's ring closed in its reflection.
+  Trees are built by `tree()`: a tapering trunk forking into curved limbs that split again, the crown dabbed as
+  clumps at and along the limbs with sky between them, the whole crown glazed darker toward its lower right, the
+  limbs showing only below the crown; each throws its shadow right. Two unequal firs behind the bridge's left end
+  are the cool dark. The river widens toward us with soft wet edges and darker water under the banks; a low rose
+  cloud band sits under the title. `paint.rough` now replicates the edge instead of pulling in paper, which left a
+  row of white dashes along the cover's bottom edge (the lighthouse has it too; it is fixed there only when that
+  cover is re-rendered). Two Josef-eye critic rounds; the second still asked for more (fewer stain-ring edges in
+  the oak's clumps, a darker overall value range); its main points were applied and not re-reviewed.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

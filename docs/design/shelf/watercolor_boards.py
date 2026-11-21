@@ -4,7 +4,7 @@ cover that is the same book scaled) with the label, title, name, ink and art swa
 edge (Josef, 2026-11-21), so the ink is chosen from the paint behind the title (art/watercolor/ink.py): cream on a
 dark top, the book's own dark ink on a light one.
 
-python3 watercolor_boards.py <root> lighthouse=<blob> harbor=<blob> autumn=<blob>
+python3 watercolor_boards.py <root> lighthouse=<blob> harbor=<blob> autumn=<blob> autumn3=<blob>
 -> <root>/project/WCCover{Lighthouse,Harbor,Autumn}2.dc.html (round 2, painted to the top). Round 1's boards
 (WCCover{Lighthouse,Harbor,Autumn}, white tops) stay on the canvas as Josef asked; their art is no longer rendered by
 covers.py, which now paints the round 2 skies."""
@@ -29,13 +29,17 @@ BOOKS = [
          title="Harbor Season", author="Sofia Marchetti", ink="#2f4a63"),
     dict(key="autumn", file="WCCoverAutumn2", label="Watercolor · autumn river in golden haze, painted to the top",
          title="The Long Way Home", author="Emmett Clarke", ink="#5a3420"),
+    # the rework (Josef: the bridge was half there and cut off, the trees lazy); round 2's board stays beside it
+    dict(key="autumn3", art="autumn", file="WCCoverAutumn3",
+         label="Watercolor · autumn river, the bridge and trees reworked", title="The Long Way Home",
+         author="Emmett Clarke", ink="#5a3420"),
 ]
 
 for b in BOOKS:
     if b["key"] not in IDS:
         continue
     h = src
-    ink, lum, contrast = ink_for(os.path.join(ART, f"{b['key']}-xl.png"), b["ink"])
+    ink, lum, contrast = ink_for(os.path.join(ART, f"{b.get('art', b['key'])}-xl.png"), b["ink"])
     print(b["key"], ink, round(lum, 3), round(contrast, 2))
     for k in ("label", "title", "author"):
         assert OLD[k] in h, k

@@ -935,6 +935,14 @@
    "h": 1090,
    "title": "Cover · Autumn river, golden haze (painted to the top)",
    "page": "watercolor"
+  },
+  "WCCoverAutumn3.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover · Autumn river, bridge and trees reworked",
+   "w": 600,
+   "x": 2040,
+   "y": 1200
   }
  },
  "createdOnFiles": {
@@ -1218,7 +1226,8 @@
   "WCCoverAutumn.dc.html",
   "WCCoverLighthouse2.dc.html",
   "WCCoverHarbor2.dc.html",
-  "WCCoverAutumn2.dc.html"
+  "WCCoverAutumn2.dc.html",
+  "WCCoverAutumn3.dc.html"
  ],
  "pages": [
   {
