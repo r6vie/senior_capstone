@@ -305,6 +305,12 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   sides, three boundaries converging on the horizon, bushes standing where hedgerows meet, one smooth swell on the
   right with a big tree on its crest, the low sun over the lilac range on the left, a deep green near field. One
   Josef-eye critic pass (it found the fields read as stripes until the boundaries were drawn wide enough to render).
+  Then (Josef: polish the book page: a nicely curving road, refined fields, the hill's tree too large, maybe add
+  another): the lane is one smooth S-curve (a Catmull-Rom curve through four points) widening from 8 at the house to
+  32 at the near edge; the fields are broader and closed by hedges like the cover, four boundaries converging, bushes
+  where hedgerows meet; the crest carries three trees of clearly different sizes in a dark ink, each with a short
+  shadow; the farmhouse sits a little nearer, whiter, with a broad overhanging rust-brown roof, one door, and a dark
+  tree behind its shaded side. One Josef-eye critic pass.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
