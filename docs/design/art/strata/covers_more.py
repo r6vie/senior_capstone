@@ -59,6 +59,10 @@ def desert():
                                              (202, 240, 14), (228, 232, 14), (254, 236, 14)])],
         hero,
         Band(-60, 300, 288, 334, SAND_CALM, seed=58, lens=0.0),
+        # scrub on the sand, as on the book page: low sage-olive clumps
+        trees([20, 40], 316, 8, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=60, spread=0.6),
+        trees([150], 328, 7, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=61, spread=0.6),
+        trees([116], 306, 5, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=62, spread=0.6),
         near,
         Band(-60, 300, 334, 360, UMBER, seed=59, lens=0.0),
     ]

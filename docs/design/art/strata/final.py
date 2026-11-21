@@ -33,6 +33,8 @@ def page():
                  ribs=0.8, mist=(568, 594), **CALM)
     return [
         Blob([(386, 424, 34, 34)], CORAL, top_light=False),
+        # pale lake water lying behind the mountains' misty feet, so no paper shows between them and the lake
+        Band(-60, 640, 548, 604, COBALT[:2], seed=22, lens=0.0),
         far,
         coral,
         Blob([(312, 550, 84, 6)], CLOUD),

@@ -212,7 +212,7 @@ class AuroraSky:
 
     def _taper(self, x):
         import numpy as np
-        return np.clip((np.asarray(x, dtype=float) + 6) / 70.0, 0.15, 1.0)   # the curtain thins out toward the left
+        return np.ones_like(np.asarray(x, dtype=float))     # one even depth from edge to edge (Josef)
 
     def cover(self, x, y):
         import numpy as np
@@ -244,7 +244,10 @@ class AuroraSky:
 
 def hem(x):
     import numpy as np
-    return 220 - 0.2 * x - 6 * np.sin(x / 46.0)
+    # low enough that the even curtain's dissolving top stays under the shelf-size name line (world y ~180 on the left)
+    # this title wraps to four lines at shelf size (the name ends near y ~190 in the left column), so the curtain's
+    # dissolving top starts just below that, and the snow hills sit lower to leave the night between
+    return 238 - 0.08 * x - 4 * np.sin(x / 46.0)
 
 
 CURTAIN = ["#A9E2BF", "#8ED3AC", "#72C3A3", "#5CAEA6", "#5297A0"]   # bright green hem, teal above
@@ -303,21 +306,21 @@ def cabin(x, base):
 def aurora():
     # low snow hills, soft-shouldered but uneven: a long main hill with a second summit on its shoulder, a smaller
     # hill to the left, each side a different length
-    peaks = Ridge([(44, 230, 58, 44, 0.8), (84, 244, 26, 34, 0.9), (150, 222, 70, 50, 0.8), (178, 230, 40, 40, 0.85),
-                   (218, 232, 36, 44, 0.9)],
+    peaks = Ridge([(44, 252, 58, 44, 0.8), (84, 262, 26, 34, 0.9), (150, 246, 70, 50, 0.8), (178, 252, 40, 40, 0.85),
+                   (218, 254, 36, 44, 0.9)],
                   280, *SNOW, seed=82, rough=3.5, ribs=0.4, lean=0.4, smooth=True, flicker=0.04)
     lake = Water(284, 310, -20, 260, ICE, ICE_G, seed=84, gaps=(0, 0), squash=0.5)
     lake.brick = (6.0, 20.0)    # one flat sheet of ice
     return [
-        AuroraSky(hem, 290, 12, 56, NIGHT, CURTAIN, seed=80),
-        Ridge([(-6, 238, 50, 40, 0.85), (112, 246, 40, 30, 0.9), (244, 228, 50, 60, 0.8)], 282, *SNOW_FAR, seed=81,
+        AuroraSky(hem, 290, 10, 38, NIGHT, CURTAIN, seed=80),
+        Ridge([(-6, 258, 50, 40, 0.85), (112, 264, 40, 30, 0.9), (244, 250, 50, 60, 0.8)], 282, *SNOW_FAR, seed=81,
               rough=3, ribs=0.3, smooth=True, flicker=0.03),
         peaks,
         Band(-60, 300, 272, 288, SNOW[0], seed=83, lens=0.0),
         lake,
         Band(-60, 300, 308, 360, SNOW[0], seed=85, lens=0.0),
         # a stand of firs behind the cabin, so its snowy roof reads against dark
-        Firs([(50, 304, 52, 15), (68, 300, 60, 16), (142, 300, 62, 16), (160, 304, 52, 14)], F_LIT, F_DARK,
+        Firs([(50, 304, 42, 13), (68, 300, 48, 14), (142, 300, 50, 14), (160, 304, 42, 12)], F_LIT, F_DARK,
              tiers=2),
         Firs([(16, 338, 62, 12), (40, 342, 44, 9), (-2, 344, 42, 9), (204, 336, 68, 13), (228, 342, 52, 10),
               (184, 344, 36, 7)], F_LIT, F_DARK, tiers=2),

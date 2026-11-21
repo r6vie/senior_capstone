@@ -185,6 +185,11 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   Then the rice cover tightened (Josef): drawn through a slightly smaller window of the scene (`VIEW`, the cover's
   proportions, about 13% closer); the two hills closer together; less of the fields at the foot; the sun higher and
   larger; the lake's yellow glints and sun path replaced by a paler teal. The name line still clears at shelf size.
+- **Three fixes (Josef).** Winter cover: the aurora no longer trails off on the left (one even depth edge to edge);
+  "Long Nights, Clear Skies" wraps to four lines at shelf size, so the curtain sits just under that name line and the
+  snow hills come down to leave the night between. Mountain lake page: pale lake water lies behind the mountains'
+  misty feet, so no paper shows between them and the lake. Desert cover: low sage-olive scrub clumps on the sand, as
+  on its book page.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
