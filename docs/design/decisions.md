@@ -193,6 +193,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 - **Purple in the aurora (Josef), cover and page.** The curtain runs green at the hem, teal, then violet and a soft
   purple in its upper body before it dissolves; the colours climb faster than the height and fade less toward paper,
   so the purple reads.
+- **Desert cover: an arch (Josef).** The tilted butte is replaced by a great rock arch of the same rock, the low sun
+  seen through its opening (drawn in front of the haze cliff and behind the arch), with one thin spire beside it;
+  both stay under the shelf-size name line.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

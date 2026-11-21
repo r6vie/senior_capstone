@@ -41,15 +41,27 @@ def desert():
     shade edge a stepped diagonal, and now a lean, so the cap sits right of its base; rose dusk light on the cap; the
     coral-gold sun behind the upper right shoulder; warm peach haze mesas behind (no purple); a smaller, nearer cliff
     in the right foreground in deeper terracotta, leaning the same way; calm sand over a dark umber base."""
-    hero = Mesa(92, 178, 44, 70, 292, TERRA_L, TERRA_D, ledges=4, bed=8, seed=53, talus=True, top_tint=ROSE,
-                shadow_slope=0.35, wobble=0, speckle=0.4, flicker=0.02, lean=0.12, flare=6,
-                bedding=([204, 234, 262], "#D9845A"))
+    # the hero is now a great rock arch (Josef): a broad slab of the same rock with a tall opening through its foot,
+    # the low sun seen through it; beside it one thin spire. Both stay under the shelf-size name line (y ~180).
+    class Arch(Mesa):
+        def __init__(self, *a, hole=(0, 0, 1, 1), **k):
+            super().__init__(*a, **k)
+            self.hole = hole
+
+        def cover(self, x, y):
+            cx, cy, rx, ry = self.hole
+            return super().cover(x, y) & ~(((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1)
+
+    hero = Arch(100, 192, 66, 80, 292, TERRA_L, TERRA_D, ledges=2, bed=8, seed=53, top_tint=ROSE, shadow_slope=0.35,
+                wobble=0, speckle=0.4, flicker=0.02, flare=4, hole=(104, 296, 40, 72),
+                bedding=([214, 236, 258], "#D9845A"))
+    spire = Mesa(196, 196, 7, 12, 296, TERRA_L, TERRA_D, ledges=2, bed=8, seed=57, talus=True, top_tint=ROSE,
+                 wobble=0, speckle=0.4, flicker=0.02, lean=0.06, flare=2)
     near = Mesa(206, 262, 24, 40, 318, NEAR_L, NEAR_D, ledges=2, bed=8, seed=54, talus=True, top_tint=ROSE,
                 wobble=0, speckle=0.4, flicker=0.02, lean=0.12, flare=3, shadow_steps=3)
-    sun = Blob([(166, 197, 28, 28)], GOLD, top_light=False)
+    sun = Blob([(104, 258, 20, 20)], GOLD, top_light=False)      # seen through the arch
     sun.ragged = 0     # a clean disc
     return [
-        sun,
         # the back cliff runs the full width as one line of flat tops at slightly different heights
         *[Mesa(cx, top, hw, hw + 4, 292, HAZE_PEACH, HAZE_PEACH_D, ledges=1, bed=8, seed=50 + i, wall_ledge=4, wobble=0,
                speckle=0.3, ragged=0, flicker=0.01)
@@ -57,7 +69,9 @@ def desert():
           for i, (cx, top, hw) in enumerate([(-6, 240, 14), (20, 236, 14), (46, 240, 14), (72, 244, 14),
                                              (98, 240, 14), (124, 236, 14), (150, 240, 14), (176, 244, 14),
                                              (202, 240, 14), (228, 232, 14), (254, 236, 14)])],
+        sun,          # in front of the haze cliff, behind the arch: it shows through the opening
         hero,
+        spire,
         Band(-60, 300, 288, 334, SAND_CALM, seed=58, lens=0.0),
         # scrub on the sand, as on the book page: low sage-olive clumps
         trees([20, 40], 316, 8, ["#A3A17A", "#8E8F68", "#7A7B58"], seed=60, spread=0.6),
