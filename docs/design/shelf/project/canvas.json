@@ -887,6 +887,14 @@
    "h": 1090,
    "title": "Book screen · Fir forest in morning light",
    "page": "final"
+  },
+  "TypeTrials.dc.html": {
+   "x": 2240,
+   "y": 0,
+   "w": 1100,
+   "h": 1290,
+   "title": "Cover type trials · actual shelf size",
+   "page": "final"
   }
  },
  "createdOnFiles": {
@@ -1164,7 +1172,8 @@
   "FinalCoverCity.dc.html",
   "FinalCoverForest.dc.html",
   "FinalBookCity.dc.html",
-  "FinalBookForest.dc.html"
+  "FinalBookForest.dc.html",
+  "TypeTrials.dc.html"
  ],
  "pages": [
   {

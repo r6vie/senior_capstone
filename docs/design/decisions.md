@@ -252,6 +252,14 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   the left and right edges. `render(..., flush=True)` stretches a run's outermost column to the edge after the row
   is laid, so it consumes the same random draws: the lake, desert, coast, valley, karst, winter, terraces and lagoon
   pages are pixel-identical inside and only their side edges changed (checked by diff).
+- **Cover type trials at true shelf size (Josef: unsure the typography does the art justice; wants three approaches on
+  a shelf at the real in-app scale, will pick one).** Board `TypeTrials` on "Covers: Strata" (`shelf/type_trials.py`):
+  the app's desktop shelf book (122 x 178 CSS px), shelf name, rule and ledge, at 1:1. A first shelf has three arts
+  with one approach each, then one shelf per approach across five covers. A Poster: Barlow Condensed 800 caps 20px,
+  the name in Barlow 700 9px under it. B Literary: Newsreader 600 16.5px (the app's book-title face), the name in
+  Plex Sans 600 caps 8.5px. C Label: the title in a thin framed label (Newsreader 600 14px), the name on a paper tab
+  cut into the foot of the art. A and B put a paper knockout behind the name where older art rises into it. Not a
+  decision yet: Josef picks.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
