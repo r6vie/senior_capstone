@@ -453,8 +453,18 @@ class Paddies:
                 return r, yy
         return None, yy
 
-    def _inside(self, side, r, x):
-        return (x <= r[3]) if side[1] > 0 else (x >= r[3])
+    def _edge_at(self, side, y):
+        # the slope's inner edge runs as one smooth diagonal through the terraces' edges, course by course, so the
+        # profile of the V does not step terrace by terrace
+        import numpy as np
+        rows = side[0]
+        ys = [r[0] for r in rows] + [rows[-1][1]]
+        es = [r[3] for r in rows] + [rows[-1][3]]
+        return float(np.interp(y, ys, es))
+
+    def _inside(self, side, r, x, y=None):
+        e = self._edge_at(side, y) if y is not None else r[3]
+        return (x <= e) if side[1] > 0 else (x >= e)
 
     def cover(self, x, y):
         import numpy as np
@@ -462,7 +472,7 @@ class Paddies:
         for j, xx in enumerate(x):
             for side in self.sides:
                 r, _ = self._row(side, xx, y)
-                if r and self._inside(side, r, xx) and (side[1] > 0) == (xx <= self.cx):
+                if r and self._inside(side, r, xx, y) and (side[1] > 0) == (xx <= self.cx):
                     out[j] = True
         return out
 
@@ -479,8 +489,6 @@ class Paddies:
             pal = inks["riser"]
         elif d >= pool_h:
             pal = inks["lip"]
-        elif i >= n - 3 and int(x // 6) % 3 == 0 and int(d // 4) % 2 == 1:
-            pal = self.seedling                              # rows of seedlings in the nearest paddies
         else:
             pal = inks["pool"]
         return pal[int(rng.random() * len(pal))]
@@ -515,7 +523,7 @@ def rice():
     lake.brick = (4.0, 12.0)
     # (pool courses, inner edge) per terrace, top down; the edges close on the middle, then the rows run across
     left = [(2, 40), (2, 58), (3, 74), (3, 90), (3, 104), (4, cx), (4, cx), (5, cx)]
-    right = [(2, 300), (3, 196), (2, 180), (3, 164), (3, 146), (3, 132), (4, cx), (4, cx), (5, cx)]
+    right = [(2, 226), (3, 196), (2, 180), (3, 164), (3, 146), (3, 132), (4, cx), (4, cx), (5, cx)]
     return [
         Ridge([(120, 196, 130, 120, 1.0)], 280, *FAR_1, seed=90, rough=2, smooth=True, flicker=0.02),
         disc(cx, 214, 18, BUTTER),
@@ -523,9 +531,6 @@ def rice():
               flicker=0.02),
         lake,
         Paddies(150, left, right, PADDY_LEFT, PADDY_RIGHT, SEEDLING, cx=cx, dip=6, seed=97),
-        # a planter bent over the near paddy, in a straw hat
-        Blocks([(52, 296, 58, 308, PLANTER), (54, 292, 62, 298, PLANTER), (52, 288, 64, 292, HAT),
-                (55, 284, 61, 288, HAT)]),
         # the hut on stilts on the right crest
         Blocks([(203, 158, 206, 172, STILT), (222, 158, 225, 172, STILT)]),
         Mesa(214, 142, 11, 11, 158, *THATCH, ledges=1, bed=8, seed=95, wobble=0, speckle=0, ragged=0),
