@@ -225,6 +225,13 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   hayloft, side windows, board seams; the fence a near run along the lower left, four posts and two continuous rails;
   the bridge rebuilt clean: a level deck with a dark underside, one continuous cable from a shore anchor over the far
   tower, sagging below the sun and easing up to land on the near tower's top, even hangers, one low continuous shore.
+  Then (Josef, 2026-11-21: doesn't like the farm and the bridge; remove them, do a forest instead): the prairie and
+  bay covers and their boards are gone; `FinalCoverForest` ("Room to Grow", Noah Bergstrom, ink #283d2e) takes the
+  slot under the city. A fir forest on a bright morning seen from a trail across a meadow: the trail, an opening in
+  the trees and the low sun in it on one axis; one old fir on the right edge, the only thing above the name line,
+  with uneven tiers, a missing and a long bough, its trunk and shadow showing; a mid stand in uneven clumps with one
+  tall fir leading; small pale firs in the opening; a fir pair and ferns as the lower-left anchor; the meadow edge
+  undulating. Two Josef-eye critic rounds. (A first try of bare trunks dissolving into haze read as poles.)
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

@@ -864,20 +864,12 @@
    "title": "Cover · Lakefront city at dusk",
    "page": "final"
   },
-  "FinalCoverPrairie.dc.html": {
+  "FinalCoverForest.dc.html": {
    "x": 0,
    "y": 10800,
    "w": 600,
    "h": 1090,
-   "title": "Cover · Prairie farm at harvest",
-   "page": "final"
-  },
-  "FinalCoverBay.dc.html": {
-   "x": 0,
-   "y": 12000,
-   "w": 600,
-   "h": 1090,
-   "title": "Cover · Bay bridge at sunset",
+   "title": "Cover · Fir forest in morning light",
    "page": "final"
   }
  },
@@ -1154,8 +1146,7 @@
   "FinalBookTerraces.dc.html",
   "FinalBookLagoon.dc.html",
   "FinalCoverCity.dc.html",
-  "FinalCoverPrairie.dc.html",
-  "FinalCoverBay.dc.html"
+  "FinalCoverForest.dc.html"
  ],
  "pages": [
   {

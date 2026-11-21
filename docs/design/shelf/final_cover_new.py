@@ -25,10 +25,8 @@ COVERS = [
          author="Keoni Akana", ink="#1f4f5a"),
     dict(key="city", file="FinalCoverCity", label="lakefront city at dusk", title="Small Bets, Big City",
          author="Danielle Owens", ink="#2f3448"),
-    dict(key="prairie", file="FinalCoverPrairie", label="prairie farm at harvest", title="Weather Decides",
-         author="Caleb Lindgren", ink="#5c3a22"),
-    dict(key="bay", file="FinalCoverBay", label="bay bridge at sunset", title="Spanning the Gap",
-         author="Rosa Delgado", ink="#2e3a52"),
+    dict(key="forest", file="FinalCoverForest", label="fir forest in morning light", title="Room to Grow",
+         author="Noah Bergstrom", ink="#283d2e"),
 ]
 
 for c in COVERS:

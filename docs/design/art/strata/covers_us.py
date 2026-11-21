@@ -1,12 +1,13 @@
-"""Three more strata covers, chosen to be relatable for American members (Josef, 2026-11-20): a lakefront city at
-dusk, a prairie farm at harvest, a bay bridge at sunset. Same style and rules as covers_new.py (see CRITIC.md):
+"""Strata covers chosen to be relatable for American members (Josef, 2026-11-20/21): a lakefront city at dusk and
+an old-growth forest in morning haze (the prairie farm and the bay bridge were dropped). Same style and rules as covers_new.py (see CRITIC.md):
 236 x 344 world, title and name on paper at the top, art below y ~180 left of x ~200 (the shelf-size name line),
 light from the left, no UI red.
 
-python3 covers_us.py [city|prairie|bay ...] -> out/us-{name}-{xl,sm}.png"""
+python3 covers_us.py [city|forest ...] -> out/us-{name}-{xl,sm}.png"""
+import math
 import sys
 sys.path.insert(0, ".")
-from strata import Ridge, Blob, Water, Band, Mesa, River, Firs, trees, render
+from strata import Ridge, Blob, Water, Band, Mesa, River, Grove, Firs, render
 from covers_new import Blocks, disc
 
 # ---- 1 lakefront city at dusk ----
@@ -62,189 +63,187 @@ def city():
     ]
 
 
-# ---- 2 prairie farm at harvest ----
-SUN_G = ["#F5DDA0", "#F1D18A", "#ECC57A"]
-WHEAT = ["#E9CC86", "#E2C177", "#DBB66A"]
-WHEAT_D = ["#C9A25A", "#BD9750"]
-CORN = ["#9DAA62", "#909E57", "#83924D"]
-PLOW = ["#A8805C", "#9C7552", "#906A49"]
-ROAD = ["#D9C8A8", "#CFBD9C", "#C4B290"]
-BARN_L = ["#9A5A3C", "#8E5236"]                    # weathered barn: rust brown, never the UI red
-BARN_D = ["#5E3426", "#552F22"]
-BARN_ROOF = ["#5C5650", "#524D48"]
-BARN_TRIM = ["#E8E0D2", "#DED5C6"]
-SILO_L = ["#C9C4BA", "#BFB9AE"]
-SILO_D = ["#8C877E", "#837E75"]
-WINDBREAK = ["#5E7445", "#526840", "#465C37", "#3A4F2E"]
-FAR_FIELD = ["#D8CFA8", "#D1C79E"]
+# ---- 2 old-growth forest in morning light ----
+GLOW = ["#F7ECCF", "#F3E3BF", "#EFDAB0"]
+FAR_T = (["#DDD4CB", "#D6CDC4"], ["#C7BEBB", "#BFB6B3"])          # far trunks, lost in the haze
+MID_T = (["#BC9278", "#B3896F"], ["#8A6656", "#805D4F"])
+NEAR_T = (["#A06A4E", "#976247"], ["#5E3D31", "#55372C"])          # bark: brown, never the UI red
+GIANT_T = (["#9A6448", "#905C42", "#A46E50"], ["#4E3229", "#462D25", "#563830"])
+FLOOR_FAR = ["#D3D6B4", "#CACEA9"]
+FLOOR = ["#9DAA78", "#93A06E", "#899665", "#7F8C5C"]
+MOSS_D = ["#5F6E45", "#56653E", "#4D5B37"]
+PATH = ["#EDE0BC", "#E6D7B0", "#DECDA3"]
+FERN = ["#6F8A4C", "#637E44", "#56703C", "#47602F", "#3B5128"]
 
 
-class Furrows:
-    """Fields in perspective: crop rows fanning out from a vanishing point at the farmstead, alternating wheat and
-    darker stubble, so the field leads the eye to the barn instead of lying in stripes."""
+class Boles:
+    """Tree trunks rising out of the forest floor into the morning haze: each trunk tapers a little, flares at its
+    root, is lit on the left and in shade on the right, and dissolves upward into paper by omitted slabs and paling,
+    never a hard cut. trunk: (cx, top, base, half_width, fade_len, (lit, dark))."""
 
-    brick = (1.6, 6.0)
+    brick = (1.2, 4.0)
+    ragged = 0
+    min_run = 0.5
 
-    def __init__(self, y0, vx, vy, inks_a, inks_b, rows=22, seed=1):
+    def __init__(self, trunks):
         from strata import hexrgb
-        self.y0, self.vx, self.vy, self.rows, self.seed = y0, vx, vy, rows, seed
-        self.a, self.b = [hexrgb(c) for c in inks_a], [hexrgb(c) for c in inks_b]
+        self.t = [(cx, top, base, hw, fl, [hexrgb(c) for c in lit], [hexrgb(c) for c in dark])
+                  for cx, top, base, hw, fl, (lit, dark) in trunks]
+
+    def _hw(self, tr, y):
+        cx, top, base, hw, fl, _, _ = tr
+        if not (top <= y <= base):
+            return -1
+        w = hw * (0.85 + 0.15 * (y - top) / max(1, base - top))
+        root = max(0, (y - (base - hw * 2.2)) / (hw * 2.2))
+        return w + hw * 0.9 * root ** 2
+
+    def _fade(self, tr, y):
+        cx, top, base, hw, fl, _, _ = tr
+        return 0 if fl <= 0 else max(0.0, min(1.0, (top + fl - y) / fl))
 
     def cover(self, x, y):
         import numpy as np
-        return np.full(len(x), y >= self.y0, dtype=bool)
+        from strata import _h
+        m = np.zeros_like(x, dtype=bool)
+        for i, tr in enumerate(self.t):
+            hw = self._hw(tr, y)
+            if hw <= 0:
+                continue
+            f = self._fade(tr, y)
+            if f > 0 and _h(i * 7, round(y * 3), 41) < f ** 1.4:
+                continue
+            m |= np.abs(x - tr[0]) <= hw
+        return m
 
     def colour(self, x, y, rng):
-        import math
-        ang = math.atan2(x - self.vx, max(1.0, y - self.vy))
-        pal = self.a if int(math.floor(ang * self.rows / math.pi * 2)) % 2 else self.b
+        from strata import mix
+        best = min(self.t, key=lambda tr: abs(x - tr[0]) if self._hw(tr, y) > 0 else 1e9)
+        cx, hw = best[0], self._hw(best, y)
+        pal = best[5] if x < cx - hw * 0.15 else best[6]
+        c = pal[int(rng.random() * len(pal))]
+        f = self._fade(best, y)
+        return mix(c, (255, 255, 255), f * 0.85) if f > 0 else c
+
+
+def stand(clumps, base, seed, rise=0.0):
+    """A tree line in clumps: firs of very uneven height standing shoulder to shoulder within a clump, with gaps of
+    their own width between clumps, so the tips never comb. clump: (x0, x1, height, half_width); rise: the line of
+    tips climbs this much per unit x toward the right."""
+    import random
+    r = random.Random(seed)
+    out = []
+    for x0, x1, h, hw in clumps:
+        x = x0
+        while x < x1:
+            k = r.uniform(0.45, 1.0)
+            out.append((x, base + r.uniform(-2, 2), h * k * (1 + rise * x), hw * (0.75 + 0.35 * k)))
+            x += hw * r.uniform(0.9, 1.7)
+    return out
+
+
+class OldFir(Firs):
+    """A big fir drawn by hand rather than by formula: each tier's boughs reach a different length on each side, the
+    shaded right side has a short broken bough or two, and the leader is a few slabs thick."""
+
+    min_run = 0.7
+
+    def __init__(self, tree, lit, dark, tiers, seed=5, broken=(), reach=None):
+        super().__init__([tree], lit, dark, tiers)
+        import random
+        r = random.Random(seed)
+        self.jl = [r.uniform(0.82, 1.18) for _ in range(tiers + 1)]
+        self.jr = [r.uniform(0.8, 1.15) * (0.55 if i in broken else 1) for i in range(tiers + 1)]
+        for i, (l, rr) in (reach or {}).items():      # a missing or a long bough on one side
+            self.jl[i], self.jr[i] = l, rr
+
+    def _sides(self, y):
+        x, base, h, w = self.t[0]
+        up = base - y
+        if up < 0 or up > h:
+            return None
+        f = up / h
+        i = int(f * self.tiers)
+        saw = 1 - ((f * self.tiers) % 1)
+        hw = max(1.6, w * (1 - f) ** 0.9 * (0.4 + 0.6 * saw ** 0.8))
+        return x - hw * self.jl[i], x + hw * self.jr[i]
+
+    def cover(self, x, y):
+        import numpy as np
+        s = self._sides(y)
+        if s is None:
+            return np.zeros_like(x, dtype=bool)
+        return (x >= s[0]) & (x <= s[1])
+
+    def colour(self, x, y, rng):
+        pal = self.lit if x < self.t[0][0] - 0.8 else self.dark
         return pal[int(rng.random() * len(pal))]
 
 
-def prairie():
-    """Harvest on the plains: a flat horizon with the low gold sun on the left, half behind a windbreak in three
-    irregular groups; the farmstead in the middle distance, a gambrel barn (lit gable, shaded side, one door) with a
-    domed silo close beside it, both throwing shadow right; crop rows fanning out toward the barn; the farm road
-    curving in from the lower left; a cluster of fence posts in the near corner as the dark anchor."""
-    vx, vy = 165, 258
-    LIT, SHADE, ROOFD = ["#8A4A32", "#80442E"], ["#5E3326", "#552E22"], ["#3E3936", "#36322F"]
-    # the gambrel gable end facing us: straight walls, then steep lower roof flanks, then a shallow cap; a dark roof
-    # edge traces the outline; the side wall goes back to the right in shade under its own roof plane
-    # the gambrel gable end facing us, larger so its details read: straight walls, steep lower roof flanks, a shallow
-    # cap; a bold pale trim traces the roof; the side wall goes back to the right in shade under its roof plane
-    rows = [(y, 124, 174) for y in range(262, 232, -4)] + \
-           [(232, 125, 173), (228, 127, 171), (224, 131, 167), (220, 137, 161), (216, 143, 155), (212, 147, 151)]
-    WALLS = 7                          # rows of straight wall before the roof begins
-    gable = [(l, y - 4, r, y, LIT) for y, l, r in rows]
-    # the roof edge and its cream trim run continuously: each piece spans from this row's edge back to the one below
-    roof_rows = rows[WALLS - 1:]
-    edge, eave_trim = [], []
-    for (yb, lb, rb), (y, l, r) in zip(roof_rows, roof_rows[1:]):
-        edge += [(min(l, lb) - 3, y - 4, l, y, ROOFD), (r, y - 4, max(r, rb) + 3, y, ROOFD)]
-    for (yb, lb, rb), (y, l, r) in zip(roof_rows, roof_rows[1:]):
-        eave_trim += [(min(l, lb), y - 4, l + 2, y, ["#EDE6D8", "#E3DACB"]),
-                      (r - 2, y - 4, max(r, rb), y, ["#EDE6D8", "#E3DACB"])]
-    side = [(174, 234, 198, 262, SHADE)]
-    roof_side = [(r + 1, y - 4, r + 24, y, ROOFD) for y, l, r in rows[WALLS - 1:]]
-    TRIM = ["#EDE6D8", "#E3DACB"]
-    BOARD = ["#7A4029", "#723C27"]
-    boards = [(x, 234, x + 1.5, 262, BOARD) for x in (130, 137, 161, 168)]
-    # a plain cream frame round one double door, a single dark seam down its middle; a small framed hayloft
-    door = [(138, 240, 160, 262, TRIM), (141, 243, 157, 262, SHADE), (148, 243, 150, 262, ["#3A2A22"])]
-    loft = [(146, 222, 156, 230, TRIM), (148, 224, 154, 230, SHADE)]
-    windows = [(178, 242, 185, 250, ["#3A2A22"]), (188, 242, 195, 250, ["#3A2A22"]),
-               (177, 240, 186, 242, TRIM), (187, 240, 196, 242, TRIM)]
-    cupola = []
-    barn = Blocks(gable + boards + side + roof_side + edge + eave_trim + door + loft + windows + cupola)
-    SILO_LB, SILO_DB = ["#9A9890", "#928F88"], ["#6E6C68", "#666461"]
-    silo = Blocks([(202, 196, 209, 262, SILO_LB), (209, 196, 216, 262, SILO_DB),
-                   (203, 192, 215, 196, SILO_LB), (205, 188, 213, 192, SILO_LB), (207, 185, 211, 188, SILO_DB)])
-    dome = Blocks([])
-    road = River(262, 344, 140, -40, 4, 60, ROAD, ROAD, swings=0.6, phase=0.0, seed=40)
-    # a fence in perspective from the near corner back toward the road: posts shrinking and closing up with distance
-    # (ground line, height, width), two continuous rails along them
-    # a near fence along the lower left, receding gently: the posts and both rails read as separate pieces
-    pts = [(6, 344, 28, 4), (38, 336, 23, 3.5), (66, 329, 19, 3), (90, 323, 15, 3)]
-    POST, RAIL = ["#4A3A2C", "#40322A"], ["#5A4030", "#523A2B"]
-    rails = []
-    for frac in (0.3, 0.65):
-        for (xa, ga, ha, wa), (xb, gb, hb, wb) in zip(pts, pts[1:]):
-            ya, yb = ga - ha * (1 - frac), gb - hb * (1 - frac)
-            th = 2.5
-            for k in range(int(xa), int(xb), 2):
-                t = (k - xa) / (xb - xa)
-                y0 = ya + (yb - ya) * t
-                y1 = ya + (yb - ya) * min(1, t + 2 / (xb - xa))
-                rails.append((k, min(y0, y1) - th / 2, k + 2.5, max(y0, y1) + th / 2, RAIL))
-    posts = Blocks(rails + [(x, g - h, x + w, g, POST) for x, g, h, w in pts])
+class Meadow:
+    """Open ground whose edge against the trees undulates instead of running dead level."""
+
+    brick = (2.0, 10.0)
+
+    def __init__(self, top, base, colours):
+        from strata import hexrgb
+        self.top, self.base = top, base
+        self.c = [hexrgb(c) for c in colours]
+
+    def cover(self, x, y):
+        import numpy as np
+        return (y >= np.array([self.top(v) for v in x])) & (y <= self.base)
+
+    def colour(self, x, y, rng):
+        return self.c[int(rng.random() * len(self.c))]
+
+
+SUN_F = ["#EFD49A", "#EACB8C", "#E4C27F"]
+
+
+def forest():
+    """A fir forest on a bright morning, seen from a trail across a meadow: the trail, an opening in the trees and the
+    low sun in it line up as the focal axis; one old fir on the right edge rising high (the only thing above the name
+    line), uneven and lived-in, its trunk flaring into the meadow and its shadow thrown right; a mid stand in clumps
+    whose tips climb gently toward the right; small warm-hazed firs in the opening; a low fir and ferns in the lower
+    left as the near anchor; the meadow edge undulating against the trees."""
+    sun = disc(98, 214, 14, SUN_F)
+    far = Firs(stand([(-10, 30, 62, 10), (44, 70, 50, 9), (76, 120, 40, 8), (128, 160, 54, 10), (170, 250, 64, 10)],
+                     272, 70), ["#D2D4BC", "#CBCDB4"], ["#B7BBA6", "#AFB39F"], tiers=4)
+    # the mid stand: two uneven groups on the left with a gap, the opening, then a clump led by one tall fir
+    mid = Firs([(x, b, h * 1.35, w * 1.25) for x, b, h, w in
+                [(4, 282, 40, 10), (16, 284, 54, 11), (30, 281, 30, 8), (62, 283, 46, 10), (74, 282, 28, 8),
+                 (122, 282, 34, 9), (136, 283, 50, 11), (158, 285, 74, 13), (172, 282, 40, 10), (186, 284, 56, 11),
+                 (198, 284, 32, 9)]], ["#86A06C", "#7D9764"], ["#536E4C", "#4B6545"], tiers=6)
+    side = Firs([(180, 300, 84, 18)], ["#7A9663", "#728E5C"], ["#4A6444", "#435C3E"], tiers=6)
+    corner = Firs([(14, 350, 84, 19), (40, 352, 56, 14)], ["#7A9663", "#728E5C"], ["#3E5A3E", "#385238"], tiers=5)
+    big = OldFir((222, 316, 226, 40), ["#5A774B", "#526E44"], ["#26392B", "#22342A"], tiers=10, seed=8,
+                 broken=(5,), reach={7: (0.55, 1.0), 3: (1.35, 1.1), 1: (1.2, 1.25), 0: (1.25, 1.3)})
+    trunk = Boles([(222, 292, 340, 4.6, 0, (["#7A5240", "#704A3A"], ["#4A3128", "#422B23"]))])
     return [
-        disc(58, 236, 20, SUN_G),
-        # the far fields: an uneven low strip, darker under the trees
-        Ridge([(10, 250, 50, 40, 1.0), (90, 254, 50, 50, 1.0), (170, 251, 40, 50, 1.0), (240, 252, 50, 40, 1.0)],
-              262, ["#C9B98A", "#BFAF80"], ["#B5A576", "#AC9C6E"], seed=41, rough=2, smooth=True, flicker=0.02),
-        trees([18, 34, 52], 256, 10, WINDBREAK, seed=42, spread=0.8),
-        trees([96, 108], 258, 6, WINDBREAK, seed=43, spread=0.8),
-        trees([226, 238], 256, 9, WINDBREAK, seed=48, spread=0.8),
-        Furrows(262, vx, vy, WHEAT, ["#B38E52", "#A8844A"], rows=13, seed=45),
-        # darker furrow lines converging on the farmstead, and the near field deepening toward us
-        Blocks([(vx + (xb - vx) * (y - vy) / (344 - vy), y, vx + (xb - vx) * (y - vy) / (344 - vy) + 2 + (y - vy) / 16,
-                 y + 4, ["#A88440", "#9E7B3B"]) for xb in (-60, 30, 120, 220, 300, 380) for y in range(266, 344, 4)]),
-        Blob([(118, 344, 160, 18)], ["#9C7A3A", "#94733A", "#8C6C36"], top_light=False),
-        road,
-        # shadows thrown right by the barn and silo
-        Blob([(214, 266, 30, 4)], ["#B9985E", "#AE8E56"], top_light=False),
-        barn, silo, dome,
-        posts,
+        sun,
+        # the haze floor behind the stands, so no paper shows between the planes
+        Band(-60, 300, 264, 286, ["#D6D8C2", "#CFD2BB"], seed=60, lens=0.0),
+        far,
+        mid,
+        # the meadow: its edge undulates against the trees; gold in the sun at the back, deepening toward us
+        Meadow(lambda x: 278 + 3 * math.sin(x / 21 + 0.6) + 1.8 * math.sin(x / 8.5), 352,
+               ["#DCD39C", "#D5CC93", "#D0C78E"]),
+        Band(-60, 300, 304, 352, ["#B9B97C", "#AFB074", "#A5A76C"], seed=63, lens=0.0),
+        # shade along the foot of the trees, and tussocks breaking up the meadow
+        Meadow(lambda x: 278 + 3 * math.sin(x / 21 + 0.6) + 1.8 * math.sin(x / 8.5) if not 84 < x < 118 else 999,
+               286, ["#BFB77C", "#B8B076"]),
+        Blob([(30, 300, 14, 2.4), (160, 296, 12, 2.0), (66, 318, 16, 2.6), (180, 328, 18, 3), (128, 336, 14, 2.4)],
+             ["#A3A266", "#9A9A60"], top_light=False),
+        River(276, 352, 100, 20, 4, 44, PATH, GLOW, swings=1.0, phase=0.5, seed=62),
+        # shadows thrown right by the firs across the meadow
+        Blob([(200, 302, 16, 3.5), (238, 342, 30, 3), (58, 344, 20, 3)], ["#8E955E", "#868D58"], top_light=False),
+        side, trunk, big, corner,
+        Grove([(4, 348, 22, 7), (60, 352, 14, 5)], FERN),
     ]
 
 
-# ---- 3 bay bridge at sunset ----
-SUN_S = ["#F3C29A", "#EFB487", "#E9A676"]
-HILL_FAR = (["#C8BFD3", "#C0B7CC"], ["#A39CB6", "#9B94AE"])
-HILL_MID = (["#A9A3B8", "#A09AAF"], ["#7E7896", "#76708E"])
-BRIDGE = ["#9B5A3E", "#8F5238"]                  # muted rust, never the UI red
-BRIDGE_D = ["#6A3A28", "#5F3424"]
-BAY = ["#8C9CB6", "#8292AC", "#7787A1", "#6C7C96"]
-BAY_G = ["#EAC6AE", "#E2BBA3"]
-SAIL = ["#F4F1EC", "#E9E5DE"]
-HEADLAND = (["#7E8C5E", "#738255", "#68774C"], ["#465436", "#3E4B30", "#36422A"])
-CYPRESS = ["#3F5236", "#36482F", "#2E3E28"]
-
-
-def bay():
-    """A suspension bridge across the bay at sunset, seen at an angle: the near tower tall on the right (the only
-    thing above the name line), two legs and three crossbars, its left leg lit; the far tower smaller and paler toward
-    the middle; a solid deck with a dark underside running off to the left; the main cable a clean catenary two slabs
-    thick; the sun low in the haze between the towers, clear of every cable, its warm reflection beneath; soft hills
-    behind, a step darker so the deck separates; a headland with cypresses in the lower left as the near anchor."""
-    import math
-    # a level deck with a dark underside; two towers (the near one tall on the right, the far one smaller); one
-    # continuous main cable: up from a shore anchor to the far tower's top, sagging below the sun, up to the near
-    # tower's top where it stops; hangers at even spacing between cable and deck
-    DECK_T, DECK_B = 240, 246
-    TF = (121, 194)                    # far tower top (centre)
-    TN = (220, 124)                    # near tower top (centre)
-    LOW = (156, 230)                   # the cable's lowest point, below the sun
-
-    def cable_y(x):
-        if x <= TF[0]:                                     # from the anchor at the deck's far end up to the far tower
-            return DECK_T + (TF[1] - DECK_T) * (x - 0) / (TF[0] - 0)
-        if x <= LOW[0]:
-            return LOW[1] - (LOW[1] - TF[1]) * ((LOW[0] - x) / (LOW[0] - TF[0])) ** 2
-        # a gentler rise that starts sooner and only meets the tower at its top
-        return LOW[1] - (LOW[1] - TN[1]) * ((x - LOW[0]) / (208 - LOW[0])) ** 1.45
-
-    # each cable piece spans its own slope, so the steep run up to the tower stays one line
-    cable = [(x, min(cable_y(x), cable_y(x + 2)) - 2.5, x + 3, max(cable_y(x), cable_y(x + 2)) + 2.5, BRIDGE_D)
-             for x in range(0, 206, 2)]
-    hangers = [(x, cable_y(x + 1) + 2, x + 2, DECK_T, ["#7A4630"]) for x in range(TF[0] + 12, 204, 10)]
-    deck = [(-20, DECK_T, 260, DECK_T + 3, BRIDGE), (-20, DECK_T + 3, 260, DECK_B, ["#4A2A1E", "#43261B"])]
-    far = [(114, 194, 119, 250, ["#B88A72", "#AE8068"]), (124, 194, 129, 250, ["#9C6E58", "#93664F"]),
-           (114, 204, 129, 208, ["#9C6E58"]), (114, 222, 129, 226, ["#9C6E58"]), (113, 190, 130, 194, ["#9C6E58"])]
-    near = [(208, 124, 216, 256, BRIDGE), (226, 124, 234, 256, BRIDGE_D), (206, 118, 236, 124, BRIDGE_D),
-            (208, 146, 234, 152, BRIDGE_D), (208, 182, 234, 188, BRIDGE_D), (208, 216, 234, 222, BRIDGE_D)]
-    bridge = Blocks(cable + hangers + deck + far + near)
-    # one low continuous far shore just above the deck, no loose bumps
-    hills = Ridge([(40, 232, 160, 140, 0.6), (190, 230, 110, 100, 0.6)], 258, ["#6E6A85", "#68647F"],
-                  ["#5A5672", "#54506B"], seed=50, rough=2, smooth=True, flicker=0.02)
-    bay_w = Water(256, 352, -120, 720, BAY, ["#9DACC4", "#A7B5CB"], seed=51, mirror=[hills], gaps=(0, 0),
-                  squash=0.5)
-    bay_w.brick = (5.0, 14.0)
-    return [
-        disc(150, 198, 14, SUN_S),
-        hills,
-        Band(-60, 300, 254, 260, ["#5E5A72", "#56526A"], seed=53, lens=0.0),
-        bay_w,
-        Blob([(150, 270, 9, 3.5), (149, 284, 7, 3.5), (151, 298, 5, 3)], ["#EDC4A6", "#E5B999"], top_light=False),
-        bridge,
-        # the headland in the lower left, lit on its left shoulder, and its cypresses
-        # one low, uneven dark bluff spreading off the lower-left edge
-        Ridge([(-30, 304, 110, 120, 0.7), (56, 322, 36, 50, 0.9)], 352, ["#3E4C36", "#38452F"],
-              ["#2E3A2A", "#283324"], seed=54, rough=4, ribs=0.4, smooth=True, flicker=0.03),
-    ]
-
-
-SCENES = {"city": city, "prairie": prairie, "bay": bay}
+SCENES = {"city": city, "forest": forest}
 
 if __name__ == "__main__":
     for name in sys.argv[1:] or SCENES:
