@@ -143,6 +143,7 @@ class Land:
 FAR = (["#C9C2D6", "#C2BBCF"], ["#A9A2BE", "#A29BB7"])
 SUN = ["#F3CD8C", "#F0C47E", "#EAB972"]
 TREE = ["#5E7446", "#536940", "#475C37", "#3B4E2E"]
+TREE_DARK = ["#3A4D2F", "#2F4026", "#25331E"]
 CROPS = [WHEAT, SAGE, GREEN, OCHRE, PLOW, PALE]
 
 
@@ -193,8 +194,8 @@ def cover():
     ]
 
 
-HOUSE_W = (["#EDE6D8", "#E5DDCC"], ["#BDB3A2", "#B3A998"])
-ROOF = ["#7A5A48", "#6C4F40"]
+HOUSE_W = (["#F6F2EA", "#F1ECE2"], ["#C2B8A6", "#B8AE9C"])
+ROOF = ["#7A5440", "#70503C"]
 LANE = ["#E9DDBF", "#E2D5B4", "#DACCA8"]
 
 
@@ -209,9 +210,31 @@ class Lane:
         self.pts = pts                      # (x, t) from far to near
         self.c = [hexrgb(c) for c in colours]
 
+    def _half(self, t):
+        if isinstance(self.width, tuple):
+            t0, t1 = self.pts[0][1], 1.0
+            u = min(1.0, max(0.0, (t - t0) / (t1 - t0)))
+            return self.width[0] + (self.width[1] - self.width[0]) * u
+        return self.width * (0.15 + t)
+
+    def _smooth(self):
+        """A Catmull-Rom curve through the control points, sampled densely, so the lane bends without kinks."""
+        P = [self.pts[0]] + list(self.pts) + [self.pts[-1]]
+        out = []
+        for i in range(1, len(P) - 2):
+            p0, p1, p2, p3 = (np.array(q, dtype=float) for q in P[i - 1:i + 3])
+            for u in np.linspace(0, 1, 40, endpoint=False):
+                out.append(0.5 * ((2 * p1) + (-p0 + p2) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u ** 2
+                                  + (-p0 + 3 * p1 - 3 * p2 + p3) * u ** 3))
+        out.append(np.array(P[-2], dtype=float))
+        c = np.array(out)
+        order = np.argsort(c[:, 1])
+        return c[order, 1], c[order, 0]
+
     def _x(self, t):
-        ts = [p[1] for p in self.pts]
-        xs = [p[0] for p in self.pts]
+        if not hasattr(self, "_curve"):
+            self._curve = self._smooth()
+        ts, xs = self._curve
         return float(np.interp(t, ts, xs))
 
     def cover(self, x, y):
@@ -222,12 +245,12 @@ class Lane:
             t = self.land.t_at(xv, y)
             if t < self.pts[0][1] or t > self.pts[-1][1]:
                 continue
-            out[i] = abs(xv - self._x(t)) < self.width * (0.15 + t)
+            out[i] = abs(xv - self._x(t)) < self._half(t)
         return out
 
     def colour(self, x, y, rng):
         t = self.land.t_at(x, y)
-        if x - self._x(t) > self.width * (0.15 + t) * 0.55:
+        if x - self._x(t) > self._half(t) * 0.55:
             return hexrgb("#CDBF98")
         return self.c[int(rng.random() * len(self.c))]
 
@@ -245,37 +268,59 @@ def hedge_trees(land, xs, t, s, seed):
 
 def page():
     """The farmland opened up: a lilac range low on the horizon with the sun just above it on the left; the land
-    rolling in three swells, the strips of crops running across them in perspective and bending over each shoulder,
-    shaded where they fall away to the right; field boundaries converging on the horizon; a lane winding from the
-    near edge over the middle swell to a white farmhouse with a dark roof among trees; trees along the hedgerows; on
-    the right the highest swell rises with one big tree on its crest, the only thing above the text's corner."""
-    land = Land(452, 760, -20, 600, [(505, 0.30, 140, 0.24, 118), (240, 0.52, 110, 0.18, 46),
+    rolling in three swells, fields clearly separated, every near field closed by dark hedges, strips of crops running
+    across in perspective and bending over each shoulder, shaded where they fall away to the right; boundaries
+    converging on the horizon with bushes standing where hedgerows meet; a lane curving smoothly from the near edge
+    over the middle swell to a white farmhouse with a low brown roof among trees; on the right the highest swell with
+    two trees on its crest, the only thing above the text's corner; a deep green near field."""
+    land = Land(452, 760, -20, 600, [(505, 0.30, 150, 0.2, 118), (240, 0.52, 110, 0.18, 46),
                                        (60, 0.80, 140, 0.2, 30)], CROPS, seed=11,
-                cross=[(-300, 0.08, 1.2), (-90, 0.12, 1.2), (-10, 0.12, 1.2), (110, 0.1, 1.2), (200, 0.14, 1.2),
-                       (330, 0.16, 1.2), (560, 0.2, 1.2), (820, 0.12, 1.2)], vx=280, near_t=0.9)
-    crest_x = 515
-    crest_y = float(land.skyline[land._col(crest_x)])
-    hx, ht = 250, 0.40
+                cross=[(-60, 0.10, 1.2), (130, 0.1, 1.2), (330, 0.14, 1.2), (560, 0.2, 1.2)], vx=280, near_t=0.9,
+                cross_w=(1.4, 3.5), closed=True, grain=1.3)
+    hx, ht = 252, 0.43
     hy = float(land._y(np.array([float(hx)]), np.array([ht]))[0])
-    k = 1.6
+    k = 1.9
     house = Blocks([(hx + a * k, hy + b * k, hx + c * k, hy + d * k, ink) for a, b, c, d, ink in
                     [(-14, -12, 4, 0, HOUSE_W[0]), (4, -12, 14, 0, HOUSE_W[1]),
-                     # one wide, low gable in brown, about twice as wide as it is tall
-                     (-17, -15, 17, -12, ROOF), (-13, -18, 13, -15, ROOF), (-8, -21, 8, -18, ROOF),
-                     (-9, -8, -5, -2, ["#5E5650"]), (7, -8, 10, -2, ["#7A7066"])]])
+                     # one broad, low gable that overhangs both walls; one door on the lit face
+                     (-18, -15, 18, -12, ROOF), (-14, -18, 14, -15, ROOF), (-9, -20, 9, -18, ROOF),
+                     (-7, -7, -3, 0, ["#5E4436"])]])
+    crest = [(496, 13, 405), (534, 9, 407), (470, 6, 408)]
+    trees_on_crest = []
+    for cx, size, seed in crest:
+        cy = float(land.skyline[land._col(cx)])
+        trees_on_crest += [Blob([(cx + size * 1.1, cy + 3, size * 1.1, 2.2)], ["#4E5F3A", "#465634"],
+                                top_light=False)]
+        trees_on_crest += lone_tree(cx, cy + 3, size, seed, TREE_DARK)
     return [
         disc(120, 440, 20, SUN),
         Ridge([(80, 432, 140, 120, 1.0), (300, 438, 120, 140, 1.0), (470, 426, 90, 100, 1.0)], 456, *FAR,
               seed=401, rough=2, smooth=True, flicker=0.02),
         land,
-        Lane(land, [(262, 0.40), (300, 0.5), (230, 0.62), (190, 0.78), (250, 1.0), (300, 1.15)], 14, LANE),
-        *hedge_trees(land, [200, 284, 300], 0.40, 11, 402),
+        Lane(land, [(254, 0.43), (276, 0.54), (228, 0.74), (262, 1.12)], (4, 16), LANE),
+        *lone_tree(hx + 30, hy + 1, 13, 402, TREE_DARK),        # one dark tree behind the house's shaded side
         house,
-        *hedge_trees(land, [60, 92, 360, 420], 0.56, 11, 403),
-        *hedge_trees(land, [20], 0.86, 10, 404),
-        *hedge_trees(land, [470, 500, 532], 0.9, 14, 406),
-        *lone_tree(crest_x, crest_y + 4, 22, 405),
+        *page_joins(land, 402),
+        *trees_on_crest,
     ]
+
+
+def page_joins(land, seed):
+    """The page's bushes: one or two where a converging boundary meets a hedged strip edge, mid distance only."""
+    r = random.Random(seed)
+    out = []
+    edges = [e for e in land.edges[1:] if 0.42 < e < 0.88]
+    for k, t in enumerate(edges[:4]):
+        f = (land.h + (land.n - land.h) * t ** land.power - land.h) / (land.n - land.h)
+        for xn, t0, t1 in land.cross:
+            x = land.vx + (xn - land.vx) * f
+            if not (t0 <= t <= t1) or x < 24 or x > 450 or r.random() < 0.35 or (abs(x - 250) < 50 and t < 0.56):
+                continue
+            g = float(land._y(np.array([float(x)]), np.array([t]))[0])
+            for _ in range(r.choice((1, 1, 2))):
+                xx = x + r.uniform(-8, 8)
+                out += lone_tree(xx, g + 1, 9 * (0.5 + t) * r.uniform(0.85, 1.15), r.randrange(999))
+    return out
 
 
 if __name__ == "__main__":
