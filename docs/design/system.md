@@ -378,10 +378,12 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
   yet" and "No". A chosen "Not
   yet" is filled ink, as the toggle pair. Never red, and no confirm step: the line says what a final answer does
   before the press. Once the copy is back, "Not yet" isn't offered.
-- **Past meets** (2026-11-18, Ellie, `PastMeetsPage.tsx`). Task: find the people you've met again. The checkout list's
-  ruled items, each with a bookmark in the margin (an ink ribbon with a notched tail, `.past-meet-bookmark`, 16 by
-  44px): the other person's name, their book, which book was checked out and when it was returned, the contact
-  line, and "Your conversation". No counts and no red.
+- **Past meets** (2026-11-18, Ellie; cards 2026-11-22, `PastMeetsPage.tsx`). Task: find the people you've met again.
+  One column of Folio `.surf` cards (at most 760px, newest first, so a list of people reads top to bottom and no
+  card leaves a hole beside another), each with a bookmark hanging from its top edge near the right corner (an ink
+  ribbon with a notched tail, `.past-meet-bookmark`, 16 by 64px): the other person's name and their book, which book
+  was checked out and when it was returned, a "Did you meet?" box if they haven't answered, the contact line, and
+  "Your conversation". No counts and no red.
 - **Contact line** (2026-11-22, Ellie, `ContactDetails.tsx`). The reveal as one wrapping line: a small display-caps
   "Reach <name>" in `--ink-2`, then the email, LinkedIn profile and phone as links. Used on Checkouts and Past meets.
 

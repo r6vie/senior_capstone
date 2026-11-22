@@ -15,10 +15,12 @@ type Meet = components["schemas"]["PastMeet"];
 
 function MeetItem({ meet, reload }: { meet: Meet; reload: () => Promise<void> }) {
   return (
-    <li className="checkout past-meet">
+    <li className="co-card surf pm-card">
       <span className="past-meet-bookmark" aria-hidden="true" />
-      <h3 className="checkout-name">{meet.other_name}</h3>
-      {meet.other_book && <p className="muted">Author of "{meet.other_book.title}"</p>}
+      <div>
+        <h3 className="co-title">{meet.other_name}</h3>
+        {meet.other_book && <p className="co-meta">Author of "{meet.other_book.title}"</p>}
+      </div>
       <p>
         {meet.you_were === "reader"
           ? `You checked out "${meet.book_title}".`
@@ -70,7 +72,7 @@ export function PastMeetsPage() {
   }, [load]);
 
   return (
-    <main className="shell-page checkouts-page">
+    <main className="shell-page co-page">
       <h1 className="page-title">Past meets</h1>
       {loadFailed && (
         <p role="alert" className="message message-error">
@@ -92,8 +94,8 @@ export function PastMeetsPage() {
             </p>
           </div>
         ) : (
-          <section className="checkouts-section" aria-label="People you've met">
-            <ul className="checkout-list">
+          <section className="pm-section" aria-label="People you've met">
+            <ul className="pm-list">
               {meets.map((meet) => (
                 <MeetItem key={meet.checkout_id} meet={meet} reload={load} />
               ))}

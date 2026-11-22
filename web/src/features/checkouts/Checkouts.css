@@ -1,45 +1,11 @@
-/* Checkouts: stacked sections and a plain list, composed from the design system's recipes
-   (fields, buttons, messages, empty). Tokens only. See docs/design/system.md, Additions. */
+/* Checkouts, checking out a book, and Past meets, composed from the design system's recipes (cards, fields,
+   buttons, messages, empty). Tokens only. See docs/design/system.md, Additions. */
 
 .checkouts-page {
   max-width: 720px;
 }
 .checkouts-page > .message {
   margin: 0 0 var(--s-5);
-}
-.checkouts-section {
-  display: grid;
-  gap: var(--s-4);
-  padding: var(--s-5) 0;
-  border-top: var(--line-heavy) solid var(--ink);
-}
-.checkouts-heading,
-.checkout-name,
-.checkout-book {
-  margin: 0;
-  font: 600 26px / 1.1 var(--font-serif);
-}
-.checkout-name,
-.checkout-book {
-  font-size: 22px;
-}
-.checkout-list {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.checkout {
-  display: grid;
-  gap: var(--s-2);
-  padding: var(--s-4) 0;
-  border-bottom: var(--line) dotted var(--ink);
-}
-.checkout:last-child {
-  border-bottom: none;
-}
-.checkout p {
-  margin: 0;
 }
 /* The other member's own words: an ink rule, as in the emails' quotes. */
 .checkout-note {
@@ -127,18 +93,30 @@
   border-color: var(--ink);
 }
 
-/* Past meets (C4): each person carries a bookmark, an ink ribbon with a notched tail, in the margin. */
-.past-meet {
-  position: relative;
-  padding-left: var(--s-6);
+/* Past meets (C4; cards 2026-11-22): one column of wide cards, newest first, so a list of people reads top to
+   bottom and no card leaves a hole beside another. Each carries a bookmark: an ink ribbon with a notched tail,
+   hanging from the card's top edge near the right corner. */
+.pm-section {
+  margin-top: var(--s-6);
+}
+.pm-list {
+  display: grid;
+  gap: var(--s-6);
+  max-width: 760px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pm-card {
+  padding-right: calc(var(--s-7) + var(--s-2));
 }
 .past-meet-bookmark {
   position: absolute;
-  /* Level with the name, clear of the dotted rule above. */
-  top: var(--s-4);
-  left: 0;
+  z-index: 1;
+  top: calc(-1 * var(--s-2));
+  right: var(--s-5);
   width: var(--s-4);
-  height: var(--s-7);
+  height: var(--s-8);
   background: var(--ink);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%);
 }
