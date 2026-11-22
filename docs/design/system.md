@@ -406,3 +406,19 @@ Task: while a member types an answer in the interview, the Librarian marks it an
   Each sits a little off-level (rotation, left offset and size vary per entry) and may carry its own underline or a word rewritten above. A revised entry is struck with a line and rewritten;
   an erased one is rubbed out. A question built on an entry circles it, or ticks a saving.
 - **Phone.** The notebook is a sheet that lifts from a one-line peek above the composer; the dot scrim sits behind it.
+
+### Signed-out pages (2026-11-22, Ellie; `web/src/features/auth/AuthLayout.tsx`, `Auth.css`)
+
+Task: sign in, join or confirm your email. The form side of "Reference screen · Sign in" (`SysSignIn.dc.html`), set as
+one card in the middle of a comic dot ground:
+
+- **Top:** a plain paper strip with a 3px ink rule under it, holding the wordmark and one quiet link to the other page
+  ("Create an account" / "Sign in"). The strip keeps the tone from running behind them.
+- **Card:** Folio's `.surf` (white face, ink line, dot shadow), centred, at most 30rem wide. Inside, left-aligned as
+  always: a caption, a Newsreader page title, one line in the Librarian's voice (`--ink-2`), then the form with one red
+  button. Errors use `.message-error`.
+- **Ground:** 7px screentone dots, full strength at the page edges and fading to clean paper around the card, so no
+  text sits on tone.
+
+Centred, not left-aligned (a default): a sign-in page has one task and nothing to read beside it, so the card is the
+focal point. The reference's dark panel with a book was left out: it needed a sample book.
