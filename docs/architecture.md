@@ -23,7 +23,11 @@ removing the `/api` prefix. The frontend never talks to MongoDB or Claude direct
 - `trove/core/config.py` reads settings from the root `.env`; real environment variables win.
 - **Sessions:** `POST /auth/login` returns a random bearer token. Only its SHA-256 hash is
   stored, in `sessions`, with a TTL index for expiry. `get_current_user` checks the session and
-  the account on every request.
+  the account on every request, in one database trip (a `$lookup`, so MongoDB 5.0 or later).
+- **Speed:** the database is in the cloud, so every trip costs a network delay (tens of
+  milliseconds). A route that shows a list reads each kind of related data once for the whole
+  list (`$in`), not once per item, and runs independent reads together with `asyncio.gather`. See
+  `Lookups` in `trove/checkouts/router.py`.
 - **Errors:** validation errors never echo submitted values, and database errors become a
   generic 503. Every response is `Cache-Control: no-store` except the API docs.
 
@@ -57,7 +61,11 @@ Each new feature adds its rows here in the PR that creates its collections.
 - `src/api/client.ts` is an `openapi-fetch` client typed by the generated `src/api/schema.ts`. A
   middleware adds the bearer token from `sessionStorage`.
 - `src/features/auth/AuthProvider.tsx` holds the signed-in member. `RequireAuth` guards pages that
-  need a session.
+  need a session; with a session on the device, the page starts fetching while the account is checked.
+- **Loading:** pages appear whole. A page renders `<PageLoading />` (`src/ui/Loading.tsx`) while it
+  fetches what it needs to show, and the `LoadingGate` in `App.tsx` keeps the screen hidden until none
+  is left, with a still placeholder after 200ms. Signed-in pages are split out with `lazy` and preloaded
+  once the first screen is up.
 - Design tokens are CSS variables in `src/ui/styles.css`. The look is the Manga screentone design system:
   rules in `docs/design/system.md`, reference CSS in `docs/design/system/tokens.css`.
 
