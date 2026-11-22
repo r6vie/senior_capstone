@@ -53,8 +53,8 @@ export function DidYouMeet({
   const notYet = view.my_answer === "not_yet";
   return (
     <fieldset className="meet-question">
-      <legend className="caption">Did you meet {name}?</legend>
-      <p className="muted">
+      <legend className="meet-question-title">Did you meet {name}?</legend>
+      <p className="meet-question-hint">
         {returned
           ? "Only you see your answer."
           : notYet
