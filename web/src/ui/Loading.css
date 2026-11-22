@@ -1,0 +1,50 @@
+/* Pages appear whole (Loading.tsx). The page is laid out and fetching underneath, just not visible yet. */
+.loading-root[data-hidden] {
+  visibility: hidden;
+}
+/* After the first screen the top bar stays up across page changes; only the page waits. */
+.loading-root[data-hidden][data-settled] .top-bar {
+  visibility: visible;
+}
+
+/* The still placeholder for a slow load: the page's shape in dot tone, under where the top bar sits. */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  align-content: start;
+  gap: var(--s-5);
+  max-width: 1120px;
+  padding: calc(var(--s-8) + var(--s-7)) var(--s-4) var(--s-8);
+  pointer-events: none;
+}
+.loading-say {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.loading-title {
+  width: min(320px, 70%);
+  height: 48px;
+}
+.loading-blocks {
+  display: grid;
+  gap: var(--s-6);
+}
+.loading-blocks .skeleton {
+  height: 180px;
+  border-radius: var(--r);
+}
+@media (min-width: 820px) {
+  .loading-screen {
+    padding-left: var(--s-7);
+    padding-right: var(--s-7);
+  }
+  .loading-blocks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
