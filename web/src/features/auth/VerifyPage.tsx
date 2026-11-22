@@ -4,6 +4,7 @@ import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
 import { TextField } from "../../ui/TextField";
+import { AuthLayout } from "./AuthLayout";
 import { useAuth } from "./AuthProvider";
 
 // Students confirm the code we emailed to their case.edu address (docs/trove.md §9.2).
@@ -43,8 +44,11 @@ export function VerifyPage() {
   }
 
   return (
-    <main className="narrow-page">
-      <h1>Confirm your email</h1>
+    <AuthLayout
+      caption="One more step"
+      title="Confirm your email."
+      across={{ to: "/sign-in", label: "Sign in" }}
+    >
       <p className="muted">
         {knownEmail ? (
           <>
@@ -67,19 +71,27 @@ export function VerifyPage() {
           inputMode="numeric"
         />
         {error && (
-          <p role="alert" className="error">
-            {error}
+          <p role="alert" className="message message-error">
+            <span>!</span>
+            <span>{error}</span>
           </p>
         )}
         {resent && (
-          <p role="status" className="muted">
-            If that address is waiting for a code, a new one is on its way. You can ask once a minute.
+          <p role="status" className="message">
+            <span>✓</span>
+            <span>
+              If that address is waiting for a code, a new one is on its way. You can ask once a minute.
+            </span>
           </p>
         )}
-        <Button type="submit" disabled={busy || code.trim().length !== 6 || !email.trim()}>
-          Confirm
-        </Button>
-        <div>
+        <div className="auth-actions">
+          <Button
+            type="submit"
+            disabled={busy || code.trim().length !== 6 || !email.trim()}
+            aria-busy={busy || undefined}
+          >
+            Confirm
+          </Button>
           <Button variant="quiet" onClick={resend} disabled={!email.trim()}>
             Send me a new code
           </Button>
@@ -88,6 +100,6 @@ export function VerifyPage() {
       <p className="muted">
         Wrong address? <Link to="/sign-up">Start over</Link>
       </p>
-    </main>
+    </AuthLayout>
   );
 }
