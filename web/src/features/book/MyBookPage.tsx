@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "../../ui/Button";
+import { PageLoading } from "../../ui/Loading";
 import { useAuth } from "../auth/AuthProvider";
 import { draftKeyFor, keepDraft } from "../interview/AnswerPanel";
 import { apiInterviewClient } from "../interview/apiInterviewClient";
@@ -514,6 +515,7 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   if (!stage) {
     return (
       <main className="mb-page" aria-busy="true">
+        <PageLoading />
         <h1 className="mb-title">My book</h1>
         <p className="mb-note">Finding your book…</p>
       </main>

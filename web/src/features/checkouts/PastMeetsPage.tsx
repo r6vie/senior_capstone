@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../api/client";
 import type { components } from "../../api/schema";
+import { PageLoading } from "../../ui/Loading";
 import { ContactDetails } from "./ContactDetails";
 import { DidYouMeet } from "./DidYouMeet";
 import { formatDay } from "./dates";
@@ -80,7 +81,7 @@ export function PastMeetsPage() {
           <span>We couldn't load your past meets. Please refresh.</span>
         </p>
       )}
-      {!meets && !loadFailed && <div className="skeleton checkout-skeleton" aria-busy="true" />}
+      {!meets && !loadFailed && <PageLoading />}
       {meets &&
         (meets.length === 0 ? (
           <div className="empty">

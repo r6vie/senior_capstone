@@ -2,6 +2,7 @@ import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import { useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
 import { artFor, loadArt } from "../../ui/art/bookArt";
 import { Button } from "../../ui/Button";
+import { PageLoading } from "../../ui/Loading";
 import { BookObject } from "./BookObject";
 import { type BookCard, type BookOrigin, BookReader } from "./BookReader";
 import { loadBook, loadOwnBook } from "./bookPreload";
@@ -233,6 +234,8 @@ export function ShelfPage() {
   return (
     <div className="shelf-page">
       <main>
+        {/* The first shelf of books is what the page is for; the Librarian's pick fills its own band later. */}
+        {shelf.busy && shelf.books.length === 0 && !shelf.error && <PageLoading />}
         <section className="feature surf dark" aria-labelledby="feature-title" aria-busy={librarian.busy}>
           <div className="burst" />
           <div className="feature-text">

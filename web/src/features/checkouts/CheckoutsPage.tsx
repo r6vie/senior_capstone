@@ -4,6 +4,7 @@ import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
+import { PageLoading } from "../../ui/Loading";
 import { ContactDetails } from "./ContactDetails";
 import { DidYouMeet } from "./DidYouMeet";
 import { formatDay } from "./dates";
@@ -339,7 +340,7 @@ export function CheckoutsPage() {
           <span>We couldn't load your checkouts. Please refresh.</span>
         </p>
       )}
-      {!mine && !loadFailed && <div className="skeleton checkout-skeleton" aria-busy="true" />}
+      {!mine && !loadFailed && <PageLoading />}
 
       {mine && <Groups mine={mine} act={act} answered={answered} />}
     </main>

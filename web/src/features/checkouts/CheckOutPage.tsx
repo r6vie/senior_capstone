@@ -4,6 +4,7 @@ import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
+import { PageLoading } from "../../ui/Loading";
 import "./Checkouts.css";
 
 // Checking out a book (plan item C1, docs/trove.md §6): one note to the author, one red button.
@@ -73,7 +74,7 @@ export function CheckOutPage() {
   if (!book) {
     return (
       <main className="shell-page checkouts-page" aria-busy="true">
-        <div className="skeleton checkout-skeleton" />
+        <PageLoading />
       </main>
     );
   }

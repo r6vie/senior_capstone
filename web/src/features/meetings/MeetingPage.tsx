@@ -4,6 +4,7 @@ import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
+import { PageLoading } from "../../ui/Loading";
 import { TextField } from "../../ui/TextField";
 import "./MeetingPage.css";
 
@@ -338,7 +339,13 @@ export function MeetingPage() {
       </main>
     );
   }
-  if (!meeting) return <main className="meeting-page" aria-busy="true" />;
+  if (!meeting) {
+    return (
+      <main className="meeting-page" aria-busy="true">
+        <PageLoading />
+      </main>
+    );
+  }
 
   return (
     <main className="meeting-page">

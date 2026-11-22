@@ -4,6 +4,7 @@ import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
+import { PageLoading } from "../../ui/Loading";
 import "./MessagesPage.css";
 
 // The conversation inside an accepted checkout (plan item C3, docs/trove.md §6, §9.8). Small on purpose:
@@ -171,7 +172,7 @@ export function MessagesPage() {
   if (!thread) {
     return (
       <main className="shell-page messages-page" aria-busy="true">
-        <div className="skeleton messages-skeleton" />
+        <PageLoading />
       </main>
     );
   }
