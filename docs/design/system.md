@@ -353,11 +353,16 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
   off-shelf book's caption is "Off the shelf", a plain note says what that means, and "Put back on the shelf" is
   the page's red action.
 
-- **Checkout list** (2026-11-15, Ellie, `web/src/features/checkouts/Checkouts.css`). Task: answer or follow
-  checkouts without a feed. Sections under a 3px ink rule; each item is a name or title, the other member's note
-  as `.checkout-note` (a 3px ink rule on the left, Newsreader italic), one line of status, and secondary/quiet
-  buttons. **No red on this page**: no single action is the next step for everyone. Declining asks once, in
-  place ("Decline …? Decline / Keep it"), not in a dialog.
+- **Checkouts page** (2026-11-15, Ellie; regrouped 2026-11-22, `web/src/features/checkouts/Checkouts.css`, `.co-*`).
+  Task: see what needs you, then follow the rest, without a feed. Three groups under display-caps headings with a
+  rule: **Waiting on you** (a request for your book, a "Did you meet?" to answer; "Nothing needs you right now." when
+  empty), **Under way**, and **Earlier** (closed checkouts as one dotted-ruled line each: title, "<name> · <status>",
+  and a Past meets link when there is one). Your book and books you've checked out mix within a group. Live
+  checkouts are Folio `.surf` cards, two to a row from 820px: the name or title in Newsreader, one meta line, and a
+  status label at the top right (above the name on a phone): outlined while it waits on someone ("Asks for your
+  book", "Waiting"), solid ink once "Accepted". The other member's note (`.checkout-note`) shows only while it's
+  waiting. **No red on this page**: no single action is the next step for everyone. Declining asks once, in place
+  ("Decline …? Decline / Keep it"), not in a dialog. The unread sign is a dot and "New message", never a number.
 - **Check out form** (2026-11-15, Ellie, `CheckOutPage.tsx`). The book's title, byline and blurb, then one
   textarea and the screen's one red button, "Ask to check out", with the note "A thirty-minute video call, if
   the author says yes."
@@ -368,14 +373,17 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
   plain line between dotted rules, never a bubble. One red button, "Send". No read receipts, typing dots or
   counts; the only unread sign is the private "New message" caption on the Checkouts page.
 - **"Did you meet?"** (2026-11-18, Ellie, `web/src/features/checkouts/DidYouMeet.tsx`). Task: answer privately
-  whether the reading happened. A caption "Did you meet <name>?" on the checkout, one muted line ("Only you see your
-  answer. Yes or No returns the copy."), then secondary "Yes, we met" and quiet "Not yet" and "No". A chosen "Not
+  whether the reading happened. A `--paper-sunk` box with the question in Newsreader ("Did you meet <name>?"), one
+  muted line ("Only you see your answer. Yes or No returns the copy."), then secondary "Yes, we met" and quiet "Not
+  yet" and "No". A chosen "Not
   yet" is filled ink, as the toggle pair. Never red, and no confirm step: the line says what a final answer does
   before the press. Once the copy is back, "Not yet" isn't offered.
 - **Past meets** (2026-11-18, Ellie, `PastMeetsPage.tsx`). Task: find the people you've met again. The checkout list's
   ruled items, each with a bookmark in the margin (an ink ribbon with a notched tail, `.past-meet-bookmark`, 16 by
   44px): the other person's name, their book, which book was checked out and when it was returned, the contact
-  panel, and "Your conversation". No counts and no red.
+  line, and "Your conversation". No counts and no red.
+- **Contact line** (2026-11-22, Ellie, `ContactDetails.tsx`). The reveal as one wrapping line: a small display-caps
+  "Reach <name>" in `--ink-2`, then the email, LinkedIn profile and phone as links. Used on Checkouts and Past meets.
 
 ### Folio: the shelf front page look (2026-11-19, design session; screens: canvas page "Elevate", board `ElevateK3` "Kit 3 · Folio, for build")
 
