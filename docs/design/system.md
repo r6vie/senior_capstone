@@ -397,6 +397,13 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
   ribbon with a notched tail, `.past-meet-bookmark`, 16 by 64px): the other person's name and their book, which book
   was checked out and when it was returned, a "Did you meet?" box if they haven't answered, the contact line, and
   "Your conversation". No counts and no red.
+- **Loading** (2026-11-22, Ellie, `web/src/ui/Loading.tsx`). Task: a page appears whole, never piece by piece.
+  A page renders `<PageLoading />` while it fetches what it needs; the screen stays hidden until none is left and
+  the fonts are in, then shows at once. A load under 200ms shows nothing in between. A slower one shows a still
+  placeholder in the page's shape (a title bar and two cards in `.skeleton` dot tone): no spinner and no loop,
+  since nothing animates on load. The top bar waits with the first page, then stays up while later pages load.
+  Something slow and optional (the Librarian's pick) keeps its own placeholder in place instead of holding the
+  page.
 - **Contact line** (2026-11-22, Ellie, `ContactDetails.tsx`). The reveal as one wrapping line: a small display-caps
   "Reach <name>" in `--ink-2`, then the email, LinkedIn profile and phone as links. Used on Checkouts and Past meets.
 
