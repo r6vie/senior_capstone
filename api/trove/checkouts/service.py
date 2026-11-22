@@ -1,5 +1,6 @@
 """The checkout rules (docs/trove.md §6) and the contract functions other features call."""
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
@@ -91,16 +92,34 @@ def _key(user_id: str) -> str:
     return user_id
 
 
-async def question_due_at(database: AsyncDatabase, checkout: dict) -> datetime:
-    """When "Did you meet?" is asked: once the confirmed meeting is over, or 14 days after the yes."""
+def _due(checkout: dict, meeting: dict | None) -> datetime:
     # Imported here because meetings imports this module; a top-level import would be circular.
     from trove.meetings.models import SLOT_MINUTES
-    from trove.meetings.service import get_meeting
 
-    meeting = await get_meeting(database, checkout["_id"])
     if meeting and meeting.get("start"):
         return as_utc(meeting["start"]) + timedelta(minutes=SLOT_MINUTES)
     return as_utc(checkout["answered_at"]) + timedelta(days=ASK_DAYS_WITHOUT_TIME)
+
+
+async def question_due_at(database: AsyncDatabase, checkout: dict) -> datetime:
+    """When "Did you meet?" is asked: once the confirmed meeting is over, or 14 days after the yes."""
+    from trove.meetings.service import get_meeting
+
+    return _due(checkout, await get_meeting(database, checkout["_id"]))
+
+
+async def question_due_times(database: AsyncDatabase, checkouts: list[dict]) -> dict[str, datetime]:
+    """`question_due_at` for each accepted or returned checkout, by id, in at most one database trip."""
+    answered = [checkout for checkout in checkouts if checkout.get("answered_at")]
+    if not answered:
+        return {}
+    meetings = {
+        meeting["_id"]: meeting
+        async for meeting in database.meetings.find(
+            {"_id": {"$in": [checkout["_id"] for checkout in answered]}}, {"start": 1}
+        )
+    }
+    return {checkout["_id"]: _due(checkout, meetings.get(checkout["_id"])) for checkout in answered}
 
 
 def is_past_meet(checkout: dict) -> bool:
@@ -116,11 +135,12 @@ async def return_overdue(database: AsyncDatabase, scope: dict) -> None:
     """
     now = datetime.now(UTC)
     # The question is never asked before the yes, so only yeses at least 14 days old can be overdue.
-    candidates = database.checkouts.find(
+    candidates = await database.checkouts.find(
         {**scope, "status": ACCEPTED, "answered_at": {"$lte": now - timedelta(days=RETURN_DAYS)}}
-    )
-    async for checkout in candidates:
-        returned_at = await question_due_at(database, checkout) + timedelta(days=RETURN_DAYS)
+    ).to_list()
+    due = await question_due_times(database, candidates)
+    for checkout in candidates:
+        returned_at = due[checkout["_id"]] + timedelta(days=RETURN_DAYS)
         if returned_at <= now:
             await database.checkouts.update_one(
                 {"_id": checkout["_id"], "status": ACCEPTED},
@@ -139,8 +159,8 @@ async def return_overdue(database: AsyncDatabase, scope: dict) -> None:
 
 async def _refresh(database: AsyncDatabase, scope: dict) -> None:
     """Bring checkouts in `scope` up to date before reading them: expiries and overdue returns."""
-    await close_expired(database)
-    await return_overdue(database, scope)
+    # Independent (unanswered vs accepted checkouts), so both go to the database at once.
+    await asyncio.gather(close_expired(database), return_overdue(database, scope))
 
 
 async def _open_count(database: AsyncDatabase, field: str, value: str) -> int:
@@ -294,6 +314,17 @@ async def open_checkouts_of_author(database: AsyncDatabase, author_id: str) -> l
     await _refresh(database, {"author_id": author_id})
     cursor = database.checkouts.find({"author_id": author_id, "open": True}).sort(NEWEST_FIRST)
     return await cursor.limit(LIST_LIMIT).to_list()
+
+
+async def checkouts_page_of(database: AsyncDatabase, user_id: str) -> tuple[list[dict], list[dict]]:
+    """`checkouts_of_reader` and `open_checkouts_of_author` together, for the Checkouts page: one refresh,
+    then both lists read at once."""
+    await _refresh(database, {"$or": [{"reader_id": user_id}, {"author_id": user_id}]})
+    reading = database.checkouts.find({"reader_id": user_id}).sort(NEWEST_FIRST).limit(LIST_LIMIT)
+    lending = (
+        database.checkouts.find({"author_id": user_id, "open": True}).sort(NEWEST_FIRST).limit(LIST_LIMIT)
+    )
+    return await asyncio.gather(reading.to_list(), lending.to_list())
 
 
 async def fully_checked_out(database: AsyncDatabase, books: list[dict]) -> set[str]:
