@@ -892,7 +892,7 @@ function StartScreen({
   }
 
   // Starting again would only be refused: the interview is there, waiting for its first question.
-  if (exists) {
+  if (exists || started) {
     return (
       <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={START_SAY}>{busy}</Waiting> : START_SAY}>
         <ErrorMessage message={error} />
