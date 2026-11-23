@@ -9,6 +9,7 @@ import { loadBook, loadOwnBook } from "./bookPreload";
 import { FrontDesk } from "./FrontDesk";
 import { useShelf } from "./useShelf";
 import "./ShelfPage.css";
+import { usePageTitle } from "../../ui/usePageTitle";
 import { useBookStepping } from "./useBookStepping";
 import { type Recommendation, useRecommendation } from "./useRecommendation";
 
@@ -193,6 +194,8 @@ export function ShelfPage() {
   } | null;
   // The copy that is out: the one opened, while its book is open (none for a book opened from a link).
   const outPlace = bookId && selected?.card?.id === bookId ? selected.place : undefined;
+  // An open book names the tab; the title is known only when it was opened from the shelf.
+  usePageTitle(bookId && selected?.card?.id === bookId ? selected.card.title : "Shelf");
   const categoryShelves = SAMPLE_CATEGORY_SHELVES.map((category) => ({
     name: category.name,
     books: shelf.books.filter((book) => category.titles.has(book.title)),

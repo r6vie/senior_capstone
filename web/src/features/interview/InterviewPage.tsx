@@ -1,6 +1,7 @@
 import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../../ui/Button";
+import { usePageTitle } from "../../ui/usePageTitle";
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, readDraft, takeOrphanDrafts } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
@@ -80,6 +81,7 @@ function placeOf(state: InterviewState | null): string {
 }
 
 export function InterviewPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
+  usePageTitle("Your interview");
   const { user } = useAuth();
   // Books carry the full name; it falls back to the first name for accounts made before last names.
   const authorName = user?.full_name ?? "";

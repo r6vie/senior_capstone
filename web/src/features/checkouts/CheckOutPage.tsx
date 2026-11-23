@@ -6,6 +6,7 @@ import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
 import { PageLoading } from "../../ui/Loading";
 import "./Checkouts.css";
+import { usePageTitle } from "../../ui/usePageTitle";
 
 // Checking out a book (plan item C1, docs/trove.md §6): one note to the author, one red button.
 // The book page (D1) links here with the book's id.
@@ -19,6 +20,7 @@ export function CheckOutPage() {
   const noteId = useId();
   const hintId = useId();
   const [book, setBook] = useState<Book | null>(null);
+  usePageTitle(book ? `Check out ${book.title}` : "Check out a book");
   const [missing, setMissing] = useState(false);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);

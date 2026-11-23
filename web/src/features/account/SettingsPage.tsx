@@ -7,6 +7,7 @@ import { TextField } from "../../ui/TextField";
 import { useAuth } from "../auth/AuthProvider";
 import { InviteSection } from "./InviteSection";
 import "./SettingsPage.css";
+import { usePageTitle } from "../../ui/usePageTitle";
 
 // Account settings (plan item A1): what to share when an author says yes, the one email switch, and
 // deleting the account. Contact details never appear on a book (docs/trove.md §9.1).
@@ -185,6 +186,7 @@ function DeleteSection({ email }: { email: string }) {
 }
 
 export function SettingsPage() {
+  usePageTitle("Settings");
   const { user, refreshUser } = useAuth();
   if (!user) return null;
 

@@ -8,6 +8,7 @@ import { PageLoading } from "../../ui/Loading";
 import { TextField } from "../../ui/TextField";
 import { downloadInvite } from "./invite";
 import "./MeetingPage.css";
+import { usePageTitle } from "../../ui/usePageTitle";
 
 // Arranging the meeting (plan item M1, docs/trove.md §9.7): each person offers a few times, the app shows
 // where they overlap, either person confirms one, and the video link goes here. Nothing more.
@@ -302,6 +303,7 @@ function Confirmed({ meeting }: { meeting: Meeting }) {
 export function MeetingPage() {
   const { checkoutId = "" } = useParams();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
+  usePageTitle(meeting ? `Meeting ${meeting.other_name}` : "Arrange your meeting");
   const [failed, setFailed] = useState(false);
 
   const load = useCallback(() => {

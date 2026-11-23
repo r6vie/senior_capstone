@@ -11,6 +11,7 @@ import { DidYouMeet } from "./DidYouMeet";
 import { formatDay, slipDay, slipWhen } from "./dates";
 import { DateSlip, MetStamp } from "./Slips";
 import "./Checkouts.css";
+import { usePageTitle } from "../../ui/usePageTitle";
 
 // Checkouts (plan item C1, docs/trove.md §6), grouped by what each one needs from you: first what's waiting on
 // you (a request for your book, a "Did you meet?" to answer), then what's under way, then a short list of earlier
@@ -326,6 +327,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
 }
 
 export function CheckoutsPage() {
+  usePageTitle("Checkouts");
   const location = useLocation();
   const navigate = useNavigate();
   // Shown once: clear it from the history entry, so a refresh doesn't repeat it.

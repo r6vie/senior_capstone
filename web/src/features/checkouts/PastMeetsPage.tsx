@@ -8,6 +8,7 @@ import { DidYouMeet } from "./DidYouMeet";
 import { formatDay, slipDay } from "./dates";
 import { MetStamp } from "./Slips";
 import "./Checkouts.css";
+import { usePageTitle } from "../../ui/usePageTitle";
 
 // Past meets (plan item C4, docs/trove.md §8): the people you've met through a checkout, newest first.
 // Both people get one: the other's full name and book, their contact details, and the conversation,
@@ -49,6 +50,7 @@ function MeetItem({ meet, reload }: { meet: Meet; reload: () => Promise<void> })
 }
 
 export function PastMeetsPage() {
+  usePageTitle("Past meets");
   const [meets, setMeets] = useState<Meet[] | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
 
