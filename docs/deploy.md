@@ -26,7 +26,8 @@ Nobody should paste a secret into a chat, a PR or a file in the repository. Each
    shared dev cluster. In Atlas: make a free (M0) cluster; under Database Access add a user for production only,
    limited to the `trove_prod` database, with a long random password (not one used anywhere else); under
    Network Access allow `0.0.0.0/0`, because Render's free service has no fixed address; then copy the
-   connection string into Render as `MONGODB_URI`. The app makes its own indexes when it starts, so an empty
+   connection string into Render as `MONGODB_URI`. Before that, check the cluster with
+   `cd api && python -m uv run python ../scripts/check_atlas.py` (it asks for the string with hidden input). The app makes its own indexes when it starts, so an empty
    database is all it needs. Moving to a shared cluster later means changing `MONGODB_URI` and moving the data.
 2. **AI (Josef): the team's Anthropic key, with his agreement.** It is his account, so the live site spends his
    money, and heavy use by members shares a budget with the team's own development. Before launch, Josef should
