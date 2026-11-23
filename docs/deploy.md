@@ -44,10 +44,17 @@ Nobody should paste a secret into a chat, a PR or a file in the repository. Each
 3. **Email (Daniel).** Students can't confirm their case.edu address, and nobody gets reminders, until `SMTP_*`
    is set. The quickest free option is a new Gmail account made just for Trove (not a personal one) with
    2-step verification on and an [app password](https://support.google.com/accounts/answer/185833):
-   `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USER` the address, `SMTP_PASSWORD` the app password,
+   `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587` (but see below), `SMTP_USER` the address, `SMTP_PASSWORD` the app password,
    `EMAIL_FROM` like `Trove <that address>`. Gmail allows about 500 emails a day, which is plenty at first.
 4. **A Render account (Daniel)** to own the service, signed in with GitHub. Add the others as team members, so
    it doesn't depend on one person.
+
+**Free Render blocks the usual mail ports.** Outbound traffic on ports 25, 465 and 587 is blocked on its free
+tier ([Render's changelog](https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports)),
+so Gmail's SMTP (587) can't work from there at all. `render.yaml` uses port **2525**, which Brevo accepts. If a
+verification code never arrives, look in the service's Logs for a line like `Email to user ... failed:
+TimeoutError`: that means the mail port is blocked, and the next step is an email API over HTTPS (Brevo has
+one) instead of SMTP.
 
 ## Steps
 
