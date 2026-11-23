@@ -360,8 +360,8 @@ def winter():
     # the cabin on the rise, a warm window, firs behind and beside it
     for x, h, w in [(478, 96, 20), (548, 120, 24), (572, 80, 18)]:
         fir(x, h, w, [CYPRESS, TEAL, PAYNE])
-    cx = 516
-    cy = y_at(snow_top, cx) + 6
+    cx = 540
+    cy = max(y_at(snow_top, x) for x in range(cx - 26, cx + 22, 2)) + 4   # its whole footprint on the snow, none over the edge
     cottage(p, cx - 24, cy, 20, 14, 24, [SIENNA, UMBER], [UMBER], window=APRICOT, snow_roof=True, ground=snow)
     p.wash(p.soften(p.ellipse(cx - 14, cy + 10, 14, 4), 3) * snow, APRICOT, 0.35, rim=0)   # the window's glow
     # a fence of a few posts running down the slope toward us
