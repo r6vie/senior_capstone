@@ -1,7 +1,8 @@
 import { type RefObject, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
-const WAIT_MS = 3_000;
+// As long as the loading gate's own give-up time, so a slow page still gets focus once it shows.
+const WAIT_MS = 10_000;
 
 /**
  * After moving to another page, puts keyboard and screen-reader focus on the new page's heading, so the next Tab
