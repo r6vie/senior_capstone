@@ -74,6 +74,7 @@ class Lookups:
     contacts: dict[str, ContactDetailsResponse] = field(default_factory=dict)
     books: dict[str, dict] = field(default_factory=dict)
     due: dict[str, datetime] = field(default_factory=dict)
+    starts: dict[str, datetime] = field(default_factory=dict)
 
     @classmethod
     async def load(
@@ -89,13 +90,28 @@ class Lookups:
         async def nothing() -> dict:
             return {}
 
-        names, contacts, shelf, due = await asyncio.gather(
+        names, contacts, shelf, meetings = await asyncio.gather(
             full_names_of(database, list(set(others))),
             contact_details_of_many(database, revealed) if revealed else nothing(),
             shelf_books_of(database, list(set(others))) if books else nothing(),
-            service.question_due_times(database, checkouts),
+            service.meetings_of(database, checkouts),
         )
-        return cls(names=names, contacts=contacts, books=shelf, due=due)
+        starts = {
+            checkout_id: service.as_utc(meeting["start"])
+            for checkout_id, meeting in meetings.items()
+            if meeting.get("start")
+        }
+        return cls(
+            names=names,
+            contacts=contacts,
+            books=shelf,
+            due=service.due_times(checkouts, meetings),
+            starts=starts,
+        )
+
+    def meeting_start(self, checkout: dict) -> datetime | None:
+        """The confirmed time, only while the checkout is accepted: after the reading it's history."""
+        return self.starts.get(checkout["_id"]) if checkout["status"] == service.ACCEPTED else None
 
     def contact(self, checkout: dict, other_id: str) -> Contact | None:
         details = self.contacts.get(other_id) if reveals(checkout) else None
@@ -122,6 +138,7 @@ async def reading_views(database: AsyncDatabase, checkouts: list[dict]) -> list[
             expires_at=checkout["expires_at"] if checkout["status"] == service.REQUESTED else None,
             author_contact=found.contact(checkout, checkout["author_id"]),
             did_you_meet=meet_view(checkout, checkout["reader_id"], found.due.get(checkout["_id"])),
+            meeting_start=found.meeting_start(checkout),
         )
         for checkout in checkouts
     ]
@@ -143,6 +160,7 @@ async def lending_views(database: AsyncDatabase, checkouts: list[dict]) -> list[
             expires_at=checkout["expires_at"] if checkout["status"] == service.REQUESTED else None,
             reader_contact=found.contact(checkout, checkout["reader_id"]),
             did_you_meet=meet_view(checkout, checkout["author_id"], found.due.get(checkout["_id"])),
+            meeting_start=found.meeting_start(checkout),
         )
         for checkout in checkouts
     ]
