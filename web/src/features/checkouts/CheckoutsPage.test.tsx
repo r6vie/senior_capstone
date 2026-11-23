@@ -343,9 +343,6 @@ describe("CheckoutsPage", () => {
   });
 
   it("shows a confirmed meeting time with a calendar file, and links to its details", async () => {
-    api.GET.mockResolvedValue({
-      data: { lending: [], reading: [reading("accepted", { meeting_start: "2026-12-03T20:00:00Z" })] },
-    });
     api.GET.mockImplementation(async (path: string) =>
       path.endsWith("invite.ics")
         ? { data: undefined, error: { detail: "No time has been agreed yet." } }

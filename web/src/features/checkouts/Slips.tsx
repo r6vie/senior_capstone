@@ -1,6 +1,6 @@
 // Library touches for checkouts (docs/design/system.md, Additions, "Date-due slip" and "Met stamp").
 
-/** A date-due slip: a small ruled card with a label and a date, as a library stamps one. Never red. */
+/** A date-due slip: a small card with a label over one printed rule, then the date. Never red. */
 export function DateSlip({ label, when }: { label: string; when: string }) {
   return (
     <p className="co-slip">
@@ -25,7 +25,3 @@ export function MetStamp({ on, fresh = false }: { on: string; fresh?: boolean })
     </span>
   );
 }
-
-/** How long the stamp stays on the card before it moves to Earlier, so the moment can be seen. */
-export const STAMP_MS = 900;
-export const pause = (ms: number) => new Promise((done) => setTimeout(done, ms));
