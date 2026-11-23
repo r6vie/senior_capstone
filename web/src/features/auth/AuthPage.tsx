@@ -1,9 +1,10 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
 import { TextField } from "../../ui/TextField";
+import { AuthLayout } from "./AuthLayout";
 import { NeedsVerification, useAuth } from "./AuthProvider";
 
 type Invite = { inviter: string } | { problem: string } | null;
@@ -55,8 +56,18 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
   const invited = inviteCheck !== null && "inviter" in inviteCheck;
 
   return (
-    <main className="narrow-page">
-      <h1>{signingUp ? "Join Trove" : "Sign in to Trove"}</h1>
+    <AuthLayout
+      caption={signingUp ? "Join" : "Sign in"}
+      title={signingUp ? "Join Trove." : "Welcome back."}
+      voice={
+        signingUp
+          ? "You are the author of the book you haven't written yet."
+          : "Your book is where you left it."
+      }
+      across={
+        signingUp ? { to: "/sign-in", label: "Sign in" } : { to: "/sign-up", label: "Create an account" }
+      }
+    >
       {signingUp && inviteCheck && (
         <p role={invited ? "status" : "alert"} className={invited ? "message" : "message message-error"}>
           <span>{invited ? "✓" : "!"}</span>
@@ -100,25 +111,15 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
           hint={signingUp ? "At least 12 characters." : undefined}
         />
         {error && (
-          <p role="alert" className="error">
-            {error}
+          <p role="alert" className="message message-error">
+            <span>!</span>
+            <span>{error}</span>
           </p>
         )}
-        <Button type="submit" disabled={busy}>
+        <Button type="submit" disabled={busy} aria-busy={busy || undefined}>
           {signingUp ? "Create account" : "Sign in"}
         </Button>
       </form>
-      <p className="muted">
-        {signingUp ? (
-          <>
-            Already have an account? <Link to="/sign-in">Sign in</Link>
-          </>
-        ) : (
-          <>
-            New here? <Link to="/sign-up">Create an account</Link>
-          </>
-        )}
-      </p>
-    </main>
+    </AuthLayout>
   );
 }
