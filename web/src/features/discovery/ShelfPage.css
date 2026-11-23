@@ -69,8 +69,14 @@
 .feature-text .page-title {
   max-width: 520px;
   margin: 18px 0 0;
-  font-size: 50px;
-  line-height: 1.04;
+  /* Barlow Condensed, like the book beside it and the shelf names, not the page-title serif: the cover
+     is the Librarian's poster, and the serif read as generic. (Daniel, 2026-11-23) */
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 60px;
+  line-height: 0.98;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   text-wrap: balance;
 }
 .feature-author {
@@ -80,11 +86,13 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
-.feature-reason {
+.feature-text .feature-reason {
   max-width: 480px;
   margin: 14px 0 0;
-  font-size: 21px;
-  line-height: 1.4;
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-size: 19px;
+  line-height: 1.45;
 }
 .feature-action {
   display: flex;
@@ -285,10 +293,10 @@ button.book {
     max-width: calc(52cqw + 0.52 * 88px - 44px - 24px);
   }
   .feature-text .page-title {
-    font-size: 40px;
+    font-size: 46px;
   }
-  .feature-reason {
-    font-size: 19px;
+  .feature-text .feature-reason {
+    font-size: 18px;
   }
   .front-desk {
     gap: var(--s-5);
@@ -392,9 +400,9 @@ button.book {
     border-radius: 0 0 var(--r-cover) var(--r-cover);
   }
   .feature-text .page-title {
-    font-size: 34px;
+    font-size: 40px;
   }
-  .feature-reason {
+  .feature-text .feature-reason {
     font-size: 18px;
   }
   .feature-action {
