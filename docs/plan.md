@@ -193,6 +193,9 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 **D3 · The Librarian recommends** · Alvisa · `doing`
 - One recommended book at a time, each with a one-line reason for why you two should talk.
+- Claude extracts grounded signals from approved public book text; deterministic scoring, not
+  Claude, chooses among available books. Member type is recorded separately but does not gate or
+  score a match.
 - Quietly favors books that are checked out less (trove.md §9.6).
 - **Waiting on Ellie:** a server-only checkout-load contract so discovery can apply that preference
   without reading the checkouts collection or exposing counts to members.

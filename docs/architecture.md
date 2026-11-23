@@ -42,6 +42,8 @@ removing the `/api` prefix. The frontend never talks to MongoDB or Claude direct
 | `checkouts` | checkouts | One per checkout. `open` is true while requested or accepted; unique on reader + book while open. Unanswered ones expire on read, no background job. After "Did you meet?": `status` `returned`, each person's private answer under `answers.<user id>`, and `met` (a Past meet). Overdue readings return on read too |
 | `messages` | messaging | One per message or app note (`sender_id` null for a note), with the checkout id and both people. The checkout note isn't copied here |
 | `message_threads` | messaging | One per checkout (`_id` = checkout id): each person's last read, latest incoming message and last email, for the private marker and the 10-minute email gap |
+| `recommendations` | discovery | One seven-day Librarian pick per member; invalidated when either public book changes or the recommended book leaves the shelf |
+| `match_profiles` | discovery | One grounded, versioned set of matching signals per book, extracted only from its author-approved public text and refreshed when that text changes |
 
 Each new feature adds its rows here in the PR that creates its collections.
 

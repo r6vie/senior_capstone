@@ -169,11 +169,21 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **"The Librarian recommends":** the AI recommends books to you.
 - **D3 recommendation (Alvisa, 2026-11-21):** this version stays signed-in. A member without a
   finished book sees the same large book graphic inviting them to create or finish theirs. Once
-  their book has been published, the Librarian uses only its public title, blurb and chapter text
-  to choose one available book and write one grounded sentence about why the two authors should
-  talk. The pick stays for seven days unless either book changes or the recommended book leaves
-  the shelf. A member's off-shelf book may privately shape their own recommendation, but an
-  off-shelf book is never recommended to somebody else.
+  their book has been published, only its author-approved public title, blurb and chapter text may
+  shape a match. Claude extracts a small, evidence-backed profile of interests, domains, knowledge,
+  experiences, explicit goals, current locations and places of origin from that text when the profile is missing or the book has
+  changed. It does not choose the match. A deterministic scorer compares exact concepts, related
+  concepts (for example, tennis and football through sports), and knowledge that complements an
+  explicitly stated goal. The strongest grounded signal supplies the one-sentence reason. Member
+  type does not filter or score matches: students, alumni, founders and non-founders may all match
+  with one another. The pick stays for seven days unless either book changes or the recommended
+  book leaves the shelf. A member's off-shelf book may privately shape their own recommendation,
+  but an off-shelf book is never recommended to somebody else.
+- **Member context for matching (Alvisa, 2026-11-23):** before the first book interview, a member
+  records whether they are a current student, alumni, or both, and separately whether they are a
+  founder. Existing members answer once, and the values can be changed later. They are ordinary
+  member metadata but are not shown prominently or required on the book. They provide context for
+  future matching work; the D3 scorer does not prefer or exclude a pairing because of them.
 - **Recommend a book:** you can recommend a book in the app to anyone you've met (your Past meets), or to anyone else by sharing a link (§9.5).
 - **No friends or follows.** Meeting someone is the only way to become connected.
 
