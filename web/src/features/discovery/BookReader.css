@@ -3,7 +3,6 @@
    pages are plain paper, and the cover is ink until covers are decided. */
 
 .book-reader {
-  --bar: 80px;
   /* The book comes forward from its place on the shelf and opens: one move. */
   --open-time: 850ms;
   --open-ease: cubic-bezier(0.5, 0, 0.2, 1);
@@ -16,14 +15,15 @@
   --turn-time: 700ms;
   --turn-ease: cubic-bezier(0.45, 0.05, 0.25, 1);
   position: fixed;
-  /* The whole window, so a book starting high on the page, under the top bar, is never clipped in flight;
-     the open book's room is still the space under the bar. */
-  inset: 0;
+  /* The whole visible screen (dvh, not vh, so browser chrome that takes room is left out), so a book starting high
+     on the page is never clipped in flight, and the open book sits in its middle: the dots cover the top bar too,
+     so the room is the screen, not the space under the bar (Josef, 2026-11-23). */
+  inset: 0 0 auto;
   box-sizing: border-box;
-  padding: var(--bar) 0 0;
+  padding: 0;
   width: 100%;
   max-width: none;
-  height: auto;
+  height: 100dvh;
   max-height: none;
   margin: 0;
   border: 0;
@@ -908,7 +908,7 @@
     --bar: 56px;
     /* The tab bar is at the foot of the screen on a phone. There is no flight here, so the room is the box. */
     inset: var(--bar) 0 64px;
-    padding: 0;
+    height: auto;
   }
   .br-fit {
     width: 100%;

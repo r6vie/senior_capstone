@@ -173,15 +173,19 @@ export function BookReader({
     const modal = dialog.current;
     const room = modal?.getBoundingClientRect();
     if (!modal || !room?.width) return null;
-    const bar = Number.parseFloat(getComputedStyle(modal).paddingTop) || 0;
-    const k = Math.min(1, (room.width - 48) / BOOK_W, (room.height - bar - 48) / BOOK_H);
+    const k = Math.min(1, (room.width - 48) / BOOK_W, (room.height - 48) / BOOK_H);
     fit.current?.style.setProperty("--k", String(k));
     setScale(k);
     return k;
   }, []);
   useEffect(() => {
+    // The visible screen also changes when browser chrome shows or hides, which only the visual viewport reports.
     window.addEventListener("resize", fitToRoom);
-    return () => window.removeEventListener("resize", fitToRoom);
+    window.visualViewport?.addEventListener("resize", fitToRoom);
+    return () => {
+      window.removeEventListener("resize", fitToRoom);
+      window.visualViewport?.removeEventListener("resize", fitToRoom);
+    };
   }, [fitToRoom]);
 
   /** Points the opening (and the closing, which is the opening played backwards) at a book on the shelf: closed,
