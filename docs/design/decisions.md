@@ -2,6 +2,13 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-23: My book redesign, two concepts (canvas page "My book"; waiting for Josef's choice)
+
+Josef asked for a complete redesign and polish of My book, with the new features: choosing a design for the book, and continuing the interview with the Librarian. Boards: how it is built today (from main), concept A "the book first"
+(the book card with the Librarian's notebook and the one red button beside it; the design picker is a dialog), concept B "the desk" (three columns: the book and live design swatches, the words, and a full Librarian notebook with
+"Answer this" on saved questions), and every stage in the new look. Both use the Folio look and the approved Librarian notebook. New copy: "Change design", "Choose a design", "Use this design", "Continue with the Librarian".
+Product questions left open: whether the design can change at any time and whether it affects a book already on the shelf; whether the red button should be renamed; whether the reading question and sparks may sit inside the notebook (B).
+
 ## 2026-11-23: five logo options (canvas page "Logo"; waiting for Josef's choice)
 
 Five ink-only logo options for the website, chosen from twelve ideas against the mission (a book and a person, not a social network), the feel (printed, calm, literary) and the job (16px favicon, 26px header, avatar, one colour, on paper and black):

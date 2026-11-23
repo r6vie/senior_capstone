@@ -56,6 +56,10 @@
     {
       "id": "logo",
       "name": "Logo"
+    },
+    {
+      "id": "mybook",
+      "name": "My book"
     }
   ],
   "boards": {
@@ -609,6 +613,42 @@
       "title": "A new logo for Trove · five options",
       "page": "logo",
       "expand": "fill"
+    },
+    "MyBookNow.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1760,
+      "h": 2290,
+      "title": "My book · how it is now",
+      "page": "mybook",
+      "expand": "fill"
+    },
+    "MyBookA.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 1760,
+      "h": 5460,
+      "title": "My book · Concept A: the book first",
+      "page": "mybook",
+      "expand": "fill"
+    },
+    "MyBookB.dc.html": {
+      "x": 3760,
+      "y": 0,
+      "w": 1760,
+      "h": 5720,
+      "title": "My book · Concept B: the desk",
+      "page": "mybook",
+      "expand": "fill"
+    },
+    "MyBookStates.dc.html": {
+      "x": 5640,
+      "y": 0,
+      "w": 1760,
+      "h": 2110,
+      "title": "My book · every stage",
+      "page": "mybook",
+      "expand": "fill"
     }
   },
   "order": [
@@ -677,7 +717,11 @@
     "LibParts.dc.html",
     "LibMore.dc.html",
     "LibReopened.dc.html",
-    "LogoOptions.dc.html"
+    "LogoOptions.dc.html",
+    "MyBookNow.dc.html",
+    "MyBookA.dc.html",
+    "MyBookB.dc.html",
+    "MyBookStates.dc.html"
   ],
   "notes": {
     "head": {
@@ -762,6 +806,14 @@
       "kind": "title1",
       "maxW": 1440,
       "page": "covers"
+    },
+    "mybook": {
+      "x": 0,
+      "y": -300,
+      "text": "My book · as it is, two concepts, every stage",
+      "kind": "title1",
+      "maxW": 7400,
+      "page": "mybook"
     }
   },
   "designSystems": []
