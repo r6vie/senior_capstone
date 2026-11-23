@@ -58,12 +58,12 @@ Secrets live in the host's dashboard and in the team's password manager (see
 ## Accounts and who owns them
 
 Whoever created an account is its owner, and the others have no access unless they are added. **Add the others
-now, so the site never depends on one person.** The login details for the shared accounts (Gmail, Brevo) belong
+now where the plan allows, so the site never depends on one person.** The login details for the shared accounts (Gmail, Brevo) belong
 in the team's password manager (Bitwarden or 1Password), not in chat or in the repository.
 
 | Service | What it does for Trove | Owner today | How to add a teammate | Free-tier limits |
 |---|---|---|---|---|
-| **Render** (render.com) | Hosts the site | Daniel (signed in with GitHub) | Dashboard → the workspace's **Settings → Team**, and invite by email. **Check Render's current pricing:** extra team members may need a paid workspace. If so, share the login through the password manager instead. | 750 instance hours a month (enough for one always-on service); sleeps after 15 minutes idle |
+| **Render** (render.com) | Hosts the site | Daniel (signed in with GitHub) | **Not possible on the free plan:** a free (Hobby) workspace allows one member only ([Render's docs](https://render.com/docs/team-members)). Members can be invited (Workspace Settings → Team members → Invite) only on a paid Pro workspace. See [Sharing Render](#sharing-render-with-the-team). | 750 instance hours a month (enough for one always-on service); sleeps after 15 minutes idle |
 | **MongoDB Atlas** (cloud.mongodb.com) | The live database | Daniel, in his own organization; project **Trove**, cluster **trove** | Project → **Access Manager → Invite to project**, as *Project Owner* | Free "M0": 512 MB storage |
 | **Brevo** (brevo.com) | Sends email | A shared Gmail account made for Trove | The free plan may allow only one user, so share the login through the password manager | 300 emails a day |
 | **Anthropic** (console.anthropic.com) | The AI | Josef (the team's shared key) | Ask Josef | Pay as you go: costs real money |
@@ -215,8 +215,26 @@ refresh (Ctrl+Shift+R) fixes it, and the deploy may simply not be finished: chec
 
 ### Add a teammate to the accounts
 
-See the table in [Accounts and who owns them](#accounts-and-who-owns-them). Do all of them; it takes ten minutes.
-Then each person should open the Render dashboard, the Atlas project and the Brevo login once, to know it works.
+See the table in [Accounts and who owns them](#accounts-and-who-owns-them). Atlas can invite people for free;
+Render cannot (below). Each person should open the logins they have once, to know they work.
+
+### Sharing Render with the team
+
+A free Render workspace has one member, so teammates cannot be added. Do not share the owner's login: it is
+tied to that person's GitHub account. The options are:
+
+1. **Upgrade to a Pro workspace** (paid; check the current price on Render's pricing page, since its pages
+   disagree on whether it is per member or flat) and invite everyone.
+2. **Each teammate runs their own copy** on their own free Render account, from `render.yaml` and the steps in
+   [Setting it all up from nothing](#setting-it-all-up-from-nothing). That is a separate site with its own
+   address, not access to this one. The secrets are handed over through the password manager.
+3. **The owner stays the only Render user.** Everyone else fixes problems by pushing a change to the branch
+   Render watches (it redeploys by itself), and anything that needs a setting, a log or a restart goes through
+   the owner. This is cheapest but depends on the owner being reachable.
+
+Without Render access, a teammate can still: change the code (by pushing to the watched branch), read the
+public site and `/api/health`, and check Brevo and Atlas if they have those logins. They cannot read Render's
+Logs, change its settings or keys, or restart it.
 
 ### AI spending
 
@@ -303,7 +321,7 @@ Only needed to rebuild the live site, for example under a new account. Do these 
 6. When it is **Live**, the service page shows its address at the top. If it is not exactly
    `https://trove.onrender.com`, set `FRONTEND_URL` to it and `API_URL` to it plus `/api` (Environment tab) and
    let it redeploy.
-7. Invite the team (see the table above).
+7. Decide how the team will share it (see [Sharing Render](#sharing-render-with-the-team)).
 
 ### 4. Prove it works
 
@@ -383,7 +401,7 @@ domain is registered in one person's name, so agree who holds it and write it do
 - [ ] The AI interview works live.
 - [ ] A monthly spend limit is set in the Anthropic console, and Josef agrees to use the team key (or has made a
       separate one).
-- [ ] Every teammate can open Render, the Atlas project and the Brevo login.
+- [ ] Teammates have what they need: the Atlas project (invite them), the Brevo login, and a plan for Render (see Sharing Render).
 - [ ] Render watches `main`, not a feature branch.
 - [ ] Passwords for Atlas, the Trove Gmail account and Brevo are in the password manager.
 - [ ] A decision has been made on a real domain and on fixing email deliverability.
