@@ -623,30 +623,30 @@
       "page": "mybook",
       "expand": "fill"
     },
-    "MyBookA.dc.html": {
-      "x": 1880,
-      "y": 0,
-      "w": 1760,
-      "h": 5460,
-      "title": "My book · Concept A: the book first",
-      "page": "mybook",
-      "expand": "fill"
-    },
-    "MyBookB.dc.html": {
-      "x": 3760,
-      "y": 0,
-      "w": 1760,
-      "h": 5720,
-      "title": "My book · Concept B: the desk",
-      "page": "mybook",
-      "expand": "fill"
-    },
     "MyBookStates.dc.html": {
       "x": 5640,
       "y": 0,
       "w": 1760,
-      "h": 2110,
+      "h": 2450,
       "title": "My book · every stage",
+      "page": "mybook",
+      "expand": "fill"
+    },
+    "MyBookC.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 1760,
+      "h": 8900,
+      "title": "My book · a calmer page",
+      "page": "mybook",
+      "expand": "fill"
+    },
+    "MyBookStudio.dc.html": {
+      "x": 3760,
+      "y": 0,
+      "w": 1760,
+      "h": 5460,
+      "title": "My book · the design studio",
       "page": "mybook",
       "expand": "fill"
     }
@@ -719,9 +719,9 @@
     "LibReopened.dc.html",
     "LogoOptions.dc.html",
     "MyBookNow.dc.html",
-    "MyBookA.dc.html",
-    "MyBookB.dc.html",
-    "MyBookStates.dc.html"
+    "MyBookStates.dc.html",
+    "MyBookC.dc.html",
+    "MyBookStudio.dc.html"
   ],
   "notes": {
     "head": {
@@ -810,7 +810,7 @@
     "mybook": {
       "x": 0,
       "y": -300,
-      "text": "My book · as it is, two concepts, every stage",
+      "text": "My book · as it is, a calmer page, the design studio, every stage",
       "kind": "title1",
       "maxW": 7400,
       "page": "mybook"

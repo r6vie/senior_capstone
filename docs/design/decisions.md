@@ -2,12 +2,13 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
-## 2026-11-23: My book redesign, two concepts (canvas page "My book"; waiting for Josef's choice)
+## 2026-11-23: My book, a calmer page and a design studio (canvas page "My book"; waiting for Josef's approval)
 
-Josef asked for a complete redesign and polish of My book, with the new features: choosing a design for the book, and continuing the interview with the Librarian. Boards: how it is built today (from main), concept A "the book first"
-(the book card with the Librarian's notebook and the one red button beside it; the design picker is a dialog), concept B "the desk" (three columns: the book and live design swatches, the words, and a full Librarian notebook with
-"Answer this" on saved questions), and every stage in the new look. Both use the Folio look and the approved Librarian notebook. New copy: "Change design", "Choose a design", "Use this design", "Continue with the Librarian".
-Product questions left open: whether the design can change at any time and whether it affects a book already on the shelf; whether the red button should be renamed; whether the reading question and sparks may sit inside the notebook (B).
+Josef rejected concepts A and B (the notebook does not belong on My book; it felt blocky, old and unbalanced) and asked for a more airy, considered page with the interview as an important block, and a design studio that is
+satisfying and adapts to categories (Strata first, then Watercolour and others, about ten designs each). Boards: how it is now, "a calmer page" (one column, the book alone on the left with its design named, the Librarian's black
+panel with the one red button as the one important block, hairlines instead of cards), "the design studio" (a page of its own: stage on a ledge, a shelf preview, category tabs, a grid of designs, Shuffle, Use this design), and
+every stage in the new look. The notebook is not on My book. New copy: "Change design", "Design", "Use this design", "Continue with the Librarian". Open product questions: whether the design can change at any time and whether it
+changes a book already on the shelf; the red button's label.
 
 ## 2026-11-23: five logo options (canvas page "Logo"; waiting for Josef's choice)
 
