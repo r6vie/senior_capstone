@@ -33,7 +33,10 @@ def lighthouse():
     rng = np.random.default_rng(5)
     tx, ty, tb = 206, 112, 218
     tower = p.rough(p.poly([(tx - 9, tb), (tx - 6.5, ty + 16), (tx + 6.5, ty + 16), (tx + 9, tb)]), 0.25, 3, fine=0.2)
-    lantern = p.poly([(tx - 8, ty + 16), (tx + 8, ty + 16), (tx + 8, ty + 4), (tx - 8, ty + 4)])
+    # the sky is kept off the lantern's own shape only (lamp room, gallery, roof), so no square of paper shows round it
+    lantern = np.maximum.reduce([p.poly([(tx - 5, ty + 15), (tx + 5, ty + 15), (tx + 5, ty + 7), (tx - 5, ty + 7)]),
+                                 p.poly([(tx - 10, ty + 18), (tx + 10, ty + 18), (tx + 10, ty + 15), (tx - 10, ty + 15)]),
+                                 p.poly([(tx - 7, ty + 7.5), (tx + 7, ty + 7.5), (tx, ty - 1)])])
     keep_white = np.clip(np.maximum(tower, lantern), 0, 1)
     # the headland: a long grassy shoulder that dips, a cliff face below it
     top = [(104, 256), (116, 246), (134, 238), (156, 231), (178, 224), (200, 217), (222, 212), (260, 210)]
@@ -110,12 +113,16 @@ def lighthouse():
     for yb in (ty + 46, ty + 76):
         p.wash(p.rough(p.poly([(tx - 9, yb), (tx + 9, yb), (tx + 9, yb + 4), (tx - 9, yb + 4)]), 0.3, 3) * tower,
                VIOLET, 0.75, rim=1.0, flow=0.4)
+    halo = p.soften(p.ellipse(tx, ty + 11, 16, 13), 6) * (1 - np.clip(tower * 1.2, 0, 1)) * (1 - lantern)
+    room = p.rough(p.poly([(tx - 5, ty + 15), (tx + 5, ty + 15), (tx + 5, ty + 7), (tx - 5, ty + 7)]), 0.2, 2)
+    p.wash(room, GOLD_D, 1.1, rim=0.8, flow=0.4)                                 # the lamp room, lit from inside
+    p.wash(room * ramp_x(tx - 1, tx + 5, 0.0, 1.0), SIENNA, 0.6, rim=0)
+    p.lift(room * p.soften(p.ellipse(tx - 1, ty + 11.5, 2.2, 2.6), 1.0), 0.6)      # the lamp itself
+    for mx in (tx - 2.2, tx + 2.4):
+        p.wash(p.rough(p.stroke([(mx, ty + 7.5), (mx, ty + 14.5)], 0.55, taper=False), 0.1, 1), PAYNE, 1.2, rim=0)
     p.wash(p.rough(p.poly([(tx - 10, ty + 18), (tx + 10, ty + 18), (tx + 10, ty + 15), (tx - 10, ty + 15)]), 0.25, 2),
-           PAYNE, 1.2, rim=0.5)                                                # the gallery
-    p.wash(p.rough(p.poly([(tx - 5, ty + 15), (tx + 5, ty + 15), (tx + 5, ty + 7), (tx - 5, ty + 7)]), 0.25, 2),
-           GOLD_D, 1.2, rim=1.2, flow=0.4)     # the lamp room, one warm glaze
-    p.wash(p.rough(p.poly([(tx - 7, ty + 7.5), (tx + 7, ty + 7.5), (tx, ty - 1)]), 0.25, 2), PAYNE, 1.4, rim=0.6)
-    halo = p.soften(p.ellipse(tx, ty + 11, 16, 13), 6) * (1 - np.clip(tower * 1.2, 0, 1))
+           PAYNE, 2.2, rim=0.5)                                                # the gallery
+    p.wash(p.rough(p.poly([(tx - 7, ty + 7.5), (tx + 7, ty + 7.5), (tx, ty - 1)]), 0.25, 2), PAYNE, 2.4, rim=0.6)
     p.lift(halo, 0.55)
     p.wash(halo, GOLD_D, 0.6, rim=0, flow=0.3, blotch=0.03)
     p.wash(p.rough(p.poly([(tx - 2.6, tb - 1), (tx - 2.6, tb - 6), (tx - 0.2, tb - 6), (tx - 0.2, tb - 1)]), 0.2, 2),

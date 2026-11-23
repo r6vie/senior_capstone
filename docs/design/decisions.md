@@ -359,6 +359,13 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   the oak's clumps, a darker overall value range); its main points were applied and not re-reviewed.
   Then (Josef: river edges "more smooth and not jagged"): both banks are Catmull-Rom curves through the river's
   points, with only a slow wobble and no fine ragging on the water's edge.
+  Then (Josef, 2026-11-23: "remove the two older autumn covers"): `WCCoverAutumn` and `WCCoverAutumn2` are off the
+  canvas; `WCCoverAutumn3` takes round 2's place in its row.
+- **Lighthouse lantern (Josef: "fix the yellow square in the lighthouse").** The dusk sky skipped a 16 x 12 rectangle
+  round the lantern, larger than the lantern, so a square of paper stood there and the glow glazed it yellow. The sky
+  now skips only the lantern's own shape (lamp room, gallery, roof). The cap and gallery are a dark Payne's grey,
+  and the lamp room is lit from inside, with two glazing bars and a lifted lamp. The re-render also carries the
+  `paint.rough` edge fix, so the white dashes along the bottom edge are gone. Board `WCCoverLighthouse2` updated.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
