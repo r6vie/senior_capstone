@@ -4,7 +4,7 @@ cover that is the same book scaled) with the label, title, name, ink and art swa
 edge (Josef, 2026-11-21), so the ink is chosen from the paint behind the title (art/watercolor/ink.py): cream on a
 dark top, the book's own dark ink on a light one.
 
-python3 watercolor_boards.py <root> lighthouse=<blob> autumn3=<blob>
+python3 watercolor_boards.py <root> lighthouse=<blob> autumn3=<blob> mesa=<blob> hills=<blob> lake=<blob> winter=<blob>
 -> <root>/project/WCCover{Lighthouse,Harbor,Autumn}2.dc.html (round 2, painted to the top). Round 1's boards
 (WCCover{Lighthouse,Harbor,Autumn}, white tops) stay on the canvas as Josef asked; their art is no longer rendered by
 covers.py, which now paints the round 2 skies."""
@@ -31,6 +31,15 @@ BOOKS = [
     dict(key="autumn3", art="autumn", file="WCCoverAutumn3",
          label="Watercolor · autumn river, the bridge and trees reworked", title="The Long Way Home",
          author="Emmett Clarke", ink="#5a3420"),
+    # the abstract set (Josef, 2026-11-23: abstraction like the round 1 headland; art/watercolor/abstract.py)
+    dict(key="mesa", file="WCCoverMesa", label="Watercolor, abstract · desert butte at dusk",
+         title="The High Desert", author="Lucia Navarro", ink="#3a2c3a"),
+    dict(key="hills", file="WCCoverHills", label="Watercolor, abstract · patchwork hills with cypresses",
+         title="Slow Harvest", author="Tomas Rinaldi", ink="#4a4a2e"),
+    dict(key="lake", file="WCCoverLake", label="Watercolor, abstract · alpine lake",
+         title="Above the Tree Line", author="Ingrid Solberg", ink="#23415a"),
+    dict(key="winter", file="WCCoverWinter", label="Watercolor, abstract · winter dusk with firs",
+         title="First Snow", author="Hannah Lindqvist", ink="#3e2b45"),
 ]
 
 for b in BOOKS:

@@ -919,6 +919,38 @@
    "w": 600,
    "x": 680,
    "y": 1200
+  },
+  "WCCoverMesa.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover · Desert butte at dusk (abstract)",
+   "w": 600,
+   "x": 0,
+   "y": 2400
+  },
+  "WCCoverHills.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover · Patchwork hills (abstract)",
+   "w": 600,
+   "x": 680,
+   "y": 2400
+  },
+  "WCCoverLake.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover · Alpine lake (abstract)",
+   "w": 600,
+   "x": 1360,
+   "y": 2400
+  },
+  "WCCoverWinter.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover · Winter dusk (abstract)",
+   "w": 600,
+   "x": 2040,
+   "y": 2400
   }
  },
  "createdOnFiles": {
@@ -1200,7 +1232,11 @@
   "WCCoverLighthouse.dc.html",
   "WCCoverHarbor.dc.html",
   "WCCoverLighthouse2.dc.html",
-  "WCCoverAutumn3.dc.html"
+  "WCCoverAutumn3.dc.html",
+  "WCCoverMesa.dc.html",
+  "WCCoverHills.dc.html",
+  "WCCoverLake.dc.html",
+  "WCCoverWinter.dc.html"
  ],
  "pages": [
   {

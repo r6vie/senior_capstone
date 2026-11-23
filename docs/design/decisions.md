@@ -368,6 +368,20 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   now skips only the lantern's own shape (lamp room, gallery, roof). The cap and gallery are a dark Payne's grey,
   and the lamp room is lit from inside, with two glazing bars and a lifted lamp. The re-render also carries the
   `paint.rough` edge fix, so the white dashes along the bottom edge are gone. Board `WCCoverLighthouse2` updated.
+- **Watercolour goes abstract (Josef, 2026-11-23: "going forward, prioritize abstraction with the watercolors like
+  seen here", the round 1 lighthouse headland, "much nicer than the full detail in the autumn. Produce 4 completely
+  new feeling covers").** The rule for watercolour covers from here on: every region is a few large wet patches side
+  by side and over each other, each with a pooled rim; flat fills; objects as single silhouettes; no stonework, limbs,
+  leaf dabs or ripple marks; where planes meet, a hair of paper rather than glazes stacking to mud. Four new covers
+  in `art/watercolor/abstract.py`, a new row on "Covers: Watercolor":
+  `WCCoverMesa` ("The High Desert", Lucia Navarro: a deep cobalt dusk over a terracotta butte in uneven strata, one
+  violet shade face, cream title at 7.4:1), `WCCoverHills` ("Slow Harvest", Tomas Rinaldi: a pale lemon morning over
+  patchwork hills in sage, ochre, apricot and mauve, three cypresses and a small house; olive title at 7.6:1),
+  `WCCoverLake` ("Above the Tree Line", Ingrid Solberg: a cerulean sky, a massif with two summits on the right, the
+  forest as three dark masses, the mountain mirrored loose in teal water; blue title at 5.4:1), `WCCoverWinter`
+  ("First Snow", Hannah Lindqvist: a mauve dusk with a low pale sun, firs as loose glazes, the snow carried by big
+  pale violet and blue patches; plum title at 5.6:1). Two Josef-eye critic rounds; the second round's fixes are
+  applied and not re-reviewed.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
