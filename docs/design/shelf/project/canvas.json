@@ -107,6 +107,22 @@
       "x": 680,
       "y": 0
     },
+    "FinalBookAurora.dc.html": {
+      "h": 1090,
+      "page": "final",
+      "title": "Book screen · Winter night, aurora",
+      "w": 1440,
+      "x": 680,
+      "y": 6000
+    },
+    "FinalBookCity.dc.html": {
+      "h": 1090,
+      "page": "final",
+      "title": "Book screen · Lakefront city at dusk",
+      "w": 1440,
+      "x": 680,
+      "y": 9600
+    },
     "FinalBookCoast.dc.html": {
       "h": 1090,
       "page": "final",
@@ -122,6 +138,38 @@
       "w": 1440,
       "x": 680,
       "y": 1200
+    },
+    "FinalBookForest.dc.html": {
+      "h": 1090,
+      "page": "final",
+      "title": "Book screen · Fir forest in morning light",
+      "w": 1440,
+      "x": 680,
+      "y": 10800
+    },
+    "FinalBookKarst.dc.html": {
+      "h": 1090,
+      "page": "final",
+      "title": "Book screen · Karst river in mist",
+      "w": 1440,
+      "x": 680,
+      "y": 4800
+    },
+    "FinalBookLagoon.dc.html": {
+      "h": 1090,
+      "page": "final",
+      "title": "Book screen · Volcanic lagoon",
+      "w": 1440,
+      "x": 680,
+      "y": 8400
+    },
+    "FinalBookTerraces.dc.html": {
+      "h": 1090,
+      "page": "final",
+      "title": "Book screen · Long fields at harvest",
+      "w": 1440,
+      "x": 680,
+      "y": 7200
     },
     "FinalBookValley.dc.html": {
       "h": 1090,
@@ -139,6 +187,22 @@
       "x": 0,
       "y": 0
     },
+    "FinalCoverAurora.dc.html": {
+      "h": 1090,
+      "page": "final",
+      "title": "Cover · Winter night, aurora",
+      "w": 600,
+      "x": 0,
+      "y": 6000
+    },
+    "FinalCoverCity.dc.html": {
+      "h": 1090,
+      "page": "final",
+      "title": "Cover · Lakefront city at dusk",
+      "w": 600,
+      "x": 0,
+      "y": 9600
+    },
     "FinalCoverCoast.dc.html": {
       "h": 1090,
       "page": "final",
@@ -154,6 +218,38 @@
       "w": 600,
       "x": 0,
       "y": 1200
+    },
+    "FinalCoverForest.dc.html": {
+      "h": 1090,
+      "page": "final",
+      "title": "Cover · Fir forest in morning light",
+      "w": 600,
+      "x": 0,
+      "y": 10800
+    },
+    "FinalCoverKarst.dc.html": {
+      "h": 1090,
+      "page": "final",
+      "title": "Cover · Karst river in mist",
+      "w": 600,
+      "x": 0,
+      "y": 4800
+    },
+    "FinalCoverLagoon.dc.html": {
+      "h": 1090,
+      "page": "final",
+      "title": "Cover · Volcanic lagoon",
+      "w": 600,
+      "x": 0,
+      "y": 8400
+    },
+    "FinalCoverTerraces.dc.html": {
+      "h": 1090,
+      "page": "final",
+      "title": "Cover · Long fields at harvest",
+      "w": 600,
+      "x": 0,
+      "y": 7200
     },
     "FinalCoverValley.dc.html": {
       "h": 1090,
@@ -760,6 +856,134 @@
       "x": 0,
       "y": 0
     },
+    "WCBookHills.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Book screen · patchwork hills",
+      "w": 1440,
+      "x": 680,
+      "y": 1200
+    },
+    "WCBookLake.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Book screen · alpine lake",
+      "w": 1440,
+      "x": 680,
+      "y": 2400
+    },
+    "WCBookMesa.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Book screen · desert butte at dusk",
+      "w": 1440,
+      "x": 680,
+      "y": 0
+    },
+    "WCBookWinter.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Book screen · winter dusk",
+      "w": 1440,
+      "x": 680,
+      "y": 3600
+    },
+    "WCCoverAutumn3.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Cover · Autumn river, bridge and trees reworked",
+      "w": 600,
+      "x": 2040,
+      "y": 6000
+    },
+    "WCCoverBeach.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Cover · Beach at sunset (abstract)",
+      "w": 600,
+      "x": 2040,
+      "y": 4800
+    },
+    "WCCoverBlossom.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Cover · Blossom tree by a pond (abstract)",
+      "w": 600,
+      "x": 680,
+      "y": 4800
+    },
+    "WCCoverCity.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Cover · City at night (abstract)",
+      "w": 600,
+      "x": 0,
+      "y": 4800
+    },
+    "WCCoverHarbor.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Cover · Hillside harbor town",
+      "w": 600,
+      "x": 680,
+      "y": 6000
+    },
+    "WCCoverHills.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Cover · Patchwork hills (abstract)",
+      "w": 600,
+      "x": 0,
+      "y": 1200
+    },
+    "WCCoverLake.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Cover · Alpine lake (abstract)",
+      "w": 600,
+      "x": 0,
+      "y": 2400
+    },
+    "WCCoverLighthouse.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Cover · Lighthouse on the headland",
+      "w": 600,
+      "x": 0,
+      "y": 6000
+    },
+    "WCCoverLighthouse2.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Cover · Lighthouse at dusk (painted to the top)",
+      "w": 600,
+      "x": 1360,
+      "y": 6000
+    },
+    "WCCoverMesa.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Cover · Desert butte at dusk (abstract)",
+      "w": 600,
+      "x": 0,
+      "y": 0
+    },
+    "WCCoverPrairie.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Cover · Prairie storm (abstract)",
+      "w": 600,
+      "x": 1360,
+      "y": 4800
+    },
+    "WCCoverWinter.dc.html": {
+      "h": 1090,
+      "page": "watercolor",
+      "title": "Cover · Winter dusk (abstract)",
+      "w": 600,
+      "x": 0,
+      "y": 3600
+    },
     "WireA.dc.html": {
       "h": 1100,
       "page": "wireframes",
@@ -792,238 +1016,41 @@
       "x": 1520,
       "y": 1220
     },
-    "FinalCoverKarst.dc.html": {
-      "x": 0,
-      "y": 4800,
-      "w": 600,
-      "h": 1090,
-      "title": "Cover · Karst river in mist",
-      "page": "final"
-    },
-    "FinalCoverAurora.dc.html": {
-      "x": 0,
-      "y": 6000,
-      "w": 600,
-      "h": 1090,
-      "title": "Cover · Winter night, aurora",
-      "page": "final"
-    },
-    "FinalCoverTerraces.dc.html": {
-      "x": 0,
-      "y": 7200,
-      "w": 600,
-      "h": 1090,
-      "title": "Cover · Long fields at harvest",
-      "page": "final"
-    },
-    "FinalCoverLagoon.dc.html": {
-      "x": 0,
-      "y": 8400,
-      "w": 600,
-      "h": 1090,
-      "title": "Cover · Volcanic lagoon",
-      "page": "final"
-    },
-    "FinalBookKarst.dc.html": {
-      "x": 680,
-      "y": 4800,
-      "w": 1440,
-      "h": 1090,
-      "title": "Book screen · Karst river in mist",
-      "page": "final"
-    },
-    "FinalBookAurora.dc.html": {
-      "x": 680,
-      "y": 6000,
-      "w": 1440,
-      "h": 1090,
-      "title": "Book screen · Winter night, aurora",
-      "page": "final"
-    },
-    "FinalBookTerraces.dc.html": {
-      "x": 680,
-      "y": 7200,
-      "w": 1440,
-      "h": 1090,
-      "title": "Book screen · Long fields at harvest",
-      "page": "final"
-    },
-    "FinalBookLagoon.dc.html": {
-      "x": 680,
-      "y": 8400,
-      "w": 1440,
-      "h": 1090,
-      "title": "Book screen · Volcanic lagoon",
-      "page": "final"
-    },
-    "FinalCoverCity.dc.html": {
-      "x": 0,
-      "y": 9600,
-      "w": 600,
-      "h": 1090,
-      "title": "Cover · Lakefront city at dusk",
-      "page": "final"
-    },
-    "FinalCoverForest.dc.html": {
-      "x": 0,
-      "y": 10800,
-      "w": 600,
-      "h": 1090,
-      "title": "Cover · Fir forest in morning light",
-      "page": "final"
-    },
-    "FinalBookCity.dc.html": {
-      "x": 680,
-      "y": 9600,
-      "w": 1440,
-      "h": 1090,
-      "title": "Book screen · Lakefront city at dusk",
-      "page": "final"
-    },
-    "FinalBookForest.dc.html": {
-      "x": 680,
-      "y": 10800,
-      "w": 1440,
-      "h": 1090,
-      "title": "Book screen · Fir forest in morning light",
-      "page": "final"
-    },
-    "WCCoverLighthouse.dc.html": {
-      "x": 0,
-      "y": 6000,
-      "w": 600,
-      "h": 1090,
-      "title": "Cover · Lighthouse on the headland",
-      "page": "watercolor"
-    },
-    "WCCoverHarbor.dc.html": {
-      "x": 680,
-      "y": 6000,
-      "w": 600,
-      "h": 1090,
-      "title": "Cover · Hillside harbor town",
-      "page": "watercolor"
-    },
-    "WCCoverLighthouse2.dc.html": {
-      "x": 1360,
-      "y": 6000,
-      "w": 600,
-      "h": 1090,
-      "title": "Cover · Lighthouse at dusk (painted to the top)",
-      "page": "watercolor"
-    },
-    "WCCoverAutumn3.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Autumn river, bridge and trees reworked",
-      "w": 600,
-      "x": 2040,
-      "y": 6000
-    },
-    "WCCoverMesa.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Desert butte at dusk (abstract)",
-      "w": 600,
-      "x": 0,
-      "y": 0
-    },
-    "WCCoverHills.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Patchwork hills (abstract)",
-      "w": 600,
-      "x": 0,
-      "y": 1200
-    },
-    "WCCoverLake.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Alpine lake (abstract)",
-      "w": 600,
-      "x": 0,
-      "y": 2400
-    },
-    "WCCoverWinter.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Winter dusk (abstract)",
-      "w": 600,
-      "x": 0,
-      "y": 3600
-    },
-    "LogoOptions.dc.html": {
+    "MyBookNow.dc.html": {
       "x": 0,
       "y": 0,
       "w": 1760,
-      "h": 4270,
-      "title": "A new logo for Trove · five options",
-      "page": "logo",
+      "h": 2290,
+      "title": "My book · how it is now",
+      "page": "mybook",
       "expand": "fill"
     },
-    "WCBookMesa.dc.html": {
-      "x": 680,
+    "MyBookA.dc.html": {
+      "x": 1880,
       "y": 0,
-      "w": 1440,
-      "h": 1090,
-      "title": "Book screen · desert butte at dusk",
-      "page": "watercolor"
+      "w": 1760,
+      "h": 5460,
+      "title": "My book · Concept A: the book first",
+      "page": "mybook",
+      "expand": "fill"
     },
-    "WCBookHills.dc.html": {
-      "x": 680,
-      "y": 1200,
-      "w": 1440,
-      "h": 1090,
-      "title": "Book screen · patchwork hills",
-      "page": "watercolor"
+    "MyBookB.dc.html": {
+      "x": 3760,
+      "y": 0,
+      "w": 1760,
+      "h": 5720,
+      "title": "My book · Concept B: the desk",
+      "page": "mybook",
+      "expand": "fill"
     },
-    "WCBookLake.dc.html": {
-      "x": 680,
-      "y": 2400,
-      "w": 1440,
-      "h": 1090,
-      "title": "Book screen · alpine lake",
-      "page": "watercolor"
-    },
-    "WCBookWinter.dc.html": {
-      "x": 680,
-      "y": 3600,
-      "w": 1440,
-      "h": 1090,
-      "title": "Book screen · winter dusk",
-      "page": "watercolor"
-    },
-    "WCCoverCity.dc.html": {
-      "x": 0,
-      "y": 4800,
-      "w": 600,
-      "h": 1090,
-      "title": "Cover · City at night (abstract)",
-      "page": "watercolor"
-    },
-    "WCCoverBlossom.dc.html": {
-      "x": 680,
-      "y": 4800,
-      "w": 600,
-      "h": 1090,
-      "title": "Cover · Blossom tree by a pond (abstract)",
-      "page": "watercolor"
-    },
-    "WCCoverPrairie.dc.html": {
-      "x": 1360,
-      "y": 4800,
-      "w": 600,
-      "h": 1090,
-      "title": "Cover · Prairie storm (abstract)",
-      "page": "watercolor"
-    },
-    "WCCoverBeach.dc.html": {
-      "x": 2040,
-      "y": 4800,
-      "w": 600,
-      "h": 1090,
-      "title": "Cover · Beach at sunset (abstract)",
-      "page": "watercolor"
+    "MyBookStates.dc.html": {
+      "x": 5640,
+      "y": 0,
+      "w": 1760,
+      "h": 2110,
+      "title": "My book · every stage",
+      "page": "mybook",
+      "expand": "fill"
     }
   },
   "createdOnFiles": {
@@ -1191,6 +1218,14 @@
       "w": 240,
       "x": 0,
       "y": -300
+    },
+    "mybook": {
+      "x": 0,
+      "y": -300,
+      "text": "My book · as it is, two concepts, every stage",
+      "kind": "title1",
+      "maxW": 7400,
+      "page": "mybook"
     }
   },
   "order": [
@@ -1310,7 +1345,6 @@
     "WCCoverHills.dc.html",
     "WCCoverLake.dc.html",
     "WCCoverWinter.dc.html",
-    "LogoOptions.dc.html",
     "WCBookMesa.dc.html",
     "WCBookHills.dc.html",
     "WCBookLake.dc.html",
@@ -1318,7 +1352,11 @@
     "WCCoverCity.dc.html",
     "WCCoverBlossom.dc.html",
     "WCCoverPrairie.dc.html",
-    "WCCoverBeach.dc.html"
+    "WCCoverBeach.dc.html",
+    "MyBookNow.dc.html",
+    "MyBookA.dc.html",
+    "MyBookB.dc.html",
+    "MyBookStates.dc.html"
   ],
   "pages": [
     {
@@ -1386,8 +1424,8 @@
       "name": "Covers: Watercolor"
     },
     {
-      "id": "logo",
-      "name": "Logo"
+      "id": "mybook",
+      "name": "My book"
     }
   ],
   "title": "Trove Shelf"

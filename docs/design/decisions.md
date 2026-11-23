@@ -425,6 +425,13 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   toward us, one palm in a single curve with broad drooping fronds; brown title 5.9:1). Two Josef-eye critic rounds;
   the second round's fixes are applied and not re-reviewed. Kept against the critic: the city's dark navy top, where
   the title turns cream by itself.
+  Then (Josef: city good; the blossom "needs some more volume, it's like weirdly L-shaped"; the storm field okay but
+  "weird yellow shine behind the barn on the field"; the beach palm "looks ugly", "at least 2 palm trees", the trunk
+  "too straight", the top "weirdly shaped", the light on the water not under the sun): the blossom crown is one full
+  rounded mass, lit on its upper left and turning mauve to its lower right; the prairie's low light is a band in the
+  sky only, nothing on the field; the beach has two palms, a big one curving in from the right and a smaller one on
+  the left, each trunk one strong curve tapering upward, each crown a fan of fronds that rise and droop to fine tips;
+  the path of light now runs straight down from the sun.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

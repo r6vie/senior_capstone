@@ -119,17 +119,20 @@ def blossom():
     trunk = p.rough(p.poly([(196, 286), (202, 270), (198, 248), (190, 224), (184, 206), (192, 204), (202, 222),
                             (212, 246), (218, 268), (226, 286)]), 0.8, 4, fine=0.4)     # tapering, flaring at the root
     limbs = np.maximum.reduce([p.rough(p.stroke(pts, w), 0.5, 3, fine=0.3) for pts, w in
-                               [([(196, 222), (172, 212), (150, 208)], 4.5), ([(192, 210), (200, 186), (214, 160)], 4)]])
+                               [([(196, 222), (172, 212), (156, 210)], 4.5), ([(192, 210), (204, 186), (222, 164)], 4)]])
     wood = np.clip(np.maximum(trunk, limbs), 0, 1)
     p.wash(p.soften(p.ellipse(216, 287, 18, 3), 1.2) * ground, CYPRESS, 0.6, rim=0)
 
     # the crown: big soft clouds of blossom, overlapping, paper left between them; clear of the title's corner
     crown = np.zeros((H, W), np.float32)
-    for cx, cy, rx, ry in [(224, 148, 22, 22), (228, 184, 26, 20), (186, 202, 30, 13), (146, 210, 30, 11),
-                           (232, 118, 18, 20), (214, 182, 18, 12), (112, 216, 20, 8), (198, 214, 16, 10)]:
+    for cx, cy, rx, ry in [(208, 188, 36, 28), (232, 158, 24, 26), (180, 202, 28, 18), (224, 210, 28, 18),
+                           (200, 162, 20, 16), (154, 212, 24, 12), (238, 196, 16, 22), (190, 222, 26, 10)]:
         crown = np.maximum(crown, p.rough(p.ellipse(cx, cy, rx, ry), ry * 0.3, max(4, rx * 0.4), fine=0.6))
     p.loose(crown, [PINK, BLUSH, MAUVE, BLUSH, PINK], 0.95, n=16, rough=0.8, patch=0.2, ground=0.55)
-    p.wash(crown * ramp_y(120, 226, 0.0, 1.0) * ramp_x(120, 236, 0.3, 1.0), MAUVE, 0.5, rim=0, flow=0.5)
+    # volume: the crown lit on its upper left, turning mauve toward its lower right
+    p.lift(crown * p.soften(p.ellipse(194, 168, 30, 18), 8), 0.3)
+    p.wash(crown * np.clip(ramp_y(160, 232, 0.0, 1.0) * 0.6 + ramp_x(170, 240, 0.0, 1.0) * 0.6, 0, 1), MAUVE, 0.7,
+           rim=0, flow=0.5)
     # the wood over it, vanishing into the blossom: full below the crown, gone inside it
     show = np.clip(1 - blur(crown, 1.5 * S) * 1.5, 0, 1)
     p.wash(wood * show, UMBER, 1.3, rim=1.0, blotch=0.06)
@@ -169,8 +172,9 @@ def prairie():
     rng = np.random.default_rng(102)
     sky(p, [SLATE, PAYNE, VIOLET, GOLDEN], [(0, 240, 1.0, 0.25, 1.4), (0, 190, 1.0, 0.0, 0.9),
                                            (120, 230, 0.0, 1.0, 0.4), (200, 244, 0.0, 1.0, 0.8)],
-        mask=np.clip(1 - p.soften(p.ellipse(50, 236, 70, 16), 6) * 0.6, 0, 1))
-    p.wash(p.soften(p.ellipse(50, 236, 70, 16), 6), GOLDEN, 0.9, rim=0)                # the light breaking low
+        mask=np.clip(1 - p.soften(p.poly([(-20, 230), (170, 234), (170, 246), (-20, 246)]), 6) * 0.5, 0, 1))
+    glow = p.soften(p.poly([(-20, 230), (170, 234), (170, 246), (-20, 246)]), 6) * (Yw < 246)
+    p.wash(glow, GOLDEN, 0.7, rim=0)                                    # the light breaking low, in the sky only
     # the storm cloud: a tower of patches on the right, its top catching gold, its belly dark
     cloud = np.zeros((H, W), np.float32)
     # an anvil on a tower, rising from a broad base on the horizon
@@ -226,7 +230,7 @@ def beach():
     p.loose(sea, [VIOLET, CERUL, CERUL], 0.6, n=4, rough=0.5, patch=0.5, ground=0.9, vary=ramp_y(hz, 276, 1.2, 0.6))
     p.wash(sea, ULTRA, 0.35, rim=0)
     p.wash(sea * ramp_y(hz + 20, 276, 0.0, 1.0), TURQ, 0.45, rim=0)
-    path = p.soften(p.poly([(102, hz), (118, hz), (150, 276), (70, 276)]), 3) * sea
+    path = p.soften(p.poly([(96, hz), (112, hz), (134, 276), (74, 276)]), 3) * sea      # under the sun at x 104
     p.lift(path * ramp_y(hz, 276, 0.8, 0.3), 0.6)
     p.wash(path, GOLDEN, 0.7, rim=0)
     for x0, x1, y0 in [(-20, 70, 244), (150, 260, 238), (20, 200, 258)]:    # swells, soft and lighter, broken
@@ -242,21 +246,32 @@ def beach():
     p.wash(sand * ramp_y(290, 344, 0.0, 1.0), SIENNA, 0.35, rim=0, flow=0.5)
     p.wash(sand * ramp_y(300, 344, 0.0, 1.0), VIOLET, 0.4, rim=0, flow=0.5)          # the near sand cooler
     # two palms leaning in from the right, the trunks curved, the fronds long tapered strokes
-    # one palm: a single smooth curve of trunk, the fronds tapered drooping arcs, its shadow on the sand
-    bx, by, tx, ty = 228, 352, 178, 188
-    trunk = p.rough(p.stroke([(bx, by), (214, 300), (198, 248), (186, 214), (tx, ty)], 7, taper=False), 0.4, 6,
-                    fine=0.3)
-    p.wash(trunk, UMBER, 1.3, rim=1.0)
-    p.wash(trunk * ramp_x(tx - 4, bx + 4, 0.2, 1.0), PAYNE, 0.6, rim=0)
-    fr = np.zeros((H, W), np.float32)
-    for ang, ln, droop in [(-168, 46, 22), (-120, 30, 10), (-50, 34, 12), (-8, 46, 24), (158, 38, 26)]:
-        a = math.radians(ang)
-        ex, ey = tx + math.cos(a) * ln, ty + math.sin(a) * ln * 0.5 + droop
-        mx2, my2 = tx + math.cos(a) * ln * 0.5, ty + math.sin(a) * ln * 0.45 - 4
-        fr = np.maximum(fr, p.stroke([(tx, ty), (mx2, my2), (ex, ey)], 14, taper=True))
-    fr = p.rough(fr, 0.8, 3, fine=0.6)
-    p.loose(fr, [CYPRESS, OLIVE, PAYNE], 1.2, n=4, rough=0.6, patch=0.4, ground=0.8)
-    p.wash(p.soften(p.ellipse(bx - 34, by - 4, 40, 4), 1.5) * sand, SIENNA, 0.6, rim=0)
+    # two palms, each trunk one strong curve tapering upward, each crown a fountain of arching fronds
+    for pts, w0, s in [([(222, 356), (226, 316), (220, 278), (204, 240), (180, 206), (160, 190)], 8.0, 1.15),
+                       ([(30, 352), (26, 320), (30, 290), (42, 262), (58, 240)], 5.5, 0.75)]:
+        wood = np.zeros((H, W), np.float32)
+        for i in range(len(pts) - 1):
+            ww = w0 * (1 - 0.55 * i / (len(pts) - 1))
+            wood = np.maximum(wood, p.stroke([pts[i], pts[i + 1]], ww, taper=False))
+        wood = p.rough(wood, 0.4, 6, fine=0.3)
+        p.wash(wood, UMBER, 1.3, rim=1.0)
+        p.wash(wood * ramp_x(pts[-1][0] - 6, pts[0][0] + 6, 0.2, 1.0), PAYNE, 0.6, rim=0)
+        bx, by = pts[0]
+        p.wash(p.soften(p.ellipse(bx - 30 * s, by - 6, 36 * s, 4), 1.5) * sand, SIENNA, 0.6, rim=0)
+        tx, ty = pts[-1]
+        fr = np.zeros((H, W), np.float32)
+        for ang, ln in [(-172, 46), (-150, 40), (-124, 30), (-96, 22), (-68, 28), (-42, 38), (-14, 46),
+                        (170, 34), (12, 36)]:
+            a = math.radians(ang)
+            # each frond rises out of the crown along its own direction, then bows over and droops to a fine tip
+            l = ln * s
+            sx, sy = math.cos(a), math.sin(a)
+            pts_f = []
+            for t in (0.0, 0.25, 0.5, 0.75, 1.0):
+                pts_f.append((tx + sx * l * t, ty + sy * l * t + l * 0.5 * t ** 2.5))
+            fr = np.maximum(fr, p.stroke(pts_f, 6.5 * s, taper=True))
+        fr = p.rough(fr, 0.9, 3, fine=0.6)
+        p.loose(fr, [CYPRESS, OLIVE, PAYNE], 1.2, n=5, rough=0.6, patch=0.35, ground=0.8)
     p.finish()
     return p
 
