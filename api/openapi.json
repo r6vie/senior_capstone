@@ -2859,6 +2859,56 @@
         }
       }
     },
+    "/discovery/search": {
+      "get": {
+        "tags": [
+          "Discovery"
+        ],
+        "summary": "Search",
+        "description": "Available books matching public story text or the author's full name.",
+        "operationId": "search_discovery_search_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "default": "",
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/discovery/recommendation": {
       "get": {
         "tags": [
@@ -5221,6 +5271,39 @@
           "approved"
         ],
         "title": "RevisionRequest"
+      },
+      "SearchResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SearchResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "SearchResponse"
+      },
+      "SearchResult": {
+        "properties": {
+          "book": {
+            "$ref": "#/components/schemas/BookCard"
+          },
+          "excerpt": {
+            "type": "string",
+            "title": "Excerpt"
+          }
+        },
+        "type": "object",
+        "required": [
+          "book",
+          "excerpt"
+        ],
+        "title": "SearchResult"
       },
       "ShapeRequest": {
         "properties": {

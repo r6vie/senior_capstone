@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthProvider";
+import { SearchControl } from "../features/discovery/SearchControl";
 import "./AppShell.css";
 
 // The signed-in frame: top bar, navigation and the page's room. Settings is reached from the avatar,
@@ -41,23 +42,7 @@ export function AppShell() {
           ))}
         </nav>
         <div className="top-bar-end">
-          {/* Drawn only: topic search is wired up by the discovery feature (D2). */}
-          <label className="search">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-            <input
-              ref={search}
-              type="search"
-              placeholder="Search topics and questions"
-              aria-label="Search topics and questions"
-              aria-keyshortcuts="/"
-            />
-            <span className="search-key" aria-hidden="true">
-              /
-            </span>
-          </label>
+          <SearchControl triggerRef={search} />
           <NavLink to="/settings" className="avatar" aria-label="Settings">
             {user?.first_name.charAt(0)}
           </NavLink>

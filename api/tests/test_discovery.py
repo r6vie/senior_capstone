@@ -44,6 +44,60 @@ def book(book_id: str, author_id: str, *, status: str = "on_shelf", title: str |
 
 async def test_recommendation_requires_sign_in(client):
     assert (await client.get("/discovery/recommendation")).status_code == 401
+    assert (await client.get("/discovery/search", params={"q": "career"})).status_code == 401
+
+
+async def test_searches_public_book_text_and_author_names(client, database):
+    _, headers = await sign_in(client)
+    matching = book("career-change", "maya-chen", title="Leaving the Laboratory")
+    matching["author_name"] = "Maya Chen"
+    matching["blurb"] = "A move from research into public-interest teaching."
+    matching["chapters"][0]["title"] = "The final experiment"
+    matching["chapters"][0]["summary"] = "How a difficult semester clarified the next direction."
+    other = book("other", "other-author", title="Growing a Neighborhood Garden")
+    other["blurb"] = "Neighbors share seeds and seasonal harvests."
+    other["chapters"][0]["title"] = "The first tomato"
+    other["chapters"][0]["summary"] = "Choosing a sunny plot and preparing the soil."
+    await database.books.insert_many(
+        [
+            matching,
+            other,
+            book("hidden", "hidden-author", status="off_shelf", title="Leaving Another Laboratory"),
+        ]
+    )
+
+    for query in ("labor", "Maya", "public teaching", "final experiment", "difficult direction"):
+        response = await client.get("/discovery/search", params={"q": query}, headers=headers)
+        assert [result["book"]["id"] for result in response.json()["results"]] == ["career-change"]
+        assert "Private grounding words" not in response.text
+
+    assert (await client.get("/discovery/search", params={"q": "Private"}, headers=headers)).json() == {
+        "results": []
+    }
+
+
+async def test_search_is_partial_ranked_and_returns_a_public_excerpt(client, database):
+    _, headers = await sign_in(client)
+    title_match = book("title", "author-one", title="Engineering a Career Change")
+    title_match["blurb"] = "A practical account of starting over."
+    summary_match = book("summary", "author-two", title="A Different Path")
+    summary_match["chapters"][0]["summary"] = "What engineering taught me about career changes."
+    await database.books.insert_many([summary_match, title_match])
+
+    results = (await client.get("/discovery/search", params={"q": "engi career"}, headers=headers)).json()[
+        "results"
+    ]
+    assert [result["book"]["id"] for result in results] == ["title", "summary"]
+    assert results[0]["excerpt"] == "Engineering a Career Change"
+    assert "engineering" in results[1]["excerpt"].lower()
+
+
+async def test_search_waits_for_two_characters(client, database):
+    _, headers = await sign_in(client)
+    await database.books.insert_one(book("one", "author-one", title="A Book"))
+    assert (await client.get("/discovery/search", params={"q": "a"}, headers=headers)).json() == {
+        "results": []
+    }
 
 
 async def test_members_are_invited_to_create_or_finish_their_book(client, database, fake_claude):
