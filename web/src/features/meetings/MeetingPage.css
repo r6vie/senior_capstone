@@ -37,6 +37,10 @@
 .meeting-confirmed p {
   margin: 0;
 }
+/* A label, not a bar: the card's grid would otherwise stretch it across. */
+.meeting-confirmed .caption {
+  justify-self: start;
+}
 .meeting-confirmed a {
   color: var(--ink);
   text-decoration: underline;
@@ -88,4 +92,22 @@
   .meeting-when {
     font-size: 26px;
   }
+}
+
+/* The way back, above the book's name. */
+.meeting-back {
+  margin: 0 0 var(--s-3);
+}
+.meeting-back a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Once confirmed: changing the time or the details waits behind these. */
+.meeting-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: calc(-1 * var(--s-3)) 0 var(--s-5) calc(-1 * var(--s-3));
 }
