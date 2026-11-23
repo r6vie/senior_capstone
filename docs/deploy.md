@@ -17,31 +17,36 @@ and an API host, and the website's own `/api/...` calls work as they do in devel
   - Its disk is wiped on every restart. Trove keeps nothing important on disk, except the AI spending
     ledger (see below).
 
-## What Josef needs to do or provide
+## Who supplies what
 
-Josef holds the shared accounts, so these are his. Nobody should paste a secret into a chat, a PR or a file in
-the repository. Each goes into Render's dashboard (the "Environment" page of the service).
+Nobody should paste a secret into a chat, a PR or a file in the repository. Each goes into Render's dashboard
+(the "Environment" page of the service).
 
-1. **Atlas network access.** Render's free service has no fixed address, so Atlas has to allow connections from
-   anywhere (`0.0.0.0/0`) for it. To keep that safe:
-   - Make a database user just for production, limited to the `trove_prod` database, with a long random password.
-   - Don't reuse the user in anyone's `.env`.
-   - Put its connection string in Render as `MONGODB_URI`.
-2. **A cap on AI spending.** Set a monthly spend limit in the Anthropic console for the key that goes live, and
-   put the key in Render as `ANTHROPIC_API_KEY`. Use a key made for production, not the one in teammates'
-   `.env` files, so it can be rotated without breaking anyone.
+1. **Database (Daniel, for now): his own free Atlas cluster.** This keeps launch data apart from the team's
+   shared dev cluster. In Atlas: make a free (M0) cluster; under Database Access add a user for production only,
+   limited to the `trove_prod` database, with a long random password (not one used anywhere else); under
+   Network Access allow `0.0.0.0/0`, because Render's free service has no fixed address; then copy the
+   connection string into Render as `MONGODB_URI`. The app makes its own indexes when it starts, so an empty
+   database is all it needs. Moving to a shared cluster later means changing `MONGODB_URI` and moving the data.
+2. **AI (Josef): the team's Anthropic key, with his agreement.** It is his account, so the live site spends his
+   money, and heavy use by members shares a budget with the team's own development. Before launch, Josef should
+   decide:
+   - **A spend limit** in the Anthropic console, so a busy week can't run up a bill. Put the key in Render as
+     `ANTHROPIC_API_KEY`.
    - `AI_BUDGET_USD` also exists, but its ledger is a file that this host erases on every restart, so it
      can't be the cap. The console limit is.
+   - If the key ever leaks, it has to be revoked, which breaks every teammate's `.env` until a new one is
+     shared. A key made just for the live site avoids that. This is worth doing before the site has real
+     members, but isn't needed for a first test.
    - **There is no free fake-AI mode for launch.** `AI_MODE=scripted` refuses to start anywhere that isn't a
      developer's machine, on purpose, so canned replies can't reach a member.
-3. **Email.** Students can't confirm their case.edu address, and nobody gets reminders, until `SMTP_*` is set.
-   The quickest free option is a Gmail account with an
-   [app password](https://support.google.com/accounts/answer/185833): `SMTP_HOST=smtp.gmail.com`,
-   `SMTP_PORT=587`, `SMTP_USER` the address, `SMTP_PASSWORD` the app password, `EMAIL_FROM` like
-   `Trove <that address>`. Gmail allows about 500 emails a day, which is plenty at first. Then send a test
-   (sign up with a case.edu address and see that the code arrives).
-4. **A Render account** to own the service. Whoever makes it should add the others as team members, so it
-   doesn't depend on one person.
+3. **Email (Daniel).** Students can't confirm their case.edu address, and nobody gets reminders, until `SMTP_*`
+   is set. The quickest free option is a new Gmail account made just for Trove (not a personal one) with
+   2-step verification on and an [app password](https://support.google.com/accounts/answer/185833):
+   `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_USER` the address, `SMTP_PASSWORD` the app password,
+   `EMAIL_FROM` like `Trove <that address>`. Gmail allows about 500 emails a day, which is plenty at first.
+4. **A Render account (Daniel)** to own the service, signed in with GitHub. Add the others as team members, so
+   it doesn't depend on one person.
 
 ## Steps
 
