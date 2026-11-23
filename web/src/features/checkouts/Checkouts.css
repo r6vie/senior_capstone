@@ -21,9 +21,6 @@
   align-items: center;
   gap: var(--s-3);
 }
-.checkout-skeleton {
-  height: 160px;
-}
 
 /* Checking out a book. */
 .checkout-book-title {
@@ -266,5 +263,101 @@
   }
   .co-earlier-what {
     grid-column: auto;
+  }
+}
+
+/* ---------- Library touches (2026-11-22): date-due slips, the met stamp, and the Librarian's empty states. ---------- */
+.co-voice {
+  margin: 0 0 var(--s-3);
+  color: var(--ink-2);
+}
+.co-slip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-4);
+}
+/* A date-due slip: a small card, tilted a hair, as if tucked into the book. */
+.co-slip {
+  display: inline-grid;
+  gap: 2px;
+  margin: 0;
+  padding: 6px var(--s-3) var(--s-2);
+  border: var(--line) solid var(--ink);
+  border-radius: 3px;
+  background: var(--white);
+  transform: rotate(-1.5deg);
+}
+/* One printed rule under the label, as on a date-due card; the date sits on the line below. */
+.co-slip-label {
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--rule);
+  font: 700 11px / 1.2 var(--font-display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.co-slip-date {
+  font: 700 19px / 1.1 var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+/* The met stamp: an ink rubber stamp, double-ruled, at an angle. Ink, never red. */
+.co-stamp {
+  position: absolute;
+  z-index: 2;
+  top: var(--s-5);
+  right: var(--s-5);
+  display: grid;
+  justify-items: center;
+  padding: 4px var(--s-3) 6px;
+  border: 4px double var(--ink);
+  border-radius: 4px;
+  background: var(--white);
+  color: var(--ink);
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+.co-stamp-word {
+  font: 800 26px / 1 var(--font-display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.co-stamp-date {
+  font: 700 11px / 1.2 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+/* Landing: one short press, answering the click on "Yes, we met" (120ms, no bounce). */
+.co-stamp[data-fresh] {
+  animation: co-stamp-land 120ms ease-out;
+}
+@keyframes co-stamp-land {
+  from {
+    opacity: 0;
+    transform: rotate(-8deg) scale(1.5);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-8deg) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-stamp[data-fresh] {
+    animation: none;
+  }
+}
+/* On Past meets the stamp sits low on the right, clear of the bookmark and the text. */
+.pm-card .co-stamp {
+  top: auto;
+  bottom: var(--s-5);
+  right: calc(var(--s-7) + var(--s-2));
+}
+@media (max-width: 559px) {
+  .pm-card .co-stamp {
+    position: static;
+    order: 99;
+    justify-self: start;
+    margin-top: var(--s-2);
   }
 }

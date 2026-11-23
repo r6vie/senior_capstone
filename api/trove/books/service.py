@@ -1,5 +1,6 @@
 """The `books` collection and the contract functions other features call (docs/plan.md, "Contracts")."""
 
+import asyncio
 import base64
 import binascii
 import re
@@ -62,6 +63,14 @@ async def get_book_of(database: AsyncDatabase, user_id: str) -> dict | None:
     return await _named(database, await database.books.find_one({"author_id": user_id}))
 
 
+async def shelf_books_of(database: AsyncDatabase, author_ids: list[str]) -> dict[str, dict]:
+    """Each author's book if it's on the shelf, by author id: `_id` and `title` only, in one database trip."""
+    books = database.books.find(
+        {"author_id": {"$in": author_ids}, "status": ON_SHELF}, {"title": 1, "author_id": 1}
+    )
+    return {book["author_id"]: book async for book in books}
+
+
 async def list_shelf(database: AsyncDatabase, *, limit: int, after: str | None = None) -> list[dict]:
     """Books on the shelf, newest first, in the same shape as `get_public_book`.
 
@@ -85,10 +94,11 @@ async def list_shelf(database: AsyncDatabase, *, limit: int, after: str | None =
         batch = await database.books.find(query, PUBLIC_FIELDS).sort(SHELF_SORT).limit(limit).to_list()
         if not batch:
             break
-        lent = await fully_checked_out(database, batch)
+        # Which copies are out, and the authors' names, read at the same time.
+        lent, _ = await asyncio.gather(fully_checked_out(database, batch), with_author_names(database, batch))
         shelf.extend(book for book in batch if book["_id"] not in lent)
         after = shelf_cursor(batch[-1])
-    return await with_author_names(database, shelf[:limit])
+    return shelf[:limit]
 
 
 async def with_author_names(database: AsyncDatabase, books: list[dict]) -> list[dict]:

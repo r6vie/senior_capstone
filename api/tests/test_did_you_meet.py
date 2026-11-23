@@ -204,3 +204,22 @@ async def test_past_meet_flag_always_matches_the_stored_answers(client, database
     await database.checkouts.update_one({"_id": checkout_id}, {"$unset": {f"answers.{maya_id}": ""}})
     await recompute_met(database, checkout_id)
     assert (await database.checkouts.find_one({"_id": checkout_id}))["met"] is True
+
+
+async def test_both_see_the_confirmed_meeting_time_only_while_accepted(client, database):
+    checkout_id, (_, maya), (_, sam) = await reading(client, database, accepted_days_ago=1)
+    assert (await mine(client, sam))[0]["meeting_start"] is None
+    start = (NOW + timedelta(days=2)).replace(microsecond=0)
+    await database.meetings.insert_one({"_id": checkout_id, "start": start})
+    seen = (await mine(client, sam))[0]["meeting_start"]
+    assert seen.startswith(start.strftime("%Y-%m-%dT%H:%M")) and (
+        seen.endswith("Z") or seen.endswith("+00:00")
+    )
+    assert (await mine(client, maya, "lending"))[0]["meeting_start"] == seen
+    # A time offered but not yet agreed isn't a confirmed time.
+    await database.meetings.update_one({"_id": checkout_id}, {"$unset": {"start": ""}})
+    assert (await mine(client, sam))[0]["meeting_start"] is None
+    # After the reading it's history, not something to plan around.
+    await database.meetings.update_one({"_id": checkout_id}, {"$set": {"start": NOW - timedelta(hours=2)}})
+    await answer(client, sam, checkout_id, "met")
+    assert (await mine(client, sam))[0]["meeting_start"] is None

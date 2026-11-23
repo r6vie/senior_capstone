@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
+import { PageLoading } from "../../ui/Loading";
 import { TextField } from "../../ui/TextField";
 import { useAuth } from "../auth/AuthProvider";
 import { InviteSection } from "./InviteSection";
@@ -63,6 +64,8 @@ function ContactSection({ email }: { email: string }) {
 
   return (
     <section aria-labelledby="contact-heading" className="settings-section">
+      {/* Settings appears once the contact details are in, so the fields don't fill in under the cursor. */}
+      {!loaded && !notice && <PageLoading />}
       <h2 id="contact-heading" className="settings-heading">
         Contact details
       </h2>

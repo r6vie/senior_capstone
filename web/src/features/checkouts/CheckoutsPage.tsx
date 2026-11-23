@@ -4,9 +4,12 @@ import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
+import { PageLoading } from "../../ui/Loading";
+import { downloadInvite } from "../meetings/invite";
 import { ContactDetails } from "./ContactDetails";
 import { DidYouMeet } from "./DidYouMeet";
-import { formatDay } from "./dates";
+import { formatDay, slipDay, slipWhen } from "./dates";
+import { DateSlip, MetStamp } from "./Slips";
 import "./Checkouts.css";
 
 // Checkouts (plan item C1, docs/trove.md §6), grouped by what each one needs from you: first what's waiting on
@@ -31,18 +34,65 @@ function Chip({ text, solid = false }: { text: string; solid?: boolean }) {
 
 // After a yes: the conversation (C3) and arranging the meeting (M1). "New message" is private to you and
 // never a count (docs/trove.md §6).
-function AcceptedActions({ id, newMessages }: { id: string; newMessages: boolean }) {
+// Once a time is agreed (M1), the card shows it on a slip with a calendar file, and the meeting link becomes
+// "Meeting details"; until then it's "Arrange the reading".
+function AcceptedActions({
+  id,
+  newMessages,
+  meetingStart,
+}: {
+  id: string;
+  newMessages: boolean;
+  meetingStart?: string | null;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  async function addToCalendar() {
+    setBusy(true);
+    setProblem(await downloadInvite(id));
+    setBusy(false);
+  }
+
   return (
-    <div className="checkout-actions">
-      <Link className="button button-secondary" to={`/checkouts/${id}/messages`}>
-        Messages
-      </Link>
-      {newMessages && <span className="co-new">New message</span>}
-      <Link className="button button-quiet" to={`/checkouts/${id}/meeting`}>
-        Arrange the reading
-      </Link>
-    </div>
+    <>
+      {meetingStart && (
+        <div className="co-slip-row">
+          <DateSlip label="Meeting" when={slipWhen(meetingStart)} />
+          <Button variant="quiet" disabled={busy} aria-busy={busy || undefined} onClick={addToCalendar}>
+            Add to calendar
+          </Button>
+        </div>
+      )}
+      <div className="checkout-actions">
+        <Link className="button button-secondary" to={`/checkouts/${id}/messages`}>
+          Messages
+        </Link>
+        {newMessages && <span className="co-new">New message</span>}
+        <Link className="button button-quiet" to={`/checkouts/${id}/meeting`}>
+          {meetingStart ? "Meeting details" : "Arrange the reading"}
+        </Link>
+      </div>
+      <ItemError text={problem} />
+    </>
   );
+}
+
+// How long the stamp stays on the card before it moves to Earlier, so the moment can be seen.
+const STAMP_MS = 900;
+
+/** "Did you meet?" on a card: a Yes stamps the card, with today's date, for a moment before it moves to Earlier. */
+function useStampedAnswer(answered: Answered, name: string) {
+  // The day it was stamped, taken once at the click so it can't change while it's showing.
+  const [stampedOn, setStampedOn] = useState<string | null>(null);
+  async function onAnswered(answer: string) {
+    if (answer === "met") {
+      setStampedOn(new Date().toISOString());
+      await new Promise((done) => setTimeout(done, STAMP_MS));
+    }
+    await answered(name, answer !== "not_yet");
+  }
+  return { stampedOn, onAnswered };
 }
 
 function ItemError({ text }: { text: string | null }) {
@@ -80,8 +130,10 @@ function LendingCard({ item, act, answered }: { item: Lending; act: Act; answere
 
   const theirBook = item.reader_book ? `Author of "${item.reader_book.title}"` : null;
   const accepted = item.status === "accepted";
+  const stamp = useStampedAnswer(answered, item.reader_name);
   return (
     <li className="co-card surf">
+      {stamp.stampedOn && <MetStamp on={slipDay(stamp.stampedOn)} fresh />}
       <CardHead
         title={item.reader_name}
         meta={accepted ? ["Checked out your book", theirBook].filter(Boolean).join(" · ") : (theirBook ?? "")}
@@ -94,15 +146,25 @@ function LendingCard({ item, act, answered }: { item: Lending; act: Act; answere
               checkoutId={item.id}
               name={item.reader_name}
               view={item.did_you_meet}
-              onAnswered={(answer) => answered(item.reader_name, answer !== "not_yet")}
+              onAnswered={stamp.onAnswered}
             />
           )}
           {item.reader_contact && <ContactDetails name={item.reader_name} contact={item.reader_contact} />}
-          <AcceptedActions id={item.id} newMessages={item.new_messages ?? false} />
+          <AcceptedActions
+            id={item.id}
+            newMessages={item.new_messages ?? false}
+            meetingStart={item.meeting_start}
+          />
         </>
       ) : (
         <>
           <Note text={item.message} />
+          {item.expires_at && (
+            <div className="co-slip-row">
+              <DateSlip label="Answer by" when={slipDay(item.expires_at)} />
+              <span className="co-due">It closes on its own if you haven't answered by then.</span>
+            </div>
+          )}
           {confirming ? (
             <div className="checkout-actions">
               <span>
@@ -123,11 +185,6 @@ function LendingCard({ item, act, answered }: { item: Lending; act: Act; answere
               <Button variant="quiet" disabled={busy} onClick={() => setConfirming(true)}>
                 Decline
               </Button>
-              {item.expires_at && (
-                <span className="co-due">
-                  If you don't answer by {formatDay(item.expires_at)}, it closes on its own.
-                </span>
-              )}
             </div>
           )}
         </>
@@ -155,8 +212,10 @@ function ReadingCard({ item, act, answered }: { item: Reading; act: Act; answere
     ) : (
       <Chip text="Returned" />
     );
+  const stamp = useStampedAnswer(answered, item.author_name);
   return (
     <li className="co-card surf">
+      {stamp.stampedOn && <MetStamp on={slipDay(stamp.stampedOn)} fresh />}
       <CardHead title={item.book_title} meta={`by ${item.author_name}`} chip={chip} />
       {item.status === "waiting" && <Note text={item.message} />}
       {item.did_you_meet && (
@@ -165,7 +224,7 @@ function ReadingCard({ item, act, answered }: { item: Reading; act: Act; answere
           name={item.author_name}
           view={item.did_you_meet}
           returned={item.status === "returned"}
-          onAnswered={(answer) => answered(item.author_name, answer !== "not_yet")}
+          onAnswered={stamp.onAnswered}
         />
       )}
       {/* Contacts on a returned checkout mean it's a Past meet, where they and the conversation now live. */}
@@ -178,19 +237,30 @@ function ReadingCard({ item, act, answered }: { item: Reading; act: Act; answere
         <ContactDetails name={item.author_name} contact={item.author_contact} />
       )}
       {item.status === "accepted" && (
-        <AcceptedActions id={item.id} newMessages={item.new_messages ?? false} />
+        <AcceptedActions
+          id={item.id}
+          newMessages={item.new_messages ?? false}
+          meetingStart={item.meeting_start}
+        />
       )}
       {item.status === "waiting" && (
-        <div className="checkout-actions">
-          <span className="co-due">
-            {item.expires_at
-              ? `Waiting for an answer. If there's none by ${formatDay(item.expires_at)}, it closes on its own.`
-              : "Waiting for an answer."}
-          </span>
-          <Button variant="quiet" disabled={busy} aria-busy={busy} onClick={cancel}>
-            Cancel checkout
-          </Button>
-        </div>
+        <>
+          {item.expires_at ? (
+            <div className="co-slip-row">
+              <DateSlip label="Answer due" when={slipDay(item.expires_at)} />
+              <span className="co-due">
+                Waiting for an answer from {item.author_name}. It closes on its own if there's none by then.
+              </span>
+            </div>
+          ) : (
+            <p className="co-due">Waiting for an answer from {item.author_name}.</p>
+          )}
+          <div className="checkout-actions">
+            <Button variant="quiet" disabled={busy} aria-busy={busy} onClick={cancel}>
+              Cancel checkout
+            </Button>
+          </div>
+        </>
       )}
       <ItemError text={error} />
     </li>
@@ -339,7 +409,7 @@ export function CheckoutsPage() {
           <span>We couldn't load your checkouts. Please refresh.</span>
         </p>
       )}
-      {!mine && !loadFailed && <div className="skeleton checkout-skeleton" aria-busy="true" />}
+      {!mine && !loadFailed && <PageLoading />}
 
       {mine && <Groups mine={mine} act={act} answered={answered} />}
     </main>
@@ -352,7 +422,9 @@ function Groups({ mine, act, answered }: { mine: Mine; act: Act; answered: Answe
     return (
       <div className="empty">
         <h2>No checkouts yet</h2>
-        <p>When someone asks for your book, or you check one out, it shows up here.</p>
+        <p className="voice co-voice">
+          When someone asks for your book, or you ask for theirs, the Librarian sets it out here.
+        </p>
         <p>
           <Link to="/">Browse the shelf</Link>
         </p>
@@ -365,7 +437,7 @@ function Groups({ mine, act, answered }: { mine: Mine; act: Act; answered: Answe
         {yours.length ? (
           <ul className="co-grid">{yours}</ul>
         ) : (
-          <p className="co-quiet">Nothing needs you right now.</p>
+          <p className="voice co-voice">Nothing needs you right now.</p>
         )}
       </Section>
       {underway.length > 0 && (

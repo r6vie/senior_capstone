@@ -4103,6 +4103,18 @@
             "title": "New Messages",
             "default": false
           },
+          "meeting_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting Start"
+          },
           "did_you_meet": {
             "anyOf": [
               {
@@ -5134,6 +5146,18 @@
             "type": "boolean",
             "title": "New Messages",
             "default": false
+          },
+          "meeting_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting Start"
           },
           "did_you_meet": {
             "anyOf": [

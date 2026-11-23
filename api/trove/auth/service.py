@@ -76,19 +76,29 @@ async def get_current_user(
     database: AsyncDatabase = Depends(get_database),
 ) -> dict:
     """FastAPI dependency: the signed-in user's account document, or 401."""
-    session = await database.sessions.find_one(
-        {
-            "token_hash": token_digest(token),
-            "expires_at": {"$gt": datetime.now(UTC)},
-        }
-    )
-    if session is None:
+    # The session and its account in one database trip: this runs before every signed-in request.
+    # The account is checked every time, even if the session has not expired yet.
+    found = await (
+        await database.sessions.aggregate(
+            [
+                {"$match": {"token_hash": token_digest(token), "expires_at": {"$gt": datetime.now(UTC)}}},
+                {"$limit": 1},
+                {
+                    "$lookup": {
+                        "from": "users",
+                        "localField": "user_id",
+                        "foreignField": "_id",
+                        "pipeline": [{"$match": {"is_active": True}}, {"$project": USER_FIELDS}],
+                        "as": "user",
+                    }
+                },
+                {"$project": {"_id": 0, "user": 1}},
+            ]
+        )
+    ).to_list()
+    if not found or not found[0]["user"]:
         raise unauthorized()
-    # Check the account on every request, even if the session has not expired yet.
-    user = await database.users.find_one({"_id": session["user_id"], "is_active": True}, USER_FIELDS)
-    if user is None:
-        raise unauthorized()
-    return user
+    return found[0]["user"][0]
 
 
 async def create_session(database: AsyncDatabase, user_id: str) -> str:
@@ -177,13 +187,21 @@ async def contact_details_of(database: AsyncDatabase, user_id: str) -> ContactDe
     Call this only after an accepted checkout (trove.md §9.1). Contact details never appear on a
     book, on the shelf, or before a yes.
     """
-    user = await database.users.find_one({"_id": user_id, "is_active": True}, {"email": 1, "contact": 1})
-    if user is None:
-        return None
-    contact = user.get("contact") or {}
-    return ContactDetailsResponse(
-        email=user["email"], linkedin_url=contact.get("linkedin_url"), phone=contact.get("phone")
-    )
+    return (await contact_details_of_many(database, [user_id])).get(user_id)
+
+
+async def contact_details_of_many(
+    database: AsyncDatabase, user_ids: list[str]
+) -> dict[str, ContactDetailsResponse]:
+    """`contact_details_of` for several members in one database trip, by id. Same rule: only after a yes."""
+    users = database.users.find({"_id": {"$in": user_ids}, "is_active": True}, {"email": 1, "contact": 1})
+    found: dict[str, ContactDetailsResponse] = {}
+    async for user in users:
+        contact = user.get("contact") or {}
+        found[user["_id"]] = ContactDetailsResponse(
+            email=user["email"], linkedin_url=contact.get("linkedin_url"), phone=contact.get("phone")
+        )
+    return found
 
 
 async def set_contact_details(database: AsyncDatabase, user_id: str, details: ContactDetailsUpdate) -> None:

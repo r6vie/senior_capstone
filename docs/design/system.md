@@ -397,8 +397,26 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
   ribbon with a notched tail, `.past-meet-bookmark`, 16 by 64px): the other person's name and their book, which book
   was checked out and when it was returned, a "Did you meet?" box if they haven't answered, the contact line, and
   "Your conversation". No counts and no red.
+- **Loading** (2026-11-22, Ellie, `web/src/ui/Loading.tsx`). Task: a page appears whole, never piece by piece.
+  A page renders `<PageLoading />` while it fetches what it needs; the screen stays hidden until none is left and
+  the fonts are in, then shows at once. A load under 200ms shows nothing in between. A slower one shows one quiet
+  word in the middle of the page, "Loading" in `--ink-2` display caps after the wordmark's ink square: no
+  boxes, no spinner and no loop, since nothing animates on load. The top bar waits with the first page, then stays up while later pages load.
+  Something slow and optional (the Librarian's pick) keeps its own placeholder in place instead of holding the
+  page.
 - **Contact line** (2026-11-22, Ellie, `ContactDetails.tsx`). The reveal as one wrapping line: a small display-caps
   "Reach <name>" in `--ink-2`, then the email, LinkedIn profile and phone as links. Used on Checkouts and Past meets.
+- **Date-due slip** (2026-11-22, Ellie, `web/src/features/checkouts/Slips.tsx`). Task: see a checkout's one date at
+  a glance. A small white card with a 2px ink line, tilted 1.5°: a display-caps label ("Answer by", "Answer due",
+  "Meeting") over one printed rule, then the date in display caps ("FRI, NOV 27", or "THU, DEC 3 · 3:00 PM" with
+  "Add to calendar" beside it). A plain sentence under it says what happens. Never red.
+- **Met stamp** (2026-11-22, Ellie, `Slips.tsx`). Task: mark the moment two people met. An ink rubber stamp, a 4px
+  double rule at −8°, "MET" and the day in display caps, on white. On "Yes, we met" it lands on the card with one
+  120ms press (motion that answers the click; none with reduced motion) and stays a moment before the card moves to
+  Earlier. On Past meets it sits at the card's lower right, below the text on a phone. Ink, never red.
+- **The Librarian's empty states** (2026-11-22, Ellie). An empty Checkouts or Past meets page, and an empty "Waiting
+  on you", says what will appear in one Newsreader italic line in `--ink-2`, with the Librarian in the third person
+  ("the Librarian sets it out here"), then one next step.
 
 ### Folio: the shelf front page look (2026-11-19, design session; screens: canvas page "Elevate", board `ElevateK3` "Kit 3 · Folio, for build")
 

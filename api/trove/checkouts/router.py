@@ -1,9 +1,17 @@
+import asyncio
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 from pymongo.asynchronous.database import AsyncDatabase
 
-from trove.auth.service import contact_details_of, full_names_of, get_current_user
+from trove.auth.service import (
+    ContactDetailsResponse,
+    contact_details_of_many,
+    full_names_of,
+    get_current_user,
+)
+from trove.books.service import shelf_books_of
 from trove.checkouts import service
 from trove.checkouts.models import (
     CheckoutRequest,
@@ -38,71 +46,124 @@ def refused(error: CheckoutRefused) -> HTTPException:
     return HTTPException(status_code=error.status_code, detail=error.detail)
 
 
-async def contact_after_yes(database: AsyncDatabase, checkout: dict, other_id: str) -> Contact | None:
-    """The other member's contact details, but only on an accepted checkout (the reveal, C2).
+def reveals(checkout: dict) -> bool:
+    """Whether contact details show on this checkout: accepted, or a Past meet afterwards (C2, C4).
 
     Read fresh each time, so a change in Settings shows up, and nothing is copied onto the checkout.
     After the reading they stay for a Past meet (docs/trove.md §8), and go if the two didn't meet.
     """
-    if not (checkout["status"] == service.ACCEPTED or service.is_past_meet(checkout)):
-        return None
-    details = await contact_details_of(database, other_id)
-    return Contact.model_validate(details.model_dump()) if details else None
+    return checkout["status"] == service.ACCEPTED or service.is_past_meet(checkout)
 
 
-async def meet_view(database: AsyncDatabase, checkout: dict, user_id: str) -> DidYouMeet | None:
-    """This member's side of "Did you meet?": None until it's asked (after the meeting time)."""
+def meet_view(checkout: dict, user_id: str, due: datetime | None) -> DidYouMeet | None:
+    """This member's side of "Did you meet?": None until it's asked (after the meeting time, `due`)."""
     mine = service.my_answer(checkout, user_id)
     if checkout["status"] == service.RETURNED:
         return DidYouMeet(can_answer=mine not in service.FINAL_ANSWERS, my_answer=mine)
-    if checkout["status"] != service.ACCEPTED:
-        return None
-    if datetime.now(UTC) < await service.question_due_at(database, checkout):
+    if checkout["status"] != service.ACCEPTED or due is None or datetime.now(UTC) < due:
         return None
     return DidYouMeet(can_answer=True, my_answer=mine)
 
 
+@dataclass
+class Lookups:
+    """Everything a list of checkouts shows about the other people in them, read in one go: each kind of
+    data is one database trip, and the trips run at the same time, however many checkouts there are."""
+
+    names: dict[str, str] = field(default_factory=dict)
+    contacts: dict[str, ContactDetailsResponse] = field(default_factory=dict)
+    books: dict[str, dict] = field(default_factory=dict)
+    due: dict[str, datetime] = field(default_factory=dict)
+    starts: dict[str, datetime] = field(default_factory=dict)
+
+    @classmethod
+    async def load(
+        cls, database: AsyncDatabase, checkouts: list[dict], others: list[str], *, books: bool = False
+    ) -> "Lookups":
+        if not checkouts:
+            # An empty list shows nobody, so there's nothing to look up.
+            return cls()
+        revealed = list(
+            {other for checkout, other in zip(checkouts, others, strict=True) if reveals(checkout)}
+        )
+
+        async def nothing() -> dict:
+            return {}
+
+        names, contacts, shelf, meetings = await asyncio.gather(
+            full_names_of(database, list(set(others))),
+            contact_details_of_many(database, revealed) if revealed else nothing(),
+            shelf_books_of(database, list(set(others))) if books else nothing(),
+            service.meetings_of(database, checkouts),
+        )
+        starts = {
+            checkout_id: service.as_utc(meeting["start"])
+            for checkout_id, meeting in meetings.items()
+            if meeting.get("start")
+        }
+        return cls(
+            names=names,
+            contacts=contacts,
+            books=shelf,
+            due=service.due_times(checkouts, meetings),
+            starts=starts,
+        )
+
+    def meeting_start(self, checkout: dict) -> datetime | None:
+        """The confirmed time, only while the checkout is accepted: after the reading it's history."""
+        return self.starts.get(checkout["_id"]) if checkout["status"] == service.ACCEPTED else None
+
+    def contact(self, checkout: dict, other_id: str) -> Contact | None:
+        details = self.contacts.get(other_id) if reveals(checkout) else None
+        return Contact.model_validate(details.model_dump()) if details else None
+
+    def book(self, other_id: str) -> ReaderBook | None:
+        book = self.books.get(other_id)
+        return ReaderBook(id=book["_id"], title=book["title"]) if book else None
+
+
 async def reading_views(database: AsyncDatabase, checkouts: list[dict]) -> list[ReadingCheckout]:
-    # Authors' current names; the name saved on the checkout covers sample books with no account.
-    names = await full_names_of(database, list({checkout["author_id"] for checkout in checkouts}))
+    authors = [checkout["author_id"] for checkout in checkouts]
+    found = await Lookups.load(database, checkouts, authors)
     return [
         ReadingCheckout(
             id=checkout["_id"],
             book_id=checkout["book_id"],
             book_title=checkout["book_title"],
-            author_name=names.get(checkout["author_id"]) or checkout["author_name"],
+            # Authors' current names; the name saved on the checkout covers sample books with no account.
+            author_name=found.names.get(checkout["author_id"]) or checkout["author_name"],
             message=checkout["message"],
             status=READER_STATUS[checkout["status"]],
             created_at=checkout["created_at"],
             expires_at=checkout["expires_at"] if checkout["status"] == service.REQUESTED else None,
-            author_contact=await contact_after_yes(database, checkout, checkout["author_id"]),
-            did_you_meet=await meet_view(database, checkout, checkout["reader_id"]),
+            author_contact=found.contact(checkout, checkout["author_id"]),
+            did_you_meet=meet_view(checkout, checkout["reader_id"], found.due.get(checkout["_id"])),
+            meeting_start=found.meeting_start(checkout),
         )
         for checkout in checkouts
     ]
 
 
 async def lending_views(database: AsyncDatabase, checkouts: list[dict]) -> list[LendingCheckout]:
-    names = await full_names_of(database, list({checkout["reader_id"] for checkout in checkouts}))
-    views = []
-    for checkout in checkouts:
-        book = await service.reader_book_of(database, checkout["reader_id"])
-        views.append(
-            LendingCheckout(
-                id=checkout["_id"],
-                book_id=checkout["book_id"],
-                book_title=checkout["book_title"],
-                reader_name=names.get(checkout["reader_id"], ""),
-                reader_book=ReaderBook(id=book["_id"], title=book["title"]) if book else None,
-                message=checkout["message"],
-                status="accepted" if checkout["status"] == service.ACCEPTED else "waiting",
-                created_at=checkout["created_at"],
-                expires_at=checkout["expires_at"] if checkout["status"] == service.REQUESTED else None,
-                reader_contact=await contact_after_yes(database, checkout, checkout["reader_id"]),
-                did_you_meet=await meet_view(database, checkout, checkout["author_id"]),
-            )
+    readers = [checkout["reader_id"] for checkout in checkouts]
+    found = await Lookups.load(database, checkouts, readers, books=True)
+    return [
+        LendingCheckout(
+            id=checkout["_id"],
+            book_id=checkout["book_id"],
+            book_title=checkout["book_title"],
+            reader_name=found.names.get(checkout["reader_id"], ""),
+            reader_book=found.book(checkout["reader_id"]),
+            message=checkout["message"],
+            status="accepted" if checkout["status"] == service.ACCEPTED else "waiting",
+            created_at=checkout["created_at"],
+            expires_at=checkout["expires_at"] if checkout["status"] == service.REQUESTED else None,
+            reader_contact=found.contact(checkout, checkout["reader_id"]),
+            did_you_meet=meet_view(checkout, checkout["author_id"], found.due.get(checkout["_id"])),
+            meeting_start=found.meeting_start(checkout),
         )
-    return views
+        for checkout in checkouts
+    ]
 
 
 @router.post("", response_model=ReadingCheckout, status_code=201)
@@ -140,12 +201,15 @@ async def my_checkouts(
     database: AsyncDatabase = Depends(get_database),
 ) -> MyCheckouts:
     """Books you've checked out, and open checkouts of your book."""
-    mine = MyCheckouts(
-        reading=await reading_views(database, await service.checkouts_of_reader(database, user["_id"])),
-        lending=await lending_views(database, await service.open_checkouts_of_author(database, user["_id"])),
+    reading, lending = await service.checkouts_page_of(database, user["_id"])
+    ids = [checkout["_id"] for checkout in [*reading, *lending]]
+    reading_list, lending_list, unread = await asyncio.gather(
+        reading_views(database, reading),
+        lending_views(database, lending),
+        checkouts_with_new_messages(database, user["_id"], ids),
     )
+    mine = MyCheckouts(reading=reading_list, lending=lending_list)
     items = [*mine.reading, *mine.lending]
-    unread = await checkouts_with_new_messages(database, user["_id"], [item.id for item in items])
     for item in items:
         item.new_messages = item.id in unread
     return mine
@@ -221,7 +285,8 @@ async def did_you_meet(
     if service.is_past_meet(checkout):
         # Each reading grows the book (I6): the author gets one quick question. Safe to call again.
         await ask_after_reading(database, checkout["author_id"], checkout["_id"])
-    view = await meet_view(database, checkout, user["_id"])
+    due = (await service.question_due_times(database, [checkout])).get(checkout["_id"])
+    view = meet_view(checkout, user["_id"], due)
     return view or DidYouMeet(can_answer=False, my_answer=service.my_answer(checkout, user["_id"]))
 
 
@@ -233,21 +298,19 @@ async def past_meets(
     """The people you've met through checkouts, newest first, with their contact details."""
     checkouts = await service.past_meet_checkouts(database, user["_id"])
     others = [c["author_id"] if c["reader_id"] == user["_id"] else c["reader_id"] for c in checkouts]
-    names = await full_names_of(database, list(set(others)))
-    meets = []
-    for checkout, other in zip(checkouts, others, strict=True):
-        book = await service.reader_book_of(database, other)
-        meets.append(
-            PastMeet(
-                checkout_id=checkout["_id"],
-                book_title=checkout["book_title"],
-                you_were="reader" if checkout["reader_id"] == user["_id"] else "author",
-                other_name=names.get(other)
-                or (checkout["author_name"] if other == checkout["author_id"] else ""),
-                other_book=ReaderBook(id=book["_id"], title=book["title"]) if book else None,
-                contact=await contact_after_yes(database, checkout, other),
-                met_on=service.as_utc(checkout["returned_at"]),
-                did_you_meet=await meet_view(database, checkout, user["_id"]),
-            )
+    found = await Lookups.load(database, checkouts, others, books=True)
+    meets = [
+        PastMeet(
+            checkout_id=checkout["_id"],
+            book_title=checkout["book_title"],
+            you_were="reader" if checkout["reader_id"] == user["_id"] else "author",
+            other_name=found.names.get(other)
+            or (checkout["author_name"] if other == checkout["author_id"] else ""),
+            other_book=found.book(other),
+            contact=found.contact(checkout, other),
+            met_on=service.as_utc(checkout["returned_at"]),
+            did_you_meet=meet_view(checkout, user["_id"], found.due.get(checkout["_id"])),
         )
+        for checkout, other in zip(checkouts, others, strict=True)
+    ]
     return meets
