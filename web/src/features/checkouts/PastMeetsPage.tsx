@@ -5,7 +5,8 @@ import type { components } from "../../api/schema";
 import { PageLoading } from "../../ui/Loading";
 import { ContactDetails } from "./ContactDetails";
 import { DidYouMeet } from "./DidYouMeet";
-import { formatDay } from "./dates";
+import { formatDay, slipDay } from "./dates";
+import { MetStamp } from "./Slips";
 import "./Checkouts.css";
 
 // Past meets (plan item C4, docs/trove.md §8): the people you've met through a checkout, newest first.
@@ -18,6 +19,7 @@ function MeetItem({ meet, reload }: { meet: Meet; reload: () => Promise<void> })
   return (
     <li className="co-card surf pm-card">
       <span className="past-meet-bookmark" aria-hidden="true" />
+      <MetStamp on={slipDay(meet.met_on)} />
       <div>
         <h2 className="co-title">{meet.other_name}</h2>
         {meet.other_book && <p className="co-meta">Author of "{meet.other_book.title}"</p>}
@@ -86,9 +88,9 @@ export function PastMeetsPage() {
         (meets.length === 0 ? (
           <div className="empty">
             <h2>Nothing here yet</h2>
-            <p>
-              After a reading, answer "Did you meet?" on your Checkouts page, and the people you've met will
-              be listed here.
+            <p className="voice co-voice">
+              Once you've met someone through a checkout, the Librarian keeps them here, with how to reach
+              them.
             </p>
             <p>
               <Link to="/checkouts">Go to Checkouts</Link>

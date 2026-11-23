@@ -6,6 +6,7 @@ import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
 import { PageLoading } from "../../ui/Loading";
 import { TextField } from "../../ui/TextField";
+import { downloadInvite } from "./invite";
 import "./MeetingPage.css";
 
 // Arranging the meeting (plan item M1, docs/trove.md §9.7): each person offers a few times, the app shows
@@ -264,20 +265,10 @@ function DetailsSection({ meeting, onChange }: { meeting: Meeting; onChange: (ne
 function Confirmed({ meeting }: { meeting: Meeting }) {
   const [notice, setNotice] = useState<Notice>(null);
 
-  // The calendar file needs the signed-in request, so a plain link won't do: fetch it, then save it.
   async function download() {
     setNotice(null);
-    const { data, error } = await api.GET("/meetings/{checkout_id}/invite.ics", {
-      params: { path: { checkout_id: meeting.checkout_id } },
-      parseAs: "blob",
-    });
-    if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
-    const url = URL.createObjectURL(data as Blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "trove-meeting.ics";
-    link.click();
-    URL.revokeObjectURL(url);
+    const problem = await downloadInvite(meeting.checkout_id);
+    if (problem) setNotice({ kind: "error", text: problem });
   }
 
   if (!meeting.start) return null;
