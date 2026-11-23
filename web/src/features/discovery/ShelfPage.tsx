@@ -1,7 +1,8 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
-import { artFor, coverInk, loadArt } from "../../ui/art/bookArt";
+import { artFor, loadArt } from "../../ui/art/bookArt";
 import { Button } from "../../ui/Button";
+import { BookObject } from "./BookObject";
 import { type BookCard, type BookOrigin, BookReader } from "./BookReader";
 import { loadBook, loadOwnBook } from "./bookPreload";
 import { FrontDesk } from "./FrontDesk";
@@ -35,54 +36,6 @@ const SAMPLE_CATEGORY_SHELVES = [
     ]),
   },
 ] as const;
-
-function Book({
-  id,
-  book,
-  size,
-  out,
-  onOpen,
-  onInterest,
-}: {
-  /** Chooses the book's art (ui/art/bookArt.ts). */
-  id: string;
-  book: { title: string; authorName: string };
-  size?: "lg";
-  /** Open in front of the shelf: its place stays empty until it's put back. */
-  out?: boolean;
-  onOpen?: (element: HTMLButtonElement) => void;
-  /** Pointed at or focused: likely to be opened, so its contents can be fetched ahead (bookPreload.ts). */
-  onInterest?: () => void;
-}) {
-  const art = artFor(id);
-  const cover = (
-    <span className="book-cover" style={coverInk(art)}>
-      <img className="book-art" src={art.cover} alt="" />
-      <span className="book-title">{book.title}</span>
-      <span className="book-author">{book.authorName}</span>
-    </span>
-  );
-  if (!onOpen) {
-    return (
-      <div className={size === "lg" ? "book book-lg" : "book"} aria-hidden="true">
-        {cover}
-      </div>
-    );
-  }
-  return (
-    <button
-      type="button"
-      className={size === "lg" ? "book book-lg" : "book"}
-      data-out={out || undefined}
-      aria-label={`${book.title}, by ${book.authorName}`}
-      onClick={(event) => onOpen(event.currentTarget)}
-      onPointerEnter={onInterest}
-      onFocus={onInterest}
-    >
-      {cover}
-    </button>
-  );
-}
 
 function promotionFor(recommendation: Recommendation | null, failed: boolean, busy: boolean) {
   if (busy) {
@@ -310,7 +263,7 @@ export function ShelfPage() {
           </div>
           <div className="feature-book">
             {featured ? (
-              <Book
+              <BookObject
                 id={featured.id}
                 book={{ title: featured.title, authorName: featured.author_name }}
                 size="lg"
@@ -319,7 +272,7 @@ export function ShelfPage() {
                 onInterest={() => interest(featured.id)}
               />
             ) : (
-              <Book
+              <BookObject
                 id="your-story-belongs-here"
                 book={{ title: "Your story belongs here", authorName: "A book by you" }}
                 size="lg"
@@ -334,7 +287,7 @@ export function ShelfPage() {
           {categoryShelves.map((category) => (
             <ShelfRow key={category.name} name={category.name}>
               {category.books.map((book) => (
-                <Book
+                <BookObject
                   key={book.id}
                   id={book.id}
                   book={{ title: book.title, authorName: book.author_name }}
@@ -348,7 +301,7 @@ export function ShelfPage() {
 
           <ShelfRow name="Recently added" busy={shelf.busy}>
             {shelf.books.map((book) => (
-              <Book
+              <BookObject
                 key={book.id}
                 id={book.id}
                 book={{ title: book.title, authorName: book.author_name }}

@@ -151,12 +151,11 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Uses only `books.get_public_book` and `books.list_shelf`.
 - Has a "Check out" button that leads into C1.
 
-**D2 · Smart search** · Alvisa · `todo`
-- Search by topic, never by name.
-- Decide first: how to search.
-  - **Recommended:** at publish time, Claude writes hidden search terms for each book, and a
-    MongoDB text index covers title, chapters and those terms. No new provider needed.
-  - Alternative: vector search, which needs an embeddings provider.
+**D2 · Smart search** · Alvisa · `doing`
+- Search every public word in a book and the author's full name. No additional Claude call or
+  embeddings provider (decision recorded in trove.md).
+- The existing top-bar field opens a translucent paper overlay. Results update while typing and
+  show each matching book with one public excerpt.
 
 **C2 · Accepting and the reveal** · Ellie · `done`
 - When the author accepts, both people see each other's full name and the contact details they

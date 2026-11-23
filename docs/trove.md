@@ -159,7 +159,13 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   Reduced-motion users get the same reader without the movement.
 
 - **Shelves will be grouped by categories.** The categories are still to be defined, and they will not be genres.
-- **Smart search** finds books relevant to what you're looking for. Never search by name.
+- **D2 smart search (Alvisa, 2026-11-22):** search the public text already in each available book:
+  title, author's full name, blurb, chapter titles and chapter summaries. Do not make another
+  Claude call, and never search grounding quotes, interview answers, contacts or checkout data.
+  The existing top-bar field stays visible; focusing it opens a paper-colored translucent layer
+  over the current page. After two characters, results update 200 ms after typing and show the
+  book cover plus one matching public excerpt. Search and Enter run immediately. The underlying
+  page remains faintly visible but cannot be used until Search is closed.
 - **"The Librarian recommends":** the AI recommends books to you.
 - **D3 recommendation (Alvisa, 2026-11-21):** this version stays signed-in. A member without a
   finished book sees the same large book graphic inviting them to create or finish theirs. Once

@@ -19,3 +19,12 @@ class LibrarianRecommendation(BaseModel):
     state: RecommendationState
     book: BookCard | None = None
     reason: str | None = None
+
+
+class SearchResult(BaseModel):
+    book: BookCard
+    excerpt: str
+
+
+class SearchResponse(BaseModel):
+    results: list[SearchResult]
