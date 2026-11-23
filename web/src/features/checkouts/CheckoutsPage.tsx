@@ -9,7 +9,7 @@ import { downloadInvite } from "../meetings/invite";
 import { ContactDetails } from "./ContactDetails";
 import { DidYouMeet } from "./DidYouMeet";
 import { formatDay, slipDay, slipWhen } from "./dates";
-import { DateSlip, MetStamp, pause, STAMP_MS } from "./Slips";
+import { DateSlip, MetStamp } from "./Slips";
 import "./Checkouts.css";
 
 // Checkouts (plan item C1, docs/trove.md §6), grouped by what each one needs from you: first what's waiting on
@@ -78,17 +78,21 @@ function AcceptedActions({
   );
 }
 
-/** "Did you meet?" on a card: a Yes stamps the card for a moment before it moves to Earlier. */
+// How long the stamp stays on the card before it moves to Earlier, so the moment can be seen.
+const STAMP_MS = 900;
+
+/** "Did you meet?" on a card: a Yes stamps the card, with today's date, for a moment before it moves to Earlier. */
 function useStampedAnswer(answered: Answered, name: string) {
-  const [stamped, setStamped] = useState(false);
+  // The day it was stamped, taken once at the click so it can't change while it's showing.
+  const [stampedOn, setStampedOn] = useState<string | null>(null);
   async function onAnswered(answer: string) {
     if (answer === "met") {
-      setStamped(true);
-      await pause(STAMP_MS);
+      setStampedOn(new Date().toISOString());
+      await new Promise((done) => setTimeout(done, STAMP_MS));
     }
     await answered(name, answer !== "not_yet");
   }
-  return { stamped, onAnswered };
+  return { stampedOn, onAnswered };
 }
 
 function ItemError({ text }: { text: string | null }) {
@@ -129,7 +133,7 @@ function LendingCard({ item, act, answered }: { item: Lending; act: Act; answere
   const stamp = useStampedAnswer(answered, item.reader_name);
   return (
     <li className="co-card surf">
-      {stamp.stamped && <MetStamp on={slipDay(new Date().toISOString())} fresh />}
+      {stamp.stampedOn && <MetStamp on={slipDay(stamp.stampedOn)} fresh />}
       <CardHead
         title={item.reader_name}
         meta={accepted ? ["Checked out your book", theirBook].filter(Boolean).join(" · ") : (theirBook ?? "")}
@@ -211,7 +215,7 @@ function ReadingCard({ item, act, answered }: { item: Reading; act: Act; answere
   const stamp = useStampedAnswer(answered, item.author_name);
   return (
     <li className="co-card surf">
-      {stamp.stamped && <MetStamp on={slipDay(new Date().toISOString())} fresh />}
+      {stamp.stampedOn && <MetStamp on={slipDay(stamp.stampedOn)} fresh />}
       <CardHead title={item.book_title} meta={`by ${item.author_name}`} chip={chip} />
       {item.status === "waiting" && <Note text={item.message} />}
       {item.did_you_meet && (
