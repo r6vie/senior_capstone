@@ -1,45 +1,11 @@
-/* Checkouts: stacked sections and a plain list, composed from the design system's recipes
-   (fields, buttons, messages, empty). Tokens only. See docs/design/system.md, Additions. */
+/* Checkouts, checking out a book, and Past meets, composed from the design system's recipes (cards, fields,
+   buttons, messages, empty). Tokens only. See docs/design/system.md, Additions. */
 
 .checkouts-page {
   max-width: 720px;
 }
 .checkouts-page > .message {
   margin: 0 0 var(--s-5);
-}
-.checkouts-section {
-  display: grid;
-  gap: var(--s-4);
-  padding: var(--s-5) 0;
-  border-top: var(--line-heavy) solid var(--ink);
-}
-.checkouts-heading,
-.checkout-name,
-.checkout-book {
-  margin: 0;
-  font: 600 26px / 1.1 var(--font-serif);
-}
-.checkout-name,
-.checkout-book {
-  font-size: 22px;
-}
-.checkout-list {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.checkout {
-  display: grid;
-  gap: var(--s-2);
-  padding: var(--s-4) 0;
-  border-bottom: var(--line) dotted var(--ink);
-}
-.checkout:last-child {
-  border-bottom: none;
-}
-.checkout p {
-  margin: 0;
 }
 /* The other member's own words: an ink rule, as in the emails' quotes. */
 .checkout-note {
@@ -81,36 +47,44 @@
   gap: var(--s-4);
 }
 
-/* The reveal (C2): the other member's contact details, on a white panel because it's something to pick up. */
+/* The reveal (C2): the other member's contact details on one line, after a small "Reach" label. */
 .checkout-contact {
-  display: grid;
-  gap: var(--s-2);
-  justify-self: start;
-  padding: var(--s-3) var(--s-4);
-  border: var(--line) solid var(--ink);
-  background: var(--white);
-}
-.checkout-contact ul {
-  display: grid;
-  /* A long email address wraps instead of running out of the panel on a phone. */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-1) var(--s-4);
+  /* A long email address wraps instead of running off a phone. */
   overflow-wrap: anywhere;
-  gap: var(--s-1);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  font-size: 15px;
+}
+.checkout-contact-label {
+  font: 700 13px / 1.6 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
 }
 
-/* "Did you meet?" (C4): a plain question on the item, with the answer buttons under it. */
+/* "Did you meet?" (C4): the question in a sunk box, so it reads as the one thing being asked on the card. */
 .meet-question {
   display: grid;
   gap: var(--s-2);
-  justify-self: start;
-  margin: var(--s-2) 0 0;
-  padding: 0;
+  margin: 0;
+  padding: var(--s-4);
   border: none;
+  border-radius: var(--r);
+  background: var(--paper-sunk);
 }
-.meet-question legend {
-  margin-bottom: var(--s-2);
+/* A legend won't sit inside a padded fieldset's box on its own; floating it keeps it in the flow. */
+.meet-question-title {
+  float: left;
+  width: 100%;
+  padding: 0;
+  font: 600 18px / 1.3 var(--font-serif);
+}
+.meet-question-hint {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-2);
 }
 /* The chosen "Not yet": filled ink, as the toggle pair in Additions (never red). */
 .meet-question .button[aria-pressed="true"] {
@@ -119,18 +93,178 @@
   border-color: var(--ink);
 }
 
-/* Past meets (C4): each person carries a bookmark, an ink ribbon with a notched tail, in the margin. */
-.past-meet {
-  position: relative;
-  padding-left: var(--s-6);
+/* Past meets (C4; cards 2026-11-22): one column of wide cards, newest first, so a list of people reads top to
+   bottom and no card leaves a hole beside another. Each carries a bookmark: an ink ribbon with a notched tail,
+   hanging from the card's top edge near the right corner. */
+.pm-section {
+  margin-top: var(--s-6);
+}
+.pm-list {
+  display: grid;
+  gap: var(--s-6);
+  max-width: 760px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pm-card {
+  padding-right: calc(var(--s-7) + var(--s-2));
 }
 .past-meet-bookmark {
   position: absolute;
-  /* Level with the name, clear of the dotted rule above. */
-  top: var(--s-4);
-  left: 0;
+  z-index: 1;
+  top: calc(-1 * var(--s-2));
+  right: var(--s-5);
   width: var(--s-4);
-  height: var(--s-7);
+  height: var(--s-8);
   background: var(--ink);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%);
+}
+
+/* ---------- The Checkouts page (design C, 2026-11-22): grouped by what each checkout needs from you. ---------- */
+.co-page {
+  max-width: 1120px;
+}
+.co-page > .message {
+  margin: 0 0 var(--s-5);
+}
+.co-section {
+  display: grid;
+  gap: var(--s-5);
+  margin-top: var(--s-7);
+}
+.co-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin: 0;
+  font: 800 26px / 1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.co-heading::after {
+  content: "";
+  flex: 1;
+  border-top: 2.5px solid var(--ink);
+}
+/* An empty page's heading sits right under the page title, so it's an h2 dressed as the system's empty state. */
+.co-page .empty h2 {
+  margin: 0 0 var(--s-2);
+  font: 600 26px / 1.1 var(--font-serif);
+}
+.co-quiet {
+  margin: 0;
+  color: var(--ink-2);
+}
+.co-grid {
+  display: grid;
+  gap: var(--s-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.co-card {
+  display: grid;
+  align-content: start;
+  gap: var(--s-4);
+}
+.co-card p {
+  margin: 0;
+}
+.co-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+.co-title {
+  margin: 0;
+  font: 600 24px / 1.15 var(--font-serif);
+}
+.co-meta {
+  margin-top: var(--s-1);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+/* Status: outlined while it waits on someone, solid ink once it's accepted. Never red. */
+.co-chip {
+  flex: none;
+  padding: 2px 8px;
+  border: var(--line) solid var(--ink);
+  border-radius: 3px;
+  font: 700 13px / 1.2 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.co-chip-solid {
+  background: var(--ink);
+  color: var(--white);
+}
+.co-due {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+/* The private unread mark: a dot and a word, never a number. */
+.co-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 700 13px / 1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.co-new::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.co-earlier {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.co-earlier-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s-1) var(--s-4);
+  align-items: baseline;
+  padding: var(--s-3) 0;
+  border-bottom: var(--line) dotted var(--ink);
+}
+.co-earlier-item:first-child {
+  border-top: var(--line) dotted var(--ink);
+}
+.co-earlier-title {
+  font: 600 18px / 1.2 var(--font-serif);
+}
+.co-earlier-what {
+  grid-column: 1;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+/* A phone: the status label goes above the name, and each earlier checkout stacks. */
+@media (max-width: 559px) {
+  .co-head {
+    flex-direction: column-reverse;
+    gap: var(--s-2);
+  }
+  .co-earlier-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (min-width: 820px) {
+  .co-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--s-6) var(--s-7);
+  }
+  .co-earlier-item {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto;
+  }
+  .co-earlier-what {
+    grid-column: auto;
+  }
 }

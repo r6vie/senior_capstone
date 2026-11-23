@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
@@ -9,9 +9,10 @@ import { DidYouMeet } from "./DidYouMeet";
 import { formatDay } from "./dates";
 import "./Checkouts.css";
 
-// Checkouts (plan item C1, docs/trove.md §6): requests for your book first, since they wait on you,
-// then the books you've checked out. No counts anywhere, and no red: nothing here is the one next step
-// for every member (docs/design/system.md).
+// Checkouts (plan item C1, docs/trove.md §6), grouped by what each one needs from you: first what's waiting on
+// you (a request for your book, a "Did you meet?" to answer), then what's under way, then a short list of earlier
+// ones. Your book and books you've checked out sit together in each group; each card says which. No counts
+// anywhere, and no red: nothing here is the one next step for every member (docs/design/system.md).
 
 type Mine = components["schemas"]["MyCheckouts"];
 type Lending = components["schemas"]["LendingCheckout"];
@@ -24,6 +25,10 @@ function Note({ text }: { text: string }) {
   return <blockquote className="checkout-note">{text}</blockquote>;
 }
 
+function Chip({ text, solid = false }: { text: string; solid?: boolean }) {
+  return <span className={solid ? "co-chip co-chip-solid" : "co-chip"}>{text}</span>;
+}
+
 // After a yes: the conversation (C3) and arranging the meeting (M1). "New message" is private to you and
 // never a count (docs/trove.md §6).
 function AcceptedActions({ id, newMessages }: { id: string; newMessages: boolean }) {
@@ -32,8 +37,8 @@ function AcceptedActions({ id, newMessages }: { id: string; newMessages: boolean
       <Link className="button button-secondary" to={`/checkouts/${id}/messages`}>
         Messages
       </Link>
-      {newMessages && <span className="caption checkout-new">New message</span>}
-      <Link className="button button-secondary" to={`/checkouts/${id}/meeting`}>
+      {newMessages && <span className="co-new">New message</span>}
+      <Link className="button button-quiet" to={`/checkouts/${id}/meeting`}>
         Arrange the reading
       </Link>
     </div>
@@ -50,7 +55,19 @@ function ItemError({ text }: { text: string | null }) {
   );
 }
 
-function LendingItem({ item, act, answered }: { item: Lending; act: Act; answered: Answered }) {
+function CardHead({ title, meta, chip }: { title: string; meta: string; chip: ReactNode }) {
+  return (
+    <div className="co-head">
+      <div>
+        <h3 className="co-title">{title}</h3>
+        <p className="co-meta">{meta}</p>
+      </div>
+      {chip}
+    </div>
+  );
+}
+
+function LendingCard({ item, act, answered }: { item: Lending; act: Act; answered: Answered }) {
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,14 +78,17 @@ function LendingItem({ item, act, answered }: { item: Lending; act: Act; answere
     setBusy(false);
   }
 
+  const theirBook = item.reader_book ? `Author of "${item.reader_book.title}"` : null;
+  const accepted = item.status === "accepted";
   return (
-    <li className="checkout">
-      <h3 className="checkout-name">{item.reader_name}</h3>
-      {item.reader_book && <p className="muted">Author of "{item.reader_book.title}"</p>}
-      <Note text={item.message} />
-      {item.status === "accepted" ? (
+    <li className="co-card surf">
+      <CardHead
+        title={item.reader_name}
+        meta={accepted ? ["Checked out your book", theirBook].filter(Boolean).join(" · ") : (theirBook ?? "")}
+        chip={accepted ? <Chip text="Accepted" solid /> : <Chip text="Asks for your book" />}
+      />
+      {accepted ? (
         <>
-          <p>You said yes.</p>
           {item.did_you_meet && (
             <DidYouMeet
               checkoutId={item.id}
@@ -80,31 +100,36 @@ function LendingItem({ item, act, answered }: { item: Lending; act: Act; answere
           {item.reader_contact && <ContactDetails name={item.reader_name} contact={item.reader_contact} />}
           <AcceptedActions id={item.id} newMessages={item.new_messages ?? false} />
         </>
-      ) : confirming ? (
-        <div className="checkout-actions">
-          <span>Decline {item.reader_name}'s checkout? They'll see the book isn't available right now.</span>
-          <Button variant="secondary" disabled={busy} aria-busy={busy} onClick={() => run("decline")}>
-            Decline
-          </Button>
-          <Button variant="quiet" disabled={busy} onClick={() => setConfirming(false)}>
-            Keep it
-          </Button>
-        </div>
       ) : (
         <>
-          {item.expires_at && (
-            <p className="muted">
-              If you don't answer by {formatDay(item.expires_at)}, it closes on its own.
-            </p>
+          <Note text={item.message} />
+          {confirming ? (
+            <div className="checkout-actions">
+              <span>
+                Decline {item.reader_name}'s checkout? They'll see the book isn't available right now.
+              </span>
+              <Button variant="secondary" disabled={busy} aria-busy={busy} onClick={() => run("decline")}>
+                Decline
+              </Button>
+              <Button variant="quiet" disabled={busy} onClick={() => setConfirming(false)}>
+                Keep it
+              </Button>
+            </div>
+          ) : (
+            <div className="checkout-actions">
+              <Button variant="secondary" disabled={busy} aria-busy={busy} onClick={() => run("accept")}>
+                Accept
+              </Button>
+              <Button variant="quiet" disabled={busy} onClick={() => setConfirming(true)}>
+                Decline
+              </Button>
+              {item.expires_at && (
+                <span className="co-due">
+                  If you don't answer by {formatDay(item.expires_at)}, it closes on its own.
+                </span>
+              )}
+            </div>
           )}
-          <div className="checkout-actions">
-            <Button variant="secondary" disabled={busy} aria-busy={busy} onClick={() => run("accept")}>
-              Accept
-            </Button>
-            <Button variant="quiet" disabled={busy} onClick={() => setConfirming(true)}>
-              Decline
-            </Button>
-          </div>
         </>
       )}
       <ItemError text={error} />
@@ -112,24 +137,7 @@ function LendingItem({ item, act, answered }: { item: Lending; act: Act; answere
   );
 }
 
-function readingStatus(item: Reading): string {
-  switch (item.status) {
-    case "waiting":
-      return item.expires_at
-        ? `Waiting for an answer. If there's none by ${formatDay(item.expires_at)}, it closes on its own.`
-        : "Waiting for an answer.";
-    case "accepted":
-      return "Accepted.";
-    case "cancelled":
-      return "You cancelled this checkout.";
-    case "returned":
-      return "Returned.";
-    default:
-      return "This book isn't available right now.";
-  }
-}
-
-function ReadingItem({ item, act, answered }: { item: Reading; act: Act; answered: Answered }) {
+function ReadingCard({ item, act, answered }: { item: Reading; act: Act; answered: Answered }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -139,12 +147,18 @@ function ReadingItem({ item, act, answered }: { item: Reading; act: Act; answere
     setBusy(false);
   }
 
+  const chip =
+    item.status === "waiting" ? (
+      <Chip text="Waiting" />
+    ) : item.status === "accepted" ? (
+      <Chip text="Accepted" solid />
+    ) : (
+      <Chip text="Returned" />
+    );
   return (
-    <li className="checkout">
-      <h3 className="checkout-book">{item.book_title}</h3>
-      <p className="muted">by {item.author_name}</p>
-      <Note text={item.message} />
-      <p>{readingStatus(item)}</p>
+    <li className="co-card surf">
+      <CardHead title={item.book_title} meta={`by ${item.author_name}`} chip={chip} />
+      {item.status === "waiting" && <Note text={item.message} />}
       {item.did_you_meet && (
         <DidYouMeet
           checkoutId={item.id}
@@ -168,6 +182,11 @@ function ReadingItem({ item, act, answered }: { item: Reading; act: Act; answere
       )}
       {item.status === "waiting" && (
         <div className="checkout-actions">
+          <span className="co-due">
+            {item.expires_at
+              ? `Waiting for an answer. If there's none by ${formatDay(item.expires_at)}, it closes on its own.`
+              : "Waiting for an answer."}
+          </span>
           <Button variant="quiet" disabled={busy} aria-busy={busy} onClick={cancel}>
             Cancel checkout
           </Button>
@@ -175,6 +194,64 @@ function ReadingItem({ item, act, answered }: { item: Reading; act: Act; answere
       )}
       <ItemError text={error} />
     </li>
+  );
+}
+
+function earlierStatus(item: Reading): string {
+  switch (item.status) {
+    case "returned":
+      return "Returned";
+    case "cancelled":
+      return "You cancelled it";
+    default:
+      return "Not available";
+  }
+}
+
+// Closed checkouts: one line each, so they don't crowd what's live.
+function EarlierItem({ item }: { item: Reading }) {
+  return (
+    <li className="co-earlier-item">
+      <span className="co-earlier-title">{item.book_title}</span>
+      <span className="co-earlier-what">
+        {item.author_name} · {earlierStatus(item)}
+      </span>
+      {item.status === "returned" && item.author_contact ? (
+        <Link to="/past-meets">See {item.author_name} in Past meets</Link>
+      ) : (
+        <span />
+      )}
+    </li>
+  );
+}
+
+/** Sorts every checkout into what's waiting on you, what's under way, and what's closed. */
+function arrange(mine: Mine, act: Act, answered: Answered) {
+  const yours: ReactNode[] = [];
+  const underway: ReactNode[] = [];
+  const earlier: Reading[] = [];
+  for (const item of mine.lending) {
+    const card = <LendingCard key={item.id} item={item} act={act} answered={answered} />;
+    if (item.status === "waiting" || item.did_you_meet?.can_answer) yours.push(card);
+    else underway.push(card);
+  }
+  for (const item of mine.reading) {
+    const card = <ReadingCard key={item.id} item={item} act={act} answered={answered} />;
+    if (item.did_you_meet?.can_answer) yours.push(card);
+    else if (item.status === "waiting" || item.status === "accepted") underway.push(card);
+    else earlier.push(item);
+  }
+  return { yours, underway, earlier };
+}
+
+function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
+  return (
+    <section className="co-section" aria-labelledby={id}>
+      <h2 id={id} className="co-heading">
+        {title}
+      </h2>
+      {children}
+    </section>
   );
 }
 
@@ -238,7 +315,7 @@ export function CheckoutsPage() {
   );
 
   return (
-    <main className="shell-page checkouts-page">
+    <main className="shell-page co-page">
       <h1 className="page-title">Checkouts</h1>
       {checkedOut && (
         <p role="status" className="message">
@@ -264,46 +341,47 @@ export function CheckoutsPage() {
       )}
       {!mine && !loadFailed && <div className="skeleton checkout-skeleton" aria-busy="true" />}
 
-      {mine && (
-        <>
-          <section className="checkouts-section" aria-labelledby="lending-heading">
-            <h2 id="lending-heading" className="checkouts-heading">
-              Requests for your book
-            </h2>
-            {mine.lending.length === 0 ? (
-              <div className="empty">
-                <p>Nobody has asked to check out your book yet.</p>
-              </div>
-            ) : (
-              <ul className="checkout-list">
-                {mine.lending.map((item) => (
-                  <LendingItem key={item.id} item={item} act={act} answered={answered} />
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section className="checkouts-section" aria-labelledby="reading-heading">
-            <h2 id="reading-heading" className="checkouts-heading">
-              Books you've checked out
-            </h2>
-            {mine.reading.length === 0 ? (
-              <div className="empty">
-                <p>You haven't checked out a book yet.</p>
-                <p>
-                  <Link to="/">Browse the shelf</Link>
-                </p>
-              </div>
-            ) : (
-              <ul className="checkout-list">
-                {mine.reading.map((item) => (
-                  <ReadingItem key={item.id} item={item} act={act} answered={answered} />
-                ))}
-              </ul>
-            )}
-          </section>
-        </>
-      )}
+      {mine && <Groups mine={mine} act={act} answered={answered} />}
     </main>
+  );
+}
+
+function Groups({ mine, act, answered }: { mine: Mine; act: Act; answered: Answered }) {
+  const { yours, underway, earlier } = arrange(mine, act, answered);
+  if (!yours.length && !underway.length && !earlier.length) {
+    return (
+      <div className="empty">
+        <h2>No checkouts yet</h2>
+        <p>When someone asks for your book, or you check one out, it shows up here.</p>
+        <p>
+          <Link to="/">Browse the shelf</Link>
+        </p>
+      </div>
+    );
+  }
+  return (
+    <>
+      <Section id="co-yours" title="Waiting on you">
+        {yours.length ? (
+          <ul className="co-grid">{yours}</ul>
+        ) : (
+          <p className="co-quiet">Nothing needs you right now.</p>
+        )}
+      </Section>
+      {underway.length > 0 && (
+        <Section id="co-underway" title="Under way">
+          <ul className="co-grid">{underway}</ul>
+        </Section>
+      )}
+      {earlier.length > 0 && (
+        <Section id="co-earlier" title="Earlier">
+          <ul className="co-earlier">
+            {earlier.map((item) => (
+              <EarlierItem key={item.id} item={item} />
+            ))}
+          </ul>
+        </Section>
+      )}
+    </>
   );
 }

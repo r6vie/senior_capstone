@@ -45,9 +45,9 @@ beforeEach(() => {
 });
 
 describe("CheckoutsPage", () => {
-  it("shows an empty state with one next step for each list", async () => {
+  it("shows one empty state with a next step when there are no checkouts", async () => {
     renderPage();
-    expect(await screen.findByText("Nobody has asked to check out your book yet.")).toBeTruthy();
+    expect(await screen.findByText("No checkouts yet")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Browse the shelf" })).toBeTruthy();
   });
 
@@ -91,7 +91,7 @@ describe("CheckoutsPage", () => {
     });
     renderPage();
     expect(await screen.findByText(/Waiting for an answer/)).toBeTruthy();
-    expect(screen.getByText("This book isn't available right now.")).toBeTruthy();
+    expect(screen.getByText("Ana Diaz · Not available")).toBeTruthy();
     expect(screen.getAllByRole("button", { name: "Cancel checkout" })).toHaveLength(1);
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel checkout" }));
@@ -133,12 +133,12 @@ describe("CheckoutsPage", () => {
       },
     });
     renderPage();
-    expect(await screen.findByText("How to reach Sam Lee")).toBeTruthy();
+    expect(await screen.findByText("Reach Sam Lee")).toBeTruthy();
     expect(screen.getByRole("link", { name: "sam@example.com" }).getAttribute("href")).toBe(
       "mailto:sam@example.com",
     );
     expect(screen.getByRole("link", { name: "216-555-0142" }).getAttribute("href")).toBe("tel:2165550142");
-    expect(screen.getByText("How to reach Ana Diaz")).toBeTruthy();
+    expect(screen.getByText("Reach Ana Diaz")).toBeTruthy();
     expect(screen.getByRole("link", { name: "LinkedIn profile" }).getAttribute("href")).toBe(
       "https://www.linkedin.com/in/ana-diaz",
     );
@@ -148,7 +148,7 @@ describe("CheckoutsPage", () => {
     api.GET.mockResolvedValue({ data: { reading: [reading("waiting")], lending: [waitingRequest] } });
     renderPage();
     expect(await screen.findByText("Sam Lee")).toBeTruthy();
-    expect(screen.queryByText(/How to reach/)).toBeNull();
+    expect(screen.queryByText(/^Reach /)).toBeNull();
   });
 
   it("confirms a new checkout, with the day it closes if unanswered", async () => {
@@ -230,7 +230,8 @@ describe("CheckoutsPage", () => {
       }),
     );
     expect(await screen.findByText(/Your checkout with Ana Diaz is closed/)).toBeTruthy();
-    expect(screen.getByText("Returned.")).toBeTruthy();
+    // It moves to Earlier, as one line.
+    expect(screen.getByText("Ana Diaz · Returned")).toBeTruthy();
     expect(screen.getByRole("link", { name: "See Ana Diaz in Past meets" }).getAttribute("href")).toBe(
       "/past-meets",
     );
@@ -281,7 +282,7 @@ describe("CheckoutsPage", () => {
       },
     });
     renderPage();
-    expect(await screen.findByText("Returned.")).toBeTruthy();
+    expect(await screen.findByText("Ana Diaz · Returned")).toBeTruthy();
     expect(screen.queryByRole("link", { name: /Past meets/ })).toBeNull();
   });
 
@@ -297,5 +298,34 @@ describe("CheckoutsPage", () => {
     fireEvent.click(await screen.findByRole("button", { name: "No" }));
     expect(await screen.findByText("It's too early to answer that.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "No" })).toBeTruthy();
+  });
+
+  it("groups checkouts by what they need from you", async () => {
+    api.GET.mockResolvedValue({
+      data: {
+        lending: [waitingRequest],
+        reading: [
+          reading("waiting", { book_title: "The Night Shift Founder", author_name: "Priya Rao" }),
+          reading("cancelled", { book_title: "Moving Home to Ohio", author_name: "Kara Singh" }),
+        ],
+      },
+    });
+    renderPage();
+    const section = async (name: string) => (await screen.findByRole("region", { name })) as HTMLElement;
+    expect((await section("Waiting on you")).textContent).toContain("Sam Lee");
+    expect((await section("Under way")).textContent).toContain("The Night Shift Founder");
+    expect((await section("Earlier")).textContent).toContain("Kara Singh · You cancelled it");
+    expect(screen.getByText("Asks for your book")).toBeTruthy();
+    expect(screen.getByText("Waiting")).toBeTruthy();
+  });
+
+  it("says when nothing is waiting on you, without hiding the rest", async () => {
+    api.GET.mockResolvedValue({
+      data: { lending: [], reading: [reading("accepted", { did_you_meet: null })] },
+    });
+    renderPage();
+    expect(await screen.findByText("Nothing needs you right now.")).toBeTruthy();
+    expect(screen.getByText("Accepted")).toBeTruthy();
+    expect(screen.queryByText("No checkouts yet")).toBeNull();
   });
 });
