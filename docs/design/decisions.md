@@ -361,6 +361,8 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   points, with only a slow wobble and no fine ragging on the water's edge.
   Then (Josef, 2026-11-23: "remove the two older autumn covers"): `WCCoverAutumn` and `WCCoverAutumn2` are off the
   canvas; `WCCoverAutumn3` takes round 2's place in its row.
+  Then (Josef, 2026-11-23: "remove the full screen harbor"): `WCCoverHarbor2` is off the canvas; round 1's
+  white-top harbor stays, and the autumn moves left to close the row.
 - **Lighthouse lantern (Josef: "fix the yellow square in the lighthouse").** The dusk sky skipped a 16 x 12 rectangle
   round the lantern, larger than the lantern, so a square of paper stood there and the glow glazed it yellow. The sky
   now skips only the lantern's own shape (lamp room, gallery, roof). The cap and gallery are a dark Payne's grey,

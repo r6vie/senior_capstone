@@ -912,20 +912,12 @@
    "title": "Cover · Lighthouse at dusk (painted to the top)",
    "page": "watercolor"
   },
-  "WCCoverHarbor2.dc.html": {
-   "x": 680,
-   "y": 1200,
-   "w": 600,
-   "h": 1090,
-   "title": "Cover · Harbor morning (painted to the top)",
-   "page": "watercolor"
-  },
   "WCCoverAutumn3.dc.html": {
    "h": 1090,
    "page": "watercolor",
    "title": "Cover · Autumn river, bridge and trees reworked",
    "w": 600,
-   "x": 1360,
+   "x": 680,
    "y": 1200
   }
  },
@@ -1208,7 +1200,6 @@
   "WCCoverLighthouse.dc.html",
   "WCCoverHarbor.dc.html",
   "WCCoverLighthouse2.dc.html",
-  "WCCoverHarbor2.dc.html",
   "WCCoverAutumn3.dc.html"
  ],
  "pages": [

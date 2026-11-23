@@ -4,7 +4,7 @@ cover that is the same book scaled) with the label, title, name, ink and art swa
 edge (Josef, 2026-11-21), so the ink is chosen from the paint behind the title (art/watercolor/ink.py): cream on a
 dark top, the book's own dark ink on a light one.
 
-python3 watercolor_boards.py <root> lighthouse=<blob> harbor=<blob> autumn3=<blob>
+python3 watercolor_boards.py <root> lighthouse=<blob> autumn3=<blob>
 -> <root>/project/WCCover{Lighthouse,Harbor,Autumn}2.dc.html (round 2, painted to the top). Round 1's boards
 (WCCover{Lighthouse,Harbor,Autumn}, white tops) stay on the canvas as Josef asked; their art is no longer rendered by
 covers.py, which now paints the round 2 skies."""
@@ -25,8 +25,7 @@ OLD = dict(label="Strata · fir forest in morning light", title="Room to Grow", 
 BOOKS = [
     dict(key="lighthouse", file="WCCoverLighthouse2", label="Watercolor · lighthouse at dusk, painted to the top",
          title="Keeping the Light", author="Maren Holt", ink="#2c3e5c"),
-    dict(key="harbor", file="WCCoverHarbor2", label="Watercolor · harbor in the morning, painted to the top",
-         title="Harbor Season", author="Sofia Marchetti", ink="#2f4a63"),
+    # the harbor painted to the top is removed (Josef, 2026-11-23); round 1's harbor board stays
     # the autumn rework (Josef: the bridge was half there and cut off, the trees lazy); the round 1 and 2 autumn
     # boards are removed (Josef, 2026-11-23)
     dict(key="autumn3", art="autumn", file="WCCoverAutumn3",
