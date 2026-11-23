@@ -48,6 +48,29 @@ describe("apiInterviewClient", () => {
     expect(await apiInterviewClient.current()).toBeNull();
   });
 
+  describe("a 503", () => {
+    const notSetUp = {
+      data: undefined,
+      error: { detail: "AI isn't set up. Add ANTHROPIC_API_KEY to .env and restart." },
+      response: new Response(null, { status: 503 }),
+    } as never;
+    afterEach(() => vi.unstubAllEnvs());
+
+    it("shows a developer the API's own reason", async () => {
+      vi.stubEnv("DEV", true);
+      vi.spyOn(api, "POST").mockResolvedValue(notSetUp);
+      await expect(apiInterviewClient.start(null)).rejects.toThrow(/Add ANTHROPIC_API_KEY to .env/);
+    });
+
+    it("shows a member only the calm sentence", async () => {
+      vi.stubEnv("DEV", false);
+      vi.spyOn(api, "POST").mockResolvedValue(notSetUp);
+      await expect(apiInterviewClient.start(null)).rejects.toThrow(
+        "Something's wrong on our side. Nothing you said is lost.",
+      );
+    });
+  });
+
   it("reads a member with no interview and no book as not started", async () => {
     const get = vi.spyOn(api, "GET").mockResolvedValue(ok(null));
     expect(await apiInterviewClient.stage()).toBe("none");
@@ -229,6 +252,8 @@ describe("apiInterviewClient", () => {
   });
 
   it("never shows a member the API's words for a database or a field", async () => {
+    // What a member's build shows; a developer's build names the reason (see "a 503").
+    vi.stubEnv("DEV", false);
     const fails = (status: number, detail: unknown) =>
       vi.spyOn(api, "POST").mockResolvedValueOnce({
         data: undefined,
@@ -243,6 +268,7 @@ describe("apiInterviewClient", () => {
     await expect(apiInterviewClient.answer("me", "An answer")).rejects.toThrow(
       "That didn't go through. Check it and try again.",
     );
+    vi.unstubAllEnvs();
   });
 
   it("carries a chapter's quotes to the member's own review", async () => {

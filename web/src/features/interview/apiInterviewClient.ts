@@ -62,6 +62,8 @@ function toLibrarian(librarian: LibrarianResponse | null | undefined): Librarian
 
 const ID = "me";
 
+const SOMETHING_WRONG = "Something's wrong on our side. Nothing you said is lost.";
+
 interface Result<T> {
   data?: T;
   error?: unknown;
@@ -70,10 +72,13 @@ interface Result<T> {
 
 function unwrap<T>({ data, error, response }: Result<T>): T {
   if (data !== undefined) return data;
-  // Neither of these reaches a member in the API's own words: one names a database, one names a field.
-  if (response?.status === 503)
-    throw new InterviewError("Something's wrong on our side. Nothing you said is lost.");
   const detail = error && typeof error === "object" && "detail" in error ? error.detail : undefined;
+  // A member never sees the API's own words for a 503, which can name a database. A developer does: on their
+  // machine it's usually a missing ANTHROPIC_API_KEY, and the API says exactly that.
+  if (response?.status === 503) {
+    const why = import.meta.env.DEV && typeof detail === "string" ? detail : SOMETHING_WRONG;
+    throw new InterviewError(why);
+  }
   // A list here is a schema error, which names fields. A sentence is the API talking to the member.
   if (response?.status === 422 && typeof detail !== "string") {
     throw new InterviewError("That didn't go through. Check it and try again.");

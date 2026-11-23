@@ -135,6 +135,34 @@ describe("InterviewPage", () => {
       expect(start).toHaveBeenLastCalledWith(null);
     });
 
+    it("when the first question fails, offers only Try again, not a second Start", async () => {
+      const client = fake();
+      vi.spyOn(client, "start").mockRejectedValueOnce(
+        new InterviewError("The Librarian couldn't answer just now. Please try again.", true),
+      );
+      const askAgain = vi.spyOn(client, "askAgain").mockResolvedValue(asking);
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: "Start the interview" }));
+      const retry = await screen.findByRole("button", { name: "Try again" });
+      expect(screen.queryByRole("button", { name: "Start the interview" })).toBeNull();
+      expect(screen.queryByRole("button", { name: /Have a résumé\?/ })).toBeNull();
+      fireEvent.click(retry);
+      expect(await screen.findByText(asking.question)).toBeTruthy();
+      expect(askAgain).toHaveBeenCalledTimes(1);
+    });
+
+    it("when an earlier Start already got through, opens that interview instead of refusing", async () => {
+      const client = fake();
+      vi.spyOn(client, "start").mockRejectedValueOnce(
+        new InterviewError("You've already started your interview.", false, true),
+      );
+      vi.spyOn(client, "current").mockResolvedValueOnce(null).mockResolvedValue(asking);
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: "Start the interview" }));
+      expect(await screen.findByText(asking.question)).toBeTruthy();
+      expect(document.body.textContent).not.toMatch(/already started/);
+    });
+
     it("turns down a résumé over the size limit in a plain sentence", async () => {
       renderWith(fake());
       fireEvent.click(await screen.findByRole("button", { name: /Have a résumé\?/ }));
@@ -526,6 +554,27 @@ describe("InterviewPage", () => {
       fireEvent.click(await screen.findByRole("button", { name: "Skip" }));
       expect(await screen.findByText(/The next question didn't come through/)).toBeTruthy();
       expect(screen.queryByText(/Your answer is saved/)).toBeNull();
+    });
+
+    it("on a developer's machine, says why the interview couldn't be loaded", async () => {
+      vi.stubEnv("DEV", true);
+      const client = fake();
+      vi.spyOn(client, "current").mockRejectedValueOnce(
+        new InterviewError("AI_MODE=scripted only runs on a trove_dev database, not alvisa."),
+      );
+      renderWith(client);
+      expect(await screen.findByText(/only runs on a trove_dev database/)).toBeTruthy();
+      vi.unstubAllEnvs();
+    });
+
+    it("never shows a member the reason behind a failed load", async () => {
+      vi.stubEnv("DEV", false);
+      const client = fake();
+      vi.spyOn(client, "current").mockRejectedValueOnce(new InterviewError("database connection failed"));
+      renderWith(client);
+      expect(await screen.findByText(/Nothing you've said is lost/)).toBeTruthy();
+      expect(document.body.textContent).not.toMatch(/database connection failed/);
+      vi.unstubAllEnvs();
     });
 
     it("when the interview can't be loaded, offers Try again rather than the start screen", async () => {
