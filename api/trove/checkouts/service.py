@@ -108,18 +108,29 @@ async def question_due_at(database: AsyncDatabase, checkout: dict) -> datetime:
     return _due(checkout, await get_meeting(database, checkout["_id"]))
 
 
+async def meetings_of(database: AsyncDatabase, checkouts: list[dict]) -> dict[str, dict]:
+    """The meeting of each answered checkout that has one, by checkout id (`start` only), in at most one trip."""
+    ids = [checkout["_id"] for checkout in checkouts if checkout.get("answered_at")]
+    if not ids:
+        return {}
+    return {
+        meeting["_id"]: meeting
+        async for meeting in database.meetings.find({"_id": {"$in": ids}}, {"start": 1})
+    }
+
+
+def due_times(checkouts: list[dict], meetings: dict[str, dict]) -> dict[str, datetime]:
+    """`question_due_at` for each answered checkout, by id, from meetings already read with `meetings_of`."""
+    return {
+        checkout["_id"]: _due(checkout, meetings.get(checkout["_id"]))
+        for checkout in checkouts
+        if checkout.get("answered_at")
+    }
+
+
 async def question_due_times(database: AsyncDatabase, checkouts: list[dict]) -> dict[str, datetime]:
     """`question_due_at` for each accepted or returned checkout, by id, in at most one database trip."""
-    answered = [checkout for checkout in checkouts if checkout.get("answered_at")]
-    if not answered:
-        return {}
-    meetings = {
-        meeting["_id"]: meeting
-        async for meeting in database.meetings.find(
-            {"_id": {"$in": [checkout["_id"] for checkout in answered]}}, {"start": 1}
-        )
-    }
-    return {checkout["_id"]: _due(checkout, meetings.get(checkout["_id"])) for checkout in answered}
+    return due_times(checkouts, await meetings_of(database, checkouts))
 
 
 def is_past_meet(checkout: dict) -> bool:

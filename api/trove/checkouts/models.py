@@ -57,6 +57,8 @@ class ReadingCheckout(BaseModel):
     author_contact: Contact | None = None
     # True when the conversation has something you haven't read. Private to you; never a count.
     new_messages: bool = False
+    # The confirmed meeting time (M1), on an accepted checkout once both agreed on one; None until then.
+    meeting_start: datetime | None = None
     # Set once "Did you meet?" is being asked (after the meeting time), and after the reading.
     did_you_meet: DidYouMeet | None = None
 
@@ -83,6 +85,8 @@ class LendingCheckout(BaseModel):
     reader_contact: Contact | None = None
     # True when the conversation has something you haven't read. Private to you; never a count.
     new_messages: bool = False
+    # The confirmed meeting time (M1), on an accepted checkout once both agreed on one; None until then.
+    meeting_start: datetime | None = None
     # Set once "Did you meet?" is being asked (after the meeting time).
     did_you_meet: DidYouMeet | None = None
 

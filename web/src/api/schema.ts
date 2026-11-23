@@ -1625,6 +1625,8 @@ export interface components {
              * @default false
              */
             new_messages: boolean;
+            /** Meeting Start */
+            meeting_start?: string | null;
             did_you_meet?: components["schemas"]["DidYouMeet"] | null;
         };
         /**
@@ -2030,6 +2032,8 @@ export interface components {
              * @default false
              */
             new_messages: boolean;
+            /** Meeting Start */
+            meeting_start?: string | null;
             did_you_meet?: components["schemas"]["DidYouMeet"] | null;
         };
         /**
