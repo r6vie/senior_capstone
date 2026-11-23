@@ -54,6 +54,7 @@ describe("PastMeetsPage", () => {
       "/checkouts/c1/messages",
     );
     expect(screen.queryByRole("group", { name: /Did you meet/ })).toBeNull();
+    expect(screen.getByRole("img", { name: /^Met, / })).toBeTruthy();
   });
 
   it("words it for the author too", async () => {

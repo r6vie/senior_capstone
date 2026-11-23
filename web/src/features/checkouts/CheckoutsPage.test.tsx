@@ -328,4 +328,59 @@ describe("CheckoutsPage", () => {
     expect(screen.getByText("Accepted")).toBeTruthy();
     expect(screen.queryByText("No checkouts yet")).toBeNull();
   });
+
+  it("shows deadlines on a date-due slip", async () => {
+    api.GET.mockResolvedValue({
+      data: {
+        lending: [waitingRequest],
+        reading: [reading("waiting", { expires_at: "2026-11-28T10:00:00Z" })],
+      },
+    });
+    renderPage();
+    expect(await screen.findByText("Answer by")).toBeTruthy();
+    expect(screen.getByText("Answer due")).toBeTruthy();
+    expect(screen.getByText(/Waiting for an answer from Ana Diaz/)).toBeTruthy();
+  });
+
+  it("shows a confirmed meeting time with a calendar file, and links to its details", async () => {
+    api.GET.mockResolvedValue({
+      data: { lending: [], reading: [reading("accepted", { meeting_start: "2026-12-03T20:00:00Z" })] },
+    });
+    api.GET.mockImplementation(async (path: string) =>
+      path.endsWith("invite.ics")
+        ? { data: undefined, error: { detail: "No time has been agreed yet." } }
+        : {
+            data: { lending: [], reading: [reading("accepted", { meeting_start: "2026-12-03T20:00:00Z" })] },
+          },
+    );
+    renderPage();
+    expect(await screen.findByText("Meeting")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Meeting details" }).getAttribute("href")).toBe(
+      "/checkouts/r-accepted/meeting",
+    );
+    expect(screen.queryByRole("link", { name: "Arrange the reading" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Add to calendar" }));
+    expect(await screen.findByText("No time has been agreed yet.")).toBeTruthy();
+    expect(api.GET).toHaveBeenCalledWith("/meetings/{checkout_id}/invite.ics", {
+      params: { path: { checkout_id: "r-accepted" } },
+      parseAs: "blob",
+    });
+  });
+
+  it("stamps the card when the member says they met", async () => {
+    api.GET.mockResolvedValueOnce({
+      data: {
+        lending: [],
+        reading: [reading("accepted", { did_you_meet: { can_answer: true, my_answer: null } })],
+      },
+    });
+    api.GET.mockResolvedValue({ data: { lending: [], reading: [] } });
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Yes, we met" }));
+    expect(await screen.findByRole("img", { name: /^Met, / })).toBeTruthy();
+    // Only after the moment does the page reload and move it on.
+    expect(
+      await screen.findByText(/Your checkout with Ana Diaz is closed/, {}, { timeout: 2000 }),
+    ).toBeTruthy();
+  });
 });
