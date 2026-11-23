@@ -49,6 +49,78 @@ describe("MeetingPage", () => {
     expect(screen.getByText(/Nothing to pick yet/)).toBeTruthy();
     const save = screen.getByRole("button", { name: "Save my times" }) as HTMLButtonElement;
     expect(save.disabled).toBe(true);
+    expect(screen.getByRole("link", { name: /Back to Checkouts/ }).getAttribute("href")).toBe("/checkouts");
+  });
+
+  it("once a time is confirmed, keeps changing it behind a button and moves focus to the new time", async () => {
+    const first = day(3).toISOString();
+    const second = day(4).toISOString();
+    api.GET.mockResolvedValue({
+      data: {
+        ...meeting,
+        start: first,
+        my_times: [first, second],
+        their_times: [first, second],
+        shared_times: [first, second],
+      },
+    });
+    renderPage();
+
+    await screen.findByText("Confirmed");
+    expect(screen.getByRole("link", { name: /Back to Checkouts/ })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Times that work for you" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Change the time" })).toBeNull();
+
+    const toggle = screen.getByRole("button", { name: "Change the time" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(toggle.textContent).toBe("Keep this time");
+    expect(screen.getByRole("heading", { name: "Times that work for you" })).toBeTruthy();
+
+    api.PUT.mockResolvedValue({
+      data: {
+        ...meeting,
+        start: second,
+        my_times: [first, second],
+        their_times: [first, second],
+        shared_times: [first, second],
+      },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: /^Confirm / })[1] as HTMLElement);
+
+    await waitFor(() =>
+      expect(screen.queryByRole("heading", { name: "Times that work for you" })).toBeNull(),
+    );
+    await waitFor(() => expect(document.activeElement?.id).toBe("confirmed-heading"));
+    expect(screen.getByRole("button", { name: "Change the time" }).getAttribute("aria-expanded")).toBe(
+      "false",
+    );
+  });
+
+  it("keeps the details form open until there are details, then behind an edit button", async () => {
+    const start = day(3).toISOString();
+    api.GET.mockResolvedValue({ data: { ...meeting, start } });
+    renderPage();
+
+    await screen.findByText("Confirmed");
+    expect(screen.queryByRole("button", { name: "Edit where you'll meet" })).toBeNull();
+    api.PUT.mockResolvedValue({ data: { ...meeting, start, video_link: "https://meet.example.com/abc" } });
+    fireEvent.change(screen.getByLabelText(/^Video link/), {
+      target: { value: "https://meet.example.com/abc" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save meeting details" }));
+
+    expect(await screen.findByRole("link", { name: "Open the video link" })).toBeTruthy();
+    expect(screen.queryByLabelText(/^Video link/)).toBeNull();
+    await waitFor(() => expect(document.activeElement?.id).toBe("confirmed-heading"));
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit where you'll meet" }));
+    expect((screen.getByLabelText(/^Video link/) as HTMLInputElement).value).toBe(
+      "https://meet.example.com/abc",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Stop editing" }));
+    expect(screen.queryByLabelText(/^Video link/)).toBeNull();
   });
 
   it("adds a time, saves it, and sends it as an exact instant", async () => {
