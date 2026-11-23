@@ -4,7 +4,8 @@
   isolation: isolate;
   display: grid;
   grid-template-rows: auto 1fr;
-  min-height: 100vh;
+  /* dvh, not vh: phones count their address bar in vh, so 100vh is taller than the screen you see. */
+  min-height: 100dvh;
   overflow: hidden;
   background: var(--paper);
 }
