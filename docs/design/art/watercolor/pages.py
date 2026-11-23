@@ -67,6 +67,43 @@ def blob(p, x, y, r, cols, d=1.0, flat=0.55, shadow=None):
     p.wash(b * ramp_x(x - r * 0.2, x + r, 0, 1), cols[1] if len(cols) > 1 else PAYNE, 0.6, rim=0)
 
 
+def cottage(p, x, base, w, h, d, walls, roofs, window=None, snow_roof=False, ground=None, k=1.0):
+    """A small house seen three-quarter on, painted by hand rather than built from boxes: the gable end toward us and
+    lit, the long side wall turning away into shade, one roof plane over it; every edge wobbles a little, each part
+    is a couple of loose wet patches. x: the gable's left corner; w, h: gable width and wall height; d: how far the
+    side wall runs back. window: a colour for one small lit window in the gable."""
+    a = w * 0.6                                                  # the gable's rise
+    sk = d * 0.08                                                # the side wall climbs a hair as it recedes
+    gable = [(x, base), (x - 0.4, base - h), (x + w / 2, base - h - a), (x + w + 0.3, base - h), (x + w, base)]
+    side = [(x + w, base), (x + w + 0.3, base - h), (x + w + d, base - h - sk), (x + w + d - 0.4, base - sk)]
+    roof = [(x + w / 2 - 0.8, base - h - a - 0.6), (x + w / 2 + d, base - h - a - sk - 0.6),
+            (x + w + d + 2.5, base - h - sk + 1.4), (x + w + 1.2, base - h + 1.6)]
+    gm = p.rough(p.poly(gable), 0.45, 3, fine=0.35)
+    sm = p.rough(p.poly(side), 0.45, 3, fine=0.35)
+    rm = p.rough(p.poly(roof), 0.45, 3, fine=0.35)
+    if ground is not None:                                       # its shadow, thrown right
+        p.wash(p.soften(p.ellipse(x + w + d * 0.8, base + 1.5, d * 0.9 + w * 0.4, 2.6), 1.2) * ground, VIOLET, 0.7,
+               rim=0)
+    p.lift(np.clip(blur(np.maximum.reduce([gm, sm, rm]), 0.4 * S) * 1.4, 0, 1), 0.85)
+    p.loose(gm, walls, 0.75 * k, n=2, rough=0.4, patch=0.7, ground=0.6)
+    p.loose(sm, walls, 0.8 * k, n=2, rough=0.4, patch=0.7, ground=0.6)
+    p.wash(sm, VIOLET, 0.8 * k, rim=1.0, flow=0.4)
+    p.wash(sm, PAYNE, 0.35 * k, rim=0, flow=0.4)
+    if snow_roof:
+        p.wash(rm, VIOLET, 0.35, rim=1.6, flow=0.3)
+        p.wash(rm * ramp_y(base - h - a, base - h, 0.0, 0.8), CERUL, 0.4, rim=0)
+    else:
+        p.loose(rm, roofs, 1.0 * k, n=2, rough=0.4, patch=0.7, ground=0.7)
+    # the verge: a darker line where the roof edge overhangs the gable
+    p.wash(p.rough(p.stroke([(x - 1.2, base - h + 1.0), (x + w / 2 - 0.4, base - h - a - 0.6),
+                             (x + w + 1.2, base - h + 1.2)], 1.1, taper=False), 0.2, 2), roofs[-1] if not snow_roof
+           else VIOLET, 1.0 * k, rim=0.6)
+    if window:
+        wx, wy = x + w * 0.5, base - h * 0.48
+        win = p.rough(p.ellipse(wx, wy, w * 0.11, h * 0.16), 0.25, 2, fine=0.2)
+        p.wash(win, window, 1.2, rim=1.0)
+
+
 def mesa():
     """The high desert at dusk, wider: a cobalt dusk climbing the right side with the evening star, apricot on the
     horizon; the great butte on the right in uneven strata, a second smaller butte and a lone spire in the middle
@@ -168,19 +205,19 @@ def hills():
     for k in range(5):
         row = [(x, y + 8 + k * 7) for x, y in near]
         p.wash(p.rough(p.stroke(row[::3], 3.2), 0.6, 10) * ms[5], VIOLET, 0.8, rim=1.0, flow=0.4)
-    # the hill town on the far rise: cream blocks and one tower, very simple
-    for x, w, h in [(468, 24, 14), (492, 18, 20), (514, 26, 12)]:
-        y = y_at(tops[0], x + w / 2) + 4
-        blk = p.rough(p.poly([(x, y), (x, y - h), (x + w, y - h), (x + w, y)]), 0.25, 3)
-        p.lift(blk, 0.8)
-        p.wash(blk, APRICOT, 0.35, rim=1.0)
-        p.wash(blk * (Xw > x + w * 0.6), MAUVE, 0.8, rim=0.6)
+    # the hill town on the far rise: a huddle of small pale cottages under tiled roofs, stepping up the hill, and a
+    # campanile with a pointed cap among them; pale, because it is far
     tx = 500
-    ty = y_at(tops[0], tx) - 12
-    tower = p.rough(p.poly([(tx, ty + 4), (tx, ty - 20), (tx + 4.5, ty - 24), (tx + 9, ty - 20), (tx + 9, ty + 4)]), 0.2, 3)
-    p.lift(tower, 0.8)
+    ty = y_at(tops[0], tx) - 4
+    tower = p.rough(p.poly([(tx, ty + 6), (tx - 0.3, ty - 18), (tx + 8.3, ty - 18), (tx + 8, ty + 6)]), 0.4, 3, fine=0.3)
+    cap = p.rough(p.poly([(tx - 1, ty - 17), (tx + 4, ty - 27), (tx + 9, ty - 17)]), 0.3, 2, fine=0.3)
+    p.lift(np.maximum(tower, cap), 0.8)
     p.wash(tower, APRICOT, 0.35, rim=1.0)
-    p.wash(tower * (Xw > tx + 4.5), MAUVE, 0.9, rim=0.6)
+    p.wash(tower * (Xw > tx + 4.5), MAUVE, 0.7, rim=0.6)
+    p.wash(cap, TERRA, 0.8, rim=1.0)
+    for x, w, h, d in [(466, 9, 6, 10), (484, 8, 7, 9), (508, 10, 6, 11), (526, 8, 5, 9), (494, 7, 5, 6)]:
+        y = y_at(tops[0], x + w / 2) + 5
+        cottage(p, x, y, w, h, d, [APRICOT, RAW], [ROSE, TERRA], k=0.6)
     # the white road winding up from the front to the farmhouse
     road = [(150, 700), (210, 640), (300, 610), (340, 580), (400, 556), (430, 534)]
     left = [(x - (2 + (y - 534) * 0.07), y) for x, y in road]
@@ -189,12 +226,7 @@ def hills():
     p.lift(rd, 0.6)
     p.wash(rd, RAW, 0.45, rim=1.2, flow=0.4)
     hx, hy = 436, y_at(tops[3], 436) + 2
-    house = p.rough(p.poly([(hx - 14, hy + 4), (hx - 14, hy - 12), (hx + 12, hy - 12), (hx + 12, hy + 4)]), 0.3, 3)
-    p.lift(house, 0.85)
-    p.wash(house, APRICOT, 0.45, rim=1.0)
-    p.wash(house * (Xw > hx + 2), MAUVE, 1.1, rim=0.8)
-    p.wash(p.rough(p.poly([(hx - 16, hy - 11), (hx + 14, hy - 11), (hx + 10, hy - 18), (hx - 12, hy - 18)]), 0.25, 2),
-           SIENNA, 1.1, rim=1.2)
+    cottage(p, hx - 16, hy + 4, 15, 12, 20, [APRICOT, RAW], [TERRA, SIENNA], window=UMBER, ground=ms[3])
     for x, s in [(338, 1.1), (348, 0.75), (392, 0.9), (452, 1.4), (462, 1.0), (474, 0.7)]:
         y = y_at(road, x) if x < 430 else hy + 2
         y = min(y, y_at(tops[3], x) + 30) - 2
@@ -254,12 +286,7 @@ def lake():
     p.loose(forest, [CYPRESS, TEAL, PAYNE], 1.3, n=7, rough=0.6, patch=0.3, ground=0.8)
     # the cabin and its dock on the left shore
     cx, cy = 150, shore + 2
-    cabin = p.rough(p.poly([(cx - 14, cy), (cx - 14, cy - 14), (cx + 14, cy - 14), (cx + 14, cy)]), 0.3, 3)
-    p.lift(cabin, 0.7)
-    p.loose(cabin, [SIENNA, UMBER], 1.0, n=2, rough=0.2, patch=0.7)
-    p.wash(p.rough(p.poly([(cx - 17, cy - 13), (cx + 17, cy - 13), (cx, cy - 26)]), 0.3, 3), PAYNE, 1.2, rim=1.0)
-    p.wash(p.rough(p.poly([(cx - 4, cy), (cx - 4, cy - 8), (cx + 2, cy - 8), (cx + 2, cy)]), 0.2, 2), LEMON, 0.9,
-           rim=0.8)
+    cottage(p, cx - 16, cy, 14, 10, 18, [SIENNA, RAW], [PAYNE, UMBER], window=LEMON)
     lake_m = p.rough(p.poly([(-20, shore + 5), (600, shore + 5), (600, 700), (-20, 700)]), 0.3, 12, fine=0.2)
     p.loose(lake_m, [TEAL, CERUL, TEAL, ULTRA], 0.85, n=6, rough=0.5, patch=0.42, ground=0.75,
             vary=ramp_y(shore, 684, 0.7, 1.3))
@@ -335,20 +362,8 @@ def winter():
         fir(x, h, w, [CYPRESS, TEAL, PAYNE])
     cx = 516
     cy = y_at(snow_top, cx) + 6
-    cabin = p.rough(p.poly([(cx - 22, cy), (cx - 22, cy - 22), (cx + 20, cy - 22), (cx + 20, cy)]), 0.3, 3)
-    p.lift(cabin, 0.8)
-    p.loose(cabin, [SIENNA, UMBER], 1.0, n=2, rough=0.2, patch=0.7)
-    p.wash(cabin * (Xw > cx + 4), PAYNE, 0.6, rim=0)
-    roof = p.rough(p.poly([(cx - 27, cy - 20), (cx + 25, cy - 20), (cx + 18, cy - 34), (cx - 20, cy - 34)]), 0.3, 3)
-    p.lift(roof, 1.0)
-    p.wash(roof, VIOLET, 0.3, rim=1.4)                                    # snow on the roof, paper with a cool rim
-    p.wash(roof * (Xw > cx + 2), PAYNE, 0.9, rim=0.8)                      # its far plane in shade
-    p.wash(p.soften(p.ellipse(cx + 26, cy + 3, 26, 4), 1.5) * snow, VIOLET, 0.7, rim=0)   # the cabin's shadow
-    p.wash(p.rough(p.poly([(cx - 12, cy - 6), (cx - 12, cy - 15), (cx - 3, cy - 15), (cx - 3, cy - 6)]), 0.2, 2),
-           APRICOT, 1.2, rim=1.0)
-    p.wash(p.rough(p.poly([(cx - 12, cy - 6), (cx - 12, cy - 15), (cx - 3, cy - 15), (cx - 3, cy - 6)]), 0.2, 2),
-           LEMON, 0.6, rim=0)
-    p.wash(p.soften(p.ellipse(cx - 8, cy + 12, 14, 5), 3) * snow, APRICOT, 0.35, rim=0)   # the window's glow
+    cottage(p, cx - 24, cy, 20, 14, 24, [SIENNA, UMBER], [UMBER], window=APRICOT, snow_roof=True, ground=snow)
+    p.wash(p.soften(p.ellipse(cx - 14, cy + 10, 14, 4), 3) * snow, APRICOT, 0.35, rim=0)   # the window's glow
     # a fence of a few posts running down the slope toward us
     for i, (x, y, lean) in enumerate([(444, 558, 1.0), (436, 562, -0.6), (356, 600, 1.6), (262, 646, -1.2)]):
         hgt = 10 + i * 3.0

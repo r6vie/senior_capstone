@@ -403,6 +403,13 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   spruce and rocks in front, the snow in soft splotches. The text on the page takes each book's dark ink. Two
   Josef-eye critic rounds; the second round's fixes are applied and not re-reviewed. Kept against the critic: the
   hair of paper between the hills' bands, the trait of the headland Josef pointed to.
+  Then (Josef: "the houses are too blocky", and the hill town "these too"): every house is now `cottage()` in
+  `pages.py`, a small house seen three-quarter on and painted by hand: the gable end toward us and lit, the side
+  wall turning away into shade, one roof plane, a dark verge, wobbling edges, each part a couple of loose patches.
+  The lake cabin, the winter cabin (snow on the roof, a lit window) and the farmhouse use it; the hill town is a
+  huddle of five small pale cottages with tiled roofs and a campanile with a pointed cap. And (Josef: "arranged
+  like the strata board, with book and book screen next to each other"): one row per book, the cover at x 0 and its
+  book screen at x 680, mesa, hills, lake, winter; the earlier covers without book screens in one row beneath.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
