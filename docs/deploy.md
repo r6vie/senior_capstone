@@ -11,6 +11,37 @@ Nothing secret is written in this file, and nothing secret may ever be added to 
 Secrets live in the host's dashboard and in the team's password manager (see
 [Secrets](#secrets-and-who-holds-them)).
 
+## Start here (teammates)
+
+**Where it stands.** The site is deployed on Render and Daniel has shared its address with you. It is a work in
+progress: it may be broken in places, and you can fix it. Nobody has proven yet that a verification code arrives
+in a real inbox. Daniel added the Brevo API key (`BREVO_API_KEY`) to Render, and the email path through it was
+tested only with the network faked.
+
+**What you can do without any account.**
+- Open the site and `<address>/api/health`. It must answer `{"ok":true,"database":true}`. If the page says
+  "Service Suspended", or never loads, the problem is on Render's side and only the Render owner can see it.
+- Try the app as a member and note what breaks. Real members sign up with a case.edu email (a code is sent) or
+  with an invite link from a member (Settings → Invite an alum).
+- Reproduce a problem on your own machine: `python3 scripts/dev.py` (see the README), which prints email codes in
+  the terminal. Most bugs are the app's, not the host's.
+- Fix code and ship it. Render watches the branch **`daniel/g1-go-live`**, so a fix pushed to that branch goes
+  live on its own in about 5 to 10 minutes (a build that fails leaves the old version running). Make the fix on
+  your own branch off it, run `python3 scripts/check.py`, then push to `daniel/g1-go-live` (or, if you prefer,
+  merge the pull request first and ask the owner to point Render at `main`). Tell the others in the chat first,
+  so two people don't push at once.
+
+**What needs the Render owner (Daniel).** Reading Render's Logs, changing settings or keys (the Environment
+page), restarting or redeploying, and pointing Render at another branch. The free plan allows no other member
+([why](#sharing-render-with-the-team)). If you need a log line, ask Daniel to paste it, with no secrets in it.
+
+**Never** put a secret in the chat, a pull request, an issue or a file in the repository (it is public). Rotate it
+if you did ([how](#rotate-a-secret)).
+
+**Where to look when something breaks:** [When something breaks](#when-something-breaks) lists every problem we
+have already met and its fix, with the exact log line to look for. [Every setting](#every-setting-and-where-it-comes-from)
+says what each environment value is for.
+
 ## Contents
 
 1. [How it is put together](#how-it-is-put-together)
