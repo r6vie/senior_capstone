@@ -98,11 +98,6 @@ function LoadingScreen() {
       <p role="status" className="loading-say">
         Loading
       </p>
-      <div className="loading-title skeleton" />
-      <div className="loading-blocks">
-        <div className="skeleton" />
-        <div className="skeleton" />
-      </div>
     </div>
   );
 }
