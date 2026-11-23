@@ -13,6 +13,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
 
 from trove.auth.models import ContactDetailsResponse, ContactDetailsUpdate, UserResponse
+from trove.core.config import get_settings
 from trove.core.database import get_database
 
 SESSION_SECONDS = 7 * 24 * 3600
@@ -114,12 +115,27 @@ async def create_session(database: AsyncDatabase, user_id: str) -> str:
     return token
 
 
+def client_address(request: Request) -> str:
+    """Who is calling, for attempt limits.
+
+    X-Forwarded-For is a list that each proxy adds to on the right, and a caller can write anything on the
+    left. So with N trusted proxies the address to believe is the Nth from the right, which only our own
+    proxy wrote. With none (the default) the header is ignored.
+    """
+    hops = get_settings().trusted_proxy_hops
+    forwarded = [
+        part.strip() for part in request.headers.get("x-forwarded-for", "").split(",") if part.strip()
+    ]
+    if hops > 0 and len(forwarded) >= hops:
+        return forwarded[-hops]
+    return request.client.host if request.client else "unknown"
+
+
 async def limit_attempts(request: Request, database: AsyncDatabase, action: str, limit: int, seconds: int):
     """A fixed-window limit kept in the database, so it holds across workers and restarts."""
     now = datetime.now(UTC)
     window = int(now.timestamp()) // seconds
-    # Don't trust X-Forwarded-For headers sent by clients.
-    address = request.client.host if request.client else "unknown"
+    address = client_address(request)
     key = token_digest(f"{action}:{address}:{window}")
     expires_at = datetime.fromtimestamp((window + 1) * seconds, UTC)
     try:

@@ -73,6 +73,11 @@ Each new feature adds its rows here in the PR that creates its collections.
 - Design tokens are CSS variables in `src/ui/styles.css`. The look is the Manga screentone design system:
   rules in `docs/design/system.md`, reference CSS in `docs/design/system/tokens.css`.
 
+## Hosting
+
+For going live, the API also serves the built website (`trove/serve.py`), so one service answers both.
+See [deploy.md](deploy.md).
+
 ## Testing
 
 - **API:** pytest with an async HTTP client against the real app.

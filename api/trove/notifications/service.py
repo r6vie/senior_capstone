@@ -1,12 +1,16 @@
 """Sending email. Features call the `notify_*` functions; nothing else sends mail."""
 
+import json
 import logging
 import smtplib
 import ssl
 from collections.abc import Callable
 from datetime import UTC, datetime
 from email.message import EmailMessage
+from email.utils import parseaddr
+from urllib.error import HTTPError
 from urllib.parse import quote
+from urllib.request import Request, urlopen
 from uuid import uuid4
 
 from pymongo.asynchronous.database import AsyncDatabase
@@ -19,6 +23,8 @@ from trove.notifications import templates
 from trove.notifications.links import unsubscribe_url
 
 logger = logging.getLogger(__name__)
+
+BREVO_SEND_URL = "https://api.brevo.com/v3/smtp/email"
 
 # Builds (subject, text, html) from the recipient's unsubscribe link.
 MakeMessage = Callable[[str], tuple[str, str, str]]
@@ -47,6 +53,38 @@ def _send_sync(settings: Settings, to: str, subject: str, text: str, html: str) 
         server.send_message(message)
 
 
+def _send_brevo_sync(settings: Settings, to: str, subject: str, text: str, html: str) -> None:
+    """Send through Brevo's web API: plain HTTPS, so it works where SMTP ports are blocked."""
+    name, address = parseaddr(clean_header(settings.email_from))
+    body = {
+        "sender": {"email": address, **({"name": name} if name else {})},
+        "to": [{"email": to}],
+        "subject": clean_header(subject),
+        "textContent": text,
+        "htmlContent": html,
+    }
+    request = Request(
+        BREVO_SEND_URL,
+        data=json.dumps(body).encode(),
+        method="POST",
+        headers={
+            "api-key": settings.brevo_api_key,
+            "content-type": "application/json",
+            "accept": "application/json",
+        },
+    )
+    with urlopen(request, timeout=10) as response:  # raises HTTPError for a refusal
+        response.read()
+
+
+def _why(error: Exception) -> str:
+    """What to write in the log for a failed send: the kind of error, plus the provider's own reason when
+    it gave one (it never includes our key). Never the recipient."""
+    if isinstance(error, HTTPError):
+        return f"HTTPError {error.code}: {error.read().decode(errors='replace')[:200]}"
+    return type(error).__name__
+
+
 async def notify_once(
     database: AsyncDatabase,
     dedupe_key: str,
@@ -65,7 +103,7 @@ async def notify_once(
         return "skipped"
 
     settings = get_settings()
-    if not settings.smtp_host:
+    if not settings.smtp_host and not settings.brevo_api_key:
         subject, text, _ = make_message(unsubscribe_url(user_id))
         print(f"[email not configured] To user {user_id}: {subject}\n{text}\n")
         return "logged"
@@ -83,10 +121,11 @@ async def notify_once(
 
     try:
         subject, text, html = make_message(unsubscribe_url(user_id))
-        await run_in_threadpool(_send_sync, settings, user["email"], subject, text, html)
+        send = _send_brevo_sync if settings.brevo_api_key else _send_sync
+        await run_in_threadpool(send, settings, user["email"], subject, text, html)
         status = "sent"
     except Exception as error:  # Email trouble must never break the request that triggered it.
-        logger.warning("Email to user %s failed: %s", user_id, type(error).__name__)
+        logger.warning("Email to user %s failed: %s", user_id, _why(error))
         status = "failed"
     await database.notifications.update_one({"_id": dedupe_key}, {"$set": {"status": status}})
     return status
