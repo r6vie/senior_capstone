@@ -324,7 +324,8 @@ async def checkouts_page_of(database: AsyncDatabase, user_id: str) -> tuple[list
     lending = (
         database.checkouts.find({"author_id": user_id, "open": True}).sort(NEWEST_FIRST).limit(LIST_LIMIT)
     )
-    return await asyncio.gather(reading.to_list(), lending.to_list())
+    reading_list, lending_list = await asyncio.gather(reading.to_list(), lending.to_list())
+    return reading_list, lending_list
 
 
 async def fully_checked_out(database: AsyncDatabase, books: list[dict]) -> set[str]:

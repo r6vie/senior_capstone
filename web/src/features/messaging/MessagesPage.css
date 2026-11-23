@@ -59,6 +59,3 @@
   padding-top: var(--s-5);
   border-top: var(--line-heavy) solid var(--ink);
 }
-.messages-skeleton {
-  height: calc(var(--s-8) * 4);
-}

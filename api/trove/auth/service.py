@@ -187,13 +187,7 @@ async def contact_details_of(database: AsyncDatabase, user_id: str) -> ContactDe
     Call this only after an accepted checkout (trove.md §9.1). Contact details never appear on a
     book, on the shelf, or before a yes.
     """
-    user = await database.users.find_one({"_id": user_id, "is_active": True}, {"email": 1, "contact": 1})
-    if user is None:
-        return None
-    contact = user.get("contact") or {}
-    return ContactDetailsResponse(
-        email=user["email"], linkedin_url=contact.get("linkedin_url"), phone=contact.get("phone")
-    )
+    return (await contact_details_of_many(database, [user_id])).get(user_id)
 
 
 async def contact_details_of_many(
@@ -201,7 +195,7 @@ async def contact_details_of_many(
 ) -> dict[str, ContactDetailsResponse]:
     """`contact_details_of` for several members in one database trip, by id. Same rule: only after a yes."""
     users = database.users.find({"_id": {"$in": user_ids}, "is_active": True}, {"email": 1, "contact": 1})
-    found = {}
+    found: dict[str, ContactDetailsResponse] = {}
     async for user in users:
         contact = user.get("contact") or {}
         found[user["_id"]] = ContactDetailsResponse(
