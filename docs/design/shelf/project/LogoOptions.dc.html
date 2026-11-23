@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A new logo for Trove</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+/* Trove design system: tokens and base components. Spec and rules: docs/design/system.md.
+   Look: "Manga screentone": black ink on white paper, screentone dots for shade, one burst of
+   lines for emphasis, one red for the one thing to do next.
+   Port target: web/src/ui/styles.css. Components use only the tokens below: no raw colors or
+   pixel sizes in feature code. The --color-* and --space-* aliases keep the current app working. */
+
+:root {
+  /* Color. Roles, not decoration. Red is the primary action and nothing else. */
+  --paper: #fafaf7;
+  --paper-sunk: #f0f0eb;
+  --white: #ffffff;
+  --ink: #111111;
+  --ink-2: #55554f; /* secondary text: 7.2:1 on paper */
+  --ink-3: #8c8c89; /* borders of disabled things. Never text: 3.2:1 */
+  --rule: #c9c9c6; /* hairlines and disabled fills. Text only on ink: 11.4:1 */
+  --red: #d42a27; /* white text 5.0:1 */
+  --red-hover: #b82220;
+  --red-press: #9e1c1a;
+
+  /* Context. Inside .dark these swap, and every component follows. */
+  --fg: var(--ink);
+  --bg: var(--paper);
+
+  /* Type */
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif; /* labels, nav, buttons, shelf names. Caps. */
+  --font-serif: "Newsreader", Georgia, serif; /* book titles, page titles, the Librarian's voice */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif; /* working text */
+
+  /* Space: 4px base. 44px is the page gutter. */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 44px;
+  --s-8: 64px;
+
+  /* Line, radius, size */
+  --line: 2px; /* controls, book outline */
+  --line-heavy: 3px; /* panels, bubbles, dialogs */
+  --radius-pill: 999px; /* search field and avatar only */
+  --radius-bubble: 26px; /* speech bubbles only */
+  --tap: 44px;
+  --control: 48px;
+  --ease: 120ms ease;
+
+  /* Compatibility with the tokens the app already uses */
+  --color-text: var(--ink);
+  --color-muted: var(--ink-2);
+  --color-accent: var(--red);
+  --color-error: var(--ink);
+  --color-border: var(--rule);
+  --color-background: var(--paper);
+  --radius: 0;
+  --space-1: var(--s-1);
+  --space-2: var(--s-2);
+  --space-3: var(--s-4);
+  --space-4: var(--s-6);
+
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.dark {
+  --fg: var(--white);
+  --bg: var(--ink);
+  color: var(--fg);
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: var(--line-heavy) solid var(--fg);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* ---------- Layout helpers ---------- */
+.narrow-page {
+  max-width: 28rem;
+  margin: var(--s-6) auto;
+  padding: 0 var(--s-4);
+}
+.stack {
+  display: grid;
+  gap: var(--s-4);
+}
+.muted {
+  color: var(--ink-2);
+}
+.error {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- Tone: screentone dots. Grounds and shadows, never behind running text. ---------- */
+.tone-fine {
+  background: radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px, var(--paper);
+}
+.tone-mid {
+  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 6px 6px, var(--paper);
+}
+.tone-dense {
+  background: radial-gradient(circle, var(--ink) 1.9px, transparent 2.3px) 0 0 / 6px 6px, var(--paper);
+}
+/* Fade: apply to a tone layer to let it dissolve (add .tone-fade on the element). */
+.tone-fade {
+  -webkit-mask-image: linear-gradient(var(--fade-dir, 180deg), #000, transparent);
+  mask-image: linear-gradient(var(--fade-dir, 180deg), #000, transparent);
+}
+/* Burst: fanned focus lines. Once per screen, behind the Librarian's pick only. Place inside .dark. */
+.burst {
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(from 0deg at var(--fx, 50%) var(--fy, 50%), var(--white) 0 0.8deg, var(--ink) 0.8deg 3deg, var(--white) 3deg 3.5deg, var(--ink) 3.5deg 8deg);
+  -webkit-mask-image: radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), transparent 14%, #000 44%);
+  mask-image: radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), transparent 14%, #000 44%);
+}
+.halo {
+  position: absolute;
+  background: radial-gradient(circle, var(--white) 1.7px, transparent 2.1px) 0 0 / 7px 7px;
+  border-radius: 50%;
+  -webkit-mask-image: radial-gradient(circle, #000 28%, transparent 68%);
+  mask-image: radial-gradient(circle, #000 28%, transparent 68%);
+}
+
+/* ---------- Buttons ---------- */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  min-height: var(--control);
+  padding: 0 26px;
+  white-space: nowrap;
+  border: var(--line) solid var(--fg);
+  border-radius: 0;
+  font: 700 17px/1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--ease), color var(--ease), border-color var(--ease);
+}
+.button-primary {
+  background: var(--red);
+  color: var(--white);
+}
+.button-primary:is(:hover, .is-hover) {
+  background: var(--red-hover);
+}
+.button-primary:is(:active, .is-press) {
+  background: var(--red-press);
+  transform: translateY(1px);
+}
+.button-secondary {
+  background: transparent;
+  color: var(--fg);
+}
+.button-secondary:is(:hover, .is-hover) {
+  background: var(--fg);
+  color: var(--bg);
+}
+.button-secondary:is(:active, .is-press) {
+  background: var(--fg);
+  color: var(--bg);
+  transform: translateY(1px);
+}
+.button-quiet {
+  min-height: var(--tap);
+  padding: 0 var(--s-3);
+  border-color: transparent;
+  background: transparent;
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+.button-quiet:is(:hover, .is-hover) {
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.button:is(:disabled, [aria-disabled="true"]) {
+  background: var(--rule);
+  border-color: var(--ink-3);
+  color: var(--ink-2);
+  cursor: not-allowed;
+  transform: none;
+}
+.button[aria-busy="true"] {
+  cursor: progress;
+  pointer-events: none;
+}
+
+/* ---------- Fields ---------- */
+.field {
+  display: grid;
+  gap: var(--s-2);
+}
+.field > label {
+  font: 600 14px/1.3 var(--font-sans);
+}
+.field :is(input, textarea, select) {
+  min-height: var(--control);
+  padding: 0 14px;
+  border: var(--line) solid var(--ink);
+  border-radius: 0;
+  background: var(--white);
+  color: var(--ink);
+  font: 400 16px/1.4 var(--font-sans);
+}
+.field textarea {
+  min-height: 112px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+.field select {
+  appearance: none;
+  padding-right: 44px;
+  background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10' viewBox='0 0 16 10' fill='none' stroke='%23111' stroke-width='2.4'%3E%3Cpath d='M2 2l6 6 6-6'/%3E%3C/svg%3E") right 16px center / 16px 10px no-repeat;
+}
+.field :is(input, textarea, select)::placeholder {
+  color: var(--ink-2);
+}
+.field :is(input, textarea, select):is(:focus, .is-focus) {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 2px;
+}
+.field .hint {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.field[data-invalid="true"] :is(input, textarea, select) {
+  border-width: var(--line-heavy);
+}
+.field[data-invalid="true"] .hint {
+  display: flex;
+  gap: var(--s-2);
+  color: var(--ink);
+  font-weight: 600;
+}
+.field[data-invalid="true"] .hint::before {
+  content: "!";
+  flex: none;
+  width: 20px;
+  height: 20px;
+  background: var(--ink);
+  color: var(--white);
+  font: 800 14px/20px var(--font-display);
+  text-align: center;
+}
+.field :is(input, textarea, select):disabled {
+  border-color: var(--ink-3);
+  background: var(--paper-sunk);
+  color: var(--ink-2);
+}
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--tap);
+  font-size: 16px;
+}
+.choice input {
+  appearance: none;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+}
+.choice input[type="radio"] {
+  border-radius: 50%;
+}
+.choice input:checked {
+  background: var(--ink);
+  box-shadow: inset 0 0 0 4px var(--white);
+}
+.choice input[type="checkbox"]:checked {
+  background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.4'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E") center / 18px no-repeat;
+  box-shadow: none;
+}
+
+/* ---------- Navigation ---------- */
+.nav {
+  display: flex;
+  gap: 6px;
+  font: 600 17px/1 var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 12px;
+  border-bottom: var(--line-heavy) solid transparent;
+  color: var(--fg);
+  text-decoration: none;
+}
+.nav a:hover {
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.nav a[aria-current="page"] {
+  border-bottom-color: var(--fg);
+}
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 800 28px/1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.wordmark::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: var(--ink);
+  transform: rotate(-6deg);
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 40px;
+  width: 230px;
+  padding: 0 14px;
+  border: var(--line) solid var(--ink);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: var(--line) solid var(--fg);
+  border-radius: 50%;
+  font: 700 14px/1 var(--font-display);
+}
+
+/* ---------- Labels, voice, lists ---------- */
+.caption {
+  display: inline-block;
+  padding: 5px 12px;
+  background: var(--fg);
+  color: var(--bg);
+  font: 600 14px/1.2 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.shelf-name {
+  margin: 0;
+  font: 800 30px/1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.page-title {
+  margin: 0;
+  font: 600 48px/1.02 var(--font-serif);
+  letter-spacing: -0.015em;
+}
+.voice {
+  font: italic 400 20px/1.3 var(--font-serif);
+}
+.bubble {
+  position: relative;
+  padding: 14px 20px;
+  border: var(--line-heavy) solid var(--ink);
+  border-radius: var(--radius-bubble);
+  background: var(--white);
+  color: var(--ink);
+  font: italic 400 19px/1.3 var(--font-serif);
+}
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 44px;
+  bottom: -14px;
+  width: 22px;
+  height: 22px;
+  background: var(--white);
+  border-right: var(--line-heavy) solid var(--ink);
+  border-bottom: var(--line-heavy) solid var(--ink);
+  transform: rotate(45deg) skew(8deg, 8deg);
+}
+.contents {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.contents li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+}
+.contents li::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  border-bottom: 2.5px dotted currentColor;
+  transform: translateY(-4px);
+}
+.contents b {
+  font: 700 18px/1 var(--font-display);
+  letter-spacing: 0.06em;
+}
+
+/* ---------- Surfaces ---------- */
+.panel {
+  padding: 22px 24px;
+  border: var(--line-heavy) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.panel > h2,
+.panel > h3 {
+  margin: 0 0 var(--s-4);
+  font: 800 24px/1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.message {
+  display: flex;
+  gap: var(--s-3);
+  padding: 14px 18px;
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.message-error {
+  border-width: var(--line-heavy);
+  background: radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px, var(--white);
+}
+.message-error > :last-child {
+  padding: 2px 8px;
+  margin: -2px 0;
+  background: var(--white);
+  font-weight: 600;
+}
+.empty {
+  padding: var(--s-6);
+  border: var(--line-heavy) dotted var(--ink);
+  color: var(--fg);
+}
+.empty h3 {
+  margin: 0 0 var(--s-2);
+  font: 600 26px/1.1 var(--font-serif);
+}
+.dialog {
+  position: relative;
+  padding: 26px 28px;
+  border: var(--line-heavy) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+}
+.dialog::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 8px -8px -8px 8px;
+  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+}
+.scrim {
+  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 6px 6px, var(--paper);
+}
+.skeleton {
+  background: radial-gradient(circle, var(--ink) 0.8px, transparent 1.2px) 0 0 / 5px 5px, var(--paper);
+  border: var(--line) solid var(--ink);
+}
+
+/* ---------- Book, shelf, band ---------- */
+.book {
+  position: relative;
+  flex: none;
+  display: block;
+  width: 122px;
+  height: 178px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform var(--ease);
+}
+.book::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  right: -8px;
+  bottom: -8px;
+  background: radial-gradient(circle, var(--fg) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+}
+.book-cover {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 16px 10px 10px 21px;
+  border: var(--line) solid var(--ink);
+  background: linear-gradient(90deg, #e4e4df 0, #f5f5f1 7px, var(--white) 8px 11px, #f2f2ee 12px, var(--white) 16px);
+  overflow: hidden;
+}
+.book-cover::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--ink);
+}
+.book-title {
+  font: 600 13.5px/1.18 var(--font-serif);
+}
+.book-author {
+  margin-top: auto;
+  /* Full names wrap (at the hyphen too) and stop at 4 lines; the aria-label carries the whole name. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  font: 600 9.5px/1.3 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.book:is(:hover, .is-hover) {
+  transform: translateY(-4px);
+}
+.book-lg {
+  width: 236px;
+  height: 344px;
+}
+.book-lg::before {
+  left: 14px;
+  top: 14px;
+  right: -14px;
+  bottom: -14px;
+  background-size: 7px 7px;
+  background-image: radial-gradient(circle, var(--fg) 1.8px, transparent 2.3px);
+}
+.book-lg .book-cover {
+  padding: 30px 18px 18px 40px;
+  border-width: var(--line-heavy);
+}
+.book-lg .book-cover::before {
+  left: 24px;
+  width: 2px;
+}
+.book-lg .book-title {
+  font-size: 27px;
+  line-height: 1.12;
+}
+.book-lg .book-author {
+  font-size: 12px;
+}
+.book-sm {
+  width: 92px;
+  height: 136px;
+}
+.book-sm .book-cover {
+  padding: 12px 6px 6px 16px;
+}
+.book-sm .book-cover::before {
+  left: 9px;
+}
+.book-sm .book-title {
+  font-size: 11.5px;
+}
+.book-sm .book-author {
+  font-size: 8.5px;
+}
+
+.shelf-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-bottom: 18px;
+}
+.shelf-head::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  border-top: 2.5px solid var(--fg);
+}
+.shelf-head a {
+  order: 2;
+  border-bottom: 2.5px solid var(--fg);
+  color: var(--fg);
+  font: 700 15px/1.2 var(--font-display);
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.shelf-books {
+  display: flex;
+  gap: 28px;
+  padding: 0 var(--s-1);
+}
+.ledge {
+  position: relative;
+  height: 14px;
+  background: var(--ink);
+}
+.ledge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 14px;
+  height: 22px;
+  background: radial-gradient(circle, var(--ink) 1.4px, transparent 1.8px) 0 0 / 5px 5px;
+  -webkit-mask-image: linear-gradient(#000, transparent);
+  mask-image: linear-gradient(#000, transparent);
+}
+.band {
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 28px), 0 100%);
+}
+
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{background:#dcdcd6}
+.wrap{width:1760px;padding:56px 64px 72px;font-family:var(--font-sans);color:var(--ink);--bg:#fafaf7}
+.wrap h1{margin:18px 0 10px;font:600 54px/1.04 var(--font-serif);letter-spacing:-.015em}
+.wrap .lede{margin:0;font:400 18px/1.5 var(--font-sans);max-width:980px}
+.cap{display:inline-block;padding:5px 12px;background:var(--ink);color:#fff;font:600 14px/1.2 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+h2.sec{margin:52px 0 18px;font:700 20px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.brief{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.brief>div{padding:22px 26px 26px;border:2px dashed var(--ink-3)}
+.brief h3{margin:0 0 10px;font:700 15px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.brief p{margin:0;font:400 15.5px/1.55 var(--font-sans)}
+.opt{display:grid;grid-template-columns:90px 560px 1fr;gap:36px;padding:34px 36px 38px;background:#fff;border:2px solid var(--ink);border-radius:5px;position:relative}
+.optw{position:relative;isolation:isolate;margin-bottom:34px}
+.optw::before{content:"";position:absolute;z-index:-1;inset:10px -10px -10px 10px;background:radial-gradient(circle,var(--ink) 1.3px,transparent 1.7px) 0 0/5px 5px}
+.num{font:800 64px/1 var(--font-display);letter-spacing:.02em}
+.opt .nm{margin:0 0 6px;font:700 15px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase}
+.opt .idea{margin:0 0 14px;font:600 22px/1.25 var(--font-serif);max-width:520px}
+.opt .why{margin:0 0 10px;font:400 15px/1.55 var(--font-sans);max-width:520px}
+.opt .risk{margin:0;font:400 15px/1.55 var(--font-sans);color:var(--ink-2);max-width:520px}
+.opt .risk b,.opt .why b{color:var(--ink);font-weight:600}
+.big{display:flex;align-items:center;height:150px;margin-bottom:18px;background:var(--paper);border:2px solid var(--ink);padding:0 34px;color:var(--ink)}
+.big .lg{height:84px;width:auto}
+.tests{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-content:start}
+.tc{display:grid;gap:10px;padding:16px 18px 18px;border:2px dashed var(--ink-3);align-content:start}
+.tc>.lb{font:700 12px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.nav{display:flex;align-items:center;gap:22px;height:56px;padding:0 18px;background:var(--paper);border:2px solid var(--ink);color:var(--ink)}
+.nav .lg{height:26px;width:auto;flex:none}
+.nav .lk{height:26px}
+.nav span{white-space:nowrap;font:600 15px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
+.nav.dk{background:var(--ink);color:#fff}
+.nav.dk span{color:#fff}
+.row{display:flex;align-items:flex-end;gap:22px}
+.row .m64{height:64px;width:auto}.row .m32{height:32px;width:auto}.row .m16{height:16px;width:auto}
+.icon{display:grid;place-items:center;width:84px;height:84px;background:var(--ink);color:#fff;border-radius:18px;--bg:#111}
+.icon .lg{height:50px;width:auto}
+.icon.round{border-radius:50%}
+.rev{display:flex;align-items:center;justify-content:center;gap:16px;height:84px;background:var(--ink);color:#fff;--bg:#111;padding:0 18px}
+.rev .lg{height:42px;width:auto}
+.cons{display:grid;grid-template-columns:repeat(2,1fr);gap:0 40px}
+.cons div{display:grid;grid-template-columns:260px 1fr;gap:18px;padding:13px 0;border-top:2px solid var(--ink);font:400 15px/1.5 var(--font-sans)}
+.cons b{font:600 16px/1.4 var(--font-serif)}
+.cons .ok b::before{content:"→ ";}
+.cons .no{color:var(--ink-2)}
+
+</style>
+</helmet>
+<div class="wrap"><span class="cap">Logo · five options</span><h1>A new logo for Trove</h1>
+<p class="lede">Twelve ideas were considered against the mission, the feel and the job a logo has to do in a product. Five survive. Each is shown as a lockup, in the app header, on black, as a mark at three sizes, and as an icon and avatar. They are ink only.</p>
+<h2 class="sec">What the logo has to do</h2><div class="brief">
+<div><h3>Mission</h3><p>Trove is where a member finds what others at CWRU know that they don’t. Every member is the author of the book they haven’t written yet; others browse the books and check one out, which is a short video call with the author. The logo has to say <b>book</b> and <b>person</b> without saying “social network”.</p></div>
+<div><h3>Feel</h3><p>Printed matter: ink on paper, calm and exact, warm without being cute. Professional enough to sit next to a résumé, not a game and not a corporation. Nothing performative: no sparkle, no badge, no gradient. It has to feel like it was made by someone who reads.</p></div>
+<div><h3>Function</h3><p>It has to work as a 16px favicon, a 26px app-header lockup, a round avatar and an app icon; in one colour, on paper and on black. It sits next to Barlow Condensed caps, so it is drawn in that voice. Red stays for the one action, so the logo is ink only.</p></div></div>
+<h2 class="sec">The five, in order of how far they go from the current wordmark</h2><div class="optw"><section class="opt"><div class="num">A</div>
+<div><p class="nm">Ribbon</p><p class="idea">The T of Trove is a bookmark: a crossbar with a notched ribbon hanging from it.</p><div class="big"><svg class="lg lk" viewBox="0 0 346 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100L32 84L20 100V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></svg></div><p class="why"><b>Why it fits.</b> A bookmark marks the place you want to come back to, which is what a member’s thread is, and it is the same notched ribbon the interface already uses for “the one thing waiting for you”. The notch is the only detail, so it survives at 16px.</p><p class="risk"><b>The risk.</b> The least literal of the five, so it has to be learned once. A bookmark alone can read as “saved”.</p></div>
+<div class="tests"><div class="tc"><span class="lb">In the app header, 26px</span><div class="nav"><svg class="lg lk" viewBox="0 0 346 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100L32 84L20 100V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></svg><span>Shelf</span><span>My book</span><span>Checkouts</span></div></div><div class="tc"><span class="lb">On black</span><div class="nav dk"><svg class="lg lk" viewBox="0 0 346 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100L32 84L20 100V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></svg><span>Shelf</span><span>My book</span><span>Checkouts</span></div></div>
+<div class="tc"><span class="lb">The mark: 64, 32 and 16px</span><div class="row"><svg class="lg m64 mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100L32 84L20 100V22H0Z"/></g></svg><svg class="lg m32 mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100L32 84L20 100V22H0Z"/></g></svg><svg class="lg m16 mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100L32 84L20 100V22H0Z"/></g></svg></div></div><div class="tc"><span class="lb">App icon and avatar</span><div class="row"><div class="icon"><svg class="lg mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100L32 84L20 100V22H0Z"/></g></svg></div><div class="icon round"><svg class="lg mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100L32 84L20 100V22H0Z"/></g></svg></div></div></div>
+<div class="tc"><span class="lb">Reversed, large</span><div class="rev"><svg class="lg lk" viewBox="0 0 346 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100L32 84L20 100V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></svg></div></div><div class="tc"><span class="lb">Reversed, mark only</span><div class="rev"><svg class="lg mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100L32 84L20 100V22H0Z"/></g></svg><svg class="lg m32 mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100L32 84L20 100V22H0Z"/></g></svg></div></div></div></section></div><div class="optw"><section class="opt"><div class="num">B</div>
+<div><p class="nm">Open V</p><p class="idea">The V of Trove is an open book: two pages meeting at the gutter.</p><div class="big"><svg class="lg lk" viewBox="0 0 346 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100H20V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path fill-rule="evenodd" d="M0 0H27L35 66L43 0H70L48 100H22Z M31 62H39V100H31Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></svg></div><p class="why"><b>Why it fits.</b> The premise in one letter: a person opening up. It sits in the middle of the word, so it reads as a letter first and a book second, and the gutter is a single cut.</p><p class="risk"><b>The risk.</b> Weakest of the five. The gutter closes below about 24px, leaving a plain V, and a V with a crack can read as a broken letter. It earns its place only if the idea matters more than the favicon.</p></div>
+<div class="tests"><div class="tc"><span class="lb">In the app header, 26px</span><div class="nav"><svg class="lg lk" viewBox="0 0 346 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100H20V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path fill-rule="evenodd" d="M0 0H27L35 66L43 0H70L48 100H22Z M31 62H39V100H31Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></svg><span>Shelf</span><span>My book</span><span>Checkouts</span></div></div><div class="tc"><span class="lb">On black</span><div class="nav dk"><svg class="lg lk" viewBox="0 0 346 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100H20V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path fill-rule="evenodd" d="M0 0H27L35 66L43 0H70L48 100H22Z M31 62H39V100H31Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></svg><span>Shelf</span><span>My book</span><span>Checkouts</span></div></div>
+<div class="tc"><span class="lb">The mark: 64, 32 and 16px</span><div class="row"><svg class="lg m64 mk" viewBox="0 0 70 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H27L35 66L43 0H70L48 100H22Z M31 62H39V100H31Z"/></g></svg><svg class="lg m32 mk" viewBox="0 0 70 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H27L35 66L43 0H70L48 100H22Z M31 62H39V100H31Z"/></g></svg><svg class="lg m16 mk" viewBox="0 0 70 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H27L35 66L43 0H70L48 100H22Z M31 62H39V100H31Z"/></g></svg></div></div><div class="tc"><span class="lb">App icon and avatar</span><div class="row"><div class="icon"><svg class="lg mk" viewBox="0 0 70 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H27L35 66L43 0H70L48 100H22Z M31 62H39V100H31Z"/></g></svg></div><div class="icon round"><svg class="lg mk" viewBox="0 0 70 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H27L35 66L43 0H70L48 100H22Z M31 62H39V100H31Z"/></g></svg></div></div></div>
+<div class="tc"><span class="lb">Reversed, large</span><div class="rev"><svg class="lg lk" viewBox="0 0 346 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path d="M0 0H64V22H44V100H20V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path fill-rule="evenodd" d="M0 0H27L35 66L43 0H70L48 100H22Z M31 62H39V100H31Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></svg></div></div><div class="tc"><span class="lb">Reversed, mark only</span><div class="rev"><svg class="lg mk" viewBox="0 0 70 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H27L35 66L43 0H70L48 100H22Z M31 62H39V100H31Z"/></g></svg><svg class="lg m32 mk" viewBox="0 0 70 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H27L35 66L43 0H70L48 100H22Z M31 62H39V100H31Z"/></g></svg></div></div></div></section></div><div class="optw"><section class="opt"><div class="num">C</div>
+<div><p class="nm">Stacked T</p><p class="idea">The T is two books: one lying across the top, one standing under it.</p><div class="big"><svg class="lg lk" viewBox="0 0 346 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H64V24H0Z M6 15H58V18H6Z"/><path fill-rule="evenodd" d="M20 29H44V100H20Z M26 35H29V94H26Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></svg></div><p class="why"><b>Why it fits.</b> Plainly bookish and sturdy, and it says “library” and “shelf” without a picture. The gaps are the page edges, so at small sizes it falls back to a clean T.</p><p class="risk"><b>The risk.</b> The most familiar idea of the five; the execution has to carry it.</p></div>
+<div class="tests"><div class="tc"><span class="lb">In the app header, 26px</span><div class="nav"><svg class="lg lk" viewBox="0 0 346 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H64V24H0Z M6 15H58V18H6Z"/><path fill-rule="evenodd" d="M20 29H44V100H20Z M26 35H29V94H26Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></svg><span>Shelf</span><span>My book</span><span>Checkouts</span></div></div><div class="tc"><span class="lb">On black</span><div class="nav dk"><svg class="lg lk" viewBox="0 0 346 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H64V24H0Z M6 15H58V18H6Z"/><path fill-rule="evenodd" d="M20 29H44V100H20Z M26 35H29V94H26Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></svg><span>Shelf</span><span>My book</span><span>Checkouts</span></div></div>
+<div class="tc"><span class="lb">The mark: 64, 32 and 16px</span><div class="row"><svg class="lg m64 mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H64V24H0Z M6 15H58V18H6Z"/><path fill-rule="evenodd" d="M20 29H44V100H20Z M26 35H29V94H26Z"/></g></svg><svg class="lg m32 mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H64V24H0Z M6 15H58V18H6Z"/><path fill-rule="evenodd" d="M20 29H44V100H20Z M26 35H29V94H26Z"/></g></svg><svg class="lg m16 mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H64V24H0Z M6 15H58V18H6Z"/><path fill-rule="evenodd" d="M20 29H44V100H20Z M26 35H29V94H26Z"/></g></svg></div></div><div class="tc"><span class="lb">App icon and avatar</span><div class="row"><div class="icon"><svg class="lg mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H64V24H0Z M6 15H58V18H6Z"/><path fill-rule="evenodd" d="M20 29H44V100H20Z M26 35H29V94H26Z"/></g></svg></div><div class="icon round"><svg class="lg mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H64V24H0Z M6 15H58V18H6Z"/><path fill-rule="evenodd" d="M20 29H44V100H20Z M26 35H29V94H26Z"/></g></svg></div></div></div>
+<div class="tc"><span class="lb">Reversed, large</span><div class="rev"><svg class="lg lk" viewBox="0 0 346 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H64V24H0Z M6 15H58V18H6Z"/><path fill-rule="evenodd" d="M20 29H44V100H20Z M26 35H29V94H26Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></svg></div></div><div class="tc"><span class="lb">Reversed, mark only</span><div class="rev"><svg class="lg mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H64V24H0Z M6 15H58V18H6Z"/><path fill-rule="evenodd" d="M20 29H44V100H20Z M26 35H29V94H26Z"/></g></svg><svg class="lg m32 mk" viewBox="0 0 64 100" fill="currentColor" role="img" aria-label="Trove" ><g transform="translate(0 0)"><path fill-rule="evenodd" d="M0 0H64V24H0Z M6 15H58V18H6Z"/><path fill-rule="evenodd" d="M20 29H44V100H20Z M26 35H29V94H26Z"/></g></svg></div></div></div></section></div><div class="optw"><section class="opt"><div class="num">D</div>
+<div><p class="nm">The book</p><p class="idea">The product’s own object: the book with a hinge, a T on its cover and the dot shadow under it.</p><div class="big"><svg class="lg lk" viewBox="0 0 442 100" fill="currentColor" role="img" aria-label="Trove" ><g><defs><pattern id="dt1" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.8"/></pattern></defs><rect x="8" y="8" width="66" height="92" fill="url(#dt1)"/><rect x="0" y="0" width="66" height="92" rx="4"/><g fill="var(--bg, #fafaf7)"><rect x="9" y="0" width="5" height="92"/><path d="M20 24H52V36H42V74H30V36H20Z"/></g></g><g transform="translate(96 0)"><g transform="translate(0 0)"><path d="M0 0H64V22H44V100H20V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></g></svg></div><p class="why"><b>Why it fits.</b> It is exactly the book the member sees everywhere, so the logo and the interface are one object. The dot shadow is the system’s signature; below 48px the mark drops the shadow and the hinge and keeps a bold T on a solid cover.</p><p class="risk"><b>The risk.</b> The plainest. A book is also what a thousand reading apps use, so it leans on the dots and the T to be ours.</p></div>
+<div class="tests"><div class="tc"><span class="lb">In the app header, 26px</span><div class="nav"><svg class="lg lk" viewBox="0 0 442 100" fill="currentColor" role="img" aria-label="Trove" ><g><defs><pattern id="dt1" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.8"/></pattern></defs><rect x="8" y="8" width="66" height="92" fill="url(#dt1)"/><rect x="0" y="0" width="66" height="92" rx="4"/><g fill="var(--bg, #fafaf7)"><rect x="9" y="0" width="5" height="92"/><path d="M20 24H52V36H42V74H30V36H20Z"/></g></g><g transform="translate(96 0)"><g transform="translate(0 0)"><path d="M0 0H64V22H44V100H20V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></g></svg><span>Shelf</span><span>My book</span><span>Checkouts</span></div></div><div class="tc"><span class="lb">On black</span><div class="nav dk"><svg class="lg lk" viewBox="0 0 442 100" fill="currentColor" role="img" aria-label="Trove" ><g><defs><pattern id="dt1" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.8"/></pattern></defs><rect x="8" y="8" width="66" height="92" fill="url(#dt1)"/><rect x="0" y="0" width="66" height="92" rx="4"/><g fill="var(--bg, #fafaf7)"><rect x="9" y="0" width="5" height="92"/><path d="M20 24H52V36H42V74H30V36H20Z"/></g></g><g transform="translate(96 0)"><g transform="translate(0 0)"><path d="M0 0H64V22H44V100H20V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></g></svg><span>Shelf</span><span>My book</span><span>Checkouts</span></div></div>
+<div class="tc"><span class="lb">The mark: 64, 32 and 16px</span><div class="row"><svg class="lg m64 mk" viewBox="0 0 74 100" fill="currentColor" role="img" aria-label="Trove" ><defs><pattern id="dt1" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.8"/></pattern></defs><rect x="8" y="8" width="66" height="92" fill="url(#dt1)"/><rect x="0" y="0" width="66" height="92" rx="4"/><g fill="var(--bg, #fafaf7)"><rect x="9" y="0" width="5" height="92"/><path d="M20 24H52V36H42V74H30V36H20Z"/></g></svg><svg class="lg m32 mk" viewBox="0 0 66 92" fill="currentColor" role="img" aria-label="Trove" ><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></svg><svg class="lg m16 mk" viewBox="0 0 66 92" fill="currentColor" role="img" aria-label="Trove" ><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></svg></div></div><div class="tc"><span class="lb">App icon and avatar</span><div class="row"><div class="icon"><svg class="lg mk" viewBox="0 0 66 92" fill="currentColor" role="img" aria-label="Trove" ><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></svg></div><div class="icon round"><svg class="lg mk" viewBox="0 0 66 92" fill="currentColor" role="img" aria-label="Trove" ><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></svg></div></div></div>
+<div class="tc"><span class="lb">Reversed, large</span><div class="rev"><svg class="lg lk" viewBox="0 0 442 100" fill="currentColor" role="img" aria-label="Trove" ><g><defs><pattern id="dt1" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.8"/></pattern></defs><rect x="8" y="8" width="66" height="92" fill="url(#dt1)"/><rect x="0" y="0" width="66" height="92" rx="4"/><g fill="var(--bg, #fafaf7)"><rect x="9" y="0" width="5" height="92"/><path d="M20 24H52V36H42V74H30V36H20Z"/></g></g><g transform="translate(96 0)"><g transform="translate(0 0)"><path d="M0 0H64V22H44V100H20V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></g></svg></div></div><div class="tc"><span class="lb">Reversed, mark only</span><div class="rev"><svg class="lg mk" viewBox="0 0 74 100" fill="currentColor" role="img" aria-label="Trove" ><defs><pattern id="dt1" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.8"/></pattern></defs><rect x="8" y="8" width="66" height="92" fill="url(#dt1)"/><rect x="0" y="0" width="66" height="92" rx="4"/><g fill="var(--bg, #fafaf7)"><rect x="9" y="0" width="5" height="92"/><path d="M20 24H52V36H42V74H30V36H20Z"/></g></svg><svg class="lg m32 mk" viewBox="0 0 66 92" fill="currentColor" role="img" aria-label="Trove" ><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></svg></div></div></div></section></div><div class="optw"><section class="opt"><div class="num">E</div>
+<div><p class="nm">Stamp</p><p class="idea">A library date stamp: “Trove” above, “Checked out” below, a book in the middle.</p><div class="big"><svg class="lg lk" viewBox="0 0 420.8 120" fill="currentColor" role="img" aria-label="Trove" ><g><circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" stroke-width="4.5"/><circle cx="60" cy="60" r="36" fill="none" stroke="currentColor" stroke-width="2.4"/><defs><path id="at3" d="M 14.5 60 A 45.5 45.5 0 0 1 105.5 60"/><path id="ab3" d="M 10.5 60 A 49.5 49.5 0 0 0 109.5 60"/></defs><text font-family="Barlow Condensed" font-weight="800" font-size="11.5" letter-spacing="2.4" text-anchor="middle"><textPath href="#at3" startOffset="50%" textLength="80" lengthAdjust="spacing">TROVE</textPath></text><text font-family="Barlow Condensed" font-weight="800" font-size="10.5" letter-spacing="2" text-anchor="middle"><textPath href="#ab3" startOffset="50%" textLength="96" lengthAdjust="spacing">CHECKED OUT</textPath></text><circle cx="12.5" cy="60" r="2.3"/><circle cx="107.5" cy="60" r="2.3"/><g transform="translate(60 60) scale(.42) translate(-33 -46)"><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></g></g><g transform="translate(144 10) scale(.8)"><g transform="translate(0 0)"><path d="M0 0H64V22H44V100H20V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></g></svg></div><p class="why"><b>Why it fits.</b> Check-out is the one verb the product owns, and a stamp is the physical trace of it. It is the only round mark, so it is the one that works as an avatar, a social image and a seal.</p><p class="risk"><b>The risk.</b> The busiest. The ring text is for large sizes only; below about 48px it becomes a thick ring around the book. It is a seal, not a favicon.</p></div>
+<div class="tests"><div class="tc"><span class="lb">In the app header, 26px</span><div class="nav"><svg class="lg lk" viewBox="0 0 420.8 120" fill="currentColor" role="img" aria-label="Trove" ><g><circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" stroke-width="4.5"/><circle cx="60" cy="60" r="36" fill="none" stroke="currentColor" stroke-width="2.4"/><defs><path id="at3" d="M 14.5 60 A 45.5 45.5 0 0 1 105.5 60"/><path id="ab3" d="M 10.5 60 A 49.5 49.5 0 0 0 109.5 60"/></defs><text font-family="Barlow Condensed" font-weight="800" font-size="11.5" letter-spacing="2.4" text-anchor="middle"><textPath href="#at3" startOffset="50%" textLength="80" lengthAdjust="spacing">TROVE</textPath></text><text font-family="Barlow Condensed" font-weight="800" font-size="10.5" letter-spacing="2" text-anchor="middle"><textPath href="#ab3" startOffset="50%" textLength="96" lengthAdjust="spacing">CHECKED OUT</textPath></text><circle cx="12.5" cy="60" r="2.3"/><circle cx="107.5" cy="60" r="2.3"/><g transform="translate(60 60) scale(.42) translate(-33 -46)"><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></g></g><g transform="translate(144 10) scale(.8)"><g transform="translate(0 0)"><path d="M0 0H64V22H44V100H20V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></g></svg><span>Shelf</span><span>My book</span><span>Checkouts</span></div></div><div class="tc"><span class="lb">On black</span><div class="nav dk"><svg class="lg lk" viewBox="0 0 420.8 120" fill="currentColor" role="img" aria-label="Trove" ><g><circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" stroke-width="4.5"/><circle cx="60" cy="60" r="36" fill="none" stroke="currentColor" stroke-width="2.4"/><defs><path id="at3" d="M 14.5 60 A 45.5 45.5 0 0 1 105.5 60"/><path id="ab3" d="M 10.5 60 A 49.5 49.5 0 0 0 109.5 60"/></defs><text font-family="Barlow Condensed" font-weight="800" font-size="11.5" letter-spacing="2.4" text-anchor="middle"><textPath href="#at3" startOffset="50%" textLength="80" lengthAdjust="spacing">TROVE</textPath></text><text font-family="Barlow Condensed" font-weight="800" font-size="10.5" letter-spacing="2" text-anchor="middle"><textPath href="#ab3" startOffset="50%" textLength="96" lengthAdjust="spacing">CHECKED OUT</textPath></text><circle cx="12.5" cy="60" r="2.3"/><circle cx="107.5" cy="60" r="2.3"/><g transform="translate(60 60) scale(.42) translate(-33 -46)"><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></g></g><g transform="translate(144 10) scale(.8)"><g transform="translate(0 0)"><path d="M0 0H64V22H44V100H20V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></g></svg><span>Shelf</span><span>My book</span><span>Checkouts</span></div></div>
+<div class="tc"><span class="lb">The mark: 64, 32 and 16px</span><div class="row"><svg class="lg m64 mk sq" viewBox="0 0 120 120" fill="currentColor" role="img" aria-label="Trove" ><circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" stroke-width="4.5"/><circle cx="60" cy="60" r="36" fill="none" stroke="currentColor" stroke-width="2.4"/><defs><path id="at3" d="M 14.5 60 A 45.5 45.5 0 0 1 105.5 60"/><path id="ab3" d="M 10.5 60 A 49.5 49.5 0 0 0 109.5 60"/></defs><text font-family="Barlow Condensed" font-weight="800" font-size="11.5" letter-spacing="2.4" text-anchor="middle"><textPath href="#at3" startOffset="50%" textLength="80" lengthAdjust="spacing">TROVE</textPath></text><text font-family="Barlow Condensed" font-weight="800" font-size="10.5" letter-spacing="2" text-anchor="middle"><textPath href="#ab3" startOffset="50%" textLength="96" lengthAdjust="spacing">CHECKED OUT</textPath></text><circle cx="12.5" cy="60" r="2.3"/><circle cx="107.5" cy="60" r="2.3"/><g transform="translate(60 60) scale(.42) translate(-33 -46)"><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></g></svg><svg class="lg m32 mk sq" viewBox="0 0 120 120" fill="currentColor" role="img" aria-label="Trove" ><circle cx="60" cy="60" r="55" fill="none" stroke="currentColor" stroke-width="9"/><g transform="translate(60 61) scale(.62) translate(-33 -46)"><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></g></svg><svg class="lg m16 mk sq" viewBox="0 0 120 120" fill="currentColor" role="img" aria-label="Trove" ><circle cx="60" cy="60" r="55" fill="none" stroke="currentColor" stroke-width="9"/><g transform="translate(60 61) scale(.62) translate(-33 -46)"><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></g></svg></div></div><div class="tc"><span class="lb">App icon and avatar</span><div class="row"><div class="icon"><svg class="lg mk sq" viewBox="0 0 120 120" fill="currentColor" role="img" aria-label="Trove" ><circle cx="60" cy="60" r="55" fill="none" stroke="currentColor" stroke-width="9"/><g transform="translate(60 61) scale(.62) translate(-33 -46)"><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></g></svg></div><div class="icon round"><svg class="lg mk sq" viewBox="0 0 120 120" fill="currentColor" role="img" aria-label="Trove" ><circle cx="60" cy="60" r="55" fill="none" stroke="currentColor" stroke-width="9"/><g transform="translate(60 61) scale(.62) translate(-33 -46)"><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></g></svg></div></div></div>
+<div class="tc"><span class="lb">Reversed, large</span><div class="rev"><svg class="lg lk" viewBox="0 0 420.8 120" fill="currentColor" role="img" aria-label="Trove" ><g><circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" stroke-width="4.5"/><circle cx="60" cy="60" r="36" fill="none" stroke="currentColor" stroke-width="2.4"/><defs><path id="at3" d="M 14.5 60 A 45.5 45.5 0 0 1 105.5 60"/><path id="ab3" d="M 10.5 60 A 49.5 49.5 0 0 0 109.5 60"/></defs><text font-family="Barlow Condensed" font-weight="800" font-size="11.5" letter-spacing="2.4" text-anchor="middle"><textPath href="#at3" startOffset="50%" textLength="80" lengthAdjust="spacing">TROVE</textPath></text><text font-family="Barlow Condensed" font-weight="800" font-size="10.5" letter-spacing="2" text-anchor="middle"><textPath href="#ab3" startOffset="50%" textLength="96" lengthAdjust="spacing">CHECKED OUT</textPath></text><circle cx="12.5" cy="60" r="2.3"/><circle cx="107.5" cy="60" r="2.3"/><g transform="translate(60 60) scale(.42) translate(-33 -46)"><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></g></g><g transform="translate(144 10) scale(.8)"><g transform="translate(0 0)"><path d="M0 0H64V22H44V100H20V22H0Z"/></g><g transform="translate(69 0)"><rect x="0" y="0" width="24" height="100"/><path d="M12 11H36A18 18 0 0 1 36 49H12" fill="none" stroke="currentColor" stroke-width="22"/><path d="M27 47H52L68 100H42Z"/></g><g transform="translate(145 0)"><rect x="12" y="11" width="46" height="78" rx="23" fill="none" stroke="currentColor" stroke-width="22"/></g><g transform="translate(219 0)"><path d="M0 0H27L35 66L43 0H70L47 100H23Z"/></g><g transform="translate(292 0)"><path d="M0 0H54V20H24V40H48V60H24V80H54V100H0Z"/></g></g></svg></div></div><div class="tc"><span class="lb">Reversed, mark only</span><div class="rev"><svg class="lg mk sq" viewBox="0 0 120 120" fill="currentColor" role="img" aria-label="Trove" ><circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" stroke-width="4.5"/><circle cx="60" cy="60" r="36" fill="none" stroke="currentColor" stroke-width="2.4"/><defs><path id="at3" d="M 14.5 60 A 45.5 45.5 0 0 1 105.5 60"/><path id="ab3" d="M 10.5 60 A 49.5 49.5 0 0 0 109.5 60"/></defs><text font-family="Barlow Condensed" font-weight="800" font-size="11.5" letter-spacing="2.4" text-anchor="middle"><textPath href="#at3" startOffset="50%" textLength="80" lengthAdjust="spacing">TROVE</textPath></text><text font-family="Barlow Condensed" font-weight="800" font-size="10.5" letter-spacing="2" text-anchor="middle"><textPath href="#ab3" startOffset="50%" textLength="96" lengthAdjust="spacing">CHECKED OUT</textPath></text><circle cx="12.5" cy="60" r="2.3"/><circle cx="107.5" cy="60" r="2.3"/><g transform="translate(60 60) scale(.42) translate(-33 -46)"><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></g></svg><svg class="lg m32 mk sq" viewBox="0 0 120 120" fill="currentColor" role="img" aria-label="Trove" ><circle cx="60" cy="60" r="55" fill="none" stroke="currentColor" stroke-width="9"/><g transform="translate(60 61) scale(.62) translate(-33 -46)"><rect x="0" y="0" width="66" height="92" rx="4"/><path fill="var(--bg, #fafaf7)" d="M16 22H50V36H40V76H26V36H16Z"/></g></svg></div></div></div></section></div>
+<h2 class="sec">What an independent critic found, and what changed</h2><div class="cons">
+<div class="ok"><b>Lockups for D and E clipped</b><span>Fixed. All five wordmarks are now drawn from the same letters, so none depends on a loaded font. Only the stamp’s ring text is live type, and it is pinned to a fixed length.</span></div>
+<div class="ok"><b>Letter spacing and weight</b><span>Fixed. T–R is 5 (was 10), R–O is 8 (was 14), V–E is 3. The V’s arms are 27 wide (was 25), the O is wider to match the R’s bowl, and the E’s counters are 20 high (were 17).</span></div>
+<div class="ok"><b>Stacked T: page lines were painted, not cut</b><span>Fixed. The lines are real cut-outs 6 in from the edge on both books, and the bar is 24 thick like the other letters. It now works in one colour on any ground.</span></div>
+<div class="ok"><b>Ribbon: notch overshot the baseline</b><span>Fixed. The tips sit on the baseline and the apex is 16 up.</span></div>
+<div class="ok"><b>Stamp: ring text hit both rings</b><span>Fixed. The band is wider, the text is smaller and sits inside it. Below about 48px the stamp is a thick ring around the book.</span></div>
+<div class="ok"><b>The book: no small master, misaligned lockup</b><span>Fixed. The book now spans the cap height and its shadow ends on the baseline. Below 48px it loses the shadow and hinge and has a bold T.</span></div>
+<div class="ok"><b>Open V: the gutter cut empty air</b><span>Fixed. It starts at the V’s inner vertex and is 8 wide. The critic still ranks it last and recommends dropping it.</span></div>
+<div class="no"><b>Ranking, from the critic</b><span>1 Ribbon, 2 The book, 3 Stacked T, 4 Stamp, 5 Open V. For the website header, the Ribbon. For the favicon and app icon, also the Ribbon.</span></div>
+</div><h2 class="sec">What was considered</h2><div class="cons"><div class="ok"><b>Ribbon T</b><span>Kept as A.</span></div><div class="ok"><b>Open-book V</b><span>Kept as B.</span></div><div class="ok"><b>Two books making a T</b><span>Kept as C.</span></div><div class="ok"><b>The product’s book object</b><span>Kept as D.</span></div><div class="ok"><b>Date-stamp roundel</b><span>Kept as E.</span></div><div class="no"><b>Gem or treasure chest</b><span>Cut. “Trove” literally, but a treasure map is a game, and the product is a professional network.</span></div><div class="no"><b>Head-and-shoulders inside a book</b><span>Cut. It is the premise, but it reads as a default avatar icon and looks like every networking app.</span></div><div class="no"><b>Bar-chart bookshelf</b><span>Cut. Books of different heights read as analytics.</span></div><div class="no"><b>Halftone T</b><span>Cut. The dots are the system’s signature, but dots fall apart at favicon size.</span></div><div class="no"><b>Sunburst behind a book</b><span>Cut. The burst belongs to the Librarian; a logo with it reads as a sunrise or a faith.</span></div><div class="no"><b>Keyhole</b><span>Cut. Hidden and secret; the product is open and warm.</span></div><div class="no"><b>Quill or pen nib</b><span>Cut. Old-fashioned, and writing is the Librarian’s act, not the member’s.</span></div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1760,"height":4600}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

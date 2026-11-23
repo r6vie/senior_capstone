@@ -52,6 +52,10 @@
     {
       "id": "librarian",
       "name": "Librarian notebook"
+    },
+    {
+      "id": "logo",
+      "name": "Logo"
     }
   ],
   "boards": {
@@ -596,6 +600,15 @@
       "title": "Interview 4 · The Librarian: reopened to add to the book",
       "page": "librarian",
       "expand": "fill"
+    },
+    "LogoOptions.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1760,
+      "h": 4270,
+      "title": "A new logo for Trove · five options",
+      "page": "logo",
+      "expand": "fill"
     }
   },
   "order": [
@@ -663,7 +676,8 @@
     "LibPhone.dc.html",
     "LibParts.dc.html",
     "LibMore.dc.html",
-    "LibReopened.dc.html"
+    "LibReopened.dc.html",
+    "LogoOptions.dc.html"
   ],
   "notes": {
     "head": {

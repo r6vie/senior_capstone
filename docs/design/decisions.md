@@ -2,6 +2,12 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-23: five logo options (canvas page "Logo"; waiting for Josef's choice)
+
+Five ink-only logo options for the website, chosen from twelve ideas against the mission (a book and a person, not a social network), the feel (printed, calm, literary) and the job (16px favicon, 26px header, avatar, one colour, on paper and black):
+A Ribbon (the T is a notched bookmark), B Open V (the V is an open book), C Stacked T (the T is two books), D The book (the product's book object with a T), E Stamp (a library date stamp, "Checked out"). An independent critic
+reviewed the first render; its fixes are applied (kerning, drawn wordmarks so none depends on a loaded font, true cut-outs, a small master for the book and the stamp). Its ranking: Ribbon, The book, Stacked T, Stamp, Open V.
+
 ## 2026-11-19: Kit 3 "Folio" APPROVED by Josef and sent for implementation, without the interview (the interview is the Librarian's notebook)
 
 Josef asked for the polished Kit 3 direction to be sent for implementation. The Kit 3 board now holds only the parts sheet and the shelf front page; its interview frames are removed, because the interview is the
