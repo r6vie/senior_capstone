@@ -4,12 +4,14 @@ import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
 import { TextField } from "../../ui/TextField";
+import { usePageTitle } from "../../ui/usePageTitle";
 import { AuthLayout } from "./AuthLayout";
 import { NeedsVerification, useAuth } from "./AuthProvider";
 
 type Invite = { inviter: string } | { problem: string } | null;
 
 export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
+  usePageTitle(mode === "sign-up" ? "Join" : "Sign in");
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();

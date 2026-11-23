@@ -4,11 +4,13 @@ import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
 import { TextField } from "../../ui/TextField";
+import { usePageTitle } from "../../ui/usePageTitle";
 import { AuthLayout } from "./AuthLayout";
 import { useAuth } from "./AuthProvider";
 
 // Students confirm the code we emailed to their case.edu address (docs/trove.md §9.2).
 export function VerifyPage() {
+  usePageTitle("Confirm your email");
   const { verifyEmail } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "../../ui/Button";
+import { usePageTitle } from "../../ui/usePageTitle";
 import { apiInterviewClient } from "./apiInterviewClient";
 import { ErrorMessage, Frame, focusBand, Waiting } from "./InterviewFrame";
 import type { InterviewClient, MyBook } from "./interviewClient";
@@ -13,6 +14,7 @@ import { BackCover, ChangeCard, WaitBox } from "./ProposedChanges";
 const MIN_CHAPTERS = 3;
 
 export function RemovalPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
+  usePageTitle("Remove a chapter");
   const { chapterId = "" } = useParams();
   const [search] = useSearchParams();
   const navigate = useNavigate();

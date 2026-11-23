@@ -6,6 +6,7 @@ import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
 import { PageLoading } from "../../ui/Loading";
 import "./MessagesPage.css";
+import { usePageTitle } from "../../ui/usePageTitle";
 
 // The conversation inside an accepted checkout (plan item C3, docs/trove.md §6, §9.8). Small on purpose:
 // no live updates, read receipts or typing indicators. The page checks for new messages every so often
@@ -50,6 +51,7 @@ function MessageItem({ message, otherName }: { message: Message; otherName: stri
 export function MessagesPage() {
   const { checkoutId = "" } = useParams();
   const [thread, setThread] = useState<Thread | null>(null);
+  usePageTitle(thread ? `Messages with ${thread.other_name}` : "Messages");
   const [missing, setMissing] = useState(false);
   // A failed check (the server restarting, a dropped connection) never hides a conversation already shown.
   const [loadFailed, setLoadFailed] = useState(false);

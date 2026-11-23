@@ -122,3 +122,19 @@
     padding: var(--s-5) var(--s-4) var(--s-6);
   }
 }
+
+/* Focus moved to a heading after a page change (usePageFocus) is for screen readers and the next Tab, not a ring. */
+.app-shell h1[tabindex="-1"]:focus:not(:focus-visible) {
+  outline: none;
+}
+/* A page that broke (ErrorBoundary). */
+.page-broke-title {
+  margin: 0 0 var(--s-2);
+  font: 600 26px / 1.1 var(--font-serif);
+}
+.page-broke-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4);
+}
