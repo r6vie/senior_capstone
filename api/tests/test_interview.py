@@ -132,7 +132,8 @@ async def test_routes_require_sign_in(client):
 
 
 async def test_full_flow_from_first_question_to_the_shelf(client, database, headers, fake_engine):
-    assert (await client.get("/interview", headers=headers)).status_code == 404
+    before = await client.get("/interview", headers=headers)
+    assert (before.status_code, before.json()) == (200, None)
 
     started = await client.post("/interview", json={}, headers=headers)
     assert started.status_code == 201
@@ -705,7 +706,7 @@ async def test_a_failed_book_can_be_tried_again_with_any_title(
     monkeypatch.setattr(engine, "finish_book", failing)
     await client.post("/interview/title", json={"title": 0}, headers=headers)
     assert (await database.interviews.find_one({}))["write_status"] == "failed"
-    assert (await client.get("/books/me", headers=headers)).status_code == 404
+    assert (await client.get("/books/me", headers=headers)).json() is None
 
     monkeypatch.setattr(engine, "finish_book", good)
     book = await choose_and_wait(client, headers, 2)

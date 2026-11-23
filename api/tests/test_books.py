@@ -102,8 +102,9 @@ async def test_unknown_or_draft_book_is_404(client, database):
 
 async def test_my_book(client, database):
     account, headers = await sign_in(client)
+    # No book yet is an answer, not an error, so the shelf's check doesn't log a failure on every visit.
     response = await client.get("/books/me", headers=headers)
-    assert response.status_code == 404
+    assert (response.status_code, response.json()) == (200, None)
 
     await database.books.insert_one(book(1, author_id=account["id"], status="draft", published_at=None))
     mine = (await client.get("/books/me", headers=headers)).json()

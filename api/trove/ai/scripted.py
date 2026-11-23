@@ -34,19 +34,24 @@ BOOK_STEP_SLOWER = 2
 QUOTE_WORDS = 5
 
 
-def ensure_scripted_allowed(settings) -> None:
-    """Raise unless this is plainly a developer's machine. Canned replies must never reach a member."""
+def scripted_refusal(settings) -> str | None:
+    """Why canned replies can't run here, or None when they can (or aren't asked for)."""
     if settings.ai_mode != "scripted":
-        return
+        return None
     if settings.environment.lower() not in DEV_ENVIRONMENTS:
-        raise RuntimeError(f"AI_MODE=scripted is for development, not ENVIRONMENT={settings.environment}.")
+        return f"AI_MODE=scripted is for development, not ENVIRONMENT={settings.environment}."
     for url in (settings.frontend_url, settings.api_url):
         if urlparse(url).hostname not in LOCAL_HOSTS:
-            raise RuntimeError(f"AI_MODE=scripted only runs on local URLs, not {url}.")
+            return f"AI_MODE=scripted only runs on local URLs, not {url}."
     if not settings.mongodb_database.startswith("trove_dev"):
-        raise RuntimeError(
-            f"AI_MODE=scripted only runs on a trove_dev database, not {settings.mongodb_database}."
-        )
+        return f"AI_MODE=scripted only runs on a trove_dev database, not {settings.mongodb_database}."
+    return None
+
+
+def ensure_scripted_allowed(settings) -> None:
+    """Raise unless this is plainly a developer's machine. Canned replies must never reach a member."""
+    if refusal := scripted_refusal(settings):
+        raise RuntimeError(refusal)
 
 
 class Asked(NamedTuple):

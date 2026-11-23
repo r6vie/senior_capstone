@@ -1,7 +1,10 @@
 """The FastAPI app. Adding a feature = include its router here and list its ensure_indexes."""
 
+import logging
+
 from fastapi import FastAPI, Request
 
+from trove.ai.client import describe_ai
 from trove.ai.scripted import ensure_scripted_allowed
 from trove.auth import service as auth_service
 from trove.auth.router import router as auth_router
@@ -46,6 +49,8 @@ ROUTERS = [
 
 # The app won't start at all with canned AI replies anywhere but on a developer's machine.
 ensure_scripted_allowed(get_settings())
+# Uvicorn's own logger, so the line shows in the terminal beside its startup messages.
+logging.getLogger("uvicorn.error").info(describe_ai(get_settings()))
 
 app = FastAPI(title="Trove API", lifespan=make_lifespan(INDEX_SETUPS))
 register_error_handlers(app)

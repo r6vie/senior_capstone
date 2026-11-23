@@ -6,7 +6,7 @@ from fastapi import HTTPException, Request
 
 from trove.ai import usage
 from trove.ai.prompts import prompt_name
-from trove.ai.scripted import ScriptedClaude, ensure_scripted_allowed
+from trove.ai.scripted import ScriptedClaude, scripted_refusal
 from trove.core.config import get_settings
 
 # On a safety decline, the API re-runs the request on Anthropic's recommended fallback model.
@@ -55,13 +55,28 @@ def ai_not_set_up() -> HTTPException:
     )
 
 
+def describe_ai(settings) -> str:
+    """One line for the API's startup log, so a developer sees at once which AI the interview will use."""
+    if settings.ai_mode == "scripted":
+        return "AI: scripted (canned replies, no key, no cost)."
+    if not settings.anthropic_api_key:
+        return (
+            "AI: not set up. ANTHROPIC_API_KEY is empty, so starting or answering the interview returns 503. "
+            "Add a key to .env, or run python3 scripts/dev.py, which uses the scripted AI without one."
+        )
+    return f"AI: real ({settings.anthropic_model})."
+
+
 def get_claude() -> Claude | ScriptedClaude:
     """FastAPI dependency: the shared Claude client, or 503 until ANTHROPIC_API_KEY is set.
     With AI_MODE=scripted, a stand-in that needs no key and spends nothing."""
     global _claude
     settings = get_settings()
     if settings.ai_mode == "scripted":
-        ensure_scripted_allowed(settings)
+        # The app refuses to start like this, so this only guards settings changed while it runs. As a
+        # 503 it stops the AI call and nothing else: routes that work without AI keep working.
+        if refusal := scripted_refusal(settings):
+            raise HTTPException(status_code=503, detail=refusal)
         return ScriptedClaude(settings.ai_scripted_delay_seconds)
     if not settings.anthropic_api_key:
         raise ai_not_set_up()

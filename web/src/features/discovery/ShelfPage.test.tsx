@@ -92,7 +92,7 @@ beforeEach(() => {
       return response({ books: [book, changingCourse, startingOver], next: null });
     }
     if (path === "/books/{book_id}") return response(book);
-    if (path === "/books/me") return response(null, 404);
+    if (path === "/books/me") return response(null);
     if (path === "/discovery/recommendation")
       return response({ state: "create_book", book: null, reason: null });
     if (path === "/interview/sparks") return response([]);
@@ -330,7 +330,7 @@ describe("D1 shelf and reader", () => {
   it("leaves the request block out when nothing is waiting", async () => {
     api.GET.mockImplementation(async (path: string) => {
       if (path === "/checkouts") return response({ reading: [], lending: [] });
-      if (path === "/books/me") return response(null, 404);
+      if (path === "/books/me") return response(null);
       return response({ books: [book], next: null });
     });
     renderShelf();

@@ -52,15 +52,15 @@ async def start(
     return interview_view(await service.start(database, claude, user, data.resume_pdf))
 
 
-@router.get("", response_model=InterviewResponse)
+@router.get("", response_model=InterviewResponse | None)
 async def current(
     background: BackgroundTasks,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
     claude: Claude | None = Depends(optional_claude),
-) -> InterviewResponse:
-    """The member's interview, for resuming where they left off. If writing proposed changes failed,
-    a return tries once more on its own."""
+) -> InterviewResponse | None:
+    """The member's interview, for resuming where they left off, or null before they start. If writing
+    proposed changes failed, a return tries once more on its own."""
     return await service.current_view(database, user, claude, background)
 
 

@@ -277,7 +277,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** My Book */
+        /**
+         * My Book
+         * @description The member's own book, or null before they have one: an answer, not an error, since the shelf
+         *     asks on every visit.
+         */
         get: operations["my_book_books_me_get"];
         put?: never;
         post?: never;
@@ -379,8 +383,8 @@ export interface paths {
         };
         /**
          * Current
-         * @description The member's interview, for resuming where they left off. If writing proposed changes failed,
-         *     a return tries once more on its own.
+         * @description The member's interview, for resuming where they left off, or null before they start. If writing
+         *     proposed changes failed, a return tries once more on its own.
          */
         get: operations["current_interview_get"];
         put?: never;
@@ -2832,7 +2836,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MyBookResponse"];
+                    "application/json": components["schemas"]["MyBookResponse"] | null;
                 };
             };
         };
@@ -2991,7 +2995,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["InterviewResponse"];
+                    "application/json": components["schemas"]["InterviewResponse"] | null;
                 };
             };
         };

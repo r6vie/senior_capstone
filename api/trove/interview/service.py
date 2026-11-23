@@ -237,8 +237,11 @@ def nearly_done(interview: dict, answered: int) -> bool:
 
 async def current_view(
     database: AsyncDatabase, user: dict, claude: Claude | None, background: BackgroundTasks
-) -> InterviewResponse:
-    interview = await get_interview(database, user["_id"])
+) -> InterviewResponse | None:
+    interview = await database.interviews.find_one({"user_id": user["_id"]})
+    if interview is None:
+        # Not started yet is an answer, not an error: a new member's page asks this on every visit.
+        return None
     failed = (
         revision_status(interview) == "failed"
         if interview["stage"] == "revising"
