@@ -35,8 +35,9 @@ function PreloadPages() {
     const start = () => {
       for (const load of loaders) load().catch(() => undefined);
     };
-    const idle = window.requestIdleCallback ?? ((run: () => void) => window.setTimeout(run, 1500));
-    idle(start);
+    // Called on window, as browsers require; Safari has no idle callback, so it waits a moment instead.
+    if ("requestIdleCallback" in window) window.requestIdleCallback(start);
+    else setTimeout(start, 1500);
   }, []);
   return null;
 }

@@ -1,10 +1,16 @@
 import asyncio
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 from pymongo.asynchronous.database import AsyncDatabase
 
-from trove.auth.service import contact_details_of_many, full_names_of, get_current_user
+from trove.auth.service import (
+    ContactDetailsResponse,
+    contact_details_of_many,
+    full_names_of,
+    get_current_user,
+)
 from trove.books.service import shelf_books_of
 from trove.checkouts import service
 from trove.checkouts.models import (
@@ -59,20 +65,23 @@ def meet_view(checkout: dict, user_id: str, due: datetime | None) -> DidYouMeet 
     return DidYouMeet(can_answer=True, my_answer=mine)
 
 
+@dataclass
 class Lookups:
     """Everything a list of checkouts shows about the other people in them, read in one go: each kind of
     data is one database trip, and the trips run at the same time, however many checkouts there are."""
 
-    def __init__(self, names, contacts, books, due):
-        self.names: dict[str, str] = names
-        self.contacts: dict = contacts
-        self.books: dict[str, dict] = books
-        self.due: dict[str, datetime] = due
+    names: dict[str, str] = field(default_factory=dict)
+    contacts: dict[str, ContactDetailsResponse] = field(default_factory=dict)
+    books: dict[str, dict] = field(default_factory=dict)
+    due: dict[str, datetime] = field(default_factory=dict)
 
     @classmethod
     async def load(
         cls, database: AsyncDatabase, checkouts: list[dict], others: list[str], *, books: bool = False
     ) -> "Lookups":
+        if not checkouts:
+            # An empty list shows nobody, so there's nothing to look up.
+            return cls()
         revealed = list(
             {other for checkout, other in zip(checkouts, others, strict=True) if reveals(checkout)}
         )
@@ -83,10 +92,10 @@ class Lookups:
         names, contacts, shelf, due = await asyncio.gather(
             full_names_of(database, list(set(others))),
             contact_details_of_many(database, revealed) if revealed else nothing(),
-            shelf_books_of(database, list(set(others))) if books and others else nothing(),
+            shelf_books_of(database, list(set(others))) if books else nothing(),
             service.question_due_times(database, checkouts),
         )
-        return cls(names, contacts, shelf, due)
+        return cls(names=names, contacts=contacts, books=shelf, due=due)
 
     def contact(self, checkout: dict, other_id: str) -> Contact | None:
         details = self.contacts.get(other_id) if reveals(checkout) else None

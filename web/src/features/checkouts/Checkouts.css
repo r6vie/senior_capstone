@@ -21,9 +21,6 @@
   align-items: center;
   gap: var(--s-3);
 }
-.checkout-skeleton {
-  height: 160px;
-}
 
 /* Checking out a book. */
 .checkout-book-title {
