@@ -214,11 +214,16 @@ def winter():
 
     def snow_y(x):
         return float(np.interp(x, [q[0] for q in snow_top], [q[1] for q in snow_top]))
-    # the snow carried by a few big overlapping pale glazes, deepening to a cool anchor at the bottom
-    for pts, cols, d in [([(-20, 252), (120, 248), (260, 262), (260, 290), (90, 286), (-20, 276)], [VIOLET, MAUVE], 0.4),
-                         ([(40, 280), (260, 296), (260, 330), (120, 322), (20, 306)], [CERUL, VIOLET], 0.45),
-                         ([(-20, 306), (140, 316), (260, 340), (260, 360), (-20, 360)], [VIOLET, ULTRA, CERUL], 0.6)]:
-        p.loose(p.rough(p.poly(pts), 3.0, 16, fine=0.6) * snow, cols, d, n=3, rough=1.2, patch=0.5, ground=0.75)
+    # the snow: a soft cool glaze deepening toward us with no edge at all, and two long sweeping drift shadows that
+    # swell in the middle and lift to nothing at both ends, crisp on top, melting below
+    p.wash(snow * ramp_y(256, 344, 0.0, 1.0), VIOLET, 0.55, rim=0, flow=0.5, blotch=0.05)
+    p.wash(snow * ramp_y(290, 344, 0.0, 1.0), CERUL, 0.4, rim=0, flow=0.5, blotch=0.05)
+    for pts, w, col, d in [([(50, 274), (96, 260), (150, 258), (200, 268), (240, 286)], 8, VIOLET, 0.45),
+                           ([(-30, 322), (30, 304), (110, 298), (190, 310), (270, 334)], 14, CERUL, 0.55)]:
+        sw = p.rough(p.stroke(pts, w), 1.2, 16, fine=0.3)
+        soft = np.clip(sw * (Yw < np.interp(Xw, [q[0] for q in pts], [q[1] for q in pts])) +
+                       blur(sw, 2.5 * S) * 1.4 * (Yw >= np.interp(Xw, [q[0] for q in pts], [q[1] for q in pts])), 0, 1)
+        p.wash(soft * snow, col, d, rim=0.9, flow=0.5, blotch=0.06)
     # the stand: four firs of stepped flat glazes, three tiers each, the shaded right half a second glaze
     for x, h, w, col in [(30, 64, 14, CYPRESS), (50, 44, 10, TEAL), (66, 30, 7, TEAL)]:
         base = snow_y(x) + 3

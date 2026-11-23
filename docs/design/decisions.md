@@ -382,6 +382,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   ("First Snow", Hannah Lindqvist: a mauve dusk with a low pale sun, firs as loose glazes, the snow carried by big
   pale violet and blue patches; plum title at 5.6:1). Two Josef-eye critic rounds; the second round's fixes are
   applied and not re-reviewed.
+  Then (Josef: "not a fan of the color rectangles on the snow"): the snow's patches are gone. The snow now takes one
+  soft cool glaze that deepens toward us with no edge at all, and two long arched drift shadows that swell in the
+  middle and lift to nothing at both ends, crisp along the top and melting below.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
