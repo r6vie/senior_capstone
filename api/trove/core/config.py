@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     # Sign-up needs a case.edu code or an invite (docs/trove.md §9.2). Turn off only for local work.
     verification_required: bool = True
 
+    # How many proxies sit in front of the API and add their view of the caller to X-Forwarded-For (a host's
+    # load balancer is 1). 0 means none, and the header is ignored. Attempt limits are per address, so
+    # behind a proxy this must be set or every visitor looks like the same one (docs/deploy.md).
+    trusted_proxy_hops: int = 0
+
     frontend_url: str = "http://127.0.0.1:5173"
     api_url: str = "http://127.0.0.1:8000"
 

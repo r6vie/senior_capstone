@@ -1,0 +1,45 @@
+# A Render Blueprint: one free web service that serves the website and the API (docs/deploy.md).
+# Values marked `sync: false` are secrets or per-person settings. Render asks for them in its dashboard;
+# nothing secret is in this file.
+services:
+  - type: web
+    name: trove
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      # A database of its own, never a teammate's trove_dev_* one.
+      - key: MONGODB_DATABASE
+        value: trove_prod
+      - key: MONGODB_URI
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Only a safety net here: the ledger is a file, and this host's disk is wiped on every restart.
+      # The real cap is the spend limit in the Anthropic console.
+      - key: AI_BUDGET_USD
+        sync: false
+      # Email. Without SMTP_HOST nobody receives a verification code.
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: EMAIL_LINK_SECRET
+        generateValue: true
+      # The service's own address, such as https://trove.onrender.com, and the same with /api on the end.
+      - key: FRONTEND_URL
+        sync: false
+      - key: API_URL
+        sync: false
+      # Render's load balancer is one proxy in front of the app (see docs/deploy.md, "Check this once live").
+      - key: TRUSTED_PROXY_HOPS
+        value: "1"

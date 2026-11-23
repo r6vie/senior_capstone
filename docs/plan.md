@@ -210,6 +210,14 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 ### Wave 4: demo readiness
 
+**G1 · Get the app live** · Daniel · `doing`
+- One free Render service serves the website and the API (`api/trove/serve.py`, `Dockerfile`, `render.yaml`).
+  Steps, and what each person must supply (Atlas access, an Anthropic spend cap, SMTP, a Render account):
+  [docs/deploy.md](deploy.md).
+- Done when: the service is up at its free address, a case.edu sign-up receives a real code by email, and
+  the attempt-limit check in deploy.md passes.
+- A real domain (a free `.me` from the GitHub Student Developer Pack) comes after, and is only a DNS change.
+
 **Q1 · End-to-end pass** · everyone
 - Run the whole loop with two real accounts.
 - Fix what breaks, in the owner's feature.
