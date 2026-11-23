@@ -406,6 +406,17 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
   page.
 - **Contact line** (2026-11-22, Ellie, `ContactDetails.tsx`). The reveal as one wrapping line: a small display-caps
   "Reach <name>" in `--ink-2`, then the email, LinkedIn profile and phone as links. Used on Checkouts and Past meets.
+- **Date-due slip** (2026-11-22, Ellie, `web/src/features/checkouts/Slips.tsx`). Task: see a checkout's one date at
+  a glance. A small white card with a 2px ink line, tilted 1.5°: a display-caps label ("Answer by", "Answer due",
+  "Meeting") over one printed rule, then the date in display caps ("FRI, NOV 27", or "THU, DEC 3 · 3:00 PM" with
+  "Add to calendar" beside it). A plain sentence under it says what happens. Never red.
+- **Met stamp** (2026-11-22, Ellie, `Slips.tsx`). Task: mark the moment two people met. An ink rubber stamp, a 4px
+  double rule at −8°, "MET" and the day in display caps, on white. On "Yes, we met" it lands on the card with one
+  120ms press (motion that answers the click; none with reduced motion) and stays a moment before the card moves to
+  Earlier. On Past meets it sits at the card's lower right, below the text on a phone. Ink, never red.
+- **The Librarian's empty states** (2026-11-22, Ellie). An empty Checkouts or Past meets page, and an empty "Waiting
+  on you", says what will appear in one Newsreader italic line in `--ink-2`, with the Librarian in the third person
+  ("the Librarian sets it out here"), then one next step.
 
 ### Folio: the shelf front page look (2026-11-19, design session; screens: canvas page "Elevate", board `ElevateK3` "Kit 3 · Folio, for build")
 
