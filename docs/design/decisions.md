@@ -385,6 +385,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   Then (Josef: "not a fan of the color rectangles on the snow"): the snow's patches are gone. The snow now takes one
   soft cool glaze that deepens toward us with no edge at all, and two long arched drift shadows that swell in the
   middle and lift to nothing at both ends, crisp along the top and melting below.
+  Then (Josef: "now they're too jagged, I want some more gentle splotches"): the drift strokes are gone. Over the
+  soft glaze, seven rounded splotches of lavender, mauve and blue are dropped in wet, soft-edged with no pooled rim,
+  overlapping and of different sizes; the lone fir's shadow is a soft splotch too.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

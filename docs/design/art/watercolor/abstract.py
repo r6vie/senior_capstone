@@ -214,16 +214,16 @@ def winter():
 
     def snow_y(x):
         return float(np.interp(x, [q[0] for q in snow_top], [q[1] for q in snow_top]))
-    # the snow: a soft cool glaze deepening toward us with no edge at all, and two long sweeping drift shadows that
-    # swell in the middle and lift to nothing at both ends, crisp on top, melting below
-    p.wash(snow * ramp_y(256, 344, 0.0, 1.0), VIOLET, 0.55, rim=0, flow=0.5, blotch=0.05)
-    p.wash(snow * ramp_y(290, 344, 0.0, 1.0), CERUL, 0.4, rim=0, flow=0.5, blotch=0.05)
-    for pts, w, col, d in [([(50, 274), (96, 260), (150, 258), (200, 268), (240, 286)], 8, VIOLET, 0.45),
-                           ([(-30, 322), (30, 304), (110, 298), (190, 310), (270, 334)], 14, CERUL, 0.55)]:
-        sw = p.rough(p.stroke(pts, w), 1.2, 16, fine=0.3)
-        soft = np.clip(sw * (Yw < np.interp(Xw, [q[0] for q in pts], [q[1] for q in pts])) +
-                       blur(sw, 2.5 * S) * 1.4 * (Yw >= np.interp(Xw, [q[0] for q in pts], [q[1] for q in pts])), 0, 1)
-        p.wash(soft * snow, col, d, rim=0.9, flow=0.5, blotch=0.06)
+    # the snow: a soft cool glaze deepening toward us, and gentle splotches dropped in wet: rounded, soft-edged,
+    # overlapping, different sizes, no hard edge or straight side anywhere
+    p.wash(snow * ramp_y(256, 344, 0.0, 1.0), VIOLET, 0.45, rim=0, flow=0.5, blotch=0.05)
+    p.wash(snow * ramp_y(296, 344, 0.0, 1.0), CERUL, 0.3, rim=0, flow=0.5, blotch=0.05)
+    for cx, cy, rx, ry, col, d in [(170, 268, 34, 9, VIOLET, 0.4), (64, 280, 40, 11, MAUVE, 0.35),
+                                   (200, 300, 44, 13, CERUL, 0.4), (110, 310, 50, 14, VIOLET, 0.4),
+                                   (20, 326, 42, 15, CERUL, 0.45), (168, 334, 56, 16, VIOLET, 0.45),
+                                   (232, 276, 26, 8, MAUVE, 0.3)]:
+        sp = p.soften(p.rough(p.ellipse(cx, cy, rx, ry), ry * 0.4, rx * 0.4, fine=0.0), ry * 0.45)
+        p.wash(sp * snow, col, d, rim=0, flow=0.5, blotch=0.08)
     # the stand: four firs of stepped flat glazes, three tiers each, the shaded right half a second glaze
     for x, h, w, col in [(30, 64, 14, CYPRESS), (50, 44, 10, TEAL), (66, 30, 7, TEAL)]:
         base = snow_y(x) + 3
@@ -242,8 +242,7 @@ def winter():
                                         (lx - lw * ww, lb - lh + lh * t1)]))
     lone = p.rough(lone, 0.6, 3, fine=0.35)
     p.loose(lone, [CYPRESS, TEAL, PAYNE], 1.2, n=3, rough=0.4, patch=0.55, ground=0.8)
-    p.wash(p.rough(p.stroke([(lx, lb + 1), (lx + 24, lb + 6), (lx + 50, lb + 10)], 4), 0.8, 8) * snow, VIOLET, 0.8,
-           rim=1.4)
+    p.wash(p.soften(p.ellipse(lx + 18, lb + 4, 22, 3.5), 2.0) * snow, VIOLET, 0.7, rim=0, flow=0.4)   # its shadow
     p.finish()
     return p
 
