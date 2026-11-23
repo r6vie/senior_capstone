@@ -42,6 +42,16 @@ def book(book_id: str, author_id: str, *, status: str = "on_shelf", title: str |
     }
 
 
+def extracted(*profiles: tuple[str, list[dict]]) -> str:
+    return json.dumps(
+        {"profiles": [{"book_id": book_id, "signals": signals} for book_id, signals in profiles]}
+    )
+
+
+def signal(kind: str, label: str, evidence: str, *broader: str) -> dict:
+    return {"kind": kind, "label": label, "broader": list(broader), "evidence": evidence}
+
+
 async def test_recommendation_requires_sign_in(client):
     assert (await client.get("/discovery/recommendation")).status_code == 401
     assert (await client.get("/discovery/search", params={"q": "career"})).status_code == 401
@@ -122,11 +132,12 @@ async def test_an_off_shelf_book_can_shape_its_owners_recommendation(client, dat
     )
     fake_claude.responses.append(
         text_message(
-            json.dumps(
-                {
-                    "book_id": "recommended",
-                    "reason": "You both turned research experience into work centered on other people.",
-                }
+            extracted(
+                ("mine", [signal("experience", "changing direction", "changing direction")]),
+                (
+                    "recommended",
+                    [signal("experience", "changing direction", "changing direction")],
+                ),
             )
         )
     )
@@ -142,7 +153,7 @@ async def test_an_off_shelf_book_can_shape_its_owners_recommendation(client, dat
             "cover_style": "cover-1",
             "blurb": "A public account of changing direction.",
         },
-        "reason": "You both turned research experience into work centered on other people.",
+        "reason": "You and Author One both write about changing direction, giving you a concrete place to start.",
     }
     sent = fake_claude.requests[0]["messages"][0]["content"]
     assert "Leaving the laboratory" in sent
@@ -155,24 +166,32 @@ async def test_the_pick_is_cached_until_a_book_changes(client, database, fake_cl
     account, headers = await sign_in(client)
     await database.books.insert_many([book("mine", account["id"]), book("candidate", "author-one")])
     fake_claude.responses.append(
-        text_message(json.dumps({"book_id": "candidate", "reason": "  You both rebuilt a path.  "}))
+        text_message(
+            extracted(
+                ("mine", [signal("experience", "changing direction", "changing direction")]),
+                ("candidate", [signal("experience", "changing direction", "changing direction")]),
+            )
+        )
     )
 
     first = await client.get("/discovery/recommendation", headers=headers)
     second = await client.get("/discovery/recommendation", headers=headers)
     assert first.json() == second.json()
-    assert first.json()["reason"] == "You both rebuilt a path."
+    assert first.json()["reason"] == (
+        "You and Author One both write about changing direction, giving you a concrete place to start."
+    )
     assert len(fake_claude.requests) == 1
     cache = await database.recommendations.find_one({"user_id": account["id"]})
     assert timedelta(days=6, hours=23) < cache["expires_at"].replace(tzinfo=UTC) - datetime.now(UTC)
 
     await database.books.update_one({"_id": "mine"}, {"$set": {"title": "A changed story"}})
     fake_claude.responses.append(
-        text_message(json.dumps({"book_id": "candidate", "reason": "Your changed stories connect."}))
+        text_message(extracted(("mine", [signal("experience", "changing direction", "changing direction")])))
     )
     changed = await client.get("/discovery/recommendation", headers=headers)
-    assert changed.json()["reason"] == "Your changed stories connect."
+    assert changed.json()["book"]["id"] == "candidate"
     assert len(fake_claude.requests) == 2
+    assert "candidate" not in fake_claude.requests[1]["messages"][0]["content"]
 
     await database.books.update_one({"_id": "candidate"}, {"$set": {"status": "off_shelf"}})
     assert (await client.get("/discovery/recommendation", headers=headers)).json() == {
@@ -186,7 +205,9 @@ async def test_a_stale_or_invalid_pick_is_never_returned(client, database, fake_
     account, headers = await sign_in(client)
     await database.books.insert_many([book("mine", account["id"]), book("candidate", "author-one")])
     fake_claude.responses.append(
-        text_message(json.dumps({"book_id": "hidden", "reason": "This id was not offered."}))
+        text_message(
+            extracted(("hidden", [signal("experience", "changing direction", "changing direction")]))
+        )
     )
     assert (await client.get("/discovery/recommendation", headers=headers)).json() == {
         "state": "unavailable",
@@ -210,3 +231,94 @@ async def test_ai_not_set_up_leaves_the_shelf_available(client, database):
         "book": None,
         "reason": None,
     }
+
+
+async def test_matching_is_deterministic_and_prefers_an_exact_interest(client, database, fake_claude):
+    account, headers = await sign_in(client)
+    own = book("mine", account["id"], title="What tennis taught me")
+    exact = book("exact", "exact-author", title="Tennis after work")
+    related = book("related", "related-author", title="A football team from scratch")
+    await database.books.insert_many([own, related, exact])
+    fake_claude.responses.append(
+        text_message(
+            extracted(
+                ("mine", [signal("interest", "tennis", "tennis", "racket sports", "sports")]),
+                ("related", [signal("interest", "football", "football", "team sports", "sports")]),
+                ("exact", [signal("interest", "tennis", "Tennis", "racket sports", "sports")]),
+            )
+        )
+    )
+
+    response = await client.get("/discovery/recommendation", headers=headers)
+
+    assert response.json()["book"]["id"] == "exact"
+    assert response.json()["reason"] == (
+        "You and Exact Author both write about tennis, giving you a concrete place to start."
+    )
+    stored = await database.match_profiles.find_one({"_id": "mine"})
+    assert stored["profile"]["signals"][0]["broader"] == ["racket sports", "sports"]
+
+
+async def test_matching_connects_different_interests_through_a_broader_concept(client, database, fake_claude):
+    account, headers = await sign_in(client)
+    own = book("mine", account["id"], title="What tennis taught me")
+    candidate = book("candidate", "maya-chen", title="A football team from scratch")
+    await database.books.insert_many([own, candidate])
+    fake_claude.responses.append(
+        text_message(
+            extracted(
+                ("mine", [signal("interest", "tennis", "tennis", "racket sports", "sports")]),
+                (
+                    "candidate",
+                    [signal("interest", "football", "football", "team sports", "sports")],
+                ),
+            )
+        )
+    )
+
+    response = await client.get("/discovery/recommendation", headers=headers)
+
+    assert response.json()["reason"] == (
+        "Your book's tennis connects with Maya Chen's football through sports."
+    )
+
+
+async def test_matching_uses_complementary_goals_and_knowledge(client, database, fake_claude):
+    account, headers = await sign_in(client)
+    own = book("mine", account["id"], title="Learning to fund a first company")
+    candidate = book("candidate", "maya-chen", title="Raising a seed round")
+    await database.books.insert_many([own, candidate])
+    fake_claude.responses.append(
+        text_message(
+            extracted(
+                ("mine", [signal("goal", "startup fundraising", "fund a first company")]),
+                ("candidate", [signal("knowledge", "startup fundraising", "Raising a seed round")]),
+            )
+        )
+    )
+
+    response = await client.get("/discovery/recommendation", headers=headers)
+
+    assert response.json()["book"]["id"] == "candidate"
+    assert response.json()["reason"] == (
+        "Maya Chen's experience with startup fundraising complements your goal around startup fundraising."
+    )
+
+
+async def test_an_extracted_signal_must_be_grounded_in_public_book_text(client, database, fake_claude):
+    account, headers = await sign_in(client)
+    await database.books.insert_many([book("mine", account["id"]), book("candidate", "author-one")])
+    fake_claude.responses.append(
+        text_message(
+            extracted(
+                ("mine", [signal("interest", "secret hobby", "Private grounding words")]),
+                ("candidate", [signal("interest", "secret hobby", "Private grounding words")]),
+            )
+        )
+    )
+
+    response = await client.get("/discovery/recommendation", headers=headers)
+
+    assert response.json() == {"state": "unavailable", "book": None, "reason": None}
+    stored = await database.match_profiles.find_one({"_id": "mine"})
+    assert stored["profile"]["signals"] == []
