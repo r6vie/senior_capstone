@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     ai_mode: Literal["real", "scripted"] = "real"
     ai_scripted_delay_seconds: float = 1.5
 
+    # Brevo's web API, for hosts that block outbound SMTP (Render's free tier does). When set, mail goes
+    # through it over HTTPS and the smtp_* settings are not used. An API key, not an SMTP key.
+    brevo_api_key: str = ""
+
     smtp_host: str = ""
     smtp_port: int = 587
     smtp_user: str = ""

@@ -24,7 +24,11 @@ services:
       # The real cap is the spend limit in the Anthropic console.
       - key: AI_BUDGET_USD
         sync: false
-      # Email. Without SMTP_HOST nobody receives a verification code.
+      # Email. Render's free tier blocks SMTP ports, so mail goes through Brevo's web API (HTTPS). Without
+      # BREVO_API_KEY (or SMTP_HOST) nobody receives a verification code. EMAIL_FROM must be a sender
+      # verified in Brevo.
+      - key: BREVO_API_KEY
+        sync: false
       - key: SMTP_HOST
         sync: false
       # Render's free tier blocks outbound mail on ports 25, 465 and 587, so mail goes out on 2525, which

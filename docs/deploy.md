@@ -51,10 +51,12 @@ Nobody should paste a secret into a chat, a PR or a file in the repository. Each
 
 **Free Render blocks the usual mail ports.** Outbound traffic on ports 25, 465 and 587 is blocked on its free
 tier ([Render's changelog](https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports)),
-so Gmail's SMTP (587) can't work from there at all. `render.yaml` uses port **2525**, which Brevo accepts. If a
-verification code never arrives, look in the service's Logs for a line like `Email to user ... failed:
-TimeoutError`: that means the mail port is blocked, and the next step is an email API over HTTPS (Brevo has
-one) instead of SMTP.
+so Gmail's SMTP (587) can't work from there at all. Trove therefore sends through **Brevo's web API** (HTTPS,
+never blocked) when `BREVO_API_KEY` is set, and uses the `SMTP_*` settings otherwise (for example on a host that
+doesn't block them). Make the key in Brevo under **SMTP & API → API Keys** (an API key, not the SMTP key) and
+put it in Render as `BREVO_API_KEY`. `EMAIL_FROM` must be a sender verified in Brevo. If a code never arrives,
+look in the Logs for `Email to user ... failed:`. Brevo's own reason follows it (for example `HTTPError 401: Key
+not found` means a wrong key).
 
 ## Steps
 
