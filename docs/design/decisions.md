@@ -412,6 +412,19 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   book screen at x 680, mesa, hills, lake, winter; the earlier covers without book screens in one row beneath.
   Then (Josef: the winter cabin "still floating over the edge, move it to the right"): it moved right onto the
   rise and sits at the lowest snow under its whole footprint, so no corner hangs over the slope.
+- **Four more abstract watercolour covers (Josef: "create 4 new gorgeous original covers").** In
+  `art/watercolor/abstract2.py`, each a feeling the set did not have, on a row under the paired books on "Covers:
+  Watercolor" (the earlier covers moved one row down): `WCCoverCity` ("After Hours", Marcus Bell: an indigo night
+  over a skyline of uneven towers with setbacks and one spire, warm windows lifted out in clusters, the tallest tower
+  catching the last glow, its lights broken in the river; cream title 5.0:1), `WCCoverBlossom` ("Second Spring", Aiko
+  Tanaka: a blush sky, one blossom tree leaning in from the right, its crown soft pink and mauve clouds of patches, a
+  pond with an uneven shore holding the pink; plum title 8.6:1), `WCCoverPrairie` ("Weather the Season", Caleb Hart:
+  a dark storm sky, one billowing storm mass on the right over a band of low gold light, a barn under a gambrel roof
+  and a windbreak, a pale track into golden fields; cream title 6.0:1), `WCCoverBeach` ("Off the Clock", Leilani
+  Cruz: a coral sunset, a large sinking sun crossed by a cloud bar, a gold path on the violet sea, warm sand cooling
+  toward us, one palm in a single curve with broad drooping fronds; brown title 5.9:1). Two Josef-eye critic rounds;
+  the second round's fixes are applied and not re-reviewed. Kept against the critic: the city's dark navy top, where
+  the title turns cream by itself.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

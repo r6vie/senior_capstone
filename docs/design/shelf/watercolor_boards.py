@@ -4,7 +4,7 @@ cover that is the same book scaled) with the label, title, name, ink and art swa
 edge (Josef, 2026-11-21), so the ink is chosen from the paint behind the title (art/watercolor/ink.py): cream on a
 dark top, the book's own dark ink on a light one.
 
-python3 watercolor_boards.py <root> lighthouse=<blob> autumn3=<blob> mesa=<blob> hills=<blob> lake=<blob> winter=<blob>
+python3 watercolor_boards.py <root> lighthouse=<blob> autumn3=<blob> mesa=<blob> hills=<blob> lake=<blob> winter=<blob> city=<blob> blossom=<blob> prairie=<blob> beach=<blob>
 -> <root>/project/WCCover{Lighthouse,Harbor,Autumn}2.dc.html (round 2, painted to the top). Round 1's boards
 (WCCover{Lighthouse,Harbor,Autumn}, white tops) stay on the canvas as Josef asked; their art is no longer rendered by
 covers.py, which now paints the round 2 skies."""
@@ -40,6 +40,15 @@ BOOKS = [
          title="Above the Tree Line", author="Ingrid Solberg", ink="#23415a"),
     dict(key="winter", file="WCCoverWinter", label="Watercolor, abstract · winter dusk with firs",
          title="First Snow", author="Hannah Lindqvist", ink="#3e2b45"),
+    # the abstract set, second four (art/watercolor/abstract2.py)
+    dict(key="city", file="WCCoverCity", label="Watercolor, abstract · city at night on the river",
+         title="After Hours", author="Marcus Bell", ink="#2c2d52"),
+    dict(key="blossom", file="WCCoverBlossom", label="Watercolor, abstract · blossom tree by a pond",
+         title="Second Spring", author="Aiko Tanaka", ink="#5a3048"),
+    dict(key="prairie", file="WCCoverPrairie", label="Watercolor, abstract · prairie storm",
+         title="Weather the Season", author="Caleb Hart", ink="#33364a"),
+    dict(key="beach", file="WCCoverBeach", label="Watercolor, abstract · beach at sunset",
+         title="Off the Clock", author="Leilani Cruz", ink="#5a2f2a"),
 ]
 
 for b in BOOKS:

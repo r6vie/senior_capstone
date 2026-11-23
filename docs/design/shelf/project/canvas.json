@@ -890,7 +890,7 @@
     },
     "WCCoverLighthouse.dc.html": {
       "x": 0,
-      "y": 4800,
+      "y": 6000,
       "w": 600,
       "h": 1090,
       "title": "Cover · Lighthouse on the headland",
@@ -898,7 +898,7 @@
     },
     "WCCoverHarbor.dc.html": {
       "x": 680,
-      "y": 4800,
+      "y": 6000,
       "w": 600,
       "h": 1090,
       "title": "Cover · Hillside harbor town",
@@ -906,7 +906,7 @@
     },
     "WCCoverLighthouse2.dc.html": {
       "x": 1360,
-      "y": 4800,
+      "y": 6000,
       "w": 600,
       "h": 1090,
       "title": "Cover · Lighthouse at dusk (painted to the top)",
@@ -918,7 +918,7 @@
       "title": "Cover · Autumn river, bridge and trees reworked",
       "w": 600,
       "x": 2040,
-      "y": 4800
+      "y": 6000
     },
     "WCCoverMesa.dc.html": {
       "h": 1090,
@@ -991,6 +991,38 @@
       "w": 1440,
       "h": 1090,
       "title": "Book screen · winter dusk",
+      "page": "watercolor"
+    },
+    "WCCoverCity.dc.html": {
+      "x": 0,
+      "y": 4800,
+      "w": 600,
+      "h": 1090,
+      "title": "Cover · City at night (abstract)",
+      "page": "watercolor"
+    },
+    "WCCoverBlossom.dc.html": {
+      "x": 680,
+      "y": 4800,
+      "w": 600,
+      "h": 1090,
+      "title": "Cover · Blossom tree by a pond (abstract)",
+      "page": "watercolor"
+    },
+    "WCCoverPrairie.dc.html": {
+      "x": 1360,
+      "y": 4800,
+      "w": 600,
+      "h": 1090,
+      "title": "Cover · Prairie storm (abstract)",
+      "page": "watercolor"
+    },
+    "WCCoverBeach.dc.html": {
+      "x": 2040,
+      "y": 4800,
+      "w": 600,
+      "h": 1090,
+      "title": "Cover · Beach at sunset (abstract)",
       "page": "watercolor"
     }
   },
@@ -1282,7 +1314,11 @@
     "WCBookMesa.dc.html",
     "WCBookHills.dc.html",
     "WCBookLake.dc.html",
-    "WCBookWinter.dc.html"
+    "WCBookWinter.dc.html",
+    "WCCoverCity.dc.html",
+    "WCCoverBlossom.dc.html",
+    "WCCoverPrairie.dc.html",
+    "WCCoverBeach.dc.html"
   ],
   "pages": [
     {
