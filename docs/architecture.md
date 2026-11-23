@@ -60,6 +60,10 @@ Each new feature adds its rows here in the PR that creates its collections.
 - `src/app/App.tsx` is the route table. Pages live in `src/features/<feature>/`.
 - `src/api/client.ts` is an `openapi-fetch` client typed by the generated `src/api/schema.ts`. A
   middleware adds the bearer token from `sessionStorage`.
+- **Every page** names the browser tab with `usePageTitle("…")` (`src/ui/usePageTitle.ts`): "<title> · Trove".
+  After a page change, focus moves to the new page's `h1` unless the page placed it itself
+  (`src/ui/usePageFocus.ts`). A page that throws shows a short error in place of the page, with the
+  top bar still working (`src/ui/ErrorBoundary.tsx`); `main.tsx` has a last one around the whole app.
 - `src/features/auth/AuthProvider.tsx` holds the signed-in member. `RequireAuth` guards pages that
   need a session; with a session on the device, the page starts fetching while the account is checked.
 - **Loading:** pages appear whole. A page renders `<PageLoading />` (`src/ui/Loading.tsx`) while it
