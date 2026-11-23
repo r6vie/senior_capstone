@@ -23,13 +23,14 @@ function Where() {
   );
 }
 
-function renderPage(mode: "sign-in" | "sign-up", url = "/") {
+function renderPage(mode: "sign-in" | "sign-up", url: string | { pathname: string; state: unknown } = "/") {
   render(
     <MemoryRouter initialEntries={[url]}>
       <Routes>
         <Route path="*" element={<AuthPage mode={mode} />} />
         <Route path="/verify" element={<Where />} />
         <Route path="/done" element={<Where />} />
+        <Route path="/interview" element={<Where />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -76,6 +77,20 @@ describe("AuthPage", () => {
       "a long test passphrase",
       undefined,
     );
+  });
+
+  it("says the session ended and goes back to the page the member was on", async () => {
+    auth.signIn.mockResolvedValue(undefined);
+    renderPage("sign-in", {
+      pathname: "/sign-in",
+      state: { from: { pathname: "/interview", search: "", hash: "" }, sessionEnded: true },
+    });
+    expect(screen.getByText("Your session ended. Sign in to pick up where you left off.")).toBeTruthy();
+    expect(screen.queryByText("Your book is where you left it.")).toBeNull();
+    fireEvent.change(screen.getByLabelText(/^Email/), { target: { value: "sam@case.edu" } });
+    fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: "a long test passphrase" } });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    expect(await screen.findByText("at /interview")).toBeTruthy();
   });
 
   it("sends someone who signs in before confirming to the code page", async () => {

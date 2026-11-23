@@ -6,6 +6,7 @@ from trove.books.models import BookCard
 
 RecommendationState = Literal[
     "create_book",
+    "continue_interview",
     "finish_book",
     "recommendation",
     "empty_shelf",

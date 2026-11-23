@@ -56,6 +56,15 @@ function promotionFor(recommendation: Recommendation | null, failed: boolean, bu
       destination: null,
     };
   }
+  if (recommendation?.state === "continue_interview") {
+    return {
+      title: "Your book is underway",
+      reason:
+        "Continue your interview so the Librarian can introduce you to someone whose experience speaks to yours.",
+      action: "Continue your interview",
+      destination: "/interview",
+    };
+  }
   if (recommendation?.state === "finish_book") {
     return {
       title: "Your story is almost ready",
@@ -280,14 +289,22 @@ export function ShelfPage() {
             ) : (
               <BookObject
                 id="your-story-belongs-here"
-                book={{ title: "Your story belongs here", authorName: "A book by you" }}
+                book={{ title: promotion.title, authorName: "A book by you" }}
                 size="lg"
               />
             )}
           </div>
         </section>
 
-        <FrontDesk />
+        <FrontDesk
+          underway={
+            librarian.recommendation
+              ? librarian.recommendation.state === "continue_interview"
+              : librarian.error || !librarian.busy
+                ? false
+                : undefined
+          }
+        />
 
         <div className="shelves">
           {categoryShelves.map((category) => (

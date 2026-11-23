@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { type Location, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
@@ -14,6 +14,9 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
   usePageTitle(mode === "sign-up" ? "Join" : "Sign in");
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  // Sent here from a page (RequireAuth): go back to it after signing in.
+  const arrival = useLocation().state as { from?: Location; sessionEnded?: boolean } | null;
+  const back = arrival?.from ? `${arrival.from.pathname}${arrival.from.search}${arrival.from.hash}` : "/";
   const [params] = useSearchParams();
   const invite = params.get("invite");
   const [firstName, setFirstName] = useState("");
@@ -46,7 +49,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
       let next = "signed-in";
       if (signingUp) next = await signUp(firstName, lastName, email, password, invite ?? undefined);
       else await signIn(email, password);
-      navigate(next === "verify" ? `/verify?email=${encodeURIComponent(email)}` : "/");
+      navigate(next === "verify" ? `/verify?email=${encodeURIComponent(email)}` : signingUp ? "/" : back);
     } catch (caught) {
       if (caught instanceof NeedsVerification) navigate(`/verify?email=${encodeURIComponent(email)}`);
       else setError(caught instanceof Error ? caught.message : "Something went wrong.");
@@ -64,7 +67,9 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
       voice={
         signingUp
           ? "You are the author of the book you haven't written yet."
-          : "Your book is where you left it."
+          : arrival?.sessionEnded
+            ? "Your session ended. Sign in to pick up where you left off."
+            : "Your book is where you left it."
       }
       across={
         signingUp ? { to: "/sign-in", label: "Sign in" } : { to: "/sign-up", label: "Create an account" }

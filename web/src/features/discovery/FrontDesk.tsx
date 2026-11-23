@@ -46,8 +46,12 @@ function useDesk(): Desk {
   return desk;
 }
 
-export function FrontDesk() {
-  const { waiting, book } = useDesk();
+/** `underway`: the member is mid-interview with no book yet (the shelf's recommendation says so); undefined
+ *  until that is known, so the card never says "Not written yet" and then changes its mind. */
+export function FrontDesk({ underway }: { underway?: boolean }) {
+  const desk = useDesk();
+  const { waiting } = desk;
+  const book = desk.book === null && underway === undefined ? undefined : desk.book;
   if (!waiting && book === undefined) return null;
   return (
     <div className="front-desk">
@@ -75,11 +79,17 @@ export function FrontDesk() {
           )}
           <p>
             <span className="desk-eyebrow">Your book</span>
-            <b>{book ? book.title : "Not written yet"}</b>
+            <b>{book ? book.title : underway ? "In progress" : "Not written yet"}</b>
           </p>
-          <Link to="/my-book" className="button button-secondary">
-            Open
-          </Link>
+          {!book && underway ? (
+            <Link to="/interview" className="button button-secondary">
+              Continue
+            </Link>
+          ) : (
+            <Link to="/my-book" className="button button-secondary">
+              Open
+            </Link>
+          )}
         </section>
       )}
     </div>
