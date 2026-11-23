@@ -435,6 +435,17 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   Then (Josef: "a little more mass to the sides of the cherry blossom", "the palm trees still don't look great"):
   the crown has four more patches at its sides; each palm leaf is now a long crescent, broad in the middle and
   drooping to a fine tip, its leaflets hanging below, the lower leaves in shade, on a thicker bowed trunk.
+  Then (Josef: the palms "still looking a little weird", "nice and abstract and pretty", "both of them on the right
+  side"): both palms stand on the right, the tall one bowing left over the beach and a smaller one leaning right
+  behind it; each leaf is one tapered brushstroke that rises, arches and droops to a point, the crown one dark wet
+  silhouette with lighter green in the upper leaves.
+- **Autumn simplified into the abstract language (Josef: "simplify the autumn cover so that it uses the abstract
+  painting methods ... a little better and isn't so overly detailed ... I do like the color scheme ... the river is
+  very defined as opposed to the nice abstract blotches ... I do like the trees").** `WCCoverAutumn3` keeps its
+  colours and every tree; the river is an uneven wet shape filled with loose gold, violet and blue-grey patches; the
+  banks are one warm wash with a few large patches; the bridge is a few washes with a shaded right side, without the
+  stone courses, single stones, coping, voussoirs or ripple lines; its reflection and the trees' reflections are soft
+  blotches.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

@@ -264,24 +264,34 @@ def beach():
             right.append((cx - nx * w, cy - ny * w))                         # the leaflets hang below
         return p.poly(left + right[::-1])
 
-    for pts, w0, s in [([(220, 356), (230, 318), (226, 280), (210, 242), (186, 210), (164, 194)], 10.0, 1.2),
-                       ([(24, 356), (20, 322), (24, 292), (36, 266), (54, 246)], 7.0, 0.85)]:
+    # both palms on the right: the tall one bowing left over the beach, a smaller one leaning right behind it
+    for pts, w0, s, seed in [([(232, 356), (236, 320), (230, 282), (214, 244), (192, 212), (174, 198)], 9.0, 1.15, 0),
+                             ([(184, 356), (180, 330), (184, 302), (194, 276), (206, 254)], 6.0, 0.8, 1)]:
         wood = np.zeros((H, W), np.float32)
         for i in range(len(pts) - 1):
             ww = w0 * (1 - 0.6 * i / (len(pts) - 1))
             wood = np.maximum(wood, p.stroke([pts[i], pts[i + 1]], ww, taper=False))
         wood = p.rough(wood, 0.5, 6, fine=0.3)
         p.loose(wood, [UMBER, SIENNA, UMBER], 1.1, n=3, rough=0.3, patch=0.5, ground=0.8)
-        p.wash(wood * ramp_x(pts[-1][0] - 6, pts[0][0] + 8, 0.2, 1.0), PAYNE, 0.6, rim=0)
+        p.wash(wood * ramp_x(pts[-1][0] - 6, pts[0][0] + 8, 0.2, 1.0), PAYNE, 0.5, rim=0)
         bx, by = pts[0]
         p.wash(p.soften(p.ellipse(bx - 34 * s, by - 6, 40 * s, 4), 1.5) * sand, SIENNA, 0.6, rim=0)
         tx, ty = pts[-1]
+        # the crown: each leaf one tapered brushstroke that rises out of the top, arches and droops to a point;
+        # the leaves are one dark wet silhouette with a little lighter green dropped into the upper ones
+        lr = np.random.default_rng(300 + seed)
         fr = np.zeros((H, W), np.float32)
-        for ang, ln in [(-170, 50), (-140, 42), (-108, 30), (-72, 30), (-38, 42), (-8, 50), (160, 36), (22, 36)]:
-            fr = np.maximum(fr, frond(tx, ty, ang, ln * s, 6.5 * s))
-        fr = p.rough(fr, 0.6, 2.5, fine=0.8)
-        p.loose(fr, [CYPRESS, OLIVE, CYPRESS, PAYNE], 1.15, n=6, rough=0.5, patch=0.3, ground=0.8)
-        p.wash(fr * ramp_y(ty - 20, ty + 40, 0.0, 1.0), PAYNE, 0.5, rim=0)          # the lower leaves in shade
+        for ang, ln in [(-172, 44), (-146, 38), (-118, 26), (-90, 16), (-62, 26), (-34, 38), (-8, 44),
+                        (160, 34), (20, 34)]:
+            a = math.radians(ang + lr.uniform(-5, 5))
+            l = ln * s * lr.uniform(0.9, 1.1)
+            sx, sy = math.cos(a), math.sin(a)
+            line = [(tx + sx * l * t, ty + sy * l * t * 0.85 + l * 0.6 * t ** 2) for t in np.linspace(0, 1, 9)]
+            fr = np.maximum(fr, p.stroke(line, 5.2 * s, taper=True))
+        fr = p.rough(fr, 0.5, 2.5, fine=0.7)
+        p.wash(fr, CYPRESS, 1.2, rim=1.4, flow=0.5, blotch=0.08)
+        p.wash(fr * ramp_y(ty - 20, ty + 6, 1.0, 0.0), SAGE, 0.6, rim=0)
+        p.wash(fr * ramp_y(ty, ty + 40, 0.0, 1.0), PAYNE, 0.7, rim=0)
     p.finish()
     return p
 

@@ -491,28 +491,20 @@ def autumn():
     # 3 the river: it leaves the arch narrow and winds toward us, widening
     rl = [(101, 254), (96, 264), (104, 276), (116, 290), (110, 304), (84, 320), (46, 336), (6, 352)]
     rr = [(135, 254), (142, 264), (150, 276), (162, 290), (168, 304), (162, 320), (168, 336), (186, 352)]
-    rl, rr = spline(rl), spline(rr)              # smooth curving banks, no jagged corners
-    river = p.soften(p.rough(p.poly(rl + rr[::-1]), 0.35, 16, fine=0.0), 0.4)
-    p.wash(river, GOLD, 0.6, rim=0.3, flow=0.4, blotch=0.04)                       # it holds the sky
-    p.wash(river, SHADOW, 0.75, rim=0.2, flow=0.45, blotch=0.06, vary=ramp_y(262, 344, 0.15, 1.2))
-    p.wash(river, ULTRA, 0.3, rim=0, flow=0.4, vary=ramp_y(300, 344, 0.0, 1.0))
-    # 4 banks: raw sienna, warmer and deeper toward us; they overlap the water so no paper shows at the seam
-    lbank = p.rough(p.poly([(-20, 252), (104, 252)] + rl[1:] + [(-20, 352)]), 0.35, 16, fine=0.0)
-    rbank = p.rough(p.poly([(132, 252), (260, 250), (260, 352)] + rr[::-1][:-1]), 0.35, 16, fine=0.0)
-    lbank = np.clip(blur(lbank, 1.0 * S) * 2.2, 0, 1)
-    rbank = np.clip(blur(rbank, 1.0 * S) * 2.2, 0, 1)
+    rl, rr = spline(rl), spline(rr)
+    # the river: an uneven wet shape, filled with loose patches holding the sky's gold and the shade's violet
+    river = p.rough(p.poly(rl + rr[::-1]), 2.2, 10, fine=0.6)
+    p.loose(river, [GOLD, SHADOW, VIOLET, GOLD, SHADOW], 0.75, n=8, rough=0.9, patch=0.32, ground=0.6)
+    p.wash(river * ramp_y(290, 344, 0.0, 1.0), SHADOW, 0.55, rim=0, flow=0.5)          # cooler toward us
+    # 4 banks: big warm patches overlapping the water's edge, deeper toward us
+    lbank = p.rough(p.poly([(-20, 252), (104, 252)] + rl[1:] + [(-20, 352)]), 1.5, 12, fine=0.5)
+    rbank = p.rough(p.poly([(132, 252), (260, 250), (260, 352)] + rr[::-1][:-1]), 1.5, 12, fine=0.5)
+    lbank = np.clip(blur(lbank, 1.0 * S) * 2.2, 0, 1) * (1 - river * 0.6)
+    rbank = np.clip(blur(rbank, 1.0 * S) * 2.2, 0, 1) * (1 - river * 0.6)
     for bank in (lbank, rbank):
-        p.wash(bank, RAW, 0.9, rim=0.6, flow=0.5, blotch=0.08, vary=ramp_y(250, 344, 0.75, 1.25))
-        p.wash(bank * ramp_y(268, 344, 0.0, 1.0), SIENNA, 0.6, rim=0.2, flow=0.5, blotch=0.06)
-        p.wash(bank * p.soften(p.rough(p.poly([(-20, 258), (260, 256), (260, 276), (-20, 282)]), 3, 12), 6), OLIVE, 0.4, rim=0,
-               flow=0.6, blotch=0.1)
-        p.wash(bank * p.soften(p.rough(p.poly([(-20, 296), (90, 292), (60, 352), (-20, 352)]), 6, 14), 8), UMBER,
-               0.35, rim=0, flow=0.6)
-    # the bank's own shade at the water's edge, and its dark line reflected just below it
-    edge = np.clip(blur(river, 2.5 * S) * 1.6, 0, 1) * (1 - river) * np.maximum(lbank, rbank)
-    p.wash(edge, UMBER, 0.25, rim=0, flow=0.4, blotch=0.04)
-    ins = np.clip(blur(1 - river, 1.5 * S) * 1.6, 0, 1) * river
-    p.wash(ins, PAYNE, 0.55, rim=0, flow=0.4)                          # darker water under the banks
+        p.wash(bank, RAW, 0.8, rim=0.8, flow=0.5, blotch=0.08)
+        p.loose(bank, [GOLD, SIENNA, RAW, TERRA], 0.55, n=5, rough=2.0, patch=0.45, ground=0.0)
+        p.wash(bank * ramp_y(280, 344, 0.0, 1.0), SIENNA, 0.5, rim=0, flow=0.5, blotch=0.06)
     # 5 the fir behind the bridge's left end, the cool dark against the gold
     fir(p, 76, 252, 42, 8, rng)
     fir(p, 64, 252, 24, 5.5, rng)
@@ -521,62 +513,22 @@ def autumn():
     top = 227 + 15 * np.clip((Xw - bx) / 52, -1.0, 1.0) ** 2            # the humped parapet, ending at the piers
     body = ((Yw >= top) & (Yw <= 258) & (np.abs(Xw - bx) <= 52 + np.clip(Yw - 240, 0, 20) * 0.6)).astype(np.float32)
     hole = ((((Xw - bx) / br) ** 2 + ((Yw - sy) / (br * 0.98)) ** 2) < 1) & (Yw < sy + 1)
-    body = p.rough(np.clip(body - hole, 0, 1), 0.35, 3, fine=0.3)
-    p.lift(np.clip(blur(body, 0.5 * S) * 1.3, 0, 1), 0.92)
-    p.loose(body, [RAW, GOLD, RAW, SIENNA], 1.0, n=10, rough=0.15, patch=0.12, ground=0.9)
-    p.wash(body, SIENNA, 0.3, rim=0.8, flow=0.4, gran=0.5)
-    p.wash(body * ramp_x(bx - 10, bx + 54, 0.0, 1.0), UMBER, 0.55, rim=0, flow=0.4, gran=0.5)   # turning from the light
-    # stone courses and a few single stones, broken dry-brush so they read as masonry, not a grid
-    for yy in np.arange(234, 257, 3.4):
-        for seg in range(4):
-            xa = bx - 54 + seg * 27 + rng.uniform(0, 8)
-            p.wash(p.rough(p.stroke([(xa, yy + rng.uniform(-0.3, 0.3)), (xa + rng.uniform(10, 20), yy)], 0.45,
-                                    taper=False), 0.15, 2) * body, UMBER, 0.55, rim=0, dry=0.55)
-    for i in range(26):
-        sx, sy2 = rng.uniform(bx - 52, bx + 50), rng.uniform(232, 255)
-        st = p.rough(p.poly([(sx, sy2), (sx + 3.2, sy2), (sx + 3.2, sy2 + 2.4), (sx, sy2 + 2.4)]), 0.25, 1, fine=0.2)
-        p.wash(st * body, str(rng.choice([SIENNA, UMBER, RAW])), rng.uniform(0.35, 0.7), rim=1.0, blotch=0.02)
-    # the coping: a dark line under a lit lip, riding the hump
-    cop = p.rough(((Yw - top > 1.0) & (Yw - top < 2.6) & (np.abs(Xw - bx) <= 54)).astype(np.float32), 0.2, 3)
-    p.wash(cop, UMBER, 0.95, rim=0.3)
-    # the voussoirs: a ring of wedge stones around the arch, each its own mark
-    for a in np.linspace(math.pi * 1.04, math.pi * 1.96, 11):
-        r0, r1 = br + 0.4, br + 4.2
-        x0, y0 = bx + math.cos(a) * r0, sy + math.sin(a) * r0 * 0.98
-        x1, y1 = bx + math.cos(a) * r1, sy + math.sin(a) * r1 * 0.98
-        p.wash(p.rough(p.stroke([(x0, y0), (x1, y1)], 0.55, taper=False), 0.12, 1), UMBER, 0.9, rim=0, dry=0.25)
-    ring = ((((Xw - bx) / (br + 4.2)) ** 2 + ((Yw - sy) / ((br + 4.2) * 0.98)) ** 2) < 1).astype(np.float32) * body
-    p.wash(ring * (1 - ((((Xw - bx) / (br + 0.6)) ** 2 + ((Yw - sy) / (br * 0.98)) ** 2) < 1)), SIENNA, 0.35, rim=0.4)
-    # under the arch: the shaded vault, dark at the top, a glimpse of lit water and far bank through it
-    hole_m = np.clip(blur(hole.astype(np.float32), 0.6 * S) * 1.8, 0, 1)        # no paper rim at the arch
+    body = p.rough(np.clip(body - hole, 0, 1), 0.6, 4, fine=0.5)
+    p.lift(np.clip(blur(body, 0.5 * S) * 1.3, 0, 1), 0.9)
+    p.loose(body, [SIENNA, RAW, TERRA], 1.25, n=5, rough=0.6, patch=0.4, ground=0.9)
+    p.wash(body * ramp_x(bx - 6, bx + 54, 0.0, 1.0), UMBER, 0.6, rim=0, flow=0.4)     # turning from the light
+    # under the arch: one shaded glaze, darkest at the vault, lighter where the far water shows
+    hole_m = np.clip(blur(hole.astype(np.float32), 0.6 * S) * 1.8, 0, 1)
     p.lift(hole_m, 0.85)
-    p.wash(hole_m, VIOLET, 0.8, rim=0, flow=0.4)
-    p.wash(hole_m * ramp_y(sy - br, sy - 3, 1.0, 0.25), UMBER, 1.5, rim=0.2, flow=0.4, blotch=0.05)
-    p.wash(hole_m * ramp_x(bx - br, bx + br, 0.2, 1.0), PAYNE, 0.6, rim=0)
-    p.lift(hole_m * ramp_y(sy - 8, sy - 6, 0, 1), 0.6)
-    p.wash(hole_m * ramp_y(sy - 8, sy, 0.3, 1), GOLD, 0.6, rim=0)
-    p.wash(hole_m * ramp_y(sy - 8, sy, 0.0, 1), SHADOW, 0.5, rim=0)                         # light on the water beyond
-    far_bank = p.rough(p.poly([(bx - br, sy - 10), (bx + br, sy - 9.5), (bx + br, sy - 7.5), (bx - br, sy - 8)]), 0.5, 3)
-    p.wash(far_bank * hole_m, OLIVE, 0.9, rim=0.3, flow=0.5)                       # the far bank seen through it
-    p.wash(hole_m * ramp_y(sy - br, sy - br * 0.4, 1.0, 0.0) * ramp_x(bx - br, bx + br, 0.5, 1.0), PAYNE, 0.6, rim=0)
-    p.wash(p.soften(p.poly([(160, 257), (178, 252), (200, 258), (176, 262)]), 2) * rbank, UMBER, 0.5, rim=0)
+    p.wash(hole_m, VIOLET, 0.8, rim=0.8, flow=0.4)
+    p.wash(hole_m * ramp_y(sy - br, sy - 2, 1.0, 0.2), UMBER, 1.2, rim=0, flow=0.5)
     # the bridge's feet sink into the banks: bushes over both ends
     for cx, cy, rx, ry, cols in [(64, 255, 10, 6, [OLIVE, SIENNA, RAW]), (172, 255, 11, 6, [SIENNA, OLIVE, GOLD]),
                                  (94, 257, 6, 3.5, [OLIVE, SIENNA]), (144, 257, 6, 3.5, [SIENNA, OLIVE])]:
         crown(p, cx, cy, rx, ry, cols, rng, n=6)
-    # the reflection: the arch's ring closed in the water, the bridge's underside a dark band, both broken by ripples
-    rring = ((((Xw - bx) / (br + 4)) ** 2 + ((Yw - sy) / ((br + 4) * 0.98)) ** 2) < 1) & (Yw > sy)
-    rhole = ((((Xw - bx) / br) ** 2 + ((Yw - sy) / (br * 0.98)) ** 2) < 1) & (Yw > sy)
-    p.wash(p.soften(p.rough(rring.astype(np.float32) * (1 - rhole), 0.8, 3), 0.8) * river, SIENNA, 0.7, rim=0,
-           vary=ramp_y(sy, sy + br + 4, 1.0, 0.4))
-    p.wash(p.soften(p.rough(rhole.astype(np.float32), 0.8, 3), 1.0) * river, UMBER, 1.2, rim=0, flow=0.5,
-           vary=ramp_y(sy, sy + br, 0.15, 1.0))
-    p.wash(p.soften(p.rough(rhole.astype(np.float32), 0.8, 3), 1.0) * river, PAYNE, 0.5, rim=0,
-           vary=ramp_x(bx - br, bx + br, 0.3, 1.0))
-    p.wash(p.soften(p.poly([(96, 254), (140, 254), (140, 258), (96, 258)]), 0.8) * river, UMBER, 0.6, rim=0)
-    for i, (dy, w) in enumerate([(3, 14), (7.5, 9), (10, 15), (15.5, 6)]):
-        y = sy + dy
-        p.lift(p.rough(p.stroke([(bx - w, y), (bx + w, y - 0.3)], 0.8), 0.6, 3) * river, 0.5, dry=0.5)
+    # the reflection: one soft dark blotch under the arch, the bridge's warm stone a looser one around it
+    p.wash(p.soften(p.rough(p.ellipse(bx, sy + 8, 34, 9), 2, 8), 1.5) * river, SIENNA, 0.6, rim=0, flow=0.5)
+    p.wash(p.soften(p.rough(p.ellipse(bx, sy + 9, 16, 9), 1.5, 6), 1.5) * river, UMBER, 1.0, rim=0, flow=0.5)
     # 7 trees on the banks, each its own shape; the left ones stay low, below the title
     for x, base, h, sp, tw, n, cols in [(18, 270, 50, 0.9, 2.8, 11, [GOLD, TERRA, SIENNA, RAW]),
                                         (44, 258, 28, 0.8, 1.6, 8, [RAW, GOLD, TERRA]),
@@ -589,16 +541,10 @@ def autumn():
     big = tree(p, 206, 300, 178, 0.33, [GOLD, TERRA, RAW, SIENNA, GOLD], rng, lean=-0.02, trunk_w=6.5, clumps=30,
                dark=TERRA, size=0.095, fork_at=0.37, leaves=6)
     p.wash(p.soften(p.ellipse(214, 301, 22, 4), 2) * rbank, UMBER, 0.6, rim=0)           # it stands in its shadow
-    # 9 the trees in the water: soft vertical streaks under each tree, and the shade under the right bank
-    for x, w, col in [(22, 26, TERRA), (46, 14, GOLD), (74, 10, PINE), (186, 20, GOLD), (208, 30, TERRA)]:
-        streak = p.soften(p.rough(p.poly([(x - w / 2, 262), (x + w / 2, 262), (x + w * 0.35, 312), (x - w * 0.3, 308)]),
-                                  1.5, 4), 2.5)
-        p.wash(streak * river, col, 0.5, rim=0, flow=0.4, blotch=0.04)
-    p.wash(river * p.soften(p.rough(p.poly([(142, 262), (164, 262), (176, 336), (150, 336)]), 2, 6), 3), VIOLET, 0.55,
-           rim=0)
-    for i in range(3):
-        x, y, w = rng.uniform(90, 140), rng.uniform(286, 326), rng.uniform(5, 14)
-        p.lift(p.rough(p.poly([(x, y), (x + w, y - 0.3), (x + w, y + 0.6), (x, y + 0.8)]), 0.3, 3) * river, 0.35)
+    # 9 the trees in the water: soft blotches of their colours, and the shade under the right bank
+    for x, w, col in [(22, 26, TERRA), (186, 20, GOLD), (208, 30, TERRA)]:
+        p.wash(p.soften(p.rough(p.ellipse(x, 290, w * 0.6, 18), 3, 10), 2.5) * river, col, 0.5, rim=0, flow=0.5)
+    p.wash(river * p.soften(p.rough(p.ellipse(160, 300, 16, 40), 3, 10), 3), VIOLET, 0.5, rim=0)
     # 10 the near plane: a warm bush low in each corner, the right one under the oak
     # the near corners deepen, warm on the left, the oak's ground on the right
     p.wash(p.soften(p.ellipse(-10, 352, 90, 46), 14) * lbank, UMBER, 0.8, rim=0, flow=0.5, blotch=0.05)
