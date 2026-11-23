@@ -15,12 +15,16 @@ import asyncio
 import getpass
 import re
 import sys
+from pathlib import Path
+
+# The `trove` package lives in api/, and Python only looks beside the script, so say where it is.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "api"))
 
 DATABASE = "trove_prod"
 
 
 async def check(uri: str) -> int:
-    from trove.core.database import connect  # imported late so --help style errors come first
+    from trove.core.database import connect
 
     host = re.search(r"@([^/?]+)", uri)
     print(f"Cluster host: {host.group(1) if host else '(could not read one)'}")
