@@ -44,12 +44,19 @@ describe("apiInterviewClient", () => {
   afterEach(() => vi.restoreAllMocks());
 
   it("treats a missing interview as not started", async () => {
-    vi.spyOn(api, "GET").mockResolvedValue({
-      data: undefined,
-      error: { detail: "Not started" },
-      response: new Response(null, { status: 404 }),
-    } as never);
+    vi.spyOn(api, "GET").mockResolvedValue(ok(null));
     expect(await apiInterviewClient.current()).toBeNull();
+  });
+
+  it("reads a member with no interview and no book as not started", async () => {
+    const get = vi.spyOn(api, "GET").mockResolvedValue(ok(null));
+    expect(await apiInterviewClient.stage()).toBe("none");
+    expect(await apiInterviewClient.myBook()).toBeNull();
+    expect(get.mock.calls.map((call) => (call as unknown[])[0])).toEqual([
+      "/interview",
+      "/books/me",
+      "/books/me",
+    ]);
   });
 
   it("shows the Shape step as the playback followed by its question", async () => {

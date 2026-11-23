@@ -43,8 +43,9 @@ export function loadOwnBook(): Promise<{ id: string | null } | null> {
   if (own && Date.now() - own.at < FRESH_MS) return own.answer;
   const answer = api
     .GET("/books/me")
-    .then(({ data, response }) => {
-      const known = data || response.status === 404 ? { id: data?.id ?? null } : null;
+    .then(({ data }) => {
+      // null is the API saying "no book yet"; only a failed call (no data at all) is unknown.
+      const known = data !== undefined ? { id: data?.id ?? null } : null;
       if (known) ownReady = known;
       else own = null;
       return known;

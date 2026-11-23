@@ -711,6 +711,7 @@
           "Books"
         ],
         "summary": "My Book",
+        "description": "The member's own book, or null before they have one: an answer, not an error, since the shelf\nasks on every visit.",
         "operationId": "my_book_books_me_get",
         "responses": {
           "200": {
@@ -718,7 +719,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MyBookResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/MyBookResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response My Book Books Me Get"
                 }
               }
             }
@@ -941,7 +950,7 @@
           "Interview"
         ],
         "summary": "Current",
-        "description": "The member's interview, for resuming where they left off. If writing proposed changes failed,\na return tries once more on its own.",
+        "description": "The member's interview, for resuming where they left off, or null before they start. If writing\nproposed changes failed, a return tries once more on its own.",
         "operationId": "current_interview_get",
         "responses": {
           "200": {
@@ -949,7 +958,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InterviewResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InterviewResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Current Interview Get"
                 }
               }
             }
