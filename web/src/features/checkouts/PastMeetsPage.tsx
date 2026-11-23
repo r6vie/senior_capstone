@@ -18,7 +18,7 @@ function MeetItem({ meet, reload }: { meet: Meet; reload: () => Promise<void> })
     <li className="co-card surf pm-card">
       <span className="past-meet-bookmark" aria-hidden="true" />
       <div>
-        <h3 className="co-title">{meet.other_name}</h3>
+        <h2 className="co-title">{meet.other_name}</h2>
         {meet.other_book && <p className="co-meta">Author of "{meet.other_book.title}"</p>}
       </div>
       <p>
@@ -84,7 +84,7 @@ export function PastMeetsPage() {
       {meets &&
         (meets.length === 0 ? (
           <div className="empty">
-            <h3>Nothing here yet</h3>
+            <h2>Nothing here yet</h2>
             <p>
               After a reading, answer "Did you meet?" on your Checkouts page, and the people you've met will
               be listed here.

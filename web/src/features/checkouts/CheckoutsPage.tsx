@@ -351,7 +351,7 @@ function Groups({ mine, act, answered }: { mine: Mine; act: Act; answered: Answe
   if (!yours.length && !underway.length && !earlier.length) {
     return (
       <div className="empty">
-        <h3>No checkouts yet</h3>
+        <h2>No checkouts yet</h2>
         <p>When someone asks for your book, or you check one out, it shows up here.</p>
         <p>
           <Link to="/">Browse the shelf</Link>

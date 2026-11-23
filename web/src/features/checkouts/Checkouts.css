@@ -147,6 +147,11 @@
   flex: 1;
   border-top: 2.5px solid var(--ink);
 }
+/* An empty page's heading sits right under the page title, so it's an h2 dressed as the system's empty state. */
+.co-page .empty h2 {
+  margin: 0 0 var(--s-2);
+  font: 600 26px / 1.1 var(--font-serif);
+}
 .co-quiet {
   margin: 0;
   color: var(--ink-2);
