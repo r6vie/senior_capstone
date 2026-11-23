@@ -1,8 +1,10 @@
 import { useEffect, useRef } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthProvider";
 import { SearchControl } from "../features/discovery/SearchControl";
 import "./AppShell.css";
+import { ErrorBoundary, PageBroke } from "./ErrorBoundary";
+import { usePageFocus } from "./usePageFocus";
 
 // The signed-in frame: top bar, navigation and the page's room. Settings is reached from the avatar,
 // so the nav keeps the design's four items (docs/design/system.md, "Navigation").
@@ -16,6 +18,10 @@ export const NAV_ITEMS = [
 export function AppShell() {
   const { user } = useAuth();
   const search = useRef<HTMLInputElement>(null);
+  const topBar = useRef<HTMLElement>(null);
+  const page = useRef<HTMLDivElement>(null);
+  const { pathname } = useLocation();
+  usePageFocus(page, topBar);
 
   // "/" goes to the search, as the key hint in the field says, unless the member is already typing.
   useEffect(() => {
@@ -32,7 +38,7 @@ export function AppShell() {
 
   return (
     <div className="app-shell">
-      <header className="top-bar">
+      <header className="top-bar" ref={topBar}>
         <span className="wordmark">Trove</span>
         <nav className="nav" aria-label="Main">
           {NAV_ITEMS.map((item) => (
@@ -48,7 +54,23 @@ export function AppShell() {
           </NavLink>
         </div>
       </header>
-      <Outlet />
+      <div ref={page}>
+        <ErrorBoundary
+          resetKey={pathname}
+          fallback={(retry) => (
+            <PageBroke
+              retry={retry}
+              home={
+                <Link className="button button-quiet" to="/">
+                  Go to the shelf
+                </Link>
+              }
+            />
+          )}
+        >
+          <Outlet />
+        </ErrorBoundary>
+      </div>
     </div>
   );
 }
