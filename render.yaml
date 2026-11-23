@@ -6,6 +6,8 @@ services:
     name: trove
     runtime: docker
     plan: free
+    # Next to the Atlas cluster (AWS N. Virginia), so database calls are quick.
+    region: virginia
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
     envVars:
