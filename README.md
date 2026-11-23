@@ -8,6 +8,7 @@ conversation with you.
 - Work plan and assignments: [docs/plan.md](docs/plan.md)
 - How the code is organized: [docs/architecture.md](docs/architecture.md)
 - How to contribute (people and AI agents): [CONTRIBUTING.md](CONTRIBUTING.md)
+- Running the live site (accounts, settings, fixing things): [docs/deploy.md](docs/deploy.md)
 
 The FoundersCircle code this replaced is preserved at the git tag `founderscircle-v1`.
 
