@@ -111,6 +111,15 @@ async def test_members_are_invited_to_create_or_finish_their_book(client, databa
     assert fake_claude.requests == []
 
 
+async def test_a_member_mid_interview_is_invited_to_continue_it(client, database, fake_claude):
+    account, headers = await sign_in(client)
+    # Seeded as the interviews feature stores it: started, no book yet.
+    await database.interviews.insert_one({"_id": "iv", "user_id": account["id"], "stage": "interviewing"})
+    response = await client.get("/discovery/recommendation", headers=headers)
+    assert response.json() == {"state": "continue_interview", "book": None, "reason": None}
+    assert fake_claude.requests == []
+
+
 async def test_an_off_shelf_book_can_shape_its_owners_recommendation(client, database, fake_claude):
     account, headers = await sign_in(client)
     await database.books.insert_many(

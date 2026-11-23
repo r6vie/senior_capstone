@@ -250,12 +250,21 @@ async def current_view(
     if claude and failed and not interview.get("write_retried"):
         # The member came back to a failed write: try once more without asking them to.
         interview = await restart_writing(database, claude, interview, background)
-    book = (
-        await books.get_book_of(database, user["_id"])
-        if interview["stage"] in ("reviewing", "done", "adding", "revising")
-        else None
-    )
+    book = await books.get_book_of(database, user["_id"]) if interview["stage"] in BOOK_STAGES else None
     return interview_view(interview, book)
+
+
+# Stages from which the interview has made the member's book (it is reviewed, done or growing).
+BOOK_STAGES = ("reviewing", "done", "adding", "revising")
+
+
+async def has_open_interview(database: AsyncDatabase, user_id: str) -> bool:
+    """Whether the member has started an interview that hasn't made their book yet, for other features
+    (the shelf asks this to say "continue" rather than "create")."""
+    open_interview = await database.interviews.find_one(
+        {"user_id": user_id, "stage": {"$nin": list(BOOK_STAGES)}}, {"_id": 1}
+    )
+    return open_interview is not None
 
 
 async def get_interview(database: AsyncDatabase, user_id: str) -> dict:

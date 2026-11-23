@@ -952,3 +952,11 @@ async def test_restoring_a_rewrite_brings_its_quotes_back(client, headers, fake_
     back = (await client.post(f"/interview/book/chapters/{first['id']}/restore", headers=headers)).json()
     assert back["chapters"][1]["quotes"] == first["quotes"]
     assert back["chapters"][1]["summary"] == first["summary"]
+
+
+async def test_an_interview_is_open_until_it_has_made_the_book(database):
+    assert not await service.has_open_interview(database, "member")
+    await database.interviews.insert_one({"_id": "iv", "user_id": "member", "stage": "choosing"})
+    assert await service.has_open_interview(database, "member")
+    await database.interviews.update_one({"_id": "iv"}, {"$set": {"stage": "reviewing"}})
+    assert not await service.has_open_interview(database, "member")

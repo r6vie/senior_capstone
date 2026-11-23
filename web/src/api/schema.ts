@@ -1662,7 +1662,7 @@ export interface components {
              * State
              * @enum {string}
              */
-            state: "create_book" | "finish_book" | "recommendation" | "empty_shelf" | "unavailable";
+            state: "create_book" | "continue_interview" | "finish_book" | "recommendation" | "empty_shelf" | "unavailable";
             book?: components["schemas"]["BookCard"] | null;
             /** Reason */
             reason?: string | null;

@@ -18,6 +18,7 @@ from trove.books.models import BookCard
 from trove.books.service import PUBLISHED, get_book_of, get_public_book, list_shelf
 from trove.checkouts.service import fully_checked_out
 from trove.discovery.models import LibrarianRecommendation, SearchResponse, SearchResult
+from trove.interview.service import has_open_interview
 
 RECOMMENDATION_DAYS = 7
 CANDIDATE_LIMIT = 30
@@ -172,6 +173,9 @@ async def librarian_recommendation(
     """Return one stable, grounded recommendation, or the member's next book-making step."""
     own = await get_book_of(database, user_id)
     if own is None:
+        # Mid-interview, the next step is to carry on, not to start (the interviews feature says which).
+        if await has_open_interview(database, user_id):
+            return LibrarianRecommendation(state="continue_interview")
         return LibrarianRecommendation(state="create_book")
     if own["status"] not in PUBLISHED:
         return LibrarianRecommendation(state="finish_book")

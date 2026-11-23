@@ -114,6 +114,23 @@ async function openBook() {
 }
 
 describe("D1 shelf and reader", () => {
+  it("asks a member mid-interview to continue it, on the cover and on their book card", async () => {
+    const original = api.GET.getMockImplementation();
+    api.GET.mockImplementation(async (path: string) =>
+      path === "/discovery/recommendation"
+        ? response({ state: "continue_interview", book: null, reason: null })
+        : original?.(path),
+    );
+    renderShelf();
+    expect(await screen.findByRole("heading", { name: "Your book is underway" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Continue your interview" })).toBeTruthy();
+    const card = await screen.findByRole("region", { name: "Your book" });
+    expect(within(card).getByText("In progress")).toBeTruthy();
+    expect(within(card).getByRole("link", { name: "Continue" }).getAttribute("href")).toBe("/interview");
+    expect(screen.queryByText("Your story belongs here")).toBeNull();
+    expect(screen.queryByText("Not written yet")).toBeNull();
+  });
+
   it("loads real books and invites a member without a book to create one", async () => {
     renderShelf();
     expect(await screen.findByRole("button", { name: `${book.title}, by ${book.author_name}` })).toBeTruthy();
