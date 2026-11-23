@@ -126,7 +126,8 @@ def blossom():
     # the crown: big soft clouds of blossom, overlapping, paper left between them; clear of the title's corner
     crown = np.zeros((H, W), np.float32)
     for cx, cy, rx, ry in [(208, 188, 36, 28), (232, 158, 24, 26), (180, 202, 28, 18), (224, 210, 28, 18),
-                           (200, 162, 20, 16), (154, 212, 24, 12), (238, 196, 16, 22), (190, 222, 26, 10)]:
+                           (200, 162, 20, 16), (154, 212, 24, 12), (238, 196, 16, 22), (190, 222, 26, 10),
+                           (162, 196, 24, 16), (132, 210, 20, 10), (240, 226, 18, 14), (176, 222, 20, 10)]:
         crown = np.maximum(crown, p.rough(p.ellipse(cx, cy, rx, ry), ry * 0.3, max(4, rx * 0.4), fine=0.6))
     p.loose(crown, [PINK, BLUSH, MAUVE, BLUSH, PINK], 0.95, n=16, rough=0.8, patch=0.2, ground=0.55)
     # volume: the crown lit on its upper left, turning mauve toward its lower right
@@ -246,32 +247,41 @@ def beach():
     p.wash(sand * ramp_y(290, 344, 0.0, 1.0), SIENNA, 0.35, rim=0, flow=0.5)
     p.wash(sand * ramp_y(300, 344, 0.0, 1.0), VIOLET, 0.4, rim=0, flow=0.5)          # the near sand cooler
     # two palms leaning in from the right, the trunks curved, the fronds long tapered strokes
-    # two palms, each trunk one strong curve tapering upward, each crown a fountain of arching fronds
-    for pts, w0, s in [([(222, 356), (226, 316), (220, 278), (204, 240), (180, 206), (160, 190)], 8.0, 1.15),
-                       ([(30, 352), (26, 320), (30, 290), (42, 262), (58, 240)], 5.5, 0.75)]:
+    # two palms: each trunk a strong bow, thick at the foot and tapering, each crown a fountain of long crescent
+    # leaves, broad in the middle, arching up and over and drooping to a fine tip
+    def frond(tx, ty, ang, l, wmax):
+        sx, sy = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+        cen = [(tx + sx * l * t, ty + sy * l * t * 0.9 + l * 0.75 * t * t) for t in np.linspace(0, 1, 14)]
+        left, right = [], []
+        for i, (cx, cy) in enumerate(cen):
+            t = i / (len(cen) - 1)
+            nx0, ny0 = cen[min(i + 1, len(cen) - 1)][0] - cen[max(i - 1, 0)][0], \
+                cen[min(i + 1, len(cen) - 1)][1] - cen[max(i - 1, 0)][1]
+            n = math.hypot(nx0, ny0) or 1
+            nx, ny = -ny0 / n, nx0 / n
+            w = wmax * math.sin(math.pi * min(1.0, t * 1.15)) ** 0.7 * (1 - 0.35 * t) + 0.4
+            left.append((cx + nx * w * 0.55, cy + ny * w * 0.55))           # the upper edge narrower,
+            right.append((cx - nx * w, cy - ny * w))                         # the leaflets hang below
+        return p.poly(left + right[::-1])
+
+    for pts, w0, s in [([(220, 356), (230, 318), (226, 280), (210, 242), (186, 210), (164, 194)], 10.0, 1.2),
+                       ([(24, 356), (20, 322), (24, 292), (36, 266), (54, 246)], 7.0, 0.85)]:
         wood = np.zeros((H, W), np.float32)
         for i in range(len(pts) - 1):
-            ww = w0 * (1 - 0.55 * i / (len(pts) - 1))
+            ww = w0 * (1 - 0.6 * i / (len(pts) - 1))
             wood = np.maximum(wood, p.stroke([pts[i], pts[i + 1]], ww, taper=False))
-        wood = p.rough(wood, 0.4, 6, fine=0.3)
-        p.wash(wood, UMBER, 1.3, rim=1.0)
-        p.wash(wood * ramp_x(pts[-1][0] - 6, pts[0][0] + 6, 0.2, 1.0), PAYNE, 0.6, rim=0)
+        wood = p.rough(wood, 0.5, 6, fine=0.3)
+        p.loose(wood, [UMBER, SIENNA, UMBER], 1.1, n=3, rough=0.3, patch=0.5, ground=0.8)
+        p.wash(wood * ramp_x(pts[-1][0] - 6, pts[0][0] + 8, 0.2, 1.0), PAYNE, 0.6, rim=0)
         bx, by = pts[0]
-        p.wash(p.soften(p.ellipse(bx - 30 * s, by - 6, 36 * s, 4), 1.5) * sand, SIENNA, 0.6, rim=0)
+        p.wash(p.soften(p.ellipse(bx - 34 * s, by - 6, 40 * s, 4), 1.5) * sand, SIENNA, 0.6, rim=0)
         tx, ty = pts[-1]
         fr = np.zeros((H, W), np.float32)
-        for ang, ln in [(-172, 46), (-150, 40), (-124, 30), (-96, 22), (-68, 28), (-42, 38), (-14, 46),
-                        (170, 34), (12, 36)]:
-            a = math.radians(ang)
-            # each frond rises out of the crown along its own direction, then bows over and droops to a fine tip
-            l = ln * s
-            sx, sy = math.cos(a), math.sin(a)
-            pts_f = []
-            for t in (0.0, 0.25, 0.5, 0.75, 1.0):
-                pts_f.append((tx + sx * l * t, ty + sy * l * t + l * 0.5 * t ** 2.5))
-            fr = np.maximum(fr, p.stroke(pts_f, 6.5 * s, taper=True))
-        fr = p.rough(fr, 0.9, 3, fine=0.6)
-        p.loose(fr, [CYPRESS, OLIVE, PAYNE], 1.2, n=5, rough=0.6, patch=0.35, ground=0.8)
+        for ang, ln in [(-170, 50), (-140, 42), (-108, 30), (-72, 30), (-38, 42), (-8, 50), (160, 36), (22, 36)]:
+            fr = np.maximum(fr, frond(tx, ty, ang, ln * s, 6.5 * s))
+        fr = p.rough(fr, 0.6, 2.5, fine=0.8)
+        p.loose(fr, [CYPRESS, OLIVE, CYPRESS, PAYNE], 1.15, n=6, rough=0.5, patch=0.3, ground=0.8)
+        p.wash(fr * ramp_y(ty - 20, ty + 40, 0.0, 1.0), PAYNE, 0.5, rim=0)          # the lower leaves in shade
     p.finish()
     return p
 

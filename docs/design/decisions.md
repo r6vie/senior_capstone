@@ -432,6 +432,9 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   sky only, nothing on the field; the beach has two palms, a big one curving in from the right and a smaller one on
   the left, each trunk one strong curve tapering upward, each crown a fan of fronds that rise and droop to fine tips;
   the path of light now runs straight down from the sun.
+  Then (Josef: "a little more mass to the sides of the cherry blossom", "the palm trees still don't look great"):
+  the crown has four more patches at its sides; each palm leaf is now a long crescent, broad in the middle and
+  drooping to a fine tip, its leaflets hanging below, the lower leaves in shade, on a thicker bowed trunk.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
