@@ -388,6 +388,21 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   Then (Josef: "now they're too jagged, I want some more gentle splotches"): the drift strokes are gone. Over the
   soft glaze, seven rounded splotches of lavender, mauve and blue are dropped in wet, soft-edged with no pooled rim,
   overlapping and of different sizes; the lone fir's shadow is a soft splotch too.
+- **Book screens for the abstract watercolours (Josef: "the more elaborate book screens for these 4 new designs, same
+  principles as the book screen for the strata covers").** Boards `WCBook{Mesa,Hills,Lake,Winter}` on "Covers:
+  Watercolor", built like the strata book screens (`shelf/watercolor_book.py` reuses `final_book_more.py`): the book
+  opened on its title page, the page art from `art/watercolor/pages.py` (570 x 684, 1140 x 1368 px). Same principles
+  as strata: the same place as the cover as a much richer scene, the text corner (x 0-470, y 0-350) left as paper,
+  the art climbing on the right. In watercolour the sky has no top edge: it is a wet wash bleeding out into the paper
+  on a gentle diagonal toward the text (the paint engine now renders at page size, `paint.configure`). Mesa: a
+  second butte and a spire, talus skirts, a broad pale dry wash, sage clusters, a juniper and a dark rock shelf in
+  front. Hills: a hill town with a short campanile, a pale road widening toward us lined with cypresses in groups,
+  olive trees, lavender rows, a dark near field. Lake: a broad massif with a shoulder, a cabin and jetty, a canoe,
+  the mountains mirrored loose in the water, boulders and a dark fir in front. Winter: the low sun, a dark forest
+  band, one dominant fir with smaller ones behind, a cabin with a lit window on the rise, a few fence posts, a big
+  spruce and rocks in front, the snow in soft splotches. The text on the page takes each book's dark ink. Two
+  Josef-eye critic rounds; the second round's fixes are applied and not re-reviewed. Kept against the critic: the
+  hair of paper between the hills' bands, the trait of the headland Josef pointed to.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills

@@ -20,6 +20,14 @@ PAPER = np.array([0.992, 0.987, 0.972])
 YY, XX = np.mgrid[0:H, 0:W].astype(np.float32)
 
 
+def configure(world_w, world_h, scale):
+    """Render at another size: the opened book's title page is 570 x 684 world units at 2 px each. Every function
+    here reads these globals when it runs, so set them before making a Paper."""
+    global S, W, H, YY, XX
+    S, W, H = scale, int(world_w * scale), int(world_h * scale)
+    YY, XX = np.mgrid[0:H, 0:W].astype(np.float32)
+
+
 def rgb(h):
     h = h.lstrip("#")
     return np.array([int(h[i:i + 2], 16) for i in (0, 2, 4)], np.float32) / 255
