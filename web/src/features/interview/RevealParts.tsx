@@ -14,6 +14,7 @@ const LETTER_MS = 24;
 // Each book starts a moment after the last one's title is on.
 const NEXT_BOOK_MS = 700;
 const RISE_STAGGER_MS = 120;
+const SLIDE_AWAY_MS = 320;
 
 function useTitleTyping(titles: TitleOption[]): number[] {
   const [typed, setTyped] = useState<number[]>(() =>
@@ -66,19 +67,32 @@ export function TitleShelf({
   author,
   busy,
   error,
+  failed,
   onChoose,
 }: {
   titles: TitleOption[];
   author: string;
   busy: boolean;
   error: ReactNode;
+  /** The last choice didn't go through: the shelf comes back as it was. */
+  failed: boolean;
   onChoose: (titleId: string) => void;
 }) {
   const typed = useTitleTyping(titles);
   const [picked, setPicked] = useState<string | null>(null);
+  // Choosing: the other two slide away first, then the chosen book comes forward and opens.
+  const [leaving, setLeaving] = useState(false);
+  const choose = (id: string) => {
+    if (leaving) return;
+    setLeaving(true);
+    setTimeout(() => onChoose(id), reducedMotion() ? 0 : SLIDE_AWAY_MS);
+  };
+  useEffect(() => {
+    if (failed && !busy) setLeaving(false);
+  }, [failed, busy]);
   const all = typed.every((count, index) => count >= (titles[index]?.title.length ?? 0));
   return (
-    <div className="rv-shelf" data-picked={picked ? true : undefined}>
+    <div className="rv-shelf" data-picked={picked ? true : undefined} data-leaving={leaving || undefined}>
       {/* The whole book is what you choose (replaces the cards and their radio buttons). */}
       <fieldset className="rv-books">
         <legend className="iv-visually-hidden">Choose a title</legend>
@@ -126,7 +140,11 @@ export function TitleShelf({
       </div>
       {error}
       <div className="rv-go">
-        <Button disabled={!picked || !all} aria-busy={busy} onClick={() => picked && onChoose(picked)}>
+        <Button
+          disabled={!picked || !all}
+          aria-busy={busy || leaving}
+          onClick={() => picked && choose(picked)}
+        >
           Choose this title
         </Button>
       </div>
@@ -137,13 +155,32 @@ export function TitleShelf({
 // ---------- The chosen book, open while it's written ----------
 
 /** The open book as the shelf's reader draws it: board, spine, page edge and two pages. */
-function OpenBook({ left, right, label }: { left: ReactNode; right: ReactNode; label: string }) {
+function OpenBook({
+  left,
+  right,
+  label,
+  opening,
+}: {
+  left: ReactNode;
+  right: ReactNode;
+  label: string;
+  /** The chosen book arrives closed and opens (StartReveal, Writing): its cover swings open about the spine. */
+  opening?: { title: string; author: string } | null;
+}) {
   return (
-    <div className="ib-book rv-open">
+    <div className="ib-book rv-open" data-opening={opening ? true : undefined}>
       <span className="ib-edge" aria-hidden="true" />
-      <section className="ib-page ib-left" aria-label={`${label}: title page`}>
-        {left}
-      </section>
+      {/* The title page is the cover's inside: it swings over from the right as the cover opens. */}
+      <div className="rv-leaf">
+        <section className="ib-page ib-left" aria-label={`${label}: title page`}>
+          {left}
+        </section>
+        {opening && (
+          <span className="rv-leaf-cover" aria-hidden="true">
+            <WhiteBook title={opening.title} author={opening.author} />
+          </span>
+        )}
+      </div>
       <section className="ib-page ib-right" aria-label={`${label}: pages`}>
         {right}
       </section>
@@ -155,14 +192,18 @@ export function WritingBook({
   title,
   author,
   places = 4,
+  opening,
 }: {
   title: string | null;
   author: string;
   places?: number;
+  /** Arriving straight from the pick: the book comes forward closed and opens. */
+  opening?: boolean;
 }) {
   return (
     <OpenBook
       label="Your book, being written"
+      opening={opening && title ? { title, author } : null}
       left={
         <div className="rv-titlepage">
           {title ? <h2 className="rv-booktitle">{title}</h2> : <span className="ib-bar rv-titlebar" />}
@@ -327,8 +368,11 @@ export function ReviewBook({
   busy,
   others,
   notes,
+  opening,
 }: {
   book: DraftBook;
+  /** Arriving straight from the pick: the book comes forward closed and opens. */
+  opening?: boolean;
   /** The Librarian's line under the name, in its hand. */
   signOff: ReactNode;
   canRemove: boolean;
@@ -519,6 +563,7 @@ export function ReviewBook({
     <div className="rv-review">
       <OpenBook
         label="Your book"
+        opening={opening ? { title: book.title, author: book.authorName } : null}
         left={
           <div className="rv-titlepage">
             <AutoField
