@@ -52,12 +52,23 @@ def record(scene):
             return out
         return inner
 
-    Paper.wash, Paper.lift = wrap(orig_wash), wrap(orig_lift)
+    orig_fade = Paper.fade_top
+
+    def fade_top(self, *a, **k):                           # the paint drying back to paper at the top of a cover
+        before = absorb(self.img)
+        out = orig_fade(self, *a, **k)
+        delta = absorb(self.img) - before
+        if np.abs(delta).max() > 0.01:
+            steps.append((shrink(delta).astype(np.float32), shrink(np.ones(delta.shape[:2], np.float32))))
+        return out
+
+    Paper.wash, Paper.lift, Paper.fade_top = wrap(orig_wash), wrap(orig_lift), fade_top
     try:
         p = scene()
     finally:
-        Paper.wash, Paper.lift = orig_wash, orig_lift
+        Paper.wash, Paper.lift, Paper.fade_top = orig_wash, orig_lift, orig_fade
     blank = Paper(seed=1)
+    blank.tooth = p.tooth                                  # the cover's own paper grain
     blank.finish()
     paper = cv2.resize(blank.img.astype(np.float32), (OUT_W, OUT_H), interpolation=cv2.INTER_AREA)
     final = cv2.resize(p.img.astype(np.float32), (OUT_W, OUT_H), interpolation=cv2.INTER_AREA)
@@ -86,7 +97,8 @@ def fronts(steps, seed=3):
         sx, sy = cx + rng.uniform(-0.15, 0.15) * OUT_W * 0.3, top * 0.6 + cy * 0.4
         d = np.sqrt((xx - sx) ** 2 + ((yy - sy) * 1.15) ** 2)
         reach = np.percentile(d[w > w.max() * 0.05], 98) if (w > w.max() * 0.05).any() else d.max()
-        r = d / max(reach, 1) + 0.28 * (noise - 0.5)
+        # clipped to 1, so the front (which runs to 1.12) is sure to cover every last corner of the shape
+        r = np.clip(d / max(reach, 1) + 0.28 * (noise - 0.5), 0, 1.0)
         area = (m > 0.3).mean()
         out.append((r.astype(np.float32), float(area)))
     return out
@@ -120,9 +132,13 @@ def soft(x):
     return x * x * (3 - 2 * x)
 
 
-def render(t, paper, steps, fr, sched):
+def render(t, paper, steps, fr, sched, k=1.0, loop=True):
+    """One frame at time t. k scales the painting's clock (k < 1 paints faster: the design studio's quick version);
+    loop=False never rests into the wash-back, so the frame holds the finished cover."""
     period = PAINT_END + REST + FADE + BLANK
-    t = t % period
+    if loop:
+        t = t % period
+    t = t / k
     total = np.zeros((OUT_H, OUT_W, 3), np.float32)
     for (delta, _m), (r, _a), (t0, dur) in zip(steps, fr, sched):
         if t < t0:
@@ -130,34 +146,53 @@ def render(t, paper, steps, fr, sched):
         u = (t - t0) / dur
         front = 1 - (1 - min(u, 1.0)) ** 2.2                   # quick at first, slowing as it spreads
         reveal = np.clip((front * 1.12 - r) / 0.05, 0, 1)
-        wet = 1 - soft((t - t0 - dur) / 2.0)                    # still wet: slightly softer and paler
+        wet = 1 - soft((t - t0 - dur) / 1.0)                    # still wet: slightly paler; dry before the rest
         a = delta * reveal[..., None]
         if wet > 0.01:
             a = a * (1 - 0.18 * wet)
         total += a
-    fade = soft((t - PAINT_END - REST) / FADE)
+    fade = soft((t - PAINT_END - REST) / FADE) if loop else 0.0
     img = paper * np.exp(-np.maximum(total, 0) * (1 - fade))   # a lift never brightens paper it hasn't reached
     return (np.clip(img, 0, 1) * 255).astype(np.uint8)
+
+
+def scenes():
+    """The ten covers of watercolor set 1, by their set keys."""
+    import abstract
+    import abstract2
+    import covers
+    import lighthouse_boats
+    return dict(mesa=abstract.mesa, hills=abstract.hills, lake=abstract.lake, winter=abstract.winter,
+                city=abstract2.city, blossom=abstract2.blossom, beach=abstract2.beach, autumn=covers.autumn,
+                **{"lighthouse-day": lighthouse_boats.lighthouse_boats, "lighthouse-dusk": covers.lighthouse})
+
+
+QUICK = 0.3          # the design studio's paint-in: the same painting at 0.3 of the time (about 4 s)
+QUICK_FPS = 24
 
 
 if __name__ == "__main__":
     from PIL import Image
     name = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else "lake"
-    import abstract
-    scenes = dict(abstract.SCENES)
-    paper, final, steps = record(scenes[name])
-    print("glazes recorded:", len(steps))
+    paper, final, steps = record(scenes()[name])
+    print(name, "glazes recorded:", len(steps), flush=True)
     fr = fronts(steps)
     sched = schedule(steps, fr)
     period = PAINT_END + REST + FADE + BLANK
-    os.makedirs(f"out/anim-{name}", exist_ok=True)
-    for f in os.listdir(f"out/anim-{name}"):
-        os.remove(f"out/anim-{name}/{f}")
-    n = int(period * FPS)
+    d = f"out/anim-{name}"
+    os.makedirs(d, exist_ok=True)
+    for f in os.listdir(d):
+        os.remove(f"{d}/{f}")
     step = 24 if "--preview" in sys.argv else 1
-    for k in range(0, n, step):
-        Image.fromarray(render(k / FPS, paper, steps, fr, sched)).save(f"out/anim-{name}/frame_{k:04d}.png")
-    Image.fromarray(render(PAINT_END + 1.0, paper, steps, fr, sched)).save(f"out/anim-{name}-poster.png")
+    # the front page's loop (its first PAINT_END seconds are also the book reveal, which then holds)
+    for k in range(0, int(period * FPS), step):
+        Image.fromarray(render(k / FPS, paper, steps, fr, sched)).save(f"{d}/loop_{k:04d}.png")
+    # the design studio's quick paint-in, at twice the frame rate so the faster spread stays smooth
+    for k in range(0, int(PAINT_END * QUICK * QUICK_FPS) + 1, step):
+        Image.fromarray(render(k / QUICK_FPS, paper, steps, fr, sched, k=QUICK, loop=False)).save(f"{d}/quick_{k:04d}.png")
+    done = render(PAINT_END, paper, steps, fr, sched, loop=False)
+    Image.fromarray(done).save(f"out/anim-{name}-poster.png")
     full = (np.clip(final, 0, 1) * 255).astype(np.uint8)
     Image.fromarray(full).save(f"out/anim-{name}-target.png")
-    print("period", period, "frames", n)
+    print(name, "max |finished - cover|:", int(np.abs(done.astype(int) - full.astype(int)).max()),
+          "mean:", round(float(np.abs(done.astype(int) - full.astype(int)).mean()), 2), flush=True)

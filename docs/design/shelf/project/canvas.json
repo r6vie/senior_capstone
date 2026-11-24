@@ -1311,7 +1311,7 @@
    "y": 0
   },
   "StartJoin.dc.html": {
-   "h": 5514,
+   "h": 5570,
    "page": "start",
    "title": "Joining · refined",
    "w": 1760,
@@ -1319,19 +1319,19 @@
    "y": 0
   },
   "StartInterview.dc.html": {
-   "h": 5985,
+   "h": 4016,
    "page": "start",
-   "title": "Starting the interview · A and B",
+   "title": "Starting the interview · the book introduces it",
    "w": 1760,
    "x": 3760,
    "y": 0
   },
   "StartReveal.dc.html": {
-   "h": 8019,
+   "h": 7659,
    "page": "start",
    "title": "The book reveal",
    "w": 1760,
-   "x": 5640,
+   "x": 7520,
    "y": 0
   },
   "StartPaint.dc.html": {
@@ -1339,7 +1339,23 @@
    "page": "start",
    "title": "The blank book painting itself · test (alpine lake)",
    "w": 1760,
-   "x": 7520,
+   "x": 9400,
+   "y": 0
+  },
+  "StartOpen.dc.html": {
+   "x": 5640,
+   "y": 0,
+   "w": 1760,
+   "h": 3391,
+   "page": "start",
+   "title": "Starting the interview · C, it opens on the question"
+  },
+  "StudioPaint.dc.html": {
+   "h": 1640,
+   "page": "start",
+   "title": "Picks and the studio · covers animating in (demo: watercolour and strata)",
+   "w": 1760,
+   "x": 11280,
    "y": 0
   }
  },
@@ -1701,7 +1717,9 @@
   "StartJoin.dc.html",
   "StartInterview.dc.html",
   "StartReveal.dc.html",
-  "StartPaint.dc.html"
+  "StartPaint.dc.html",
+  "StartOpen.dc.html",
+  "StudioPaint.dc.html"
  ],
  "pages": [
   {
