@@ -20,6 +20,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 # The same list the API checks (api/trove/ai/scripted.py), so dev.py stops before the API would refuse.
 DEV_ENVIRONMENTS = {"development", "dev", "local", "test"}
+# The live site's database (render.yaml). A local copy must never run on it.
+LIVE_DATABASE = "trove_prod"
 
 
 def api_settings(env: dict[str, str]) -> dict | None:
@@ -98,6 +100,15 @@ def main() -> int:
     settings = api_settings(env)
     if settings is None:
         ai = "unknown: couldn't read the API's settings (run `uv sync --directory api`)"
+    elif settings["database"] == LIVE_DATABASE:
+        # The dev .env reaches the same Atlas cluster as the live site, so one wrong name would let a local
+        # copy write test accounts and real AI spend into live members' data.
+        print(
+            f"MONGODB_DATABASE is {LIVE_DATABASE}, the live site's database. "
+            "Set MONGODB_DATABASE=trove_dev_<yourname> in .env.",
+            file=sys.stderr,
+        )
+        return 1
     else:
         scripted, ai, problem = choose_ai(settings, args.scripted_ai)
         if problem:

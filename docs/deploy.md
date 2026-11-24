@@ -25,11 +25,10 @@ tested only with the network faked.
   with an invite link from a member (Settings → Invite an alum).
 - Reproduce a problem on your own machine: `python3 scripts/dev.py` (see the README), which prints email codes in
   the terminal. Most bugs are the app's, not the host's.
-- Fix code and ship it. Render watches the branch **`daniel/g1-go-live`**, so a fix pushed to that branch goes
-  live on its own in about 5 to 10 minutes (a build that fails leaves the old version running). Make the fix on
-  your own branch off it, run `python3 scripts/check.py`, then push to `daniel/g1-go-live` (or, if you prefer,
-  merge the pull request first and ask the owner to point Render at `main`). Tell the others in the chat first,
-  so two people don't push at once.
+- Fix code and ship it the usual way: a branch, `python3 scripts/check.py`, a pull request into `main`. Render
+  watches `main`, so a merged fix goes live on its own in about 5 to 10 minutes (a build that fails leaves the
+  old version running). The rules for merging now that `main` is live are in
+  [CONTRIBUTING.md](../CONTRIBUTING.md#the-live-site).
 
 **What needs the Render owner (Daniel).** Reading Render's Logs, changing settings or keys (the Environment
 page), restarting or redeploying, and pointing Render at another branch. The free plan allows no other member
