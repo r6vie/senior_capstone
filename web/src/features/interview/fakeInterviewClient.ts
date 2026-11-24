@@ -10,7 +10,6 @@ import type {
   NotesReply,
   Phase,
   ProposedChange,
-  ReadingQuestion,
   Spark,
 } from "./interviewClient";
 
@@ -158,7 +157,6 @@ interface Stored {
   offShelf?: boolean;
   previous?: DraftBook;
   sparks?: Spark[];
-  reading?: ReadingQuestion[];
   /** The Librarian's notebook, and its marks on the answer being written. */
   notebook?: NotebookEntry[];
   marks?: LibMark[];
@@ -591,22 +589,6 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
       const stored = load();
       if (!stored) return;
       stored.sparks = (stored.sparks ?? []).filter((spark) => spark.id !== sparkId);
-      save(stored);
-    },
-    readingQuestions: async () => load()?.reading ?? [],
-    answerReading: (questionId) =>
-      wait(delay).then(() => {
-        const stored = load();
-        if (!stored) throw new Error("There's no book to add to.");
-        stored.reading = (stored.reading ?? []).filter((question) => question.id !== questionId);
-        stored.stage = "writing";
-        save(stored);
-        return view(stored, authorName);
-      }),
-    dismissReading: async (questionId) => {
-      const stored = load();
-      if (!stored) return;
-      stored.reading = (stored.reading ?? []).filter((question) => question.id !== questionId);
       save(stored);
     },
   };

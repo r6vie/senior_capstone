@@ -118,7 +118,7 @@ export function SearchControl({ triggerRef }: { triggerRef: RefObject<HTMLInputE
     const { x, y, width, height } = element.getBoundingClientRect();
     const origin = { x, y, width, height };
     loadBook(result.book.id);
-    loadArt(artFor(result.book.id));
+    loadArt(artFor(result.book.id, result.book.design));
     setOpened({ result, origin });
   }
 
@@ -210,7 +210,7 @@ export function SearchControl({ triggerRef }: { triggerRef: RefObject<HTMLInputE
                       onOpen={(element) => openBook(result, element)}
                       onInterest={() => {
                         loadBook(result.book.id);
-                        loadArt(artFor(result.book.id));
+                        loadArt(artFor(result.book.id, result.book.design));
                       }}
                     />
                     <p>{result.excerpt}</p>

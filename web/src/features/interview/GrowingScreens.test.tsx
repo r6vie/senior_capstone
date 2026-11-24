@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "../auth/AuthProvider";
-import { answerOf, setAnswer } from "./answerField.testing";
+import { setAnswer } from "./answerField.testing";
 import { createFakeInterviewClient, resetFakeInterview } from "./fakeInterviewClient";
 import { InterviewPage } from "./InterviewPage";
 import {
@@ -11,7 +11,6 @@ import {
   type MyBook,
   type ProposedChange,
 } from "./interviewClient";
-import { ReadingQuestionPage } from "./ReadingQuestionPage";
 import { RemovalPage } from "./RemovalPage";
 
 const changes: ProposedChange[] = [
@@ -47,7 +46,6 @@ function show(c: InterviewClient, url = "/interview") {
       <MemoryRouter initialEntries={[url]}>
         <Routes>
           <Route path="/interview" element={<InterviewPage client={c} />} />
-          <Route path="/interview/reading/:questionId" element={<ReadingQuestionPage client={c} />} />
           <Route path="/my-book/remove/:chapterId" element={<RemovalPage client={c} />} />
           <Route path="/my-book" element={<p>The My book page</p>} />
         </Routes>
@@ -382,11 +380,8 @@ describe("words that can't go where they were meant", () => {
   it("a draft left behind by another screen comes back on arrival", async () => {
     localStorage.setItem("trove_interview_seen:anon", String(Date.now()));
     localStorage.setItem("trove_interview_draft:anon:An earlier question", "Unsent words");
-    localStorage.setItem("trove_interview_draft:anon:reading:r1", "A reading draft");
     show(client(inRound));
     expect(await screen.findByText("Unsent words")).toBeTruthy();
-    expect(screen.queryByText("A reading draft")).toBeNull();
-    expect(localStorage.getItem("trove_interview_draft:anon:reading:r1")).toBe("A reading draft");
   });
 
   it("holds the Librarian's last line on the band during the wait", async () => {
@@ -442,32 +437,19 @@ describe("how a round ends", () => {
     expect(screen.queryByText(/A few more questions/)).toBeNull();
   });
 
-  it("says why when an answer was left out for naming someone, and offers another go", async () => {
-    show(client({ id: "me", stage: "nothing", droppedForNames: true, readingQuestionId: "r1" }));
-    expect(await screen.findByText(/I left this out because it named someone or somewhere/)).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Say it again" }).getAttribute("href")).toBe(
-      "/interview/reading/r1",
-    );
-  });
-
-  it("names what was caught, and Say it again opens with the member's words", async () => {
+  it("says what was caught when an answer was left out for naming someone", async () => {
     show(
       client({
         id: "me",
         stage: "nothing",
         droppedForNames: true,
-        readingQuestionId: "r1",
         droppedWords: ["Geauga", "County", "Fair"],
-        readingAnswer: "They asked about the Geauga County Fair.",
       }),
     );
     expect(
       await screen.findByText(/named someone or somewhere: Geauga, County, Fair. Change those/),
     ).toBeTruthy();
-    fireEvent.click(screen.getByRole("link", { name: "Say it again" }));
-    expect(localStorage.getItem("trove_interview_draft:anon:reading:r1")).toBe(
-      "They asked about the Geauga County Fair.",
-    );
+    expect(screen.getByRole("link", { name: "Back to my book" })).toBeTruthy();
   });
 });
 
@@ -543,150 +525,5 @@ describe("removing a chapter from the shelf", () => {
       "/my-book/remove/0",
     );
     expect(await screen.findByText("The My book page")).toBeTruthy();
-  });
-});
-
-describe("the reading question", () => {
-  const question = {
-    id: "r1",
-    question: "What did they ask you about that surprised you?",
-    readerName: "Sam Okafor",
-    createdAt: "2026-11-06T12:00:00Z",
-  };
-  beforeEach(() => localStorage.clear());
-
-  it("names the reader, asks for names to be left out, and has no Skip", async () => {
-    show(client(null, { readingQuestions: async () => [question] }), "/interview/reading/r1");
-    expect(await screen.findByText("After your reading with Sam Okafor, Nov 6")).toBeTruthy();
-    expect(screen.getByText("Leave names out. This can become part of your book.")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Skip" })).toBeNull();
-  });
-
-  it("Not now only goes back: it doesn't dismiss", async () => {
-    const dismiss = vi.fn(async () => undefined);
-    show(
-      client(null, { readingQuestions: async () => [question], dismissReading: dismiss }),
-      "/interview/reading/r1",
-    );
-    const notNow = await screen.findByRole("link", { name: "Not now" });
-    expect(notNow.getAttribute("href")).toBe("/my-book");
-    expect(dismiss).not.toHaveBeenCalled();
-  });
-
-  it("sends the answer, then waits with its own words, and a thin one says so plainly", async () => {
-    const answer = vi.fn(async (): Promise<InterviewState> => ({ id: "me", stage: "writing" }));
-    show(
-      client(
-        { id: "me", stage: "writing" },
-        { readingQuestions: async () => [question], answerReading: answer },
-      ),
-      "/interview/reading/r1",
-    );
-    setAnswer(await screen.findByLabelText("Your answer"), "They asked why.");
-    press("Send answer");
-    expect(await screen.findByText("I'm checking whether this belongs in your book.")).toBeTruthy();
-    expect(answer).toHaveBeenCalledWith("r1", "They asked why.");
-  });
-
-  it("when the reply is lost but the answer arrived, goes on and says it was saved", async () => {
-    const asked = vi.fn().mockResolvedValueOnce([question]).mockResolvedValue([]);
-    show(
-      client(
-        { id: "me", stage: "writing" },
-        {
-          readingQuestions: asked,
-          answerReading: async () => {
-            throw new TypeError("Failed to fetch");
-          },
-        },
-      ),
-      "/interview/reading/r1",
-    );
-    setAnswer(await screen.findByLabelText("Your answer"), "They asked why.");
-    press("Send answer");
-    expect(await screen.findByText("Your answer was saved.")).toBeTruthy();
-    expect(screen.getByText("I'm checking whether this belongs in your book.")).toBeTruthy();
-  });
-
-  it("a first send refused because another screen answered doesn't claim it was saved", async () => {
-    const asked = vi.fn().mockResolvedValueOnce([question]).mockResolvedValue([]);
-    show(
-      client(null, {
-        readingQuestions: asked,
-        answerReading: async () => {
-          throw new InterviewError("That question isn't waiting for you.", false, true);
-        },
-      }),
-      "/interview/reading/r1",
-    );
-    setAnswer(await screen.findByLabelText("Your answer"), "My words.");
-    press("Send answer");
-    expect((await screen.findByRole("alert")).textContent).toMatch(/these words weren't saved/);
-    expect(asked).toHaveBeenCalled();
-    expect(screen.queryByText("Your answer was saved.")).toBeNull();
-    expect(answerOf(screen.getByLabelText("Your answer"))).toBe("My words.");
-  });
-
-  it("a refusal that says this answer arrived goes on and says it was saved", async () => {
-    const asked = vi.fn().mockResolvedValueOnce([question]).mockResolvedValue([]);
-    show(
-      client(
-        { id: "me", stage: "writing" },
-        {
-          readingQuestions: asked,
-          answerReading: async () => {
-            throw new InterviewError("Already answered.", false, true, true);
-          },
-        },
-      ),
-      "/interview/reading/r1",
-    );
-    setAnswer(await screen.findByLabelText("Your answer"), "My words.");
-    press("Send answer");
-    expect(await screen.findByText("Your answer was saved.")).toBeTruthy();
-  });
-
-  it("an edit after a lost reply that did arrive stays visible", async () => {
-    const asked = vi
-      .fn()
-      .mockResolvedValueOnce([question])
-      .mockResolvedValueOnce([question])
-      .mockResolvedValue([]);
-    const answer = vi
-      .fn()
-      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
-      .mockRejectedValue(new InterviewError("That question isn't waiting for you.", false, true));
-    show(
-      client({ id: "me", stage: "writing" }, { readingQuestions: asked, answerReading: answer }),
-      "/interview/reading/r1",
-    );
-    setAnswer(await screen.findByLabelText("Your answer"), "First.");
-    press("Send answer");
-    await screen.findByRole("alert");
-    setAnswer(screen.getByLabelText("Your answer"), "Better.");
-    press("Send answer");
-    expect(await screen.findByText("Better.")).toBeTruthy();
-    expect(screen.getByText(/Your first version was saved/)).toBeTruthy();
-  });
-
-  it("when the send failed and it's still waiting, keeps the answer", async () => {
-    show(
-      client(null, {
-        readingQuestions: async () => [question],
-        answerReading: async () => {
-          throw new TypeError("Failed to fetch");
-        },
-      }),
-      "/interview/reading/r1",
-    );
-    setAnswer(await screen.findByLabelText("Your answer"), "They asked why.");
-    press("Send answer");
-    expect((await screen.findByRole("alert")).textContent).toMatch(/Your answer is still here/);
-    expect(answerOf(screen.getByLabelText("Your answer"))).toBe("They asked why.");
-  });
-
-  it("says so when the question isn't waiting any more", async () => {
-    show(client(null, { readingQuestions: async () => [] }), "/interview/reading/r1");
-    expect(await screen.findByText("That question isn't waiting any more.")).toBeTruthy();
   });
 });

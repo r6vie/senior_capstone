@@ -310,8 +310,9 @@ export interface paths {
         head?: never;
         /**
          * Edit My Book
-         * @description Change the book's title or back cover, in the member's own words. On a published book it's
-         *     live at once, and POST /interview/book/undo takes it back. 409 while proposed changes wait.
+         * @description Change the book's title or back cover, in the member's own words, or its cover design. On a
+         *     published book it's live at once, and POST /interview/book/undo takes back words. 409 while proposed
+         *     changes wait, except for the design, which no proposal touches.
          */
         patch: operations["edit_my_book_books_me_patch"];
         trace?: never;
@@ -1256,18 +1257,22 @@ export interface components {
              * @enum {string}
              */
             cover_style: "cover-1" | "cover-2" | "cover-3" | "cover-4" | "cover-5" | "cover-6" | "cover-7" | "cover-8";
+            /** Design */
+            design?: ("strata/lake" | "strata/desert" | "strata/coast" | "strata/valley" | "strata/karst" | "strata/winter" | "strata/fields" | "strata/lagoon" | "strata/city" | "strata/forest" | "watercolor/mesa" | "watercolor/hills" | "watercolor/lake" | "watercolor/winter" | "watercolor/city" | "watercolor/blossom" | "watercolor/autumn" | "watercolor/beach" | "watercolor/lighthouse-day" | "watercolor/lighthouse-dusk") | null;
             /** Blurb */
             blurb: string | null;
         };
         /**
          * BookEdit
-         * @description The member's own words for their book's title or back cover. Plain text.
+         * @description The member's own words for their book's title or back cover (plain text), or its cover design.
          */
         BookEdit: {
             /** Title */
             title?: string | null;
             /** Blurb */
             blurb?: string | null;
+            /** Design */
+            design?: ("strata/lake" | "strata/desert" | "strata/coast" | "strata/valley" | "strata/karst" | "strata/winter" | "strata/fields" | "strata/lagoon" | "strata/city" | "strata/forest" | "watercolor/mesa" | "watercolor/hills" | "watercolor/lake" | "watercolor/winter" | "watercolor/city" | "watercolor/blossom" | "watercolor/autumn" | "watercolor/beach" | "watercolor/lighthouse-day" | "watercolor/lighthouse-dusk") | null;
         };
         /**
          * Change
@@ -1783,6 +1788,8 @@ export interface components {
              * @enum {string}
              */
             cover_style: "cover-1" | "cover-2" | "cover-3" | "cover-4" | "cover-5" | "cover-6" | "cover-7" | "cover-8";
+            /** Design */
+            design?: ("strata/lake" | "strata/desert" | "strata/coast" | "strata/valley" | "strata/karst" | "strata/winter" | "strata/fields" | "strata/lagoon" | "strata/city" | "strata/forest" | "watercolor/mesa" | "watercolor/hills" | "watercolor/lake" | "watercolor/winter" | "watercolor/city" | "watercolor/blossom" | "watercolor/autumn" | "watercolor/beach" | "watercolor/lighthouse-day" | "watercolor/lighthouse-dusk") | null;
             /** Blurb */
             blurb: string | null;
             /** Chapters */
@@ -1936,6 +1943,8 @@ export interface components {
              * @enum {string}
              */
             cover_style: "cover-1" | "cover-2" | "cover-3" | "cover-4" | "cover-5" | "cover-6" | "cover-7" | "cover-8";
+            /** Design */
+            design?: ("strata/lake" | "strata/desert" | "strata/coast" | "strata/valley" | "strata/karst" | "strata/winter" | "strata/fields" | "strata/lagoon" | "strata/city" | "strata/forest" | "watercolor/mesa" | "watercolor/hills" | "watercolor/lake" | "watercolor/winter" | "watercolor/city" | "watercolor/blossom" | "watercolor/autumn" | "watercolor/beach" | "watercolor/lighthouse-day" | "watercolor/lighthouse-dusk") | null;
             /** Blurb */
             blurb: string | null;
             /** Chapters */

@@ -11,8 +11,9 @@ type BookAnswer = Awaited<ReturnType<typeof fetchBook>>;
 const FRESH_MS = 60_000;
 const books = new Map<string, { at: number; answer: Promise<BookAnswer> }>();
 const ready = new Map<string, PublicBook>();
-let own: { at: number; answer: Promise<{ id: string | null } | null> } | null = null;
-let ownReady: { id: string | null } | null = null;
+type Own = { id: string | null; design?: string | null };
+let own: { at: number; answer: Promise<Own | null> } | null = null;
+let ownReady: Own | null = null;
 
 function fetchBook(id: string) {
   return api.GET("/books/{book_id}", { params: { path: { book_id: id } } });
@@ -39,13 +40,13 @@ export function loadedBook(id: string): PublicBook | null {
 }
 
 /** Which book is the member's own (null id: none yet), to tell Ask to check out from My book. */
-export function loadOwnBook(): Promise<{ id: string | null } | null> {
+export function loadOwnBook(): Promise<Own | null> {
   if (own && Date.now() - own.at < FRESH_MS) return own.answer;
   const answer = api
     .GET("/books/me")
     .then(({ data }) => {
       // null is the API saying "no book yet"; only a failed call (no data at all) is unknown.
-      const known = data !== undefined ? { id: data?.id ?? null } : null;
+      const known = data !== undefined ? { id: data?.id ?? null, design: data?.design ?? null } : null;
       if (known) ownReady = known;
       else own = null;
       return known;
@@ -58,8 +59,14 @@ export function loadOwnBook(): Promise<{ id: string | null } | null> {
   return answer;
 }
 
-export function loadedOwnBook(): { id: string | null } | null {
+export function loadedOwnBook(): Own | null {
   return own && Date.now() - own.at < FRESH_MS ? ownReady : null;
+}
+
+/** The member's own book changed (its design), so the next look fetches it again. */
+export function forgetOwnBook(): void {
+  own = null;
+  ownReady = null;
 }
 
 /** Forgets everything fetched, so each test starts from nothing. */

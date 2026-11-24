@@ -66,11 +66,15 @@ async def edit_my_book(
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
 ) -> MyBookResponse:
-    """Change the book's title or back cover, in the member's own words. On a published book it's
-    live at once, and POST /interview/book/undo takes it back. 409 while proposed changes wait."""
-    await _editable(database, user["_id"])
+    """Change the book's title or back cover, in the member's own words, or its cover design. On a
+    published book it's live at once, and POST /interview/book/undo takes back words. 409 while proposed
+    changes wait, except for the design, which no proposal touches."""
+    if data.title is not None or data.blurb is not None:
+        await _editable(database, user["_id"])
     try:
-        book = await books.edit_book(database, user["_id"], title=data.title, blurb=data.blurb)
+        book = await books.edit_book(
+            database, user["_id"], title=data.title, blurb=data.blurb, design=data.design
+        )
     except books.EditRefused as error:
         raise HTTPException(status_code=error.status_code, detail=error.detail) from None
     return await _own_view(database, book, user["_id"])

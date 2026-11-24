@@ -332,20 +332,15 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-/* Rows reach 12px left and 10px right of the text, so a highlight and its rules have room around the words
-   (board FreshReaderOpen). The list itself reaches out: it scrolls, so it would clip a row that did. */
+/* Rows reach 12px left and 10px right of the text, so a highlight has room around the words (board FreshReaderOpen).
+   No rules between rows and no underline on hover, as on My book (Josef, 2026-11-23). The list itself reaches out:
+   it scrolls, so it would clip a row that did. */
 .br-toc {
   min-height: 0;
   margin: 20px -10px 0 -12px;
   padding: 0 0 24px;
   overflow-y: auto;
   list-style: none;
-}
-.br-toc li {
-  border-top: 2.5px dotted var(--ink);
-}
-.br-toc li:last-child {
-  border-bottom: 2.5px dotted var(--ink);
 }
 .br-toc button {
   display: grid;
@@ -363,11 +358,6 @@
 }
 .br-toc button:hover {
   background: var(--paper-sunk);
-}
-.br-toc button:hover .br-toc-title {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
 }
 .br-toc b {
   font: 700 22px / 1 var(--font-display);

@@ -9,6 +9,30 @@ from trove.interview.engine import MAX_BLURB, MAX_SUMMARY
 # Books are plain white for now; the style is stored so covers can differ later without a migration.
 CoverStyle = Literal["cover-1", "cover-2", "cover-3", "cover-4", "cover-5", "cover-6", "cover-7", "cover-8"]
 BookStatus = Literal["draft", "on_shelf", "off_shelf"]
+# The cover designs a member can choose on My book: "<kind>/<key>", one per approved art in web/src/ui/art/*/manifest.json
+# (tests/test_book_editing.py checks the two lists match). A book without one gets its art from a hash of its id.
+Design = Literal[
+    "strata/lake",
+    "strata/desert",
+    "strata/coast",
+    "strata/valley",
+    "strata/karst",
+    "strata/winter",
+    "strata/fields",
+    "strata/lagoon",
+    "strata/city",
+    "strata/forest",
+    "watercolor/mesa",
+    "watercolor/hills",
+    "watercolor/lake",
+    "watercolor/winter",
+    "watercolor/city",
+    "watercolor/blossom",
+    "watercolor/autumn",
+    "watercolor/beach",
+    "watercolor/lighthouse-day",
+    "watercolor/lighthouse-dusk",
+]
 # The AI's summaries and blurbs have these limits too. Titles have none in the prompts, so these
 # leave room (docs/review/decisions.md, row 30).
 MAX_BOOK_TITLE = 80
@@ -34,6 +58,8 @@ class BookCard(BaseModel):
     title: str
     author_name: str
     cover_style: CoverStyle
+    # The cover design the author chose; null means the art comes from the book's id.
+    design: Design | None = None
     blurb: str | None
 
 
@@ -56,6 +82,7 @@ class MyBookResponse(BaseModel):
     title: str
     author_name: str
     cover_style: CoverStyle
+    design: Design | None = None
     blurb: str | None
     chapters: list[AuthorChapter]
     copies: int
@@ -71,15 +98,16 @@ class MyBookResponse(BaseModel):
 
 
 class BookEdit(RequestBody):
-    """The member's own words for their book's title or back cover. Plain text."""
+    """The member's own words for their book's title or back cover (plain text), or its cover design."""
 
     title: NonEmptyText | None = Field(None, max_length=MAX_BOOK_TITLE)
     blurb: NonEmptyText | None = Field(None, max_length=MAX_BLURB)
+    design: Design | None = None
 
     @model_validator(mode="after")
     def something_to_change(self):
-        if self.title is None and self.blurb is None:
-            raise ValueError("Send a title or a blurb to change.")
+        if self.title is None and self.blurb is None and self.design is None:
+            raise ValueError("Send a title, a blurb or a design to change.")
         return self
 
 

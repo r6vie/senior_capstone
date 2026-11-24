@@ -22,10 +22,6 @@ const CheckoutsPage = page(() => import("../features/checkouts/CheckoutsPage"), 
 const PastMeetsPage = page(() => import("../features/checkouts/PastMeetsPage"), "PastMeetsPage");
 const ShelfPage = page(() => import("../features/discovery/ShelfPage"), "ShelfPage");
 const InterviewPage = page(() => import("../features/interview/InterviewPage"), "InterviewPage");
-const ReadingQuestionPage = page(
-  () => import("../features/interview/ReadingQuestionPage"),
-  "ReadingQuestionPage",
-);
 const RemovalPage = page(() => import("../features/interview/RemovalPage"), "RemovalPage");
 const MeetingPage = page(() => import("../features/meetings/MeetingPage"), "MeetingPage");
 const MessagesPage = page(() => import("../features/messaging/MessagesPage"), "MessagesPage");
@@ -76,14 +72,6 @@ export function App() {
                 element={
                   <RequireAuth>
                     <InterviewPage />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/interview/reading/:questionId"
-                element={
-                  <RequireAuth>
-                    <ReadingQuestionPage />
                   </RequireAuth>
                 }
               />

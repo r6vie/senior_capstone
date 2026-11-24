@@ -348,3 +348,57 @@ async def test_a_spark_from_before_the_author_was_recorded_still_goes(client, da
     # The interview's cleanup runs while the book still exists, so it can find the book's sparks.
     await interview.delete_interview_of(database, author["id"])
     assert await database.sparks.find_one({"_id": spark["id"]}) is None
+
+
+# The cover design (My book D2).
+
+
+async def test_a_chosen_design_is_kept_shown_to_readers_and_left_alone_by_undo(client, database, author):
+    reader = await member(client, "reader@case.edu", "Rae", "Jones")
+    assert (await my_book(client, author))["design"] is None
+
+    response = await edit(client, author, design="watercolor/lake")
+    assert response.status_code == 200, response.text
+    book = response.json()
+    assert book["design"] == "watercolor/lake"
+    # A design isn't words: it leaves nothing for undo to take back.
+    assert book["can_undo"] is False
+    seen = (await client.get(f"/books/{book['id']}", headers=reader["headers"])).json()
+    assert seen["design"] == "watercolor/lake"
+    shelf = (await client.get("/books", headers=reader["headers"])).json()["books"]
+    assert next(card for card in shelf if card["id"] == book["id"])["design"] == "watercolor/lake"
+
+    await edit(client, author, title="A New Title")
+    undone = (await client.post("/interview/book/undo", headers=author["headers"])).json()
+    assert undone["title"] == "The Book"
+    assert undone["design"] == "watercolor/lake"
+
+
+@pytest.mark.parametrize("design", ["watercolor/nowhere", "mosaic/lake", "", "strata"])
+async def test_an_unknown_design_is_refused(client, author, design):
+    response = await edit(client, author, design=design)
+    assert response.status_code == 422
+    assert (await my_book(client, author))["design"] is None
+
+
+async def test_a_design_can_change_while_proposed_changes_wait(client, author, fake_claude):
+    await propose(client, author, fake_claude, change())
+    assert (await edit(client, author, title="Not now")).status_code == 409
+    response = await edit(client, author, design="strata/forest")
+    assert response.status_code == 200, response.text
+    assert response.json()["design"] == "strata/forest"
+
+
+def test_the_designs_are_the_web_apps_arts():
+    from pathlib import Path
+    from typing import get_args
+
+    from trove.books.models import Design
+
+    art = Path(__file__).resolve().parents[2] / "web" / "src" / "ui" / "art"
+    web = [
+        f"{kind}/{entry['key']}"
+        for kind in ("strata", "watercolor")
+        for entry in json.loads((art / kind / "manifest.json").read_text())["arts"]
+    ]
+    assert sorted(get_args(Design)) == sorted(web)

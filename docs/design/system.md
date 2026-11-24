@@ -256,6 +256,44 @@ so leave the art layer out (keep a place for one image under each page's content
 
 Patterns added after v1. Each entry: name, the task it solves, date, owner, snippet or link.
 
+### My book: the shelf's book, opened to its author (MyBookD2, 2026-11-24, Trove UI; approved by Josef 2026-11-23; `web/src/features/book/`)
+
+Replaces "My book layout" under Growing books, and the edit forms of "Editing your own book" on My book.
+
+- **The page:** "My book" and, top right, **On the shelf** as a switch (`.mb-switch`, `role="switch"`: a 52x28 ink box with
+  an 18px square knob; filled ink when on). Turning it off takes the book off the shelf at once; it is not shown for a draft.
+- **The book:** the reveal's open book (`OpenBook`, `AutoField` in `RevealParts.tsx`). The title page carries the
+  design's page art behind the title field and the byline, and the **pen** (44px white square, ink line) bottom left. The
+  contents list the chapters with their summaries and end with **Back cover**. A chapter or the back cover opens on the
+  right with the contents, titles only, on the left; the open row is inked. Every field saves as it's typed; there is no
+  Save or Cancel. "Remove this chapter" sits at the foot of a chapter's page and asks once.
+- **The Librarian:** one black block under the book (`.mb-lib`): a white caption "The Librarian", the line for the stage if
+  it has one, and the one red button.
+- **Changing the design:** the pen closes the book, which steps aside at a smaller size; "Choose a design" opens beside
+  it with two tabs, **Mosaic** and **Watercolour**, each with ten designs drawn as the member's own cover and no names.
+  The designs not chosen sit back (scale .92, opacity .5, saturation .45); the chosen one comes forward (scale 1.06),
+  over 0.2 s. Choosing fades the closed cover to paper (0.4 s), then its quick clip paints the new cover in (about 4 s).
+  "Use this design" saves it on the book (`design`, PATCH /books/me) and opens the book with the new scene; every screen
+  then draws that design (a book with none keeps the art its id gives it). "Back to my book" opens it as it was. Reduced
+  motion swaps at once.
+- **Removed from My book:** the reading question, the sparks list, Undo changes, "Show what you said", and the "Take off
+  the shelf" link (now the switch). The shelf reader's contents drop their dotted rules and hover underline to match.
+
+### Signed-out pages, two halves (StartJoin, 2026-11-24, Trove UI; approved by Josef 2026-11-23; `web/src/features/auth/`)
+
+Replaces "Signed-out pages" (2026-11-22) below.
+
+- **Desktop (960px and up):** under a paper strip (wordmark, one underlined Barlow link across), the left half is the dot
+  ground with the Librarian's line in a **caption box** (white, 3px ink line, offset outline) and a **white book** standing on
+  a hatched shelf; the right half (up to 560px) is white, with the caption, a 52px Newsreader title and the form.
+- **Your name on the cover:** joining letters the first and last name onto the white book as they are typed; before that a
+  faint "Your name" shows where it goes. The confirm page keeps the name. Sign in shows the book with no name.
+- **An invite** is a library card ("Invited by", the inviter's name, two ruled lines) tucked behind the book, tilted 5°;
+  the case.edu hint goes with it.
+- **The code** is six boxes, three and three, over one real field (paste and the phone's code suggestion still work);
+  the box being filled has the focus ring. The password field has **Show** inside it, at its right end.
+- **Phone:** the caption box and the book on a short dot band, then the form at full width, names stacked under 480px.
+
 ### The reveal: titles on a shelf, the book open while it's written, review in the book (StartReveal, 2026-11-24, Trove UI; approved by Josef)
 
 `RevealParts.tsx`, with the book frame from `IntroBook.css`.

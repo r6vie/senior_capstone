@@ -136,7 +136,7 @@ export function BookReader({
   const object = useRef<HTMLDivElement>(null);
   const [book, setBook] = useState<PublicBook | null>(() => example ?? loadedBook(bookId));
   // The same art as the book's cover on the shelf: its cover while it is closed, its title page once open.
-  const art = artFor(bookId);
+  const art = artFor(bookId, card?.design ?? book?.design);
   // Its art decoded before it opens, so no picture comes in mid-flight (loaded ahead with the book on the shelf).
   const [artLoaded, setArtLoaded] = useState(() => artReady(art));
   useEffect(() => {

@@ -252,6 +252,7 @@
   font: 600 14px / 1 var(--font-display);
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  white-space: nowrap;
   cursor: pointer;
 }
 .rv-tabs [aria-current] {

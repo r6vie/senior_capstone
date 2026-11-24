@@ -23,6 +23,7 @@ type InterviewResponse = components["schemas"]["InterviewResponse"];
 type MarkResponse = components["schemas"]["Mark"];
 type EntryResponse = components["schemas"]["Entry"];
 type LibrarianResponse = components["schemas"]["LibrarianState"];
+type BookEditBody = components["schemas"]["BookEdit"];
 
 function toMark(mark: MarkResponse): LibMark {
   return {
@@ -113,7 +114,13 @@ function toBook(book: MyBookResponse): DraftBook {
 }
 
 function toMyBook(book: MyBookResponse) {
-  return { ...toBook(book), status: book.status, canUndo: book.can_undo, changedAt: book.revised_at };
+  return {
+    ...toBook(book),
+    status: book.status,
+    canUndo: book.can_undo,
+    changedAt: book.revised_at,
+    design: book.design ?? null,
+  };
 }
 
 function fromBook(book: MyBookResponse): InterviewState {
@@ -196,9 +203,7 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
             id: ID,
             stage: "nothing",
             droppedForNames: response.dropped_for_names,
-            readingQuestionId: response.reading_question_id ?? undefined,
             droppedWords: response.dropped_words ?? undefined,
-            readingAnswer: response.reading_answer ?? undefined,
           }
         : myBook();
     case "revising":
@@ -465,7 +470,8 @@ export const apiInterviewClient: InterviewClient = {
     ended(await api.POST("/interview/revision", { body }));
   },
   async editBook(edit) {
-    return toMyBook(unwrap(await api.PATCH("/books/me", { body: edit })));
+    const body = { ...edit, design: edit.design as BookEditBody["design"] };
+    return toMyBook(unwrap(await api.PATCH("/books/me", { body })));
   },
   async editChapter(chapterId, edit) {
     const params = { path: { chapter_id: chapterId } };
@@ -495,8 +501,6 @@ export const apiInterviewClient: InterviewClient = {
       empty: Boolean(now?.nothing_new),
       droppedForNames: now?.dropped_for_names,
       droppedWords: now?.dropped_words ?? undefined,
-      readingQuestionId: now?.reading_question_id ?? undefined,
-      readingAnswer: now?.reading_answer ?? undefined,
     };
   },
   async sparks() {
@@ -505,26 +509,5 @@ export const apiInterviewClient: InterviewClient = {
   },
   async removeSpark(sparkId) {
     ended(await api.DELETE("/interview/sparks/{spark_id}", { params: { path: { spark_id: sparkId } } }));
-  },
-  async readingQuestions() {
-    const questions = unwrap(await api.GET("/interview/reading-questions"));
-    return questions.map(({ id, question, reader_name, created_at }) => ({
-      id,
-      question,
-      readerName: reader_name,
-      createdAt: created_at,
-    }));
-  },
-  async answerReading(questionId, answer) {
-    const params = { path: { question_id: questionId } };
-    return toState(
-      unwrap<InterviewResponse>(
-        await api.POST("/interview/reading-questions/{question_id}/answer", { params, body: { answer } }),
-      ),
-    );
-  },
-  async dismissReading(questionId) {
-    const params = { path: { question_id: questionId } };
-    ended(await api.POST("/interview/reading-questions/{question_id}/dismiss", { params }));
   },
 };

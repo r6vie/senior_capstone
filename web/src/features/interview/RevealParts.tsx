@@ -155,7 +155,7 @@ export function TitleShelf({
 // ---------- The chosen book, open while it's written ----------
 
 /** The open book as the shelf's reader draws it: board, spine, page edge and two pages. */
-function OpenBook({
+export function OpenBook({
   left,
   right,
   label,
@@ -249,7 +249,7 @@ export function WritingBook({
 const SAVE_AFTER_MS = 700;
 
 /** A field that saves itself a moment after the member stops typing, and when they leave it. */
-function AutoField({
+export function AutoField({
   label,
   value,
   onSave,

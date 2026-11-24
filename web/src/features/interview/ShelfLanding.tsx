@@ -15,7 +15,7 @@ import "./ShelfLanding.css";
 //    Its last frame is the cover, so on `ended` the still cover takes its place with no jump.
 // Reduced motion: a short crossfade to the finished shelf, with the still cover.
 
-export type LandingBook = { id: string; title: string; authorName: string };
+export type LandingBook = { id: string; design?: string | null; title: string; authorName: string };
 
 // flight: travelling to the shelf, still white. white: on the shelf, still white, while the clip gets ready.
 // paint: the clip plays. done: the still cover.
@@ -55,7 +55,7 @@ export function ShelfLanding({
   /** After the cover has painted in, or at once with reduced motion. */
   onLanded?: () => void;
 }) {
-  const art = artFor(book.id);
+  const art = artFor(book.id, book.design);
   const [reduced] = useState(reducedMotion);
   const [phase, setPhase] = useState<Phase>(() =>
     reduced || !art.anim ? "done" : from ? "flight" : "white",

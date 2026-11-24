@@ -13,7 +13,7 @@ type MyBook = components["schemas"]["MyBookResponse"];
 
 interface Desk {
   waiting: { readerName: string } | null;
-  book: { id: string; title: string; authorName: string } | null | undefined;
+  book: { id: string; design?: string | null; title: string; authorName: string } | null | undefined;
 }
 
 function useDesk(): Desk {
@@ -43,7 +43,7 @@ function useDesk(): Desk {
         else
           setDesk((now) => ({
             ...now,
-            book: { id: book.id, title: book.title, authorName: book.author_name },
+            book: { id: book.id, design: book.design, title: book.title, authorName: book.author_name },
           }));
       })
       .catch(() => undefined);
@@ -79,8 +79,8 @@ export function FrontDesk({ underway }: { underway?: boolean }) {
         <section className="surf desk-block desk-book" aria-label="Your book">
           {book && (
             <span className="book book-xs" aria-hidden="true">
-              <span className="book-cover" style={coverInk(artFor(book.id))}>
-                <ArtImage className="book-art" src={artFor(book.id).cover} />
+              <span className="book-cover" style={coverInk(artFor(book.id, book.design))}>
+                <ArtImage className="book-art" src={artFor(book.id, book.design).cover} />
                 <span className="book-title">{book.title}</span>
                 <span className="book-author">{book.authorName}</span>
               </span>

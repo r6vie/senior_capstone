@@ -134,8 +134,6 @@ export function InterviewPage({
   const [search] = useSearchParams();
   const adding = search.has("add");
   const location = useLocation();
-  // Arrived from answering the question after a reading: the wait and the outcome say so.
-  const fromReading = Boolean((location.state as { fromReading?: boolean } | null)?.fromReading);
   const fromLostReading = Boolean((location.state as { answerSaved?: boolean } | null)?.answerSaved);
   const navigate = useNavigate();
   // "Your book is on the shelf" is for the moment of shelving, from the review. Anything else that
@@ -818,10 +816,7 @@ export function InterviewPage({
         );
       case "writing":
         return (
-          <Frame
-            canLeave={false}
-            say={fromReading ? "I'm checking whether this belongs in your book." : "I'm writing the changes."}
-          >
+          <Frame canLeave={false} say="I'm writing the changes.">
             {fromLostReading && (
               <p className="iv-note" role="status">
                 Your answer was saved.
@@ -868,28 +863,11 @@ export function InterviewPage({
         );
       case "nothing":
         if (state.droppedForNames) {
-          const { readingQuestionId, readingAnswer } = state;
           return (
             <Frame canLeave={false} say="Nothing here changes your book.">
               <p className="iv-note iv-note-big">{droppedSentence(state.droppedWords)}</p>
               <div className="iv-row">
-                {readingQuestionId && (
-                  <Link
-                    to={`/interview/reading/${readingQuestionId}`}
-                    className="button button-primary"
-                    onClick={() => {
-                      if (readingAnswer) {
-                        keepDraft(draftKeyFor(userId, `reading:${readingQuestionId}`), readingAnswer);
-                      }
-                    }}
-                  >
-                    Say it again
-                  </Link>
-                )}
-                <Link
-                  to="/my-book"
-                  className={`button ${readingQuestionId ? "button-quiet" : "button-primary"}`}
-                >
+                <Link to="/my-book" className="button button-primary">
                   Back to my book
                 </Link>
               </div>
@@ -898,11 +876,7 @@ export function InterviewPage({
         }
         return (
           <Frame canLeave={false} say="Nothing here changes your book.">
-            <p className="iv-note iv-note-big">
-              {fromReading
-                ? "What you said is saved."
-                : "What you said is saved, and the next questions can use it."}
-            </p>
+            <p className="iv-note iv-note-big">What you said is saved, and the next questions can use it.</p>
             <div className="iv-row">
               <Link to="/my-book" className="button button-primary">
                 Back to my book
@@ -1200,18 +1174,27 @@ function SignOff({ line }: { line: string }) {
 function DoneScreen({ book, from }: { book: DraftBook; from: DOMRect | null }) {
   // The book lands on the real shelf (StartReveal, step 7): its own id gives its cover art, and a few of the
   // shelf's books stand either side of it.
-  const [shelf, setShelf] = useState<{ id: string; neighbours: LandingBook[] } | null>(null);
+  const [shelf, setShelf] = useState<{
+    id: string;
+    design?: string | null;
+    neighbours: LandingBook[];
+  } | null>(null);
   useEffect(() => {
     let live = true;
     Promise.all([api.GET("/books/me"), api.GET("/books", { params: { query: { limit: 12 } } })])
       .then(([mine, all]) => {
         if (!live || !mine.data) return;
-        const id = mine.data.id;
+        const { id, design } = mine.data;
         const neighbours = (all.data?.books ?? [])
           .filter((other) => other.id !== id)
           .slice(0, 6)
-          .map((other) => ({ id: other.id, title: other.title, authorName: other.author_name }));
-        setShelf({ id, neighbours });
+          .map((other) => ({
+            id: other.id,
+            design: other.design,
+            title: other.title,
+            authorName: other.author_name,
+          }));
+        setShelf({ id, design, neighbours });
       })
       .catch(() => undefined);
     return () => {
@@ -1223,7 +1206,7 @@ function DoneScreen({ book, from }: { book: DraftBook; from: DOMRect | null }) {
       <div className="iv-landing">
         {shelf ? (
           <ShelfLanding
-            book={{ id: shelf.id, title: book.title, authorName: book.authorName }}
+            book={{ id: shelf.id, design: shelf.design, title: book.title, authorName: book.authorName }}
             neighbours={shelf.neighbours}
             from={from}
           />
