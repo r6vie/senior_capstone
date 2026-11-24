@@ -256,6 +256,25 @@ so leave the art layer out (keep a place for one image under each page's content
 
 Patterns added after v1. Each entry: name, the task it solves, date, owner, snippet or link.
 
+### The reveal: titles on a shelf, the book open while it's written, review in the book (StartReveal, 2026-11-24, Trove UI; approved by Josef)
+
+`RevealParts.tsx`, with the book frame from `IntroBook.css`.
+
+- **Titles:** three white books rise onto a shelf, 120ms apart. Each title types onto its cover (24ms a letter), its
+  reason fades up under the shelf, and the next book starts 0.7s later. The whole book is the choice (a pressed
+  button). The pick lifts 26px in 0.25s, its outline thickens and its bookmark slides in, with "Your pick" over
+  its reason. The other two sit back at 92%, half opacity, desaturated, as in the design picker. On a phone each
+  book is a row with its reason beside it.
+- **Writing:** the chosen book stays open on screen for the whole wait: its title page, and a contents page of
+  blank places.
+- **Review:** the same open book. The title is a field from the start, with the name and the Librarian's sign-off
+  under it. The contents have no dividers, and each entry's text is clamped to two lines. The back cover is the
+  last entry, in italics with no number, and has its own tab. A chapter opens to its title and text as fields;
+  the back cover opens to one field. Every field saves a moment after typing stops, and on leaving it. Remove
+  chapter is on the chapter's own page and asks in place. "Put it on the shelf" (red) and "See the other
+  titles" sit under the book. The contents fill row by row as review opens.
+- Reduced motion: everything is there at once.
+
 ### The interview's first screen: the book introduces it (StartInterview, 2026-11-23, Trove UI; approved by Josef)
 
 The task: say what the interview is before it starts, without a band or a form. `IntroBook.tsx`.

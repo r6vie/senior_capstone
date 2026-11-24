@@ -22,6 +22,11 @@ function renderWith(
   );
 }
 
+/** Reduced motion: the screens that type or rise show their end state at once. */
+function stillMotion() {
+  vi.stubGlobal("matchMedia", (query: string) => ({ matches: query === "(prefers-reduced-motion: reduce)" }));
+}
+
 /** The intro book (StartInterview) types its lines first; Skip goes straight to its questions and Start. */
 async function skipIntro() {
   await screen.findByText("I’ll ask you one question at a time.");
@@ -572,10 +577,11 @@ describe("InterviewPage", () => {
       vi.spyOn(client, "chooseTitle").mockRejectedValueOnce(
         new InterviewError("You already have a book.", false, true),
       );
+      stillMotion();
       renderWith(client);
-      fireEvent.click(await screen.findByRole("radio"));
+      fireEvent.click(await screen.findByRole("button", { name: /A title/ }));
       fireEvent.click(screen.getByRole("button", { name: "Choose this title" }));
-      expect(await screen.findByRole("heading", { name: bookWith(null).title })).toBeTruthy();
+      expect(await screen.findByDisplayValue(bookWith(null).title)).toBeTruthy();
       expect(document.body.textContent).not.toMatch(/already have a book/);
     });
 
@@ -597,7 +603,7 @@ describe("InterviewPage", () => {
       renderWith(client);
       expect(await screen.findByText("The Librarian is writing your book…")).toBeTruthy();
       await act(() => vi.advanceTimersByTimeAsync(5000));
-      expect(screen.getByRole("heading", { name: bookWith(null).title })).toBeTruthy();
+      expect(screen.getByDisplayValue(bookWith(null).title)).toBeTruthy();
     });
 
     it("when writing failed twice, offers the same step again", async () => {
@@ -608,7 +614,7 @@ describe("InterviewPage", () => {
       expect(screen.getByText("Everything you've said is saved.")).toBeTruthy();
       fireEvent.click(screen.getByRole("button", { name: "Try again" }));
       expect(retry).toHaveBeenCalledWith("book", "2");
-      expect(await screen.findByRole("heading", { name: bookWith(null).title })).toBeTruthy();
+      expect(await screen.findByDisplayValue(bookWith(null).title)).toBeTruthy();
     });
 
     it("not enough yet is never a dead end", async () => {
@@ -902,28 +908,58 @@ describe("InterviewPage", () => {
         response: new Response(null, { status: 200 }),
       } as never);
       renderWith(at({ id: "me", stage: "choosing", titles }));
-      expect(await screen.findByText("Alexandra Okonkwo-Brennan")).toBeTruthy();
+      expect(await screen.findAllByText("Alexandra Okonkwo-Brennan")).not.toHaveLength(0);
     });
 
-    it("reads each title once to a screen reader, under a plain line", async () => {
+    it("makes each white book the choice, with its reason", async () => {
+      stillMotion();
       renderWith(at({ id: "me", stage: "choosing", titles }));
       expect(await screen.findByText("Here are three titles for your book.")).toBeTruthy();
-      expect(document.querySelector(".iv-pick .book")?.getAttribute("aria-hidden")).toBe("true");
+      const book = screen.getByRole("button", { name: /Finding the Step That Went Wrong/ });
+      expect(book.getAttribute("aria-pressed")).toBe("false");
+      fireEvent.click(book);
+      expect(book.getAttribute("aria-pressed")).toBe("true");
+      expect(screen.getAllByText("Your pick")).not.toHaveLength(0);
+      expect((screen.getByRole("button", { name: "Choose this title" }) as HTMLButtonElement).disabled).toBe(
+        false,
+      );
     });
   });
 
   describe("reviewing the book", () => {
-    it("shows the book itself, and promises only what the screen can do", async () => {
+    async function openChapter(index: number) {
+      fireEvent.click(await screen.findByRole("button", { name: new RegExp(CHAPTER_TITLES[index] ?? "") }));
+    }
+
+    it("is the open book, every word a field, and promises only what it does", async () => {
       renderWith(at(reviewing()));
-      await screen.findByRole("heading", { name: bookWith(null).title });
+      expect(await screen.findByDisplayValue(bookWith(null).title)).toBeTruthy();
       // Josef removed Rewrite chapter and Rewrite back cover (2026-11-23).
       expect(screen.queryByRole("button", { name: /^Rewrite/ })).toBeNull();
-      expect(document.querySelector(".iv-booktitle .book")).toBeTruthy();
       expect(screen.getByText(/Edit or remove anything that doesn't sound like you/)).toBeTruthy();
-      expect(document.body.textContent).not.toMatch(/Change anything/);
+      for (const title of CHAPTER_TITLES)
+        expect(screen.getByRole("button", { name: new RegExp(title) })).toBeTruthy();
+      // The back cover is the last entry in the contents.
+      expect(screen.getAllByRole("button", { name: "Back cover" })).not.toHaveLength(0);
     });
 
-    it("edits a chapter in place, and the review shows it", async () => {
+    it("saves the title as the member types it", async () => {
+      const client = at(reviewing());
+      const edit = vi.spyOn(client, "editBook").mockResolvedValue({
+        ...bookWith("I fix schedules that slipped."),
+        title: "My Own Title",
+        canUndo: false,
+        status: "draft",
+      });
+      renderWith(client);
+      const title = await screen.findByLabelText("Title");
+      fireEvent.focus(title);
+      fireEvent.change(title, { target: { value: "My Own Title" } });
+      fireEvent.blur(title);
+      await waitFor(() => expect(edit).toHaveBeenCalledWith({ title: "My Own Title" }));
+    });
+
+    it("opens a chapter to its title and text, and saves its words", async () => {
       const client = at(reviewing());
       const edit = vi.spyOn(client, "editChapter").mockResolvedValue({
         ...bookWith("I fix schedules that slipped."),
@@ -934,11 +970,13 @@ describe("InterviewPage", () => {
         status: "draft",
       });
       renderWith(client);
-      fireEvent.click(await screen.findByRole("button", { name: `Edit ${CHAPTER_TITLES[0]}` }));
-      fireEvent.change(screen.getByLabelText("What it's about"), { target: { value: "In my own words." } });
-      fireEvent.click(screen.getByRole("button", { name: "Save" }));
-      expect(await screen.findByText("In my own words.")).toBeTruthy();
-      expect(edit).toHaveBeenCalledWith("0", { summary: "In my own words." });
+      await openChapter(0);
+      const text = screen.getByLabelText("Chapter 1 text");
+      fireEvent.focus(text);
+      fireEvent.change(text, { target: { value: "In my own words." } });
+      fireEvent.blur(text);
+      await waitFor(() => expect(edit).toHaveBeenCalledWith("0", { summary: "In my own words." }));
+      expect(screen.getByLabelText("Chapter 1 title")).toBeTruthy();
     });
 
     it("an edit refused while changes wait keeps the words and says why", async () => {
@@ -947,9 +985,12 @@ describe("InterviewPage", () => {
         new InterviewError("Decide on the waiting changes first.", false, true),
       );
       renderWith(client);
-      fireEvent.click(await screen.findByRole("button", { name: "Edit the title and back cover" }));
-      fireEvent.change(screen.getByLabelText("Back cover"), { target: { value: "My blurb" } });
-      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+      const [backTab] = await screen.findAllByRole("button", { name: "Back cover" });
+      if (backTab) fireEvent.click(backTab);
+      const back = screen.getByLabelText("Back cover");
+      fireEvent.focus(back);
+      fireEvent.change(back, { target: { value: "My blurb" } });
+      fireEvent.blur(back);
       expect((await screen.findByRole("alert")).textContent).toMatch(/waiting changes/);
       expect((screen.getByLabelText("Back cover") as HTMLTextAreaElement).value).toBe("My blurb");
     });
@@ -959,15 +1000,16 @@ describe("InterviewPage", () => {
       vi.spyOn(client, "removeChapter").mockResolvedValue(reviewing("The shorter blurb.", 3));
       renderWith(client);
       const title = CHAPTER_TITLES[0] ?? "";
-      fireEvent.click(await screen.findByRole("button", { name: `Remove ${title}` }));
+      await openChapter(0);
+      fireEvent.click(screen.getByRole("button", { name: `Remove ${title}` }));
       fireEvent.click(screen.getByRole("button", { name: `Remove ${title}` }));
       expect(await screen.findByText("Back cover rewritten to match.")).toBeTruthy();
     });
 
-    it("shows no blurb for a book written before blurbs", async () => {
+    it("has no back cover entry for a book written before blurbs", async () => {
       renderWith(at(reviewing(null)));
-      await screen.findByRole("heading", { name: bookWith(null).title });
-      expect(document.querySelector(".iv-blurb")).toBeNull();
+      await screen.findByDisplayValue(bookWith(null).title);
+      expect(screen.queryByRole("button", { name: "Back cover" })).toBeNull();
     });
 
     it("goes back to the other titles, warning that rewrites may change", async () => {
@@ -986,44 +1028,17 @@ describe("InterviewPage", () => {
       expect(await screen.findByText(/rewrites your chapters to fit the new title/)).toBeTruthy();
       expect(screen.queryByText("The one you have.")).toBeNull();
       fireEvent.click(screen.getByRole("button", { name: /Another Title/ }));
-      await screen.findByRole("heading", { name: "Another Title" });
+      expect(await screen.findByDisplayValue("Another Title")).toBeTruthy();
       expect(change).toHaveBeenCalledWith("me", "1");
     });
 
-    it("shows the member their own words behind a chapter, on request", async () => {
-      renderWith(at(reviewing()));
-      expect(
-        await screen.findByText(/opens your own words behind each chapter. Only you see those/),
-      ).toBeTruthy();
-      const quote = `I said this about ${CHAPTER_TITLES[0]}.`;
-      expect(screen.queryByText(quote)).toBeNull();
-      fireEvent.click(screen.getByRole("button", { name: `Show what you said for ${CHAPTER_TITLES[0]}` }));
-      expect(screen.getByText(quote)).toBeTruthy();
-      fireEvent.click(screen.getByRole("button", { name: `Hide what you said for ${CHAPTER_TITLES[0]}` }));
-      expect(screen.queryByText(quote)).toBeNull();
-    });
-
-    it("names the chapter on each row's buttons", async () => {
-      renderWith(at(reviewing()));
-      for (const title of CHAPTER_TITLES) {
-        expect(await screen.findByRole("button", { name: `Edit ${title}` })).toBeTruthy();
-        expect(screen.getByRole("button", { name: `Remove ${title}` })).toBeTruthy();
-      }
-    });
-
-    it("asks about one chapter's removal at a time", async () => {
-      renderWith(at(reviewing()));
-      fireEvent.click(await screen.findByRole("button", { name: `Remove ${CHAPTER_TITLES[0]}` }));
-      fireEvent.click(screen.getByRole("button", { name: `Remove ${CHAPTER_TITLES[1]}` }));
-      expect(screen.getAllByText("Remove this chapter?")).toHaveLength(1);
-    });
-
-    it("asks in place before removing a chapter", async () => {
+    it("asks on the chapter's page before removing it", async () => {
       const client = at(reviewing());
       const remove = vi.spyOn(client, "removeChapter").mockResolvedValue(reviewing("Blurb.", 3));
       renderWith(client);
       const title = CHAPTER_TITLES[0] ?? "";
-      fireEvent.click(await screen.findByRole("button", { name: `Remove ${title}` }));
+      await openChapter(0);
+      fireEvent.click(screen.getByRole("button", { name: `Remove ${title}` }));
       expect(remove).not.toHaveBeenCalled();
       expect(screen.getByText("Remove this chapter?")).toBeTruthy();
       fireEvent.click(screen.getByRole("button", { name: "Keep it" }));
@@ -1033,9 +1048,9 @@ describe("InterviewPage", () => {
       expect(remove).toHaveBeenCalledWith("me", "0");
     });
 
-    it("at three chapters, hides Remove and says why", async () => {
+    it("at three chapters, a chapter's page has no Remove", async () => {
       renderWith(at(reviewing("Blurb.", 3)));
-      expect(await screen.findByText("A book keeps at least three chapters.")).toBeTruthy();
+      await openChapter(0);
       expect(screen.queryByRole("button", { name: /^Remove / })).toBeNull();
     });
   });

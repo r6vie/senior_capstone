@@ -8,13 +8,11 @@ import type { Affiliation, MemberContext } from "../account/MemberContextFields"
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, takeOrphanDrafts } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
-import { EditForm, editKeyFor, hasEditDraft } from "./EditInPlace";
 import {
   AskFrame,
   ErrorMessage,
   Frame,
   RetryContext,
-  SmallBook,
   TypedQuestion,
   WAIT_SHOWS_AFTER_MS,
   Waiting,
@@ -44,6 +42,7 @@ import { reducedMotion } from "./librarian/pen";
 import { useAnnouncer } from "./librarian/useAnnouncer";
 import { useNotebook } from "./librarian/useNotebook";
 import { ChangesScreen, WaitBox } from "./ProposedChanges";
+import { ReviewBook, TitleShelf, WritingBook } from "./RevealParts";
 import { UndoChanges } from "./UndoChanges";
 
 // The interview, direction A (docs/design/shelf/project/InterviewA.dc.html, trove.md §4), with the band
@@ -138,6 +137,8 @@ export function InterviewPage({
   // "Your book is on the shelf" is for the moment of shelving, from the review. Anything else that
   // arrives at done belongs on My book.
   const [justShelved, setJustShelved] = useState(false);
+  // The title the member chose, so the book stays on screen, open, while it's written.
+  const [chosenTitle, setChosenTitle] = useState<string | null>(null);
   const [leftAsIs, setLeftAsIs] = useState(false);
   // What the last send tried to save, when the reply never came, so nobody can tell if it arrived.
   const unsure = useRef<string | null>(null);
@@ -670,9 +671,10 @@ export function InterviewPage({
             author={authorName}
             busy={busy}
             error={error}
-            onChoose={(titleId) =>
-              run("The Librarian is writing your book…", () => client.chooseTitle(state.id, titleId))
-            }
+            onChoose={(titleId) => {
+              setChosenTitle(state.titles.find((option) => option.id === titleId)?.title ?? null);
+              return run("The Librarian is writing your book…", () => client.chooseTitle(state.id, titleId));
+            }}
           />
         );
       case "reviewing":
@@ -680,7 +682,6 @@ export function InterviewPage({
           <ReviewScreen
             book={state.book}
             signOff={state.signOff ?? null}
-            userId={userId}
             onEditBook={async (edit) => {
               const book = await client.editBook(edit);
               setState({ id: state.id, stage: "reviewing", book });
@@ -743,7 +744,9 @@ export function InterviewPage({
               )
             }
           >
-            <p className="iv-note iv-note-big">{savedLine}</p>
+            {/* While the book is written, the chosen book is open on screen, its contents still blank. */}
+            {state.about === "book" && <WritingBook title={chosenTitle} author={authorName} />}
+            <p className="iv-note iv-note-big rv-saved">{savedLine}</p>
           </Frame>
         );
       case "notEnough":
@@ -950,7 +953,6 @@ function StartScreen({
 
 // ---------- The reveal ----------
 
-const REVEAL_STEP_MS = 700;
 const REVEAL_SAY = "Here are three titles for your book.";
 
 function RevealScreen({
@@ -966,48 +968,16 @@ function RevealScreen({
   error: string | null;
   onChoose: (titleId: string) => void;
 }) {
-  const reduceMotion = useMemo(
-    () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
-    [],
-  );
-  // The three titles arrive one at a time (trove.md §4), unless the member asked for less motion.
-  const [shown, setShown] = useState(reduceMotion ? titles.length : 1);
-  const [picked, setPicked] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (shown >= titles.length) return;
-    const timer = setTimeout(() => setShown((count) => count + 1), REVEAL_STEP_MS);
-    return () => clearTimeout(timer);
-  }, [shown, titles.length]);
-
   return (
     <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={REVEAL_SAY}>{busy}</Waiting> : REVEAL_SAY}>
-      <fieldset className="iv-picks">
-        <legend className="iv-visually-hidden">Choose a title</legend>
-        {titles.map((option, index) => (
-          <label key={option.id} className="iv-pick" data-on={picked === option.id} hidden={index >= shown}>
-            <SmallBook title={option.title} author={author} />
-            <input
-              type="radio"
-              name="title"
-              value={option.id}
-              checked={picked === option.id}
-              onChange={() => setPicked(option.id)}
-            />
-            <b>{option.title}</b>
-            <span className="iv-why">{option.why}</span>
-          </label>
-        ))}
-      </fieldset>
-      <ErrorMessage message={error} />
-      <div className="iv-row">
-        <Button disabled={!picked} aria-busy={Boolean(busy)} onClick={() => picked && onChoose(picked)}>
-          Choose this title
-        </Button>
-        {!picked && shown >= titles.length && (
-          <span className="iv-quiet-note">Pick the one that sounds most like you.</span>
-        )}
-      </div>
+      {/* The three titles as white books on a shelf (StartReveal): the whole book is what you choose. */}
+      <TitleShelf
+        titles={titles}
+        author={author}
+        busy={Boolean(busy)}
+        error={<ErrorMessage message={error} />}
+        onChoose={onChoose}
+      />
     </Frame>
   );
 }
@@ -1017,125 +987,9 @@ function RevealScreen({
 const REVIEW_SAY = "Here is your book. Edit or remove anything that doesn't sound like you.";
 const MIN_CHAPTERS = 3;
 
-function ChapterRow({
-  index,
-  chapter,
-  canRemove,
-  removing,
-  onAskRemove,
-  editKey,
-  onEdit,
-  onRemove,
-}: {
-  index: number;
-  chapter: DraftChapter;
-  canRemove: boolean;
-  /** "Remove this chapter?" is open on this row. Only one row asks at a time. */
-  removing: boolean;
-  onAskRemove: (asking: boolean) => void;
-  editKey: string;
-  onEdit: (edit: ChapterEdit) => Promise<void>;
-  onRemove: () => void;
-}) {
-  const [showing, setShowing] = useState(false);
-  const [editing, setEditing] = useState(() => hasEditDraft(editKey));
-
-  if (editing) {
-    return (
-      <li>
-        <span className="iv-n">{index + 1}</span>
-        <div className="ed-row">
-          <EditForm
-            fields={chapterFields(chapter)}
-            draftKey={editKey}
-            onSave={onEdit}
-            onClose={() => setEditing(false)}
-          />
-        </div>
-      </li>
-    );
-  }
-
-  if (removing && canRemove) {
-    return (
-      <li className="iv-confirm">
-        <span className="iv-n">{index + 1}</span>
-        <div>
-          <b>Remove this chapter?</b>
-          <span>{chapter.title}</span>
-        </div>
-        <div className="iv-ch-act">
-          <button
-            type="button"
-            className="button button-quiet iv-sm"
-            aria-label={`Remove ${chapter.title}`}
-            onClick={onRemove}
-          >
-            Remove
-          </button>
-          <button type="button" className="button button-quiet iv-sm" onClick={() => onAskRemove(false)}>
-            Keep it
-          </button>
-        </div>
-      </li>
-    );
-  }
-
-  return (
-    <li>
-      <span className="iv-n">{index + 1}</span>
-      <div>
-        <b>{chapter.title}</b>
-        <span>{chapter.summary}</span>
-        {chapter.quotes.length > 0 && (
-          <>
-            <button
-              type="button"
-              className="button button-quiet iv-sm iv-show"
-              aria-expanded={showing}
-              aria-label={`${showing ? "Hide" : "Show"} what you said for ${chapter.title}`}
-              onClick={() => setShowing((now) => !now)}
-            >
-              {showing ? "Hide what you said" : "Show what you said"}
-            </button>
-            {showing && (
-              <div className="iv-quotes">
-                {chapter.quotes.map((quote) => (
-                  <p key={quote}>{quote}</p>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-      <div className="iv-ch-act">
-        <button
-          type="button"
-          className="button button-quiet iv-sm"
-          aria-label={`Edit ${chapter.title}`}
-          onClick={() => setEditing(true)}
-        >
-          Edit
-        </button>
-        {canRemove && (
-          <button
-            type="button"
-            className="button button-quiet iv-sm"
-            aria-label={`Remove ${chapter.title}`}
-            onClick={() => onAskRemove(true)}
-          >
-            Remove
-          </button>
-        )}
-      </div>
-    </li>
-  );
-}
-
 function ReviewScreen({
   book,
   signOff,
-  userId,
   onEditBook,
   onEditChapter,
   busy,
@@ -1148,7 +1002,6 @@ function ReviewScreen({
   book: DraftBook;
   /** The Librarian's one line under the title, in its hand. */
   signOff: string | null;
-  userId: string;
   onEditBook: (edit: BookEdit) => Promise<void>;
   onEditChapter: (chapterId: string, edit: ChapterEdit) => Promise<void>;
   busy: string | null;
@@ -1161,16 +1014,10 @@ function ReviewScreen({
   const [others, setOthers] = useState<TitleOption[] | null>(null);
   const [othersError, setOthersError] = useState<string | null>(null);
   const canRemove = book.chapters.length > MIN_CHAPTERS;
-  const bookKey = editKeyFor(userId, "book");
-  // An edit under way before a refresh opens again with the member's words.
-  const [editingBook, setEditingBook] = useState(() => hasEditDraft(bookKey));
   // The back cover changes with a removal, and the member should be told. Until their next action.
   const [blurbAtRemoval, setBlurbAtRemoval] = useState<string | null | undefined>(undefined);
 
-  // The row asking "Remove this chapter?", if any.
-  const [confirming, setConfirming] = useState<string | null>(null);
   async function remove(chapterId: string) {
-    setConfirming(null);
     setBlurbAtRemoval(book.blurb);
     await onRemove(chapterId);
   }
@@ -1190,107 +1037,70 @@ function ReviewScreen({
       busy={Boolean(busy)}
       say={busy ? <Waiting holding={REVIEW_SAY}>{busy}</Waiting> : REVIEW_SAY}
     >
-      <div className="iv-booktitle">
-        <span className="book iv-book-wide" aria-hidden="true">
-          <span className="book-cover">
-            <span className="book-title">{book.title}</span>
-            <span className="book-author">{book.authorName}</span>
-          </span>
-        </span>
-        <div>
-          {editingBook ? (
-            <EditForm
-              fields={bookFields(book)}
-              draftKey={bookKey}
-              onSave={onEditBook}
-              onClose={() => setEditingBook(false)}
-            />
-          ) : (
-            <h2>{book.title}</h2>
-          )}
-          {signOff && !editingBook && <SignOff line={signOff} />}
-          <p className="iv-by">by {book.authorName}</p>
-          {/* On a phone the book comes after the title, at the small size, on its own row. */}
-          <SmallBook title={book.title} author={book.authorName} />
-          {book.blurb && !editingBook && <p className="iv-blurb">{book.blurb}</p>}
-          {blurbAtRemoval !== undefined && blurbAtRemoval !== book.blurb && (
-            <p className="iv-note" role="status">
-              Back cover rewritten to match.
-            </p>
-          )}
-          <div className="iv-head-act">
-            {!editingBook && (
-              <button
-                type="button"
-                className="button button-quiet iv-sm iv-show"
-                onClick={() => setEditingBook(true)}
-              >
-                Edit the title and back cover
-              </button>
+      {/* Review is the shelf's open book (StartReveal): every word a field that saves itself. */}
+      <ReviewBook
+        book={book}
+        signOff={signOff ? <SignOff line={signOff} /> : null}
+        canRemove={canRemove}
+        onEditBook={onEditBook}
+        onEditChapter={onEditChapter}
+        onRemove={async (chapterId) => {
+          await remove(chapterId);
+          return true;
+        }}
+        notes={
+          <>
+            {blurbAtRemoval !== undefined && blurbAtRemoval !== book.blurb && (
+              <p className="iv-note" role="status">
+                Back cover rewritten to match.
+              </p>
             )}
+            {others !== null && (
+              <div className="iv-others">
+                <p className="iv-note">This rewrites your chapters to fit the new title.</p>
+                {others.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className="iv-other"
+                    onClick={async () => {
+                      if (await onChangeTitle(option.id)) setOthers(null);
+                    }}
+                  >
+                    <b>{option.title}</b>
+                    <span className="iv-why">{option.why}</span>
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="button button-quiet iv-sm iv-show"
+                  onClick={() => setOthers(null)}
+                >
+                  Keep this title
+                </button>
+              </div>
+            )}
+            {othersError && (
+              <p className="message" role="status">
+                {othersError}
+              </p>
+            )}
+            <ErrorMessage message={error} />
+          </>
+        }
+        under={
+          <>
+            <Button onClick={onShelve} aria-busy={Boolean(busy)}>
+              Put it on the shelf
+            </Button>
             {others === null && (
-              <button type="button" className="button button-quiet iv-sm iv-show" onClick={seeOthers}>
+              <button type="button" className="button button-quiet" onClick={seeOthers}>
                 See the other titles
               </button>
             )}
-          </div>
-          {others !== null && (
-            <div className="iv-others">
-              <p className="iv-note">This rewrites your chapters to fit the new title.</p>
-              {others.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  className="iv-other"
-                  onClick={async () => {
-                    if (await onChangeTitle(option.id)) setOthers(null);
-                  }}
-                >
-                  <b>{option.title}</b>
-                  <span className="iv-why">{option.why}</span>
-                </button>
-              ))}
-              <button
-                type="button"
-                className="button button-quiet iv-sm iv-show"
-                onClick={() => setOthers(null)}
-              >
-                Keep this title
-              </button>
-            </div>
-          )}
-          {othersError && (
-            <p className="message" role="status">
-              {othersError}
-            </p>
-          )}
-        </div>
-      </div>
-      <p className="iv-note">
-        "Show what you said" opens your own words behind each chapter. Only you see those.
-      </p>
-      <ol className="iv-chapters">
-        {book.chapters.map((chapter, index) => (
-          <ChapterRow
-            key={chapter.id}
-            index={index}
-            chapter={chapter}
-            canRemove={canRemove}
-            removing={confirming === chapter.id}
-            onAskRemove={(asking) => setConfirming(asking ? chapter.id : null)}
-            editKey={editKeyFor(userId, `chapter:${chapter.id}`)}
-            onEdit={(edit) => onEditChapter(chapter.id, edit)}
-            onRemove={() => remove(chapter.id)}
-          />
-        ))}
-      </ol>
-      {!canRemove && <p className="iv-note">A book keeps at least three chapters.</p>}
-      <ErrorMessage message={error} />
-      <div className="iv-row">
-        <Button onClick={onShelve} aria-busy={Boolean(busy)}>
-          Put it on the shelf
-        </Button>
-      </div>
+          </>
+        }
+      />
     </Frame>
   );
 }

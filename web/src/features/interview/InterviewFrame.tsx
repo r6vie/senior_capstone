@@ -224,15 +224,13 @@ export function TypedQuestion({ text, after, onDone }: { text: string; after: nu
   // The whole question sits invisibly under the typed letters, so its place is its final size from the
   // first letter and nothing under it moves as it wraps. Screen readers read that whole question, once.
   return (
-    <>
-      <span className="iv-typed">
-        <span className="iv-typed-full">{text}</span>
-        <span className="iv-typed-now" aria-hidden="true">
-          {text.slice(0, count)}
-          {count < text.length && <span className="iv-caret" />}
-        </span>
+    <span className="iv-typed">
+      <span className="iv-typed-full">{text}</span>
+      <span className="iv-typed-now" aria-hidden="true">
+        {text.slice(0, count)}
+        {count < text.length && <span className="iv-caret" />}
       </span>
-    </>
+    </span>
   );
 }
 

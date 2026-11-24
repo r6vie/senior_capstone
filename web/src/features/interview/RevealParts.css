@@ -1,0 +1,500 @@
+/* The reveal (StartReveal): three white books on a shelf, the chosen one open while it's written, review in that
+   same open book. The book frame is IntroBook.css's. Tokens only, apart from the books' own measures. */
+
+/* The titles, the waits and review all sit in the open book's width. */
+.iv-act:has(.rv-shelf),
+.iv-act:has(.rv-open) {
+  --act-width: 1180px;
+}
+
+/* ---------- Three titles on a shelf ---------- */
+.rv-shelf {
+  display: grid;
+  justify-items: center;
+  /* Room above for a lifted book, so its top is never cut off. */
+  padding-top: 48px;
+}
+.rv-books {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 104px;
+}
+.rv-book {
+  --w: 230px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  /* The books rise onto the shelf, one after another. */
+  animation: rv-rise 420ms ease-out calc(var(--i) * 120ms) both;
+  transition:
+    transform 250ms ease,
+    opacity 250ms ease,
+    filter 250ms ease;
+}
+.rv-book:disabled {
+  cursor: default;
+}
+.rv-face {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  width: var(--w);
+  aspect-ratio: 236 / 344;
+}
+.rv-why-beside {
+  display: none;
+}
+/* Its dot shadow. */
+.rv-face::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 7px -7px -7px 7px;
+  border-radius: 3px 6px 6px 3px;
+  background: radial-gradient(circle, var(--ink) 1px, transparent 1.4px) 0 0 / 4px 4px;
+}
+.rv-book:focus-visible {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 6px;
+}
+@keyframes rv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+.rv-cover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--w) * 0.035);
+  padding: calc(var(--w) * 0.13) calc(var(--w) * 0.09) 0 calc(var(--w) * 0.15);
+  border: var(--line-heavy) solid var(--ink);
+  border-radius: 3px 6px 6px 3px;
+  background: var(--white);
+}
+/* The hinge. */
+.rv-cover::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--w) * 0.065);
+  top: 0;
+  bottom: 0;
+  width: var(--line-heavy);
+  background: var(--ink);
+}
+.rv-title {
+  display: grid;
+  font: 800 calc(var(--w) * 0.118) / 0.98 var(--font-display);
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+.rv-title > * {
+  grid-area: 1 / 1;
+}
+.rv-full {
+  color: transparent;
+}
+@media (forced-colors: active) {
+  .rv-full {
+    color: CanvasText;
+  }
+  .rv-typed {
+    display: none;
+  }
+}
+.rv-author {
+  font: 700 calc(var(--w) * 0.046) / 1.2 var(--font-display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+/* The bookmark slides down into the chosen book. */
+.rv-ribbon {
+  position: absolute;
+  z-index: -2;
+  right: 22%;
+  top: 0;
+  width: 22px;
+  height: 80px;
+  background: var(--ink);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%);
+  opacity: 0;
+  transition:
+    transform 250ms ease,
+    opacity 250ms ease;
+}
+.rv-book[data-on] {
+  transform: translateY(-26px);
+}
+.rv-book[data-on] .rv-cover {
+  border-width: 4px;
+}
+.rv-book[data-on] .rv-ribbon {
+  opacity: 1;
+  transform: translateY(-30px);
+}
+/* The other two sit back, as the unchosen designs do in the design picker. */
+.rv-shelf[data-picked] .rv-book:not([data-on]) {
+  opacity: 0.5;
+  filter: saturate(0.45);
+  transform: scale(0.92);
+}
+.rv-ledge {
+  position: relative;
+  justify-self: stretch;
+  height: 14px;
+  background: var(--ink);
+}
+.rv-ledge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 14px;
+  height: 14px;
+  background: repeating-linear-gradient(135deg, var(--ink) 0 2px, transparent 2px 7px);
+}
+.rv-whys {
+  display: grid;
+  grid-template-columns: repeat(3, 260px);
+  justify-content: center;
+  gap: 104px;
+  margin-top: 30px;
+}
+.rv-why {
+  margin: 0;
+  font: italic 400 18px / 1.45 var(--font-serif);
+  text-align: center;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease,
+    color 250ms ease;
+}
+.rv-why[data-shown] {
+  opacity: 1;
+  transform: none;
+}
+.rv-why[data-dim] {
+  color: var(--ink-2);
+}
+.rv-pick {
+  display: block;
+  margin: 0 auto 10px;
+  font: 700 12px / 1 var(--font-display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-style: normal;
+}
+.rv-go {
+  margin-top: 30px;
+}
+
+/* ---------- The open book: title page and contents ---------- */
+.rv-titlepage {
+  display: grid;
+  justify-items: start;
+}
+.rv-booktitle,
+.rv-booktitle .rv-fld {
+  margin: 0;
+  font: 600 42px / 1.04 var(--font-serif);
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.rv-titlepage .rv-booktitle {
+  justify-self: stretch;
+}
+.rv-titlebar {
+  width: 70%;
+  height: 34px;
+}
+.rv-by {
+  margin: 14px 0 0;
+  color: var(--ink-2);
+  font: 600 13px / 1.3 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.rv-titlepage .lib-signoff {
+  margin: 14px 0 0;
+}
+
+/* The page tabs, as the shelf's reader has them. */
+.rv-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.rv-tabs button {
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  min-height: var(--tap);
+  padding: 0 9px;
+  border: 0;
+  border-bottom: var(--line-heavy) solid transparent;
+  background: none;
+  color: var(--ink-2);
+  font: 600 14px / 1 var(--font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.rv-tabs button[aria-current] {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+.rv-tabs button:focus-visible {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* The contents: no dividers; a row opens its chapter. */
+.rv-toc {
+  margin: 20px -10px 0 -12px;
+  padding: 0 0 24px;
+  list-style: none;
+}
+.rv-toc button {
+  display: grid;
+  grid-template-columns: 40px 1fr 24px;
+  gap: 0 6px;
+  align-items: baseline;
+  width: 100%;
+  padding: 13px 10px 13px 12px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.rv-toc button:hover {
+  background: var(--paper-sunk);
+}
+.rv-toc button:focus-visible {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: -3px;
+}
+.rv-toc b {
+  font: 700 22px / 1 var(--font-display);
+}
+.rv-toc-t {
+  font: 600 21px / 1.2 var(--font-serif);
+}
+.rv-toc i {
+  font: 700 20px / 1 var(--font-display);
+  font-style: normal;
+  text-align: right;
+}
+/* A chapter's words are long; the contents show their start, and the chapter's page has them all. */
+.rv-toc-s {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  grid-column: 2;
+  margin-top: 5px;
+  color: var(--ink-2);
+  font: 400 14px / 1.45 var(--font-sans);
+}
+.rv-toc-back .rv-toc-t {
+  font-style: italic;
+}
+/* The contents fill row by row as review opens. */
+.rv-toc[data-arriving] li {
+  animation: rv-row 260ms ease-out calc(var(--i) * 90ms) both;
+}
+@keyframes rv-row {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* A chapter's own page, and the back cover's: their words as fields. */
+.rv-chapter,
+.rv-back {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.rv-num {
+  display: block;
+  font: 800 96px / 0.9 var(--font-display);
+}
+.rv-field {
+  display: grid;
+  gap: var(--s-2);
+}
+.rv-fld {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 7px 12px 9px;
+  border: var(--line) solid var(--ink);
+  border-radius: 0;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  letter-spacing: inherit;
+  resize: none;
+  overflow: hidden;
+  field-sizing: content;
+}
+.rv-fld:focus {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 2px;
+}
+.rv-ct {
+  margin-top: 14px;
+  font: 600 38px / 1.08 var(--font-serif);
+  letter-spacing: -0.012em;
+}
+.rv-text {
+  flex: 1;
+  min-height: 0;
+  margin-top: 12px;
+  font: 400 17px / 1.6 var(--font-serif);
+}
+.rv-field[data-long] .rv-fld {
+  height: 100%;
+  min-height: 160px;
+  field-sizing: fixed;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+.rv-back .rv-text {
+  margin-top: 18px;
+}
+.rv-problem {
+  margin: 0;
+}
+.rv-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin: 14px 0 22px -12px;
+}
+.rv-confirm b {
+  padding-left: var(--s-3);
+}
+.rv-under {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  margin: 30px 6px 0;
+}
+.rv-review > .iv-note,
+.rv-review > .iv-others,
+.rv-review > .message {
+  margin: var(--s-4) 6px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv-book,
+  .rv-toc[data-arriving] li {
+    animation: none;
+  }
+  .rv-book,
+  .rv-ribbon,
+  .rv-why {
+    transition: none;
+  }
+}
+
+/* ---------- Narrower screens ---------- */
+@media (max-width: 1099px) {
+  .rv-books {
+    gap: 40px;
+  }
+  .rv-book {
+    --w: 180px;
+  }
+  .rv-whys {
+    grid-template-columns: repeat(3, 180px);
+    gap: 40px;
+  }
+  .rv-why {
+    font-size: 16px;
+  }
+}
+@media (max-width: 1099px) {
+  /* The open book stacks its pages; the tabs may wrap, so they sit in the page's flow rather than over it. */
+  .rv-open .ib-right {
+    padding-top: var(--s-3);
+  }
+  .rv-open .ib-head {
+    position: static;
+    height: auto;
+    margin: 0 0 var(--s-3) -9px;
+  }
+  .rv-open .ib-left {
+    padding-top: var(--s-6);
+  }
+}
+@media (max-width: 719px) {
+  /* A phone: one book to a row, its reason beside it. */
+  .rv-shelf {
+    justify-items: stretch;
+    padding-top: var(--s-2);
+  }
+  .rv-books {
+    display: grid;
+    gap: 14px;
+  }
+  .rv-book {
+    --w: 110px;
+    display: grid;
+    grid-template-columns: var(--w) minmax(0, 1fr);
+    gap: var(--s-4);
+    align-items: center;
+    padding: 14px 14px 14px 12px;
+    border: var(--line) solid var(--ink);
+    background: var(--white);
+  }
+  .rv-book[data-on] {
+    transform: none;
+    outline: var(--line-heavy) solid var(--ink);
+    outline-offset: 3px;
+  }
+  .rv-shelf[data-picked] .rv-book:not([data-on]) {
+    transform: none;
+  }
+  .rv-why-beside {
+    display: block;
+    font: italic 400 15.5px / 1.4 var(--font-serif);
+  }
+  .rv-ledge,
+  .rv-whys {
+    display: none;
+  }
+  .rv-go > .button {
+    width: 100%;
+  }
+  .rv-booktitle,
+  .rv-booktitle .rv-fld {
+    font-size: 34px;
+  }
+  .rv-ct {
+    font-size: 28px;
+  }
+}
