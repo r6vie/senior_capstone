@@ -1238,3 +1238,16 @@ Pending Josef's review of the new canvas.
   never reached, the last glazes were still wet, and the paper grain was another seed's); now each finished frame
   matches its cover to under 0.1 levels on average. `encode_anim.sh` writes `set-1/anim/` (MP4 + WebM + poster,
   0.12–0.63 MB each, 19 MB in all) and the manifest and README say which plays where.
+
+## 2026-11-23: strata builds itself (demo, the lake), following the terrain
+
+- **Josef:** strata covers animate too, for picks and in the design studio (never sign-in), on the watercolours'
+  clock; then, of the first try (layers far to near, each bottom-up): "understand the terrain and the layout of the
+  image ... the layering, the timing doesn't make sense."
+- `art/strata/strata_anim.py` records every slab the renderer lays and replays them, each dropping into its course,
+  on a per-cover choreography that follows the terrain. The lake: the far haze rises from the horizon; the massif
+  rises from its foot to the stone cap while the lake's reflection grows down row for row, each reflected row
+  landing just after the mountain row it mirrors; the sage hill; the sun climbs behind the peak once the mountain
+  stands; a cloud drifts in; the near shore, then its trees. All in by ~12.5 s, ends on the cover pixel for pixel at
+  13.5 s; quick (studio) at 0.3 of the time. Demo board `StudioPaint` beside the watercolour lake. Only the lake so
+  far, as Josef asked.

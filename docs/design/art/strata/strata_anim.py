@@ -65,32 +65,47 @@ def record(scene, viewport, size, course, **kw):
     return [s for s in slabs if s[1]], img
 
 
-def schedule(slabs, course, seed=5):
-    """When each slab lands. Layers start far to near across START_SPAN, a bigger layer given longer to build;
-    within a layer, courses go up from its foot, and the slabs of one course land a little out of step."""
+def schedule(slabs, course, plan, scene, scale, seed=5):
+    """When each slab lands, following the terrain (Josef, 2026-11-23: "understand the terrain and the layout of the
+    image"). plan gives each layer of the scene a start, a duration and how it grows:
+      rise    land and things that stand on it build up from their foot, course by course, to their top
+      sweep   a cloud drifts in from the left
+      mirror  water reflecting a ridge: each row of the reflection lands just after the ridge row it mirrors, so
+              the reflection grows down the lake as the mountain grows up; water that mirrors nothing spreads
+              from the shoreline toward us
+    Inside a course the slabs land a little out of step."""
     rng = random.Random(seed)
-    layers = sorted({k for k, _r in slabs})
-    area = {k: 0 for k in layers}
-    rows = {k: [] for k in layers}
+    rows = {}
     for k, rects in slabs:
-        x0, y0, x1, y1, _c = rects[0]
-        area[k] += (x1 - x0 + 1) * course
-        rows[k].append(y0)
-    tot = sum(area.values())
-    weights = {k: 0.6 + 3.0 * math.sqrt(area[k] / tot) for k in layers}
-    t, start, dur = 0.3, {}, {}
-    wsum = sum(weights.values())
-    for k in layers:
-        start[k] = t
-        dur[k] = 1.6 + 5.0 * (weights[k] - 0.6) / 3.0
-        t += START_SPAN * weights[k] / wsum
-    lo = {k: min(rows[k]) for k in layers}
-    hi = {k: max(rows[k]) for k in layers}
+        rows.setdefault(k, []).append(rects[0][1])
+    lo = {k: min(v) for k, v in rows.items()}
+    hi = {k: max(v) for k, v in rows.items()}
+
+    def rise(k, y):
+        st, du = plan[k][0], plan[k][1]
+        return st + du * (1 - (y - lo[k]) / max(1, hi[k] - lo[k]))
+
     times = []
     for k, rects in slabs:
-        y = rects[0][1]
-        up = 1 - (y - lo[k]) / max(1, hi[k] - lo[k])          # 0 at the layer's foot, 1 at its top
-        times.append(start[k] + dur[k] * (0.85 * up + 0.15 * rng.random()))
+        st, du, mode = plan[k][:3]
+        x0, y, x1, _y1, _c = rects[0]
+        if mode == "rise":
+            t = rise(k, y)
+        elif mode == "sweep":
+            t = st + du * ((x0 + x1) / 2) / scale[0]
+        elif mode == "mirror":
+            src = plan[k][3]
+            w = scene[k]
+            yw = (y + course / 2) / scale[1] * 344             # world units (the cover is 344 tall)
+            my = 2 * w.y0 - yw + (yw - w.y0) * w.squash        # the ridge row this water row reflects
+            myp = my / 344 * scale[1]
+            if lo[src] <= myp <= hi[src]:
+                t = rise(src, myp) + 0.35
+            else:
+                t = st + du * (y - lo[k]) / max(1, hi[k] - lo[k])
+        else:
+            t = st
+        times.append(t + rng.uniform(-0.18, 0.18))
     return times
 
 
@@ -124,19 +139,29 @@ def frame(t, slabs, times, size, paper, course, k=1.0):
 
 
 def covers():
-    """The ten strata set 1 covers: (scene, render arguments). Only the lake is wired up for the demo."""
+    """The strata covers with their choreography. Only the lake is wired up for the demo. The lake's layers
+    (final.cover): 0 the coral sun, 1 the far haze ranges, 2 a cloud, 3 the teal massif, 4 the sage hill on the left,
+    5 the lake (mirroring the massif), 6 the near shore, 7 its trees."""
     import final
+    plan = {1: (0.3, 4.0, "rise"),                 # the horizon first: far haze rising from it
+            3: (1.0, 7.5, "rise"),                 # the massif, from its foot to the stone cap
+            5: (2.0, 8.0, "mirror", 3),            # the lake: the reflection grows down as the massif grows up
+            4: (3.0, 4.0, "rise"),                 # the nearer sage hill
+            0: (6.5, 2.8, "rise"),                 # the sun climbs up behind the peak once the mountain stands
+            2: (8.0, 2.2, "sweep"),                # a cloud drifts in
+            6: (8.6, 2.4, "rise"),                 # the near shore
+            7: (9.6, 2.4, "rise")}                 # its trees grow up last
     return {"lake": (final.cover(), dict(viewport=(0, 0, 236, 344), size=(472, 688), course=8,
-                                          paper=(255, 255, 255), clean=True))}
+                                          paper=(255, 255, 255), clean=True), plan)}
 
 
 if __name__ == "__main__":
     key = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else "lake"
-    scene, kw = covers()[key]
+    scene, kw, plan = covers()[key]
     course, size, paper = kw["course"], kw["size"], kw.get("paper", strata.PAPER)
     slabs, final_img = record(scene, kw["viewport"], size, course,
                               **{a: b for a, b in kw.items() if a not in ("viewport", "size", "course")})
-    times = schedule(slabs, course)
+    times = schedule(slabs, course, plan, scene, size)
     print(key, "slabs:", len(slabs), "last lands at", round(max(times) + SETTLE, 2), "s")
     d = f"out/anim-{key}"
     os.makedirs(d, exist_ok=True)
