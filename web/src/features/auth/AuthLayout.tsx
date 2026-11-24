@@ -26,7 +26,9 @@ export function AuthLayout({
     <div className="auth">
       <div className="auth-tone" aria-hidden="true" />
       <header className="auth-top">
-        <span className="wordmark">Trove</span>
+        <Link className="wordmark" to="/" aria-label="Trove home">
+          Trove
+        </Link>
         <Link className="button button-quiet" to={across.to}>
           {across.label}
         </Link>

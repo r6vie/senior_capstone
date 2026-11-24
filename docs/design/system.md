@@ -272,6 +272,40 @@ screen itself is the welcome.
   to 44px above the window's foot. The phone's sheet is unchanged.
 - **Reduced motion:** everything is there at once. An interview already under way opens without the welcome.
 
+### Wide pages (2026-11-23, Trove UI, at Josef's ask; `web/src/ui/AppShell.css`)
+
+The task: the plain pages (Settings, Checkouts, the meeting, messages, checking out) sat in a narrow
+column against the left edge on a wide screen. They now use the width, still left-aligned, in one of two layouts.
+Phones and tablets keep the stacked page.
+
+- **Rows (`.page-row`, from 960px): for settings-like pages.** Each section is a row under a 3px ink rule.
+  - Left (`.page-row-head`): the section's heading (Newsreader 26) and what it means, in `--ink-2`, at most 34ch.
+  - Right (`.page-row-body`): its controls on a `--paper-sunk` panel (5px radius, `--s-6` padding). White
+    fields read clearly on it.
+  - A row whose whole content is one checkbox or button adds `.page-row-bare`: no panel, since the rule already
+    frames it.
+  - A lone field keeps a 36rem measure. Related short fields may pair up (`.settings-pair`).
+  - Columns: `minmax(220px, 1fr) minmax(0, 2.2fr)`, gap `--s-8`. The page is `.page-wide`, at most 1320px.
+- **Rail (`.page-rail`, from 1100px): for pages about one checkout.** The page's head (way back, caption,
+  title) holds the left column under a 3px rule. The title steps down to 32px there, so a long name stays a head
+  and doesn't become the page's focal point. It stays in place as the page scrolls. The work reads
+  beside it in a column of at most 800px, starting on the same rule line.
+  - Columns: `minmax(280px, 1fr) minmax(0, 800px)`, gap `--s-8`, at most 1320px.
+  - A form in the work column sits on a `--paper-sunk` panel (the note on Check out, the reply on Messages).
+  - Where the page knows its book, the book itself (`BookObject`, shelf size) goes under the head (Check out).
+    Otherwise the rail is just the head: no decorative tone in it.
+- Checkouts keeps its own two-column card grid, out to the same 1320px. Past meets stays stacked: a rail holding
+  only its title doesn't earn the width.
+- Links in these pages are ink and underlined, never the browser's blue.
+
+```html
+<main class="shell-page page-wide"><h1 class="page-title">Settings</h1>
+  <section class="page-row"><div class="page-row-head"><h2>Email</h2><p>…</p></div>
+    <div class="page-row-body page-row-bare">…</div></section></main>
+<main class="shell-page page-rail"><header class="page-rail-head">…<h1 class="page-title">…</h1></header>
+  <div>…the work…</div></main>
+```
+
 ### Searching the library (D2, 2026-11-22, Alvisa)
 
 - The square search field in the header is the entrance, not an editable field. Clicking it, focusing it, or

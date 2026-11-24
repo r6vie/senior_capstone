@@ -26,10 +26,6 @@
           "mp4": "anim/mesa-loop.mp4",
           "webm": "anim/mesa-loop.webm"
         },
-        "reveal": {
-          "mp4": "anim/mesa-reveal.mp4",
-          "webm": "anim/mesa-reveal.webm"
-        },
         "quick": {
           "mp4": "anim/mesa-quick.mp4",
           "webm": "anim/mesa-quick.webm"
@@ -49,10 +45,6 @@
         "loop": {
           "mp4": "anim/hills-loop.mp4",
           "webm": "anim/hills-loop.webm"
-        },
-        "reveal": {
-          "mp4": "anim/hills-reveal.mp4",
-          "webm": "anim/hills-reveal.webm"
         },
         "quick": {
           "mp4": "anim/hills-quick.mp4",
@@ -74,10 +66,6 @@
           "mp4": "anim/lake-loop.mp4",
           "webm": "anim/lake-loop.webm"
         },
-        "reveal": {
-          "mp4": "anim/lake-reveal.mp4",
-          "webm": "anim/lake-reveal.webm"
-        },
         "quick": {
           "mp4": "anim/lake-quick.mp4",
           "webm": "anim/lake-quick.webm"
@@ -97,10 +85,6 @@
         "loop": {
           "mp4": "anim/winter-loop.mp4",
           "webm": "anim/winter-loop.webm"
-        },
-        "reveal": {
-          "mp4": "anim/winter-reveal.mp4",
-          "webm": "anim/winter-reveal.webm"
         },
         "quick": {
           "mp4": "anim/winter-quick.mp4",
@@ -122,10 +106,6 @@
           "mp4": "anim/city-loop.mp4",
           "webm": "anim/city-loop.webm"
         },
-        "reveal": {
-          "mp4": "anim/city-reveal.mp4",
-          "webm": "anim/city-reveal.webm"
-        },
         "quick": {
           "mp4": "anim/city-quick.mp4",
           "webm": "anim/city-quick.webm"
@@ -145,10 +125,6 @@
         "loop": {
           "mp4": "anim/blossom-loop.mp4",
           "webm": "anim/blossom-loop.webm"
-        },
-        "reveal": {
-          "mp4": "anim/blossom-reveal.mp4",
-          "webm": "anim/blossom-reveal.webm"
         },
         "quick": {
           "mp4": "anim/blossom-quick.mp4",
@@ -170,10 +146,6 @@
           "mp4": "anim/autumn-loop.mp4",
           "webm": "anim/autumn-loop.webm"
         },
-        "reveal": {
-          "mp4": "anim/autumn-reveal.mp4",
-          "webm": "anim/autumn-reveal.webm"
-        },
         "quick": {
           "mp4": "anim/autumn-quick.mp4",
           "webm": "anim/autumn-quick.webm"
@@ -193,10 +165,6 @@
         "loop": {
           "mp4": "anim/beach-loop.mp4",
           "webm": "anim/beach-loop.webm"
-        },
-        "reveal": {
-          "mp4": "anim/beach-reveal.mp4",
-          "webm": "anim/beach-reveal.webm"
         },
         "quick": {
           "mp4": "anim/beach-quick.mp4",
@@ -218,10 +186,6 @@
           "mp4": "anim/lighthouse-day-loop.mp4",
           "webm": "anim/lighthouse-day-loop.webm"
         },
-        "reveal": {
-          "mp4": "anim/lighthouse-day-reveal.mp4",
-          "webm": "anim/lighthouse-day-reveal.webm"
-        },
         "quick": {
           "mp4": "anim/lighthouse-day-quick.mp4",
           "webm": "anim/lighthouse-day-quick.webm"
@@ -242,10 +206,6 @@
           "mp4": "anim/lighthouse-dusk-loop.mp4",
           "webm": "anim/lighthouse-dusk-loop.webm"
         },
-        "reveal": {
-          "mp4": "anim/lighthouse-dusk-reveal.mp4",
-          "webm": "anim/lighthouse-dusk-reveal.webm"
-        },
         "quick": {
           "mp4": "anim/lighthouse-dusk-quick.mp4",
           "webm": "anim/lighthouse-dusk-quick.webm"
@@ -256,10 +216,9 @@
   ],
   "animation": {
     "size": "472x688, the cover at 2x, muted, no audio; MP4 (H.264) and WebM (VP9) of each",
-    "loop": "the sign-in page only: paints in (all glazes by ~12.3 s), rests from 13.5 s, washes back to paper 18.5-23.5 s, 1.5 s clean paper; 25 s, 12 fps, seamless",
-    "reveal": "the book reveal and your picks: the same painting at the same timing, played once, ending on the finished cover at 13.5 s; 12 fps",
-    "quick": "the design studio, when you choose a design: the same painting at 0.3 of the time, ending on the finished cover at ~4 s; 24 fps",
-    "poster": "the finished cover (the reveal's last frame); for reduced motion and before a video loads",
-    "endsOnCover": "the last frame of reveal and quick is the cover image (mean difference under 0.1 levels of 255), so swapping to the still is invisible"
+    "loop": "the sign-in intro only: paints in (all glazes by ~12.3 s), rests from 13.5 s, washes back to paper 18.5-23.5 s, 1.5 s clean paper; 25 s, 12 fps, seamless. The only slow animation.",
+    "quick": "the book reveal, your picks and the design studio: the painting at 0.3 of the time, ending on the finished cover at ~4 s; 24 fps",
+    "poster": "the finished cover; for reduced motion and before a video loads",
+    "endsOnCover": "the last frame of quick is the cover image (mean difference under 0.1 levels of 255), so swapping to the still is invisible"
   }
 }

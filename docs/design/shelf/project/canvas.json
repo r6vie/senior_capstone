@@ -698,24 +698,6 @@
    "x": 0,
    "y": 7000
   },
-  "MyBookD.dc.html": {
-   "expand": "fill",
-   "h": 6000,
-   "page": "mybook",
-   "title": "My book · D, the open book",
-   "w": 1760,
-   "x": 1880,
-   "y": 0
-  },
-  "MyBookE.dc.html": {
-   "expand": "fill",
-   "h": 7440,
-   "page": "mybook",
-   "title": "My book · E, the scene",
-   "w": 1760,
-   "x": 5640,
-   "y": 0
-  },
   "MyBookNow.dc.html": {
    "expand": "fill",
    "h": 2290,
@@ -723,24 +705,6 @@
    "title": "My book · how it is now",
    "w": 1760,
    "x": 0,
-   "y": 0
-  },
-  "MyBookStates.dc.html": {
-   "expand": "fill",
-   "h": 2450,
-   "page": "mybook",
-   "title": "My book · every stage",
-   "w": 1760,
-   "x": 9400,
-   "y": 0
-  },
-  "MyBookStudio.dc.html": {
-   "expand": "fill",
-   "h": 5190,
-   "page": "mybook",
-   "title": "My book · the design studio",
-   "w": 1760,
-   "x": 7520,
    "y": 0
   },
   "PaperCells.dc.html": {
@@ -1294,10 +1258,10 @@
    "y": 4720
   },
   "MyBookD2.dc.html": {
-   "x": 3760,
+   "x": 1880,
    "y": 0,
    "w": 1760,
-   "h": 8480,
+   "h": 8258,
    "page": "mybook",
    "title": "My book · D, the shelf’s book",
    "expand": "fill"
@@ -1319,7 +1283,7 @@
    "y": 0
   },
   "StartInterview.dc.html": {
-   "h": 4016,
+   "h": 5084,
    "page": "start",
    "title": "Starting the interview · the book introduces it",
    "w": 1760,
@@ -1351,9 +1315,9 @@
    "title": "Starting the interview · C, it opens on the question"
   },
   "StudioPaint.dc.html": {
-   "h": 1640,
+   "h": 1720,
    "page": "start",
-   "title": "Picks and the studio · covers animating in (demo: watercolour and strata)",
+   "title": "Picks, the reveal and the studio · covers animating in (fast; strata all ten)",
    "w": 1760,
    "x": 11280,
    "y": 0
@@ -1473,9 +1437,9 @@
   },
   "mybook": {
    "kind": "title1",
-   "maxW": 7400,
+   "maxW": 3640,
    "page": "mybook",
-   "text": "My book · as it is, a calmer page, the design studio, every stage",
+   "text": "My book · as it is, and the shelf’s book",
    "w": 240,
    "x": 0,
    "y": -300
@@ -1679,10 +1643,6 @@
   "WCCoverPrairie.dc.html",
   "WCCoverBeach.dc.html",
   "MyBookNow.dc.html",
-  "MyBookStates.dc.html",
-  "MyBookD.dc.html",
-  "MyBookE.dc.html",
-  "MyBookStudio.dc.html",
   "STCoverLayers.dc.html",
   "STCoverOrbit.dc.html",
   "STCoverRipples.dc.html",

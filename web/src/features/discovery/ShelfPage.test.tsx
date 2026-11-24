@@ -114,6 +114,19 @@ async function openBook() {
 }
 
 describe("D1 shelf and reader", () => {
+  it("leaves out the book card when the member's book couldn't be read, rather than say it isn't written", async () => {
+    const original = api.GET.getMockImplementation();
+    api.GET.mockImplementation(async (path: string) =>
+      path === "/books/me"
+        ? { error: { detail: "Unavailable" }, response: { status: 503, ok: false } }
+        : original?.(path),
+    );
+    renderShelf();
+    expect(await screen.findByRole("heading", { name: "Recently added" })).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Your book" })).toBeNull();
+    expect(screen.queryByText("Not written yet")).toBeNull();
+  });
+
   it("asks a member mid-interview to continue it, on the cover and on their book card", async () => {
     const original = api.GET.getMockImplementation();
     api.GET.mockImplementation(async (path: string) =>

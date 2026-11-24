@@ -1,7 +1,7 @@
 import { type FormEvent, type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, NO_CONNECTION } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
 import { PageLoading } from "../../ui/Loading";
@@ -82,10 +82,12 @@ function TimesSection({ meeting, onChange }: { meeting: Meeting; onChange: (next
   async function save() {
     setBusy(true);
     setNotice(null);
-    const { data, error } = await api.PUT("/meetings/{checkout_id}/times", {
-      params: { path: { checkout_id: meeting.checkout_id } },
-      body: { times },
-    });
+    const { data, error } = await api
+      .PUT("/meetings/{checkout_id}/times", {
+        params: { path: { checkout_id: meeting.checkout_id } },
+        body: { times },
+      })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     setBusy(false);
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     onChange(data);
@@ -162,10 +164,12 @@ function PickSection({ meeting, onChange }: { meeting: Meeting; onChange: (next:
   async function confirm(start: string) {
     setBusy(true);
     setNotice(null);
-    const { data, error } = await api.PUT("/meetings/{checkout_id}/confirm", {
-      params: { path: { checkout_id: meeting.checkout_id } },
-      body: { start },
-    });
+    const { data, error } = await api
+      .PUT("/meetings/{checkout_id}/confirm", {
+        params: { path: { checkout_id: meeting.checkout_id } },
+        body: { start },
+      })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     setBusy(false);
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     onChange(data);
@@ -228,10 +232,12 @@ function DetailsSection({
     event.preventDefault();
     setBusy(true);
     setNotice(null);
-    const { data, error } = await api.PUT("/meetings/{checkout_id}/details", {
-      params: { path: { checkout_id: meeting.checkout_id } },
-      body: { video_link: link.trim() || null, place_note: place.trim() || null },
-    });
+    const { data, error } = await api
+      .PUT("/meetings/{checkout_id}/details", {
+        params: { path: { checkout_id: meeting.checkout_id } },
+        body: { video_link: link.trim() || null, place_note: place.trim() || null },
+      })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     setBusy(false);
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     onChange(data);
@@ -345,6 +351,17 @@ function BackLink() {
   );
 }
 
+/** The page's head: on a wide screen it holds the left rail (docs/design/system.md Additions, "Wide pages"). */
+function RailHead({ meeting }: { meeting: Meeting }) {
+  return (
+    <header className="page-rail-head">
+      <BackLink />
+      <p className="caption">{meeting.book_title}</p>
+      <h1 className="page-title">Meeting {meeting.other_name}</h1>
+    </header>
+  );
+}
+
 export function MeetingPage() {
   const { checkoutId = "" } = useParams();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
@@ -354,16 +371,24 @@ export function MeetingPage() {
   const confirmedHeading = useRef<HTMLHeadingElement>(null);
   const backToConfirmed = () => requestAnimationFrame(() => confirmedHeading.current?.focus());
   usePageTitle(meeting ? `Meeting ${meeting.other_name}` : "Arrange your meeting");
+  // Only a real "not found" means there is no meeting; a failed call or a dropped connection is worth another try.
+  const [missing, setMissing] = useState(false);
   const [failed, setFailed] = useState(false);
 
   const load = useCallback(() => {
     // A late answer from an earlier request must not replace a newer one.
     let stale = false;
-    api.GET("/meetings/{checkout_id}", { params: { path: { checkout_id: checkoutId } } }).then(({ data }) => {
-      if (stale) return;
-      if (data) setMeeting(data);
-      else setFailed(true);
-    });
+    api
+      .GET("/meetings/{checkout_id}", { params: { path: { checkout_id: checkoutId } } })
+      .then(({ data, response }) => {
+        if (stale) return;
+        if (data) setMeeting(data);
+        else if (response.status === 404) setMissing(true);
+        else setFailed(true);
+      })
+      .catch(() => {
+        if (!stale) setFailed(true);
+      });
     return () => {
       stale = true;
     };
@@ -371,9 +396,9 @@ export function MeetingPage() {
 
   useEffect(() => load(), [load]);
 
-  if (failed) {
+  if (missing) {
     return (
-      <main className="meeting-page">
+      <main className="shell-page meeting-page">
         <h1 className="page-title">Arrange your meeting</h1>
         <p className="meeting-empty">
           We couldn't find this meeting. It opens once the author says yes.{" "}
@@ -382,9 +407,31 @@ export function MeetingPage() {
       </main>
     );
   }
+  if (failed && !meeting) {
+    return (
+      <main className="shell-page meeting-page">
+        <h1 className="page-title">Arrange your meeting</h1>
+        <p role="alert" className="message message-error">
+          <span>!</span>
+          <span>
+            We couldn't load this meeting.{" "}
+            <Button
+              variant="quiet"
+              onClick={() => {
+                setFailed(false);
+                load();
+              }}
+            >
+              Try again
+            </Button>
+          </span>
+        </p>
+      </main>
+    );
+  }
   if (!meeting) {
     return (
-      <main className="meeting-page" aria-busy="true">
+      <main className="shell-page meeting-page" aria-busy="true">
         <PageLoading />
       </main>
     );
@@ -392,19 +439,19 @@ export function MeetingPage() {
 
   if (!meeting.start) {
     return (
-      <main className="meeting-page">
-        <BackLink />
-        <p className="caption">{meeting.book_title}</p>
-        <h1 className="page-title">Meeting {meeting.other_name}</h1>
-        <TimesSection meeting={meeting} onChange={setMeeting} />
-        <PickSection
-          meeting={meeting}
-          onChange={(next) => {
-            setMeeting(next);
-            backToConfirmed();
-          }}
-        />
-        <DetailsSection meeting={meeting} onChange={setMeeting} />
+      <main className="shell-page page-rail meeting-page">
+        <RailHead meeting={meeting} />
+        <div>
+          <TimesSection meeting={meeting} onChange={setMeeting} />
+          <PickSection
+            meeting={meeting}
+            onChange={(next) => {
+              setMeeting(next);
+              backToConfirmed();
+            }}
+          />
+          <DetailsSection meeting={meeting} onChange={setMeeting} />
+        </div>
       </main>
     );
   }
@@ -414,50 +461,50 @@ export function MeetingPage() {
   const showDetails = !hasDetails || editingDetails;
 
   return (
-    <main className="meeting-page">
-      <BackLink />
-      <p className="caption">{meeting.book_title}</p>
-      <h1 className="page-title">Meeting {meeting.other_name}</h1>
-      <Confirmed meeting={meeting} headingRef={confirmedHeading} />
-      <div className="meeting-actions">
-        <Toggle
-          open={changingTime}
-          onToggle={() => setChangingTime(!changingTime)}
-          closed="Change the time"
-          opened="Keep this time"
-        />
-        {hasDetails && (
+    <main className="shell-page page-rail meeting-page">
+      <RailHead meeting={meeting} />
+      <div>
+        <Confirmed meeting={meeting} headingRef={confirmedHeading} />
+        <div className="meeting-actions">
           <Toggle
-            open={editingDetails}
-            onToggle={() => setEditingDetails(!editingDetails)}
-            closed="Edit where you'll meet"
-            opened="Stop editing"
+            open={changingTime}
+            onToggle={() => setChangingTime(!changingTime)}
+            closed="Change the time"
+            opened="Keep this time"
           />
+          {hasDetails && (
+            <Toggle
+              open={editingDetails}
+              onToggle={() => setEditingDetails(!editingDetails)}
+              closed="Edit where you'll meet"
+              opened="Stop editing"
+            />
+          )}
+        </div>
+        {changingTime && (
+          <>
+            <TimesSection meeting={meeting} onChange={setMeeting} />
+            <PickSection
+              meeting={meeting}
+              onChange={(next) => {
+                setMeeting(next);
+                setChangingTime(false);
+                backToConfirmed();
+              }}
+            />
+          </>
         )}
-      </div>
-      {changingTime && (
-        <>
-          <TimesSection meeting={meeting} onChange={setMeeting} />
-          <PickSection
+        {showDetails && (
+          <DetailsSection
             meeting={meeting}
-            onChange={(next) => {
-              setMeeting(next);
-              setChangingTime(false);
+            onChange={setMeeting}
+            onSaved={() => {
+              setEditingDetails(false);
               backToConfirmed();
             }}
           />
-        </>
-      )}
-      {showDetails && (
-        <DetailsSection
-          meeting={meeting}
-          onChange={setMeeting}
-          onSaved={() => {
-            setEditingDetails(false);
-            backToConfirmed();
-          }}
-        />
-      )}
+        )}
+      </div>
     </main>
   );
 }

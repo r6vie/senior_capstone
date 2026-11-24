@@ -1,11 +1,10 @@
 """Shared fixtures.
 
 Tests that touch the database use a real MongoDB: a throwaway database named trove_test_<random>
-on TROVE_TEST_MONGODB_URI (or, if unset, the MONGODB_URI in .env). It is dropped afterwards.
+on TROVE_TEST_MONGODB_URI (in .env or the environment; if unset, the MONGODB_URI in .env). It is dropped afterwards.
 Without either, database tests are skipped. CI runs a local MongoDB container.
 """
 
-import os
 from uuid import uuid4
 
 import pytest
@@ -40,7 +39,8 @@ def no_real_email(monkeypatch):
 
 @pytest.fixture(scope="session")
 async def mongo_database():
-    uri = os.environ.get("TROVE_TEST_MONGODB_URI") or get_settings().mongodb_uri
+    settings = get_settings()
+    uri = settings.trove_test_mongodb_uri or settings.mongodb_uri
     if not uri:
         pytest.skip("Set TROVE_TEST_MONGODB_URI (or MONGODB_URI in .env) to run database tests.")
     client = connect(uri)

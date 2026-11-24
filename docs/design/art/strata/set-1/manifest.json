@@ -17,70 +17,136 @@
       "name": "Mountain lake",
       "ink": "#16302e",
       "cover": "covers/lake.webp",
-      "page": "pages/lake.webp"
+      "page": "pages/lake.webp",
+      "anim": {
+        "quick": {
+          "mp4": "anim/lake-quick.mp4",
+          "webm": "anim/lake-quick.webm"
+        }
+      }
     },
     {
       "key": "desert",
       "name": "Desert arch at dusk",
       "ink": "#6a3525",
       "cover": "covers/desert.webp",
-      "page": "pages/desert.webp"
+      "page": "pages/desert.webp",
+      "anim": {
+        "quick": {
+          "mp4": "anim/desert-quick.mp4",
+          "webm": "anim/desert-quick.webm"
+        }
+      }
     },
     {
       "key": "coast",
       "name": "Sea cliffs by moonlight",
       "ink": "#26304f",
       "cover": "covers/coast.webp",
-      "page": "pages/coast.webp"
+      "page": "pages/coast.webp",
+      "anim": {
+        "quick": {
+          "mp4": "anim/coast-quick.mp4",
+          "webm": "anim/coast-quick.webm"
+        }
+      }
     },
     {
       "key": "valley",
       "name": "Autumn hills",
       "ink": "#263a2d",
       "cover": "covers/valley.webp",
-      "page": "pages/valley.webp"
+      "page": "pages/valley.webp",
+      "anim": {
+        "quick": {
+          "mp4": "anim/valley-quick.mp4",
+          "webm": "anim/valley-quick.webm"
+        }
+      }
     },
     {
       "key": "karst",
       "name": "Karst river in mist",
       "ink": "#2f4637",
       "cover": "covers/karst.webp",
-      "page": "pages/karst.webp"
+      "page": "pages/karst.webp",
+      "anim": {
+        "quick": {
+          "mp4": "anim/karst-quick.mp4",
+          "webm": "anim/karst-quick.webm"
+        }
+      }
     },
     {
       "key": "winter",
       "name": "Winter night, aurora",
       "ink": "#252a4c",
       "cover": "covers/winter.webp",
-      "page": "pages/winter.webp"
+      "page": "pages/winter.webp",
+      "anim": {
+        "quick": {
+          "mp4": "anim/winter-quick.mp4",
+          "webm": "anim/winter-quick.webm"
+        }
+      }
     },
     {
       "key": "fields",
       "name": "Long fields at harvest",
       "ink": "#3d5a32",
       "cover": "covers/fields.webp",
-      "page": "pages/fields.webp"
+      "page": "pages/fields.webp",
+      "anim": {
+        "quick": {
+          "mp4": "anim/fields-quick.mp4",
+          "webm": "anim/fields-quick.webm"
+        }
+      }
     },
     {
       "key": "lagoon",
       "name": "Volcanic lagoon",
       "ink": "#1f4f5a",
       "cover": "covers/lagoon.webp",
-      "page": "pages/lagoon.webp"
+      "page": "pages/lagoon.webp",
+      "anim": {
+        "quick": {
+          "mp4": "anim/lagoon-quick.mp4",
+          "webm": "anim/lagoon-quick.webm"
+        }
+      }
     },
     {
       "key": "city",
       "name": "Lakefront city at dusk",
       "ink": "#2f3448",
       "cover": "covers/city.webp",
-      "page": "pages/city.webp"
+      "page": "pages/city.webp",
+      "anim": {
+        "quick": {
+          "mp4": "anim/city-quick.mp4",
+          "webm": "anim/city-quick.webm"
+        }
+      }
     },
     {
       "key": "forest",
       "name": "Fir forest in morning light",
       "ink": "#283d2e",
       "cover": "covers/forest.webp",
-      "page": "pages/forest.webp"
+      "page": "pages/forest.webp",
+      "anim": {
+        "quick": {
+          "mp4": "anim/forest-quick.mp4",
+          "webm": "anim/forest-quick.webm"
+        }
+      }
     }
-  ]
+  ],
+  "category": "strata",
+  "animation": {
+    "size": "472x688, the cover at 2x, muted, no audio; MP4 (H.264) and WebM (VP9)",
+    "quick": "the book reveal, your picks and the design studio: the cover builds itself bottom to top, slabs settling into their courses, about 4 s at 24 fps, ending on the cover image pixel for pixel",
+    "signIn": "none: strata never appears on the sign-in intro"
+  }
 }

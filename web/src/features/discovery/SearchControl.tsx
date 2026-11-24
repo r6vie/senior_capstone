@@ -1,16 +1,17 @@
 import { type FormEvent, type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { artFor, loadArt } from "../../ui/art/bookArt";
 import { Button } from "../../ui/Button";
 import { BookObject } from "./BookObject";
+import { type BookOrigin, BookReader } from "./BookReader";
 import { loadBook } from "./bookPreload";
 import "./SearchControl.css";
 
 type SearchResult = components["schemas"]["SearchResult"];
+type OpenedResult = { result: SearchResult; origin: BookOrigin };
 const SEARCH_DELAY_MS = 200;
 
 function Magnifier() {
@@ -23,7 +24,6 @@ function Magnifier() {
 }
 
 export function SearchControl({ triggerRef }: { triggerRef: RefObject<HTMLInputElement | null> }) {
-  const navigate = useNavigate();
   const dialog = useRef<HTMLDialogElement>(null);
   const field = useRef<HTMLInputElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -36,6 +36,7 @@ export function SearchControl({ triggerRef }: { triggerRef: RefObject<HTMLInputE
   const [busy, setBusy] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [opened, setOpened] = useState<OpenedResult | null>(null);
 
   const load = useCallback(async (value: string) => {
     const search = value.trim();
@@ -118,10 +119,17 @@ export function SearchControl({ triggerRef }: { triggerRef: RefObject<HTMLInputE
     const origin = { x, y, width, height };
     loadBook(result.book.id);
     loadArt(artFor(result.book.id));
-    close(false);
-    navigate(`/books/${encodeURIComponent(result.book.id)}`, {
-      state: { card: result.book, origin, fromShelf: true },
-    });
+    setOpened({ result, origin });
+  }
+
+  function leaveReader() {
+    setOpened(null);
+    setOpen(false);
+    setBusy(false);
+    clearTimeout(timer.current);
+    generation.current += 1;
+    restoreFocus.current = false;
+    dialog.current?.close();
   }
 
   const overlay = open ? (
@@ -198,6 +206,7 @@ export function SearchControl({ triggerRef }: { triggerRef: RefObject<HTMLInputE
                     <BookObject
                       id={result.book.id}
                       book={{ title: result.book.title, authorName: result.book.author_name }}
+                      out={opened?.result.book.id === result.book.id}
                       onOpen={(element) => openBook(result, element)}
                       onInterest={() => {
                         loadBook(result.book.id);
@@ -236,6 +245,15 @@ export function SearchControl({ triggerRef }: { triggerRef: RefObject<HTMLInputE
         </span>
       </label>
       {typeof document === "undefined" ? null : createPortal(overlay, document.body)}
+      {opened && (
+        <BookReader
+          bookId={opened.result.book.id}
+          card={opened.result.book}
+          origin={opened.origin}
+          onDismiss={() => setOpened(null)}
+          onNavigate={leaveReader}
+        />
+      )}
     </>
   );
 }

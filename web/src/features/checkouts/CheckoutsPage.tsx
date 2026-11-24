@@ -1,7 +1,7 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, NO_CONNECTION } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
 import { PageLoading } from "../../ui/Loading";
@@ -368,9 +368,14 @@ export function CheckoutsPage() {
 
   const act: Act = useCallback(
     async (path, id) => {
-      const { error } = await api.POST(`/checkouts/{checkout_id}/${path}`, {
-        params: { path: { checkout_id: id } },
-      });
+      let error: unknown;
+      try {
+        ({ error } = await api.POST(`/checkouts/{checkout_id}/${path}`, {
+          params: { path: { checkout_id: id } },
+        }));
+      } catch {
+        error = NO_CONNECTION;
+      }
       if (error) return errorMessage(error);
       await load();
       return null;

@@ -56,6 +56,21 @@ The page art fills the left page of the opened book (570 x 684 at desktop), behi
 `object-fit: cover; object-position: bottom` keeps the art if the page is a little shorter or taller. The book
 screen boards on the canvas (`FinalBook*.dc.html` in docs/design/shelf/project) show the layout.
 
+## Animation (approved 2026-11-23)
+
+Every strata cover builds itself: the renderer's own slabs laid back down in one sweep from the foot of the cover to
+the top, racing up at first and slowing as it climbs, each slab appearing a little above its course and drifting
+down into place, the top ones settling slowest. One version only, `anim/<key>-quick.{mp4,webm}` (472 x 688, muted,
+24 fps, about 4 s), listed per art in `manifest.json` under `anim`.
+
+- **Where:** the book reveal, your picks (when a new book's design options appear) and the design studio (when you
+  choose a design). The same fast timing as watercolour's quick version there. **Never on the sign-in intro**:
+  that is watercolour only (Josef, 2026-11-23).
+- The last frame is the cover image, pixel for pixel, so swap to the still with no visible jump.
+- `prefers-reduced-motion`: show the cover, play nothing. Play `muted`, `playsinline`, no controls, under the title
+  and name where the cover art sits.
+- These screens may not be approved designs yet; wire the playback in as each one is.
+
 ## Source
 
 Each image is rendered by the strata scripts in this folder (`final.py`, `covers_more.py`, `pages_more.py`,

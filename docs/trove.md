@@ -165,7 +165,9 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   The existing top-bar field stays visible; focusing it opens a paper-colored translucent layer
   over the current page. After two characters, results update 200 ms after typing and show the
   book cover plus one matching public excerpt. Search and Enter run immediately. The underlying
-  page remains faintly visible but cannot be used until Search is closed.
+  page remains faintly visible but cannot be used until Search is closed. Selecting a result lifts
+  that cover forward into the same full-screen book reader while the search results stay dimmed
+  behind it; closing the book returns it to its result and preserves the query and results.
 - **"The Librarian recommends":** the AI recommends books to you.
 - **D3 recommendation (Alvisa, 2026-11-21):** this version stays signed-in. A member without a
   finished book sees the same large book graphic inviting them to create or finish theirs. Once

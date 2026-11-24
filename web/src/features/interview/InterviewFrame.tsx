@@ -71,7 +71,9 @@ export function Frame({
   return (
     <div className="interview">
       <header className="iv-top">
-        <span className="wordmark">Trove</span>
+        <Link className="wordmark" to="/" aria-label="Trove home">
+          Trove
+        </Link>
         {phase && (
           <ol className="iv-phases" aria-label="Where we are">
             {PHASES.map((item) => (
@@ -150,7 +152,9 @@ export function AskFrame({
   return (
     <div className="interview iv-ask">
       <header className="iv-top">
-        <span className="wordmark">Trove</span>
+        <Link className="wordmark" to="/" aria-label="Trove home">
+          Trove
+        </Link>
         <span className="iv-grow" />
         <Link to="/my-book" className="button button-quiet">
           Leave for now

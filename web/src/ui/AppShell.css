@@ -62,6 +62,99 @@
   max-width: 640px;
 }
 
+/* Wide pages (2026-11-23, docs/design/system.md Additions, "Wide pages"): on a wide screen the plain pages
+   use the width rather than hugging the left edge. Two layouts, both left-aligned:
+   - A rail (.page-rail): the page's head (way back, caption, title) holds the left column, sticky, and
+     the page's work reads in a measured column beside it.
+   - Rows (.page-row): each section's heading and what it means on the left, its controls on a sunk
+     panel on the right.
+   Below 1100px (rail) and 960px (rows) both fall back to the stacked page they replace. */
+.page-rail-head > :last-child {
+  margin-bottom: var(--s-5);
+}
+@media (min-width: 1100px) {
+  .page-rail {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(0, 800px);
+    column-gap: var(--s-8);
+    align-items: start;
+    max-width: 1320px;
+  }
+  .page-rail-head {
+    position: sticky;
+    top: var(--s-6);
+    display: grid;
+    padding-top: var(--s-5);
+    border-top: var(--line-heavy) solid var(--ink);
+    justify-items: start;
+    align-content: start;
+  }
+  .page-rail-head > :last-child {
+    margin-bottom: 0;
+  }
+  /* In the rail the title steps down a size, so a long name stays a head and not the page's focal point. */
+  .page-rail-head .page-title {
+    font-size: 32px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+}
+
+.page-wide {
+  max-width: 1320px;
+}
+.page-row {
+  display: grid;
+  align-items: start;
+  gap: var(--s-4);
+  padding: var(--s-6) 0;
+  border-top: var(--line-heavy) solid var(--ink);
+}
+.page-row-head {
+  display: grid;
+  align-content: start;
+  gap: var(--s-2);
+}
+.page-row-head h2 {
+  margin: 0;
+  font: 600 26px / 1.1 var(--font-serif);
+}
+.page-row-head p {
+  margin: 0;
+  color: var(--ink-2);
+}
+.page-row-body {
+  display: grid;
+  align-content: start;
+  gap: var(--s-4);
+}
+.page-row-body > * {
+  margin: 0;
+}
+/* A field keeps a measure a person can read across. */
+.page-row-body .field {
+  max-width: 36rem;
+}
+@media (min-width: 960px) {
+  .page-row {
+    grid-template-columns: minmax(220px, 1fr) minmax(0, 2.2fr);
+    column-gap: var(--s-8);
+  }
+  .page-row-head p {
+    max-width: 34ch;
+  }
+  .page-row-body {
+    padding: var(--s-6);
+    border-radius: var(--r);
+    background: var(--paper-sunk);
+  }
+  /* A row whose whole content is one control keeps it on the page: a panel would only frame it twice. */
+  .page-row-bare {
+    padding: var(--s-1) 0 0;
+    background: none;
+  }
+}
+
 @media (max-width: 1099px) {
   .top-bar .search {
     width: 220px;

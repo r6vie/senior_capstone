@@ -408,9 +408,20 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  min-height: var(--tap);
+  color: inherit;
   font: 800 28px / 1 var(--font-display);
   letter-spacing: 0.14em;
+  text-decoration: none;
   text-transform: uppercase;
+}
+.wordmark:hover {
+  text-decoration: underline;
+  text-decoration-thickness: var(--line);
+  text-underline-offset: var(--s-1);
+}
+.wordmark:active {
+  color: var(--ink-2);
 }
 .wordmark::before {
   content: "";
@@ -770,6 +781,10 @@ body {
    the book above until they are decided, so the art is desktop-only too. */
 .book-art {
   display: none;
+}
+/* A book's picture still arriving (ui/art/ArtImage.tsx): hidden, so it appears whole rather than drawn in strips. */
+img[data-pending] {
+  visibility: hidden;
 }
 @media (min-width: 720px) {
   .book:not(.book-lg, .book-sm, .book-xs) {

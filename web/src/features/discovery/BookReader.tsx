@@ -11,6 +11,7 @@ import { createPortal, flushSync } from "react-dom";
 import { Link } from "react-router-dom";
 import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
+import { ArtImage } from "../../ui/art/ArtImage";
 import { artFor, artReady, coverInk, loadArt, pageInk } from "../../ui/art/bookArt";
 import { Button } from "../../ui/Button";
 import "./BookReader.css";
@@ -120,12 +121,15 @@ export function BookReader({
   origin,
   example,
   onDismiss,
+  onNavigate,
 }: {
   bookId: string;
   card?: BookCard;
   origin?: BookOrigin;
   example?: PublicBook;
   onDismiss: () => void;
+  /** The reader is about to follow one of its links; an owning overlay can leave with it. */
+  onNavigate?: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const fit = useRef<HTMLDivElement>(null);
@@ -440,11 +444,15 @@ export function BookReader({
   const isOwn = Boolean(book && ownBook?.id === book.id);
   const ask =
     example || !book || missing ? null : isOwn ? (
-      <Link to="/my-book" className="button button-secondary">
+      <Link to="/my-book" className="button button-secondary" onClick={onNavigate}>
         My book
       </Link>
     ) : (
-      <Link to={`/checkouts/new/${encodeURIComponent(book.id)}`} className="button button-primary">
+      <Link
+        to={`/checkouts/new/${encodeURIComponent(book.id)}`}
+        className="button button-primary"
+        onClick={onNavigate}
+      >
         Ask to check out
       </Link>
     );
@@ -558,7 +566,7 @@ export function BookReader({
       return (
         <>
           {/* Every left page carries the book's art behind its text, the title page and each contents page. */}
-          <img className="br-page-art" src={art.page} alt="" />
+          <ArtImage className="br-page-art" src={art.page} />
           <div className="br-head">{close}</div>
           {at === 0 ? (
             titlePage
@@ -753,7 +761,7 @@ export function BookReader({
                 <div className="br-cover-rim br-cover-head" />
                 <div className="br-cover-rim br-cover-foot" />
                 <div className="br-cover-front" style={coverInk(art)}>
-                  <img className="br-cover-art" src={art.cover} alt="" />
+                  <ArtImage className="br-cover-art" src={art.cover} />
                   <div className="br-cover-type">
                     <strong>{printed ? printLines(printed.title) : title}</strong>
                     <span>{printed ? printLines(printed.name) : author}</span>

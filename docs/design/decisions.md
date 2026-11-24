@@ -1238,3 +1238,38 @@ Pending Josef's review of the new canvas.
   never reached, the last glazes were still wet, and the paper grain was another seed's); now each finished frame
   matches its cover to under 0.1 levels on average. `encode_anim.sh` writes `set-1/anim/` (MP4 + WebM + poster,
   0.12–0.63 MB each, 19 MB in all) and the manifest and README say which plays where.
+
+## 2026-11-23: strata builds itself (demo, the lake), following the terrain
+
+- **Josef:** strata covers animate too, for picks and in the design studio (never sign-in), on the watercolours'
+  clock; then, of the first try (layers far to near, each bottom-up): "understand the terrain and the layout of the
+  image ... the layering, the timing doesn't make sense."
+- `art/strata/strata_anim.py` records every slab the renderer lays and replays them, each dropping into its course,
+  on a per-cover choreography that follows the terrain. The lake: the far haze rises from the horizon; the massif
+  rises from its foot to the stone cap while the lake's reflection grows down row for row, each reflected row
+  landing just after the mountain row it mirrors; the sage hill; the sun climbs behind the peak once the mountain
+  stands; a cloud drifts in; the near shore, then its trees. All in by ~12.5 s, ends on the cover pixel for pixel at
+  13.5 s; quick (studio) at 0.3 of the time. Demo board `StudioPaint` beside the watercolour lake. Only the lake so
+  far, as Josef asked.
+- **Then (Josef): "just going from the bottom to the top, nice and smooth. But just them appearing is a little
+  boring ... settle slightly down into position slowly."** The terrain choreography is gone: one sweep up the
+  cover, course by course, the slabs of a course a little out of step. Each slab appears 1.6 courses above its
+  place, fades in over the first third of 1.2 s and drifts down, easing out to a stop. Last slab settled by
+  ~12.4 s; still ends on the cover pixel for pixel; quick at 0.3 of the time.
+- **Then (Josef): a faster spread at first, slowing, "the last one settle in more slower", and as long as the
+  watercolours ("right now it's a little too long").** The front reaches the top over 9 s on an ease-out (most of
+  the cover is up within ~5 s), and each slab's settle lengthens from 0.8 s at the foot to 2.2 s at the top. Last
+  slab settled at ~11.7 s; still ends on the cover pixel for pixel at 13.5 s; quick at 0.3 of the time.
+
+## 2026-11-23: fast everywhere but the intro; strata animations for all ten
+
+- **Josef:** "the slower animation is only going to be used for watercolor in the intro screen, and then even at
+  the reveal of your books and in the design studio, it's going to be the fast animations ... drop the slow Strata
+  animation, only fast Strata animations ... render the rest of Strata and send everything over for
+  implementation."
+- Strata: `strata_anim.py` renders only the quick build (24 fps, ~4 s, every slab settled by 3.5 s) for all ten set 1
+  covers, each matching its `set-1/covers/<key>.webp` pixel for pixel; `strata/set-1/anim/<key>-quick.{mp4,webm}`
+  (2.2 MB in all), manifest (`category: strata`, `anim`) and README updated.
+- Watercolour: the `reveal` clips are removed from `watercolor/set-1/anim/`; the reveal, the picks and the studio
+  use `quick`; `loop` (sign-in intro only) is the one slow animation. Manifest, README and `encode_anim.sh` follow.
+- Board `StudioPaint` shows the two styles' quick versions side by side and all ten strata covers at shelf size.
