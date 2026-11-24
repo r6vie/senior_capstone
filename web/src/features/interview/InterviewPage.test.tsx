@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { api, session } from "../../api/client";
+import type { MemberContext } from "../account/MemberContextFields";
 import { AuthProvider } from "../auth/AuthProvider";
 import { clearAllDrafts, draftKeyFor } from "./AnswerPanel";
 import { answerOf, setAnswer } from "./answerField.testing";
@@ -14,14 +15,21 @@ import {
   type InterviewState,
 } from "./interviewClient";
 
-function renderWith(client: InterviewClient) {
+function renderWith(
+  client: InterviewClient,
+  saveMemberContext: (context: MemberContext) => Promise<void> = async () => undefined,
+) {
   render(
     <AuthProvider>
       <MemoryRouter>
-        <InterviewPage client={client} />
+        <InterviewPage client={client} saveMemberContext={saveMemberContext} />
       </MemoryRouter>
     </AuthProvider>,
   );
+}
+
+async function chooseStudent() {
+  fireEvent.click(await screen.findByLabelText("Current student"));
 }
 
 function fake() {
@@ -94,8 +102,13 @@ describe("InterviewPage", () => {
 
   describe("start", () => {
     it("leads with Start and keeps the résumé behind one quiet line", async () => {
-      renderWith(fake());
+      const saveContext = vi.fn(async () => undefined);
+      renderWith(fake(), saveContext);
       const start = await screen.findByRole("button", { name: "Start the interview" });
+      expect((start as HTMLButtonElement).disabled).toBe(true);
+      fireEvent.click(screen.getByLabelText("Current student"));
+      fireEvent.click(screen.getByLabelText("Alumni"));
+      fireEvent.click(screen.getByLabelText("I am a founder"));
       expect(screen.getByText(/Nobody sees it until you put it on the shelf/)).toBeTruthy();
       expect(screen.getByText(/About twenty minutes/)).toBeTruthy();
       expect(screen.queryByText(/A résumé, if you like/)).toBeNull();
@@ -105,6 +118,10 @@ describe("InterviewPage", () => {
       expect(document.body.textContent).not.toMatch(/never stored/);
       fireEvent.click(start);
       expect(await screen.findByText(/spent years getting good at/)).toBeTruthy();
+      expect(saveContext).toHaveBeenCalledWith({
+        affiliations: ["current_student", "alumni"],
+        founder: true,
+      });
     });
 
     it("clears a file's error when another is picked", async () => {
@@ -126,6 +143,7 @@ describe("InterviewPage", () => {
         .mockRejectedValueOnce(new InterviewError("That PDF couldn't be read."))
         .mockResolvedValue(asking);
       renderWith(client);
+      await chooseStudent();
       fireEvent.click(await screen.findByRole("button", { name: /Have a résumé\?/ }));
       const cv = new File(["x"], "cv.pdf", { type: "application/pdf" });
       fireEvent.change(screen.getByLabelText("Choose a PDF"), { target: { files: [cv] } });
@@ -142,6 +160,7 @@ describe("InterviewPage", () => {
       );
       const askAgain = vi.spyOn(client, "askAgain").mockResolvedValue(asking);
       renderWith(client);
+      await chooseStudent();
       fireEvent.click(await screen.findByRole("button", { name: "Start the interview" }));
       const retry = await screen.findByRole("button", { name: "Try again" });
       expect(screen.queryByRole("button", { name: "Start the interview" })).toBeNull();
@@ -158,6 +177,7 @@ describe("InterviewPage", () => {
       );
       vi.spyOn(client, "current").mockResolvedValueOnce(null).mockResolvedValue(asking);
       renderWith(client);
+      await chooseStudent();
       fireEvent.click(await screen.findByRole("button", { name: "Start the interview" }));
       expect(await screen.findByText(asking.question)).toBeTruthy();
       expect(document.body.textContent).not.toMatch(/already started/);

@@ -30,6 +30,8 @@ async def test_signup_login_me_logout(client):
     assert me.json()["first_name"] == "Maya"
     assert me.json()["last_name"] == "Okafor"
     assert me.json()["full_name"] == "Maya Okafor"
+    assert me.json()["affiliations"] is None
+    assert me.json()["founder"] is None
 
     assert (await client.post("/auth/logout", headers=headers)).status_code == 204
     assert (await client.get("/auth/me", headers=headers)).status_code == 401
@@ -150,6 +152,9 @@ async def test_account_routes_need_sign_in(client):
     assert (await client.get("/auth/me/contact")).status_code == 401
     assert (await client.put("/auth/me/contact", json={})).status_code == 401
     assert (
+        await client.put("/auth/me/context", json={"affiliations": ["alumni"], "founder": False})
+    ).status_code == 401
+    assert (
         await client.put("/auth/me/notifications", json={"email_notifications": False})
     ).status_code == 401
     assert (await client.request("DELETE", "/auth/me", json={"email": "a@example.com"})).status_code == 401
@@ -204,6 +209,41 @@ async def test_members_turn_email_notifications_off_and_on(client, database):
     assert response.json()["email_notifications"] is True
     bad = await client.put("/auth/me/notifications", json={"email_notifications": "no"}, headers=headers)
     assert bad.status_code == 422
+
+
+async def test_members_record_and_change_their_community_context(client):
+    headers = auth(await sign_in(client))
+    response = await client.put(
+        "/auth/me/context",
+        json={"affiliations": ["current_student", "alumni"], "founder": True},
+        headers=headers,
+    )
+    assert response.status_code == 200
+    assert response.json()["affiliations"] == ["current_student", "alumni"]
+    assert response.json()["founder"] is True
+    assert (await client.get("/auth/me", headers=headers)).json()["affiliations"] == [
+        "current_student",
+        "alumni",
+    ]
+
+    changed = await client.put(
+        "/auth/me/context",
+        json={"affiliations": ["alumni"], "founder": False},
+        headers=headers,
+    )
+    assert changed.json()["affiliations"] == ["alumni"]
+    assert changed.json()["founder"] is False
+
+
+async def test_member_context_needs_an_affiliation_and_explicit_founder_status(client):
+    headers = auth(await sign_in(client))
+    for body in (
+        {"affiliations": [], "founder": False},
+        {"affiliations": ["student"], "founder": False},
+        {"affiliations": ["alumni", "alumni"], "founder": False},
+        {"affiliations": ["alumni"]},
+    ):
+        assert (await client.put("/auth/me/context", json=body, headers=headers)).status_code == 422
 
 
 async def test_deleting_an_account_needs_the_email_and_removes_everything(client, database):

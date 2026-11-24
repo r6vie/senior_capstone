@@ -111,6 +111,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/me/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update My Context
+         * @description Record student, alumni and founder context. It never restricts who the member can meet.
+         */
+        put: operations["update_my_context_auth_me_context_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/logout": {
         parameters: {
             query?: never;
@@ -1757,6 +1777,16 @@ export interface components {
             /** Place Note */
             place_note: string | null;
         };
+        /**
+         * MemberContextUpdate
+         * @description How the member relates to CWRU, plus founder status. Neither limits who they can meet.
+         */
+        MemberContextUpdate: {
+            /** Affiliations */
+            affiliations: ("current_student" | "alumni")[];
+            /** Founder */
+            founder: boolean;
+        };
         /** Message */
         Message: {
             /** Id */
@@ -2231,6 +2261,10 @@ export interface components {
             email: string;
             /** Email Notifications */
             email_notifications: boolean;
+            /** Affiliations */
+            affiliations: ("current_student" | "alumni")[] | null;
+            /** Founder */
+            founder: boolean | null;
             /** Verified */
             verified: boolean;
             /**
@@ -2484,6 +2518,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["NotificationSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_my_context_auth_me_context_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberContextUpdate"];
             };
         };
         responses: {

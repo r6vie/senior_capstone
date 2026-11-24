@@ -268,9 +268,13 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **Contact details still wait for a yes.** Nobody can reach an author outside Trove until the author accepts, which keeps "no cold messages" meaningful.
 - **Pen names would mostly end up as real names anyway**, so there are none.
 
-### 9.2 Branches and affiliation (decided: none for now)
+### 9.2 Membership and affiliation (revised 2026-11-23)
 
-Everyone at launch is CWRU, so community branches and affiliation badges would carry no information. We can revisit them if Trove expands beyond CWRU.
+There are no public affiliation badges. Before a member begins their first book interview, they
+record whether they are a current student, alumni, or both, and independently whether they are a
+founder. Existing members can supply or change the same context in Settings. It is not shown on the
+book and does not restrict or prioritize who may match with whom. The values are member-supplied;
+email and invite history never infer them.
 
 Membership verification (decided 2026-11-16, A2, Daniel):
 
