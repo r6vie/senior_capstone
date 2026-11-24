@@ -62,6 +62,8 @@ async def test_an_edit_on_the_shelf_is_live_at_once_and_undo_takes_it_back(clien
     assert undone["title"] == "The Book"
     assert undone["blurb"] == "The old blurb."
     assert undone["can_undo"] is False
+    # Undo puts back whose words the back cover was, too.
+    assert (await database.books.find_one({"author_id": author["id"]})).get("blurb_edited") is False
 
 
 async def test_a_chapter_edit_keeps_its_quotes_and_can_be_undone(client, database, author):

@@ -5,6 +5,7 @@ import anthropic
 import pytest
 
 from tests.fakes import choose_and_wait, finish_and_wait, send_answer, send_skip
+from trove.books import service as books
 from trove.interview import engine, service
 from trove.interview.engine import Draft, DraftChapter, FinishedBook, NextTurn, TitleOption
 
@@ -451,6 +452,39 @@ async def test_removing_a_chapter_keeps_a_back_cover_the_member_edited(client, h
     assert removed.json()["blurb"] == mine
     # No back cover was written: the Librarian wasn't asked.
     assert len(fake_engine.calls) == calls
+
+
+async def test_changing_the_title_keeps_a_back_cover_the_member_edited(client, headers, fake_engine):
+    await to_review(client, headers, fake_engine)
+    mine = "My own back cover, in my words."
+    assert (await client.patch("/books/me", json={"blurb": mine}, headers=headers)).status_code == 200
+    changed = (await client.post("/interview/book/title", json={"title": 2}, headers=headers)).json()
+    assert (changed["title"], changed["blurb"]) == ("Title 2", mine)
+
+
+async def test_a_back_cover_the_member_never_touched_is_still_rewritten(
+    client, database, headers, fake_engine
+):
+    book = await to_review(client, headers, fake_engine)
+    removed = (
+        await client.delete(f"/interview/book/chapters/{book['chapters'][0]['id']}", headers=headers)
+    ).json()
+    assert removed["blurb"].startswith("I know ")
+    # Books saved before the flag count as unedited.
+    await database.books.update_one({}, {"$unset": {"blurb_edited": ""}})
+    changed = (await client.post("/interview/book/title", json={"title": 2}, headers=headers)).json()
+    assert changed["blurb"] == "I know Title 2."
+
+
+async def test_an_edit_saved_while_the_back_cover_is_rewritten_is_kept(
+    database, headers, client, fake_engine
+):
+    # The flag is checked in the update itself, so an edit landing during the Librarian's rewrite wins.
+    await to_review(client, headers, fake_engine)
+    book = await database.books.find_one({})
+    await database.books.update_one({}, {"$set": {"blurb": "Mine, just now.", "blurb_edited": True}})
+    kept = await books._set_unedited_blurb(database, book, "The Librarian's version.")
+    assert kept["blurb"] == "Mine, just now."
 
 
 async def test_title_route_only_in_review(client, headers, fake_engine):

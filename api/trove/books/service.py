@@ -181,16 +181,35 @@ async def _named(database: AsyncDatabase, book: dict | None) -> dict | None:
     return (await with_author_names(database, [book]))[0] if book else None
 
 
+def blurb_edited(book: dict) -> bool:
+    """Whether the member wrote this back cover themselves. Their words are never rewritten for them.
+    Books from before the flag count as unedited."""
+    return bool(book.get("blurb_edited"))
+
+
+async def _set_unedited_blurb(database: AsyncDatabase, book: dict | None, blurb: str | None) -> dict | None:
+    """Put the Librarian's new back cover on `book`, unless the member has written their own since.
+    Checked in the update itself, so an edit saved meanwhile is never overwritten."""
+    if book is None or blurb is None:
+        return book
+    updated = await database.books.find_one_and_update(
+        {"_id": book["_id"], "blurb_edited": {"$ne": True}},
+        {"$set": {"blurb": blurb}},
+        return_document=ReturnDocument.AFTER,
+    )
+    # Not updated: the member's own words are there now, so show those, not the copy read before.
+    return updated or await database.books.find_one({"_id": book["_id"]}) or book
+
+
 async def remove_chapter(
     database: AsyncDatabase, author_id: str, chapter_id: str, *, blurb: str | None = None
 ) -> dict | None:
     """Remove a chapter from the author's draft, if more than MIN_CHAPTERS remain. None if it can't.
 
-    `blurb`, if given, replaces the blurb in the same update, since it should match what's left.
+    `blurb`, if given, replaces the blurb, since it should match what's left, unless the member wrote
+    their own back cover.
     """
     changes: dict = {"updated_at": datetime.now(UTC)}
-    if blurb is not None:
-        changes["blurb"] = blurb
     book = await database.books.find_one_and_update(
         {
             "author_id": author_id,
@@ -203,23 +222,24 @@ async def remove_chapter(
         {"$pull": {"chapters": {"id": chapter_id}}, "$set": changes, "$unset": {"previous_blurb": ""}},
         return_document=ReturnDocument.AFTER,
     )
-    return await _named(database, book)
+    return await _named(database, await _set_unedited_blurb(database, book, blurb))
 
 
 async def retitle_draft(
     database: AsyncDatabase, author_id: str, *, title: str, chapters: list[dict], blurb: str | None
 ) -> dict | None:
-    """Replace the author's draft with one finished for another title. None if they have no draft."""
+    """Replace the author's draft with one finished for another title, keeping a back cover the member
+    wrote themselves. None if they have no draft."""
     book = await database.books.find_one_and_update(
         {"author_id": author_id, "status": DRAFT},
         {
-            "$set": {"title": title, "chapters": chapters, "blurb": blurb, "updated_at": datetime.now(UTC)},
+            "$set": {"title": title, "chapters": chapters, "updated_at": datetime.now(UTC)},
             # The old back cover described the old book.
             "$unset": {"previous_blurb": ""},
         },
         return_document=ReturnDocument.AFTER,
     )
-    return await _named(database, book)
+    return await _named(database, await _set_unedited_blurb(database, book, blurb))
 
 
 def revised_chapters(
@@ -264,12 +284,15 @@ async def apply_revision(
         "previous_version": {
             "chapters": book["chapters"],
             "blurb": book.get("blurb"),
+            "blurb_edited": blurb_edited(book),
             "applied_at": datetime.now(UTC),
         },
         "updated_at": datetime.now(UTC),
     }
     if blurb is not None:
+        # The member chose the Librarian's new back cover over their own, on the changes screen.
         changes["blurb"] = blurb
+        changes["blurb_edited"] = False
     updated = await database.books.find_one_and_update(
         # Only if the book hasn't changed since it was read, so two approvals can't lose one.
         {"_id": book["_id"], "status": book["status"], "updated_at": book["updated_at"]},
@@ -292,6 +315,8 @@ async def undo_revision(database: AsyncDatabase, author_id: str) -> dict | None:
             "$set": {
                 "chapters": previous["chapters"],
                 "blurb": previous["blurb"],
+                # Saved before the flag existed, a version leaves it as it is.
+                "blurb_edited": previous.get("blurb_edited", blurb_edited(book)),
                 # Edits can change the title too; revisions never do.
                 "title": previous.get("title", book["title"]),
                 "updated_at": datetime.now(UTC),
@@ -350,6 +375,7 @@ def _snapshot(book: dict) -> dict:
     return {
         "chapters": book["chapters"],
         "blurb": book.get("blurb"),
+        "blurb_edited": blurb_edited(book),
         "title": book["title"],
         "applied_at": datetime.now(UTC),
         "kind": "edit",
