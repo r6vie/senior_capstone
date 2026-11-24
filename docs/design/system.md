@@ -306,7 +306,8 @@ corners turn pages as in the reader.
 `padding:34px 40px 36px`, two columns `minmax(0,1fr) auto`, gap 48px: a white `.caption` "The Librarian", the next
 question it will ask in Newsreader italic 500 32px/1.2 (at most 640px), and on the right "Continue with the
 Librarian" (the page's one red button). With a round already open the button reads "Continue adding to your book".
-Showing the question before Start needs the interview to have it ready (an API change; see the board's note).
+With no round open there is no question yet, so the line reads "There's more to your story." in the same type
+(Josef, 2026-11-24).
 
 **Changing the design.**
 

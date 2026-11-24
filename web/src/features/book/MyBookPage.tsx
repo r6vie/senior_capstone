@@ -176,8 +176,9 @@ function NextStep({
         </Librarian>
       );
     default:
+      // No round open, so no question yet: a fixed line in its place (Josef, 2026-11-24).
       return (
-        <Librarian>
+        <Librarian line="There's more to your story.">
           <Link to="/interview?add" className="button button-primary">
             Continue with the Librarian
           </Link>

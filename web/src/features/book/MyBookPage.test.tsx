@@ -248,6 +248,7 @@ describe("MyBookPage", () => {
     show(client("shelf"));
     expect(await screen.findByRole("region", { name: "The Librarian" })).toBeTruthy();
     expect(linkTo("Continue with the Librarian")).toBe("/interview?add");
+    expect(screen.getByText("There's more to your story.")).toBeTruthy();
     expect(document.querySelectorAll(".button-primary")).toHaveLength(1);
   });
 
