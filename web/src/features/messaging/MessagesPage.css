@@ -6,8 +6,32 @@
 .messages-page {
   max-width: 720px;
 }
-.messages-page > p:first-child {
+@media (min-width: 1100px) {
+  .messages-page.page-rail {
+    max-width: 1320px;
+  }
+  /* Beside the rail, the conversation starts on the rail's top rule rather than drawing its own. */
+  .messages-body > .thread {
+    margin-top: 0;
+  }
+  /* What you write sits on its own sunk ground under the conversation. */
+  .messages-body > .thread-form {
+    padding: var(--s-5) var(--s-6) var(--s-6);
+    border-top: 0;
+    border-radius: var(--r);
+    background: var(--paper-sunk);
+  }
+}
+.messages-back {
   margin: 0 0 var(--s-4);
+}
+.messages-back a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.messages-page .caption {
+  margin-bottom: var(--s-2);
 }
 .thread {
   display: grid;
