@@ -408,9 +408,20 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  min-height: var(--tap);
+  color: inherit;
   font: 800 28px / 1 var(--font-display);
   letter-spacing: 0.14em;
+  text-decoration: none;
   text-transform: uppercase;
+}
+.wordmark:hover {
+  text-decoration: underline;
+  text-decoration-thickness: var(--line);
+  text-underline-offset: var(--s-1);
+}
+.wordmark:active {
+  color: var(--ink-2);
 }
 .wordmark::before {
   content: "";

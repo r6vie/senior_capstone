@@ -27,6 +27,12 @@ function renderAt(path: string) {
 }
 
 describe("AppShell", () => {
+  it("returns to the shelf from the Trove wordmark", () => {
+    renderAt("/my-book");
+    fireEvent.click(screen.getByRole("link", { name: "Trove home" }));
+    expect(screen.getByText("shelf page")).toBeTruthy();
+  });
+
   it("links to every main page", () => {
     renderAt("/");
     const nav = screen.getByRole("navigation", { name: "Main" });
