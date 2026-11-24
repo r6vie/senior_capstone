@@ -217,3 +217,11 @@
     transition: none;
   }
 }
+/* A long title stops at three lines, so the full name under it stays clear of the art and readable. */
+.shelf-landing .book-cover .book-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}

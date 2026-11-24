@@ -271,12 +271,11 @@ export function IntroBook({
                   >
                     Start the interview
                   </Button>
-                  {busy ? (
+                  {/* The minutes are in the third line already; beside Start goes only the wait. */}
+                  {busy && (
                     <span className="ib-wait" aria-hidden="true">
                       {busy}
                     </span>
-                  ) : (
-                    <span className="ib-minutes">About 10 minutes</span>
                   )}
                 </div>
               </div>

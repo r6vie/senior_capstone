@@ -59,6 +59,9 @@ const LOST_DEFAULT = "That didn't reach the Librarian. Try again.";
 const LOST_ANSWER = "That didn't reach the Librarian. Your answer is still here.";
 // How often to look while changes are written in the background.
 const LOOK_AGAIN_MS = 4000;
+// For the first moments of a wait the book is usually nearly ready: look this often until then.
+const LOOK_FAST_MS = 300;
+const LOOK_FAST_FOR_MS = 5000;
 
 class TimedOut extends Error {}
 
@@ -251,17 +254,33 @@ export function InterviewPage({
   // The writing happens in the background, so the screen moves on by itself when it's done.
   const stage = state?.stage;
   const place = placeOf(state);
+  // Right after a pick the book is usually ready within moments, so it looks often at first, then settles.
   useEffect(() => {
     if (stage !== "writing" && place !== "drafting") return;
-    const timer = setInterval(() => {
-      client
-        .current()
-        .then((now) => {
-          if (now && placeOf(now) !== place) setState(now);
-        })
-        .catch(() => undefined);
-    }, LOOK_AGAIN_MS);
-    return () => clearInterval(timer);
+    const began = Date.now();
+    let timer: ReturnType<typeof setTimeout>;
+    let live = true;
+    const look = () => {
+      const soon = Date.now() - began < LOOK_FAST_FOR_MS;
+      timer = setTimeout(
+        () => {
+          client
+            .current()
+            .then((now) => {
+              if (!live) return;
+              if (now && placeOf(now) !== place) setState(now);
+              else look();
+            })
+            .catch(() => live && look());
+        },
+        soon ? LOOK_FAST_MS : LOOK_AGAIN_MS,
+      );
+    };
+    look();
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
   }, [client, stage, place]);
 
   // While the Librarian works the member's side is inert, which drops keyboard focus to the page.
@@ -755,6 +774,10 @@ export function InterviewPage({
         return (
           <Frame
             busy
+            // The titles take a while with the real Librarian; "still working" waits until it's news, and
+            // the page already says the answers are saved, once.
+            slowAfter={state.about === "titles" ? 45_000 : undefined}
+            stillLine="Still working."
             say={
               state.closingLine ?? (
                 <Waiting>
