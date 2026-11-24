@@ -28,17 +28,26 @@ class FakeClaude(Claude):
         responses: list[BetaMessage] | None = None,
         model: str = "claude-opus-5-5",
         notes: list[BetaMessage] | None = None,
+        bodies: list[BetaMessage] | None = None,
     ):
         self.model = model
         self.responses = list(responses or [])
         # When set, the Librarian's notes calls take their replies from here instead, so the look it
         # makes on every sent answer can't take a reply queued for the next question.
         self.notes = notes
+        # The same for the chapter texts written in the background, which are kept out of `requests`
+        # too. An empty queue makes each one fail, so the chapter keeps no text, as when the call fails.
+        self.bodies = bodies
         self.requests: list[dict] = []
+        self.body_requests: list[dict] = []
 
     async def create(self, **params) -> BetaMessage:
-        self.requests.append(self.request(params))
         queue = self.responses
+        if self.bodies is not None and prompt_name(params.get("system")) == "interview/body":
+            self.body_requests.append(self.request(params))
+            queue = self.bodies
+        else:
+            self.requests.append(self.request(params))
         if self.notes is not None and prompt_name(params.get("system")) == "interview/notes":
             queue = self.notes
         if not queue:

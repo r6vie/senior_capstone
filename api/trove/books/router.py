@@ -87,11 +87,12 @@ async def edit_my_chapter(
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
 ) -> MyBookResponse:
-    """Change a chapter's title or summary. Its quotes stay."""
+    """Change a chapter's title, summary or text. Its quotes stay. Text the member saves is theirs: the
+    Librarian never writes over it."""
     await _editable(database, user["_id"])
     try:
         book = await books.edit_chapter(
-            database, user["_id"], chapter_id, title=data.title, summary=data.summary
+            database, user["_id"], chapter_id, title=data.title, summary=data.summary, body=data.body
         )
     except books.EditRefused as error:
         raise HTTPException(status_code=error.status_code, detail=error.detail) from None

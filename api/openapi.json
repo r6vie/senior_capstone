@@ -908,7 +908,7 @@
           "Books"
         ],
         "summary": "Edit My Chapter",
-        "description": "Change a chapter's title or summary. Its quotes stay.",
+        "description": "Change a chapter's title, summary or text. Its quotes stay. Text the member saves is theirs: the\nLibrarian never writes over it.",
         "operationId": "edit_my_chapter_books_me_chapters__chapter_id__patch",
         "security": [
           {
@@ -3008,6 +3008,17 @@
             "type": "string",
             "title": "Summary"
           },
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
           "quotes": {
             "items": {
               "type": "string"
@@ -3270,6 +3281,17 @@
           "summary": {
             "type": "string",
             "title": "Summary"
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
           }
         },
         "type": "object",
@@ -3307,12 +3329,25 @@
               }
             ],
             "title": "Summary"
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "title": "ChapterEdit",
-        "description": "The member's own words for a chapter's title or summary. Its quotes stay as they are."
+        "description": "The member's own words for a chapter's title, summary or text. Its quotes stay as they are."
       },
       "CheckoutRequest": {
         "properties": {

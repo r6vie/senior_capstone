@@ -37,6 +37,8 @@ Design = Literal[
 # leave room (docs/review/decisions.md, row 30).
 MAX_BOOK_TITLE = 80
 MAX_CHAPTER_TITLE = 100
+# The Librarian writes 150-250 words; this leaves the member room to write more.
+MAX_CHAPTER_BODY = 4000
 DEFAULT_COPIES = 3
 
 
@@ -44,6 +46,9 @@ class Chapter(BaseModel):
     id: str
     title: str
     summary: str
+    # The chapter's text, a few short paragraphs separated by a blank line. Null until the Librarian has
+    # written it, or on books from before chapters had text: show the summary instead.
+    body: str | None = None
 
 
 class AuthorChapter(Chapter):
@@ -112,13 +117,15 @@ class BookEdit(RequestBody):
 
 
 class ChapterEdit(RequestBody):
-    """The member's own words for a chapter's title or summary. Its quotes stay as they are."""
+    """The member's own words for a chapter's title, summary or text. Its quotes stay as they are."""
 
     title: NonEmptyText | None = Field(None, max_length=MAX_CHAPTER_TITLE)
     summary: NonEmptyText | None = Field(None, max_length=MAX_SUMMARY)
+    # Once the member saves their own text, the Librarian never writes over it.
+    body: NonEmptyText | None = Field(None, max_length=MAX_CHAPTER_BODY)
 
     @model_validator(mode="after")
     def something_to_change(self):
-        if self.title is None and self.summary is None:
-            raise ValueError("Send a title or a summary to change.")
+        if self.title is None and self.summary is None and self.body is None:
+            raise ValueError("Send a title, a summary or a text to change.")
         return self

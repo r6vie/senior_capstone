@@ -940,3 +940,53 @@ async def test_a_title_whose_book_failed_to_prepare_is_written_on_the_pick(
     assert set((await database.interviews.find_one({}))["prepared"]) == {"0", "2"}
     book = await choose_and_wait(client, headers, 1)
     assert book["blurb"] == "I know Title 1."
+
+
+async def test_every_chapter_gets_its_text_and_a_members_own_text_stays(
+    client, database, headers, fake_engine, monkeypatch
+):
+    written: list[list[str]] = []
+
+    async def write_bodies(claude, *, turns, chapters, **_):
+        written.append([c.id for c in chapters])
+        return {c.id: f"The text of {c.id}." for c in chapters if c.id != "c3"}
+
+    monkeypatch.setattr(engine, "write_bodies", write_bodies)
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    await finish_and_wait(client, headers)
+    # Once for the whole pool, while the titles are read: a title never changes a chapter's facts.
+    assert written == [[c.id for c in POOL]]
+
+    book = await choose_and_wait(client, headers, 1)
+    assert [c["body"] for c in book["chapters"]] == [
+        "The text of c1.",
+        "The text of c2.",
+        None,
+        "The text of c4.",
+    ]
+
+    edited = await client.patch("/books/me/chapters/c1", json={"body": "My own words."}, headers=headers)
+    assert edited.status_code == 200, edited.text
+    book = (await client.post("/interview/book/title", json={"title": 2}, headers=headers)).json()
+    assert book["title"] == "Title 2"
+    assert [c["body"] for c in book["chapters"]][:2] == ["My own words.", "The text of c2."]
+
+
+async def test_text_written_after_the_book_is_saved_still_reaches_it(
+    client, database, headers, fake_engine, monkeypatch
+):
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    await finish_and_wait(client, headers)
+    book = await choose_and_wait(client, headers, 0)
+    assert all(c["body"] is None for c in book["chapters"])
+    await database.interviews.update_one({}, {"$set": {"bodies": {}}})
+
+    async def write_bodies(claude, *, turns, chapters, **_):
+        return {c.id: f"Late text of {c.id}." for c in chapters}
+
+    monkeypatch.setattr(engine, "write_bodies", write_bodies)
+    await service.prepare_bodies(database, None, await database.interviews.find_one({}))
+    book = (await client.get("/books/me", headers=headers)).json()
+    assert [c["body"] for c in book["chapters"]] == [f"Late text of {c['id']}." for c in book["chapters"]]

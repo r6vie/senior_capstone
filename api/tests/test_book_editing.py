@@ -78,6 +78,41 @@ async def test_a_chapter_edit_keeps_its_quotes_and_can_be_undone(client, databas
     assert undone["chapters"][1]["summary"] == "Summary 1."
 
 
+async def test_a_chapters_text_is_the_members_once_they_edit_it(client, database, author):
+    reader = await member(client, "reader@case.edu", "Rae", "Jones")
+    assert (await my_book(client, author))["chapters"][0]["body"] is None
+    await books.set_chapter_bodies(database, author["id"], {"c0": "The Librarian's text.", "nope": "Lost."})
+    book = await my_book(client, author)
+    assert [c["body"] for c in book["chapters"]] == ["The Librarian's text.", None, None]
+    # Readers see it too.
+    seen = (await client.get(f"/books/{book['id']}", headers=reader["headers"])).json()
+    assert seen["chapters"][0]["body"] == "The Librarian's text."
+
+    text = "I ran the schedule.\n\nNobody else would touch it."
+    response = await edit_chapter(client, author, "c0", body=f"  {text}  ")
+    assert response.status_code == 200, response.text
+    assert response.json()["chapters"][0]["body"] == text
+    assert response.json()["chapters"][0]["summary"] == "Summary 0."
+    # The Librarian's text never goes over the member's, nor over text that's already there.
+    await books.set_chapter_bodies(database, author["id"], {"c0": "Rewritten.", "c1": "New text."})
+    assert [c["body"] for c in (await my_book(client, author))["chapters"]][:2] == [text, "New text."]
+    undone = (await client.post("/interview/book/undo", headers=author["headers"])).json()
+    assert undone["chapters"][0]["body"] == "The Librarian's text."
+
+
+def test_a_revision_keeps_the_text_a_member_wrote():
+    old = [
+        {"id": "c0", "title": "T", "summary": "S.", "body": "Mine.", "body_edited": True},
+        {"id": "c1", "body": "B."},
+    ]
+    improved = [
+        {"id": "c0", "title": "Better", "summary": "S."},
+        {"id": "c1", "title": "Also", "summary": "S."},
+    ]
+    chapters = books.revised_chapters(old, improved=improved, added=[], removed=[])
+    assert [(c["title"], c.get("body")) for c in chapters] == [("Better", "Mine."), ("Also", None)]
+
+
 async def test_undoing_an_edit_doesnt_put_the_members_words_off_limits(client, database, author):
     await edit_chapter(client, author, "c0", title="My own title")
     await client.post("/interview/book/undo", headers=author["headers"])
@@ -112,7 +147,7 @@ async def test_bad_book_edits_are_refused(client, author, body):
 
 @pytest.mark.parametrize(
     "body",
-    [{}, {"summary": ""}, {"summary": "x" * 301}, {"title": "x" * 101}],
+    [{}, {"summary": ""}, {"summary": "x" * 301}, {"title": "x" * 101}, {"body": " "}, {"body": "x" * 4001}],
 )
 async def test_bad_chapter_edits_are_refused(client, author, body):
     assert (await edit_chapter(client, author, "c0", **body)).status_code == 422

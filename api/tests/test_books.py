@@ -56,7 +56,7 @@ async def test_open_a_book(client, database):
         "cover_style": "cover-1",
         "design": None,
         "blurb": "A blurb.",
-        "chapters": [{"id": "c1", "title": "One thing", "summary": "About it."}],
+        "chapters": [{"id": "c1", "title": "One thing", "summary": "About it.", "body": None}],
     }
 
 

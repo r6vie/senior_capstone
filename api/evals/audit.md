@@ -3,7 +3,7 @@
 Quotes are checked in code. Summaries and blurbs aren't, and they're written in the member's first person, so an
 invented line puts words in a real person's mouth. This audit finds out how often that happens.
 
-Go through every numbered sentence `[S…]`. Split it into its separate claims: each fact, number, outcome, cause,
+Go through every numbered sentence, `[S…]` and `[B…]` (a chapter's text). Split it into its separate claims: each fact, number, outcome, cause,
 feeling, opinion or lesson. Check each claim against the member's **answers only**. Interviewer questions are
 context: a claim found only in a question is not supported, unless the member's answer plainly accepts it.
 
@@ -19,7 +19,8 @@ Be strict about lessons, motives and feelings, and about whether something is pr
 plain paraphrase or a neat summary of what they did say.
 
 Report:
-1. Totals: claims, and the count and percentage of each class.
+1. Totals: claims, and the count and percentage of each class. Give them twice: for the `[B…]` sentences (the
+   chapter texts) and for the `[S…]` sentences.
 2. A table of every claim that isn't supported: sentence number, the claim, the class, and the closest thing the
    member really said (quoted, with its answer number), or "nothing".
 3. Which of these would matter if the member read it, or if a reader raised it on the call. Name them.

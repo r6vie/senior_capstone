@@ -374,7 +374,7 @@ def lint_book(book: dict, turns: list[Turn], *, resume: str | None = None, autho
     for name, blurb in (book.get("blurbs") or {}).items():
         findings += _lint_blurb(blurb, f"blurb {name}")
     # What a reader sees, and what a member can put on the shelf.
-    shelf = {w: f"{c['title']}. {c['summary']}" for w, c in written.items()} | {
+    shelf = {w: f"{c['title']}. {c['summary']} {c.get('body') or ''}" for w, c in written.items()} | {
         f"blurb {n}": b for n, b in (book.get("blurbs") or {}).items()
     }
     shelf |= {f"title {n}": t["title"] for n, t in enumerate(book.get("titles", []), start=1)}
@@ -382,7 +382,9 @@ def lint_book(book: dict, turns: list[Turn], *, resume: str | None = None, autho
     for where, text in shelf.items():
         findings += _lint_grounding(text, answers, where, resume=resume, author=author)
     # Titles are in title case, so the name check only reads running text.
-    prose = {w: c["summary"] for w, c in written.items()} | (book.get("blurbs") or {})
+    prose = {w: f"{c['summary']} {c.get('body') or ''}" for w, c in written.items()} | (
+        book.get("blurbs") or {}
+    )
     for where, text in prose.items():
         findings += [Finding("warn", "possible name", where, name) for name in _names(text)]
     return findings

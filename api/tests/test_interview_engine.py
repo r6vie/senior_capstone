@@ -181,6 +181,32 @@ async def test_finish_tops_up_a_short_pick_from_the_pool():
     assert finished.blurb == "I know the pool."
 
 
+async def test_no_chapter_keeps_the_books_title():
+    # Quality's real run: the book and its chapter 1 were both "Almost nothing is really lost".
+    title = "Almost nothing is really lost"
+    echo = [{"pool_id": "c0", "title": "Almost nothing is really lost.", "summary": "S."}]
+    rest = [{"pool_id": f"c{n}", "title": f"T{n}", "summary": "S."} for n in (1, 2)]
+    fixed = [{"pool_id": "c0", "title": "The bin under the bench", "summary": "S."}]
+    claude = FakeClaude(
+        [reply({"chapters": echo + rest, "blurb": BLURB}), reply({"chapters": fixed + rest, "blurb": BLURB})]
+    )
+    finished = await engine.finish_book(claude, turns=turns(), draft=a_draft(), title=title)
+    assert [c.title for c in finished.chapters] == ["The bin under the bench", "T1", "T2"]
+    assert "No chapter may be titled the same as the book" in sent(claude)
+
+    # Echoed twice over: the chapter falls back to its pool title.
+    claude = FakeClaude([reply({"chapters": echo + rest, "blurb": BLURB})] * 2)
+    finished = await engine.finish_book(claude, turns=turns(), draft=a_draft(), title=title)
+    assert finished.chapters[0].title == "Pool 0"
+
+
+def test_a_title_inside_another_is_an_echo():
+    assert engine._echoes_title("Why almost nothing is really lost", "Almost nothing is really lost")
+    assert engine._echoes_title("The fryer only cooks", "the fryer only cooks!")
+    assert not engine._echoes_title("The fryer line", "The fryer only cooks")
+    assert not engine._echoes_title("The line", "Stuck with the line")
+
+
 async def test_write_blurb_sees_only_the_chapters_left_and_retries_once():
     book = a_draft().pool[:3]
     claude = FakeClaude([reply({"blurb": "x" * 601}), reply({"blurb": BLURB})])
@@ -475,3 +501,47 @@ def test_a_long_summary_is_cut_at_a_sentence_that_fits():
 def test_one_long_sentence_stays_whole():
     long = "word " * 80 + "end."
     assert engine._fit_summary(long) == long
+
+
+# A chapter's text.
+
+BODY = " ".join([ANSWERS[1]] * 6) + "\n\n\n" + " ".join([ANSWERS[2]] * 3)
+
+
+def body(text: str):
+    return text_message(json.dumps({"body": text}))
+
+
+async def test_a_chapters_text_is_checked_and_retried_once():
+    chapter = a_draft().pool[1]
+    claude = FakeClaude([body(BODY)])
+    written = await engine.write_body(claude, turns=turns(), chapter=chapter)
+    # Paragraphs keep one blank line between them.
+    assert written == " ".join([ANSWERS[1]] * 6) + "\n\n" + " ".join([ANSWERS[2]] * 3)
+    assert claude.requests[0]["system"] == load_prompt("interview/body")
+    assert "Grounding" in load_prompt("interview/body")
+    assert '"title": "Pool 1"' in sent(claude) and ANSWERS[0] in sent(claude)
+
+    # A number the member never said, too short, or about the book: one retry, then no text at all.
+    invented = BODY + " By then I had 40 stores."
+    claude = FakeClaude([body(invented), body("Too short.")])
+    assert await engine.write_body(claude, turns=turns(), chapter=chapter) is None
+    assert "the member never said the number 40" in sent(claude)
+    assert engine.body_problems("In this chapter I explain. " + BODY, turns())
+    assert engine.body_problems(BODY, turns(), leaks=lambda text: "soy" in text)
+    assert engine.body_problems(BODY, turns()) == []
+
+
+async def test_each_chapter_gets_its_text_and_a_failure_loses_only_that_one():
+    pool = a_draft().pool[:3]
+    claude = FakeClaude([body(BODY), ClaudeRefused, body(BODY)])
+
+    async def create(**params):
+        reply = claude.responses.pop(0)
+        if reply is ClaudeRefused:
+            raise ClaudeRefused()
+        return reply
+
+    claude.create = create
+    bodies = await engine.write_bodies(claude, turns=turns(), chapters=pool)
+    assert len(bodies) == 2 and set(bodies) <= {"c0", "c1", "c2"}
