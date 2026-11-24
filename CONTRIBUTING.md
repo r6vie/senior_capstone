@@ -148,6 +148,10 @@ Real Claude calls in development (evals, real-AI interviews on your own copy) ar
   on), and any product rule it enforces (for example, "names stay hidden before a yes").
 - Database tests use a real MongoDB. Take the `client` fixture, or `database` for direct access.
   Each test run gets a throwaway database, emptied between tests.
+- **Run them on a local MongoDB.** Against the shared Atlas cluster the API suite takes 10 minutes to over an
+  hour, and it competes with the live site for the cluster's limits. Locally it takes about 2, as in CI. Run
+  `docker run -d --name trove-test-mongo -p 27017:27017 --restart unless-stopped mongo:7.0` once, and put
+  `TROVE_TEST_MONGODB_URI=mongodb://localhost:27017` in your `.env`.
 - **Never call the real Claude API in tests.** Use the `fake_claude` fixture and script its
   responses with `text_message(...)` from `tests/fakes.py`.
 - Never send real email. Tests run with SMTP turned off automatically.
