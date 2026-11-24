@@ -53,6 +53,23 @@ describe("AuthPage", () => {
     expect(screen.getByLabelText("Last name")).toBeTruthy();
   });
 
+  it("letters the name onto the book's cover as it's typed", () => {
+    renderPage("sign-up");
+    fireEvent.change(screen.getByLabelText("First name"), { target: { value: "Ingrid" } });
+    fireEvent.change(screen.getByLabelText("Last name"), { target: { value: "Solberg" } });
+    expect(document.querySelector(".auth-author")?.textContent).toBe("Ingrid Solberg");
+  });
+
+  it("shows the password on request", () => {
+    renderPage("sign-in");
+    const field = screen.getByLabelText(/^Password/) as HTMLInputElement;
+    expect(field.type).toBe("password");
+    fireEvent.click(screen.getByRole("button", { name: "Show password" }));
+    expect(field.type).toBe("text");
+    fireEvent.click(screen.getByRole("button", { name: "Hide password" }));
+    expect(field.type).toBe("password");
+  });
+
   it("doesn't ask for a name when signing in", () => {
     renderPage("sign-in");
     expect(screen.queryByLabelText("First name")).toBeNull();
@@ -106,7 +123,9 @@ describe("AuthPage", () => {
     api.POST.mockResolvedValue({ data: { inviter_name: "Maya Lee" } });
     auth.signUp.mockResolvedValue("signed-in");
     renderPage("sign-up", "/?invite=abc123");
-    expect(await screen.findByText("Maya Lee invited you to Trove.")).toBeTruthy();
+    // The invite is a library card behind the book.
+    expect(await screen.findByText("Maya Lee")).toBeTruthy();
+    expect(screen.getByText("Invited by")).toBeTruthy();
     expect(screen.queryByText(/ask a Trove member/)).toBeNull();
     fillIn("ada@gmail.com");
     await screen.findByRole("button", { name: "Create account" });
