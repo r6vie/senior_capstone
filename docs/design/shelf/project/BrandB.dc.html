@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brand B · Facing pages</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+
+body{margin:0}
+.bb{--ink:#111;--paper:#FAFAF7;--sunk:#F0F0EB;--ink2:#55554F;--rule:#C9C9C6;
+ --cond:'Barlow Condensed','Arial Narrow',sans-serif;--ser:'Newsreader',Georgia,serif;--sans:'IBM Plex Sans',system-ui,sans-serif;
+ width:1760px;padding:72px 80px 96px;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.bb,.bb *{box-sizing:border-box}
+:where(.bb) :is(h1,h2,h3,p,ul,ol,figure){margin:0;padding:0}
+.eyebrow{font:700 15px var(--cond);letter-spacing:.16em;text-transform:uppercase;color:var(--ink2)}
+.h1{font:600 64px/1.02 var(--ser);letter-spacing:-.015em;margin-top:14px}
+.lede{font:400 22px/1.4 var(--ser);max-width:900px;margin-top:18px}
+.sec{margin-top:72px}
+.sh2{display:flex;align-items:baseline;gap:18px;border-top:3px solid var(--ink);padding-top:14px;margin-bottom:28px}
+.sh2 b{font:800 30px/1 var(--cond);letter-spacing:.04em;text-transform:uppercase}
+.sh2 span{font-size:15px;color:var(--ink2)}
+.note{font-size:14px;color:var(--ink2);max-width:520px}
+.cap{font:600 13px var(--cond);letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);margin-top:10px}
+.tone{background-image:radial-gradient(var(--ink) 1.1px,transparent 1.3px);background-size:6px 6px}
+.tone-f{background-image:radial-gradient(var(--ink) .9px,transparent 1.1px);background-size:5px 5px}
+
+/* wordmarks */
+.wa{position:relative;display:inline-block;line-height:1}
+.wa .wt{display:block;font-family:var(--ser);font-weight:600;letter-spacing:-.02em;line-height:.9;padding:0 .04em;border-bottom:var(--rl) solid currentColor}
+.wa .rb{position:absolute;top:100%;display:block;margin-top:calc(var(--rl) * -1)}
+.wt-a{font-family:var(--ser);font-weight:600;letter-spacing:-.02em;line-height:1}
+.wb{font-family:var(--ser);font-style:italic;font-weight:500;letter-spacing:-.01em;line-height:1}
+.wc{font-family:var(--cond);font-weight:800;letter-spacing:.05em;line-height:.9}
+.lk{display:inline-flex;align-items:center;gap:.28em}
+.lkb{gap:.42em}.lkc{gap:.22em}
+
+/* book cover */
+.cv{position:relative;flex:none;background:#fff;border:2px solid var(--ink);display:flex;flex-direction:column;justify-content:flex-start;padding:9% 7% 6% 11%;overflow:visible}
+.cv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+.cv::before{content:"";position:absolute;left:4.5%;top:0;bottom:0;width:1.5px;background:var(--ink);z-index:1}
+.cv.sh::after{content:"";position:absolute;inset:0;transform:translate(8px,8px);z-index:-1;background-image:radial-gradient(var(--ink) 1px,transparent 1.2px);background-size:5px 5px}
+.cv .ct{position:relative;z-index:2;color:var(--ci);font-family:var(--cond);font-weight:800;line-height:.92;letter-spacing:.01em;text-transform:uppercase;text-wrap:balance;max-width:86%}
+.cv .cn{position:relative;z-index:2;align-self:flex-start;margin-top:.7em;padding:0 .3em 0 0;line-height:1.3;color:var(--ci);font-family:var(--cond);font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+
+/* product */
+.tb{display:flex;align-items:center;gap:36px;height:72px;padding:0 36px;background:var(--paper);border:2px solid var(--ink)}
+.tb nav{display:flex;gap:26px}
+.tb nav b{font:600 17px var(--cond);letter-spacing:.12em;text-transform:uppercase;padding:6px 0}
+.tb nav b[aria-current]{border-bottom:3px solid var(--ink)}
+.tb .sr{margin-left:auto;width:230px;height:40px;border:2px solid var(--ink);border-radius:999px;display:flex;align-items:center;padding:0 16px;font-size:14px;color:var(--ink2);background:#fff}
+.tb .av{width:40px;height:40px;border-radius:999px;border:2px solid var(--ink);display:grid;place-items:center;font:700 16px var(--cond);background:#fff}
+.tbd{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tbd nav b[aria-current]{border-color:var(--paper)}
+.tbd .sr,.tbd .av{background:var(--ink);border-color:var(--paper);color:var(--rule)}
+.btab{display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 14px;background:#fff;border:1.5px solid var(--rule);border-bottom:none;border-radius:8px 8px 0 0;font-size:13px}
+.btab .bi{display:grid;place-items:center;width:16px;height:16px}
+.btab .bi svg{width:16px;height:16px}
+.btab .bx{color:var(--ink2);margin-left:18px}
+.btd{background:#2a2a2a;border-color:#2a2a2a;color:#eee}
+.btd .bx{color:#aaa}
+
+/* swatches */
+.sws{display:flex;gap:16px}
+.sw{width:150px}
+.swc{height:96px;display:flex;align-items:flex-end;padding:8px 10px;font:600 13px var(--cond);letter-spacing:.1em;border:1.5px solid var(--ink)}
+.sw b{display:block;margin-top:8px;font:700 14px var(--cond);letter-spacing:.12em;text-transform:uppercase}
+.sw span{font-size:13px;color:var(--ink2);line-height:1.35;display:block}
+
+.row{display:flex;gap:40px;align-items:flex-start}
+.panel{border:2px solid var(--ink);background:#fff}
+.dk{background:var(--ink);color:var(--paper)}
+.pt{font:600 13px var(--cond);letter-spacing:.14em;text-transform:uppercase}
+
+</style>
+</helmet>
+<div class="bb" style="height:4300px;overflow:hidden">
+
+<style>
+.hero{display:grid;grid-template-columns:1fr 1fr;border:3px solid var(--ink);height:560px}
+.hero>div{display:grid;place-items:center;position:relative}
+.hero .hp{background:var(--paper)}
+.hero .hk{background:var(--ink)}
+.hero .tag{position:absolute;left:28px;bottom:22px;font:600 13px var(--cond);letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
+.hero .hk .tag{color:var(--rule)}
+.mr{display:flex;gap:44px;align-items:flex-end}
+.mr figure{display:flex;flex-direction:column;align-items:flex-start}
+.ic{width:120px;height:120px;border-radius:26px;display:grid;place-items:center;overflow:hidden}
+.cons{display:grid;grid-template-columns:520px 1fr;gap:56px;align-items:start}
+.grid{position:relative;width:520px;height:520px;background:#fff;border:2px solid var(--ink);
+ background-image:linear-gradient(var(--rule) 1px,transparent 1px),linear-gradient(90deg,var(--rule) 1px,transparent 1px);background-size:26px 26px}
+.grid>svg{position:absolute;inset:0}
+.cl{list-style:none;display:grid;gap:18px}
+.cl li{border-top:2px solid var(--ink);padding-top:10px;font-size:16px;max-width:620px}
+.cl b{display:block;font:700 15px var(--cond);letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
+.tys{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.ty{border-top:2px solid var(--ink);padding-top:14px}
+.ty .s{margin-top:10px}
+.prod{display:grid;gap:20px}
+.mk{display:grid;grid-template-columns:repeat(12,1fr);gap:28px;align-items:start}
+.poster{position:relative;overflow:hidden;border:2px solid var(--ink)}
+.mx-cap{font:600 13px var(--cond);letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);margin-top:10px}
+.voice{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.voice div{border-top:3px solid var(--ink);padding-top:16px;font:600 30px/1.12 var(--ser);letter-spacing:-.01em}
+.voice span{display:block;margin-top:10px;font:400 14px/1.45 var(--sans);color:var(--ink2);letter-spacing:0}
+</style>
+<span class="eyebrow">Brand · identity B</span>
+<h1 class="h1">Facing pages</h1>
+<p class="lede">An open book whose two pages are two people face to face; the spine is the space between them.</p>
+<p class="note" style="margin-top:14px;max-width:900px;font-size:16px">Trove's whole idea in one shape: a book you read by talking to its author. It is the warmest and most ownable of the three, and the only one that shows two people as equals. Its risk is drawing: the profiles must read at 32px and stay dignified, never cartoonish. It also leans on a well-known figure-ground trick, so the profiles have to be ours.</p>
+
+<section class="sec"><div class="hero"><div class="hp"><span class="lk lkb"><svg width="166" height="138" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111" transform="translate(120 0) scale(-1 1)"/></svg><span class="wb" style="font-size:150px;color:#111111">trove</span></span><span class="tag">Primary · ink on paper</span></div>
+<div class="hk"><span class="lk lkb"><svg width="166" height="138" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#FAFAF7"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#FAFAF7" transform="translate(120 0) scale(-1 1)"/></svg><span class="wb" style="font-size:150px;color:#FAFAF7">trove</span></span><span class="tag">Reversed · paper on ink</span></div></div></section>
+
+<section class="sec"><div class="sh2"><b>The mark at every size</b><span>Tab, phone, avatar, poster</span></div>
+<div class="mr"><figure><svg width="264" height="220" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111" transform="translate(120 0) scale(-1 1)"/></svg><span class="cap">Poster · 220</span></figure><figure><svg width="115" height="96" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111" transform="translate(120 0) scale(-1 1)"/></svg><span class="cap">Avatar · 96</span></figure><figure><svg width="58" height="48" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111" transform="translate(120 0) scale(-1 1)"/></svg><span class="cap">Icon · 48</span></figure><figure><svg width="38" height="32" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111" transform="translate(120 0) scale(-1 1)"/></svg><span class="cap">Nav · 32</span></figure><figure><svg width="19" height="16" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111" transform="translate(120 0) scale(-1 1)"/></svg><span class="cap">Tab · 16</span></figure><figure><div class="ic" style="background:#111"><svg width="74" height="62.31999999999999" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#FAFAF7"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#FAFAF7" transform="translate(120 0) scale(-1 1)"/></svg></div><span class="cap">App icon · dark</span></figure><figure><div class="ic" style="background:#FAFAF7;border:2px solid #111"><svg width="91" height="76" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111" transform="translate(120 0) scale(-1 1)"/></svg></div><span class="cap">App icon · light</span></figure></div>
+<div style="display:flex;gap:24px;margin-top:36px;align-items:flex-end"><div class="btab"><span class="bi"><svg width="16" height="16" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111" transform="translate(120 0) scale(-1 1)"/></svg></span><span class="bl">Trove · Shelf</span><span class="bx">×</span></div><div class="btab btd"><span class="bi"><svg width="16" height="16" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#EEEEEE"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#EEEEEE" transform="translate(120 0) scale(-1 1)"/></svg></span><span class="bl">Trove · Shelf</span><span class="bx">×</span></div></div></section>
+
+<section class="sec"><div class="sh2"><b>Construction</b><span>How it is drawn and why</span></div>
+<div class="cons"><div class="grid"><svg width="516" height="430" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111" transform="translate(120 0) scale(-1 1)"/></svg></div><ul class="cl"><li><b>Two pages</b>An open book seen from the front, the outer corners low and the heads rising to the gutter.</li><li><b>Two people</b>The inner edge of each page is one profile: brow, nose, lips, chin. The right page is the left mirrored, so neither speaker is first. The spine is the space between them.</li><li><b>The gap</b>At the noses the pages come within 4 of 120: close enough to read as talking, never touching.</li><li><b>The wordmark</b>trove in Newsreader italic 500, lowercase: the Librarian's voice, said rather than announced.</li><li><b>Never</b>Give the faces eyes, colour one page differently, or put a face on only one side.</li></ul></div></section>
+
+<section class="sec"><div class="sh2"><b>Colour and type</b><span>The brand is ink and paper; the members' covers bring the colour</span></div>
+<div class="sws"><div class="sw"><div class="swc" style="background:#111111;color:#FFFFFF">#111111</div><b>Ink</b><span>The logo, always</span></div><div class="sw"><div class="swc" style="background:#FAFAF7;color:#111111">#FAFAF7</div><b>Paper</b><span>The ground</span></div><div class="sw"><div class="swc" style="background:#FFFFFF;color:#111111">#FFFFFF</div><b>White</b><span>Things you can pick up</span></div><div class="sw"><div class="swc" style="background:#F0F0EB;color:#111111">#F0F0EB</div><b>Paper sunk</b><span>Quiet grounds</span></div>
+<div class="sw"><div class="swc tone" style="background-color:#fff"></div><b>Dot tone</b><span>Shade and shadow, never a blur</span></div>
+<div class="sw" style="width:90px"><div class="swc" style="background:#D42A27;color:#fff;height:40px;margin-top:56px">RED</div><b>Red</b><span>Only the one action. Never the logo.</span></div>
+<div class="sw" style="width:auto;display:flex;gap:8px;align-items:flex-start"><div style="width:46px;height:96px;background:#23415a;border:1.5px solid var(--ink)"></div><div style="width:46px;height:96px;background:#5a2f2a;border:1.5px solid var(--ink)"></div><div style="width:46px;height:96px;background:#6a3525;border:1.5px solid var(--ink)"></div><div style="width:46px;height:96px;background:#26304f;border:1.5px solid var(--ink)"></div><div style="width:46px;height:96px;background:#283d2e;border:1.5px solid var(--ink)"></div><div style="width:46px;height:96px;background:#2c3e5c;border:1.5px solid var(--ink)"></div><div style="width:190px;margin-left:8px"><b style="margin-top:0">Cover inks</b><span>Each book's own colour. Marketing borrows them from real covers, never invents a brand hue.</span></div></div>
+</div>
+<div class="tys" style="margin-top:44px"><div class="ty"><span class="pt">Wordmark</span><div class="s"><span class="wb" style="font-size:96px;color:#111111">trove</span></div><p class="note" style="margin-top:44px">Newsreader italic 500, lowercase, −1% tracking. Beside the mark, cap-height ≈ the page height × 0.5.</p></div><div class="ty"><span class="pt">Headlines · Newsreader</span><div class="s" style="font:600 40px/1.05 var(--ser);letter-spacing:-.015em">Check out a person.</div><div class="s" style="font:italic 400 22px/1.35 var(--ser)">The Librarian’s voice, in italic.</div></div><div class="ty"><span class="pt">Labels · Barlow Condensed · Body · Plex Sans</span><div class="s" style="font:800 30px/1 var(--cond);letter-spacing:.04em;text-transform:uppercase">Changing course</div><div class="s" style="font-size:16px">Plex Sans for anything you read to do a task, at 15–16px.</div></div></div></section>
+
+<section class="sec"><div class="sh2"><b>In the product</b><span>The top bar, on paper and on ink</span></div>
+<div class="prod"><div class="tb"><span class="lk lkb"><svg width="32" height="27" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111" transform="translate(120 0) scale(-1 1)"/></svg><span class="wb" style="font-size:30px;color:#111111">trove</span></span><nav><b aria-current="page">Shelf</b><b>My book</b><b>Checkouts</b><b>Past meets</b></nav><span class="sr">Search by topic</span><span class="av">H</span></div><div class="tb tbd"><span class="lk lkb"><svg width="32" height="27" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#FAFAF7"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#FAFAF7" transform="translate(120 0) scale(-1 1)"/></svg><span class="wb" style="font-size:30px;color:#FAFAF7">trove</span></span><nav><b aria-current="page">Shelf</b><b>My book</b><b>Checkouts</b><b>Past meets</b></nav><span class="sr">Search by topic</span><span class="av">H</span></div></div></section>
+
+<section class="sec"><div class="sh2"><b>Marketing</b><span>Campus launch: posters, social, the thing you hand someone</span></div>
+
+<div class="mk">
+ <div style="grid-column:span 4"><div class="poster" style="width:100%;height:740px;background:#FAFAF7">
+  <div style="position:absolute;left:0;right:0;top:70px;display:grid;place-items:center"><svg width="396" height="330" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111" transform="translate(120 0) scale(-1 1)"/></svg></div>
+  <div style="position:absolute;left:36px;right:36px;bottom:120px;font:600 50px/1.04 var(--ser);letter-spacing:-.02em">Every book here is a conversation.</div>
+  <div style="position:absolute;left:36px;right:36px;bottom:36px;display:flex;justify-content:space-between;align-items:center;border-top:2px solid #111;padding-top:16px"><span class="wb" style="font-size:40px;color:#111111">trove</span><span class="pt">trove · case.edu</span></div>
+ </div><p class="mx-cap">Campus poster · 18×24</p></div>
+ <div style="grid-column:span 4;display:grid;gap:28px">
+  <div><div class="poster" style="height:470px;background:#111;display:flex;align-items:center;justify-content:center;gap:0">
+   <div class="cv" style="width:170px;height:248px;--ci:#26304f;transform:rotate(-4deg)" aria-label="Notes From the Edge, by Callum O’Donnell"><img src="/_blob/09eabf0d3c4a573f24c3190ca05b4b95" alt=""><span class="ct" style="font-size:28.1px">Notes From the Edge</span><span class="cn" style="font-size:10.2px;background:#fff">Callum O’Donnell</span></div><div style="width:70px;display:grid;place-items:center"><svg width="53" height="44" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#FAFAF7"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#FAFAF7" transform="translate(120 0) scale(-1 1)"/></svg></div><div class="cv" style="width:170px;height:248px;--ci:#283d2e;transform:rotate(4deg)" aria-label="Room to Grow, by Noah Bergstrom"><img src="/_blob/f555c336b0c5f0fc55b7aae44dad590e" alt=""><span class="ct" style="font-size:28.1px">Room to Grow</span><span class="cn" style="font-size:10.2px;background:#fff">Noah Bergstrom</span></div>
+   <div style="position:absolute;left:28px;bottom:24px;font:italic 500 22px var(--ser);color:#FAFAF7">Two books. One conversation.</div>
+  </div><p class="mx-cap">Instagram post</p></div>
+  <div><div class="poster" style="height:206px;background:#fff;display:flex;align-items:center;padding:0 36px;gap:28px">
+   <svg width="120" height="100" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111" transform="translate(120 0) scale(-1 1)"/></svg><div style="font:600 30px/1.1 var(--ser);letter-spacing:-.01em">Ingrid said yes.<span style="display:block;margin-top:8px;font:400 15px var(--sans);color:#55554F">Email header · a checkout was accepted</span></div></div></div>
+ </div>
+ <div style="grid-column:span 4;display:grid;gap:28px">
+  <div><div class="poster" style="height:380px;background:#111;color:#FAFAF7;padding:34px;display:flex;flex-direction:column">
+   <span class="pt" style="color:#C9C9C6">Instagram story</span>
+   <div style="font:600 40px/1.06 var(--ser);letter-spacing:-.015em;margin-top:22px">Not followers.<br>Not a feed.<br><i style="font-weight:500">Two people and a book.</i></div>
+   <div style="margin-top:auto;display:flex;align-items:center;gap:14px"><span class="lk lkb"><svg width="37" height="31" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#FAFAF7"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#FAFAF7" transform="translate(120 0) scale(-1 1)"/></svg><span class="wb" style="font-size:34px;color:#FAFAF7">trove</span></span></div>
+  </div></div>
+  <div style="display:flex;gap:28px">
+   <div><div style="width:200px;height:200px;border-radius:999px;background:#FAFAF7;border:3px solid #111;display:grid;place-items:center"><svg width="115" height="96" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111" transform="translate(120 0) scale(-1 1)"/></svg></div><p class="mx-cap">Sticker</p></div>
+   <div><div style="width:200px;height:200px;background:#111;display:grid;place-items:center;border-radius:999px"><span class="wb" style="font-size:64px;color:#FAFAF7">trove</span></div><p class="mx-cap">Pin</p></div>
+  </div>
+ </div>
+</div></section>
+
+<section class="sec"><div class="sh2"><b>Voice</b><span>Headlines this identity would carry</span></div>
+<div class="voice"><div>Every book here is a conversation.<span>The mark, said out loud.</span></div><div>Not followers. Not a feed. Two people and a book.<span>What Trove refuses, and what's left.</span></div><div>A book you read by talking to its author.<span>The checkout, without the jargon.</span></div></div></section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1760,"height":4300}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

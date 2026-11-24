@@ -322,6 +322,130 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   cover ink, files), a contact sheet, and a README with the implementation spec (176 x 257 shelf book, narrow hinge,
   poster type with the name under the title, page art behind the opened book's title page). Each book picks its art
   deterministically from its id, so its cover and page always match and stay the same across reloads.
+- **Watercolor covers, first three (Josef, 2026-11-21: a new page, 10 watercolour books over time, the first three
+  obsessed over, covers only).** New canvas page "Covers: Watercolor", boards `WCCoverLighthouse` ("Keeping the
+  Light", Maren Holt), `WCCoverHarbor` ("Harbor Season", Sofia Marchetti), `WCCoverAutumn` ("The Long Way Home",
+  Emmett Clarke); `art/watercolor/` (engine `paint.py`, scenes `covers.py`). Illustrated watercolour, not photographic
+  (rejected before) and not abstract: glazes, wet-in-wet, pooled edges, granulation, bare paper as white. Every object
+  is painted "loose", built from overlapping wet patches the way foliage is, because clean shapes under a paper
+  texture read as clip-art. Lighthouse: a white tower on a grassy point, surf lifted round three rock groups, a pale
+  sky with clouds left as paper. Harbor: two wooden boats close in the foreground, a white village on its own
+  headland behind with a small campanile. Autumn: a river under a stone arch bridge, golden crowns flowered at their
+  edges, the big tree on the right. Same cover object and type as strata. Two Josef-eye critic rounds, their fixes
+  applied but not re-reviewed; the critics found the objects stiffer than the washes, so this is round 1 for Josef.
+  Then (Josef: "all look pretty, push all, but this time, we wont make the top of the cover white, it can be some
+  light (or even dark) color and title will adjust by itself so that there is some variety in the library"; and keep
+  round 1 on the board): round 2 is painted edge to edge, on new boards `WCCover{Lighthouse,Harbor,Autumn}2` in a row
+  under round 1, which stays as it was (its code is in commit 5813d6b). The lighthouse at dusk (indigo melting to
+  rose and gold, the lantern glowing), the harbor under a light morning sky (smaller boats on their reflections,
+  muted roofs, a masthead and stay), the autumn river in a golden haze (it now meanders, reflects the sky and runs
+  under a real stone arch). **The title adjusts by itself:** `art/watercolor/ink.py` measures the paint behind the
+  title (world x 18-200, y 20-175) and picks cream (#f6efe0) on a dark top or the book's dark ink on a light one,
+  whichever contrasts more (here 7.2, 6.1 and 6.7 to 1); the name has no knockout, it sits on the paint. This changes
+  the fixed cover type's colour rule for these covers, with Josef's yes. One Josef-eye critic round on round 2, its
+  fixes applied.
+  Then (Josef: "rework the autumn cover, the bridge is kinda half there and half not, cut off, and trees are lazy,
+  polish it all up"): a new board `WCCoverAutumn3` beside round 2's autumn, which stays. The glazes are transparent,
+  so the old bridge let the trees behind show through half of it; the bridge is now lifted back to paper first and
+  built over it: a humped stone bridge with splayed ends sunk into bushes, coursed and single stones, a coping and a
+  ring of voussoirs, the river and its far bank seen through the arch, and the arch's ring closed in its reflection.
+  Trees are built by `tree()`: a tapering trunk forking into curved limbs that split again, the crown dabbed as
+  clumps at and along the limbs with sky between them, the whole crown glazed darker toward its lower right, the
+  limbs showing only below the crown; each throws its shadow right. Two unequal firs behind the bridge's left end
+  are the cool dark. The river widens toward us with soft wet edges and darker water under the banks; a low rose
+  cloud band sits under the title. `paint.rough` now replicates the edge instead of pulling in paper, which left a
+  row of white dashes along the cover's bottom edge (the lighthouse has it too; it is fixed there only when that
+  cover is re-rendered). Two Josef-eye critic rounds; the second still asked for more (fewer stain-ring edges in
+  the oak's clumps, a darker overall value range); its main points were applied and not re-reviewed.
+  Then (Josef: river edges "more smooth and not jagged"): both banks are Catmull-Rom curves through the river's
+  points, with only a slow wobble and no fine ragging on the water's edge.
+  Then (Josef, 2026-11-23: "remove the two older autumn covers"): `WCCoverAutumn` and `WCCoverAutumn2` are off the
+  canvas; `WCCoverAutumn3` takes round 2's place in its row.
+  Then (Josef, 2026-11-23: "remove the full screen harbor"): `WCCoverHarbor2` is off the canvas; round 1's
+  white-top harbor stays, and the autumn moves left to close the row.
+- **Lighthouse lantern (Josef: "fix the yellow square in the lighthouse").** The dusk sky skipped a 16 x 12 rectangle
+  round the lantern, larger than the lantern, so a square of paper stood there and the glow glazed it yellow. The sky
+  now skips only the lantern's own shape (lamp room, gallery, roof). The cap and gallery are a dark Payne's grey,
+  and the lamp room is lit from inside, with two glazing bars and a lifted lamp. The re-render also carries the
+  `paint.rough` edge fix, so the white dashes along the bottom edge are gone. Board `WCCoverLighthouse2` updated.
+- **Watercolour goes abstract (Josef, 2026-11-23: "going forward, prioritize abstraction with the watercolors like
+  seen here", the round 1 lighthouse headland, "much nicer than the full detail in the autumn. Produce 4 completely
+  new feeling covers").** The rule for watercolour covers from here on: every region is a few large wet patches side
+  by side and over each other, each with a pooled rim; flat fills; objects as single silhouettes; no stonework, limbs,
+  leaf dabs or ripple marks; where planes meet, a hair of paper rather than glazes stacking to mud. Four new covers
+  in `art/watercolor/abstract.py`, a new row on "Covers: Watercolor":
+  `WCCoverMesa` ("The High Desert", Lucia Navarro: a deep cobalt dusk over a terracotta butte in uneven strata, one
+  violet shade face, cream title at 7.4:1), `WCCoverHills` ("Slow Harvest", Tomas Rinaldi: a pale lemon morning over
+  patchwork hills in sage, ochre, apricot and mauve, three cypresses and a small house; olive title at 7.6:1),
+  `WCCoverLake` ("Above the Tree Line", Ingrid Solberg: a cerulean sky, a massif with two summits on the right, the
+  forest as three dark masses, the mountain mirrored loose in teal water; blue title at 5.4:1), `WCCoverWinter`
+  ("First Snow", Hannah Lindqvist: a mauve dusk with a low pale sun, firs as loose glazes, the snow carried by big
+  pale violet and blue patches; plum title at 5.6:1). Two Josef-eye critic rounds; the second round's fixes are
+  applied and not re-reviewed.
+  Then (Josef: "not a fan of the color rectangles on the snow"): the snow's patches are gone. The snow now takes one
+  soft cool glaze that deepens toward us with no edge at all, and two long arched drift shadows that swell in the
+  middle and lift to nothing at both ends, crisp along the top and melting below.
+  Then (Josef: "now they're too jagged, I want some more gentle splotches"): the drift strokes are gone. Over the
+  soft glaze, seven rounded splotches of lavender, mauve and blue are dropped in wet, soft-edged with no pooled rim,
+  overlapping and of different sizes; the lone fir's shadow is a soft splotch too.
+- **Book screens for the abstract watercolours (Josef: "the more elaborate book screens for these 4 new designs, same
+  principles as the book screen for the strata covers").** Boards `WCBook{Mesa,Hills,Lake,Winter}` on "Covers:
+  Watercolor", built like the strata book screens (`shelf/watercolor_book.py` reuses `final_book_more.py`): the book
+  opened on its title page, the page art from `art/watercolor/pages.py` (570 x 684, 1140 x 1368 px). Same principles
+  as strata: the same place as the cover as a much richer scene, the text corner (x 0-470, y 0-350) left as paper,
+  the art climbing on the right. In watercolour the sky has no top edge: it is a wet wash bleeding out into the paper
+  on a gentle diagonal toward the text (the paint engine now renders at page size, `paint.configure`). Mesa: a
+  second butte and a spire, talus skirts, a broad pale dry wash, sage clusters, a juniper and a dark rock shelf in
+  front. Hills: a hill town with a short campanile, a pale road widening toward us lined with cypresses in groups,
+  olive trees, lavender rows, a dark near field. Lake: a broad massif with a shoulder, a cabin and jetty, a canoe,
+  the mountains mirrored loose in the water, boulders and a dark fir in front. Winter: the low sun, a dark forest
+  band, one dominant fir with smaller ones behind, a cabin with a lit window on the rise, a few fence posts, a big
+  spruce and rocks in front, the snow in soft splotches. The text on the page takes each book's dark ink. Two
+  Josef-eye critic rounds; the second round's fixes are applied and not re-reviewed. Kept against the critic: the
+  hair of paper between the hills' bands, the trait of the headland Josef pointed to.
+  Then (Josef: "the houses are too blocky", and the hill town "these too"): every house is now `cottage()` in
+  `pages.py`, a small house seen three-quarter on and painted by hand: the gable end toward us and lit, the side
+  wall turning away into shade, one roof plane, a dark verge, wobbling edges, each part a couple of loose patches.
+  The lake cabin, the winter cabin (snow on the roof, a lit window) and the farmhouse use it; the hill town is a
+  huddle of five small pale cottages with tiled roofs and a campanile with a pointed cap. And (Josef: "arranged
+  like the strata board, with book and book screen next to each other"): one row per book, the cover at x 0 and its
+  book screen at x 680, mesa, hills, lake, winter; the earlier covers without book screens in one row beneath.
+  Then (Josef: the winter cabin "still floating over the edge, move it to the right"): it moved right onto the
+  rise and sits at the lowest snow under its whole footprint, so no corner hangs over the slope.
+- **Four more abstract watercolour covers (Josef: "create 4 new gorgeous original covers").** In
+  `art/watercolor/abstract2.py`, each a feeling the set did not have, on a row under the paired books on "Covers:
+  Watercolor" (the earlier covers moved one row down): `WCCoverCity` ("After Hours", Marcus Bell: an indigo night
+  over a skyline of uneven towers with setbacks and one spire, warm windows lifted out in clusters, the tallest tower
+  catching the last glow, its lights broken in the river; cream title 5.0:1), `WCCoverBlossom` ("Second Spring", Aiko
+  Tanaka: a blush sky, one blossom tree leaning in from the right, its crown soft pink and mauve clouds of patches, a
+  pond with an uneven shore holding the pink; plum title 8.6:1), `WCCoverPrairie` ("Weather the Season", Caleb Hart:
+  a dark storm sky, one billowing storm mass on the right over a band of low gold light, a barn under a gambrel roof
+  and a windbreak, a pale track into golden fields; cream title 6.0:1), `WCCoverBeach` ("Off the Clock", Leilani
+  Cruz: a coral sunset, a large sinking sun crossed by a cloud bar, a gold path on the violet sea, warm sand cooling
+  toward us, one palm in a single curve with broad drooping fronds; brown title 5.9:1). Two Josef-eye critic rounds;
+  the second round's fixes are applied and not re-reviewed. Kept against the critic: the city's dark navy top, where
+  the title turns cream by itself.
+  Then (Josef: city good; the blossom "needs some more volume, it's like weirdly L-shaped"; the storm field okay but
+  "weird yellow shine behind the barn on the field"; the beach palm "looks ugly", "at least 2 palm trees", the trunk
+  "too straight", the top "weirdly shaped", the light on the water not under the sun): the blossom crown is one full
+  rounded mass, lit on its upper left and turning mauve to its lower right; the prairie's low light is a band in the
+  sky only, nothing on the field; the beach has two palms, a big one curving in from the right and a smaller one on
+  the left, each trunk one strong curve tapering upward, each crown a fan of fronds that rise and droop to fine tips;
+  the path of light now runs straight down from the sun.
+  Then (Josef: "a little more mass to the sides of the cherry blossom", "the palm trees still don't look great"):
+  the crown has four more patches at its sides; each palm leaf is now a long crescent, broad in the middle and
+  drooping to a fine tip, its leaflets hanging below, the lower leaves in shade, on a thicker bowed trunk.
+  Then (Josef: the palms "still looking a little weird", "nice and abstract and pretty", "both of them on the right
+  side"): both palms stand on the right, the tall one bowing left over the beach and a smaller one leaning right
+  behind it; each leaf is one tapered brushstroke that rises, arches and droops to a point, the crown one dark wet
+  silhouette with lighter green in the upper leaves.
+- **Autumn simplified into the abstract language (Josef: "simplify the autumn cover so that it uses the abstract
+  painting methods ... a little better and isn't so overly detailed ... I do like the color scheme ... the river is
+  very defined as opposed to the nice abstract blotches ... I do like the trees").** `WCCoverAutumn3` keeps its
+  colours and every tree; the river is an uneven wet shape filled with loose gold, violet and blue-grey patches; the
+  banks are one warm wash with a few large patches; the bridge is a few washes with a shaded right side, without the
+  stone courses, single stones, coping, voussoirs or ripple lines; its reflection and the trees' reflections are soft
+  blotches.
 - **Winter page: even aurora, lake back (Josef).** The aurora keeps one depth from edge to edge (the cover's taper
   toward the left end is switched off on the page) and dissolves upward through a much taller zone, a slower
   gradient into paper. The fjord is gone: a lake of dark night ice lies between the hills again, the back hills
@@ -341,6 +465,59 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   knockout, whose box is taller than the 0.95 line, so each line's box covered the foot of the line above. The title
   has no knockout now (the art never reaches it). The name is plain Barlow Condensed 700 caps, +0.24em, in the
   cover's ink, on the white knockout only.
+- **Book screens for the city, blossom and autumn covers (Josef: "do the book screens for blossom, city and
+  autumn").** Boards `WCBook{City,Blossom,Autumn}` on "Covers: Watercolor", built like the first four
+  (`shelf/watercolor_book.py`), the page art from `art/watercolor/pages2.py`. Each sits to the right of its cover:
+  city, blossom and autumn now take the paired rows under winter; prairie and beach (no book screens) one row below,
+  the round 1 and lighthouse covers in the last row. City: the indigo night climbing the right with a pale moon, a
+  few overlapping towers rising to one spire, soft lights only near it, a long low bridge on broad arches with an
+  uneven string of lamps, broken streaks in the river, a deep violet embankment in front. Blossom: grouped blossom
+  and green trees on the far bank, a pond with an irregular shore holding the pink, a small footbridge as one solid
+  arc between grassy banks, the great tree's crown climbing the right side and reaching out low over the water,
+  petals drifting. Autumn: the same golden haze and violet wood, a long flat stone arch in the middle distance with
+  a dark fir beyond, the river winding wide toward us in loose gold and violet patches, a broken reflection, trees on
+  both banks and the great oak rising on the right. One Josef-eye critic round; its fixes are applied (fewer towers
+  and lights, no black quay or lamps, clustered far trees, no railings on the footbridge, a flatter arch, the house
+  removed) and not re-reviewed.
+  Then (Josef: one part of the blossom tree "unusually faded", "looks like a mistake"; the grass "a little too dark in
+  places"; the autumn bridge "less steep at the ends"): the crown no longer fades out softly where it nears the text
+  corner (the patches are placed clear of it instead), the grass patches are lighter and fewer with no dark near
+  corner, and the bridge is a flat crown easing down into long low ramps at both ends.
+- **The daytime lighthouse with the harbor's boats (Josef: "a new version of the day lighthouse that takes the boats
+  from harbor and put the cover next to the existing ones (not replace)").** Board `WCCoverLighthouse3` at the end of
+  the lighthouse row, the same book ("Keeping the Light", Maren Holt). `art/watercolor/lighthouse_boats.py`: round
+  1's lighthouse as it was (commit 5813d6b), plus the round 1 harbor's two wooden fishing boats in the open water on
+  the left, kept out of the sea's glazes. After one Josef-eye critic round (the boats at full size pulled focus and
+  looked pasted in), they are smaller and step back into depth, the big one near with a shorter mast and no stay, the
+  small one beyond it; the hulls are a solid weathered blue-grey and a faded ochre, each with a soft shadow at the
+  waterline. Fixes not re-reviewed.
+  Then (Josef: "I think I liked the pre-critic pass on the boats"): the boats are back at the harbor's size and
+  colours, with the mast's stay; and (Josef: "refine the house ... to be more like the harbor houses") the keeper's
+  cottage is painted like the harbor's houses: a pale lit front, a cool shaded side, a terracotta tile roof in
+  patches, an eave shadow, two small windows and a door. Round 1's lighthouse board is unchanged.
+- **Beach recoloured (Josef: "less all-orange and more gorgeous", then "add some sunset illuminated clouds", then "a
+  little less dark, a little more light and orange in the sky ... keep some violet but less night").** The sky now
+  stops at the horizon (its washes had been running down over the sea and sand, which is what made everything
+  orange): a soft violet top warming through coral to a high peach glow, a cream sun with a peach halo, and five
+  long cloud banks of soft puffs, violet on top and lit coral and peach underneath, under the title on the left and
+  higher only at the right edge. Below the horizon the light comes from the sky: deep blue at the horizon, slate
+  blue, muted aqua only in the shallows, blush beside the sun's path, the path itself broken peach and rose-gold
+  dashes; pale cream and pink sand with lavender shadows; the palms (same shapes) dark violet silhouettes. The title
+  now takes the dark ink, 4.8:1. One Josef-eye critic round on the first recolour (the sea read as midday, the path
+  khaki, the palms translucent), all applied; the clouds and the lighter sky came after it and were not reviewed.
+- **Book screens for the beach and the daytime lighthouse (Josef: "now make the book screen for the beach and the
+  updated lighthouse").** Boards `WCBookBeach` and `WCBookLighthouse`, each beside its cover in a paired row under the
+  autumn row; the prairie cover (no book screen) one row below, the round 1, harbor and dusk lighthouse covers in the
+  last row. Page art in `art/watercolor/pages2.py`. Beach: the soft violet dusk warming to coral and peach, two long
+  cloud banks lit coral underneath and one higher on the right, a big half-sunk sun, a far mauve point of land, a
+  small sailboat, the sea in slate-blue patches with the sun's path broken peach dashes, foam in broken runs, pale
+  sand with lavender shade under two palms. Lighthouse: the cover's day scene wider, a pale cerulean sky with clouds
+  left as paper, the headland climbing on the right with the white tower and its lantern (only its own shape kept
+  from the sky, no paper box), the keeper's cottage and a shed painted like the harbor's houses, rocks and soft surf
+  at the cliff's foot, the harbor's two boats at the cover's proportions, gulls, deeper water in front. One Josef-eye
+  critic round, the boats and palms held as Josef set them; its fixes are applied (the far point made clearly land,
+  the grass tufts replaced by soft shade, one cloud strip dropped; the surf soft and wet and clear of the small
+  boat's bow, fewer ripples, a deeper near plane) and not re-reviewed.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
@@ -924,3 +1101,107 @@ Pending Josef's review.
 - **Feel:** modern, but serif and library-like, in warm colors.
 
 Pending Josef's review of the new canvas.
+
+## 2026-11-23: brand, round 1 (logo and identity)
+
+- **Josef asked** for a logo and the whole brand identity on a new canvas page, starting from the mission and the
+  feeling, then ideas, critique, and three kept. New page **Brand**: `BrandThink` (mission, feeling, what any mark
+  must do, twelve ideas with a verdict each) and three identities, each with hero lockups on paper and ink, the mark
+  from 220px to 16px, app icons, browser tabs, construction, colour and type, the top bar, and marketing (poster,
+  Instagram post and story, email header, a handout or merch) plus three headlines.
+  - **A · Bookmark:** a book's edge with a ribbon hanging from it, which is also the T. Wordmark Trove in Newsreader
+    600 on a rule with the ribbon slipping out under it.
+  - **B · Facing pages:** an open book whose inner page edges are two profiles face to face; the spine is the gap.
+    Wordmark lowercase italic Newsreader.
+  - **C · The blank cover:** the app's own book object (outline, hinge, dot shadow) with an untitled cover; below
+    48px the shadow drops and the hinge and title bar thicken. Wordmark Barlow Condensed 800 caps.
+- **Rules the marks keep:** ink only, never red (red is the one action); square; dot tone for shade; the brand is ink
+  and paper, and marketing borrows colour from real covers rather than inventing a brand hue.
+- **Critic round** (fresh subagent): fixed the clipped Voice rows, C's copy-icon look at small sizes, the speed lines
+  in C's story (now a dot field), harsher B profiles (redrawn softer), the gap under A's ribbon, a deeper swallowtail,
+  C's shelf post now uses the mark's own cover, a smaller red swatch, and copy that invented product (a bookmark
+  feature, a call length, naming two members who met). Not taken: the critic wanted the search pill and round avatar
+  squared, but the system allows exactly those two pills; it wanted C's wordmark in Newsreader, kept in Barlow so the
+  three directions differ in voice. Its pick was B, after a hand-drawn pass on the profiles.
+- Source: `docs/design/shelf/brand_boards.py`.
+
+## 2026-11-23: brand, round 2
+
+- **Josef:** none of round 1 ("all of them are too basic"); new fonts are welcome, and the site's fonts may switch to
+  move away from the AI-generated look. Round 2 sits under round 1 on the Brand page: `Brand2Think` (why round 1
+  was basic, the faces we'd leave: Inter, Space Grotesk, Fraunces, Instrument Serif, and today's Plex and Barlow)
+  and three identities, each with a made thing at the centre, its own typefaces, and the shelf retyped in them.
+  - **A · The Magpie:** Trove as the publisher of unwritten books, with a colophon: a linocut magpie (wedge tail,
+    gouge cuts) on a closed book, in an oval with TROVE and CLEVELAND · MMXXVI. On dark grounds the bird stays black
+    on a cream plate. Gloock, Literata, Hanken Grotesk; ink, warm paper, a blue-green tail sheen.
+  - **B · Overprint:** riso teal and yellow; two books leaning together overprint green, and the wordmark is printed
+    in both inks so the overlap shows. Big Shoulders Display (Chicago civic signage) and Libre Franklin. The
+    Librarian's band is newsprint so the red button sits on a calm ground.
+  - **C · Wet Ink:** an open book of two watercolour washes, painted with the cover engine
+    (`art/watercolor/brandmark.py`, transparent PNGs), the overlap a darker lens at the spine; a flat two-colour
+    version at 32px and below. Libre Caslon Display/Text and Schibsted Grotesk; blue-black ink. **Product question,
+    shown only as a proposal:** a mark painted per member from their own cover.
+- Every site mock keeps red only for "Ask to check out".
+- **Critic rounds:** two. Fixed a percentage-padding bug that stretched the shelf covers; bylines now match the
+  covers; the colophon's lettering got its own channel; the magpie was redrawn (wedge tail, cuts, chunkier book)
+  and small sizes cropped tight; B moved off Bricolage (itself a startup default) and off blue-and-yellow (a flag);
+  C's mark was repainted as a gull-wing open book; invented features and job titles were taken out of the copy.
+  The critics split: the first picked C, the second A.
+- Source: `docs/design/shelf/brand2_boards.py`.
+
+## 2026-11-23: the dusk lighthouse's beam and book screen; the city bridge; the winter firs
+
+- **Beam (Josef: "add a beam of light from the lighthouse at dusk").** `covers.lighthouse`: the beam is lifted out of
+  the wet sky (paper showing through, not yellow laid on blue), a narrow core in a wider glow, broken in patches,
+  dipping toward the sea and fading before the left edge, just under the title; warm only near the lamp; a short stub
+  on the right. Cream title still 6.1:1.
+- **Book screen ("then make a book screen for it").** `WCBookLighthouse2` beside the cover, both moved to a new row
+  (y 13200); page art `pages2.lighthouse_dusk`: the cover's dusk wider, night gathered round the tower so the beam
+  has a dark sky to cut through, the beam at the cover's angle and spent inside the blue, stars, lit cottage, flat
+  bottomed rocks lit top-left. Same book text as the daytime lighthouse.
+- **City page ("make the bridge go all the way to the right side").** The deck, piers, arches and lamps run edge to
+  edge; the spans widen toward the right so it isn't a picket fence.
+- **Winter cover ("the bottom of the trees are kind of weirdly translucent").** Each fir is lifted to paper and given
+  one even dark ground before its patches, so it is as deep in the snow as against the sky; snow lifted over each
+  foot and a violet shadow thrown right.
+- Critic round: one (beam airbrushed and muddy, page beam a stain, a star on the beam, smudge rocks, even arches,
+  skirt-like bottom tiers); all fixed. Checked in local renders, not on the live canvas.
+
+## 2026-11-23: brand 2C (Wet Ink), typography and marketing refined
+
+- **Josef: "refine the typography and marketing for 2C, keep the logo".** The painted mark is unchanged.
+- **Wordmark tuned:** the T–r gap closed by 5.5% and the word tracked −1.2%; a stacked lockup with the tagline "the
+  book you haven't written yet" in Caslon italic under a hairline as wide as the word; rules for clear space
+  (the o's height), smallest sizes and colour.
+- **Type system:** seven jobs (Display 72, Page title 44, Section 30 in Caslon Display; Voice 21 italic and Reading 17
+  in Caslon Text; Interface 15 and Label 12 caps in Schibsted Grotesk), plus book-typography rules: old-style
+  figures on, real quotes and dashes, italic not bold for emphasis, caps only for short tracked labels.
+- **Marketing as one campaign:** three posters on one grid (headlines anchored up from a shared footer, each in a
+  different colourway of the mark), a three-slide carousel, a 9:16 story, an email, a bookmark, a launch invitation
+  with placeholders, and a tote. The per-member mark is no longer shown as a proposal; the colourways are campaign
+  colourways.
+- **Critic round:** one; fixed folios, the slide-3 rules, the quote's attribution, the bookmark rag, the invitation's
+  missing wordmark, the email's ground and body face, the tagline's width, poster double branding. Kept against it:
+  "A thirty-minute video call" beside the button in the site mock, as the design system's shelf spec has it.
+
+## 2026-11-23: dusk lighthouse, stars on the cover and a lighter page top
+
+- **Josef (relayed by the stipple session):** "like the dots in the night sky. Add them to the book cover as well a
+  little bit, but reduce the amount of darkness up in the top part of the book screen for the lighthouse, since the
+  text is then hard to read." Cover: nine lifted pinpricks of stars, clear of the title, the name and the beam
+  (cream title still 6.1:1). Book screen: the sky climbs less high on the right (bleed climb 320 → 250), its top
+  wash is lighter, the dark round the tower smaller and lower, and the stars moved down into what dark remains.
+  Checked in local renders only.
+
+## 2026-11-23: watercolor art set 1 approved for the app
+
+- **Josef:** "all the books that you have book screens for in the watercolor section, so that's the 10 books, you may
+  send those to UI implementation to get them into the app." Not the three covers without a book screen (round 1
+  lighthouse, harbor, prairie).
+- **Categories:** they are their own category, `watercolor`, beside strata set 1 (`strata`). A new book's art is a
+  flat draw over every art in every category (all twenty equally likely); the category matters only on the "choose
+  your own design" screen Josef is designing now, where arts are grouped by it.
+- Packaged in `art/watercolor/set-1/` like strata set 1: covers 472 x 688, pages 1140 x 1368, `manifest.json` (with
+  `category`, `coverInk` chosen from the paint, `pageInk` for the title page), a contact sheet and a README with
+  what differs from strata (painted to the top, two inks, no knockout behind the name). Cover inks checked against
+  the published boards: all ten match.
