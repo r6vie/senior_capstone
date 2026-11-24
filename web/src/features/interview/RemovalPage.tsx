@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-r
 import { Button } from "../../ui/Button";
 import { usePageTitle } from "../../ui/usePageTitle";
 import { apiInterviewClient } from "./apiInterviewClient";
-import { ErrorMessage, Frame, focusBand, Waiting } from "./InterviewFrame";
+import { ErrorMessage, Frame, focusLine, Waiting } from "./InterviewFrame";
 import type { InterviewClient, MyBook } from "./interviewClient";
 import { BackCover, ChangeCard, WaitBox } from "./ProposedChanges";
 
@@ -59,7 +59,7 @@ export function RemovalPage({ client = apiInterviewClient }: { client?: Intervie
   const arrived = book !== undefined;
   // biome-ignore lint/correctness/useExhaustiveDependencies: each step is a new screen for the keyboard
   useEffect(() => {
-    if (arrived) focusBand();
+    if (arrived) focusLine();
   }, [arrived, started, writing]);
 
   if (book === undefined) return <Frame busy say={<Waiting>The Librarian is finding your place…</Waiting>} />;

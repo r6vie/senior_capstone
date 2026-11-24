@@ -262,7 +262,7 @@ describe("apiInterviewClient", () => {
     vi.unstubAllEnvs();
   });
 
-  it("carries a chapter's quotes to the member's own review", async () => {
+  it("carries a chapter's quotes into review when the book is written again", async () => {
     vi.spyOn(api, "POST").mockResolvedValue(
       ok({
         title: "T",

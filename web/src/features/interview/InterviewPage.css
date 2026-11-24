@@ -46,7 +46,6 @@
 /* ---------- The Librarian's line (StartReveal): no band ---------- */
 /* Across the top of the page, in the question's serif, left-aligned with the content under it. */
 .iv-line {
-  position: relative;
   width: min(var(--act-width), 100% - 2 * var(--gutter));
   margin: 0 auto;
   padding-top: 40px;
@@ -58,6 +57,9 @@
   font: 600 var(--iv-say-size) / 1.16 var(--font-serif);
   letter-spacing: -0.012em;
   text-wrap: pretty;
+}
+.iv-eyebrow[data-hidden] {
+  visibility: hidden;
 }
 .iv-eyebrow {
   display: block;
@@ -75,7 +77,6 @@
   font-size: var(--iv-say-quiet-size);
 }
 .iv-still {
-  position: relative;
   margin: var(--s-3) 0 0;
   font-size: 15px;
   color: var(--ink-2);
@@ -104,7 +105,7 @@
   align-content: start;
   width: min(var(--act-width), 100% - 2 * var(--gutter));
   margin: 0 auto;
-  padding-top: 34px;
+  padding-top: 30px;
 }
 .iv-row {
   display: flex;
@@ -562,15 +563,8 @@
     --iv-say-quiet-size: 22px;
     --iv-book-title-size: 26px;
   }
-  .iv-holding {
-    visibility: hidden;
-  }
-  .iv-waiting[data-over="true"] {
-    position: absolute;
-    inset: 0 auto auto 0;
-  }
   .iv-act {
-    padding-top: var(--s-5);
+    padding-top: 18px;
   }
   .iv-row > .button-primary {
     flex: 1 1 100%;

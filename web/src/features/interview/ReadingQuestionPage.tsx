@@ -4,7 +4,7 @@ import { usePageTitle } from "../../ui/usePageTitle";
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
-import { ErrorMessage, Frame, focusBand, Waiting } from "./InterviewFrame";
+import { ErrorMessage, Frame, focusLine, Waiting } from "./InterviewFrame";
 import { type InterviewClient, InterviewError, type ReadingQuestion } from "./interviewClient";
 import { FIRST_VERSION_SAVED, leaveWords } from "./LeftoverWords";
 
@@ -51,7 +51,7 @@ export function ReadingQuestionPage({ client = apiInterviewClient }: { client?: 
   }, [client, questionId]);
 
   useEffect(() => {
-    if (loaded) focusBand();
+    if (loaded) focusLine();
   }, [loaded]);
 
   if (!loaded) return <Frame busy say={<Waiting>The Librarian is finding your place…</Waiting>} />;

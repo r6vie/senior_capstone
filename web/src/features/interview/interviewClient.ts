@@ -146,7 +146,7 @@ export type InterviewState =
       about: "titles" | "book";
       failed?: boolean;
       retryTitle?: string;
-      /** The Librarian's last line, held on the band during the wait. */
+      /** The Librarian's last line, held at the top during the wait. */
       closingLine?: string;
     }
   /** Not enough yet for three chapters. Never a dead end: the Librarian keeps asking (decision 14). */
@@ -264,7 +264,7 @@ export interface InterviewClient {
   chooseTitle(id: string, titleId: string): Promise<InterviewState>;
   /** The titles the member can still go back to, while reviewing. */
   otherTitles(id: string): Promise<TitleOption[]>;
-  /** Pick another title. This writes the book again, so chapter rewrites may be replaced. */
+  /** Pick another title. This writes the book again, so chapter edits may be replaced. */
   changeTitle(id: string, titleId: string): Promise<InterviewState>;
   removeChapter(id: string, chapterId: string): Promise<InterviewState>;
   putOnShelf(id: string): Promise<InterviewState>;

@@ -7,7 +7,7 @@ import { LeftoverWords } from "./LeftoverWords";
 import { reducedMotion } from "./librarian/pen";
 import "./InterviewPage.css";
 
-// The question band and its top bar, shared by every interview screen: the first interview, adding to
+// The Librarian's line and its top bar, shared by every interview screen: the first interview, adding to
 // a book, proposed changes and the reading question.
 
 const PHASES: { id: Phase; label: string }[] = [
@@ -17,14 +17,15 @@ const PHASES: { id: Phase; label: string }[] = [
 ];
 
 /** Arriving on a screen starts the keyboard at the Librarian's words. */
-export function focusBand() {
+export function focusLine() {
   document.querySelector<HTMLElement>(".iv-say")?.focus({ preventScroll: true });
 }
 
 // A wait this long gets one calm line.
 const SLOW_AFTER_MS = 15_000;
 
-/** A line that starts with "The Librarian" needs no label saying who speaks. */
+/** A line that starts with "The Librarian" needs no label saying who speaks. Today every such line is a
+ * wait; this keeps the rule for any that isn't. */
 function namesLibrarian(say: ReactNode): boolean {
   return typeof say === "string" && say.startsWith("The Librarian");
 }
@@ -40,7 +41,7 @@ export function Frame({
 }: {
   phase?: Phase;
   canLeave?: boolean;
-  /** The band steps back, on a screen where something below it is the focus. */
+  /** The line steps back, on a screen where something below it is the focus. */
   quiet?: boolean;
   /** A small caption above the Librarian's words. */
   eyebrow?: string;
@@ -77,12 +78,13 @@ export function Frame({
         )}
       </header>
       {/* No band (StartReveal): the Librarian's line runs across the top of the page, under a small label
-          unless the line already names it, or it is a wait. */}
-      <section className="iv-line" data-busy={busy || undefined}>
-        {eyebrow ? (
-          <span className="iv-eyebrow">{eyebrow}</span>
-        ) : (
-          !busy && !namesLibrarian(say) && <span className="iv-eyebrow">The Librarian</span>
+          unless the line already names it. On a wait the label is hidden but keeps its place, so the line
+          doesn't move when the wait starts or ends. */}
+      <section className="iv-line">
+        {(eyebrow || !namesLibrarian(say)) && (
+          <span className="iv-eyebrow" data-hidden={busy || undefined} aria-hidden={busy || undefined}>
+            {eyebrow ?? "The Librarian"}
+          </span>
         )}
         <h1 className="iv-say" data-quiet={quiet || undefined} tabIndex={-1} aria-live="polite">
           {say}
@@ -210,7 +212,7 @@ export function TypedQuestion({ text, after, onDone }: { text: string; after: nu
 }
 
 export function Waiting({ children, holding }: { children: ReactNode; holding?: ReactNode }) {
-  // The band keeps the height of what it held, so the page doesn't jump while the Librarian thinks.
+  // The line keeps the height of what it held, so the page doesn't jump while the Librarian thinks.
   return (
     <>
       {holding && (
