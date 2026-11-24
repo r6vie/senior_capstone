@@ -1256,3 +1256,7 @@ Pending Josef's review of the new canvas.
   cover, course by course, the slabs of a course a little out of step. Each slab appears 1.6 courses above its
   place, fades in over the first third of 1.2 s and drifts down, easing out to a stop. Last slab settled by
   ~12.4 s; still ends on the cover pixel for pixel; quick at 0.3 of the time.
+- **Then (Josef): a faster spread at first, slowing, "the last one settle in more slower", and as long as the
+  watercolours ("right now it's a little too long").** The front reaches the top over 9 s on an ease-out (most of
+  the cover is up within ~5 s), and each slab's settle lengthens from 0.8 s at the foot to 2.2 s at the top. Last
+  slab settled at ~11.7 s; still ends on the cover pixel for pixel at 13.5 s; quick at 0.3 of the time.

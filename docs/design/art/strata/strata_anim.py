@@ -24,7 +24,8 @@ import strata
 
 START_SPAN, PAINT_END, QUICK = 10.0, 13.5, 0.3       # the watercolours' clock (art/watercolor/paint_anim.py)
 FPS, QUICK_FPS = 12, 24
-SETTLE = 1.2                                        # a slab drifts down into its course and settles
+SWEEP, EASE = 9.0, 2.4                              # the front reaches the top at 9 s, racing first, slowing last
+SETTLE_FAST, SETTLE_SLOW = 0.8, 2.2                 # a slab's drift into place: quick at the foot, slow at the top
 DROP = 1.6                                          # how far above its course it appears, in courses
 
 
@@ -67,15 +68,22 @@ def record(scene, viewport, size, course, **kw):
 
 
 def schedule(slabs, seed=5):
-    """When each slab lands (Josef, 2026-11-23, after a terrain-led order: "just going from the bottom to the top,
-    nice and smooth"). One sweep up the cover, course by course, from the lowest slab to the highest; the slabs of a
-    course land a little out of step, so the front is soft, not a ruled line. Timed so the last slab has settled by
-    about 12.5 s, the watercolours' clock."""
+    """When each slab lands and how long it takes to settle (Josef, 2026-11-23: bottom to top, "nice and smooth";
+    then: "at first it's a faster spread, so more blocks appear at the beginning and then it slows down and the
+    last one settle in more slower", lasting as long as the watercolours). The front races up the lower cover and
+    slows toward the top (an ease-out over SWEEP seconds), and each slab's settle lengthens from SETTLE_FAST at the
+    foot to SETTLE_SLOW at the top, so the build pushes in and then calms down. The slabs of a course land a little
+    out of step, so the front is soft, not a ruled line. Returns (start, settle) per slab."""
     rng = random.Random(seed)
     ys = [rects[0][1] for _k, rects in slabs]
     top, bottom = min(ys), max(ys)
-    span = PAINT_END - 1.0 - 0.3 - SETTLE - 0.3
-    return [0.3 + span * (bottom - y) / max(1, bottom - top) + rng.uniform(-0.3, 0.3) for y in ys]
+    out = []
+    for y in ys:
+        r = (bottom - y) / max(1, bottom - top)                 # 0 at the foot, 1 at the top
+        x = 1 - (1 - r) ** (1 / EASE)                           # the inverse of an ease-out: high rows come late
+        settle = SETTLE_FAST + (SETTLE_SLOW - SETTLE_FAST) * r
+        out.append((0.3 + SWEEP * x + rng.uniform(-0.25, 0.25) * (0.4 + r), settle))
+    return out
 
 
 def ease(x):
@@ -84,14 +92,14 @@ def ease(x):
 
 
 def frame(t, slabs, times, size, paper, course, k=1.0):
-    """A slab appears a little above its course (DROP courses), fading in over the first third of its SETTLE while
+    """A slab appears a little above its course (DROP courses), fading in over the first third of its settle while
     it drifts down, and slows into place (an ease-out), so the cover seems to settle rather than pop."""
     W, H = size
     img = np.empty((H, W, 3), np.float32)
     img[:] = paper
     t = t / k
-    for (layer, rects), t0 in zip(slabs, times):
-        u = (t - t0) / SETTLE
+    for (layer, rects), (t0, settle) in zip(slabs, times):
+        u = (t - t0) / settle
         if u <= 0:
             continue
         a = min(1.0, u / 0.35)
@@ -123,7 +131,7 @@ if __name__ == "__main__":
     slabs, final_img = record(scene, kw["viewport"], size, course,
                               **{a: b for a, b in kw.items() if a not in ("viewport", "size", "course")})
     times = schedule(slabs)
-    print(key, "slabs:", len(slabs), "last settles at", round(max(times) + SETTLE, 2), "s")
+    print(key, "slabs:", len(slabs), "last settles at", round(max(t0 + st for t0, st in times), 2), "s")
     d = f"out/anim-{key}"
     os.makedirs(d, exist_ok=True)
     for f in os.listdir(d):
