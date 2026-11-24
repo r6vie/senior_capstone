@@ -624,7 +624,7 @@
       "expand": "fill"
     },
     "MyBookStates.dc.html": {
-      "x": 7520,
+      "x": 9400,
       "y": 0,
       "w": 1760,
       "h": 2450,
@@ -641,8 +641,17 @@
       "page": "mybook",
       "expand": "fill"
     },
-    "MyBookE.dc.html": {
+    "MyBookD2.dc.html": {
       "x": 3760,
+      "y": 0,
+      "w": 1760,
+      "h": 6220,
+      "title": "My book · D, the shelf’s book",
+      "page": "mybook",
+      "expand": "fill"
+    },
+    "MyBookE.dc.html": {
+      "x": 5640,
       "y": 0,
       "w": 1760,
       "h": 7440,
@@ -651,7 +660,7 @@
       "expand": "fill"
     },
     "MyBookStudio.dc.html": {
-      "x": 5640,
+      "x": 7520,
       "y": 0,
       "w": 1760,
       "h": 5190,
@@ -731,7 +740,8 @@
     "MyBookStates.dc.html",
     "MyBookD.dc.html",
   "MyBookE.dc.html",
-    "MyBookStudio.dc.html"
+    "MyBookStudio.dc.html",
+    "MyBookD2.dc.html"
   ],
   "notes": {
     "head": {
