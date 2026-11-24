@@ -1259,6 +1259,54 @@
         ]
       }
     },
+    "/interview/notes/final": {
+      "get": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Final Notes",
+        "description": "The Librarian's last look at the answer to `question_id`, made while the next question is written.\nAsk for it alongside POST /interview/answers: it waits up to about 8 seconds for the look. Never an\nerror: `none` when there's nothing to add, `pending` if it's still being written.",
+        "operationId": "final_notes_interview_notes_final_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "question_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Question Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinalNotesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/interview/finish": {
       "post": {
         "tags": [
@@ -3605,6 +3653,38 @@
         ],
         "title": "Entry",
         "description": "One line in the notebook. `anchors` are the member's words it was built on; when those words\nleave the answer, the entry is rubbed out. `source_turns` are interview turn numbers, 1 first."
+      },
+      "FinalNotesResponse": {
+        "properties": {
+          "silent": {
+            "type": "boolean",
+            "title": "Silent"
+          },
+          "marks": {
+            "$ref": "#/components/schemas/MarksDelta"
+          },
+          "notebook": {
+            "$ref": "#/components/schemas/NotebookDelta"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "done",
+              "none",
+              "pending"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "silent",
+          "marks",
+          "notebook",
+          "status"
+        ],
+        "title": "FinalNotesResponse",
+        "description": "The Librarian's last look at an answer as sent. `done`: apply it like a `/interview/notes` reply.\n`none`: there was nothing new to read (or no look). `pending`: still being written; the answer's\nown response brings it."
       },
       "FinishRequest": {
         "properties": {

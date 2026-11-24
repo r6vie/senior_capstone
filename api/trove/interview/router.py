@@ -10,6 +10,7 @@ from trove.core.database import get_database
 from trove.interview import service
 from trove.interview.models import (
     AnswerRequest,
+    FinalNotesResponse,
     FinishRequest,
     InterviewResponse,
     NotesRequest,
@@ -115,6 +116,18 @@ async def notes(
     keystroke, and drop a reply once the member has moved to another question. It never fails for
     want of AI: it just adds nothing. 409 if `question_id` isn't the question waiting."""
     return await service.notes(database, claude, user, data)
+
+
+@router.get("/notes/final", response_model=FinalNotesResponse)
+async def final_notes(
+    question_id: str,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> FinalNotesResponse:
+    """The Librarian's last look at the answer to `question_id`, made while the next question is written.
+    Ask for it alongside POST /interview/answers: it waits up to about 8 seconds for the look. Never an
+    error: `none` when there's nothing to add, `pending` if it's still being written."""
+    return await service.final_notes_of(database, user, question_id)
 
 
 @router.post("/finish", response_model=InterviewResponse, responses=STALE_QUESTION_RESPONSES)

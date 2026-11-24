@@ -4,6 +4,7 @@ The engine (`engine.py`) writes questions and books; this module keeps the state
 answer, and checks each step happens in order.
 """
 
+import asyncio
 import base64
 import binascii
 import contextlib
@@ -33,6 +34,7 @@ from trove.interview.engine import Change, Draft, DraftChapter, Turn
 from trove.interview.librarian import Entry, Mark
 from trove.interview.models import (
     AnsweredTurn,
+    FinalNotesResponse,
     InterviewResponse,
     LibrarianState,
     MarksDelta,
@@ -548,6 +550,7 @@ async def answer(
     if interview["stage"] not in ASKING_STAGES or current is None:
         raise conflict("There's no question waiting for an answer.")
     turn, notebook = final_notes(interview, text)
+    looking = final_look_needed(interview, claude, text, turn)
     # Saved before the next question is written, so a failure there never loses the answer.
     saved = await database.interviews.find_one_and_update(
         {"_id": interview["_id"], "stage": interview["stage"], "current": current},
@@ -557,6 +560,11 @@ async def answer(
                 "current": None,
                 "notebook": notebook,
                 "last_question_id": current.get("question_id"),
+                "final_look": {
+                    "question_id": current.get("question_id"),
+                    "status": "running" if looking else "none",
+                    "at": datetime.now(UTC),
+                },
                 "updated_at": datetime.now(UTC),
             },
         },
@@ -565,7 +573,18 @@ async def answer(
     if saved is None:
         latest = await get_interview(database, user["_id"])
         raise StaleQuestion(latest, already_saved=_already_saved(latest, question_id, text))
-    return await ask_next_question(database, claude, saved)
+    if not looking:
+        return await ask_next_question(database, claude, saved)
+    # The Librarian's last look at the words actually sent runs while the next question is written,
+    # so a pasted or fast answer still gets its notes, and the member waits no longer for them.
+    asked, _ = await asyncio.gather(
+        ask_next_question(database, claude, saved),
+        final_look(database, claude, interview, saved, text),
+        return_exceptions=True,
+    )
+    if isinstance(asked, BaseException):
+        raise asked
+    return await get_interview(database, user["_id"])
 
 
 async def skip(database: AsyncDatabase, claude: Claude, user: dict, question_id: str) -> dict:
@@ -1735,14 +1754,14 @@ def _checked_builds_on(entry_id: str | None, notebook: list[dict]) -> str | None
 
 async def mark_built_on(database: AsyncDatabase, interview: dict, entry_id: str) -> dict:
     """The question is out: circle its source entry, and tick it off if it was a `saving` entry."""
-    notebook = [
-        {**entry, "status": "ticked" if entry["kind"] == "saving" else "circled"}
-        if entry["id"] == entry_id
-        else entry
-        for entry in interview.get("notebook", [])
-    ]
+    entry = next((e for e in interview.get("notebook", []) if e["id"] == entry_id), None)
+    if entry is None:
+        return interview
+    # Only that entry is touched, so the final look adding to the notebook at the same time is kept.
     updated = await database.interviews.find_one_and_update(
-        {"_id": interview["_id"]}, {"$set": {"notebook": notebook}}, return_document=ReturnDocument.AFTER
+        {"_id": interview["_id"], "notebook.id": entry_id},
+        {"$set": {"notebook.$.status": "ticked" if entry["kind"] == "saving" else "circled"}},
+        return_document=ReturnDocument.AFTER,
     )
     return updated or interview
 
@@ -1937,6 +1956,196 @@ async def notes(
             erase=sorted({*erased, *(i for i in shown if i.startswith("n_") and i not in live_entries)}),
         ),
     )
+
+
+# How long GET /interview/notes/final holds on for the last answer's look before saying "pending".
+FINAL_NOTES_WAIT_SECONDS = 8.0
+FINAL_NOTES_POLL_SECONDS = 0.25
+# A look marked running for longer than this died with its request.
+FINAL_LOOK_STALE = timedelta(minutes=1)
+
+
+def final_look_needed(interview: dict, claude: Claude | None, text: str, turn: dict) -> bool:
+    """Whether the sent answer has words the Librarian hasn't read: a paste, or typing too quick for
+    the looks while typing. Never for a skip or a silent answer, past the caps, or without AI."""
+    if claude is None or not text.strip() or turn.get("silent") or _ends_by_limit(interview):
+        return False
+    working = _working(interview["current"])
+    within, _ = _within_rate(interview, datetime.now(UTC))
+    # One look past the per-answer cap: the sent words are the ones that count most.
+    if not within or working["calls"] > librarian.MAX_CALLS_PER_ANSWER:
+        return False
+    return text.strip() != (working["last_text"] or "").strip()
+
+
+def _ends_by_limit(interview: dict) -> bool:
+    """Whether this answer ends the interview or round at its limit, so no notebook comes after it."""
+    turns = turns_of(interview)
+    if interview["stage"] == "adding":
+        new = turns[interview["round_start"] :]
+        answered = sum(1 for turn in new if turn.answer.strip()) + 1
+        return answered >= engine.MAX_ADDING_ANSWERS or len(new) + 1 >= engine.MAX_ADDING_TURNS
+    asked = sum(1 for turn in turns if turn.answer.strip()) + 1
+    return asked >= engine.MAX_QUESTIONS or len(turns) + 1 >= engine.MAX_TURNS
+
+
+async def final_look(database: AsyncDatabase, claude: Claude, before: dict, saved: dict, text: str) -> None:
+    """Look once more at the answer as sent, and save what it adds onto that turn and the notebook.
+    `before` is the interview as it was with the answer still waiting. Never raises: the next question
+    must not fail because the Librarian did."""
+    question_id = before["current"].get("question_id")
+    try:
+        response = await _final_look(database, claude, before, saved, text)
+    except Exception:
+        logger.warning("The Librarian's final look failed for interview %s", before["_id"])
+        response = None
+    status = "done" if response is not None else "none"
+    await database.interviews.update_one(
+        {"_id": before["_id"], "final_look.question_id": question_id},
+        {
+            "$set": {
+                "final_look.status": status,
+                "final_look.response": response.model_dump() if response is not None else None,
+            }
+        },
+    )
+
+
+async def _final_look(
+    database: AsyncDatabase, claude: Claude, before: dict, saved: dict, text: str
+) -> NotesResponse | None:
+    current = before["current"]
+    number = _turn_number(before)
+    index = number - 1
+    working = _working(current)
+    turn = saved["turns"][index]
+    notebook = saved.get("notebook", [])
+    mine = [Entry.model_validate(entry) for entry in notebook if entry.get("turn") == number]
+    others = [Entry.model_validate(entry) for entry in notebook if entry.get("turn") != number]
+    marks = [Mark.model_validate(mark) for mark in turn.get("marks", [])]
+    held = [Mark.model_validate(mark) for mark in working["marks"]]
+    lost = [mark for mark in held if mark.id not in {m.id for m in marks}]
+    context = librarian.Context(
+        question=current["question"],
+        question_number=number,
+        setting="a round of adding to their book" if before["stage"] == "adding" else "the interview",
+        earlier=turns_of(before),
+        silent_turns=_silent_turns(before),
+        answer=text,
+        pasted=False,
+        marks=marks,
+        entries=mine,
+        notebook=others,
+        lost_marks=lost,
+        back_cover_used=_used(before, marks, "back_cover"),
+        running_bit_used=_used(before, marks, "circle"),
+        conceded=before.get("conceded", False),
+    )
+    _, rate = _within_rate(before, datetime.now(UTC))
+    await database.interviews.update_one(
+        {"_id": before["_id"]}, {"$set": {"notes_rate": {**rate, "count": rate["count"] + 1}}}
+    )
+    looked = await librarian.look(librarian.on_notes_model(claude), context)
+    turn_path = f"turns.{index}"
+    if looked.silent:
+        # As while typing: a silent answer keeps nothing, and the notebook loses what it wrote for it.
+        await database.interviews.update_one(
+            {"_id": before["_id"]},
+            {
+                "$set": {f"{turn_path}.silent": True},
+                "$unset": {f"{turn_path}.marks": ""},
+                "$pull": {"notebook": {"turn": number}},
+            },
+        )
+        return NotesResponse(
+            silent=True,
+            marks=MarksDelta(keep=[], add=[], revise=[], erase=sorted(m.id for m in marks)),
+            notebook=NotebookDelta(keep=[], add=[], revise=[], erase=sorted(e.id for e in mine)),
+        )
+    erased = [entry_id for entry_id in looked.erased_entries]
+    erased += [entry.id for entry in mine if entry.id not in {e.id for e in looked.entries}]
+    settled = {bet.id: (bet, anchor) for bet, anchor in looked.settled}
+    # Each write touches only its own entries, so the next question circling one can't be undone.
+    if erased:
+        await database.interviews.update_one(
+            {"_id": before["_id"]}, {"$pull": {"notebook": {"id": {"$in": erased}}}}
+        )
+    for entry in looked.revised_entries:
+        extra = {"turn": _entry_turn(notebook, entry.id) or number}
+        if entry.id in settled:
+            extra |= {"settled_turn": number, "settled_by": settled[entry.id][1]}
+        await database.interviews.update_one(
+            {"_id": before["_id"], "notebook.id": entry.id},
+            {"$set": {"notebook.$": {**entry.model_dump(), **extra}}},
+        )
+    updates: dict = {"$set": {"conceded": before.get("conceded", False) or looked.conceded}}
+    if looked.marks:
+        updates["$set"][f"{turn_path}.marks"] = [mark.model_dump() for mark in looked.marks]
+    else:
+        updates["$unset"] = {f"{turn_path}.marks": ""}
+    if looked.added_entries:
+        updates["$push"] = {
+            "notebook": {"$each": [{**entry.model_dump(), "turn": number} for entry in looked.added_entries]}
+        }
+    await database.interviews.update_one({"_id": before["_id"]}, updates)
+    changed_marks = {mark.id for mark in [*looked.added_marks, *looked.revised_marks]}
+    live_marks = {mark.id for mark in looked.marks}
+    changed_entries = {entry.id for entry in [*looked.added_entries, *looked.revised_entries]}
+    live_entries = {entry.id for entry in [*others, *looked.entries]} - set(erased)
+    return NotesResponse(
+        silent=False,
+        marks=MarksDelta(
+            keep=sorted(live_marks - changed_marks),
+            add=looked.added_marks,
+            revise=looked.revised_marks,
+            erase=sorted({m.id for m in [*marks, *lost]} - live_marks),
+        ),
+        notebook=NotebookDelta(
+            keep=sorted(live_entries - changed_entries),
+            add=looked.added_entries,
+            revise=looked.revised_entries,
+            erase=sorted(set(erased)),
+        ),
+    )
+
+
+def _entry_turn(notebook: list[dict], entry_id: str) -> int | None:
+    return next((entry.get("turn") for entry in notebook if entry["id"] == entry_id), None)
+
+
+async def final_notes_of(database: AsyncDatabase, user: dict, question_id: str) -> FinalNotesResponse:
+    """The final look's notes on the answer to `question_id`, waiting a little for them if they're
+    still being written. Asked for alongside the answer, so the answer may not be saved yet either."""
+    empty = FinalNotesResponse(
+        status="none",
+        silent=False,
+        marks=MarksDelta(keep=[], add=[], revise=[], erase=[]),
+        notebook=NotebookDelta(keep=[], add=[], revise=[], erase=[]),
+    )
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + FINAL_NOTES_WAIT_SECONDS
+    while True:
+        interview = await database.interviews.find_one(
+            {"user_id": user["_id"]}, {"final_look": 1, "current.question_id": 1}
+        )
+        if interview is None:
+            return empty
+        look = interview.get("final_look") or {}
+        waiting = (interview.get("current") or {}).get("question_id") == question_id
+        if look.get("question_id") == question_id:
+            at = look.get("at")
+            if at is not None and at.tzinfo is None:
+                at = at.replace(tzinfo=UTC)
+            if look.get("status") == "done" and look.get("response"):
+                return FinalNotesResponse(status="done", **look["response"])
+            if look.get("status") != "running" or (at and datetime.now(UTC) - at > FINAL_LOOK_STALE):
+                return empty
+        elif not waiting:
+            # Not this answer's look, and the answer isn't about to be saved either.
+            return empty
+        if loop.time() >= deadline:
+            return empty.model_copy(update={"status": "pending"})
+        await asyncio.sleep(FINAL_NOTES_POLL_SECONDS)
 
 
 async def sign_off_for(

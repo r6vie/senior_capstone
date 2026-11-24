@@ -465,7 +465,9 @@ def _adding(text: str) -> dict:
         return {"question": "", "topic": "what you've just added", "done": True}
     asked = {turn.question for turn in new}
     # A spark stands in for the next question, asked as the member's own version.
-    spark = re.search(r"^- \[(.+?)\] (.+)$", text, re.MULTILINE)
+    # Only the sparks block: the notebook's lines look the same.
+    sparks = re.search(r"<sparks>\n(.*?)\n</sparks>", text, re.DOTALL)
+    spark = re.search(r"^- \[(.+?)\] (.+)$", sparks[1], re.MULTILINE) if sparks else None
     if spark:
         return {
             "question": f"You saved {spark[2]!r}. What's your own version? Tell me about one specific time.",

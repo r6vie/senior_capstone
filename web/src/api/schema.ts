@@ -502,6 +502,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/interview/notes/final": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Final Notes
+         * @description The Librarian's last look at the answer to `question_id`, made while the next question is written.
+         *     Ask for it alongside POST /interview/answers: it waits up to about 8 seconds for the look. Never an
+         *     error: `none` when there's nothing to add, `pending` if it's still being written.
+         */
+        get: operations["final_notes_interview_notes_final_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/interview/finish": {
         parameters: {
             query?: never;
@@ -1496,6 +1518,23 @@ export interface components {
             struck: string[];
             /** Outcome Note */
             outcome_note?: string | null;
+        };
+        /**
+         * FinalNotesResponse
+         * @description The Librarian's last look at an answer as sent. `done`: apply it like a `/interview/notes` reply.
+         *     `none`: there was nothing new to read (or no look). `pending`: still being written; the answer's
+         *     own response brings it.
+         */
+        FinalNotesResponse: {
+            /** Silent */
+            silent: boolean;
+            marks: components["schemas"]["MarksDelta"];
+            notebook: components["schemas"]["NotebookDelta"];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "done" | "none" | "pending";
         };
         /** FinishRequest */
         FinishRequest: {
@@ -3189,6 +3228,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NotesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    final_notes_interview_notes_final_get: {
+        parameters: {
+            query: {
+                question_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalNotesResponse"];
                 };
             };
             /** @description Validation Error */
