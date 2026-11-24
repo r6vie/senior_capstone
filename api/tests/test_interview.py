@@ -611,10 +611,12 @@ async def test_finish_sets_the_stage_first_and_writes_after(client, database, he
     assert (await client.get("/interview", headers=headers)).json()["stage"] == "choosing"
 
 
-async def test_title_sets_the_stage_first_and_writes_after(client, headers, fake_engine):
+async def test_title_sets_the_stage_first_and_writes_after(client, database, headers, fake_engine):
     await client.post("/interview", json={}, headers=headers)
     await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
     await client.post("/interview/finish", headers=headers)
+    # A book not prepared in time is written after the response.
+    await database.interviews.update_one({}, {"$set": {"prepared": {}, "prepare_status": "done"}})
     state = (await client.post("/interview/title", json={"title": 1}, headers=headers)).json()
     assert state["stage"] == "finishing"
     assert state["chosen_title"] == TITLES[1].title
