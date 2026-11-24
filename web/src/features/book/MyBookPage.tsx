@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { ArtImage } from "../../ui/art/ArtImage";
+import { artFor, coverInk } from "../../ui/art/bookArt";
 import { Button } from "../../ui/Button";
 import { PageLoading } from "../../ui/Loading";
 import { useAuth } from "../auth/AuthProvider";
+import { loadOwnBook } from "../discovery/bookPreload";
 import { draftKeyFor, keepDraft } from "../interview/AnswerPanel";
 import { apiInterviewClient } from "../interview/apiInterviewClient";
 import { EditForm, editKeyFor, hasEditDraft } from "../interview/EditInPlace";
@@ -414,6 +417,8 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   usePageTitle("My book");
   const [stage, setStage] = useState<BookStage | null>(null);
   const [book, setBook] = useState<MyBook | null>(null);
+  // The book's id chooses its cover art (ui/art/bookArt.ts); the interview client's book doesn't carry it.
+  const [bookId, setBookId] = useState<string | null>(null);
   const [sparks, setSparks] = useState<Spark[]>([]);
   const [reading, setReading] = useState<ReadingQuestion[]>([]);
   const [failed, setFailed] = useState(false);
@@ -435,16 +440,18 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
     setFailed(false);
     try {
       // All together, so the next step is drawn once, right the first time.
-      const [nextStage, nextBook, nextRound] = await Promise.all([
+      const [nextStage, nextBook, nextRound, own] = await Promise.all([
         client.stage(),
         client.myBook(),
         client.lastRound().catch(() => ({ empty: false })),
+        loadOwnBook(),
       ]);
       const nextRemoval =
         nextStage === "changesWaiting" ? await client.openRemoval().catch(() => null) : null;
       stageNow.current = nextStage;
       setStage(nextStage);
       setBook(nextBook);
+      setBookId(own?.id ?? null);
       setLastRound(nextRound);
       setRemoval(nextRemoval);
     } catch {
@@ -589,6 +596,8 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
     />
   );
 
+  const art = bookId ? artFor(bookId) : null;
+
   return (
     <main className="mb-page">
       <LeftoverWords />
@@ -597,13 +606,15 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
           <section className="mb-head">
             {/* The large book on a wide screen, the regular one on a phone. */}
             <span className="book book-lg mb-book-wide" aria-hidden="true">
-              <span className="book-cover">
+              <span className="book-cover" style={art ? coverInk(art) : undefined}>
+                {art && <ArtImage className="book-art" src={art.cover} />}
                 <span className="book-title">{book.title}</span>
                 <span className="book-author">{book.authorName}</span>
               </span>
             </span>
             <span className="book mb-book-narrow" aria-hidden="true">
-              <span className="book-cover">
+              <span className="book-cover" style={art ? coverInk(art) : undefined}>
+                {art && <ArtImage className="book-art" src={art.cover} />}
                 <span className="book-title">{book.title}</span>
                 <span className="book-author">{book.authorName}</span>
               </span>
