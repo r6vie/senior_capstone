@@ -20,7 +20,22 @@
       "pageInk": "#3a2c3a",
       "coverInkContrast": 7.4,
       "cover": "covers/mesa.webp",
-      "page": "pages/mesa.webp"
+      "page": "pages/mesa.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/mesa-loop.mp4",
+          "webm": "anim/mesa-loop.webm"
+        },
+        "reveal": {
+          "mp4": "anim/mesa-reveal.mp4",
+          "webm": "anim/mesa-reveal.webm"
+        },
+        "quick": {
+          "mp4": "anim/mesa-quick.mp4",
+          "webm": "anim/mesa-quick.webm"
+        },
+        "poster": "anim/mesa-poster.webp"
+      }
     },
     {
       "key": "hills",
@@ -29,7 +44,22 @@
       "pageInk": "#4a4a2e",
       "coverInkContrast": 7.57,
       "cover": "covers/hills.webp",
-      "page": "pages/hills.webp"
+      "page": "pages/hills.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/hills-loop.mp4",
+          "webm": "anim/hills-loop.webm"
+        },
+        "reveal": {
+          "mp4": "anim/hills-reveal.mp4",
+          "webm": "anim/hills-reveal.webm"
+        },
+        "quick": {
+          "mp4": "anim/hills-quick.mp4",
+          "webm": "anim/hills-quick.webm"
+        },
+        "poster": "anim/hills-poster.webp"
+      }
     },
     {
       "key": "lake",
@@ -38,7 +68,22 @@
       "pageInk": "#23415a",
       "coverInkContrast": 5.36,
       "cover": "covers/lake.webp",
-      "page": "pages/lake.webp"
+      "page": "pages/lake.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/lake-loop.mp4",
+          "webm": "anim/lake-loop.webm"
+        },
+        "reveal": {
+          "mp4": "anim/lake-reveal.mp4",
+          "webm": "anim/lake-reveal.webm"
+        },
+        "quick": {
+          "mp4": "anim/lake-quick.mp4",
+          "webm": "anim/lake-quick.webm"
+        },
+        "poster": "anim/lake-poster.webp"
+      }
     },
     {
       "key": "winter",
@@ -47,7 +92,22 @@
       "pageInk": "#3e2b45",
       "coverInkContrast": 5.63,
       "cover": "covers/winter.webp",
-      "page": "pages/winter.webp"
+      "page": "pages/winter.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/winter-loop.mp4",
+          "webm": "anim/winter-loop.webm"
+        },
+        "reveal": {
+          "mp4": "anim/winter-reveal.mp4",
+          "webm": "anim/winter-reveal.webm"
+        },
+        "quick": {
+          "mp4": "anim/winter-quick.mp4",
+          "webm": "anim/winter-quick.webm"
+        },
+        "poster": "anim/winter-poster.webp"
+      }
     },
     {
       "key": "city",
@@ -56,7 +116,22 @@
       "pageInk": "#2c2d52",
       "coverInkContrast": 4.98,
       "cover": "covers/city.webp",
-      "page": "pages/city.webp"
+      "page": "pages/city.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/city-loop.mp4",
+          "webm": "anim/city-loop.webm"
+        },
+        "reveal": {
+          "mp4": "anim/city-reveal.mp4",
+          "webm": "anim/city-reveal.webm"
+        },
+        "quick": {
+          "mp4": "anim/city-quick.mp4",
+          "webm": "anim/city-quick.webm"
+        },
+        "poster": "anim/city-poster.webp"
+      }
     },
     {
       "key": "blossom",
@@ -65,7 +140,22 @@
       "pageInk": "#5a3048",
       "coverInkContrast": 8.54,
       "cover": "covers/blossom.webp",
-      "page": "pages/blossom.webp"
+      "page": "pages/blossom.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/blossom-loop.mp4",
+          "webm": "anim/blossom-loop.webm"
+        },
+        "reveal": {
+          "mp4": "anim/blossom-reveal.mp4",
+          "webm": "anim/blossom-reveal.webm"
+        },
+        "quick": {
+          "mp4": "anim/blossom-quick.mp4",
+          "webm": "anim/blossom-quick.webm"
+        },
+        "poster": "anim/blossom-poster.webp"
+      }
     },
     {
       "key": "autumn",
@@ -74,7 +164,22 @@
       "pageInk": "#5a3420",
       "coverInkContrast": 6.08,
       "cover": "covers/autumn.webp",
-      "page": "pages/autumn.webp"
+      "page": "pages/autumn.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/autumn-loop.mp4",
+          "webm": "anim/autumn-loop.webm"
+        },
+        "reveal": {
+          "mp4": "anim/autumn-reveal.mp4",
+          "webm": "anim/autumn-reveal.webm"
+        },
+        "quick": {
+          "mp4": "anim/autumn-quick.mp4",
+          "webm": "anim/autumn-quick.webm"
+        },
+        "poster": "anim/autumn-poster.webp"
+      }
     },
     {
       "key": "beach",
@@ -83,7 +188,22 @@
       "pageInk": "#5a2f2a",
       "coverInkContrast": 4.83,
       "cover": "covers/beach.webp",
-      "page": "pages/beach.webp"
+      "page": "pages/beach.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/beach-loop.mp4",
+          "webm": "anim/beach-loop.webm"
+        },
+        "reveal": {
+          "mp4": "anim/beach-reveal.mp4",
+          "webm": "anim/beach-reveal.webm"
+        },
+        "quick": {
+          "mp4": "anim/beach-quick.mp4",
+          "webm": "anim/beach-quick.webm"
+        },
+        "poster": "anim/beach-poster.webp"
+      }
     },
     {
       "key": "lighthouse-day",
@@ -92,7 +212,22 @@
       "pageInk": "#2c3e5c",
       "coverInkContrast": 10.38,
       "cover": "covers/lighthouse-day.webp",
-      "page": "pages/lighthouse-day.webp"
+      "page": "pages/lighthouse-day.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/lighthouse-day-loop.mp4",
+          "webm": "anim/lighthouse-day-loop.webm"
+        },
+        "reveal": {
+          "mp4": "anim/lighthouse-day-reveal.mp4",
+          "webm": "anim/lighthouse-day-reveal.webm"
+        },
+        "quick": {
+          "mp4": "anim/lighthouse-day-quick.mp4",
+          "webm": "anim/lighthouse-day-quick.webm"
+        },
+        "poster": "anim/lighthouse-day-poster.webp"
+      }
     },
     {
       "key": "lighthouse-dusk",
@@ -101,7 +236,30 @@
       "pageInk": "#2c3e5c",
       "coverInkContrast": 6.1,
       "cover": "covers/lighthouse-dusk.webp",
-      "page": "pages/lighthouse-dusk.webp"
+      "page": "pages/lighthouse-dusk.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/lighthouse-dusk-loop.mp4",
+          "webm": "anim/lighthouse-dusk-loop.webm"
+        },
+        "reveal": {
+          "mp4": "anim/lighthouse-dusk-reveal.mp4",
+          "webm": "anim/lighthouse-dusk-reveal.webm"
+        },
+        "quick": {
+          "mp4": "anim/lighthouse-dusk-quick.mp4",
+          "webm": "anim/lighthouse-dusk-quick.webm"
+        },
+        "poster": "anim/lighthouse-dusk-poster.webp"
+      }
     }
-  ]
+  ],
+  "animation": {
+    "size": "472x688, the cover at 2x, muted, no audio; MP4 (H.264) and WebM (VP9) of each",
+    "loop": "the sign-in page only: paints in (all glazes by ~12.3 s), rests from 13.5 s, washes back to paper 18.5-23.5 s, 1.5 s clean paper; 25 s, 12 fps, seamless",
+    "reveal": "the book reveal and your picks: the same painting at the same timing, played once, ending on the finished cover at 13.5 s; 12 fps",
+    "quick": "the design studio, when you choose a design: the same painting at 0.3 of the time, ending on the finished cover at ~4 s; 24 fps",
+    "poster": "the finished cover (the reveal's last frame); for reduced motion and before a video loads",
+    "endsOnCover": "the last frame of reveal and quick is the cover image (mean difference under 0.1 levels of 255), so swapping to the still is invisible"
+  }
 }

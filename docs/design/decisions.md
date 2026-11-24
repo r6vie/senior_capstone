@@ -1205,3 +1205,36 @@ Pending Josef's review of the new canvas.
   `category`, `coverInk` chosen from the paint, `pageInk` for the title page), a contact sheet and a README with
   what differs from strata (painted to the top, two inks, no knockout behind the name). Cover inks checked against
   the published boards: all ten match.
+
+## 2026-11-23: the blank book paints itself (test, Getting started page)
+
+- **Request (via the My Book Screen session):** a moving watercolour for the blank cover on the Getting started
+  screens. A first abstract version (drops blooming and washing out, `art/watercolor/blank_loop.py`) was set aside
+  when **Josef** asked instead to "animate the art that we already have being drawn on ... one of the colors starts
+  slowly being drawn in, dropping in, like watercolor art would look like. And then in the end, just like fades, and
+  then a new cover comes to life", as a test on one cover (the alpine lake suggested).
+- `art/watercolor/paint_anim.py` runs a cover's own scene with every wash and lift recorded, then lays the 46 glazes
+  back down in painting order: each lands near the top of its shape and spreads along a broad, lobed wet front, big
+  washes slowly and small patches quickly, paler while still wet. 0–22 s painting, 5 s rest, 5 s wash back to paper,
+  1.5 s clean paper; the loop's last frame is the first. 472 x 688, 12 fps: MP4 0.55 MB, WebM 0.47 MB, a poster of the
+  finished cover for reduced motion.
+- New board `StartPaint` ("The blank book painting itself · test") on the Getting started page, drawing StartJoin's
+  left half (dot ground, caption box, the book on the shelf bar) with the video in the cover at 270px and 150px.
+  StartJoin itself is untouched. Not yet: the chain to the next cover, a critic round.
+- **Timing reworked (Josef: no "weird empty gaps", the spreading speed is good, "shorten the time between the
+  individual ones so that more are running at the same time").** The big ground washes (sky, the lake's ground, the
+  far range) are pulled to the front so no stretch of paper waits empty; the rest keep painting order, lifts after
+  what they lift; starts packed into 10 s (was ~19 s) with the same spread durations, so several glazes spread at
+  once. All land by ~12.3 s; rest 13.5–18.5 s, wash back to 23.5 s, loop at 25 s. MP4 0.44 MB, WebM 0.43 MB.
+
+## 2026-11-23: watercolor animations for all ten, and where they play
+
+- **Josef:** "do it for all the watercolor." Only watercolour animates on the sign-in page; covers also paint in
+  when a new book's picks appear and in the book reveal (the same timing as the test), and in the design studio
+  "it should animate in quicker because you don't want to wait to see the design".
+- `paint_anim.py` now renders every set 1 cover (it also records `fade_top`), in three versions: `loop` (sign-in,
+  25 s, seamless), `reveal` (picks and the reveal, 13.5 s, ends on the cover) and `quick` (the studio, 0.3 of the
+  time, ~4 s at 24 fps). Fixed on the way: the last frame was not quite the cover (the far corners of big washes were
+  never reached, the last glazes were still wet, and the paper grain was another seed's); now each finished frame
+  matches its cover to under 0.1 levels on average. `encode_anim.sh` writes `set-1/anim/` (MP4 + WebM + poster,
+  0.12–0.63 MB each, 19 MB in all) and the manifest and README say which plays where.
