@@ -35,6 +35,8 @@ function useDesk(): Desk {
       .then(({ data, response }) => {
         if (!live) return;
         const book = data as MyBook | undefined;
+        // A failed read isn't "no book": the card stays away rather than say "Not written yet" to an author.
+        if (response?.status !== 404 && !response?.ok) return;
         if (response?.status === 404 || !book?.title) setDesk((now) => ({ ...now, book: null }));
         else setDesk((now) => ({ ...now, book: { title: book.title, authorName: book.author_name } }));
       })

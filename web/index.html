@@ -13,7 +13,10 @@
     />
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Shown from the first paint (the stylesheet above blocks it until styled) until the app's script has
+         loaded and replaces it: on a slow connection that script takes seconds, and the page would be blank.
+         The same still placeholder as ui/Loading.tsx. -->
+    <div id="root"><div class="loading-screen"><p role="status" class="loading-say">Loading</p></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

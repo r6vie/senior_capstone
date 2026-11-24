@@ -1,3 +1,4 @@
+import { ArtImage } from "../../ui/art/ArtImage";
 import { artFor, coverInk } from "../../ui/art/bookArt";
 
 export function BookObject({
@@ -21,7 +22,7 @@ export function BookObject({
   const art = artFor(id);
   const cover = (
     <span className="book-cover" style={coverInk(art)}>
-      <img className="book-art" src={art.cover} alt="" />
+      <ArtImage className="book-art" src={art.cover} />
       <span className="book-title">{book.title}</span>
       <span className="book-author">{book.authorName}</span>
     </span>

@@ -1,7 +1,7 @@
 import { type FormEvent, type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, NO_CONNECTION } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
 import { PageLoading } from "../../ui/Loading";
@@ -82,10 +82,12 @@ function TimesSection({ meeting, onChange }: { meeting: Meeting; onChange: (next
   async function save() {
     setBusy(true);
     setNotice(null);
-    const { data, error } = await api.PUT("/meetings/{checkout_id}/times", {
-      params: { path: { checkout_id: meeting.checkout_id } },
-      body: { times },
-    });
+    const { data, error } = await api
+      .PUT("/meetings/{checkout_id}/times", {
+        params: { path: { checkout_id: meeting.checkout_id } },
+        body: { times },
+      })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     setBusy(false);
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     onChange(data);
@@ -162,10 +164,12 @@ function PickSection({ meeting, onChange }: { meeting: Meeting; onChange: (next:
   async function confirm(start: string) {
     setBusy(true);
     setNotice(null);
-    const { data, error } = await api.PUT("/meetings/{checkout_id}/confirm", {
-      params: { path: { checkout_id: meeting.checkout_id } },
-      body: { start },
-    });
+    const { data, error } = await api
+      .PUT("/meetings/{checkout_id}/confirm", {
+        params: { path: { checkout_id: meeting.checkout_id } },
+        body: { start },
+      })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     setBusy(false);
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     onChange(data);
@@ -228,10 +232,12 @@ function DetailsSection({
     event.preventDefault();
     setBusy(true);
     setNotice(null);
-    const { data, error } = await api.PUT("/meetings/{checkout_id}/details", {
-      params: { path: { checkout_id: meeting.checkout_id } },
-      body: { video_link: link.trim() || null, place_note: place.trim() || null },
-    });
+    const { data, error } = await api
+      .PUT("/meetings/{checkout_id}/details", {
+        params: { path: { checkout_id: meeting.checkout_id } },
+        body: { video_link: link.trim() || null, place_note: place.trim() || null },
+      })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     setBusy(false);
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     onChange(data);
@@ -365,16 +371,24 @@ export function MeetingPage() {
   const confirmedHeading = useRef<HTMLHeadingElement>(null);
   const backToConfirmed = () => requestAnimationFrame(() => confirmedHeading.current?.focus());
   usePageTitle(meeting ? `Meeting ${meeting.other_name}` : "Arrange your meeting");
+  // Only a real "not found" means there is no meeting; a failed call or a dropped connection is worth another try.
+  const [missing, setMissing] = useState(false);
   const [failed, setFailed] = useState(false);
 
   const load = useCallback(() => {
     // A late answer from an earlier request must not replace a newer one.
     let stale = false;
-    api.GET("/meetings/{checkout_id}", { params: { path: { checkout_id: checkoutId } } }).then(({ data }) => {
-      if (stale) return;
-      if (data) setMeeting(data);
-      else setFailed(true);
-    });
+    api
+      .GET("/meetings/{checkout_id}", { params: { path: { checkout_id: checkoutId } } })
+      .then(({ data, response }) => {
+        if (stale) return;
+        if (data) setMeeting(data);
+        else if (response.status === 404) setMissing(true);
+        else setFailed(true);
+      })
+      .catch(() => {
+        if (!stale) setFailed(true);
+      });
     return () => {
       stale = true;
     };
@@ -382,13 +396,35 @@ export function MeetingPage() {
 
   useEffect(() => load(), [load]);
 
-  if (failed) {
+  if (missing) {
     return (
       <main className="shell-page meeting-page">
         <h1 className="page-title">Arrange your meeting</h1>
         <p className="meeting-empty">
           We couldn't find this meeting. It opens once the author says yes.{" "}
           <Link to="/checkouts">Back to Checkouts</Link>
+        </p>
+      </main>
+    );
+  }
+  if (failed && !meeting) {
+    return (
+      <main className="shell-page meeting-page">
+        <h1 className="page-title">Arrange your meeting</h1>
+        <p role="alert" className="message message-error">
+          <span>!</span>
+          <span>
+            We couldn't load this meeting.{" "}
+            <Button
+              variant="quiet"
+              onClick={() => {
+                setFailed(false);
+                load();
+              }}
+            >
+              Try again
+            </Button>
+          </span>
         </p>
       </main>
     );

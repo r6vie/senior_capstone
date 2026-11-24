@@ -782,6 +782,10 @@ body {
 .book-art {
   display: none;
 }
+/* A book's picture still arriving (ui/art/ArtImage.tsx): hidden, so it appears whole rather than drawn in strips. */
+img[data-pending] {
+  visibility: hidden;
+}
 @media (min-width: 720px) {
   .book:not(.book-lg, .book-sm, .book-xs) {
     width: 176px;

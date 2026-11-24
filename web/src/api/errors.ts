@@ -1,3 +1,6 @@
+/** For a call that never got an answer (the connection dropped): read like an API error, so one path shows it. */
+export const NO_CONNECTION = { detail: "We couldn't reach Trove. Check your connection and try again." };
+
 // Turn a FastAPI error body ({"detail": ...}) into one sentence a member can read.
 export function errorMessage(error: unknown): string {
   if (!error || typeof error !== "object" || !("detail" in error)) {
