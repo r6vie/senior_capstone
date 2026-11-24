@@ -1,0 +1,107 @@
+{
+  "set": "watercolor-1",
+  "category": "watercolor",
+  "approved": "2026-11-23",
+  "approvedBy": "Josef",
+  "cover": {
+    "file": "472x688 webp, the 236x344 cover world at 2x, painted edge to edge",
+    "shelfBook": "176x257 CSS px",
+    "largeBook": "236x344 CSS px"
+  },
+  "page": {
+    "file": "1140x1368 webp, the 570x684 title page at 2x",
+    "fills": "the left (title) page of the opened book, behind the text"
+  },
+  "arts": [
+    {
+      "key": "mesa",
+      "name": "Desert butte at dusk",
+      "coverInk": "#f6efe0",
+      "pageInk": "#3a2c3a",
+      "coverInkContrast": 7.4,
+      "cover": "covers/mesa.webp",
+      "page": "pages/mesa.webp"
+    },
+    {
+      "key": "hills",
+      "name": "Patchwork hills",
+      "coverInk": "#4a4a2e",
+      "pageInk": "#4a4a2e",
+      "coverInkContrast": 7.57,
+      "cover": "covers/hills.webp",
+      "page": "pages/hills.webp"
+    },
+    {
+      "key": "lake",
+      "name": "Alpine lake",
+      "coverInk": "#23415a",
+      "pageInk": "#23415a",
+      "coverInkContrast": 5.36,
+      "cover": "covers/lake.webp",
+      "page": "pages/lake.webp"
+    },
+    {
+      "key": "winter",
+      "name": "Winter dusk with firs",
+      "coverInk": "#3e2b45",
+      "pageInk": "#3e2b45",
+      "coverInkContrast": 5.63,
+      "cover": "covers/winter.webp",
+      "page": "pages/winter.webp"
+    },
+    {
+      "key": "city",
+      "name": "City at night on the river",
+      "coverInk": "#f6efe0",
+      "pageInk": "#2c2d52",
+      "coverInkContrast": 4.98,
+      "cover": "covers/city.webp",
+      "page": "pages/city.webp"
+    },
+    {
+      "key": "blossom",
+      "name": "Blossom tree by a pond",
+      "coverInk": "#5a3048",
+      "pageInk": "#5a3048",
+      "coverInkContrast": 8.54,
+      "cover": "covers/blossom.webp",
+      "page": "pages/blossom.webp"
+    },
+    {
+      "key": "autumn",
+      "name": "Autumn river with a bridge",
+      "coverInk": "#5a3420",
+      "pageInk": "#5a3420",
+      "coverInkContrast": 6.08,
+      "cover": "covers/autumn.webp",
+      "page": "pages/autumn.webp"
+    },
+    {
+      "key": "beach",
+      "name": "Beach at sunset",
+      "coverInk": "#5a2f2a",
+      "pageInk": "#5a2f2a",
+      "coverInkContrast": 4.83,
+      "cover": "covers/beach.webp",
+      "page": "pages/beach.webp"
+    },
+    {
+      "key": "lighthouse-day",
+      "name": "Lighthouse by day with the harbor boats",
+      "coverInk": "#2c3e5c",
+      "pageInk": "#2c3e5c",
+      "coverInkContrast": 10.38,
+      "cover": "covers/lighthouse-day.webp",
+      "page": "pages/lighthouse-day.webp"
+    },
+    {
+      "key": "lighthouse-dusk",
+      "name": "Lighthouse at dusk with its beam",
+      "coverInk": "#f6efe0",
+      "pageInk": "#2c3e5c",
+      "coverInkContrast": 6.1,
+      "cover": "covers/lighthouse-dusk.webp",
+      "page": "pages/lighthouse-dusk.webp"
+    }
+  ]
+}

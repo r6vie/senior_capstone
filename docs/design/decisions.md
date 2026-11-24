@@ -1083,3 +1083,16 @@ Pending Josef's review of the new canvas.
   (cream title still 6.1:1). Book screen: the sky climbs less high on the right (bleed climb 320 → 250), its top
   wash is lighter, the dark round the tower smaller and lower, and the stars moved down into what dark remains.
   Checked in local renders only.
+
+## 2026-11-23: watercolor art set 1 approved for the app
+
+- **Josef:** "all the books that you have book screens for in the watercolor section, so that's the 10 books, you may
+  send those to UI implementation to get them into the app." Not the three covers without a book screen (round 1
+  lighthouse, harbor, prairie).
+- **Categories:** they are their own category, `watercolor`, beside strata set 1 (`strata`). A new book's art is a
+  flat draw over every art in every category (all twenty equally likely); the category matters only on the "choose
+  your own design" screen Josef is designing now, where arts are grouped by it.
+- Packaged in `art/watercolor/set-1/` like strata set 1: covers 472 x 688, pages 1140 x 1368, `manifest.json` (with
+  `category`, `coverInk` chosen from the paint, `pageInk` for the title page), a contact sheet and a README with
+  what differs from strata (painted to the top, two inks, no knockout behind the name). Cover inks checked against
+  the published boards: all ten match.
