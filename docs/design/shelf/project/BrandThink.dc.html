@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brand · the thinking</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+
+body{margin:0}
+.bb{--ink:#111;--paper:#FAFAF7;--sunk:#F0F0EB;--ink2:#55554F;--rule:#C9C9C6;
+ --cond:'Barlow Condensed','Arial Narrow',sans-serif;--ser:'Newsreader',Georgia,serif;--sans:'IBM Plex Sans',system-ui,sans-serif;
+ width:1760px;padding:72px 80px 96px;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.bb,.bb *{box-sizing:border-box}
+:where(.bb) :is(h1,h2,h3,p,ul,ol,figure){margin:0;padding:0}
+.eyebrow{font:700 15px var(--cond);letter-spacing:.16em;text-transform:uppercase;color:var(--ink2)}
+.h1{font:600 64px/1.02 var(--ser);letter-spacing:-.015em;margin-top:14px}
+.lede{font:400 22px/1.4 var(--ser);max-width:900px;margin-top:18px}
+.sec{margin-top:72px}
+.sh2{display:flex;align-items:baseline;gap:18px;border-top:3px solid var(--ink);padding-top:14px;margin-bottom:28px}
+.sh2 b{font:800 30px/1 var(--cond);letter-spacing:.04em;text-transform:uppercase}
+.sh2 span{font-size:15px;color:var(--ink2)}
+.note{font-size:14px;color:var(--ink2);max-width:520px}
+.cap{font:600 13px var(--cond);letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);margin-top:10px}
+.tone{background-image:radial-gradient(var(--ink) 1.1px,transparent 1.3px);background-size:6px 6px}
+.tone-f{background-image:radial-gradient(var(--ink) .9px,transparent 1.1px);background-size:5px 5px}
+
+/* wordmarks */
+.wa{position:relative;display:inline-block;line-height:1}
+.wa .wt{display:block;font-family:var(--ser);font-weight:600;letter-spacing:-.02em;line-height:.9;padding:0 .04em;border-bottom:var(--rl) solid currentColor}
+.wa .rb{position:absolute;top:100%;display:block;margin-top:calc(var(--rl) * -1)}
+.wt-a{font-family:var(--ser);font-weight:600;letter-spacing:-.02em;line-height:1}
+.wb{font-family:var(--ser);font-style:italic;font-weight:500;letter-spacing:-.01em;line-height:1}
+.wc{font-family:var(--cond);font-weight:800;letter-spacing:.05em;line-height:.9}
+.lk{display:inline-flex;align-items:center;gap:.28em}
+.lkb{gap:.42em}.lkc{gap:.22em}
+
+/* book cover */
+.cv{position:relative;flex:none;background:#fff;border:2px solid var(--ink);display:flex;flex-direction:column;justify-content:flex-start;padding:9% 7% 6% 11%;overflow:visible}
+.cv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+.cv::before{content:"";position:absolute;left:4.5%;top:0;bottom:0;width:1.5px;background:var(--ink);z-index:1}
+.cv.sh::after{content:"";position:absolute;inset:0;transform:translate(8px,8px);z-index:-1;background-image:radial-gradient(var(--ink) 1px,transparent 1.2px);background-size:5px 5px}
+.cv .ct{position:relative;z-index:2;color:var(--ci);font-family:var(--cond);font-weight:800;line-height:.92;letter-spacing:.01em;text-transform:uppercase;text-wrap:balance;max-width:86%}
+.cv .cn{position:relative;z-index:2;align-self:flex-start;margin-top:.7em;padding:0 .3em 0 0;line-height:1.3;color:var(--ci);font-family:var(--cond);font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+
+/* product */
+.tb{display:flex;align-items:center;gap:36px;height:72px;padding:0 36px;background:var(--paper);border:2px solid var(--ink)}
+.tb nav{display:flex;gap:26px}
+.tb nav b{font:600 17px var(--cond);letter-spacing:.12em;text-transform:uppercase;padding:6px 0}
+.tb nav b[aria-current]{border-bottom:3px solid var(--ink)}
+.tb .sr{margin-left:auto;width:230px;height:40px;border:2px solid var(--ink);border-radius:999px;display:flex;align-items:center;padding:0 16px;font-size:14px;color:var(--ink2);background:#fff}
+.tb .av{width:40px;height:40px;border-radius:999px;border:2px solid var(--ink);display:grid;place-items:center;font:700 16px var(--cond);background:#fff}
+.tbd{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tbd nav b[aria-current]{border-color:var(--paper)}
+.tbd .sr,.tbd .av{background:var(--ink);border-color:var(--paper);color:var(--rule)}
+.btab{display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 14px;background:#fff;border:1.5px solid var(--rule);border-bottom:none;border-radius:8px 8px 0 0;font-size:13px}
+.btab .bi{display:grid;place-items:center;width:16px;height:16px}
+.btab .bi svg{width:16px;height:16px}
+.btab .bx{color:var(--ink2);margin-left:18px}
+.btd{background:#2a2a2a;border-color:#2a2a2a;color:#eee}
+.btd .bx{color:#aaa}
+
+/* swatches */
+.sws{display:flex;gap:16px}
+.sw{width:150px}
+.swc{height:96px;display:flex;align-items:flex-end;padding:8px 10px;font:600 13px var(--cond);letter-spacing:.1em;border:1.5px solid var(--ink)}
+.sw b{display:block;margin-top:8px;font:700 14px var(--cond);letter-spacing:.12em;text-transform:uppercase}
+.sw span{font-size:13px;color:var(--ink2);line-height:1.35;display:block}
+
+.row{display:flex;gap:40px;align-items:flex-start}
+.panel{border:2px solid var(--ink);background:#fff}
+.dk{background:var(--ink);color:var(--paper)}
+.pt{font:600 13px var(--cond);letter-spacing:.14em;text-transform:uppercase}
+
+</style>
+</helmet>
+<div class="bb" style="height:2580px;overflow:hidden">
+
+<style>
+.ms{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+.ms blockquote{margin:0;font:600 44px/1.12 var(--ser);letter-spacing:-.015em}
+.ms p{font-size:17px;line-height:1.55;max-width:720px}
+.ms p+p{margin-top:14px}
+.fls{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:2px solid var(--ink)}
+.fl{padding:26px 22px;border-right:2px solid var(--ink);background:#fff}
+.fl:last-child{border-right:none}
+.fl b{display:block;font:600 34px/1 var(--ser);letter-spacing:-.01em}
+.fl span{display:block;margin-top:12px;font:600 14px var(--cond);letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);text-decoration:line-through;text-decoration-thickness:2px}
+.ids{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.id{display:flex;gap:20px;padding:20px;border:2px solid var(--ink);background:#fff;min-height:200px}
+.id .ik{flex:none;width:120px;height:120px;display:grid;place-items:center;opacity:.32}
+.id.keep{border-width:3px;box-shadow:8px 8px 0 -0px transparent;position:relative}
+.id.keep::after{content:"";position:absolute;inset:0;transform:translate(8px,8px);z-index:-1;background-image:radial-gradient(var(--ink) 1px,transparent 1.2px);background-size:5px 5px}
+.id.keep .ik{opacity:1}
+.ih{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.ih b{font:800 22px/1.05 var(--cond);letter-spacing:.04em;text-transform:uppercase}
+.ih em{font:700 13px var(--cond);letter-spacing:.14em;text-transform:uppercase;font-style:normal;color:var(--ink2);white-space:nowrap}
+.keep .ih em{color:var(--ink);border-bottom:3px solid var(--ink)}
+.ii{margin-top:8px;font:400 17px/1.35 var(--ser)}
+.ic{margin-top:8px;font-size:14px;color:var(--ink2);line-height:1.45}
+.kps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.kp{display:flex;gap:28px;align-items:center;padding:28px;border:3px solid var(--ink);background:#fff}
+.kpm{flex:none;width:160px;display:grid;place-items:center}
+.kpt b{display:block;font:600 36px/1.05 var(--ser);margin-top:6px}
+.kpt p{margin-top:10px;font-size:15px;color:var(--ink2)}
+.rules{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.rules div{border-top:2px solid var(--ink);padding-top:12px;font-size:15px}
+.rules b{display:block;font:700 15px var(--cond);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+</style>
+<span class="eyebrow">Brand · round 1 · the thinking</span>
+<h1 class="h1">Who Trove is, before what it looks like</h1>
+<p class="lede">Mission first, then the feeling, then twelve ideas for a mark and an honest note on each. Three survive; each has its own board to the right.</p>
+
+<section class="sec"><div class="sh2"><b>The mission</b><span>From docs/trove.md</span></div>
+<div class="ms"><blockquote>You are the author of the book you haven't written yet.</blockquote>
+<div><p>Trove helps CWRU students and alumni meet. An interview finds what each member knows that others don't and turns it into a book: a title and chapters, all in their own words. Other members browse the shelf and check a book out, which means a short video call with its author.</p>
+<p>It is deliberately not LinkedIn. No feed, no followers, no counts, no polish. A first-year's book and a VP's book look identical on the shelf. Meeting comes first; opportunities follow from people who were curious about each other.</p></div></div></section>
+
+<section class="sec"><div class="sh2"><b>The feeling</b><span>What a member should feel on first sight, and what we refuse</span></div>
+<div class="fls"><div class="fl"><b>Curious</b><span>Not clever</span></div><div class="fl"><b>Generous</b><span>Not transactional</span></div><div class="fl"><b>Level</b><span>Not ranked</span></div><div class="fl"><b>Unhurried</b><span>Not urgent</span></div><div class="fl"><b>Human</b><span>Not AI sparkle</span></div><div class="fl"><b>Bookish</b><span>Not dusty</span></div></div></section>
+
+<section class="sec"><div class="sh2"><b>What any mark must do</b></div>
+<div class="rules">
+<div><b>Ink, never red</b>Red is the one action on each screen. If the logo were red, it would be a second button.</div>
+<div><b>Work at 16px</b>A browser tab and a phone icon first, a poster second.</div>
+<div><b>Say people, not status</b>No crests, ranks, charts or trophies. Nothing that suggests who is ahead.</div>
+<div><b>Belong to the system</b>Ink on paper, square corners, dot tone for shade. The covers bring the colour.</div>
+</div></section>
+
+<section class="sec"><div class="sh2"><b>Twelve ideas</b><span>Sketched, then judged against the mission</span></div>
+<div class="ids"><div class="id"><div class="ik"><svg width="120" height="120" viewBox="0 0 100 100" aria-hidden="true"><path d="M8 30Q30 22 50 32Q70 22 92 30V78Q70 70 50 80Q30 70 8 78Z" fill="none" stroke="#111" stroke-width="5"/><path d="M50 32V80" stroke="#111" stroke-width="4"/></svg></div><div class="it"><div class="ih"><b>Open book</b><em>Cut</em></div><p class="ii">The plain sign for a book.</p><p class="ic">Every library, e-reader and course site already owns it. It says books, not people.</p></div></div><div class="id"><div class="ik"><svg width="120" height="120" viewBox="0 0 100 100" aria-hidden="true"><rect x="14" y="44" width="72" height="40" fill="none" stroke="#111" stroke-width="5"/><path d="M14 44Q14 20 50 20Q86 20 86 44" fill="none" stroke="#111" stroke-width="5"/><rect x="44" y="50" width="12" height="14" fill="#111"/></svg></div><div class="it"><div class="ih"><b>Treasure chest</b><em>Cut</em></div><p class="ii">Read “trove” literally: a hoard of treasure.</p><p class="ic">Pirates and loot boxes. Treasure you own is status, the opposite of lending what you know.</p></div></div><div class="id"><div class="ik"><svg width="120" height="120" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="38" r="16" fill="#111"/><path d="M42 48L36 84H64L58 48Z" fill="#111"/></svg></div><div class="it"><div class="ih"><b>Key and keyhole</b><em>Cut</em></div><p class="ii">Unlock what is in you.</p><p class="ic">A cliché, and it reads as security or a password manager.</p></div></div><div class="id"><div class="ik"><svg width="120" height="120" viewBox="0 0 100 100" aria-hidden="true"><path d="M78 10Q30 22 26 80L32 82Q44 40 78 10Z" fill="#111"/><path d="M26 80L20 92" stroke="#111" stroke-width="4"/></svg></div><div class="it"><div class="ih"><b>Quill</b><em>Cut</em></div><p class="ii">The author's pen.</p><p class="ic">Antique, and it suggests the member writes. The interview writes; the member talks.</p></div></div><div class="id"><div class="ik"><svg width="120" height="120" viewBox="0 0 100 100" aria-hidden="true"><rect x="12" y="40" width="12" height="46" fill="#111"/><rect x="28" y="22" width="12" height="64" fill="#111"/><rect x="44" y="52" width="12" height="34" fill="#111"/><rect x="60" y="30" width="12" height="56" fill="#111"/><rect x="76" y="46" width="12" height="40" fill="#111"/></svg></div><div class="it"><div class="ih"><b>Spines on a shelf</b><em>Cut</em></div><p class="ii">Members as books standing side by side.</p><p class="ic">Uneven spines read as a bar chart: a ranking. Trove has no counts, so its mark can't look like one.</p></div></div><div class="id"><div class="ik"><svg width="120" height="120" viewBox="0 0 100 100" aria-hidden="true"><path d="M12 20H88V68H40L24 84V68H12Z" fill="none" stroke="#111" stroke-width="5"/><path d="M50 22V66" stroke="#111" stroke-width="4"/></svg></div><div class="it"><div class="ih"><b>Speech bubble book</b><em>Cut</em></div><p class="ii">A book you talk with.</p><p class="ic">Two ideas glued together; it lands as a chat app, and Trove has no cold messages.</p></div></div><div class="id"><div class="ik"><svg width="120" height="120" viewBox="0 0 100 100" aria-hidden="true"><path d="M20 38L34 18H66L80 38L50 86Z" fill="none" stroke="#111" stroke-width="5"/><path d="M20 38H80M34 18L42 38L50 86L58 38L66 18" fill="none" stroke="#111" stroke-width="3"/></svg></div><div class="it"><div class="ih"><b>Hidden gem</b><em>Cut</em></div><p class="ii">Everyone is a hidden gem; dot tone as the facets.</p><p class="ic">Jewellery and crypto. Also a compliment, and compliments are a kind of rating.</p></div></div><div class="id"><div class="ik"><svg width="120" height="120" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="38" fill="none" stroke="#111" stroke-width="5"/><circle cx="50" cy="50" r="28" fill="none" stroke="#111" stroke-width="2"/><rect x="30" y="44" width="40" height="12" fill="#111"/></svg></div><div class="it"><div class="ih"><b>Due-date stamp</b><em>Cut</em></div><p class="ii">The library stamp you get when you check out.</p><p class="ic">Warm and true to checkouts, but it is about borrowing, not authorship, and it slides into retro pastiche.</p></div></div><div class="id"><div class="ik"><svg width="120" height="120" viewBox="0 0 100 100" aria-hidden="true"><path d="M18 14H82V54Q82 78 50 90Q18 78 18 54Z" fill="none" stroke="#111" stroke-width="5"/><path d="M34 32H66M50 32V72" stroke="#111" stroke-width="7"/></svg></div><div class="it"><div class="ih"><b>Collegiate monogram</b><em>Cut</em></div><p class="ii">A crest, because it starts at CWRU.</p><p class="ic">Crests are about rank and belonging to the right club. Trove is a level shelf; a VP and a first-year sit side by side.</p></div></div><div class="id keep"><div class="ik"><svg width="120" height="120" viewBox="0 0 100 100" aria-hidden="true"><rect x="12" y="16" width="76" height="13" fill="#111111"/><path d="M41 29H59V88L50 74L41 88Z" fill="#111111"/></svg></div><div class="it"><div class="ih"><b>Bookmark T</b><em>Keep · A</em></div><p class="ii">A ribbon hanging from the edge of a book. It holds a place, and it is the T.</p><p class="ic">Simple enough for a 16px tab, and it names a quiet act: holding a place in someone's book.</p></div></div><div class="id keep"><div class="ik"><svg width="120" height="100" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111" transform="translate(120 0) scale(-1 1)"/></svg></div><div class="it"><div class="ih"><b>Facing pages</b><em>Keep · B</em></div><p class="ii">An open book whose two pages are two profiles, face to face. The spine is the space between them.</p><p class="ic">The whole product in one shape: a book that is a conversation. Needs careful drawing so the faces read small.</p></div></div><div class="id keep"><div class="ik"><svg width="120" height="120" viewBox="0 0 100 100" aria-hidden="true"><defs><pattern id="dt1" width="4.2" height="4.2" patternUnits="userSpaceOnUse"><circle cx="2.1" cy="2.1" r="1.25" fill="#111111"/></pattern></defs><rect x="30" y="17" width="58" height="78" fill="url(#dt1)"/><rect x="17.5" y="7.5" width="59" height="79" fill="#FFFFFF" stroke="#111111" stroke-width="5"/><rect x="26" y="10" width="3.2" height="74" fill="#111111"/><rect x="36" y="24" width="28" height="6.5" fill="#111111"/></svg></div><div class="it"><div class="ih"><b>The blank cover</b><em>Keep · C</em></div><p class="ii">Trove's own book object, outline and dot shadow, with the title not written yet.</p><p class="ic">Comes straight out of the screentone system, and it says the tagline: the book you haven't written yet.</p></div></div></div></section>
+
+<section class="sec"><div class="sh2"><b>The three we keep</b><span>Each answers the mission from a different side</span></div>
+<div class="kps"><div class="kp"><div class="kpm"><svg width="150" height="150" viewBox="0 0 100 100" aria-hidden="true"><rect x="12" y="16" width="76" height="13" fill="#111111"/><path d="M41 29H59V88L50 74L41 88Z" fill="#111111"/></svg></div><div class="kpt"><span class="eyebrow">A · The act</span><b>Bookmark</b><p>Marking someone's book to come back to. Quiet, literary, works at every size.</p></div></div><div class="kp"><div class="kpm"><svg width="156" height="130" viewBox="0 0 120 100" aria-hidden="true"><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111"/><path d="M6 21 C18 15 32 13 45 15 C47.5 21 49.2 27 50 32 C50.4 34.5 50 36 50.6 37.6 C52.4 40.4 54.6 42.6 55.8 44.6 C56.6 46 55.8 47.6 54 47.8 L52.8 48.2 C53.2 49.4 54.2 50 54.4 51.2 C54.5 52.2 53.4 52.8 53.2 53.4 C53.6 54 54.2 54.8 53.9 55.8 C53.6 56.8 52.2 57.2 51.8 58 C51.6 59.2 53.4 60.4 53.6 62.4 C53.8 64.6 52 66.2 49.4 66.8 C48.4 68.6 48.2 75 49 86 C34 82 18 82 6 88 Z" fill="#111111" transform="translate(120 0) scale(-1 1)"/></svg></div><div class="kpt"><span class="eyebrow">B · The meeting</span><b>Facing pages</b><p>A book that is two people talking. The warmest and most ownable of the three.</p></div></div><div class="kp"><div class="kpm"><svg width="150" height="150" viewBox="0 0 100 100" aria-hidden="true"><defs><pattern id="dt2" width="4.2" height="4.2" patternUnits="userSpaceOnUse"><circle cx="2.1" cy="2.1" r="1.25" fill="#111111"/></pattern></defs><rect x="30" y="17" width="58" height="78" fill="url(#dt2)"/><rect x="17.5" y="7.5" width="59" height="79" fill="#FFFFFF" stroke="#111111" stroke-width="5"/><rect x="26" y="10" width="3.2" height="74" fill="#111111"/><rect x="36" y="24" width="28" height="6.5" fill="#111111"/></svg></div><div class="kpt"><span class="eyebrow">C · The promise</span><b>The blank cover</b><p>The book you haven't written yet. The most native to the screentone system we already have.</p></div></div></div></section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1760,"height":2580}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

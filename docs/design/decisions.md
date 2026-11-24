@@ -939,3 +939,26 @@ Pending Josef's review.
 - **Feel:** modern, but serif and library-like, in warm colors.
 
 Pending Josef's review of the new canvas.
+
+## 2026-11-23: brand, round 1 (logo and identity)
+
+- **Josef asked** for a logo and the whole brand identity on a new canvas page, starting from the mission and the
+  feeling, then ideas, critique, and three kept. New page **Brand**: `BrandThink` (mission, feeling, what any mark
+  must do, twelve ideas with a verdict each) and three identities, each with hero lockups on paper and ink, the mark
+  from 220px to 16px, app icons, browser tabs, construction, colour and type, the top bar, and marketing (poster,
+  Instagram post and story, email header, a handout or merch) plus three headlines.
+  - **A · Bookmark:** a book's edge with a ribbon hanging from it, which is also the T. Wordmark Trove in Newsreader
+    600 on a rule with the ribbon slipping out under it.
+  - **B · Facing pages:** an open book whose inner page edges are two profiles face to face; the spine is the gap.
+    Wordmark lowercase italic Newsreader.
+  - **C · The blank cover:** the app's own book object (outline, hinge, dot shadow) with an untitled cover; below
+    48px the shadow drops and the hinge and title bar thicken. Wordmark Barlow Condensed 800 caps.
+- **Rules the marks keep:** ink only, never red (red is the one action); square; dot tone for shade; the brand is ink
+  and paper, and marketing borrows colour from real covers rather than inventing a brand hue.
+- **Critic round** (fresh subagent): fixed the clipped Voice rows, C's copy-icon look at small sizes, the speed lines
+  in C's story (now a dot field), harsher B profiles (redrawn softer), the gap under A's ribbon, a deeper swallowtail,
+  C's shelf post now uses the mark's own cover, a smaller red swatch, and copy that invented product (a bookmark
+  feature, a call length, naming two members who met). Not taken: the critic wanted the search pill and round avatar
+  squared, but the system allows exactly those two pills; it wanted C's wordmark in Newsreader, kept in Barlow so the
+  three directions differ in voice. Its pick was B, after a hand-drawn pass on the profiles.
+- Source: `docs/design/shelf/brand_boards.py`.
