@@ -160,7 +160,7 @@ Real Claude calls in development (evals, real-AI interviews on your own copy) ar
 - Database tests use a real MongoDB. Take the `client` fixture, or `database` for direct access.
   Each test run gets a throwaway database, emptied between tests.
 - **Run them on a local MongoDB.** Against the shared Atlas cluster the API suite takes 15 minutes to over an
-  hour, and it competes with the live site for the cluster's limits. Locally it takes about 2, as in CI. Run
+  hour, and every teammate's run competes for the shared cluster's limits. Locally it takes about 2, as in CI. Run
   `docker run -d --name trove-test-mongo -p 27017:27017 --restart unless-stopped mongo:7.0` once, and put
   `TROVE_TEST_MONGODB_URI=mongodb://localhost:27017` in your `.env`.
 - **Never call the real Claude API in tests.** Use the `fake_claude` fixture and script its
@@ -291,7 +291,7 @@ them from colliding with each other and with teammates.
   two pieces of work must touch the same file, run them one after the other, or stack the second on the first.
 - **Separate local copies.** Each running copy of the app gets its own database and ports, for example
   `MONGODB_DATABASE=trove_dev_<name>_qa python3 scripts/dev.py --api-port 8100 --web-port 5273 --scripted-ai`.
-- **Tests on the local MongoDB** ([Tests](#tests)). Several suites against the shared Atlas cluster slow each
+- **Tests on the local MongoDB** ([Tests](#tests)). Several suites against the shared dev Atlas cluster slow each
   other down, and slow the live site with them.
 - **A checker that didn't write the code.** Before a UI change merges, have a separate agent walk through it
   in the running app at desktop and phone width, judging both bugs and how it feels. The author's own check
