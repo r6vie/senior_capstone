@@ -257,7 +257,13 @@ async def current_view(
     if claude and failed and not interview.get("write_retried"):
         # The member came back to a failed write: try once more without asking them to.
         interview = await restart_writing(database, claude, interview, background)
-    book = await books.get_book_of(database, user["_id"]) if interview["stage"] in BOOK_STAGES else None
+    return await view_with_book(database, interview)
+
+
+async def view_with_book(database: AsyncDatabase, interview: dict) -> InterviewResponse:
+    """The view, with the member's book once the interview has made one (its blurb is the current one)."""
+    in_book = interview["stage"] in BOOK_STAGES
+    book = await books.get_book_of(database, interview["user_id"]) if in_book else None
     return interview_view(interview, book)
 
 
@@ -839,6 +845,11 @@ async def choose_title(
         return_document=ReturnDocument.AFTER,
     )
     if moved is None:
+        return await get_interview(database, user["_id"])
+    if _prepared(moved, moved["chosen_title"]) is not None:
+        # The book was finished while the member read the titles: save it now and go straight to
+        # review, so the pick never waits on a poll.
+        await write_book(database, claude, moved["_id"])
         return await get_interview(database, user["_id"])
     background.add_task(write_book, database, claude, moved["_id"])
     return moved
@@ -2057,7 +2068,7 @@ async def _final_look(
     await database.interviews.update_one(
         {"_id": before["_id"]}, {"$set": {"notes_rate": {**rate, "count": rate["count"] + 1}}}
     )
-    looked = await librarian.look(librarian.on_notes_model(claude), context)
+    looked = await librarian.look(librarian.on_notes_model(claude), context, quick=True)
     turn_path = f"turns.{index}"
     if looked.silent:
         # As while typing: a silent answer keeps nothing, and the notebook loses what it wrote for it.

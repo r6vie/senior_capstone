@@ -166,9 +166,11 @@ async def choose_title(
     database: AsyncDatabase = Depends(get_database),
     claude: Claude = Depends(get_claude),
 ) -> InterviewResponse:
-    """Choose one of the three titles. Stage goes to `finishing`, and the book is written to match in
-    the background (`step_status`). After a failure, send this again."""
-    return interview_view(await service.choose_title(database, claude, user, data.title, background))
+    """Choose one of the three titles. When its book was already prepared while the titles were shown,
+    the stage goes straight to `reviewing`. Otherwise it goes to `finishing`, and the book is written to
+    match in the background (`step_status`). After a failure, send this again."""
+    chosen = await service.choose_title(database, claude, user, data.title, background)
+    return await service.view_with_book(database, chosen)
 
 
 @router.delete("/book/chapters/{chapter_id}", response_model=MyBookResponse)

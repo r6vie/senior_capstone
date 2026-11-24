@@ -168,6 +168,19 @@ async def test_one_retry_with_the_broken_rules_then_bad_items_are_dropped():
     assert retry["messages"][1]["role"] == "assistant"
 
 
+async def test_the_quick_look_after_send_doesnt_think_or_retry():
+    # It has to land while the next question is written, so bad items are just dropped.
+    answer = TURNS[2]
+    bad = {"move": "underline", "anchor": "eleven pages", "occurrence": 1, "note": "says who?"}
+    good = {"move": "underline", "anchor": "nine pages", "occurrence": 1, "note": "a number would help."}
+    claude = FakeClaude([text_message(notes_reply(marks=[bad, good]))])
+    notes = await librarian.look(librarian.on_notes_model(claude), context(answer), quick=True)
+    assert [m.anchor for m in notes.marks] == ["nine pages"]
+    [only] = claude.requests
+    assert only["thinking"] == {"type": "disabled"}
+    assert only["max_tokens"] == librarian.QUICK_MAX_TOKENS
+
+
 async def test_caps_on_marks_and_notebook_additions():
     answer = "The intake form had nine pages, nine fields, and nobody read the nine pages at all."
     marks = [

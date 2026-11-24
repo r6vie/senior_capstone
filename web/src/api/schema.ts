@@ -558,8 +558,9 @@ export interface paths {
         put?: never;
         /**
          * Choose Title
-         * @description Choose one of the three titles. Stage goes to `finishing`, and the book is written to match in
-         *     the background (`step_status`). After a failure, send this again.
+         * @description Choose one of the three titles. When its book was already prepared while the titles were shown,
+         *     the stage goes straight to `reviewing`. Otherwise it goes to `finishing`, and the book is written to
+         *     match in the background (`step_status`). After a failure, send this again.
          */
         post: operations["choose_title_interview_title_post"];
         delete?: never;

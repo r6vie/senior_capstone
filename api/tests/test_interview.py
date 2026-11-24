@@ -904,9 +904,12 @@ async def test_the_book_for_each_title_is_ready_before_the_pick(client, database
     interview = await database.interviews.find_one({})
     assert interview["prepare_status"] == "done"
 
-    # The pick uses the book already written, so it doesn't wait on another call.
+    # The pick uses the book already written, so it goes straight to review with no wait at all.
     calls = len(fake_engine.calls)
-    book = await choose_and_wait(client, headers, 1)
+    picked = (await client.post("/interview/title", json={"title": 1}, headers=headers)).json()
+    assert picked["stage"] == "reviewing"
+    assert picked["blurb"] == "I know Title 1."
+    book = (await client.get("/books/me", headers=headers)).json()
     assert book["title"] == "Title 1" and book["blurb"] == "I know Title 1."
     assert not [name for name, _ in fake_engine.calls[calls:] if name == "finish_book"]
 
