@@ -19,6 +19,7 @@ class LoginRequest(RequestBody):
 
 
 Name = Annotated[NonEmptyText, Field(max_length=60)]
+Affiliation = Literal["current_student", "alumni"]
 
 
 class SignupRequest(LoginRequest):
@@ -103,6 +104,20 @@ class NotificationSettingsUpdate(RequestBody):
     email_notifications: bool
 
 
+class MemberContextUpdate(RequestBody):
+    """How the member relates to CWRU, plus founder status. Neither limits who they can meet."""
+
+    affiliations: list[Affiliation] = Field(min_length=1, max_length=2)
+    founder: bool
+
+    @field_validator("affiliations")
+    @classmethod
+    def affiliations_are_unique(cls, value: list[Affiliation]) -> list[Affiliation]:
+        if len(value) != len(set(value)):
+            raise ValueError("Choose each affiliation only once.")
+        return value
+
+
 class DeleteAccountRequest(RequestBody):
     """Deleting an account cannot be undone, so the member types their email to confirm."""
 
@@ -123,6 +138,9 @@ class UserResponse(BaseModel):
     full_name: str
     email: EmailStr
     email_notifications: bool
+    # Null until an existing member supplies the one-time context. A member can be both.
+    affiliations: list[Affiliation] | None
+    founder: bool | None
     # False until a student enters the code sent to their case.edu email.
     verified: bool
     created_at: datetime

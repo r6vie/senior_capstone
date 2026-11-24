@@ -13,6 +13,7 @@ from trove.auth.models import (
     DeleteAccountRequest,
     LoginRequest,
     LoginResponse,
+    MemberContextUpdate,
     NameUpdate,
     NotificationSettingsUpdate,
     SignupRequest,
@@ -31,6 +32,7 @@ from trove.auth.service import (
     public_user,
     set_contact_details,
     set_email_notifications,
+    set_member_context,
     token_digest,
 )
 from trove.auth.verification import code_digest, is_case_email, is_verified, new_verification
@@ -179,6 +181,17 @@ async def update_my_notifications(
     """Turn email notifications on or off. Account emails are sent either way."""
     await set_email_notifications(database, user["_id"], data.email_notifications)
     return public_user({**user, "email_notifications": data.email_notifications})
+
+
+@router.put("/me/context", response_model=UserResponse)
+async def update_my_context(
+    data: MemberContextUpdate,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> UserResponse:
+    """Record student, alumni and founder context. It never restricts who the member can meet."""
+    changes = await set_member_context(database, user["_id"], data)
+    return public_user({**user, **changes})
 
 
 @router.delete("/me", status_code=204, response_class=Response)

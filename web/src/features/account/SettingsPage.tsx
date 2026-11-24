@@ -6,6 +6,7 @@ import { PageLoading } from "../../ui/Loading";
 import { TextField } from "../../ui/TextField";
 import { useAuth } from "../auth/AuthProvider";
 import { InviteSection } from "./InviteSection";
+import { type Affiliation, MemberContextFields } from "./MemberContextFields";
 import "./SettingsPage.css";
 import { usePageTitle } from "../../ui/usePageTitle";
 
@@ -134,6 +135,61 @@ function EmailSection({ initial, onChanged }: { initial: boolean; onChanged: () 
   );
 }
 
+function MemberContextSection({
+  initialAffiliations,
+  initialFounder,
+  onChanged,
+}: {
+  initialAffiliations: Affiliation[];
+  initialFounder: boolean;
+  onChanged: () => Promise<void>;
+}) {
+  const [affiliations, setAffiliations] = useState(initialAffiliations);
+  const [founder, setFounder] = useState(initialFounder);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<Notice>(null);
+
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setNotice(null);
+    const { data, error } = await api.PUT("/auth/me/context", { body: { affiliations, founder } });
+    setBusy(false);
+    if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
+    setAffiliations(data.affiliations ?? []);
+    setFounder(data.founder ?? false);
+    await Promise.resolve(onChanged()).catch(() => undefined);
+    setNotice({ kind: "saved", text: "Community context saved." });
+  }
+
+  return (
+    <section aria-labelledby="context-heading" className="settings-section">
+      <h2 id="context-heading" className="settings-heading">
+        About you
+      </h2>
+      <form onSubmit={save} className="stack">
+        <MemberContextFields
+          affiliations={affiliations}
+          founder={founder}
+          onAffiliationsChange={setAffiliations}
+          onFounderChange={setFounder}
+        />
+        <Feedback notice={notice} />
+        <div>
+          <Button
+            type="submit"
+            variant="secondary"
+            disabled={busy || affiliations.length === 0}
+            aria-busy={busy}
+          >
+            Save community context
+          </Button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
 function DeleteSection({ email }: { email: string }) {
   const { signOut } = useAuth();
   const [typed, setTyped] = useState("");
@@ -193,6 +249,11 @@ export function SettingsPage() {
   return (
     <main className="settings-page">
       <h1 className="page-title">Settings</h1>
+      <MemberContextSection
+        initialAffiliations={user.affiliations ?? []}
+        initialFounder={user.founder ?? false}
+        onChanged={refreshUser}
+      />
       <ContactSection email={user.email} />
       <EmailSection initial={user.email_notifications} onChanged={refreshUser} />
       <InviteSection />

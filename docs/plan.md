@@ -213,6 +213,12 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 ### Wave 4: demo readiness
 
+**A3 · Member context for future matching** · Daniel + Josef · `review`
+- Before the first book interview, members choose current student, alumni or both, and independently
+  whether they are a founder. Existing members can supply or change it in Settings.
+- The context is not displayed on the book and does not gate or score a recommendation.
+- Auth owns the account fields and endpoint; the interview start screen collects them.
+
 **G1 · Get the app live** · Daniel · `doing`
 - One free Render service serves the website and the API (`api/trove/serve.py`, `Dockerfile`, `render.yaml`).
   Steps, and what each person must supply (Atlas access, an Anthropic spend cap, SMTP, a Render account):

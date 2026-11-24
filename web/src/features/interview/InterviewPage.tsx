@@ -1,7 +1,10 @@
 import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { api } from "../../api/client";
+import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
 import { usePageTitle } from "../../ui/usePageTitle";
+import { type Affiliation, type MemberContext, MemberContextFields } from "../account/MemberContextFields";
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, readDraft, takeOrphanDrafts } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
@@ -80,9 +83,20 @@ function placeOf(state: InterviewState | null): string {
   return state.stage === "drafting" && state.failed ? "draftingFailed" : state.stage;
 }
 
-export function InterviewPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
+async function saveContext(context: MemberContext): Promise<void> {
+  const { data, error } = await api.PUT("/auth/me/context", { body: context });
+  if (!data) throw new InterviewError(errorMessage(error));
+}
+
+export function InterviewPage({
+  client = apiInterviewClient,
+  saveMemberContext,
+}: {
+  client?: InterviewClient;
+  saveMemberContext?: (context: MemberContext) => Promise<void>;
+}) {
   usePageTitle("Your interview");
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   // Books carry the full name; it falls back to the first name for accounts made before last names.
   const authorName = user?.full_name ?? "";
 
@@ -389,23 +403,33 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     }
 
     if (!state) {
+      const persistContext =
+        saveMemberContext ??
+        (async (context: MemberContext) => {
+          await saveContext(context);
+          await refreshUser().catch(() => undefined);
+        });
       return (
         <StartScreen
           hasSparks={hasSparks}
           busy={busy}
           error={error}
           started={Boolean(retry)}
-          onStart={(resume) =>
+          initialAffiliations={user?.affiliations ?? []}
+          initialFounder={user?.founder ?? false}
+          onStart={(resume, context) =>
             run(
               resume ? "The Librarian is reading your résumé…" : "The Librarian is getting ready…",
               // "Already started" means an earlier press got through: load that interview rather than refuse.
               () =>
-                client.start(resume).catch(async (reason) => {
-                  if (!(reason instanceof InterviewError && reason.conflict)) throw reason;
-                  const now = await client.current();
-                  if (!now) throw reason;
-                  return now;
-                }),
+                persistContext(context)
+                  .then(() => client.start(resume))
+                  .catch(async (reason) => {
+                    if (!(reason instanceof InterviewError && reason.conflict)) throw reason;
+                    const now = await client.current();
+                    if (!now) throw reason;
+                    return now;
+                  }),
               // A 502 here means the interview exists but its first question failed.
               { retryWith: () => client.askAgain("") },
             )
@@ -855,6 +879,8 @@ function StartScreen({
   busy,
   error,
   started,
+  initialAffiliations,
+  initialFounder,
   onStart,
 }: {
   hasSparks: boolean;
@@ -862,12 +888,16 @@ function StartScreen({
   error: string | null;
   /** The interview exists and only its first question failed, so Try again is the one way on. */
   started: boolean;
-  onStart: (resume: File | null) => void;
+  initialAffiliations: Affiliation[];
+  initialFounder: boolean;
+  onStart: (resume: File | null, context: MemberContext) => void;
 }) {
   const [resume, setResume] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [addingResume, setAddingResume] = useState(false);
+  const [affiliations, setAffiliations] = useState(initialAffiliations);
+  const [founder, setFounder] = useState(initialFounder);
   const input = useRef<HTMLInputElement>(null);
   const inputId = useId();
   // Stays set through the retry's wait, so Start doesn't flash back while Try again is working.
@@ -904,12 +934,26 @@ function StartScreen({
     <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={START_SAY}>{busy}</Waiting> : START_SAY}>
       <ErrorMessage message={error} />
       {error && resume && (
-        <button type="button" className="iv-textlink" onClick={() => onStart(null)}>
+        <button
+          type="button"
+          className="iv-textlink"
+          onClick={() => onStart(null, { affiliations, founder })}
+        >
           Start without it
         </button>
       )}
+      <MemberContextFields
+        affiliations={affiliations}
+        founder={founder}
+        onAffiliationsChange={setAffiliations}
+        onFounderChange={setFounder}
+      />
       <div className="iv-row">
-        <Button onClick={() => onStart(resume)} aria-busy={Boolean(busy)}>
+        <Button
+          onClick={() => onStart(resume, { affiliations, founder })}
+          aria-busy={Boolean(busy)}
+          disabled={affiliations.length === 0}
+        >
           Start the interview
         </Button>
         <span className="iv-quiet-note">

@@ -316,6 +316,53 @@
         ]
       }
     },
+    "/auth/me/context": {
+      "put": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Update My Context",
+        "description": "Record student, alumni and founder context. It never restricts who the member can meet.",
+        "operationId": "update_my_context_auth_me_context_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberContextUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/auth/logout": {
       "post": {
         "tags": [
@@ -4508,6 +4555,35 @@
         ],
         "title": "MeetingView"
       },
+      "MemberContextUpdate": {
+        "properties": {
+          "affiliations": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "current_student",
+                "alumni"
+              ]
+            },
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Affiliations"
+          },
+          "founder": {
+            "type": "boolean",
+            "title": "Founder"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "affiliations",
+          "founder"
+        ],
+        "title": "MemberContextUpdate",
+        "description": "How the member relates to CWRU, plus founder status. Neither limits who they can meet."
+      },
       "Message": {
         "properties": {
           "id": {
@@ -5695,6 +5771,35 @@
             "type": "boolean",
             "title": "Email Notifications"
           },
+          "affiliations": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "current_student",
+                    "alumni"
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Affiliations"
+          },
+          "founder": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Founder"
+          },
           "verified": {
             "type": "boolean",
             "title": "Verified"
@@ -5713,6 +5818,8 @@
           "full_name",
           "email",
           "email_notifications",
+          "affiliations",
+          "founder",
           "verified",
           "created_at"
         ],
