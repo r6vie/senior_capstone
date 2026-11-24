@@ -64,9 +64,11 @@ describe("AuthPage", () => {
     renderPage("sign-in");
     const field = screen.getByLabelText(/^Password/) as HTMLInputElement;
     expect(field.type).toBe("password");
-    fireEvent.click(screen.getByRole("button", { name: "Show password" }));
+    const show = screen.getByRole("button", { name: "Show password" });
+    fireEvent.click(show);
     expect(field.type).toBe("text");
-    fireEvent.click(screen.getByRole("button", { name: "Hide password" }));
+    expect(show.getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(show);
     expect(field.type).toBe("password");
   });
 

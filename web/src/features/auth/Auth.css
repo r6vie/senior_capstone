@@ -41,7 +41,9 @@
   gap: 26px;
   padding-top: 22px;
   overflow: hidden;
-  background: var(--dots), var(--paper);
+  background:
+    radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 6px 6px,
+    var(--paper);
   border-bottom: var(--line-heavy) solid var(--ink);
 }
 /* A comic caption box: white, a heavy ink line, and an offset outline behind it. */
@@ -126,9 +128,9 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
-/* Where the name will go: part of the picture, which nobody reads (the book is hidden from screen readers). */
+/* Where the name will go, until a name field has text. */
 .auth-author[data-ghost] {
-  color: var(--ink-3);
+  color: var(--ink-2);
 }
 /* The invite: a library card tucked behind the book, tilted out from under it. */
 .auth-card {
@@ -215,6 +217,19 @@
 .auth-names {
   display: grid;
   gap: var(--s-4);
+}
+/* The fields here are a little larger than elsewhere: label 500 15px, box 52px, text 17px. */
+.auth-form .field > label,
+.auth-form .field > span:not(.auth-pw, .auth-code) {
+  font: 500 15px / 1.2 var(--font-sans);
+}
+.auth-form .field input:not(.auth-code-input) {
+  min-height: 52px;
+  font-size: 17px;
+}
+.auth-form .field .muted {
+  font-size: 13.5px;
+  line-height: 1.45;
 }
 .auth-names .field,
 .auth-names input {

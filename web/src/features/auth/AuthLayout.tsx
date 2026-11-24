@@ -108,7 +108,8 @@ export function PasswordField({
         <button
           type="button"
           className="auth-show"
-          aria-label={shown ? "Hide password" : "Show password"}
+          aria-label="Show password"
+          aria-pressed={shown}
           onClick={() => setShown((now) => !now)}
         >
           {shown ? "Hide" : "Show"}

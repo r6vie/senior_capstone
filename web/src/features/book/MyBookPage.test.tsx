@@ -328,9 +328,19 @@ describe("MyBookPage", () => {
     await waitFor(() => expect(document.activeElement).toBe(heading));
   });
 
-  it("names the next step for a growing book", async () => {
-    show(client("adding"));
-    expect(await screen.findByText(/You have questions in progress/)).toBeTruthy();
+  it("with a round open, shows the question waiting in it", async () => {
+    const asking = {
+      id: "me",
+      stage: "asking" as const,
+      round: "adding" as const,
+      phase: "dig" as const,
+      question: "What did your PI say when the build kept failing?",
+      canFinish: false,
+      hasAnswers: true,
+      lastTopic: null,
+    };
+    show(client("adding", { current: async () => asking }));
+    expect(await screen.findByText(asking.question)).toBeTruthy();
     expect(linkTo("Continue adding to your book")).toBe("/interview");
   });
 

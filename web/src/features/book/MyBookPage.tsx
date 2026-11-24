@@ -110,12 +110,15 @@ function Librarian({ line, children }: { line?: ReactNode; children?: ReactNode 
 
 function NextStep({
   stage,
+  question,
   removal,
   onCancelRemoval,
   onRetry,
   retrying,
 }: {
   stage: BookStage;
+  /** The question waiting in a round that's already open. */
+  question: string | null;
   /** The only open change is a removal the member started. */
   removal: { chapterId: string; title: string } | null;
   onCancelRemoval: () => void;
@@ -133,7 +136,7 @@ function NextStep({
       );
     case "adding":
       return (
-        <Librarian line="You have questions in progress. Your book on the shelf hasn't changed.">
+        <Librarian line={question ?? undefined}>
           <Link to="/interview" className="button button-primary">
             Continue adding to your book
           </Link>
@@ -191,6 +194,7 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   const [retrying, setRetrying] = useState(false);
   const [removal, setRemoval] = useState<{ chapterId: string; title: string } | null>(null);
   const [lastRound, setLastRound] = useState<LastRound>({ empty: false });
+  const [question, setQuestion] = useState<string | null>(null);
   const [switching, setSwitching] = useState(false);
   const [designing, setDesigning] = useState(false);
   const [savingDesign, setSavingDesign] = useState(false);
@@ -209,8 +213,12 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
         client.lastRound().catch(() => ({ empty: false })),
         loadOwnBook(),
       ]);
-      const nextRemoval =
-        nextStage === "changesWaiting" ? await client.openRemoval().catch(() => null) : null;
+      const [nextRemoval, open] = await Promise.all([
+        nextStage === "changesWaiting" ? client.openRemoval().catch(() => null) : null,
+        // A round already open: the Librarian's block shows the question waiting in it.
+        nextStage === "adding" ? client.current().catch(() => null) : null,
+      ]);
+      setQuestion(open?.stage === "asking" ? open.question : null);
       stageNow.current = nextStage;
       setStage(nextStage);
       setBook(nextBook);
@@ -374,6 +382,7 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
           />
           <NextStep
             stage={stage}
+            question={question}
             removal={removal}
             onCancelRemoval={() => attempt(() => client.cancelRemoval(), load)}
             retrying={retrying}

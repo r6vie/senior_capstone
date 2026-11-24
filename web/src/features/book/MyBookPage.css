@@ -113,11 +113,63 @@
   object-fit: cover;
   object-position: bottom;
 }
+/* A page holding fields starts higher; its byline sits 12px under the title, 14px in. */
+.mb-own[data-page="contents"] .ib-left {
+  padding-top: var(--s-8);
+}
+.mb-own .rv-text {
+  font-size: 17px;
+  line-height: 1.6;
+}
+.mb-own .rv-toc:not(.mb-toc-compact) button {
+  padding: var(--s-4) 10px var(--s-4) var(--s-3);
+}
+/* The lifted corners turn the pages, as in the shelf's reader (BookReader.css, .br-curl). */
+.mb-curl {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: 0;
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  background:
+    linear-gradient(-45deg, var(--white) 0 49%, transparent 50%),
+    radial-gradient(circle, var(--ink) 1px, transparent 1.4px) 0 0 / 4px 4px,
+    var(--paper-sunk);
+}
+.mb-curl::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(-45deg, transparent 48.5%, var(--ink) 49%, var(--ink) 51%, transparent 51.5%);
+}
+.mb-curl:hover {
+  width: 52px;
+  height: 52px;
+}
+.mb-curl:focus-visible {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: -3px;
+}
+.mb-curl-back {
+  right: auto;
+  left: 0;
+  background:
+    linear-gradient(45deg, var(--white) 0 49%, transparent 50%),
+    radial-gradient(circle, var(--ink) 1px, transparent 1.4px) 0 0 / 4px 4px,
+    var(--paper-sunk);
+}
+.mb-curl-back::after {
+  background: linear-gradient(45deg, transparent 48.5%, var(--ink) 49%, var(--ink) 51%, transparent 51.5%);
+}
 .mb-titlepage .rv-booktitle .rv-fld {
   color: var(--page-ink, var(--ink));
 }
-.mb-by {
-  margin-left: 14px;
+.mb-titlepage .mb-by {
+  margin: 12px 0 0 14px;
 }
 /* The pen on the art changes the design. */
 .mb-pen {
@@ -359,6 +411,16 @@
   .mb-own .ib-left {
     padding-bottom: 210px;
   }
+  .mb-page-art {
+    top: auto;
+    height: auto;
+  }
+}
+/* A wide stacked page is short for its width: the scene keeps to the foot, clear of the byline. */
+@media (min-width: 720px) and (max-width: 1099px) {
+  .mb-page-art {
+    height: 200px;
+  }
 }
 
 @media (max-width: 719px) {
@@ -391,9 +453,34 @@
   .mb-own .ib-left {
     padding: 20px 18px 210px;
   }
+  /* The design picker on a phone isn't drawn or approved yet, so a phone keeps today's My book without it. */
   .mb-pen {
-    left: 14px;
-    bottom: 14px;
+    display: none;
+  }
+  .mb-own .ib-right {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+  .mb-own .ib-pname {
+    display: none;
+  }
+  .mb-own .rv-toc {
+    margin: 0;
+    padding: 0;
+  }
+  .mb-own .rv-toc button,
+  .mb-own .rv-toc:not(.mb-toc-compact) button {
+    grid-template-columns: 24px 1fr 12px;
+    gap: 0 10px;
+    padding: 13px 0;
+  }
+  .mb-own .rv-toc-t {
+    font-size: 18px;
+    line-height: 1.25;
+  }
+  .mb-own .rv-toc-s {
+    font-size: 13.5px;
+    line-height: 1.4;
   }
   .mb-lib {
     grid-template-columns: minmax(0, 1fr);

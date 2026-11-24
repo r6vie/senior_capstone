@@ -168,6 +168,7 @@ async def test_an_off_shelf_book_can_shape_its_owners_recommendation(client, dat
             "title": "Building a classroom after research",
             "author_name": "Author One",
             "cover_style": "cover-1",
+            "design": None,
             "blurb": "A public account of changing direction.",
         },
         "reason": "You and Author One both write about changing direction, giving you a concrete place to start.",

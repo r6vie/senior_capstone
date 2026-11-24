@@ -72,6 +72,15 @@ export function OwnBook({
     next.kind === page.kind && (next.kind !== "chapter" || (page.kind === "chapter" && page.id === next.id))
       ? true
       : undefined;
+  // The pages in order, for the lifted corners: contents, each chapter, then the back cover.
+  const order: Page[] = [
+    { kind: "contents" },
+    ...book.chapters.map((item): Page => ({ kind: "chapter", id: item.id })),
+    ...(hasBack ? [{ kind: "back" } as Page] : []),
+  ];
+  const here = order.findIndex((item) => current(item));
+  const after = order[here + 1];
+  const before = here > 0 ? order[here - 1] : undefined;
 
   const tabs = (
     <nav className="rv-tabs" aria-label="Pages of this book">
@@ -254,12 +263,28 @@ export function OwnBook({
                 <PenIcon />
               </button>
             )}
+            {before && (
+              <button
+                type="button"
+                className="mb-curl mb-curl-back"
+                aria-label="Turn back a page"
+                onClick={() => go(before)}
+              />
+            )}
           </>
         }
         right={
           <>
             <div className="ib-head ib-head-right">{tabs}</div>
             {right}
+            {after && (
+              <button
+                type="button"
+                className="mb-curl"
+                aria-label="Turn the page"
+                onClick={() => go(after)}
+              />
+            )}
           </>
         }
       />
