@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     mongodb_uri: str = ""
     # Each developer uses their own database (trove_dev_<name>) so test data never collides.
     mongodb_database: str = "trove_dev"
+    # Where the tests make their throwaway databases. A local MongoDB makes the suite many times faster than
+    # the shared Atlas cluster, and keeps test load off the cluster the live site also uses.
+    trove_test_mongodb_uri: str = ""
 
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-opus-5-5"
