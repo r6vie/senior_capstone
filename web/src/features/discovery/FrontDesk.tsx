@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../api/client";
 import type { components } from "../../api/schema";
+import { ArtImage } from "../../ui/art/ArtImage";
+import { artFor, coverInk } from "../../ui/art/bookArt";
 
 // Under the Librarian's cover: the one request waiting on the member, with its bookmark, and their own
 // book (Folio front page, docs/design/system.md, Additions). Never a count: one request, by name.
@@ -11,7 +13,7 @@ type MyBook = components["schemas"]["MyBookResponse"];
 
 interface Desk {
   waiting: { readerName: string } | null;
-  book: { title: string; authorName: string } | null | undefined;
+  book: { id: string; title: string; authorName: string } | null | undefined;
 }
 
 function useDesk(): Desk {
@@ -38,7 +40,11 @@ function useDesk(): Desk {
         // A failed read isn't "no book": the card stays away rather than say "Not written yet" to an author.
         if (response?.status !== 404 && !response?.ok) return;
         if (response?.status === 404 || !book?.title) setDesk((now) => ({ ...now, book: null }));
-        else setDesk((now) => ({ ...now, book: { title: book.title, authorName: book.author_name } }));
+        else
+          setDesk((now) => ({
+            ...now,
+            book: { id: book.id, title: book.title, authorName: book.author_name },
+          }));
       })
       .catch(() => undefined);
     return () => {
@@ -73,7 +79,8 @@ export function FrontDesk({ underway }: { underway?: boolean }) {
         <section className="surf desk-block desk-book" aria-label="Your book">
           {book && (
             <span className="book book-xs" aria-hidden="true">
-              <span className="book-cover">
+              <span className="book-cover" style={coverInk(artFor(book.id))}>
+                <ArtImage className="book-art" src={artFor(book.id).cover} />
                 <span className="book-title">{book.title}</span>
                 <span className="book-author">{book.authorName}</span>
               </span>
