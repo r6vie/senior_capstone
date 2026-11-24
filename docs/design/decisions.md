@@ -1221,3 +1221,8 @@ Pending Josef's review of the new canvas.
 - New board `StartPaint` ("The blank book painting itself · test") on the Getting started page, drawing StartJoin's
   left half (dot ground, caption box, the book on the shelf bar) with the video in the cover at 270px and 150px.
   StartJoin itself is untouched. Not yet: the chain to the next cover, a critic round.
+- **Timing reworked (Josef: no "weird empty gaps", the spreading speed is good, "shorten the time between the
+  individual ones so that more are running at the same time").** The big ground washes (sky, the lake's ground, the
+  far range) are pulled to the front so no stretch of paper waits empty; the rest keep painting order, lifts after
+  what they lift; starts packed into 10 s (was ~19 s) with the same spread durations, so several glazes spread at
+  once. All land by ~12.3 s; rest 13.5–18.5 s, wash back to 23.5 s, loop at 25 s. MP4 0.44 MB, WebM 0.43 MB.

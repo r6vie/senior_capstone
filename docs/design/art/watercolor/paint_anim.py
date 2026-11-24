@@ -22,7 +22,8 @@ from paint import Paper
 
 OUT_W, OUT_H = 472, 688
 FPS = 12
-PAINT_END = 22.0          # by now every glaze has landed
+START_SPAN = 10.0         # every glaze has started by now (was ~19 s): more of them spread at once
+PAINT_END = 13.5          # by now every glaze has landed (the last ends at ~12.3 s)
 REST = 5.0                # the finished cover rests
 FADE = 5.0                # it washes back to the paper
 BLANK = 1.5               # a breath of clean paper before the next cover
@@ -92,15 +93,25 @@ def fronts(steps, seed=3):
 
 
 def schedule(steps, fr):
-    """Start time and spread time for each glaze. Big washes take longer to spread; starts are spaced by how much
-    paint each one is, so the eye can follow one colour coming in before the next."""
-    weights = [0.6 + 3.0 * math.sqrt(a) for _r, a in fr]
+    """Start time and spread time for each glaze (Josef, 2026-11-23: no empty gaps waiting their turn, "shorten the
+    time between the individual ones so that more are running at the same time", the spreading speed unchanged).
+    The big ground washes (the sky, the lake's ground, the far range) are pulled to the front, so no stretch of bare
+    paper sits waiting for its first colour; everything else keeps its painting order, and the lifts stay after
+    the paint they lift. Starts are packed into START_SPAN, so several glazes spread at once."""
+    order = []
+    for i, ((delta, _m), (_r, a)) in enumerate(zip(steps, fr)):
+        is_lift = delta.sum() < 0
+        big = a > 0.12 and not is_lift
+        order.append((i * 0.25 if big else i, i))
+    order.sort()
+    weights = [0.6 + 3.0 * math.sqrt(fr[i][1]) for _k, i in order]
     total = sum(weights)
-    t, out = 0.4, []
-    for w in weights:
-        dur = 1.6 + 5.0 * (w - 0.6) / 3.0
-        out.append((t, dur))
-        t += (PAINT_END - 3.0) * w / total
+    out = [None] * len(steps)
+    t = 0.3
+    for (_k, i), w in zip(order, weights):
+        dur = 1.6 + 5.0 * (w - 0.6) / 3.0                  # the same spreading speed as before
+        out[i] = (t, dur)
+        t += START_SPAN * w / total
     return out
 
 
@@ -125,7 +136,7 @@ def render(t, paper, steps, fr, sched):
             a = a * (1 - 0.18 * wet)
         total += a
     fade = soft((t - PAINT_END - REST) / FADE)
-    img = paper * np.exp(-total * (1 - fade))
+    img = paper * np.exp(-np.maximum(total, 0) * (1 - fade))   # a lift never brightens paper it hasn't reached
     return (np.clip(img, 0, 1) * 255).astype(np.uint8)
 
 
