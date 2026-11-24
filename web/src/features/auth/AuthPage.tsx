@@ -1,11 +1,11 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { type Location, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, type Location, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
 import { TextField } from "../../ui/TextField";
 import { usePageTitle } from "../../ui/usePageTitle";
-import { AuthLayout } from "./AuthLayout";
+import { AuthLayout, keepJoiningName, PasswordField } from "./AuthLayout";
 import { NeedsVerification, useAuth } from "./AuthProvider";
 
 type Invite = { inviter: string } | { problem: string } | null;
@@ -49,9 +49,18 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
       let next = "signed-in";
       if (signingUp) next = await signUp(firstName, lastName, email, password, invite ?? undefined);
       else await signIn(email, password);
-      navigate(next === "verify" ? `/verify?email=${encodeURIComponent(email)}` : signingUp ? "/" : back);
+      // The confirm page keeps the name on the book: it travels in the navigation and this tab's storage, not the
+      // address.
+      if (next === "verify") {
+        keepJoiningName(`${firstName.trim()} ${lastName.trim()}`.trim());
+        navigate(`/verify?email=${encodeURIComponent(email)}`, {
+          state: { name: `${firstName.trim()} ${lastName.trim()}`.trim() },
+        });
+      } else navigate(signingUp ? "/" : back);
     } catch (caught) {
-      if (caught instanceof NeedsVerification) navigate(`/verify?email=${encodeURIComponent(email)}`);
+      // Signed up earlier but never confirmed: that code may be long gone, so the confirm page sends a fresh one.
+      if (caught instanceof NeedsVerification)
+        navigate(`/verify?email=${encodeURIComponent(email)}`, { state: { sendCode: true } });
       else setError(caught instanceof Error ? caught.message : "Something went wrong.");
     } finally {
       setBusy(false);
@@ -66,7 +75,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
       title={signingUp ? "Join Trove." : "Welcome back."}
       voice={
         signingUp
-          ? "You are the author of the book you haven't written yet."
+          ? "You are the author of the book you haven’t written yet."
           : arrival?.sessionEnded
             ? "Your session ended. Sign in to pick up where you left off."
             : "Your book is where you left it."
@@ -74,18 +83,16 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
       across={
         signingUp ? { to: "/sign-in", label: "Sign in" } : { to: "/sign-up", label: "Create an account" }
       }
+      author={signingUp ? `${firstName.trim()} ${lastName.trim()}`.trim() : undefined}
+      invitedBy={inviteCheck && "inviter" in inviteCheck ? inviteCheck.inviter : null}
     >
-      {signingUp && inviteCheck && (
-        <p role={invited ? "status" : "alert"} className={invited ? "message" : "message message-error"}>
-          <span>{invited ? "✓" : "!"}</span>
-          <span>
-            {"inviter" in inviteCheck
-              ? `${inviteCheck.inviter} invited you to Trove.`
-              : `${inviteCheck.problem} You can still join with a case.edu email.`}
-          </span>
+      {signingUp && inviteCheck && "problem" in inviteCheck && (
+        <p role="alert" className="message message-error">
+          <span>!</span>
+          <span>{`${inviteCheck.problem} You can still join with a case.edu email.`}</span>
         </p>
       )}
-      <form onSubmit={submit} className="stack">
+      <form onSubmit={submit} className="auth-form">
         {signingUp && (
           <div className="auth-names">
             <TextField
@@ -109,9 +116,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
               : undefined
           }
         />
-        <TextField
-          label="Password"
-          type="password"
+        <PasswordField
           value={password}
           onChange={setPassword}
           autoComplete={signingUp ? "new-password" : "current-password"}
@@ -123,9 +128,16 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
             <span>{error}</span>
           </p>
         )}
-        <Button type="submit" disabled={busy} aria-busy={busy || undefined}>
-          {signingUp ? "Create account" : "Sign in"}
-        </Button>
+        <div className="auth-go">
+          <Button type="submit" disabled={busy} aria-busy={busy || undefined}>
+            {signingUp ? "Create account" : "Sign in"}
+          </Button>
+          {!signingUp && (
+            <Link to="/reset-password" state={{ email: email.trim() }} className="button button-quiet">
+              Forgot your password?
+            </Link>
+          )}
+        </div>
       </form>
     </AuthLayout>
   );

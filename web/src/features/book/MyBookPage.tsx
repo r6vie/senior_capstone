@@ -1,34 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArtImage } from "../../ui/art/ArtImage";
-import { artFor, coverInk } from "../../ui/art/bookArt";
+import { artFor } from "../../ui/art/bookArt";
 import { Button } from "../../ui/Button";
 import { PageLoading } from "../../ui/Loading";
-import { useAuth } from "../auth/AuthProvider";
-import { loadOwnBook } from "../discovery/bookPreload";
-import { draftKeyFor, keepDraft } from "../interview/AnswerPanel";
-import { apiInterviewClient } from "../interview/apiInterviewClient";
-import { EditForm, editKeyFor, hasEditDraft } from "../interview/EditInPlace";
-import { bookFields, chapterFields, droppedSentence } from "../interview/InterviewPage";
-import type {
-  BookEdit,
-  BookStage,
-  ChapterEdit,
-  DraftChapter,
-  InterviewClient,
-  LastRound,
-  MyBook,
-  ReadingQuestion,
-  Spark,
-} from "../interview/interviewClient";
-import { LeftoverWords } from "../interview/LeftoverWords";
-import { readingCaption } from "../interview/ReadingQuestionPage";
-import { UndoChanges } from "../interview/UndoChanges";
-import "./MyBookPage.css";
 import { usePageTitle } from "../../ui/usePageTitle";
+import { forgetOwnBook, loadOwnBook } from "../discovery/bookPreload";
+import { apiInterviewClient } from "../interview/apiInterviewClient";
+import { droppedSentence } from "../interview/InterviewPage";
+import type { BookStage, InterviewClient, LastRound, MyBook } from "../interview/interviewClient";
+import { LeftoverWords } from "../interview/LeftoverWords";
+import { DesignPicker } from "./DesignPicker";
+import { OwnBook } from "./OwnBook";
+import "./MyBookPage.css";
 
-// The member's own page (board G1): their book as an object, and the one next step for its stage.
-// It shows no numbers of any kind: no checkouts, no sparks count, no copies.
+// The member's own page (My book D2, approved by Josef 2026-11-23): the shelf's open book, opened to its author and
+// edited where it is; a switch for being on the shelf; the Librarian underneath with the next step. No numbers of any
+// kind, and no Save or Cancel: every word saves as it's typed.
 
 const LOOK_AGAIN_MS = 4000;
 const MIN_CHAPTERS = 3;
@@ -84,331 +71,115 @@ function NoBookYet({ stage }: { stage: BookStage }) {
   );
 }
 
-function Sparks({
-  sparks,
-  shaping,
-  onRemove,
+/** On the shelf, as a switch: turning it off takes the book off the shelf, and on puts it back. */
+function ShelfSwitch({
+  on,
+  busy,
+  onChange,
 }: {
-  sparks: Spark[];
-  /** A round is open, so they're in use now. */
-  shaping: boolean;
-  onRemove: (id: string) => void;
+  on: boolean;
+  busy: boolean;
+  onChange: (on: boolean) => void;
 }) {
-  if (!sparks.length) return null;
   return (
-    <section className="mb-sparks">
-      <h2 className="mb-heading">For your next questions</h2>
-      <p className="mb-note">
-        {shaping
-          ? "These are shaping the questions you're answering now."
-          : 'Chapters you marked "I have one like this". Only you see this list. They shape the next questions. Nothing from them goes into your book.'}
-      </p>
-      <ul>
-        {sparks.map((spark) => (
-          <li key={spark.id}>
-            <span>{spark.chapterTitle}</span>
-            <button
-              type="button"
-              className="button button-quiet iv-sm"
-              aria-label={`Remove ${spark.chapterTitle}`}
-              onClick={() => onRemove(spark.id)}
-            >
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
+    <button
+      type="button"
+      role="switch"
+      className="mb-switch"
+      aria-checked={on}
+      aria-busy={busy || undefined}
+      // Never disabled, so the keyboard stays on it: presses while one is saving are queued, the latest winning.
+      onClick={() => onChange(!on)}
+    >
+      <span>On the shelf</span>
+      <i aria-hidden="true" />
+    </button>
+  );
+}
+
+/** The Librarian, one black block under the book: what comes next, and the way to it. */
+function Librarian({ line, children }: { line?: ReactNode; children?: ReactNode }) {
+  return (
+    <section className="mb-lib" aria-label="The Librarian">
+      <span className="caption mb-lib-caption">The Librarian</span>
+      {line && <p className="mb-lib-line">{line}</p>}
+      {children && <div className="mb-lib-go">{children}</div>}
     </section>
   );
-}
-
-function ReadingPanel({
-  question,
-  onAnswer,
-  onDismiss,
-}: {
-  question: ReadingQuestion;
-  onAnswer: () => void;
-  onDismiss: (id: string) => void;
-}) {
-  return (
-    <section className="panel mb-reading">
-      <span className="mb-reading-caption">{readingCaption(question)}</span>
-      <p>{question.question}</p>
-      <div className="iv-row">
-        <Link
-          to={`/interview/reading/${question.id}`}
-          className="button button-secondary iv-sm"
-          onClick={onAnswer}
-        >
-          Answer
-        </Link>
-        <button type="button" className="button button-quiet iv-sm" onClick={() => onDismiss(question.id)}>
-          No thanks
-        </button>
-      </div>
-    </section>
-  );
-}
-
-function ChapterRow({
-  index,
-  chapter,
-  canRemove,
-  editKey,
-  onEdit,
-}: {
-  index: number;
-  chapter: DraftChapter;
-  canRemove: boolean;
-  editKey: string;
-  onEdit: (edit: ChapterEdit) => Promise<void>;
-}) {
-  const [showing, setShowing] = useState(false);
-  const [editing, setEditing] = useState(() => hasEditDraft(editKey));
-  if (editing) {
-    return (
-      <li>
-        <span className="mb-n">{index + 1}</span>
-        <EditForm
-          fields={chapterFields(chapter)}
-          draftKey={editKey}
-          onSave={onEdit}
-          onClose={() => setEditing(false)}
-        />
-      </li>
-    );
-  }
-  return (
-    <li>
-      <span className="mb-n">{index + 1}</span>
-      <div>
-        <b>{chapter.title}</b>
-        <span className="mb-summary">{chapter.summary}</span>
-        <div className="mb-row-act">
-          <button
-            type="button"
-            className="button button-quiet iv-sm iv-show"
-            aria-label={`Edit ${chapter.title}`}
-            onClick={() => setEditing(true)}
-          >
-            Edit
-          </button>
-          {chapter.quotes.length > 0 && (
-            <button
-              type="button"
-              className="button button-quiet iv-sm iv-show"
-              aria-expanded={showing}
-              aria-label={`${showing ? "Hide" : "Show"} what you said for ${chapter.title}`}
-              onClick={() => setShowing((now) => !now)}
-            >
-              {showing ? "Hide what you said" : "Show what you said"}
-            </button>
-          )}
-          {canRemove && (
-            <Link
-              to={`/my-book/remove/${chapter.id}`}
-              className="button button-quiet iv-sm iv-show"
-              aria-label={`Remove this chapter: ${chapter.title}`}
-            >
-              Remove this chapter
-            </Link>
-          )}
-        </div>
-        {showing && (
-          <div className="iv-quotes mb-quotes">
-            {chapter.quotes.map((quote) => (
-              <p key={quote}>{quote}</p>
-            ))}
-          </div>
-        )}
-      </div>
-    </li>
-  );
-}
-
-/** Taking a book down stops new checkouts, so it asks in place first, and focus goes to the safe answer. */
-function TakeOffShelf({ onTakeDown }: { onTakeDown: () => Promise<void> }) {
-  const [asking, setAsking] = useState(false);
-  const [working, setWorking] = useState(false);
-  const keep = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (asking) keep.current?.focus();
-  }, [asking]);
-
-  if (!asking) {
-    return (
-      <button type="button" className="button button-quiet iv-sm iv-show" onClick={() => setAsking(true)}>
-        Take off the shelf
-      </button>
-    );
-  }
-  return (
-    <div className="mb-confirm">
-      <p>
-        Take your book off the shelf? Other members won't be able to find it, and no new checkouts can start.
-        Anything already arranged still happens. You can put it back at any time.
-      </p>
-      <div className="iv-row">
-        <button
-          type="button"
-          className="button button-quiet iv-sm"
-          aria-busy={working}
-          disabled={working}
-          onClick={async () => {
-            setWorking(true);
-            await onTakeDown();
-            setWorking(false);
-            setAsking(false);
-          }}
-        >
-          Take it off
-        </button>
-        <button
-          type="button"
-          ref={keep}
-          className="button button-quiet iv-sm"
-          onClick={() => setAsking(false)}
-        >
-          Keep it on the shelf
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function updatedOn(when: string | null | undefined): string {
-  const undoable = "You can undo these changes until the next time you change it.";
-  if (!when) return undoable;
-  const date = new Date(when).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  return `Your book was updated on ${date}. ${undoable}`;
 }
 
 function NextStep({
   stage,
-  canUndo,
-  changedAt,
+  question,
   removal,
   onCancelRemoval,
-  onUndo,
-  onUndone,
   onRetry,
   retrying,
-  offShelf,
-  onPutBack,
-  puttingBack,
 }: {
-  offShelf: boolean;
-  onPutBack: () => void;
-  puttingBack: boolean;
   stage: BookStage;
-  canUndo: boolean;
-  changedAt?: string | null;
+  /** The question waiting in a round that's already open. */
+  question: string | null;
   /** The only open change is a removal the member started. */
   removal: { chapterId: string; title: string } | null;
   onCancelRemoval: () => void;
-  onUndo: () => Promise<void>;
-  onUndone: () => void;
   onRetry: () => void;
   retrying: boolean;
 }) {
   switch (stage) {
     case "draft":
       return (
-        <>
-          <div className="iv-row">
-            <Link to="/interview" className="button button-primary">
-              Review your book
-            </Link>
-          </div>
-          <p className="mb-note">Other members can't see it until you put it on the shelf.</p>
-        </>
+        <Librarian line="Other members can't see it until you put it on the shelf.">
+          <Link to="/interview" className="button button-primary">
+            Review your book
+          </Link>
+        </Librarian>
       );
     case "adding":
       return (
-        <>
-          <div className="iv-row">
-            <Link to="/interview" className="button button-primary">
-              Continue adding to your book
-            </Link>
-          </div>
-          <p className="mb-note">You have questions in progress. Your book on the shelf hasn't changed.</p>
-        </>
+        <Librarian line={question ?? undefined}>
+          <Link to="/interview" className="button button-primary">
+            Continue adding to your book
+          </Link>
+        </Librarian>
       );
     case "writing":
-      return <p className="mb-note">I'm writing your changes. Your book on the shelf hasn't changed.</p>;
+      return <Librarian line="I'm writing your changes. Your book on the shelf hasn't changed." />;
     case "writeFailed":
       return (
-        <>
-          <div className="iv-row">
-            <Button onClick={onRetry} aria-busy={retrying}>
-              Try again
-            </Button>
-          </div>
-          <p className="mb-note">Your changes couldn't be written. Your answers are saved.</p>
-        </>
+        <Librarian line="Your changes couldn't be written. Your answers are saved.">
+          <Button onClick={onRetry} aria-busy={retrying}>
+            Try again
+          </Button>
+        </Librarian>
       );
     case "changesWaiting":
       if (removal) {
         return (
-          <>
-            <div className="iv-row">
-              <Link to={`/my-book/remove/${removal.chapterId}?finish`} className="button button-primary">
-                Finish removing
-              </Link>
-              <button type="button" className="button button-quiet" onClick={onCancelRemoval}>
-                Keep it
-              </button>
-            </div>
-            <p className="mb-note">You started removing {removal.title}.</p>
-          </>
+          <Librarian line={`You started removing ${removal.title}.`}>
+            <Link to={`/my-book/remove/${removal.chapterId}?finish`} className="button button-primary">
+              Finish removing
+            </Link>
+            <button type="button" className="button button-quiet" onClick={onCancelRemoval}>
+              Keep it
+            </button>
+          </Librarian>
         );
       }
       return (
-        <>
-          <div className="iv-row">
-            <Link to="/interview" className="button button-primary">
-              Review the proposed changes
-            </Link>
-          </div>
-          <p className="mb-note">
-            Your book on the shelf hasn't changed. These changes go live only when you confirm.
-          </p>
-        </>
+        <Librarian line="Your book on the shelf hasn't changed. These changes go live only when you confirm.">
+          <Link to="/interview" className="button button-primary">
+            Review the proposed changes
+          </Link>
+        </Librarian>
       );
     default:
-      if (offShelf) {
-        // Off the shelf, putting it back is the next step. Adding to it still works, as a quieter choice.
-        return (
-          <>
-            <p className="mb-note mb-off">
-              Your book is off the shelf. Other members can't find it or ask to check it out. Anything already
-              arranged still happens.
-            </p>
-            <div className="iv-row">
-              <Button onClick={onPutBack} aria-busy={puttingBack}>
-                Put back on the shelf
-              </Button>
-              <Link to="/interview?add" className="button button-quiet iv-show">
-                Add to your book
-              </Link>
-              {canUndo && <UndoChanges onUndo={onUndo} onDone={onUndone} />}
-            </div>
-            {canUndo && <p className="mb-note">{updatedOn(changedAt)}</p>}
-          </>
-        );
-      }
+      // No round open, so no question yet: a fixed line in its place (Josef, 2026-11-24).
       return (
-        <>
-          <div className="iv-row">
-            <Link to="/interview?add" className="button button-primary">
-              Add to your book
-            </Link>
-            {canUndo && <UndoChanges onUndo={onUndo} onDone={onUndone} />}
-          </div>
-          {canUndo && <p className="mb-note">{updatedOn(changedAt)}</p>}
-        </>
+        <Librarian line="There's more to your story.">
+          <Link to="/interview?add" className="button button-primary">
+            Continue with the Librarian
+          </Link>
+        </Librarian>
       );
   }
 }
@@ -419,22 +190,33 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   const [book, setBook] = useState<MyBook | null>(null);
   // The book's id chooses its cover art (ui/art/bookArt.ts); the interview client's book doesn't carry it.
   const [bookId, setBookId] = useState<string | null>(null);
-  const [sparks, setSparks] = useState<Spark[]>([]);
-  const [reading, setReading] = useState<ReadingQuestion[]>([]);
   const [failed, setFailed] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [removal, setRemoval] = useState<{ chapterId: string; title: string } | null>(null);
   const [lastRound, setLastRound] = useState<LastRound>({ empty: false });
-  const { user } = useAuth();
-  const [undone, setUndone] = useState(false);
-  const [editingBook, setEditingBook] = useState(() => hasEditDraft(editKeyFor(user?.id ?? "anon", "book")));
-  const location = useLocation();
-  const leftAsIs = Boolean((location.state as { leftAsIs?: boolean } | null)?.leftAsIs);
+  const [question, setQuestion] = useState<string | null>(null);
+  const [switching, setSwitching] = useState(false);
+  // The switch moves at once; the server catches up, and if it refuses, the page shows what's true.
+  const [wanted, setWanted] = useState<boolean | null>(null);
+  // The latest position asked for, and whether a save is under way: one save at a time, each for the latest ask,
+  // so a quick off-then-on ends on the shelf, as the switch shows.
+  const latest = useRef<boolean | null>(null);
+  const saving = useRef(false);
+  const onShelfNow = useRef(false);
+  const [designing, setDesigning] = useState(false);
+  // Leaving the picker hands the keyboard back to the pen that opened it.
+  const backToPen = useRef(false);
+  useEffect(() => {
+    if (designing || !backToPen.current) return;
+    backToPen.current = false;
+    document.querySelector<HTMLElement>(".mb-pen")?.focus({ preventScroll: true });
+  }, [designing]);
+  const [savingDesign, setSavingDesign] = useState(false);
+  const [designProblem, setDesignProblem] = useState<string | null>(null);
+  const leftAsIs = Boolean((useLocation().state as { leftAsIs?: boolean } | null)?.leftAsIs);
   const stageNow = useRef<BookStage | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
-  const focusAfterSpark = useRef(false);
-  const [puttingBack, setPuttingBack] = useState(false);
 
   const load = useCallback(async () => {
     setFailed(false);
@@ -446,8 +228,12 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
         client.lastRound().catch(() => ({ empty: false })),
         loadOwnBook(),
       ]);
-      const nextRemoval =
-        nextStage === "changesWaiting" ? await client.openRemoval().catch(() => null) : null;
+      const [nextRemoval, open] = await Promise.all([
+        nextStage === "changesWaiting" ? client.openRemoval().catch(() => null) : null,
+        // A round already open: the Librarian's block shows the question waiting in it.
+        nextStage === "adding" ? client.current().catch(() => null) : null,
+      ]);
+      setQuestion(open?.stage === "asking" ? open.question : null);
       stageNow.current = nextStage;
       setStage(nextStage);
       setBook(nextBook);
@@ -456,11 +242,7 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
       setRemoval(nextRemoval);
     } catch {
       setFailed(true);
-      return;
     }
-    // A book without its extras is still the page the member came for.
-    client.sparks().then(setSparks, () => undefined);
-    client.readingQuestions().then(setReading, () => undefined);
   }, [client]);
 
   useEffect(() => {
@@ -474,23 +256,11 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
     return () => clearInterval(timer);
   }, [load, stage]);
 
-  // Arriving on the page starts the keyboard at its heading; so does anything that takes away the
-  // control the member just used.
+  // Arriving on the page starts the keyboard at its heading.
   const arrived = Boolean(stage);
   useEffect(() => {
     if (arrived) heading.current?.focus({ preventScroll: true });
   }, [arrived]);
-
-  // A spark's Remove goes with its row, so the keyboard moves on to the next one, if there is one.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the list changes
-  useEffect(() => {
-    if (!focusAfterSpark.current) return;
-    focusAfterSpark.current = false;
-    const next = [...document.querySelectorAll<HTMLElement>(".mb-sparks li button")].find(
-      (button) => button.offsetParent !== null || document.documentElement.clientWidth === 0,
-    );
-    next?.focus({ preventScroll: true });
-  }, [sparks]);
 
   async function attempt(call: () => Promise<unknown>, after: () => void) {
     setProblem(null);
@@ -498,7 +268,6 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
     try {
       await call();
       after();
-      heading.current?.focus({ preventScroll: true });
     } catch {
       // Often the server has moved on and the page is what's out of date. Say so only if it isn't.
       await load();
@@ -506,10 +275,16 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
     }
   }
 
+  const title = (
+    <h1 className="mb-title" ref={heading} tabIndex={-1}>
+      My book
+    </h1>
+  );
+
   if (failed) {
     return (
       <main className="mb-page">
-        <h1 className="mb-title">My book</h1>
+        {title}
         <div className="empty">
           <h3>I couldn't find your book just now.</h3>
           <p>Nothing you've said is lost.</p>
@@ -531,21 +306,10 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
     );
   }
 
-  const removeSpark = (id: string) =>
-    attempt(
-      () => client.removeSpark(id),
-      () => {
-        setSparks((now) => now.filter((spark) => spark.id !== id));
-        focusAfterSpark.current = true;
-      },
-    );
-
   if (!book) {
     return (
       <main className="mb-page">
-        <h1 className="mb-title" ref={heading} tabIndex={-1}>
-          My book
-        </h1>
+        {title}
         <div className="mb-one">
           <LeftoverWords />
           <NoBookYet stage={stage} />
@@ -554,182 +318,130 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
               {problem}
             </p>
           )}
-          {stage !== "titles" && stage !== "writingTitles" && stage !== "writingBook" && (
-            <Sparks sparks={sparks} shaping={false} onRemove={removeSpark} />
-          )}
         </div>
       </main>
     );
   }
 
-  const userId = user?.id ?? "anon";
-  const bookKey = editKeyFor(userId, "book");
-  const offShelf = book.status === "off_shelf";
-  // Saved means live, so the page shows the book as the server now has it.
-  const afterEdit = (updated: MyBook) => {
-    setBook(updated);
-    load();
-  };
-  const editBook = async (edit: BookEdit) => afterEdit(await client.editBook(edit));
-  const editChapter = async (chapterId: string, edit: ChapterEdit) =>
-    afterEdit(await client.editChapter(chapterId, edit));
   const onShelf = stage !== "draft";
   const open =
     stage === "adding" || stage === "writing" || stage === "writeFailed" || stage === "changesWaiting";
-  const question = onShelf && !open ? reading[0] : undefined;
-  const aside = onShelf && (question || sparks.length > 0);
-
-  const readingPanel = question && (
-    <ReadingPanel
-      question={question}
-      onAnswer={() => {
-        if (lastRound.readingAnswer && lastRound.readingQuestionId === question.id) {
-          keepDraft(draftKeyFor(user?.id ?? "anon", `reading:${question.id}`), lastRound.readingAnswer);
-        }
-      }}
-      onDismiss={(id) =>
-        attempt(
-          () => client.dismissReading(id),
-          () => setReading((now) => now.filter((item) => item.id !== id)),
-        )
-      }
-    />
-  );
-
-  const art = bookId ? artFor(bookId) : null;
+  const art = bookId ? artFor(bookId, book.design) : null;
+  // Saved means live, so the page shows the book as the server now has it.
+  const editBook = async (edit: Parameters<InterviewClient["editBook"]>[0]) => {
+    setBook(await client.editBook(edit));
+  };
+  const editChapter = async (chapterId: string, edit: Parameters<InterviewClient["editChapter"]>[1]) => {
+    setBook(await client.editChapter(chapterId, edit));
+  };
 
   return (
-    <main className="mb-page">
+    <main className="mb-page mb-d2">
       <LeftoverWords />
-      <div className={aside ? "mb-two" : "mb-one-wide"}>
-        <div>
-          <section className="mb-head">
-            {/* The large book on a wide screen, the regular one on a phone. */}
-            <span className="book book-lg mb-book-wide" aria-hidden="true">
-              <span className="book-cover" style={art ? coverInk(art) : undefined}>
-                {art && <ArtImage className="book-art" src={art.cover} />}
-                <span className="book-title">{book.title}</span>
-                <span className="book-author">{book.authorName}</span>
-              </span>
-            </span>
-            <span className="book mb-book-narrow" aria-hidden="true">
-              <span className="book-cover" style={art ? coverInk(art) : undefined}>
-                {art && <ArtImage className="book-art" src={art.cover} />}
-                <span className="book-title">{book.title}</span>
-                <span className="book-author">{book.authorName}</span>
-              </span>
-            </span>
-            <div className="mb-meta">
-              <span className="caption">
-                {!onShelf ? "Draft, not on the shelf yet" : offShelf ? "Off the shelf" : "On the shelf"}
-              </span>
-              {editingBook ? (
-                <EditForm
-                  fields={bookFields(book)}
-                  draftKey={bookKey}
-                  onSave={editBook}
-                  onClose={() => setEditingBook(false)}
-                />
-              ) : (
-                <h1 ref={heading} tabIndex={-1}>
-                  {book.title}
-                </h1>
-              )}
-              <p className="mb-by">by {book.authorName}</p>
-              {book.blurb && !editingBook && <p className="mb-blurb">{book.blurb}</p>}
-              {!editingBook && (
-                <div className="mb-edit-act">
-                  <button
-                    type="button"
-                    className="button button-quiet iv-sm iv-show"
-                    onClick={() => setEditingBook(true)}
-                  >
-                    Edit the title and back cover
-                  </button>
-                </div>
-              )}
-              <NextStep
-                stage={stage}
-                canUndo={book.canUndo}
-                changedAt={book.changedAt}
-                removal={removal}
-                onCancelRemoval={() => attempt(() => client.cancelRemoval(), load)}
-                retrying={retrying}
-                onUndo={() => client.undoChanges()}
-                onUndone={() => {
-                  setUndone(true);
-                  load();
-                  heading.current?.focus({ preventScroll: true });
-                }}
-                offShelf={offShelf}
-                puttingBack={puttingBack}
-                onPutBack={async () => {
-                  setPuttingBack(true);
-                  await attempt(() => client.putBackOnShelf(), load);
-                  setPuttingBack(false);
-                }}
-                onRetry={async () => {
-                  setRetrying(true);
-                  await attempt(() => client.retryWriting("me"), load);
-                  setRetrying(false);
-                }}
-              />
-              {undone && (
-                <p className="mb-note" role="status">
-                  Your book is back as it was.
-                </p>
-              )}
-              {leftAsIs && !undone && <p className="mb-note">Your book stays as it is.</p>}
-              {lastRound.empty && onShelf && !open && (
-                <p className="mb-note">
-                  {lastRound.droppedForNames
-                    ? droppedSentence(lastRound.droppedWords)
-                    : "Your last answers didn't change your book. They're saved, and the next questions can use them."}
-                </p>
-              )}
-              {problem && (
-                <p className="message" role="alert">
-                  {problem}
-                </p>
-              )}
-            </div>
-          </section>
-          {/* On a phone the question comes before the chapters, as it's the thing to act on. */}
-          {readingPanel && <div className="mb-reading-top">{readingPanel}</div>}
-          <h2 className="mb-heading">Chapters</h2>
-          <p className="mb-note">
-            "Show what you said" opens your own words behind each chapter. Only you see those.
-          </p>
-          <ol className="mb-chapters">
-            {book.chapters.map((chapter, index) => (
-              <ChapterRow
-                key={chapter.id}
-                index={index}
-                chapter={chapter}
-                canRemove={onShelf && !open && book.chapters.length > MIN_CHAPTERS}
-                editKey={editKeyFor(userId, `chapter:${chapter.id}`)}
-                onEdit={(edit) => editChapter(chapter.id, edit)}
-              />
-            ))}
-          </ol>
-          {onShelf && !offShelf && (
-            <div className="mb-shelf-act">
-              <TakeOffShelf onTakeDown={() => attempt(() => client.takeOffShelf(), load)} />
-            </div>
-          )}
-          {onShelf && (
-            <div className="mb-sparks-below">
-              <Sparks sparks={sparks} shaping={open} onRemove={removeSpark} />
-            </div>
-          )}
-        </div>
-        {aside && (
-          <aside className="mb-aside">
-            {readingPanel}
-            <Sparks sparks={sparks} shaping={open} onRemove={removeSpark} />
-          </aside>
+      <div className="mb-top">
+        {title}
+        {onShelf && (
+          <ShelfSwitch
+            on={wanted ?? book.status === "on_shelf"}
+            busy={switching}
+            onChange={async (on) => {
+              latest.current = on;
+              setWanted(on);
+              if (saving.current) return;
+              saving.current = true;
+              setSwitching(true);
+              onShelfNow.current = book.status === "on_shelf";
+              while (latest.current !== null && latest.current !== onShelfNow.current) {
+                const target = latest.current;
+                await attempt(
+                  async () => {
+                    const saved = await (target ? client.putBackOnShelf() : client.takeOffShelf());
+                    onShelfNow.current = saved.status === "on_shelf";
+                    setBook(saved);
+                  },
+                  () => undefined,
+                ).catch(() => undefined);
+                // attempt() reloads and says so when a save is refused; then the page shows what's true.
+                if (onShelfNow.current !== target) break;
+              }
+              latest.current = null;
+              saving.current = false;
+              setWanted(null);
+              setSwitching(false);
+            }}
+          />
         )}
       </div>
+      {designing && art ? (
+        <DesignPicker
+          current={art}
+          title={book.title}
+          author={book.authorName}
+          busy={savingDesign}
+          error={designProblem}
+          onUse={async (chosen) => {
+            if (chosen.id === art.id) {
+              backToPen.current = true;
+              setDesigning(false);
+              return;
+            }
+            setSavingDesign(true);
+            setDesignProblem(null);
+            try {
+              setBook(await client.editBook({ design: chosen.id }));
+              forgetOwnBook();
+              backToPen.current = true;
+              setDesigning(false);
+            } catch (reason) {
+              setDesignProblem(reason instanceof Error ? reason.message : "That didn't save. Try again.");
+            } finally {
+              setSavingDesign(false);
+            }
+          }}
+          onBack={() => {
+            setDesignProblem(null);
+            backToPen.current = true;
+            setDesigning(false);
+          }}
+        />
+      ) : (
+        <>
+          <OwnBook
+            book={book}
+            art={art}
+            canRemove={onShelf && !open && book.chapters.length > MIN_CHAPTERS}
+            onEditBook={editBook}
+            onEditChapter={editChapter}
+            onRemove={(chapterId) => attempt(() => client.removeFromShelf(chapterId, null), load)}
+            onDesign={() => setDesigning(true)}
+          />
+          <NextStep
+            stage={stage}
+            question={question}
+            removal={removal}
+            onCancelRemoval={() => attempt(() => client.cancelRemoval(), load)}
+            retrying={retrying}
+            onRetry={async () => {
+              setRetrying(true);
+              await attempt(() => client.retryWriting("me"), load);
+              setRetrying(false);
+            }}
+          />
+          {leftAsIs && <p className="mb-note">Your book stays as it is.</p>}
+          {lastRound.empty && onShelf && !open && (
+            <p className="mb-note">
+              {lastRound.droppedForNames
+                ? droppedSentence(lastRound.droppedWords)
+                : "Your last answers didn't change your book. They're saved, and the next questions can use them."}
+            </p>
+          )}
+        </>
+      )}
+      {problem && (
+        <p className="message" role="alert">
+          {problem}
+        </p>
+      )}
     </main>
   );
 }

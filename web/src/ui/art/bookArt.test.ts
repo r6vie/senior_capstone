@@ -31,4 +31,11 @@ describe("book art", () => {
   it("keeps the knockout behind the name on strata covers only", () => {
     for (const art of BOOK_ARTS) expect(art.knockout).toBe(art.category === "strata");
   });
+
+  it("uses the design an author chose, and the id's own art when there is none or it's unknown", () => {
+    const chosen = BOOK_ARTS.find((art) => art.id !== artFor("nora-book").id);
+    expect(artFor("nora-book", chosen?.id)).toBe(chosen);
+    expect(artFor("nora-book", null)).toBe(artFor("nora-book"));
+    expect(artFor("nora-book", "mosaic/nowhere")).toBe(artFor("nora-book"));
+  });
 });

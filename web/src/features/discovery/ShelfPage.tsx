@@ -225,14 +225,14 @@ export function ShelfPage() {
   }, []);
 
   /** Pointed at or focused: fetch its contents and decode its art ahead of a likely opening. */
-  function interest(id: string) {
+  function interest(id: string, design?: string | null) {
     loadBook(id);
-    loadArt(artFor(id));
+    loadArt(artFor(id, design));
   }
 
   function open(book: BookCard, element: HTMLButtonElement, place: string) {
     // On touch there was no pointing first: fetch now, while the book waits closed in its place.
-    interest(book.id);
+    interest(book.id, book.design);
     navigate(`/books/${encodeURIComponent(book.id)}`, {
       state: { card: book, origin: bounds(element), fromShelf: true, place },
     });
@@ -280,11 +280,12 @@ export function ShelfPage() {
             {featured ? (
               <BookObject
                 id={featured.id}
+                design={featured.design}
                 book={{ title: featured.title, authorName: featured.author_name }}
                 size="lg"
                 out={outPlace === `recommendation/${featured.id}`}
                 onOpen={(element) => open(featured, element, `recommendation/${featured.id}`)}
-                onInterest={() => interest(featured.id)}
+                onInterest={() => interest(featured.id, featured.design)}
               />
             ) : (
               <BookObject
@@ -313,10 +314,11 @@ export function ShelfPage() {
                 <BookObject
                   key={book.id}
                   id={book.id}
+                  design={book.design}
                   book={{ title: book.title, authorName: book.author_name }}
                   out={outPlace === `${category.name}/${book.id}`}
                   onOpen={(element) => open(book, element, `${category.name}/${book.id}`)}
-                  onInterest={() => interest(book.id)}
+                  onInterest={() => interest(book.id, book.design)}
                 />
               ))}
             </ShelfRow>
@@ -327,10 +329,11 @@ export function ShelfPage() {
               <BookObject
                 key={book.id}
                 id={book.id}
+                design={book.design}
                 book={{ title: book.title, authorName: book.author_name }}
                 out={outPlace === `recent/${book.id}`}
                 onOpen={(element) => open(book, element, `recent/${book.id}`)}
-                onInterest={() => interest(book.id)}
+                onInterest={() => interest(book.id, book.design)}
               />
             ))}
           </ShelfRow>

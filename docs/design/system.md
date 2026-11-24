@@ -256,7 +256,7 @@ so leave the art layer out (keep a place for one image under each page's content
 
 Patterns added after v1. Each entry: name, the task it solves, date, owner, snippet or link.
 
-### Build handoff: My book D2, the shelf's book opened to you (MyBookD2, approved by Josef 2026-11-23; not built yet)
+### Build handoff: My book D2, the shelf's book opened to you (MyBookD2, approved by Josef 2026-11-23; built 2026-11-24, `web/src/features/book/`)
 
 The task: write and look after your own book where readers see it. Source of truth for pixels:
 `docs/design/shelf/project/MyBookD2.dc.html` (canvas page "My book", board "My book · D, the shelf's book"). It
@@ -306,7 +306,8 @@ corners turn pages as in the reader.
 `padding:34px 40px 36px`, two columns `minmax(0,1fr) auto`, gap 48px: a white `.caption` "The Librarian", the next
 question it will ask in Newsreader italic 500 32px/1.2 (at most 640px), and on the right "Continue with the
 Librarian" (the page's one red button). With a round already open the button reads "Continue adding to your book".
-Showing the question before Start needs the interview to have it ready (an API change; see the board's note).
+With no round open there is no question yet, so the line reads "There's more to your story." in the same type
+(Josef, 2026-11-24).
 
 **Changing the design.**
 
@@ -324,7 +325,8 @@ Showing the question before Start needs the interview to have it ready (an API c
    from the bottom up). The book does not rotate. A newer choice during a clip starts over from paper. Reduced
    motion: the cover simply swaps.
 5. "Use this design" (red) keeps it and opens the book again with the new scene on the title page; "Back to my
-   book" (quiet) opens it again unchanged.
+   book" (quiet) opens it again unchanged. The choice is stored on the book (`design`, PATCH /books/me), and every
+   screen draws it; a book with none keeps the art its id gives it.
 
 **Names.** The pixel-band style is "Mosaic" wherever its name shows (it was Strata). Code names can stay.
 
@@ -347,7 +349,7 @@ The picker on a phone is not drawn: proposed, a sheet from below (3 columns of d
 avatar should open My book with the My book tab dropped from the nav and Settings moved under the book (Josef
 raised it on 2026-11-23; not drawn or approved yet).
 
-### Build handoff: joining, confirming and signing in (StartJoin, approved by Josef 2026-11-24; not built yet)
+### Build handoff: joining, confirming and signing in (StartJoin, approved by Josef 2026-11-24; built 2026-11-24, `web/src/features/auth/`)
 
 The task: join, confirm your email or sign in, on a desktop screen, with the book you are about to write in view.
 Source of truth: `docs/design/shelf/project/StartJoin.dc.html` (canvas page "Getting started"). It replaces the
@@ -398,8 +400,15 @@ the next box, Backspace goes back, a pasted code fills all six. Then "Confirm" (
 (quiet), and at the foot "Wrong address? Start over" (Plex 14px `--ink-2`, the link in ink).
 
 **Sign in.** The same halves, the book closed and blank (no name). Email, Password with Show, then "Sign in" and
-the quiet "Forgot your password?" beside it. **There is no password reset in the API yet**: that needs a backend
-task and Josef's yes on the flow before the link ships. Until then leave the link out.
+the quiet "Forgot your password?" beside it.
+
+**Resetting a password** (approved by Josef 2026-11-24; `ResetPasswordPage.tsx`, at `/reset-password`, which the
+reset email links to with `?email=`). The same halves and line as sign in, caption "Sign in", title "Reset your
+password.": the email and "Send me a code"; then "If <email> has a Trove account, we sent it a 6-digit code. It works
+for 15 minutes." (the same whether or not it has one; from the email's link, "Enter the 6-digit code we emailed to
+<email>."), the six code boxes, "New password" with Show and "At least 12 characters.", "Reset password" (red) and
+"Send me a new code" (quiet), and "Wrong address? Start over" at the foot. A reset signs every session out, so the
+page signs in with the new password and goes to the shelf (an unconfirmed student goes to confirm their email).
 
 **Motion.** The intro's slow watercolour loop (`docs/design/art/watercolor/set-1/anim/<key>-loop.{webm,mp4}`, 25s, seamless, not in `web/` yet; decision
 2026-11-23 "watercolor animations for all ten, and where they play") is approved for the sign-in pages' book; the

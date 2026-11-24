@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthPage } from "../features/auth/AuthPage";
 import { AuthProvider } from "../features/auth/AuthProvider";
 import { RequireAuth } from "../features/auth/RequireAuth";
+import { ResetPasswordPage } from "../features/auth/ResetPasswordPage";
 import { VerifyPage } from "../features/auth/VerifyPage";
 import { SparkPreviewPage } from "../features/book/SparkPreviewPage";
 import { AppShell } from "../ui/AppShell";
@@ -22,10 +23,6 @@ const CheckoutsPage = page(() => import("../features/checkouts/CheckoutsPage"), 
 const PastMeetsPage = page(() => import("../features/checkouts/PastMeetsPage"), "PastMeetsPage");
 const ShelfPage = page(() => import("../features/discovery/ShelfPage"), "ShelfPage");
 const InterviewPage = page(() => import("../features/interview/InterviewPage"), "InterviewPage");
-const ReadingQuestionPage = page(
-  () => import("../features/interview/ReadingQuestionPage"),
-  "ReadingQuestionPage",
-);
 const RemovalPage = page(() => import("../features/interview/RemovalPage"), "RemovalPage");
 const MeetingPage = page(() => import("../features/meetings/MeetingPage"), "MeetingPage");
 const MessagesPage = page(() => import("../features/messaging/MessagesPage"), "MessagesPage");
@@ -54,6 +51,7 @@ export function App() {
               <Route path="/sign-in" element={<AuthPage mode="sign-in" />} />
               <Route path="/sign-up" element={<AuthPage mode="sign-up" />} />
               <Route path="/verify" element={<VerifyPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route
                 element={
                   <RequireAuth>
@@ -76,14 +74,6 @@ export function App() {
                 element={
                   <RequireAuth>
                     <InterviewPage />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/interview/reading/:questionId"
-                element={
-                  <RequireAuth>
-                    <ReadingQuestionPage />
                   </RequireAuth>
                 }
               />

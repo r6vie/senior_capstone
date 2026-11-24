@@ -119,7 +119,11 @@ export function CheckOutPage() {
         <p className="checkout-byline">by {book.author_name}</p>
         {book.blurb && <p className="voice checkout-blurb">{book.blurb}</p>}
         <div className="checkout-book">
-          <BookObject id={book.id} book={{ title: book.title, authorName: book.author_name }} />
+          <BookObject
+            id={book.id}
+            design={book.design}
+            book={{ title: book.title, authorName: book.author_name }}
+          />
         </div>
       </header>
 

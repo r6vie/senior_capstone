@@ -155,7 +155,7 @@ export function TitleShelf({
 // ---------- The chosen book, open while it's written ----------
 
 /** The open book as the shelf's reader draws it: board, spine, page edge and two pages. */
-function OpenBook({
+export function OpenBook({
   left,
   right,
   label,
@@ -249,7 +249,7 @@ export function WritingBook({
 const SAVE_AFTER_MS = 700;
 
 /** A field that saves itself a moment after the member stops typing, and when they leave it. */
-function AutoField({
+export function AutoField({
   label,
   value,
   onSave,
@@ -474,8 +474,9 @@ export function ReviewBook({
           track={track}
           className="rv-text"
           long
-          value={chapter.summary}
-          onSave={(summary) => onEditChapter(chapter.id, { summary })}
+          // The chapter's own text once it's written; until then its summary stands in, and is what's edited.
+          value={chapter.body ?? chapter.summary}
+          onSave={(text) => onEditChapter(chapter.id, chapter.body ? { body: text } : { summary: text })}
         />
         {canRemove &&
           (confirming ? (

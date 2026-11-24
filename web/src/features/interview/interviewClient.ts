@@ -14,6 +14,8 @@ export interface DraftChapter {
   id: string;
   title: string;
   summary: string;
+  /** The chapter's own text, 2–3 paragraphs split by a blank line; null until written (show the summary then). */
+  body?: string | null;
   /** The member's own words behind this chapter. Only they ever see them. */
   quotes: string[];
 }
@@ -169,11 +171,8 @@ export type InterviewState =
       stage: "nothing";
       /** The only thing to come of it named someone or somewhere, so it was left out. */
       droppedForNames?: boolean;
-      /** The reading question to answer again, when that was the answer. */
-      readingQuestionId?: string;
       /** What was caught, and what the member said, so they needn't retype it. */
       droppedWords?: string[];
-      readingAnswer?: string;
     }
   /** Approved changes just went live. */
   | { id: string; stage: "updated"; book: DraftBook; canUndo: boolean };
@@ -196,19 +195,20 @@ export interface LastRound {
   empty: boolean;
   droppedForNames?: boolean;
   droppedWords?: string[];
-  readingQuestionId?: string;
-  readingAnswer?: string;
 }
 
 /** The book's own text, as the member writes it. Saved means live on a shelved book. */
 export interface BookEdit {
   title?: string;
   blurb?: string;
+  /** A cover design: an art's id from ui/art/bookArt.ts. */
+  design?: string;
 }
 
 export interface ChapterEdit {
   title?: string;
   summary?: string;
+  body?: string;
 }
 
 export interface MyBook extends DraftBook {
@@ -218,19 +218,13 @@ export interface MyBook extends DraftBook {
   canUndo: boolean;
   /** When they were applied. */
   changedAt?: string | null;
+  /** The cover design the author chose; none means the art comes from the book's id. */
+  design?: string | null;
 }
 
 export interface Spark {
   id: string;
   chapterTitle: string;
-}
-
-export interface ReadingQuestion {
-  id: string;
-  question: string;
-  /** The person the reading was with. To the author only, and never sent to a prompt. */
-  readerName: string | null;
-  createdAt: string;
 }
 
 /** A failed call. Retryable when the Librarian (Claude) failed and nothing the member said was lost. */
@@ -306,7 +300,4 @@ export interface InterviewClient {
   lastRound(): Promise<LastRound>;
   sparks(): Promise<Spark[]>;
   removeSpark(sparkId: string): Promise<void>;
-  readingQuestions(): Promise<ReadingQuestion[]>;
-  answerReading(questionId: string, answer: string): Promise<InterviewState>;
-  dismissReading(questionId: string): Promise<void>;
 }

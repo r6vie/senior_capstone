@@ -3,6 +3,7 @@ import { artFor, coverInk } from "../../ui/art/bookArt";
 
 export function BookObject({
   id,
+  design,
   book,
   size,
   out,
@@ -11,6 +12,8 @@ export function BookObject({
 }: {
   /** Chooses the book's art (ui/art/bookArt.ts). */
   id: string;
+  /** The design its author chose, if any. */
+  design?: string | null;
   book: { title: string; authorName: string };
   size?: "lg";
   /** Open in front of the shelf: its place stays empty until it's put back. */
@@ -19,7 +22,7 @@ export function BookObject({
   /** Pointed at or focused: likely to be opened, so its contents can be fetched ahead. */
   onInterest?: () => void;
 }) {
-  const art = artFor(id);
+  const art = artFor(id, design);
   const cover = (
     <span className="book-cover" style={coverInk(art)}>
       <ArtImage className="book-art" src={art.cover} />

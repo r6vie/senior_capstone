@@ -1,20 +1,17 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { artFor } from "../../ui/art/bookArt";
+import { artFor, BOOK_ARTS } from "../../ui/art/bookArt";
 import { AuthProvider } from "../auth/AuthProvider";
 import { createFakeInterviewClient } from "../interview/fakeInterviewClient";
-import type {
-  BookStage,
-  InterviewClient,
-  MyBook,
-  ReadingQuestion,
-  Spark,
-} from "../interview/interviewClient";
+import type { BookStage, InterviewClient, MyBook } from "../interview/interviewClient";
 import { leaveWords } from "../interview/LeftoverWords";
 import { MyBookPage } from "./MyBookPage";
 
 // The book's id, which chooses its cover art, comes from /books/me.
-vi.mock("../discovery/bookPreload", () => ({ loadOwnBook: async () => ({ id: "nora-book" }) }));
+vi.mock("../discovery/bookPreload", () => ({
+  loadOwnBook: async () => ({ id: "nora-book" }),
+  forgetOwnBook: () => undefined,
+}));
 
 const book: MyBook = {
   title: "The Coil Was Never the Problem",
@@ -29,23 +26,12 @@ const book: MyBook = {
     quotes: [`I said ${title}.`],
   })),
 };
-const sparks: Spark[] = [{ id: "s1", chapterTitle: "How I decided between two offers" }];
-const reading: ReadingQuestion[] = [
-  {
-    id: "r1",
-    question: "What did they ask you about that surprised you?",
-    readerName: "Sam Okafor",
-    createdAt: "2026-11-06T12:00:00Z",
-  },
-];
 
 function client(stage: BookStage, overrides: Partial<InterviewClient> = {}): InterviewClient {
   return {
     ...createFakeInterviewClient("Nora", 0),
     stage: async () => stage,
     myBook: async () => (stage === "none" || stage === "interviewing" || stage === "titles" ? null : book),
-    sparks: async () => [],
-    readingQuestions: async () => [],
     ...overrides,
   };
 }
@@ -64,38 +50,72 @@ function linkTo(name: string) {
   return screen.getByRole("link", { name }).getAttribute("href");
 }
 
-describe("my book's cover", () => {
-  it("shows the book's own cover art, at both sizes, with the type in the art's ink", async () => {
-    show(client("shelf"));
-    await screen.findByRole("heading", { level: 1, name: book.title });
-    const art = artFor("nora-book");
-    const covers = [...document.querySelectorAll(".mb-head .book-cover")] as HTMLElement[];
-    expect(covers).toHaveLength(2);
-    for (const cover of covers) {
-      expect(cover.querySelector("img.book-art")?.getAttribute("src")).toBe(art.cover);
-      expect(cover.style.getPropertyValue("--art-ink")).toBe(art.ink);
-    }
-  });
-});
+const titleField = async () => (await screen.findByLabelText("Title")) as HTMLTextAreaElement;
 
-describe("editing my book", () => {
+describe("my book, open", () => {
   beforeEach(() => localStorage.clear());
+  afterEach(() => vi.useRealTimers());
 
-  it("edits the title and back cover in place, saving only what changed", async () => {
-    let current: MyBook = book;
-    const edit = vi.fn(async () => {
-      current = { ...book, title: "My own title" };
-      return current;
-    });
-    show(client("shelf", { editBook: edit, myBook: async () => current }));
-    fireEvent.click(await screen.findByRole("button", { name: "Edit the title and back cover" }));
-    fireEvent.change(screen.getByLabelText("Title"), { target: { value: "My own title" } });
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(edit).toHaveBeenCalledWith({ title: "My own title" }));
-    expect(await screen.findByRole("heading", { name: "My own title" })).toBeTruthy();
+  it("is the open book: the title page carries the book's art, the contents end with the back cover", async () => {
+    show(client("shelf"));
+    expect((await titleField()).value).toBe(book.title);
+    expect(screen.getByText(`by ${book.authorName}`)).toBeTruthy();
+    const art = artFor("nora-book");
+    expect(document.querySelector("img.mb-page-art")?.getAttribute("src")).toBe(art.page);
+    const rows = [...document.querySelectorAll(".rv-toc li")].map(
+      (row) => row.querySelector(".rv-toc-t")?.textContent,
+    );
+    expect(rows).toEqual(["One", "Two", "Three", "Four", "Back cover"]);
   });
 
-  it("shows the server's reason and keeps what was typed", async () => {
+  it("saves the title as it's typed, with no Save button", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const edit = vi.fn(async () => ({ ...book, title: "My own title" }));
+    show(client("shelf", { editBook: edit }));
+    fireEvent.change(await titleField(), { target: { value: "My own title" } });
+    expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(edit).toHaveBeenCalledWith({ title: "My own title" });
+  });
+
+  it("opens a chapter with its title and text as fields, the contents beside it", async () => {
+    const edit = vi.fn(async () => book);
+    show(client("shelf", { editChapter: edit }));
+    fireEvent.click(await screen.findByRole("button", { name: "Chapter 2" }));
+    const title = screen.getByLabelText("Chapter 2 title") as HTMLTextAreaElement;
+    expect(title.value).toBe("Two");
+    expect((screen.getByLabelText("Chapter 2 text") as HTMLTextAreaElement).value).toBe("About Two.");
+    expect(document.querySelector('.rv-toc button[aria-current="page"]')?.textContent).toContain("Two");
+    fireEvent.change(title, { target: { value: "Two, again" } });
+    fireEvent.blur(title);
+    await waitFor(() => expect(edit).toHaveBeenCalledWith("1", { title: "Two, again" }));
+  });
+
+  it("shows a chapter's own text when it has one, and saves edits to it", async () => {
+    const body = "The demo failed at eleven.\n\nThe fault was a cache nobody cleared.";
+    const withBody = { ...book, chapters: book.chapters.map((c, i) => (i === 0 ? { ...c, body } : c)) };
+    const edit = vi.fn(async () => withBody);
+    show(client("shelf", { myBook: async () => withBody, editChapter: edit }));
+    fireEvent.click(await screen.findByRole("button", { name: "Chapter 1" }));
+    const text = screen.getByLabelText("Chapter 1 text") as HTMLTextAreaElement;
+    expect(text.value).toBe(body);
+    fireEvent.change(text, { target: { value: `${body}\n\nAnd then I fixed it.` } });
+    fireEvent.blur(text);
+    await waitFor(() => expect(edit).toHaveBeenCalledWith("0", { body: `${body}\n\nAnd then I fixed it.` }));
+  });
+
+  it("opens the back cover as one field that saves itself", async () => {
+    const edit = vi.fn(async () => book);
+    show(client("shelf", { editBook: edit }));
+    fireEvent.click(await screen.findByRole("button", { name: "Back cover" }));
+    const field = screen.getByLabelText("Back cover") as HTMLTextAreaElement;
+    expect(field.value).toBe(book.blurb);
+    fireEvent.change(field, { target: { value: "Thirty machines, and counting." } });
+    fireEvent.blur(field);
+    await waitFor(() => expect(edit).toHaveBeenCalledWith({ blurb: "Thirty machines, and counting." }));
+  });
+
+  it("shows the server's reason when a save is refused, and keeps what was typed", async () => {
     const { InterviewError } = await import("../interview/interviewClient");
     const refuse = vi.fn(async () => {
       throw new InterviewError(
@@ -103,65 +123,119 @@ describe("editing my book", () => {
       );
     });
     show(client("shelf", { editChapter: refuse }));
-    fireEvent.click(await screen.findByRole("button", { name: "Edit One" }));
-    fireEvent.change(screen.getByLabelText("What it's about"), { target: { value: "Email me at a@b.com" } });
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Chapter 1" }));
+    const text = screen.getByLabelText("Chapter 1 text") as HTMLTextAreaElement;
+    fireEvent.change(text, { target: { value: "Email me at a@b.com" } });
+    fireEvent.blur(text);
     expect((await screen.findByRole("alert")).textContent).toMatch(/Contact details are shared only/);
-    expect((screen.getByLabelText("What it's about") as HTMLTextAreaElement).value).toBe(
-      "Email me at a@b.com",
-    );
+    expect(text.value).toBe("Email me at a@b.com");
   });
 
-  it("keeps an edit under way through a refresh", async () => {
-    show(client("shelf"));
-    fireEvent.click(await screen.findByRole("button", { name: "Edit One" }));
-    fireEvent.change(screen.getByLabelText("Chapter title"), { target: { value: "Half typed" } });
-    document.body.innerHTML = "";
-    show(client("shelf"));
-    expect(((await screen.findByLabelText("Chapter title")) as HTMLInputElement).value).toBe("Half typed");
+  it("removes a chapter after asking, keeping the back cover", async () => {
+    const remove = vi.fn(async () => undefined);
+    show(client("shelf", { removeFromShelf: remove }));
+    fireEvent.click(await screen.findByRole("button", { name: "Chapter 4" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove this chapter" }));
+    expect(remove).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Remove Four" }));
+    await waitFor(() => expect(remove).toHaveBeenCalledWith("3", null));
   });
 
-  it("never cuts a paste: past the limit it says so and waits", async () => {
-    show(client("shelf"));
-    fireEvent.click(await screen.findByRole("button", { name: "Edit the title and back cover" }));
-    const long = "x".repeat(81);
-    fireEvent.change(screen.getByLabelText("Title"), { target: { value: long } });
-    expect(screen.getByText(/80 characters at most/)).toBeTruthy();
-    expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByLabelText("Title") as HTMLInputElement).value).toBe(long);
+  it("can't remove a chapter at three chapters, or from a draft", async () => {
+    show(client("shelf", { myBook: async () => ({ ...book, chapters: book.chapters.slice(0, 3) }) }));
+    fireEvent.click(await screen.findByRole("button", { name: "Chapter 1" }));
+    expect(screen.queryByRole("button", { name: "Remove this chapter" })).toBeNull();
   });
+});
 
-  it("refuses an empty field without sending it", async () => {
-    const edit = vi.fn();
-    show(client("shelf", { editBook: edit }));
-    fireEvent.click(await screen.findByRole("button", { name: "Edit the title and back cover" }));
-    fireEvent.change(screen.getByLabelText("Title"), { target: { value: "  " } });
-    expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(true);
-    expect(edit).not.toHaveBeenCalled();
-  });
-
-  it("takes the book off the shelf only after asking, with focus on keeping it", async () => {
+describe("on the shelf", () => {
+  it("is a switch: off takes the book down, on puts it back", async () => {
     const down = vi.fn(async () => ({ ...book, status: "off_shelf" as const }));
-    show(client("shelf", { takeOffShelf: down }));
-    fireEvent.click(await screen.findByRole("button", { name: "Take off the shelf" }));
-    expect(down).not.toHaveBeenCalled();
-    expect(
-      screen.getByText(/no new checkouts can start. Anything already arranged still happens/),
-    ).toBeTruthy();
-    await waitFor(() => expect(document.activeElement?.textContent).toBe("Keep it on the shelf"));
-    fireEvent.click(screen.getByRole("button", { name: "Take it off" }));
-    await waitFor(() => expect(down).toHaveBeenCalledTimes(1));
+    const back = vi.fn(async () => ({ ...book, status: "on_shelf" as const }));
+    show(client("shelf", { takeOffShelf: down, putBackOnShelf: back }));
+    const toggle = await screen.findByRole("switch", { name: "On the shelf" });
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(toggle);
+    await waitFor(() => expect(toggle.getAttribute("aria-checked")).toBe("false"));
+    expect(down).toHaveBeenCalledTimes(1);
+    fireEvent.click(toggle);
+    await waitFor(() => expect(toggle.getAttribute("aria-checked")).toBe("true"));
+    expect(back).toHaveBeenCalledTimes(1);
   });
 
-  it("says plainly when the book is off the shelf, and puts it back", async () => {
+  it("moves at once and keeps the keyboard while the server catches up", async () => {
+    let finish: (value: MyBook) => void = () => {};
+    const down = vi.fn(() => new Promise<MyBook>((resolve) => (finish = resolve)));
+    show(client("shelf", { takeOffShelf: down }));
+    const toggle = await screen.findByRole("switch", { name: "On the shelf" });
+    toggle.focus();
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+    expect((toggle as HTMLButtonElement).disabled).toBe(false);
+    expect(document.activeElement).toBe(toggle);
+    await act(async () => finish({ ...book, status: "off_shelf" }));
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+  });
+
+  it("queues a quick off-then-on, so the book ends where the switch shows", async () => {
+    let finish: (value: MyBook) => void = () => {};
+    const down = vi.fn(() => new Promise<MyBook>((resolve) => (finish = resolve)));
     const back = vi.fn(async () => ({ ...book, status: "on_shelf" as const }));
-    show(client("shelf", { myBook: async () => ({ ...book, status: "off_shelf" }), putBackOnShelf: back }));
-    expect(await screen.findByText("Off the shelf")).toBeTruthy();
-    expect(screen.getByText(/Other members can't find it or ask to check it out/)).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Take off the shelf" })).toBeNull();
-    expect(document.querySelectorAll(".button-primary")).toHaveLength(1);
-    fireEvent.click(screen.getByRole("button", { name: "Put back on the shelf" }));
+    show(client("shelf", { takeOffShelf: down, putBackOnShelf: back }));
+    const toggle = await screen.findByRole("switch", { name: "On the shelf" });
+    fireEvent.click(toggle);
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+    await act(async () => finish({ ...book, status: "off_shelf" }));
     await waitFor(() => expect(back).toHaveBeenCalledTimes(1));
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+  });
+
+  it("isn't there for a draft, which isn't on the shelf yet", async () => {
+    show(client("draft"));
+    expect(await titleField()).toBeTruthy();
+    expect(screen.queryByRole("switch")).toBeNull();
+    expect(linkTo("Review your book")).toBe("/interview");
+  });
+});
+
+describe("changing the design", () => {
+  it("closes the book and shows the designs of its kind, the current one chosen", async () => {
+    show(client("shelf"));
+    fireEvent.click(await screen.findByRole("button", { name: "Change the design" }));
+    expect(await screen.findByRole("heading", { name: "Choose a design" })).toBeTruthy();
+    const art = artFor("nora-book");
+    const kind = screen.getByRole("tab", { selected: true });
+    expect(kind.textContent).toBe(art.category === "strata" ? "Mosaic" : "Watercolour");
+    const options = screen
+      .getAllByRole("button", { pressed: false })
+      .filter((b) => b.classList.contains("mb-design-opt"));
+    expect(options).toHaveLength(9);
+    expect(screen.getByRole("button", { name: art.name, pressed: true })).toBeTruthy();
+  });
+
+  it("saves the chosen design to the book and shows it on the title page", async () => {
+    const save = vi.fn(async (edit: { design?: string }) => ({ ...book, design: edit.design ?? null }));
+    show(client("shelf", { editBook: save }));
+    fireEvent.click(await screen.findByRole("button", { name: "Change the design" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Watercolour" }));
+    const next = BOOK_ARTS.find((art) => art.category === "watercolor" && art.id !== artFor("nora-book").id);
+    fireEvent.click(screen.getByRole("button", { name: next?.name }));
+    fireEvent.click(screen.getByRole("button", { name: "Use this design" }));
+    expect(await titleField()).toBeTruthy();
+    expect(save).toHaveBeenCalledWith({ design: next?.id });
+    expect(document.querySelector("img.mb-page-art")?.getAttribute("src")).toBe(next?.page);
+  });
+
+  it("goes back to the book as it was, with the keyboard on the pen", async () => {
+    show(client("shelf"));
+    fireEvent.click(await screen.findByRole("button", { name: "Change the design" }));
+    fireEvent.click(screen.getByRole("button", { name: "Back to my book" }));
+    expect(await titleField()).toBeTruthy();
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Change the design" })),
+    );
+    expect(document.querySelector("img.mb-page-art")?.getAttribute("src")).toBe(artFor("nora-book").page);
   });
 });
 
@@ -176,16 +250,10 @@ describe("MyBookPage", () => {
   });
 
   it("never tells someone with saved answers they haven't started", async () => {
-    show(client("interviewing", { sparks: async () => sparks }));
+    show(client("interviewing"));
     expect(await screen.findByText("Your interview is in progress.")).toBeTruthy();
     expect(screen.queryByText(/haven't started/)).toBeNull();
     expect(linkTo("Continue your interview")).toBe("/interview");
-    expect(await screen.findByText("How I decided between two offers")).toBeTruthy();
-  });
-
-  it("shows sparks saved before a first interview too", async () => {
-    show(client("none", { sparks: async () => sparks }));
-    expect(await screen.findByText("For your next questions")).toBeTruthy();
   });
 
   it.each([
@@ -203,72 +271,20 @@ describe("MyBookPage", () => {
     expect(linkTo("See your titles")).toBe("/interview");
   });
 
-  it("a draft points to review, with no reading question or sparks", async () => {
-    show(client("draft", { sparks: async () => sparks, readingQuestions: async () => reading }));
-    expect(await screen.findByText("Draft, not on the shelf yet")).toBeTruthy();
-    expect(linkTo("Review your book")).toBe("/interview");
-    expect(screen.queryByText(/What did they ask you/)).toBeNull();
-    expect(screen.queryByText("For your next questions")).toBeNull();
-    expect(screen.queryByRole("link", { name: /Remove this chapter/ })).toBeNull();
-  });
-
-  it("on the shelf, offers adding as the one primary action, and removing a chapter", async () => {
+  it("on the shelf, the Librarian's block is the one way on", async () => {
     show(client("shelf"));
-    expect(await screen.findByText("On the shelf")).toBeTruthy();
-    expect(linkTo("Add to your book")).toBe("/interview?add");
+    expect(await screen.findByRole("region", { name: "The Librarian" })).toBeTruthy();
+    expect(linkTo("Continue with the Librarian")).toBe("/interview?add");
+    expect(screen.getByText("There's more to your story.")).toBeTruthy();
     expect(document.querySelectorAll(".button-primary")).toHaveLength(1);
-    expect(linkTo("Remove this chapter: One")).toBe("/my-book/remove/0");
-    expect(screen.queryByText("Undo these changes")).toBeNull();
   });
 
-  it("hides removing at three chapters", async () => {
-    const three = { ...book, chapters: book.chapters.slice(0, 3) };
-    show(client("shelf", { myBook: async () => three }));
-    await screen.findByText("On the shelf");
-    expect(screen.queryByRole("link", { name: /Remove this chapter/ })).toBeNull();
-  });
-
-  it("shows the author's own words on request", async () => {
-    show(client("shelf"));
-    await screen.findByText("On the shelf");
-    expect(screen.queryByText("I said One.")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Show what you said for One" }));
-    expect(screen.getByText("I said One.")).toBeTruthy();
-  });
-
-  it("asks before undoing, says what it did, and gives the date", async () => {
-    const undo = vi.fn(async () => undefined);
-    let canUndo = true;
-    undo.mockImplementation(async () => {
-      canUndo = false;
-    });
-    show(
-      client("shelf", {
-        myBook: async () => ({ ...book, canUndo, changedAt: "2026-11-09T12:00:00Z" }),
-        undoChanges: undo,
-      }),
-    );
-    expect(await screen.findByText(/Your book was updated on Nov 9/)).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Undo these changes" }));
-    expect(undo).not.toHaveBeenCalled();
-    expect(screen.getByText("Undo these changes? Your book goes back to how it was.")).toBeTruthy();
-    // A second Enter lands on the safe answer.
-    await waitFor(() => expect(document.activeElement?.textContent).toBe("Keep them"));
-    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
-    expect(await screen.findByText("Your book is back as it was.")).toBeTruthy();
-    expect(undo).toHaveBeenCalledTimes(1);
-  });
-
-  it("a second press while undoing does nothing", async () => {
-    let finish: () => void = () => {};
-    const undo = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
-    show(client("shelf", { myBook: async () => ({ ...book, canUndo: true }), undoChanges: undo }));
-    fireEvent.click(await screen.findByRole("button", { name: "Undo these changes" }));
-    const press = screen.getByRole("button", { name: "Undo" });
-    fireEvent.click(press);
-    fireEvent.click(press);
-    expect(undo).toHaveBeenCalledTimes(1);
-    await act(async () => finish());
+  it("has no Undo, sparks, reading question or 'what you said'", async () => {
+    show(client("shelf", { myBook: async () => ({ ...book, canUndo: true }) }));
+    await titleField();
+    expect(screen.queryByRole("button", { name: /Undo/ })).toBeNull();
+    expect(screen.queryByText("For your next questions")).toBeNull();
+    expect(screen.queryByText(/what you said/i)).toBeNull();
   });
 
   it("says when the last round changed nothing", async () => {
@@ -276,25 +292,13 @@ describe("MyBookPage", () => {
     expect(await screen.findByText(/Your last answers didn't change your book/)).toBeTruthy();
   });
 
-  it("says which words were left out, and answering again starts from what was said", async () => {
-    localStorage.clear();
+  it("says which words were left out", async () => {
     show(
       client("shelf", {
-        readingQuestions: async () => reading,
-        lastRound: async () => ({
-          empty: true,
-          droppedForNames: true,
-          droppedWords: ["Geauga", "Fair"],
-          readingQuestionId: "r1",
-          readingAnswer: "They asked about the Geauga Fair.",
-        }),
+        lastRound: async () => ({ empty: true, droppedForNames: true, droppedWords: ["Geauga", "Fair"] }),
       }),
     );
     expect(await screen.findByText(/named someone or somewhere: Geauga, Fair/)).toBeTruthy();
-    fireEvent.click(screen.getAllByRole("link", { name: "Answer" })[0] as HTMLElement);
-    expect(localStorage.getItem("trove_interview_draft:anon:reading:r1")).toBe(
-      "They asked about the Geauga Fair.",
-    );
   });
 
   it("draws the next step once, with what it needs: a removal never flashes as changes", async () => {
@@ -316,7 +320,6 @@ describe("MyBookPage", () => {
     show(client("shelf"));
     expect(await screen.findByText("My careful words")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "I've got them" }));
-    // The page may still be loading its book; the words go once the update lands.
     await waitFor(() => expect(screen.queryByText("My careful words")).toBeNull());
     expect(localStorage.getItem("trove_interview_draft:leftover:anon")).toBeNull();
   });
@@ -365,36 +368,24 @@ describe("MyBookPage", () => {
   it("shows the page while it loads, then starts the keyboard at the heading", async () => {
     show(client("shelf"));
     expect(screen.getByRole("heading", { name: "My book" })).toBeTruthy();
-    const heading = await screen.findByRole("heading", { name: book.title });
+    await titleField();
+    const heading = screen.getByRole("heading", { level: 1, name: "My book" });
     await waitFor(() => expect(document.activeElement).toBe(heading));
   });
 
-  it("names the reader to the author, and No thanks dismisses it", async () => {
-    const dismiss = vi.fn(async () => undefined);
-    show(client("shelf", { readingQuestions: async () => reading, dismissReading: dismiss }));
-    const captions = await screen.findAllByText("After your reading with Sam Okafor, Nov 6");
-    expect(captions.length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("link", { name: "Answer" })[0]?.getAttribute("href")).toBe(
-      "/interview/reading/r1",
-    );
-    fireEvent.click(screen.getAllByRole("button", { name: "No thanks" })[0] as HTMLElement);
-    await waitFor(() => expect(dismiss).toHaveBeenCalledWith("r1"));
-    await waitFor(() => expect(screen.queryByText(/What did they ask you/)).toBeNull());
-  });
-
-  it.each(["adding", "writing", "writeFailed", "changesWaiting"] as const)(
-    "hides the reading question and removing while %s",
-    async (stage) => {
-      show(client(stage, { readingQuestions: async () => reading, sparks: async () => sparks }));
-      expect(await screen.findAllByText(/These are shaping the questions/)).toBeTruthy();
-      expect(screen.queryByText(/What did they ask you/)).toBeNull();
-      expect(screen.queryByRole("link", { name: /Remove this chapter/ })).toBeNull();
-    },
-  );
-
-  it("names the next step for a growing book", async () => {
-    show(client("adding"));
-    expect(await screen.findByText(/You have questions in progress/)).toBeTruthy();
+  it("with a round open, shows the question waiting in it", async () => {
+    const asking = {
+      id: "me",
+      stage: "asking" as const,
+      round: "adding" as const,
+      phase: "dig" as const,
+      question: "What did your PI say when the build kept failing?",
+      canFinish: false,
+      hasAnswers: true,
+      lastTopic: null,
+    };
+    show(client("adding", { current: async () => asking }));
+    expect(await screen.findByText(asking.question)).toBeTruthy();
     expect(linkTo("Continue adding to your book")).toBe("/interview");
   });
 
@@ -421,24 +412,6 @@ describe("MyBookPage", () => {
     await waitFor(() => expect(retry).toHaveBeenCalledTimes(1));
   });
 
-  it("removes a spark", async () => {
-    const remove = vi.fn(async () => undefined);
-    show(client("shelf", { sparks: async () => sparks, removeSpark: remove }));
-    const buttons = await screen.findAllByRole("button", { name: `Remove ${sparks[0]?.chapterTitle}` });
-    fireEvent.click(buttons[0] as HTMLElement);
-    await waitFor(() => expect(remove).toHaveBeenCalledWith("s1"));
-    await waitFor(() => expect(screen.queryByText("For your next questions")).toBeNull());
-  });
-
-  it("after removing a spark, the keyboard goes on to the next one", async () => {
-    const two = [...sparks, { id: "s2", chapterTitle: "The question I stopped asking" }];
-    show(client("draft", { stage: async () => "none", myBook: async () => null, sparks: async () => two }));
-    fireEvent.click(await screen.findByRole("button", { name: `Remove ${sparks[0]?.chapterTitle}` }));
-    const next = await screen.findByRole("button", { name: "Remove The question I stopped asking" });
-    await waitFor(() => expect(screen.queryByText(sparks[0]?.chapterTitle ?? "")).toBeNull());
-    expect(next).toBeTruthy();
-  });
-
   it("when it can't load, doesn't say the member has no book", async () => {
     let fail = true;
     show(
@@ -453,12 +426,12 @@ describe("MyBookPage", () => {
     expect(screen.queryByText(/haven't started/)).toBeNull();
     fail = false;
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
-    expect(await screen.findByText("On the shelf")).toBeTruthy();
+    expect(await screen.findByRole("switch", { name: "On the shelf" })).toBeTruthy();
   });
 
   it("shows no performance numbers", async () => {
-    show(client("shelf", { sparks: async () => sparks }));
-    await screen.findByText("On the shelf");
+    show(client("shelf"));
+    await titleField();
     const text = document.body.textContent ?? "";
     expect(text).not.toMatch(/cop(y|ies)|checkouts?\b|views?\b/i);
   });

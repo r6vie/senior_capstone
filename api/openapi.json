@@ -861,7 +861,7 @@
           "Books"
         ],
         "summary": "Edit My Book",
-        "description": "Change the book's title or back cover, in the member's own words. On a published book it's\nlive at once, and POST /interview/book/undo takes it back. 409 while proposed changes wait.",
+        "description": "Change the book's title or back cover, in the member's own words, or its cover design. On a\npublished book it's live at once, and POST /interview/book/undo takes back words. 409 while proposed\nchanges wait, except for the design, which no proposal touches.",
         "operationId": "edit_my_book_books_me_patch",
         "requestBody": {
           "content": {
@@ -3064,6 +3064,39 @@
             ],
             "title": "Cover Style"
           },
+          "design": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "strata/lake",
+                  "strata/desert",
+                  "strata/coast",
+                  "strata/valley",
+                  "strata/karst",
+                  "strata/winter",
+                  "strata/fields",
+                  "strata/lagoon",
+                  "strata/city",
+                  "strata/forest",
+                  "watercolor/mesa",
+                  "watercolor/hills",
+                  "watercolor/lake",
+                  "watercolor/winter",
+                  "watercolor/city",
+                  "watercolor/blossom",
+                  "watercolor/autumn",
+                  "watercolor/beach",
+                  "watercolor/lighthouse-day",
+                  "watercolor/lighthouse-dusk"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Design"
+          },
           "blurb": {
             "anyOf": [
               {
@@ -3114,12 +3147,45 @@
               }
             ],
             "title": "Blurb"
+          },
+          "design": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "strata/lake",
+                  "strata/desert",
+                  "strata/coast",
+                  "strata/valley",
+                  "strata/karst",
+                  "strata/winter",
+                  "strata/fields",
+                  "strata/lagoon",
+                  "strata/city",
+                  "strata/forest",
+                  "watercolor/mesa",
+                  "watercolor/hills",
+                  "watercolor/lake",
+                  "watercolor/winter",
+                  "watercolor/city",
+                  "watercolor/blossom",
+                  "watercolor/autumn",
+                  "watercolor/beach",
+                  "watercolor/lighthouse-day",
+                  "watercolor/lighthouse-dusk"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Design"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "title": "BookEdit",
-        "description": "The member's own words for their book's title or back cover. Plain text."
+        "description": "The member's own words for their book's title or back cover (plain text), or its cover design."
       },
       "Change": {
         "properties": {
@@ -4645,6 +4711,39 @@
             ],
             "title": "Cover Style"
           },
+          "design": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "strata/lake",
+                  "strata/desert",
+                  "strata/coast",
+                  "strata/valley",
+                  "strata/karst",
+                  "strata/winter",
+                  "strata/fields",
+                  "strata/lagoon",
+                  "strata/city",
+                  "strata/forest",
+                  "watercolor/mesa",
+                  "watercolor/hills",
+                  "watercolor/lake",
+                  "watercolor/winter",
+                  "watercolor/city",
+                  "watercolor/blossom",
+                  "watercolor/autumn",
+                  "watercolor/beach",
+                  "watercolor/lighthouse-day",
+                  "watercolor/lighthouse-dusk"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Design"
+          },
           "blurb": {
             "anyOf": [
               {
@@ -5050,6 +5149,39 @@
               "cover-8"
             ],
             "title": "Cover Style"
+          },
+          "design": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "strata/lake",
+                  "strata/desert",
+                  "strata/coast",
+                  "strata/valley",
+                  "strata/karst",
+                  "strata/winter",
+                  "strata/fields",
+                  "strata/lagoon",
+                  "strata/city",
+                  "strata/forest",
+                  "watercolor/mesa",
+                  "watercolor/hills",
+                  "watercolor/lake",
+                  "watercolor/winter",
+                  "watercolor/city",
+                  "watercolor/blossom",
+                  "watercolor/autumn",
+                  "watercolor/beach",
+                  "watercolor/lighthouse-day",
+                  "watercolor/lighthouse-dusk"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Design"
           },
           "blurb": {
             "anyOf": [

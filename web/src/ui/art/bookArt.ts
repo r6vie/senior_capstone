@@ -5,8 +5,9 @@ import watercolor from "./watercolor/manifest.json";
 // Book art in two categories, each approved by Josef: strata set 1 (docs/design/art/strata/set-1/README.md,
 // 2026-11-21) and watercolor set 1 (docs/design/art/watercolor/set-1/README.md, 2026-11-23). A book's art is chosen
 // from its id out of every art in every category, so each art is equally likely, the same book has the same art on
-// every screen and after every reload, and its cover and its opened title page always match. Front end only: the
-// book has no art field. The category is on each art so the design chooser can group by it.
+// every screen and after every reload, and its cover and its opened title page always match. On My book the author
+// can choose another design; the book then carries it (`design`), and every screen uses that instead.
+// The category is on each art so the design chooser can group by it.
 
 const covers = import.meta.glob<string>(["./strata/covers/*.webp", "./watercolor/covers/*.webp"], {
   eager: true,
@@ -89,8 +90,11 @@ export const BOOK_ARTS: BookArt[] = [
   ...arts("watercolor", watercolor.arts, (art) => [art.coverInk, art.pageInk]),
 ];
 
-/** The book's art: a stable hash of its id (FNV-1a), modulo every art. */
-export function artFor(bookId: string): BookArt {
+/** The book's art: the design its author chose (an art's id, "<kind>/<key>"), or else a stable hash of its id
+ *  (FNV-1a) modulo every art, so books with no choice keep the art they always had. */
+export function artFor(bookId: string, design?: string | null): BookArt {
+  const chosen = design ? BOOK_ARTS.find((art) => art.id === design) : undefined;
+  if (chosen) return chosen;
   let hash = 0x811c9dc5;
   for (let index = 0; index < bookId.length; index++) {
     hash ^= bookId.charCodeAt(index);

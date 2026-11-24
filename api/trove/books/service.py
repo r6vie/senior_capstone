@@ -31,6 +31,7 @@ PUBLIC_FIELDS = {
     "title": 1,
     "author_name": 1,
     "cover_style": 1,
+    "design": 1,
     "blurb": 1,
     "chapters.id": 1,
     "chapters.title": 1,
@@ -442,13 +443,23 @@ async def _save(database: AsyncDatabase, book: dict, changes: dict) -> dict:
 
 
 async def edit_book(
-    database: AsyncDatabase, author_id: str, *, title: str | None = None, blurb: str | None = None
+    database: AsyncDatabase,
+    author_id: str,
+    *,
+    title: str | None = None,
+    blurb: str | None = None,
+    design: str | None = None,
 ) -> dict:
-    """Save the member's own title or back cover. On a published book, saved means live, and undo
-    takes it back. `published_at` stays."""
+    """Save the member's own title or back cover, or the cover design they chose. On a published book,
+    saved means live, and undo takes back words (a design is a choice, not words, so undo leaves it).
+    `published_at` stays."""
     check_text(title, blurb)
     book = await _own_book(database, author_id)
     changes: dict = {}
+    if design is not None:
+        changes["design"] = design
+        if title is None and blurb is None:
+            return await _save(database, book, changes)
     if title is not None:
         changes["title"] = title
     if blurb is not None:
