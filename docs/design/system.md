@@ -256,6 +256,30 @@ so leave the art layer out (keep a place for one image under each page's content
 
 Patterns added after v1. Each entry: name, the task it solves, date, owner, snippet or link.
 
+### A book landing on the shelf (2026-11-24, built from board StartReveal step 7, which Josef approved; `web/src/features/interview/ShelfLanding.{tsx,css}`)
+
+The task: the payoff at the end of the interview. The member's book, still white, goes onto the shelf among other
+members' books and its cover arrives. Only the shelf is the component; the interview page keeps the Librarian's
+line, the words and the buttons.
+
+- **The still frame.** Books stand on one `.ledge`. The member's book is the large book (236 x 344) in the middle,
+  pulled slightly forward: it stands 18px proud of its neighbours (17px on a phone). The neighbours are shelf books
+  (176 x 257; 141 x 206 on a phone) under a light dot tone of paper dots, never a blur or fade. 48px of room is kept
+  above the books, so a lifted book is never cut off. Neighbours past the edges are cut off
+  sideways; the page never scrolls sideways.
+- **Landing (1.6s).** The closed white book starts where the open book closed, turns to face the member about
+  its spine (from 18°, in its first 0.64s) and travels down on one move. Its neighbours slide apart to open its gap (0.9s). It settles on one soft ease-out
+  (`cubic-bezier(0.25, 0, 0.1, 1)`), with no bounce and no overshoot. Its dot shadow comes as it touches the shelf.
+  Transforms only, as in the open book.
+- **The cover arrives (about 4s).** The art's quick clip (`anim` in `ui/art/bookArt.ts`; Josef chose the quick
+  timing over the board's 13.5s) plays muted, inline and without controls, exactly where the cover art sits,
+  under the title and name. Those are in ink on the white cover and take the cover's own ink as the paint
+  reaches them. The clip's last frame is the cover, so on `ended` the still cover takes its place with no jump.
+  If the clip can't start within 2.5s, the still cover fades in (480ms) instead.
+- **Reduced motion.** A 200ms crossfade to the finished frame, with the still cover.
+- **On a phone** the shelf books keep their desktop look and art for this screen (the board's phone frame), at
+  the sizes above.
+
 ### Wide pages (2026-11-23, Trove UI, at Josef's ask; `web/src/ui/AppShell.css`)
 
 The task: the plain pages (Settings, Checkouts, the meeting, messages, checking out) sat in a narrow
