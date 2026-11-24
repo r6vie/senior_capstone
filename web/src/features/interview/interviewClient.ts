@@ -16,8 +16,6 @@ export interface DraftChapter {
   summary: string;
   /** The member's own words behind this chapter. Only they ever see them. */
   quotes: string[];
-  /** In review, the last rewrite can be taken back. */
-  hasPrevious?: boolean;
 }
 
 export interface DraftBook {
@@ -26,10 +24,6 @@ export interface DraftBook {
   /** The back-cover blurb, in the member's own voice. Null on books written before blurbs. */
   blurb: string | null;
   chapters: DraftChapter[];
-  /** The last rewrite couldn't be told better from what the member said, so nothing changed. */
-  rewriteUnchanged?: boolean;
-  /** In review, the last back cover rewrite can be taken back. */
-  hasPreviousBlurb?: boolean;
 }
 
 /** One proposed change to a book on the shelf. Nothing here is live until the member confirms. */
@@ -272,12 +266,6 @@ export interface InterviewClient {
   otherTitles(id: string): Promise<TitleOption[]>;
   /** Pick another title. This writes the book again, so chapter rewrites may be replaced. */
   changeTitle(id: string, titleId: string): Promise<InterviewState>;
-  rewriteBlurb(id: string): Promise<InterviewState>;
-  /** Go back to the back cover before the last rewrite. */
-  restoreBlurb(id: string): Promise<InterviewState>;
-  rewriteChapter(id: string, chapterId: string): Promise<InterviewState>;
-  /** Go back to the chapter's last version. */
-  restoreChapter(id: string, chapterId: string): Promise<InterviewState>;
   removeChapter(id: string, chapterId: string): Promise<InterviewState>;
   putOnShelf(id: string): Promise<InterviewState>;
 

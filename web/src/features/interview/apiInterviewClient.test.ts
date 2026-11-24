@@ -272,7 +272,7 @@ describe("apiInterviewClient", () => {
         chapters: [{ id: "1", title: "C", summary: "S", quotes: ["My words."] }],
       }),
     );
-    const state = await apiInterviewClient.rewriteChapter("me", "1");
+    const state = await apiInterviewClient.changeTitle("me", "1");
     expect(state).toMatchObject({ stage: "reviewing", book: { chapters: [{ quotes: ["My words."] }] } });
   });
 
@@ -362,7 +362,7 @@ describe("apiInterviewClient", () => {
     const post = vi.spyOn(api, "POST").mockResolvedValue(ok(offShelf));
     await apiInterviewClient.takeOffShelf();
     expect(post).toHaveBeenLastCalledWith("/books/me/take-down");
-    await expect(apiInterviewClient.rewriteChapter("me", "c1")).resolves.toMatchObject({ stage: "done" });
+    await expect(apiInterviewClient.changeTitle("me", "1")).resolves.toMatchObject({ stage: "done" });
   });
 
   it("marks a 409 as out of date", async () => {
@@ -394,22 +394,6 @@ describe("apiInterviewClient", () => {
     );
     await expect(apiInterviewClient.current()).resolves.toMatchObject({ stage: "notEnough" });
     expect(post).not.toHaveBeenCalled();
-  });
-
-  it("carries what a rewrite did to the book", async () => {
-    vi.spyOn(api, "POST").mockResolvedValue(
-      ok({
-        title: "T",
-        author_name: "A",
-        blurb: null,
-        status: "draft",
-        rewrite_unchanged: true,
-        chapters: [{ id: "1", title: "C", summary: "S", quotes: [], has_previous: true }],
-      }),
-    );
-    await expect(apiInterviewClient.rewriteChapter("me", "1")).resolves.toMatchObject({
-      book: { rewriteUnchanged: true, chapters: [{ hasPrevious: true }] },
-    });
   });
 
   it("carries the closing line to the wait", async () => {

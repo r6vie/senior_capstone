@@ -24,6 +24,11 @@ export function focusBand() {
 // A wait this long gets one calm line.
 const SLOW_AFTER_MS = 15_000;
 
+/** A line that starts with "The Librarian" needs no label saying who speaks. */
+function namesLibrarian(say: ReactNode): boolean {
+  return typeof say === "string" && say.startsWith("The Librarian");
+}
+
 export function Frame({
   phase,
   say,
@@ -71,9 +76,14 @@ export function Frame({
           </Link>
         )}
       </header>
-      <section className="iv-band dark">
-        <span className="halo" />
-        {eyebrow && <span className="iv-eyebrow">{eyebrow}</span>}
+      {/* No band (StartReveal): the Librarian's line runs across the top of the page, under a small label
+          unless the line already names it, or it is a wait. */}
+      <section className="iv-line" data-busy={busy || undefined}>
+        {eyebrow ? (
+          <span className="iv-eyebrow">{eyebrow}</span>
+        ) : (
+          !busy && !namesLibrarian(say) && <span className="iv-eyebrow">The Librarian</span>
+        )}
         <h1 className="iv-say" data-quiet={quiet || undefined} tabIndex={-1} aria-live="polite">
           {say}
         </h1>
