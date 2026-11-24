@@ -101,7 +101,7 @@ def main() -> int:
     if settings is None:
         ai = "unknown: couldn't read the API's settings (run `uv sync --directory api`)"
     elif settings["database"] == LIVE_DATABASE:
-        # The dev .env reaches the same Atlas cluster as the live site, so one wrong name would let a local
+        # A dev .env could be pointed at the live cluster by mistake, and one wrong name would then let a local
         # copy write test accounts and real AI spend into live members' data.
         print(
             f"MONGODB_DATABASE is {LIVE_DATABASE}, the live site's database. "

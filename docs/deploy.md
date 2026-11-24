@@ -146,9 +146,21 @@ Two kinds of setting exist, and they are changed in different places:
    running, so a broken build does not take the site down.
 4. Check it: open `https://<address>/api/health`. It must answer `{"ok":true,"database":true}`.
 
-**Which branch does Render watch?** During setup it was pointed at the branch `daniel/g1-go-live`. **After that
-branch is merged into `main`, change it to `main`** (Render → the service → **Settings → Build & Deploy →
-Branch**). If the branch is deleted by a merge and Render still watches it, deploys stop silently.
+**Which branch does Render watch?** It must be `main`. During setup it was `daniel/g1-go-live`. To change it:
+Render → the service → **Settings → Build & Deploy → Branch**. If the service was created from the Blueprint, also
+Render → **Blueprints** → trove → **Settings → Branch**, or the next Blueprint sync switches the service back.
+
+**Check which branch it really deploys.** Render reports each deploy to GitHub, so anyone can check without a
+Render account: on the repository's GitHub page under **Deployments**, or:
+
+```bash
+gh api repos/r6vie/senior_capstone/deployments --jq '.[:3][] | "\(.created_at) \(.ref) \(.sha[:7])"'
+```
+
+The `ref` column must say `main`. On 2026-11-23 it still said `daniel/g1-go-live` after the service setting was
+changed, so the Blueprint setting is the next place to look. Until it says `main`, a merge reaches the live site
+only after `daniel/g1-go-live` is fast-forwarded to `main`:
+`git push origin origin/main:refs/heads/daniel/g1-go-live`.
 
 **Watching a deploy.** Render → the service → **Events** shows each deploy and whether it succeeded;
 **Logs** shows the build and then the running app.

@@ -256,43 +256,162 @@ so leave the art layer out (keep a place for one image under each page's content
 
 Patterns added after v1. Each entry: name, the task it solves, date, owner, snippet or link.
 
-### My book: the shelf's book, opened to its author (MyBookD2, 2026-11-24, Trove UI; approved by Josef 2026-11-23; `web/src/features/book/`)
+### Build handoff: My book D2, the shelf's book opened to you (MyBookD2, approved by Josef 2026-11-23; built 2026-11-24, `web/src/features/book/`)
 
-Replaces "My book layout" under Growing books, and the edit forms of "Editing your own book" on My book.
+The task: write and look after your own book where readers see it. Source of truth for pixels:
+`docs/design/shelf/project/MyBookD2.dc.html` (canvas page "My book", board "My book · D, the shelf's book"). It
+replaces today's `MyBookPage` look and the "Editing your own book" entry below wherever they differ. The art
+clips and their timings are in `ui/art/bookArt.ts` already.
 
-- **The page:** "My book" and, top right, **On the shelf** as a switch (`.mb-switch`, `role="switch"`: a 52x28 ink box with
-  an 18px square knob; filled ink when on). Turning it off takes the book off the shelf at once; it is not shown for a draft.
-- **The book:** the reveal's open book (`OpenBook`, `AutoField` in `RevealParts.tsx`). The title page carries the
-  design's page art behind the title field and the byline, and the **pen** (44px white square, ink line) bottom left. The
-  contents list the chapters with their summaries and end with **Back cover**. A chapter or the back cover opens on the
-  right with the contents, titles only, on the left; the open row is inked. Every field saves as it's typed; there is no
-  Save or Cancel. "Remove this chapter" sits at the foot of a chapter's page and asks once.
-- **The Librarian:** one black block under the book (`.mb-lib`): a white caption "The Librarian", the line for the stage if
-  it has one, and the one red button.
-- **Changing the design:** the pen closes the book, which steps aside at a smaller size; "Choose a design" opens beside
-  it with two tabs, **Mosaic** and **Watercolour**, each with ten designs drawn as the member's own cover and no names.
-  The designs not chosen sit back (scale .92, opacity .5, saturation .45); the chosen one comes forward (scale 1.06),
-  over 0.2 s. Choosing fades the closed cover to paper (0.4 s), then its quick clip paints the new cover in (about 4 s).
-  "Use this design" saves it on the book (`design`, PATCH /books/me) and opens the book with the new scene; every screen
-  then draws that design (a book with none keeps the art its id gives it). "Back to my book" opens it as it was. Reduced
-  motion swaps at once.
-- **Removed from My book:** the reading question, the sparks list, Undo changes, "Show what you said", and the "Take off
-  the shelf" link (now the switch). The shelf reader's contents drop their dotted rules and hover underline to match.
+**Page.** The shelf's top bar, unchanged. Content 1192px wide, padding 28px top, 96px bottom. A head row
+(`display:flex; gap:18px; margin:12px 0 30px`): "My book" in Newsreader 600 48px, then the shelf switch at the far
+right. No status caption beside the title: the switch says it.
 
-### Signed-out pages, two halves (StartJoin, 2026-11-24, Trove UI; approved by Josef 2026-11-23; `web/src/features/auth/`)
+**The shelf switch.** A `role="switch"` button, `aria-checked` true while the book is on the shelf; label "On the
+shelf" in display caps 600 14px, `letter-spacing:.14em`, 12px gap, 44px tall target. The track is 52 x 28 with a
+2px ink line on white; the knob 18 x 18 ink, 3px in from the left. On: track ink, knob white at the right. Turning it
+off takes the book off the shelf at once (no dialog, no confirm line); turning it on puts it back. Phone: track
+44 x 24, knob 14, label 12px.
 
-Replaces "Signed-out pages" (2026-11-22) below.
+**The book.** The reader's open book exactly (`BookReader.css`, "Handoff: the open book" above), at the same size
+and in the same type, with the art behind the left page: 1180 x 724; pages 570 x 684 on `--paper`, 2px ink, 1px at
+the gutter; page padding 84px 56px 0 64px (left), 84px 64px 0 56px (right); the 18px gutter dot shade. Heads:
+the left page's is empty (there is nothing to close); the right page's holds the tabs Contents, 1, 2, …, Back cover
+(display caps 14px, 40px tall, the current one with a 3px ink underline bar, others `--ink-2`). The lifted
+corners turn pages as in the reader.
 
-- **Desktop (960px and up):** under a paper strip (wordmark, one underlined Barlow link across), the left half is the dot
-  ground with the Librarian's line in a **caption box** (white, 3px ink line, offset outline) and a **white book** standing on
-  a hatched shelf; the right half (up to 560px) is white, with the caption, a 52px Newsreader title and the form.
-- **Your name on the cover:** joining letters the first and last name onto the white book as they are typed; before that a
-  faint "Your name" shows where it goes. The confirm page keeps the name. Sign in shows the book with no name.
-- **An invite** is a library card ("Invited by", the inviter's name, two ruled lines) tucked behind the book, tilted 5°;
-  the case.edu hint goes with it.
-- **The code** is six boxes, three and three, over one real field (paste and the phone's code suggestion still work);
-  the box being filled has the focus ring. The password field has **Show** inside it, at its right end.
-- **Phone:** the caption box and the book on a short dot band, then the form at full width, names stacked under 480px.
+- **Fields by default, on one edge.** On your own copy the title, the back cover, and each chapter's title and text
+  are fields from the start (no Edit, no pens per field): white, 2px ink line, no radius, `padding:7px 12px 9px`,
+  in the type of what they hold (title Newsreader 600 42px, chapter title 600 38px, text Newsreader 17px/1.6),
+  growing with their content (`field-sizing:content`). Focus: a 3px ink outline, 2px offset. The byline ("by <full
+  name>", Plex 600 13px caps, `--ink-2`) sits 12px under the title field, 14px in. The left page starts at 64px
+  when it holds fields.
+- **Autosave.** Every field saves a moment after typing stops (about 600ms) and on blur. There is no Save, Cancel,
+  Undo or "go back to the last version" anywhere on My book. A save that fails says so in one `.message` line under
+  that field and keeps the text; it retries on the next pause.
+- **Contents.** Rows as the reader's: number (display 700 22px), title (Newsreader 600 21px), `›`, and the one-line
+  summary under the title (Plex 14px, `--ink-2`, clamped to two lines), `padding:16px 10px 16px 12px`, columns
+  `40px 1fr 24px`. **No dotted rules between rows** and **no underline on hover**: hover only shades the row
+  `--paper-sunk`. The back cover is the last row, after the chapters, in italics with no number.
+- **A chapter.** Left page the compact contents (17px titles, no summaries, the current one reversed in ink). Right
+  page: the number (display 800, 96px), then the chapter title field, then the text field, which fills the rest of
+  the page and scrolls inside itself (`field-sizing:fixed; overflow-y:auto; white-space:pre-wrap`). "Remove this
+  chapter" (quiet) at the foot, asking in place as today. No "What you said", no quotes, no Rewrite chapter.
+- **The back cover** opens like a chapter: one text field, no number, no title, and it cannot be removed. It is no
+  longer on the title page.
+- **The design pen.** One 44px square pen button (2px ink line, white; ink with white icon on hover) at the left
+  page's foot, 18px from its left and bottom edges, over the art. `aria-label` "Change the design".
+
+**The Librarian block, under the book.** One black block (`--ink`, white text), 56px below the book,
+`padding:34px 40px 36px`, two columns `minmax(0,1fr) auto`, gap 48px: a white `.caption` "The Librarian", the next
+question it will ask in Newsreader italic 500 32px/1.2 (at most 640px), and on the right "Continue with the
+Librarian" (the page's one red button). With a round already open the button reads "Continue adding to your book".
+Showing the question before Start needs the interview to have it ready (an API change; see the board's note).
+
+**Changing the design.**
+
+1. The pen closes the book: the cover swings shut about the spine as on the shelf, and the closed book slides left
+   and shrinks to 0.8 (about 378 x 550), into a 440px column. The picker opens beside it (64px gap).
+2. The picker: "Choose a design" (Newsreader 600 34px), then the two kinds as tabs, "Mosaic" and "Watercolour"
+   (display caps 15px, 44px tall, the current with a 3px bar). It opens on the kind the book wears now, with its ten
+   designs and the current one marked. There is no screen before it to choose the kind.
+3. The designs: a 5-column grid (gap 16px 18px), each your own book's cover with your title and name at 0.56 of
+   the shelf size. **No names or descriptions under them**: the art speaks for itself. The unchosen ones sit back:
+   `opacity:.5; filter:saturate(.45); transform:scale(.92)`. The chosen one: full opacity and colour,
+   `scale(1.06)`, no box around it. The change between them is 0.2s.
+4. **Choosing paints in.** The closed book's current art fades back to plain paper (0.4s), then the new cover's
+   quick clip plays in place on the closed book (about 4s; a watercolour paints itself in, a Mosaic cover builds
+   from the bottom up). The book does not rotate. A newer choice during a clip starts over from paper. Reduced
+   motion: the cover simply swaps.
+5. "Use this design" (red) keeps it and opens the book again with the new scene on the title page; "Back to my
+   book" (quiet) opens it again unchanged. The choice is stored on the book (`design`, PATCH /books/me), and every
+   screen draws it; a book with none keeps the art its id gives it.
+
+**Names.** The pixel-band style is "Mosaic" wherever its name shows (it was Strata). Code names can stay.
+
+**Removed from My book.** The question from a reading (take it out of the code), the next-questions list (sparks),
+Undo changes, What you said, the Take off the shelf link (now the switch), and Rewrite chapter and Rewrite back
+cover.
+
+**Everywhere, the shelf's reader included.** A chapter title in any contents list never underlines on hover
+(`BookReader.css` `.br-toc button:hover .br-toc-title` loses its underline; the row shade stays), and the reader's
+contents drop their dotted rules (`border-top/bottom: 2.5px dotted`) to match.
+
+**Phone (board's phone frame).** One page at a time, as the reader does on a phone: the title page with its fields
+and the design pen (14px in from the foot corner; the page keeps 210px under its fields for the art), the contents,
+then the Librarian block at full width with its button full width. Gutter 16px, "My book" 34px, the switch beside
+it. The contents drop their own heading (the tabs above say Contents) and the rows sit on the page's text edge:
+padding 66px 18px 12px, columns `24px 1fr 12px`, gap 10px, row padding 13px 0, titles 18px, summaries 13.5px.
+The picker on a phone is not drawn: proposed, a sheet from below (3 columns of designs) over the closed book.
+
+**Not decided here (product, ask Josef):** what My book shows for a member with no book yet, and whether the
+avatar should open My book with the My book tab dropped from the nav and Settings moved under the book (Josef
+raised it on 2026-11-23; not drawn or approved yet).
+
+### Build handoff: joining, confirming and signing in (StartJoin, approved by Josef 2026-11-24; built 2026-11-24, `web/src/features/auth/`)
+
+The task: join, confirm your email or sign in, on a desktop screen, with the book you are about to write in view.
+Source of truth: `docs/design/shelf/project/StartJoin.dc.html` (canvas page "Getting started"). It replaces the
+card on dots in "Signed-out pages" below at 960px and up; phones keep that entry except where noted.
+
+**Top bar.** 72px, paper, a 2px ink rule under it, 44px side padding: the wordmark, and at the right one link to
+the other page ("Sign in" / "Create an account"), display caps 700 15px, `letter-spacing:.14em`, ink, underlined
+2px at 5px offset. It isn't repeated under the form.
+
+**Two halves.** A grid `minmax(0,1fr) 560px` filling the window under the bar (728px on the board).
+
+- **Left: the book.** The dot ground (`radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0/6px 6px` on
+  `--paper`) with a 3px ink rule on its right. At the top, 56px in, the Librarian's line in a caption box (white,
+  3px ink line, `padding:18px 24px 20px`, at most 520px, a hard offset shadow `8px 8px 0 -1px var(--paper), 8px
+  8px 0 1px var(--ink)`), in Newsreader italic 500 32px/1.2: "You are the author of the book you haven't written
+  yet." (join and confirm) or "Your book is where you left it." (sign in). At the foot, the white book standing on
+  a shelf, centred: the book 270px wide at 236:344, white, 3px ink line, radius 3px 6px 6px 3px, the hinge a 3px
+  line 6.5% in, a 4px dot shadow 7px down-right, three blank title lines (`--paper-sunk` with a 2px `--rule`
+  under, 84%, 100% and 62% wide). The shelf is a 14px ink bar with a 14px diagonal hatch under it
+  (`repeating-linear-gradient(135deg, var(--ink) 0 2px, transparent 2px 7px)`), full width, 72px above the foot.
+- **Right: the form.** White, `padding:64px 72px 40px`. A `.caption` ("Join", "One more step", "Sign in"), the
+  title 16px under it in Newsreader 600 52px ("Join Trove.", "Confirm your email.", "Welcome back."), then the
+  form 34px under, fields 20px apart. Fields: label Plex 500 15px, the box 52px tall, 2px ink, white, Plex 17px;
+  focus a 3px ink outline at 2px. Hints Plex 13.5px `--ink-2`, unchanged in wording. The red button (at least
+  220px) is the only boxed control.
+
+**Join.** First and last name side by side (two columns, 16px gap), then Email with its hint, then Password with
+"Show" inside the box at the right (display caps 700 13px, underlined; it toggles to "Hide" and the field to plain
+text; `aria-pressed`), "At least 12 characters.", then "Create account".
+
+**Your name on the cover.** The book's author line (display 700, 4.6% of the book's width, caps, `.16em`) shows
+"Your name" in `--ink-2` until a name field has text, then fills letter by letter from the two fields as they are
+typed: the full name, nothing else. (The board draws the placeholder in `--ink-3`; use `--ink-2`, since `--ink-3`
+is never text.) The cover stays white: no title, no art.
+
+**From an invite link.** Who invited you shows as a library card tucked behind the book, not a message above the
+form: white, 2px ink line, 250px wide, `padding:16px 18px 18px 52px`, turned 5° about its lower left, its left edge
+96px right of the book's centre and 190px above the shelf, under the book (`z-index` below it). On it: "Invited by"
+(display caps 700 11px, `--ink-2`, a 1px ink rule under it), the inviter's full name in Newsreader 600 19px, and
+two blank 1px `--rule` lines. The case.edu hint goes, since any email works with an invite. A used or expired
+invite keeps today's message.
+
+**Confirm your email.** The same halves; the book keeps the name. Under the title: "We sent a 6-digit code to
+<email>. It works for 15 minutes." (Plex 16px `--ink-2`, the email in ink 600). The code is six boxes, 58 x 70,
+2px ink, white, Newsreader 600 34px, 10px apart with an extra 12px after the third. One real input underneath
+(`inputmode="numeric"`, `autocomplete="one-time-code"`, maxlength 6); typing moves the focus ring (3px outline) to
+the next box, Backspace goes back, a pasted code fills all six. Then "Confirm" (red) and "Send me a new code"
+(quiet), and at the foot "Wrong address? Start over" (Plex 14px `--ink-2`, the link in ink).
+
+**Sign in.** The same halves, the book closed and blank (no name). Email, Password with Show, then "Sign in" and
+the quiet "Forgot your password?" beside it. **There is no password reset in the API yet**: that needs a backend
+task and Josef's yes on the flow before the link ships. Until then leave the link out.
+
+**Motion.** The intro's slow watercolour loop (`docs/design/art/watercolor/set-1/anim/<key>-loop.{webm,mp4}`, 25s, seamless, not in `web/` yet; decision
+2026-11-23 "watercolor animations for all ten, and where they play") is approved for the sign-in pages' book; the
+StartJoin board draws the book still and white, so where the loop sits on it (the white cover, or a cover beside
+it) is not drawn yet: build the still book first. Typing the name has no animation beyond the letters appearing.
+Reduced motion: no loop, the poster.
+
+**Phone.** The book on a short dot band at the top (the caption box 16px in, 12px 16px 14px padding, 21px type;
+the book smaller, on the shelf bar 28px above the band's foot, the band's foot a 3px ink rule), then the form full
+width under it (`padding:26px 18px 40px`, title 38px, names stacked, fields 16px apart, the button full width). The
+code boxes are 46 x 58 at 28px, 7px apart, 6px extra after the third. Top bar 60px with 16px padding.
 
 ### The reveal: titles on a shelf, the book open while it's written, review in the book (StartReveal, 2026-11-24, Trove UI; approved by Josef)
 
@@ -512,6 +631,8 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
 
 ### Editing your own book (spec-editing.md, 2026-11-15, Trove UI)
 
+Superseded where they differ by "Build handoff: My book D2" above (fields by default, autosave, the shelf switch).
+
 - **Edit in place (`.ed-form`).** A quiet "Edit" (`.button-quiet.sm`, 44px) under the text it edits; the text becomes
   `.field`s where it stood, labelled ("Title", "Back cover", "Chapter title", "What it's about"), with a secondary
   "Save" and quiet "Cancel" (never red: the screen's red stays its next step). Typing past the limit is allowed and
@@ -606,6 +727,8 @@ Task: while a member types an answer in the interview, the Librarian marks it an
 - **Phone.** The notebook is a sheet that lifts from a one-line peek above the composer; the dot scrim sits behind it.
 
 ### Signed-out pages (2026-11-22, Ellie; `web/src/features/auth/AuthLayout.tsx`, `Auth.css`)
+
+From 960px up this is replaced by "Build handoff: joining, confirming and signing in" above once that is built.
 
 Task: sign in, join or confirm your email. The form side of "Reference screen · Sign in" (`SysSignIn.dc.html`), set as
 one card in the middle of a comic dot ground:
