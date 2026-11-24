@@ -19,7 +19,6 @@ from trove.interview.models import (
     RemovalRequest,
     RevisionChoicesRequest,
     RevisionRequest,
-    ShapeRequest,
     SkipRequest,
     SparkRequest,
     SparkResponse,
@@ -84,9 +83,7 @@ async def answer(
     """Answer the waiting question. The answer is saved first, then the next question is written."""
     try:
         return interview_view(
-            await service.answer(
-                database, claude, user, data.answer, shape=False, question_id=data.question_id
-            )
+            await service.answer(database, claude, user, data.answer, question_id=data.question_id)
         )
     except service.StaleQuestion as error:
         return stale_question(error)
@@ -118,23 +115,6 @@ async def notes(
     keystroke, and drop a reply once the member has moved to another question. It never fails for
     want of AI: it just adds nothing. 409 if `question_id` isn't the question waiting."""
     return await service.notes(database, claude, user, data)
-
-
-@router.post("/shape", response_model=InterviewResponse, responses=STALE_QUESTION_RESPONSES)
-async def shape(
-    data: ShapeRequest,
-    user: dict = Depends(get_current_user),
-    database: AsyncDatabase = Depends(get_database),
-    claude: Claude = Depends(get_claude),
-) -> InterviewResponse:
-    """Confirm the Librarian's playback ("Yes, that's me"), or correct it."""
-    text = data.correction or service.SHAPE_CONFIRMED
-    try:
-        return interview_view(
-            await service.answer(database, claude, user, text, shape=True, question_id=data.question_id)
-        )
-    except service.StaleQuestion as error:
-        return stale_question(error)
 
 
 @router.post("/finish", response_model=InterviewResponse, responses=STALE_QUESTION_RESPONSES)

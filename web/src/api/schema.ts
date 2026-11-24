@@ -482,26 +482,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/interview/shape": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Shape
-         * @description Confirm the Librarian's playback ("Yes, that's me"), or correct it.
-         */
-        post: operations["shape_interview_shape_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/interview/finish": {
         parameters: {
             query?: never;
@@ -1998,8 +1978,6 @@ export interface components {
              * @enum {string}
              */
             phase: "sweep" | "dig" | "shape" | "adding" | "reading";
-            /** Playback */
-            playback: string | null;
             /** Builds On */
             builds_on?: string | null;
         };
@@ -2123,19 +2101,6 @@ export interface components {
             book: components["schemas"]["BookCard"];
             /** Excerpt */
             excerpt: string;
-        };
-        /** ShapeRequest */
-        ShapeRequest: {
-            /**
-             * Question Id
-             * @description The `question_id` of the playback being answered.
-             */
-            question_id?: string | null;
-            /**
-             * Correction
-             * @description What's different. Leave out to confirm: "Yes, that's me".
-             */
-            correction?: string | null;
         };
         /** ShelfPage */
         ShelfPage: {
@@ -3157,48 +3122,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NotesResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    shape_interview_shape_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ShapeRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InterviewResponse"];
-                };
-            };
-            /** @description Conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StaleQuestionResponse"];
                 };
             };
             /** @description Validation Error */

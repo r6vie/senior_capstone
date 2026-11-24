@@ -8,7 +8,7 @@ type InterviewResponse = components["schemas"]["InterviewResponse"];
 function interview(overrides: Partial<InterviewResponse>): InterviewResponse {
   return {
     stage: "interviewing",
-    question: { question_id: "q0", text: "What do people come to you for?", phase: "sweep", playback: null },
+    question: { question_id: "q0", text: "What do people come to you for?", phase: "sweep" },
     topic: null,
     has_answers: false,
     can_finish: false,
@@ -82,24 +82,15 @@ describe("apiInterviewClient", () => {
     ]);
   });
 
-  it("shows the Shape step as the playback followed by its question", async () => {
+  it("asks a Shape question like any other, with nothing played back", async () => {
+    const text = "What does leaving grad school have in common with the bakery, if anything?";
     vi.spyOn(api, "POST").mockResolvedValue(
-      ok(
-        interview({
-          question: {
-            question_id: "q1",
-            text: "Is this you?",
-            phase: "shape",
-            playback: "You left grad school twice.",
-          },
-        }),
-      ),
+      ok(interview({ question: { question_id: "q1", text, phase: "shape" } })),
     );
-    expect(await apiInterviewClient.answer("me", "An answer")).toEqual({
-      id: "me",
-      stage: "shaping",
+    expect(await apiInterviewClient.answer("me", "An answer")).toMatchObject({
+      stage: "asking",
       phase: "shape",
-      playback: "You left grad school twice. Is this you?",
+      question: text,
       questionId: "q1",
     });
   });
@@ -111,7 +102,7 @@ describe("apiInterviewClient", () => {
       .mockResolvedValueOnce(
         ok(interview({ stage: "choosing", question: null, titles: [{ title: "A", why: "B" }] })),
       );
-    const state = await apiInterviewClient.confirmShape("me");
+    const state = await apiInterviewClient.answer("me", "An answer");
     expect(post).toHaveBeenLastCalledWith("/interview/finish", {});
     expect(state).toEqual({ id: "me", stage: "choosing", titles: [{ id: "0", title: "A", why: "B" }] });
   });
@@ -386,9 +377,7 @@ describe("apiInterviewClient", () => {
   it("sends the question's id back once the API gives one", async () => {
     const post = vi
       .spyOn(api, "POST")
-      .mockResolvedValue(
-        ok(interview({ question: { question_id: "q1", text: "Q", phase: "sweep", playback: null } })),
-      );
+      .mockResolvedValue(ok(interview({ question: { question_id: "q1", text: "Q", phase: "sweep" } })));
     await apiInterviewClient.askAgain("me");
     await apiInterviewClient.answer("me", "An answer");
     expect(post).toHaveBeenLastCalledWith("/interview/answers", {
@@ -423,7 +412,7 @@ describe("apiInterviewClient", () => {
     });
   });
 
-  it("sends the question's id with a correction, and carries the closing line to the wait", async () => {
+  it("carries the closing line to the wait", async () => {
     const post = vi.spyOn(api, "POST").mockResolvedValue(
       ok({
         ...interview({ question: null, closing_line: "That's enough for your book." }),
@@ -431,12 +420,10 @@ describe("apiInterviewClient", () => {
       }),
     );
     await apiInterviewClient.askAgain("me");
-    await expect(apiInterviewClient.correctShape("me", "It was three times")).resolves.toMatchObject({
+    await expect(apiInterviewClient.answer("me", "It was three times")).resolves.toMatchObject({
       closingLine: "That's enough for your book.",
     });
-    expect(post).toHaveBeenLastCalledWith("/interview/shape", {
-      body: { correction: "It was three times", question_id: undefined },
-    });
+    expect(post.mock.lastCall?.[0]).toBe("/interview/answers");
   });
 
   it("reads the writing stages after a refresh", async () => {

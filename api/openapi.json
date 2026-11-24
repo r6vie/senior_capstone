@@ -1212,63 +1212,6 @@
         ]
       }
     },
-    "/interview/shape": {
-      "post": {
-        "tags": [
-          "Interview"
-        ],
-        "summary": "Shape",
-        "description": "Confirm the Librarian's playback (\"Yes, that's me\"), or correct it.",
-        "operationId": "shape_interview_shape_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ShapeRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InterviewResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StaleQuestionResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
     "/interview/finish": {
       "post": {
         "tags": [
@@ -5019,17 +4962,6 @@
             ],
             "title": "Phase"
           },
-          "playback": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Playback"
-          },
           "builds_on": {
             "anyOf": [
               {
@@ -5046,8 +4978,7 @@
         "required": [
           "question_id",
           "text",
-          "phase",
-          "playback"
+          "phase"
         ],
         "title": "Question"
       },
@@ -5346,39 +5277,6 @@
           "excerpt"
         ],
         "title": "SearchResult"
-      },
-      "ShapeRequest": {
-        "properties": {
-          "question_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Question Id",
-            "description": "The `question_id` of the playback being answered."
-          },
-          "correction": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000,
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Correction",
-            "description": "What's different. Leave out to confirm: \"Yes, that's me\"."
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "ShapeRequest"
       },
       "ShelfPage": {
         "properties": {

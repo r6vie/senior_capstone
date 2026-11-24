@@ -197,12 +197,10 @@ THEO_ANSWERS = [
     "to show whether something was contaminating the samples in the lab or during collection, so we'd know "
     "if a high number was real or just from our process.",
 ]
-THEO_PLAYBACK = (
-    "You split the fry stand line at 16 so one person takes orders and money while the fryer only cooks, and "
-    "waits went from about 25 minutes to under 10. You also check the bolts and the slats before touching a "
-    "tool, and you learned the creek samples only meant something once they moved to a fixed 7am Tuesday with "
-    "a rain log."
+THEO_LINK = (
+    "What does splitting the fry stand line have in common with the 7am Tuesday creek samples, if anything?"
 )
+LINK = "Which two things you've told me feel like the same move to you, if any?"
 TITLES = [
     {
         "title": "Check the slats first",
@@ -339,8 +337,8 @@ def _turns(text: str) -> list[ParsedTurn]:
 
 
 def _answers(turns: list[ParsedTurn]) -> list[str]:
-    """What the member actually said: no skips, and not their "yes" to the Shape playback."""
-    return [turn.answer.strip() for turn in turns if turn.answer != SKIPPED and turn.phase != "shape"]
+    """What the member actually said, without the skips."""
+    return [turn.answer.strip() for turn in turns if turn.answer != SKIPPED]
 
 
 def _first_sentence(answer: str) -> str:
@@ -370,12 +368,11 @@ def _next_question(turns: list[ParsedTurn], thin: bool) -> Asked:
     return next((option for option in order if option.question not in asked), LAST_RESORT)
 
 
-def _plan(phase: str, question: str, topic: str, *, playback: str | None = None, ready: bool = False) -> dict:
+def _plan(phase: str, question: str, topic: str, *, ready: bool = False) -> dict:
     return {
         "threads": [{"thread": topic, "has_moment": False, "missing": "A specific moment."}],
         "phase": phase,
         "question": question,
-        "playback": playback,
         "topic": topic,
         "ready_for_reveal": ready,
     }
@@ -390,12 +387,9 @@ def _interviewer(text: str) -> dict:
         return _plan("shape", "Thanks, I have enough to start your book.", "your book", ready=True)
     answers = _answers(turns)
     if len(answers) >= SHAPE_AFTER_ANSWERS:
-        if "fry stand" in " ".join(answers).casefold():
-            playback = THEO_PLAYBACK
-        else:
-            longest = sorted(answers, key=len, reverse=True)[:2]
-            playback = "You told me: " + " ".join(_first_sentence(answer) for answer in longest)
-        return _plan("shape", "Is this you?", "what you've told me so far", playback=playback)
+        # Shape asks about a link between two threads, and never plays the answers back.
+        link = THEO_LINK if "fry stand" in " ".join(answers).casefold() else LINK
+        return _plan("shape", link, "what links your stories")
     # Answers ran thin, or the member is skipping: the next question comes from other ground.
     thin = "Answers are running thin" in text
     question, topic = _next_question(turns, thin)

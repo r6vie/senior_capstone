@@ -36,11 +36,8 @@ class MemberReply(BaseModel):
     skipped: bool
 
 
-async def answer(
-    claude: Claude, persona: dict, turns: list[Turn], question: str, playback: str | None
-) -> MemberReply:
-    asked = f"{playback}\n\n{question}" if playback else question
-    asked += '\n\n(A quiet "Skip" button is always on screen.)'
+async def answer(claude: Claude, persona: dict, turns: list[Turn], question: str) -> MemberReply:
+    asked = question + '\n\n(A quiet "Skip" button is always on screen.)'
     content = (
         f"<profile>\n{persona['profile'].strip()}\n</profile>\n\n"
         f"{engine._transcript(turns)}\n\n<newest_question>\n{asked}\n</newest_question>"
@@ -75,11 +72,7 @@ async def run_case(claude: Claude, case: dict) -> str:
             first_moment = len(turns)
         ranking = " / ".join(f"{t.thread} ({t.missing})" for t in plan.threads[:4])
         flags = [name for name, pattern in BANNED.items() if re.search(pattern, plan.question, re.I | re.S)]
-        if plan.phase == "shape" and plan.playback:
-            flags = [f for f in flags if f != "yes/no opener"]
         entry = [f"**Q{len(turns) + 1} [{plan.phase}]** {plan.question}"]
-        if plan.playback:
-            entry.append(f"> playback: {plan.playback}")
         entry.append(f"<sub>topic: {plan.topic} · threads: {ranking}</sub>")
         if flags:
             entry.append(f"⚠️ flags: {', '.join(flags)}")
@@ -88,7 +81,7 @@ async def run_case(claude: Claude, case: dict) -> str:
             break
         if engine._running_thin(turns):
             entry.insert(1, "<sub>↻ answers running thin: sharper angle asked for</sub>")
-        reply = await answer(member, case, turns, plan.question, plan.playback)
+        reply = await answer(member, case, turns, plan.question)
         skipped = reply.skipped or not reply.answer.strip()
         reply = reply.answer.strip()
         entry.append("**A:** *(skips)*" if skipped else f"**A:** {reply}")
