@@ -1057,3 +1057,20 @@ Pending Josef's review of the new canvas.
   foot and a violet shadow thrown right.
 - Critic round: one (beam airbrushed and muddy, page beam a stain, a star on the beam, smudge rocks, even arches,
   skirt-like bottom tiers); all fixed. Checked in local renders, not on the live canvas.
+
+## 2026-11-23: brand 2C (Wet Ink), typography and marketing refined
+
+- **Josef: "refine the typography and marketing for 2C, keep the logo".** The painted mark is unchanged.
+- **Wordmark tuned:** the T–r gap closed by 5.5% and the word tracked −1.2%; a stacked lockup with the tagline "the
+  book you haven't written yet" in Caslon italic under a hairline as wide as the word; rules for clear space
+  (the o's height), smallest sizes and colour.
+- **Type system:** seven jobs (Display 72, Page title 44, Section 30 in Caslon Display; Voice 21 italic and Reading 17
+  in Caslon Text; Interface 15 and Label 12 caps in Schibsted Grotesk), plus book-typography rules: old-style
+  figures on, real quotes and dashes, italic not bold for emphasis, caps only for short tracked labels.
+- **Marketing as one campaign:** three posters on one grid (headlines anchored up from a shared footer, each in a
+  different colourway of the mark), a three-slide carousel, a 9:16 story, an email, a bookmark, a launch invitation
+  with placeholders, and a tote. The per-member mark is no longer shown as a proposal; the colourways are campaign
+  colourways.
+- **Critic round:** one; fixed folios, the slide-3 rules, the quote's attribution, the bookmark rag, the invitation's
+  missing wordmark, the email's ground and body face, the tagline's width, poster double branding. Kept against it:
+  "A thirty-minute video call" beside the button in the site mock, as the design system's shelf spec has it.

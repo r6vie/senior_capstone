@@ -504,15 +504,61 @@ def board_b():
 
 
 def board_c():
-    ink, paper = "#1C2230", "#FBF9F4"
+    """Wet Ink, refined (Josef, 2026-11-23: "refine the typography and marketing for 2C, keep the logo"). The painted
+    mark is unchanged. The type becomes a system: a tuned wordmark (the T-r pair closed up, the tagline in Caslon
+    italic under a hairline), a full scale with jobs, and the book-typography rules (old-style figures, real quotes,
+    italic for emphasis, caps only for short tracked labels). The marketing becomes a campaign: three posters, a
+    carousel, a story, an email, a bookmark, a launch invitation and a tote, all on one grid and one footer."""
+    ink, paper, wash = "#1C2230", "#FBF9F4", "#F1ECE2"
     vars_css = (f"--pg:{paper};--ink:{ink};--ink2:#5A5E68;--disp:'Libre Caslon Display',Georgia,serif;--voice:'Libre Caslon Text',Georgia,serif;"
-                f"--ui:'Schibsted Grotesk',system-ui,sans-serif;--band:#F1ECE2;--bandfg:{ink};"
+                f"--ui:'Schibsted Grotesk',system-ui,sans-serif;--band:{wash};--bandfg:{ink};"
                 "--navf:500 15px 'Schibsted Grotesk';--navls:.02em;--btnf:600 16px 'Schibsted Grotesk'")
     extra = """
+.b2{font-variant-numeric:oldstyle-nums proportional-nums;hanging-punctuation:first}
+.tw{font-family:'Libre Caslon Display';font-weight:400;letter-spacing:-.012em;line-height:.9;font-kerning:normal}
+.tw .tT{letter-spacing:-.055em}
+.tag{font-family:'Libre Caslon Text';font-style:italic;letter-spacing:.005em}
+.lbl{font:600 12px 'Schibsted Grotesk';letter-spacing:.16em;text-transform:uppercase}
+.scale{display:grid;grid-template-columns:220px minmax(0,1fr) 300px;border-top:1.5px solid var(--ink)}
+.scale>div{padding:18px 0;border-bottom:1px solid #D9D4C8;display:flex;align-items:baseline}
+.scale .k{flex-direction:column;align-items:flex-start;gap:4px}
+.scale .k b{font:600 12px 'Schibsted Grotesk';letter-spacing:.16em;text-transform:uppercase}
+.scale .k span,.scale .m{font:400 13px 'Schibsted Grotesk';color:var(--ink2);line-height:1.4}
+.rules{display:grid;grid-template-columns:repeat(4,1fr);gap:28px}
+.rules>div{border-top:1.5px solid var(--ink);padding-top:12px}
+.rules .ex{font-family:'Libre Caslon Text';font-size:22px;line-height:1.3;margin:10px 0 8px}
+.rules .ex s{color:#9A9CA3;text-decoration-thickness:1.5px}
+.rules p{font-size:14px;color:var(--ink2)}
+.pp{position:relative;overflow:hidden;border:1px solid #CFC9BC;background:var(--pg);box-shadow:0 1px 0 #CFC9BC}
+.foot{position:absolute;left:var(--m);right:var(--m);bottom:var(--m);display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid var(--ink);padding-top:12px}
+.url{font:500 12px 'Schibsted Grotesk';letter-spacing:.06em}
 """
-    hero = f"""<section class="sec" style="margin-top:56px"><div style="border:2px solid {ink};height:660px;background:{paper};display:grid;place-items:center">{wet_lock(140, "lake", ink)}</div></section>"""
+
+    def word(px, ink_=ink, tagline=False):
+        tg = (f'<span style="display:block;width:100%;border-top:1px solid {ink_};margin-top:.16em;padding-top:.22em;'
+              f'font-size:.142em;text-align:center;white-space:nowrap;letter-spacing:0" class="tag">the book you haven’t written yet</span>' if tagline else "")
+        return f'<span class="tw" style="font-size:{px}px;color:{ink_};display:inline-block;text-align:center"><span class="tT">T</span>rove{tg}</span>'
+
+    def lock(px, key="lake", tagline=False, stacked=True):
+        if stacked:
+            return (f'<span style="display:inline-flex;flex-direction:column;align-items:center;gap:{px*.08:.0f}px">'
+                    f'{painted(key, int(px*1.9))}{word(px, tagline=tagline)}</span>')
+        sm = "" if px >= 40 else "font-family:'Libre Caslon Text';letter-spacing:0"
+        return (f'<span style="display:inline-flex;align-items:center;gap:{px*.24:.0f}px">{painted(key, int(px*1.5))}'
+                f'<span class="tw" style="font-size:{px}px;color:{ink};{sm}"><span class="tT">T</span>rove</span></span>')
+
+    def footer(m=40, key="lake", url=True):
+        return (f'<div class="foot" style="--m:{m}px">{lock(30, key, stacked=False)}'
+                + ('<span class="url" style="margin-left:auto">[link]</span>' if url else "") + '</div>')
+
+    hero = f"""<section class="sec" style="margin-top:56px"><div style="border:2px solid {ink};height:700px;background:{paper};display:grid;grid-template-columns:1.25fr 1fr">
+<div style="display:grid;place-items:center;border-right:1px solid #D9D4C8">{lock(132, "lake", tagline=True)}</div>
+<div style="display:grid;grid-template-rows:1fr 1fr">
+<div style="display:grid;place-items:center;border-bottom:1px solid #D9D4C8">{lock(64, "lake", stacked=False)}</div>
+<div style="display:grid;place-items:center;background:{wash}">{word(110)}</div></div></div>
+<div style="display:flex;gap:44px;margin-top:14px"><span class="cap">Primary · stacked, with the tagline under a hairline</span><span class="cap" style="margin-left:auto">Horizontal · the nav and footers</span><span class="cap">Wordmark alone · where the mark is already near</span></div></section>"""
     variants = "".join(f'<figure>{painted(k, 200)}<span class="cap">{k}</span></figure>' for k in PAINTED)
-    marks = f"""<section class="sec"><div class="sh"><b>The mark</b><span>Painted, not drawn: an open book of two wet washes. Proposal: each member’s mark takes the two colours of their own cover</span></div>
+    marks = f"""<section class="sec"><div class="sh"><b>The mark</b><span>Unchanged: an open book of two wet washes, painted in colourways taken from the covers</span></div>
 <div class="row" style="gap:28px">{variants}</div>
 <div class="row" style="margin-top:44px">
 <figure>{painted("lake", 120)}<span class="cap">120</span></figure>
@@ -520,66 +566,116 @@ def board_c():
 <figure>{wet_flat(32)}<span class="cap">32 · flat</span></figure>
 <figure>{wet_flat(16)}<span class="cap">16 · flat</span></figure>
 <figure><div class="ico" style="background:{paper};border:1.5px solid {ink}">{painted("dusk", 96)}</div><span class="cap">App icon</span></figure>
-<figure>{wet_lock(56, "coast", ink, stacked=False)}<span class="cap">Horizontal</span></figure>
 </div><div style="margin-top:28px"><span class="btab">{wet_flat(16)}Trove · Shelf</span></div></section>"""
-    why = f"""<section class="sec"><div class="sh"><b>Why paint</b><span>The covers are already watercolour; the brand comes from the same brush</span></div>
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:36px;font-size:17px">
-<p><b style="font-family:'Libre Caslon Display';font-weight:400;font-size:30px;display:block;margin-bottom:6px">No two alike (a proposal).</b>The site carries one house mark. As a proposal, each member’s could be painted in their own cover’s colours: a family, not a stamp.</p>
-<p><b style="font-family:'Libre Caslon Display';font-weight:400;font-size:30px;display:block;margin-bottom:6px">Where they meet, it deepens.</b>The two pages overlap at the spine, and the glazes stack into a third, darker colour: the conversation.</p>
-<p><b style="font-family:'Libre Caslon Display';font-weight:400;font-size:30px;display:block;margin-bottom:6px">Visibly by hand.</b>Pooled edges, uneven pigment, paper tooth. Nothing about it can be mistaken for a template.</p></div></section>"""
-    typ = f"""<section class="sec"><div class="sh"><b>Type</b><span>A literary serif with a working sans</span></div>
-{spec([
-        ("Display · Libre Caslon Display", "font-family:'Libre Caslon Display';font-size:96px", "Trove",
-         "Caslon is the face of English-language books for three centuries; the display cut is sharp and elegant at size. The wordmark, titles, shelf names."),
-        ("Reading · Libre Caslon Text", "font-family:'Libre Caslon Text';font-style:italic;font-size:30px;line-height:1.3",
-         "A book you read by talking to its author.", "The text cut for blurbs and chapters; the italic is the Librarian’s voice."),
-        ("Interface · Schibsted Grotesk", "font-family:'Schibsted Grotesk';font-weight:600;font-size:40px",
-         "Ask to check out", "A newspaper-born grotesk, sturdy and slightly condensed, in place of Plex for anything you do."),
-    ])}</section>"""
-    col = f"""<section class="sec"><div class="sh"><b>Colour</b><span>Blue-black ink on paper; everything else comes from the members' paints</span></div>
-{swatches([(ink, "Iron-gall ink", "Type and the wordmark"), (paper, "Cold-press", "The ground"), ("#F1ECE2", "Wash", "Panels, the Librarian’s band"),
+    wordsec = f"""<section class="sec"><div class="sh"><b>The wordmark, tuned</b><span>Caslon as set, then corrected by eye</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end">
+<div><div style="font-family:'Libre Caslon Display';font-size:170px;line-height:.9;color:#B9B6AE">Trove</div><span class="cap">As typed: the T’s arm leaves a hole before the r</span></div>
+<div><div>{word(170)}</div><span class="cap">Tuned: T–r closed by 5.5%, the whole word −1.2%, nothing else drawn</span></div></div>
+<div class="rules" style="margin-top:40px">
+<div><span class="lbl">Clear space</span><p style="margin-top:10px">The height of the o on every side. Nothing enters it, not even a rule.</p></div>
+<div><span class="lbl">Smallest sizes</span><p style="margin-top:10px">Stacked lockup 120px wide; horizontal 96px; below that the flat mark, and the word set in Caslon Text.</p></div>
+<div><span class="lbl">The tagline</span><p style="margin-top:10px">Caslon italic, a sixth of the word’s size, under a hairline as wide as the word. Only on the stacked lockup.</p></div>
+<div><span class="lbl">Colour</span><p style="margin-top:10px">Iron-gall ink on paper or wash. Never reversed out of a colour; on a painting, sit it on paper.</p></div></div></section>"""
+    sc = [("Display", "Libre Caslon Display 72 / 1.0", "font-family:'Libre Caslon Display';font-size:72px;line-height:1", "Check out a person.", "Posters, the landing page"),
+          ("Page title", "Caslon Display 44 / 1.05", "font-family:'Libre Caslon Display';font-size:44px;line-height:1.05", "Above the Tree Line", "Book title on its page; page titles"),
+          ("Section", "Caslon Display 30 / 1.1", "font-family:'Libre Caslon Display';font-size:30px", "Changing course", "Shelf names, headings"),
+          ("Voice", "Caslon Text italic 21 / 1.45", "font-family:'Libre Caslon Text';font-style:italic;font-size:21px;line-height:1.45", "Six summers guiding in the Brooks Range, and what that does to how you plan anything.", "The Librarian, blurbs"),
+          ("Reading", "Caslon Text 17 / 1.6", "font-family:'Libre Caslon Text';font-size:17px;line-height:1.6", "Every chapter is something the author could talk about for half an hour, in their own words.", "Chapters, long text; 60–70 characters a line"),
+          ("Interface", "Schibsted Grotesk 500 15 / 1.45", "font-family:'Schibsted Grotesk';font-weight:500;font-size:15px", "Ask to check out · Save contact details", "Buttons, fields, anything you do"),
+          ("Label", "Schibsted 600 12, caps +16%", "font:600 12px 'Schibsted Grotesk';letter-spacing:.16em;text-transform:uppercase", "The Librarian recommends", "Short labels only; never a sentence")]
+    scale_html = "".join(f'<div class="k"><b>{n}</b><span>{spec_}</span></div><div style="{st}">{sample}</div><div class="m">{job}</div>' for n, spec_, st, sample, job in sc)
+    typ = f"""<section class="sec"><div class="sh"><b>Type system</b><span>Three cuts, seven jobs</span></div>
+<div class="scale">{scale_html}</div>
+<div class="rules" style="margin-top:48px">
+<div><span class="lbl">Old-style figures</span><div class="ex">Chapter 4, about 30 minutes</div><p>Numbers sit in the text like lowercase letters. On by default.</p></div>
+<div><span class="lbl">Real punctuation</span><div class="ex">“It’s yours” — <s>"It's yours" -</s></div><p>Curly quotes and apostrophes, en and em dashes, always.</p></div>
+<div><span class="lbl">Italic, not bold</span><div class="ex">A book you <i>read</i> by talking.</div><p>Emphasis in reading text is italic. Bold is for the interface only.</p></div>
+<div><span class="lbl">Caps are labels</span><div class="ex" style="font:600 13px 'Schibsted Grotesk';letter-spacing:.16em;text-transform:uppercase;margin-top:18px">By Ingrid Solberg</div><p>Short, tracked, in the sans. A sentence is never set in caps.</p></div></div></section>"""
+    col = f"""<section class="sec"><div class="sh"><b>Colour</b><span>Blue-black ink on paper; everything else comes from the members’ paints</span></div>
+{swatches([(ink, "Iron-gall ink", "Type and the wordmark"), (paper, "Cold-press", "The ground"), (wash, "Wash", "Panels, the Librarian’s band"),
            ("#5B74B8", "Ultramarine", "From the covers"), ("#C98A5A", "Sienna", "From the covers"), ("#78A9A6", "Teal", "From the covers"),
            ("#D42A27", "Red", "Still only the one action")])}</section>"""
     books = (cover("beach", 236, "'Libre Caslon Display'", 400, size=0.16, lh="1", rot=2),
              "".join(cover(k, 176, "'Libre Caslon Display'", 400, size=0.16, lh="1") for k in ("lake", "forest", "city", "mesa", "desert", "coast")))
-    site_sec = f"""<section class="sec"><div class="sh"><b>The site in it</b><span>Caslon titles everywhere, the Librarian’s band a pale wash instead of black</span></div>
-{site(wet_lock(34, "lake", ink, stacked=False), books, "Changing course", "Off the Clock",
+    site_sec = f"""<section class="sec"><div class="sh"><b>The site in it</b><span>Caslon titles, the Librarian’s band a pale wash instead of black</span></div>
+{site(lock(34, "lake", stacked=False), books, "Changing course", "Off the Clock",
       "From back-to-back meetings to running a surf school, and what a week looks like when you design it yourself.", "Leilani Cruz")}</section>"""
-    mkt = f"""<section class="sec"><div class="sh"><b>Marketing</b><span>Campus launch</span></div>
-<div class="mk">
-<div style="grid-column:span 4"><div class="pst" style="height:760px;background:{paper};padding:48px 40px;display:flex;flex-direction:column">
-{painted("forest", 470)}
-<div style="font-family:'Libre Caslon Display';font-size:58px;line-height:1.02;margin-top:30px">Somebody here knows what you’re trying to figure out.</div>
-<div style="margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end">{wet_lock(40, "forest", ink, stacked=False)}<span style="font:600 13px 'Schibsted Grotesk';letter-spacing:.12em;text-transform:uppercase">trove · case.edu</span></div>
-</div><span class="cap">Poster · 18×24</span></div>
-<div style="grid-column:span 4;display:grid;gap:28px">
-<div><div class="pst" style="height:420px;background:#F1ECE2;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:28px">
-{"".join(f'<div style="display:grid;place-items:center">{painted(k, 120)}</div>' for k in ("lake","coast","forest","dusk","mesa","lake"))}
-<div style="position:absolute;left:28px;bottom:20px;font-family:'Libre Caslon Text';font-style:italic;font-size:20px">Six covers, six pairs of colours.</div></div><span class="cap">Instagram post · if members get their own marks</span></div>
-<div><div class="pst" style="height:280px;background:{paper};display:flex;align-items:center;gap:30px;padding:0 34px">{painted("coast", 170)}
-<div><div style="font-family:'Libre Caslon Display';font-size:36px;line-height:1.05">Your book is on the shelf.</div></div></div><span class="cap">Email header · in the proposal, the mark is painted from the member’s cover</span></div>
-</div>
-<div style="grid-column:span 4;display:grid;gap:28px">
-<div><div class="pst" style="height:430px;background:#E8E2D4;display:grid;place-items:center">
-<div style="width:250px;height:330px;background:{paper};border:1.5px solid {ink};position:relative;display:grid;place-items:center">
-<div style="position:absolute;top:-56px;left:50%;width:120px;height:76px;margin-left:-60px;border:3px solid {ink};border-bottom:none;border-radius:60px 60px 0 0"></div>{wet_lock(62, "dusk", ink)}</div></div><span class="cap">Tote</span></div>
-<div style="display:flex;gap:24px;align-items:center">
-<div style="width:240px;height:170px;background:#fff;border:1.5px solid {ink};padding:16px 18px;display:flex;flex-direction:column;justify-content:space-between">
-<div style="display:flex;justify-content:space-between;align-items:flex-start">{painted("mesa", 64)}<span style="font:600 11px 'Schibsted Grotesk';letter-spacing:.12em;text-transform:uppercase">Author</span></div>
-<div style="font-family:'Libre Caslon Display';font-size:24px">Lucia Navarro</div></div>
-<div style="width:150px;height:150px;border-radius:999px;background:{paper};border:1.5px solid {ink};display:grid;place-items:center">{painted("lake", 110)}</div></div>
-<span class="cap" style="margin-top:-18px">Name card in the member’s own mark · sticker</span></div>
-</div></section>"""
-    voice = """<section class="sec"><div class="sh"><b>Voice</b></div><div class="voice">
+
+    def poster(key, head, sub, w=512, h=716):
+        return (f'<div class="pp" style="width:{w}px;height:{h}px;--m:36px">'
+                f'<div style="position:absolute;left:36px;right:36px;top:34px;display:flex;justify-content:space-between" class="lbl">'
+                f'<span>For students and alumni</span><span>Case Western Reserve</span></div>'
+                f'<div style="position:absolute;left:0;right:0;top:78px;display:grid;place-items:center">{painted(key, int(w*0.74))}</div>'
+                f'<div style="position:absolute;left:36px;right:36px;bottom:110px">'
+                f'<div style="font-family:\'Libre Caslon Display\';font-size:{int(w*0.105)}px;line-height:1.02;letter-spacing:-.01em;text-wrap:balance">{head}</div>'
+                f'<div class="tag" style="font-size:19px;line-height:1.4;margin-top:14px;color:#3A4050;max-width:400px">{sub}</div></div>'
+                f'{footer(36, key)}</div>')
+
+    posters = (poster("lake", "Somebody here knows what you’re trying to figure out.", "Find their book. Ask for half an hour.")
+               + poster("coast", "You are the author of the book you haven’t written yet.", "A short interview finds it with you.")
+               + poster("forest", "Check out a person.", "No feed, no followers. Books, and the people who could write them."))
+
+    def slide(inner, bg=paper):
+        return f'<div class="pp" style="width:300px;height:300px;background:{bg}">{inner}</div>'
+
+    carousel = (
+        slide(f'<div style="position:absolute;left:28px;top:28px;right:28px;font-family:\'Libre Caslon Display\';font-size:38px;line-height:1.04">Every member here has a book.</div>'
+              f'<div style="position:absolute;right:20px;bottom:34px">{painted("dusk", 150)}</div>'
+              f'<span class="lbl" style="position:absolute;left:24px;bottom:16px">1 / 3</span>')
+        + slide(f'<div style="position:absolute;left:28px;top:28px">{cover("lake", 110, "\'Libre Caslon Display\'", 400, size=0.16, lh="1")}</div>'
+                f'<div class="tag" style="position:absolute;left:156px;right:22px;top:30px;font-size:16px;line-height:1.4">“Six summers guiding in the Brooks Range, and what that does to how you plan anything.”<span class="lbl" style="display:block;font-style:normal;margin-top:10px">Ingrid Solberg</span></div>'
+                f'<span class="lbl" style="position:absolute;left:24px;bottom:16px">2 / 3</span>', wash)
+        + slide('<div style="position:absolute;left:24px;right:24px;top:22px;display:grid;gap:9px">'
+                + "".join(f'<div style="display:grid;grid-template-columns:34px 1fr;align-items:baseline;border-top:1px solid {ink};padding-top:8px">'
+                          f'<span style="font-family:\'Libre Caslon Display\';font-size:28px">{n}</span>'
+                          f'<span style="font-family:\'Libre Caslon Text\';font-size:15px;line-height:1.3">{t}</span></div>'
+                          for n, t in [("1", "A short interview finds what you know."), ("2", "It becomes your book: a title and chapters, in your words."),
+                                       ("3", "Others check it out: a <span style=\"white-space:nowrap\">thirty-minute</span> video call with you.")])
+                + f'<div style="border-top:1px solid {ink}"></div></div><span class="lbl" style="position:absolute;left:24px;bottom:16px">3 / 3</span>'))
+    story = (f'<div class="pp" style="width:236px;height:420px;background:{wash}">'
+             f'<div style="position:absolute;left:0;right:0;top:40px;display:grid;place-items:center">{painted("mesa", 180)}</div>'
+             f'<div style="position:absolute;left:24px;right:24px;top:200px;font-family:\'Libre Caslon Display\';font-size:32px;line-height:1.05">Nobody here is performing.</div>'
+             f'<div class="tag" style="position:absolute;left:24px;right:24px;top:312px;font-size:15px;line-height:1.4">Every book on the shelf is the same size.</div>'
+             f'<div style="position:absolute;left:24px;bottom:22px">{lock(22, "mesa", stacked=False)}</div></div>')
+    email = (f'<div class="pp" style="width:520px;height:300px;background:{paper}">'
+             f'<div style="height:64px;display:flex;align-items:center;padding:0 28px;border-bottom:1px solid #E3DED3">{lock(26, "coast", stacked=False)}</div>'
+             f'<div style="padding:26px 28px"><span class="lbl" style="color:#5A5E68">Your book is on the shelf</span>'
+             f'<div style="font-family:\'Libre Caslon Display\';font-size:34px;line-height:1.05;margin-top:10px">Notes From the Edge</div>'
+             f'<div style="font-family:\'Libre Caslon Text\';font-size:17px;line-height:1.55;margin-top:10px;color:#3A4050">Members can find it now. When someone asks<br>to check it out, you’ll hear from us here.</div></div></div>')
+    bookmark = (f'<div class="pp" style="width:150px;height:420px;background:{paper}">'
+                f'<div style="position:absolute;left:10px;right:10px;top:30px;font-family:\'Libre Caslon Text\';font-size:14.5px;line-height:1.42;text-align:center;white-space:nowrap">You are the author<br>of the book you<br>haven’t written yet.</div>'
+                f'<div style="position:absolute;left:0;right:0;bottom:28px;display:grid;place-items:center">{lock(30, "forest")}</div></div>')
+    invite = (f'<div class="pp" style="width:400px;height:280px;background:{paper};--m:24px">'
+              f'<div style="position:absolute;left:24px;top:22px" class="lbl">An invitation</div>'
+              f'<div style="position:absolute;left:24px;right:140px;top:52px;font-family:\'Libre Caslon Display\';font-size:34px;line-height:1.04">The first shelf opens.</div>'
+              f'<div class="tag" style="position:absolute;left:24px;right:150px;top:142px;font-size:15px;line-height:1.4">[Date] · [Place on campus]<br>Come with nothing written.</div>'
+              f'<div style="position:absolute;right:20px;top:20px">{painted("dusk", 96)}</div>'
+              f'{footer(24, "dusk", url=False)}</div>')
+    tote = (f'<div style="width:300px;height:390px;background:#E8E2D4;display:grid;place-items:center;border:1px solid #CFC9BC;position:relative">'
+            f'<div style="width:220px;height:280px;background:{paper};border:1px solid #BDB6A7;position:relative;display:grid;place-items:center;margin-top:40px">'
+            f'<div style="position:absolute;top:-62px;left:50%;width:110px;height:74px;margin-left:-55px;border:3px solid #BDB6A7;border-bottom:none;border-radius:55px 55px 0 0"></div>'
+            f'{lock(52, "dusk")}</div></div>')
+    mkt = f"""<section class="sec"><div class="sh"><b>Marketing</b><span>One campaign: the same margins, the same footer, a different colourway on each piece</span></div>
+<div style="display:flex;gap:28px">{posters}</div><span class="cap">Three campus posters · 18×24 · headline Caslon Display, subline Caslon italic, footer the horizontal lockup</span>
+<div style="display:flex;gap:28px;margin-top:44px;align-items:flex-start">
+<div><div style="display:flex;gap:14px">{carousel}</div><span class="cap">Instagram carousel · 1:1 · three slides</span></div>
+<div>{story}<span class="cap">Story · 9:16</span></div></div>
+<div style="display:flex;gap:28px;margin-top:44px;align-items:flex-start">
+<div>{email}<span class="cap">Email · book on the shelf</span></div>
+<div>{bookmark}<span class="cap">Bookmark · 2×7 in</span></div>
+<div>{invite}<span class="cap">Launch invitation · placeholders in brackets</span></div>
+<div>{tote}<span class="cap">Tote</span></div></div></section>"""
+    voice = """<section class="sec"><div class="sh"><b>Voice</b><span>Short, plain, a little literary; never a boast</span></div><div class="voice">
 <div>A book you read by talking to its author.<span>The checkout, without the jargon.</span></div>
 <div>Nobody here is performing.<span>What Trove refuses, said once.</span></div>
 <div>Every book on the shelf is the same size.<span>The level shelf, said plainly.</span></div></div></section>"""
     body = header("C", "Wet Ink",
-                  "A painted mark: an open book of two watercolour washes that overlap and deepen at the spine. The site has one house mark; as a proposal, each member’s could be painted from their own cover.",
+                  "A painted mark, an open book of two watercolour washes that deepen where they meet, with a Caslon wordmark tuned by eye and a type system built from book typography.",
                   "The covers are already painted with Trove’s own watercolour engine, so the brand comes from the same brush. "
-                  "The wordmark is set in Caslon, the classic face of printed books, in blue-black ink. The mark is a living "
-                  "system: the site shows a house version, and each member gets their own.") + hero + why + marks + typ + col + site_sec + mkt + voice
-    return doc("Brand round 2 · C · Wet Ink", FONTS["C"], vars_css, extra, body, 5100)
+                  "Refined: the wordmark’s T–r gap closed and a tagline lockup added; a seven-step type scale with a job for each "
+                  "size; book-typography rules; and the marketing redrawn as one campaign on one grid.") \
+        + hero + wordsec + marks + typ + col + site_sec + mkt + voice
+    return doc("Brand round 2 · C · Wet Ink", FONTS["C"], vars_css, extra, body, 6860)
 
 
 def board_think():
