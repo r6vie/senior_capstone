@@ -76,6 +76,26 @@ export function ShelfLanding({
   const leftBooks = neighbours.slice(0, Math.floor(neighbours.length / 2));
   const rightBooks = neighbours.slice(leftBooks.length);
 
+  // A long title gets smaller type rather than a cut: the clamp in ShelfLanding.css is only the last resort, since
+  // the member reads their own title here. Measured again once the display font has loaded.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a new title is what calls for a new measure
+  useLayoutEffect(() => {
+    const title = mine.current?.querySelector<HTMLElement>(".book-title");
+    if (!title) return;
+    const shrink = () => {
+      title.style.fontSize = "";
+      const start = Number.parseFloat(getComputedStyle(title).fontSize);
+      let size = start;
+      // The display face's tight leading lets glyphs overhang a few pixels, so only a hidden half line counts as a cut.
+      while (title.scrollHeight - title.clientHeight > size * 0.46 && size > start * 0.6) {
+        size *= 0.92;
+        title.style.fontSize = `${size}px`;
+      }
+    };
+    shrink();
+    document.fonts?.ready.then(shrink);
+  }, [book.title]);
+
   // The still cover is fetched from the start, so it is ready the moment the clip ends (or instead of it).
   useEffect(() => {
     loadArt(art);

@@ -217,7 +217,8 @@
     transition: none;
   }
 }
-/* A long title stops at three lines, so the full name under it stays clear of the art and readable. */
+/* A long title stops at three lines, so the full name under it stays clear of the art and readable. On the
+   member's own book ShelfLanding first shrinks the type to fit, so this cut is only a last resort. */
 .shelf-landing .book-cover .book-title {
   display: -webkit-box;
   -webkit-box-orient: vertical;
