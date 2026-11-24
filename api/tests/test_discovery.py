@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import UTC, datetime, timedelta
 
@@ -42,14 +43,21 @@ def book(book_id: str, author_id: str, *, status: str = "on_shelf", title: str |
     }
 
 
-def extracted(*profiles: tuple[str, list[dict]]) -> str:
+def choice(
+    book_id: str,
+    *,
+    own_evidence: str = "changing direction",
+    candidate_evidence: str = "changing direction",
+    reason: str = "These authors both write about changing direction, giving them a concrete place to start.",
+) -> str:
     return json.dumps(
-        {"profiles": [{"book_id": book_id, "signals": signals} for book_id, signals in profiles]}
+        {
+            "book_id": book_id,
+            "own_evidence": own_evidence,
+            "candidate_evidence": candidate_evidence,
+            "reason": reason,
+        }
     )
-
-
-def signal(kind: str, label: str, evidence: str, *broader: str) -> dict:
-    return {"kind": kind, "label": label, "broader": list(broader), "evidence": evidence}
 
 
 async def test_recommendation_requires_sign_in(client):
@@ -141,11 +149,11 @@ async def test_an_off_shelf_book_can_shape_its_owners_recommendation(client, dat
     )
     fake_claude.responses.append(
         text_message(
-            extracted(
-                ("mine", [signal("experience", "changing direction", "changing direction")]),
-                (
-                    "recommended",
-                    [signal("experience", "changing direction", "changing direction")],
+            choice(
+                "recommended",
+                reason=(
+                    "You and Author One both write about changing direction, "
+                    "giving you a concrete place to start."
                 ),
             )
         )
@@ -176,9 +184,12 @@ async def test_the_pick_is_cached_until_a_book_changes(client, database, fake_cl
     await database.books.insert_many([book("mine", account["id"]), book("candidate", "author-one")])
     fake_claude.responses.append(
         text_message(
-            extracted(
-                ("mine", [signal("experience", "changing direction", "changing direction")]),
-                ("candidate", [signal("experience", "changing direction", "changing direction")]),
+            choice(
+                "candidate",
+                reason=(
+                    "You and Author One both write about changing direction, "
+                    "giving you a concrete place to start."
+                ),
             )
         )
     )
@@ -194,13 +205,11 @@ async def test_the_pick_is_cached_until_a_book_changes(client, database, fake_cl
     assert timedelta(days=6, hours=23) < cache["expires_at"].replace(tzinfo=UTC) - datetime.now(UTC)
 
     await database.books.update_one({"_id": "mine"}, {"$set": {"title": "A changed story"}})
-    fake_claude.responses.append(
-        text_message(extracted(("mine", [signal("experience", "changing direction", "changing direction")])))
-    )
+    fake_claude.responses.append(text_message(choice("candidate")))
     changed = await client.get("/discovery/recommendation", headers=headers)
     assert changed.json()["book"]["id"] == "candidate"
     assert len(fake_claude.requests) == 2
-    assert "candidate" not in fake_claude.requests[1]["messages"][0]["content"]
+    assert "candidate" in fake_claude.requests[1]["messages"][0]["content"]
 
     await database.books.update_one({"_id": "candidate"}, {"$set": {"status": "off_shelf"}})
     assert (await client.get("/discovery/recommendation", headers=headers)).json() == {
@@ -210,14 +219,25 @@ async def test_the_pick_is_cached_until_a_book_changes(client, database, fake_cl
     }
 
 
+async def test_simultaneous_requests_share_one_librarian_call(client, database, fake_claude):
+    account, headers = await sign_in(client)
+    await database.books.insert_many([book("mine", account["id"]), book("candidate", "author-one")])
+    fake_claude.responses.append(text_message(choice("candidate")))
+
+    first, second = await asyncio.gather(
+        client.get("/discovery/recommendation", headers=headers),
+        client.get("/discovery/recommendation", headers=headers),
+    )
+
+    assert first.json() == second.json()
+    assert first.json()["book"]["id"] == "candidate"
+    assert len(fake_claude.requests) == 1
+
+
 async def test_a_stale_or_invalid_pick_is_never_returned(client, database, fake_claude):
     account, headers = await sign_in(client)
     await database.books.insert_many([book("mine", account["id"]), book("candidate", "author-one")])
-    fake_claude.responses.append(
-        text_message(
-            extracted(("hidden", [signal("experience", "changing direction", "changing direction")]))
-        )
-    )
+    fake_claude.responses.append(text_message(choice("hidden")))
     assert (await client.get("/discovery/recommendation", headers=headers)).json() == {
         "state": "unavailable",
         "book": None,
@@ -242,7 +262,7 @@ async def test_ai_not_set_up_leaves_the_shelf_available(client, database):
     }
 
 
-async def test_matching_is_deterministic_and_prefers_an_exact_interest(client, database, fake_claude):
+async def test_claude_is_told_to_prioritize_exact_then_related_interests(client, database, fake_claude):
     account, headers = await sign_in(client)
     own = book("mine", account["id"], title="What tennis taught me")
     exact = book("exact", "exact-author", title="Tennis after work")
@@ -250,10 +270,11 @@ async def test_matching_is_deterministic_and_prefers_an_exact_interest(client, d
     await database.books.insert_many([own, related, exact])
     fake_claude.responses.append(
         text_message(
-            extracted(
-                ("mine", [signal("interest", "tennis", "tennis", "racket sports", "sports")]),
-                ("related", [signal("interest", "football", "football", "team sports", "sports")]),
-                ("exact", [signal("interest", "tennis", "Tennis", "racket sports", "sports")]),
+            choice(
+                "exact",
+                own_evidence="tennis",
+                candidate_evidence="Tennis",
+                reason="You and Exact Author both write about tennis, giving you a concrete place to start.",
             )
         )
     )
@@ -261,25 +282,26 @@ async def test_matching_is_deterministic_and_prefers_an_exact_interest(client, d
     response = await client.get("/discovery/recommendation", headers=headers)
 
     assert response.json()["book"]["id"] == "exact"
-    assert response.json()["reason"] == (
-        "You and Exact Author both write about tennis, giving you a concrete place to start."
-    )
-    stored = await database.match_profiles.find_one({"_id": "mine"})
-    assert stored["profile"]["signals"][0]["broader"] == ["racket sports", "sports"]
+    prompt = fake_claude.requests[0]["system"]
+    assert prompt.index("same specific interest") < prompt.index("related interests")
+    assert "goal" in prompt
+    assert "current location or place of origin" in prompt
 
 
-async def test_matching_connects_different_interests_through_a_broader_concept(client, database, fake_claude):
+async def test_claude_can_choose_related_interests_or_complementary_knowledge(client, database, fake_claude):
     account, headers = await sign_in(client)
-    own = book("mine", account["id"], title="What tennis taught me")
-    candidate = book("candidate", "maya-chen", title="A football team from scratch")
+    own = book("mine", account["id"], title="Learning tennis and startup fundraising")
+    candidate = book("candidate", "maya-chen", title="Football and raising a seed round")
     await database.books.insert_many([own, candidate])
     fake_claude.responses.append(
         text_message(
-            extracted(
-                ("mine", [signal("interest", "tennis", "tennis", "racket sports", "sports")]),
-                (
-                    "candidate",
-                    [signal("interest", "football", "football", "team sports", "sports")],
+            choice(
+                "candidate",
+                own_evidence="startup fundraising",
+                candidate_evidence="raising a seed round",
+                reason=(
+                    "Maya Chen's experience raising a seed round complements your interest "
+                    "in startup fundraising."
                 ),
             )
         )
@@ -287,41 +309,19 @@ async def test_matching_connects_different_interests_through_a_broader_concept(c
 
     response = await client.get("/discovery/recommendation", headers=headers)
 
-    assert response.json()["reason"] == (
-        "Your book's tennis connects with Maya Chen's football through sports."
-    )
-
-
-async def test_matching_uses_complementary_goals_and_knowledge(client, database, fake_claude):
-    account, headers = await sign_in(client)
-    own = book("mine", account["id"], title="Learning to fund a first company")
-    candidate = book("candidate", "maya-chen", title="Raising a seed round")
-    await database.books.insert_many([own, candidate])
-    fake_claude.responses.append(
-        text_message(
-            extracted(
-                ("mine", [signal("goal", "startup fundraising", "fund a first company")]),
-                ("candidate", [signal("knowledge", "startup fundraising", "Raising a seed round")]),
-            )
-        )
-    )
-
-    response = await client.get("/discovery/recommendation", headers=headers)
-
     assert response.json()["book"]["id"] == "candidate"
-    assert response.json()["reason"] == (
-        "Maya Chen's experience with startup fundraising complements your goal around startup fundraising."
-    )
+    assert "complements" in response.json()["reason"]
 
 
-async def test_an_extracted_signal_must_be_grounded_in_public_book_text(client, database, fake_claude):
+async def test_claude_choice_requires_public_evidence_from_both_books(client, database, fake_claude):
     account, headers = await sign_in(client)
     await database.books.insert_many([book("mine", account["id"]), book("candidate", "author-one")])
     fake_claude.responses.append(
         text_message(
-            extracted(
-                ("mine", [signal("interest", "secret hobby", "Private grounding words")]),
-                ("candidate", [signal("interest", "secret hobby", "Private grounding words")]),
+            choice(
+                "candidate",
+                own_evidence="Private grounding words",
+                candidate_evidence="changing direction",
             )
         )
     )
@@ -329,5 +329,14 @@ async def test_an_extracted_signal_must_be_grounded_in_public_book_text(client, 
     response = await client.get("/discovery/recommendation", headers=headers)
 
     assert response.json() == {"state": "unavailable", "book": None, "reason": None}
-    stored = await database.match_profiles.find_one({"_id": "mine"})
-    assert stored["profile"]["signals"] == []
+    assert await database.recommendations.find_one({"user_id": account["id"]}) is None
+
+
+async def test_markdown_wrapped_choice_is_accepted(client, database, fake_claude):
+    account, headers = await sign_in(client)
+    await database.books.insert_many([book("mine", account["id"]), book("candidate", "author-one")])
+    fake_claude.responses.append(text_message(f"```json\n{choice('candidate')}\n```"))
+
+    response = await client.get("/discovery/recommendation", headers=headers)
+
+    assert response.json()["book"]["id"] == "candidate"
