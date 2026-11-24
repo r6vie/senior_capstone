@@ -120,12 +120,15 @@ export function BookReader({
   origin,
   example,
   onDismiss,
+  onNavigate,
 }: {
   bookId: string;
   card?: BookCard;
   origin?: BookOrigin;
   example?: PublicBook;
   onDismiss: () => void;
+  /** The reader is about to follow one of its links; an owning overlay can leave with it. */
+  onNavigate?: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const fit = useRef<HTMLDivElement>(null);
@@ -440,11 +443,15 @@ export function BookReader({
   const isOwn = Boolean(book && ownBook?.id === book.id);
   const ask =
     example || !book || missing ? null : isOwn ? (
-      <Link to="/my-book" className="button button-secondary">
+      <Link to="/my-book" className="button button-secondary" onClick={onNavigate}>
         My book
       </Link>
     ) : (
-      <Link to={`/checkouts/new/${encodeURIComponent(book.id)}`} className="button button-primary">
+      <Link
+        to={`/checkouts/new/${encodeURIComponent(book.id)}`}
+        className="button button-primary"
+        onClick={onNavigate}
+      >
         Ask to check out
       </Link>
     );

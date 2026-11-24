@@ -120,6 +120,17 @@
 .search-result .book {
   margin-inline: auto;
 }
+/* The selected cover has flown into the reader. Its place stays open so closing can return it here. */
+.search-result .book[data-out] .book-cover {
+  visibility: hidden;
+}
+.search-result .book[data-out]::before {
+  opacity: 0;
+}
+.search-result .book[data-out][data-returning]::before {
+  opacity: 1;
+  transition-duration: 480ms;
+}
 
 @media (max-width: 1099px) {
   .search-results-grid {
