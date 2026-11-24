@@ -419,6 +419,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/interview/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Attach Resume
+         * @description Attach a résumé to the interview under way, replacing any before (`has_resume`). It shapes the
+         *     questions written after it, never the book. 422 if it isn't a readable PDF; 409 once the first
+         *     interview is over (titles, review, a round of adding).
+         */
+        post: operations["attach_resume_interview_resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/interview/question": {
         parameters: {
             query?: never;
@@ -1527,6 +1549,11 @@ export interface components {
             topic: string | null;
             /** Has Answers */
             has_answers: boolean;
+            /**
+             * Has Resume
+             * @default false
+             */
+            has_resume: boolean;
             /** Can Finish */
             can_finish: boolean;
             /** Ready For Reveal */
@@ -2097,6 +2124,14 @@ export interface components {
              * Format: email
              */
             email: string;
+        };
+        /** ResumeRequest */
+        ResumeRequest: {
+            /**
+             * Resume Pdf
+             * @description A résumé PDF, base64-encoded, replacing any attached before. It shapes the questions from here on, never the book. The file isn't kept. Its text is deleted when the interview ends, or 30 days after the last activity.
+             */
+            resume_pdf: string;
         };
         /** RevisionChoicesRequest */
         RevisionChoicesRequest: {
@@ -3047,6 +3082,39 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    attach_resume_interview_resume_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResumeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -195,6 +195,9 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
         dropped_words=interview.get("dropped_words", []) if dropped else None,
         librarian=librarian_view(interview) if stage in ASKING_STAGES else None,
         sign_off=interview.get("sign_off") if stage == "reviewing" else None,
+        # Older interviews only have their résumé terms to show they had one.
+        has_resume=stage == "interviewing"
+        and bool(interview.get("has_resume") or interview.get("resume_terms")),
     )
 
 
@@ -503,6 +506,7 @@ async def start(database: AsyncDatabase, claude: Claude, user: dict, resume_pdf:
         "user_id": user["_id"],
         "stage": "interviewing",
         "resume_terms": resume_terms.resume_terms(resume_text, interview_id) if resume_text else [],
+        "has_resume": bool(resume_text),
         "turns": [],
         "current": None,
         "topic": None,
@@ -520,6 +524,38 @@ async def start(database: AsyncDatabase, claude: Claude, user: dict, resume_pdf:
             {"_id": interview_id, "text": resume_text, "last_activity_at": now}
         )
     return await ask_next_question(database, claude, interview)
+
+
+async def attach_resume(database: AsyncDatabase, user: dict, resume_pdf: str) -> dict:
+    """Attach a résumé to an interview under way, replacing any before. Only the questions written after
+    it see it: the waiting one stays as it is. Like one sent at the start, it never reaches the book."""
+    interview = await get_interview(database, user["_id"])
+    if interview["stage"] != "interviewing":
+        raise conflict("A résumé can only be added while you're answering the first interview.")
+    resume_text = await run_in_threadpool(read_resume, resume_pdf)
+    now = datetime.now(UTC)
+    updated = await database.interviews.find_one_and_update(
+        {"_id": interview["_id"], "stage": "interviewing"},
+        {
+            "$set": {
+                "resume_terms": resume_terms.resume_terms(resume_text, interview["_id"]),
+                "has_resume": True,
+                "updated_at": now,
+            }
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if updated is None:
+        raise conflict("A résumé can only be added while you're answering the first interview.")
+    await database.resume_texts.replace_one(
+        {"_id": interview["_id"]}, {"text": resume_text, "last_activity_at": now}, upsert=True
+    )
+    # If the interview ended while the text was being saved, the text goes as it would have then.
+    latest = await get_interview(database, user["_id"])
+    if latest["stage"] != "interviewing":
+        await database.resume_texts.delete_one({"_id": interview["_id"]})
+        raise conflict("A résumé can only be added while you're answering the first interview.")
+    return latest
 
 
 async def ask_again(database: AsyncDatabase, claude: Claude, user: dict) -> dict:

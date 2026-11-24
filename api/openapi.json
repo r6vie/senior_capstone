@@ -1071,6 +1071,53 @@
         ]
       }
     },
+    "/interview/resume": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Attach Resume",
+        "description": "Attach a r\u00e9sum\u00e9 to the interview under way, replacing any before (`has_resume`). It shapes the\nquestions written after it, never the book. 422 if it isn't a readable PDF; 409 once the first\ninterview is over (titles, review, a round of adding).",
+        "operationId": "attach_resume_interview_resume_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/interview/question": {
       "post": {
         "tags": [
@@ -3693,6 +3740,11 @@
             "type": "boolean",
             "title": "Has Answers"
           },
+          "has_resume": {
+            "type": "boolean",
+            "title": "Has Resume",
+            "default": false
+          },
           "can_finish": {
             "type": "boolean",
             "title": "Can Finish"
@@ -5274,6 +5326,22 @@
           "email"
         ],
         "title": "ResendRequest"
+      },
+      "ResumeRequest": {
+        "properties": {
+          "resume_pdf": {
+            "type": "string",
+            "maxLength": 7000000,
+            "title": "Resume Pdf",
+            "description": "A r\u00e9sum\u00e9 PDF, base64-encoded, replacing any attached before. It shapes the questions from here on, never the book. The file isn't kept. Its text is deleted when the interview ends, or 30 days after the last activity."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "resume_pdf"
+        ],
+        "title": "ResumeRequest"
       },
       "RevisionChoicesRequest": {
         "properties": {

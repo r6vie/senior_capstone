@@ -17,6 +17,7 @@ from trove.interview.models import (
     ReadingAnswerRequest,
     ReadingQuestionResponse,
     RemovalRequest,
+    ResumeRequest,
     RevisionChoicesRequest,
     RevisionRequest,
     SkipRequest,
@@ -49,6 +50,18 @@ async def start(
 ) -> InterviewResponse:
     """Start the interview and get the first question. A member with a book can't start again (409)."""
     return interview_view(await service.start(database, claude, user, data.resume_pdf))
+
+
+@router.post("/resume", response_model=InterviewResponse)
+async def attach_resume(
+    data: ResumeRequest,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> InterviewResponse:
+    """Attach a résumé to the interview under way, replacing any before (`has_resume`). It shapes the
+    questions written after it, never the book. 422 if it isn't a readable PDF; 409 once the first
+    interview is over (titles, review, a round of adding)."""
+    return interview_view(await service.attach_resume(database, user, data.resume_pdf))
 
 
 @router.get("", response_model=InterviewResponse | None)

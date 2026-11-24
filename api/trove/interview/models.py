@@ -27,6 +27,15 @@ class StartRequest(RequestBody):
     )
 
 
+class ResumeRequest(RequestBody):
+    resume_pdf: str = Field(
+        max_length=MAX_RESUME_BASE64,
+        description="A résumé PDF, base64-encoded, replacing any attached before. It shapes the questions "
+        "from here on, never the book. The file isn't kept. Its text is deleted when the interview ends, or "
+        "30 days after the last activity.",
+    )
+
+
 class AnswerRequest(RequestBody):
     answer: NonEmptyText = Field(max_length=5000)
     question_id: str = Field(description="The `question_id` of the question this answers.")
@@ -174,6 +183,8 @@ class InterviewResponse(BaseModel):
     topic: str | None
     # Whether any answer is saved yet: "Welcome back" instead of the start screen. Never a count.
     has_answers: bool
+    # A résumé is attached and shaping the questions. Only ever true while interviewing.
+    has_resume: bool = False
     # "I've said enough. Show me my book" may be offered: POST /interview/finish. Also true while
     # revising if writing the changes failed. No count is ever shown.
     can_finish: bool

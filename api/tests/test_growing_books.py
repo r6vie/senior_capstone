@@ -350,6 +350,33 @@ async def test_the_resume_never_comes_back(client, scripted_ai):
     assert not any("RESUMEMARKER" in member_data(request) for request in later)
 
 
+async def test_a_resume_clipped_on_mid_interview_reaches_questions_but_never_the_book(
+    client, database, scripted_ai
+):
+    person = await member(client, "clip@case.edu")
+    await client.post("/interview", json={}, headers=person["headers"])
+    await send_answer(client, person["headers"], scripted.THEO_ANSWERS[0])
+    pdf = base64.b64encode(minimal_pdf("RESUMEMARKER Acme Corp")).decode()
+    clipped = await client.post("/interview/resume", json={"resume_pdf": pdf}, headers=person["headers"])
+    assert clipped.status_code == 200
+    asked_before = len(scripted_ai.requests)
+    for answer in scripted.THEO_ANSWERS[1:]:
+        await send_answer(client, person["headers"], answer)
+    await send_answer(client, person["headers"], "Both came down to timing.")
+    await client.post("/interview/finish", headers=person["headers"])
+    await client.post("/interview/title", json={"title": 0}, headers=person["headers"])
+
+    later = scripted_ai.requests[asked_before:]
+    interviewer = [r for r in later if r["system"] == load_prompt("interview/interviewer")]
+    assert interviewer and all("RESUMEMARKER" in member_data(r) for r in interviewer)
+    book_steps = [
+        r for r in later if r["system"] in (load_prompt("interview/draft"), load_prompt("interview/finish"))
+    ]
+    assert len(book_steps) >= 2
+    assert not any("RESUMEMARKER" in member_data(r) or "Acme" in member_data(r) for r in book_steps)
+    assert await database.resume_texts.count_documents({}) == 0
+
+
 async def test_a_resume_only_term_stays_out_of_book_steps_and_the_saved_interview(
     client, database, scripted_ai
 ):

@@ -11,6 +11,7 @@ function interview(overrides: Partial<InterviewResponse>): InterviewResponse {
     question: { question_id: "q0", text: "What do people come to you for?", phase: "sweep" },
     topic: null,
     has_answers: false,
+    has_resume: false,
     can_finish: false,
     ready_for_reveal: false,
     needs_more: false,

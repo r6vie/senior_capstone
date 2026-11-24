@@ -299,6 +299,60 @@ async def test_resume_text_is_used_then_deleted_and_the_file_is_never_kept(
     assert await database.resume_texts.count_documents({}) == 0
 
 
+async def test_a_resume_clipped_on_later_shapes_the_next_questions_and_replaces_the_last(
+    client, database, headers, fake_engine
+):
+    state = (await client.post("/interview", json={}, headers=headers)).json()
+    assert state["has_resume"] is False
+    await answer_questions(client, headers, 2)
+    waiting = (await client.get("/interview", headers=headers)).json()["question"]
+
+    pdf = base64.b64encode(minimal_pdf("Ran the assay lab for three years")).decode()
+    state = (await client.post("/interview/resume", json={"resume_pdf": pdf}, headers=headers)).json()
+    assert state["has_resume"] is True
+    # The question already waiting stays; the ones after it get the résumé.
+    assert state["question"] == waiting
+    await answer_questions(client, headers, 1)
+    assert "assay lab" in fake_engine.calls[-1][1]["resume_text"]
+    interview = await database.interviews.find_one({})
+    assert "assay lab" not in str(interview)
+
+    other = base64.b64encode(minimal_pdf("Managed the pottery studio kilns")).decode()
+    await client.post("/interview/resume", json={"resume_pdf": other}, headers=headers)
+    await answer_questions(client, headers, 1)
+    assert "pottery studio" in fake_engine.calls[-1][1]["resume_text"]
+    assert "assay lab" not in fake_engine.calls[-1][1]["resume_text"]
+    assert await database.resume_texts.count_documents({}) == 1
+
+    await answer_questions(client, headers, 10)
+    await client.post("/interview/finish", headers=headers)
+    assert await database.resume_texts.count_documents({}) == 0
+    state = (await client.get("/interview", headers=headers)).json()
+    assert state["has_resume"] is False
+
+
+async def test_a_resume_is_refused_once_the_interview_is_over(client, database, headers, fake_engine):
+    pdf = base64.b64encode(minimal_pdf("Ran the assay lab for three years")).decode()
+    assert (
+        await client.post("/interview/resume", json={"resume_pdf": pdf}, headers=headers)
+    ).status_code == 404
+    await to_review(client, headers, fake_engine)
+    refused = await client.post("/interview/resume", json={"resume_pdf": pdf}, headers=headers)
+    assert refused.status_code == 409
+    assert "first interview" in refused.json()["detail"]
+    assert await database.resume_texts.count_documents({}) == 0
+
+
+async def test_a_clipped_on_resume_must_be_a_readable_pdf(client, database, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    not_pdf = base64.b64encode(b"just text").decode()
+    assert (
+        await client.post("/interview/resume", json={"resume_pdf": not_pdf}, headers=headers)
+    ).status_code == 422
+    assert (await client.post("/interview/resume", json={}, headers=headers)).status_code == 422
+    assert (await client.get("/interview", headers=headers)).json()["has_resume"] is False
+
+
 async def test_unreadable_resume_is_422(client, headers, fake_engine):
     not_pdf = base64.b64encode(b"just text").decode()
     assert (await client.post("/interview", json={"resume_pdf": not_pdf}, headers=headers)).status_code == 422
