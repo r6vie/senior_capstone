@@ -42,6 +42,31 @@ beforeEach(() => {
 });
 
 describe("MeetingPage", () => {
+  it("offers to try again when loading fails, including a dropped connection", async () => {
+    api.GET.mockResolvedValueOnce({ error: { detail: "Unavailable" }, response: { status: 503 } });
+    renderPage();
+    expect((await screen.findByRole("alert")).textContent).toContain("couldn't load this meeting");
+    expect(screen.queryByText(/couldn't find this meeting/)).toBeNull();
+
+    api.GET.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect((await screen.findByRole("alert")).textContent).toContain("couldn't load this meeting");
+
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Meeting Maya Lee" })).toBeTruthy();
+  });
+
+  it("says the connection dropped when confirming a time, rather than staying stuck", async () => {
+    const time = day(3).toISOString();
+    api.GET.mockResolvedValue({
+      data: { ...meeting, my_times: [time], their_times: [time], shared_times: [time] },
+    });
+    api.PUT.mockRejectedValue(new TypeError("Failed to fetch"));
+    renderPage();
+    fireEvent.click((await screen.findAllByRole("button", { name: /^Confirm / }))[0] as HTMLElement);
+    expect((await screen.findByRole("alert")).textContent).toContain("couldn't reach Trove");
+  });
+
   it("names the other person and starts with nothing to pick", async () => {
     renderPage();
     expect(await screen.findByRole("heading", { level: 1, name: "Meeting Maya Lee" })).toBeTruthy();
@@ -220,7 +245,7 @@ describe("MeetingPage", () => {
   });
 
   it("explains when the meeting can't be found", async () => {
-    api.GET.mockResolvedValue({ error: { detail: "Checkout not found." } });
+    api.GET.mockResolvedValue({ error: { detail: "Checkout not found." }, response: { status: 404 } });
     renderPage();
     expect(await screen.findByText(/We couldn't find this meeting/)).toBeTruthy();
     expect(screen.getByRole("link", { name: "Back to Checkouts" })).toBeTruthy();

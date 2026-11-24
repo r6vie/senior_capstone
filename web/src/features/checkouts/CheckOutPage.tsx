@@ -1,7 +1,7 @@
-import { type FormEvent, useEffect, useId, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useId, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, NO_CONNECTION } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
 import { PageLoading } from "../../ui/Loading";
@@ -23,22 +23,33 @@ export function CheckOutPage() {
   const [book, setBook] = useState<Book | null>(null);
   usePageTitle(book ? `Check out ${book.title}` : "Check out a book");
   const [missing, setMissing] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsOwnBook, setNeedsOwnBook] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     let stale = false;
-    api.GET("/books/{book_id}", { params: { path: { book_id: bookId } } }).then(({ data }) => {
-      if (stale) return;
-      if (data) setBook(data);
-      else setMissing(true);
-    });
+    setFailed(false);
+    api
+      .GET("/books/{book_id}", { params: { path: { book_id: bookId } } })
+      .then(({ data, response }) => {
+        if (stale) return;
+        if (data) setBook(data);
+        // Only a real "not found" means the book isn't there; anything else is worth another try.
+        else if (response.status === 404) setMissing(true);
+        else setFailed(true);
+      })
+      .catch(() => {
+        if (!stale) setFailed(true);
+      });
     return () => {
       stale = true;
     };
   }, [bookId]);
+
+  useEffect(() => load(), [load]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -49,17 +60,33 @@ export function CheckOutPage() {
       data,
       error: failure,
       response,
-    } = await api.POST("/checkouts", {
-      body: { book_id: bookId, message: note.trim() },
-    });
+    } = await api
+      .POST("/checkouts", { body: { book_id: bookId, message: note.trim() } })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION, response: undefined }));
     setBusy(false);
     if (!data) {
-      setNeedsOwnBook(response.status === 403);
+      setNeedsOwnBook(response?.status === 403);
       return setError(errorMessage(failure));
     }
     navigate("/checkouts", { state: { checkedOut: data.book_title, answerBy: data.expires_at } });
   }
 
+  if (failed && !book) {
+    return (
+      <main className="shell-page checkouts-page">
+        <h1 className="page-title">Check out a book</h1>
+        <p role="alert" className="message message-error">
+          <span>!</span>
+          <span>
+            We couldn't load this book.{" "}
+            <Button variant="quiet" onClick={() => load()}>
+              Try again
+            </Button>
+          </span>
+        </p>
+      </main>
+    );
+  }
   if (missing) {
     return (
       <main className="shell-page checkouts-page">
