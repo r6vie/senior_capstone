@@ -6,6 +6,15 @@ import { SearchControl } from "./SearchControl";
 
 const api = vi.hoisted(() => ({ GET: vi.fn() }));
 vi.mock("../../api/client", () => ({ api }));
+vi.mock("./BookReader", () => ({
+  BookReader: ({ card, onDismiss }: { card: { title: string }; onDismiss: () => void }) => (
+    <section role="dialog" aria-label={`Open book: ${card.title}`}>
+      <button type="button" onClick={onDismiss}>
+        Close the book
+      </button>
+    </section>
+  ),
+}));
 
 const result = {
   book: {
@@ -81,7 +90,7 @@ describe("D2 search overlay", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("searches live after two characters and shows a cover with its matching excerpt", async () => {
+  it("opens a result above the search and returns to the same results", async () => {
     renderSearch();
     fireEvent.click(screen.getByRole("searchbox", { name: "Search stories, topics, and people" }));
     const field = screen.getByRole("searchbox", { name: "Search Trove" });
@@ -100,8 +109,17 @@ describe("D2 search overlay", () => {
     });
 
     fireEvent.click(cover);
-    expect(await screen.findByText("Opened search result")).toBeTruthy();
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByRole("dialog", { name: "Open book: Engineering a Career Change" })).toBeTruthy();
+    expect(screen.getByRole("dialog", { name: "Search books" })).toBeTruthy();
+    expect(cover.hasAttribute("data-out")).toBe(true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Close the book" }));
+    expect(screen.queryByRole("dialog", { name: /Open book/ })).toBeNull();
+    expect(screen.getByRole("dialog", { name: "Search books" })).toBeTruthy();
+    expect((screen.getByRole("searchbox", { name: "Search Trove" }) as HTMLInputElement).value).toBe(
+      "engineering",
+    );
+    expect(cover.hasAttribute("data-out")).toBe(false);
   });
 
   it("runs immediately when Search is pressed", async () => {
