@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brand 2C · typography 1 · Caslon, set bold</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&amp;family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+.b2{width:1760px;padding:72px 80px 96px;background:var(--pg);color:var(--ink);font-family:var(--ui);font-variation-settings:var(--uvs);font-size:16px;line-height:1.5;font-variant-numeric:oldstyle-nums proportional-nums}
+.b2,.b2 *{box-sizing:border-box}
+:where(.b2) :is(h1,h2,h3,p,ul,ol,figure,blockquote){margin:0;padding:0}
+.b2{--pg:#FBF9F4;--ink:#1C2230;--ink2:#5A5E68;--band:#F1ECE2}
+.d{font-family:var(--disp);font-weight:var(--dw);font-variation-settings:var(--dvs);letter-spacing:var(--dls)}
+.v{font-family:var(--voice);font-weight:var(--vw);font-variation-settings:var(--vvs);font-style:italic}
+.r{font-family:var(--read);font-weight:var(--rw);font-variation-settings:var(--rvs)}
+.ey,.lbl,.cap{font-family:var(--ui);font-variation-settings:var(--uvs);font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+.ey{font-size:13px;color:var(--ink2)}
+.lbl{font-size:12px}
+.cap{display:block;margin-top:10px;font-size:12px;letter-spacing:.14em;color:var(--ink2)}
+.h1{font-size:96px;line-height:1;margin-top:16px}
+.lede{font-size:26px;line-height:1.35;max-width:1000px;margin-top:20px}
+.fonts{margin-top:18px;font-size:15px;color:var(--ink2)}
+.sec{margin-top:80px}
+.sh{display:flex;align-items:baseline;gap:20px;border-top:2px solid var(--ink);padding-top:14px;margin-bottom:32px}
+.sh b{font-size:36px;line-height:1}
+.sh span{color:var(--ink2);font-size:15px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end}
+.cmp .x{max-width:620px;font-size:104px;line-height:.98;text-wrap:balance}
+.tw{font-family:var(--disp);font-weight:var(--dw);font-variation-settings:var(--dvs);letter-spacing:var(--wls);line-height:.9;font-kerning:normal}
+.tw .tT{letter-spacing:var(--tT)}
+.tag{font-family:var(--voice);font-variation-settings:var(--vvs);font-style:italic;font-weight:400;letter-spacing:.005em}
+.pm{display:block;object-fit:contain}
+.scale{display:grid;grid-template-columns:240px minmax(0,1fr) 300px;border-top:1.5px solid var(--ink)}
+.scale>div{padding:18px 0;border-bottom:1px solid #D9D4C8;display:flex;align-items:baseline}
+.scale .k{flex-direction:column;align-items:flex-start;gap:4px}
+.scale .k b{font-weight:600;font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+.scale .k span,.scale .m{font-size:13px;color:var(--ink2);line-height:1.4}
+.cv{position:relative;flex:none;border:1.5px solid var(--ink);display:flex;flex-direction:column;background:#fff;overflow:hidden}
+.cv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cv::before{content:"";position:absolute;left:4.5%;top:0;bottom:0;width:1.5px;background:rgba(0,0,0,.55);z-index:1}
+.cv .ct{position:relative;z-index:2;text-wrap:balance;max-width:92%;line-height:1}
+.cv .cn{position:relative;z-index:2;align-self:flex-start;margin-top:.8em;padding:0 .35em 0 0;font-family:var(--ui);font-variation-settings:var(--uvs);font-weight:700;letter-spacing:.14em;text-transform:uppercase;line-height:1.3}
+.site{border:2px solid var(--ink);background:var(--pg);overflow:hidden}
+.s-top{display:flex;align-items:center;gap:40px;height:76px;padding:0 40px;border-bottom:1.5px solid var(--ink)}
+.s-top nav{display:flex;gap:28px;font-weight:500;font-size:15px;letter-spacing:.02em}
+.s-top nav b{font-weight:inherit;padding:6px 0}
+.s-top nav b[aria-current]{border-bottom:2px solid var(--ink)}
+.s-search{margin-left:auto;width:240px;height:42px;border:1.5px solid var(--ink);border-radius:999px;display:flex;align-items:center;padding:0 18px;font-size:14px;color:var(--ink2);background:#fff}
+.s-av{width:42px;height:42px;border-radius:999px;border:1.5px solid var(--ink);display:grid;place-items:center;font-weight:700;background:#fff}
+.s-band{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:40px;padding:44px 40px 48px;background:var(--band)}
+.s-cap{font-weight:600;font-size:13px;letter-spacing:.16em;text-transform:uppercase;opacity:.8}
+.s-title{font-size:60px;line-height:1.02;margin-top:14px;max-width:760px}
+.s-by{margin-top:12px;font-weight:600;font-size:14px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+.s-voice{margin-top:20px;font-size:22px;line-height:1.4;max-width:720px}
+.s-act{margin-top:28px;display:flex;align-items:center;gap:20px}
+.s-btn{display:inline-flex;align-items:center;height:50px;padding:0 26px;background:#D42A27;color:#fff;font-weight:600;font-size:16px}
+.s-note{font-size:14px;opacity:.8}
+.s-shelf{padding:34px 40px 40px}
+.s-sh{display:flex;align-items:baseline;gap:18px;margin-bottom:22px}
+.s-sh b{font-size:32px;line-height:1}
+.s-sh i{flex:1;height:1.5px;background:var(--ink);align-self:center}
+.s-sh span{font-size:14px}
+.s-books{display:flex;gap:30px}
+.s-read{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:60px;padding:40px;border-top:1.5px solid var(--ink)}
+.s-read h3{font-size:40px;line-height:1.05;margin-top:10px}
+.s-read p{font-size:17px;line-height:1.6;margin-top:16px;max-width:640px}
+.s-read q{display:block;quotes:none;font-size:21px;line-height:1.45;border-left:3px solid var(--ink);padding-left:18px}
+.pp{position:relative;overflow:hidden;border:1px solid #CFC9BC;background:var(--pg);box-shadow:0 1px 0 #CFC9BC}
+.foot{position:absolute;left:36px;right:36px;bottom:36px;display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid var(--ink);padding-top:12px}
+.url{font-weight:500;font-size:12px;letter-spacing:.06em}
+</style>
+</helmet>
+<div class="b2" style="--disp:'Libre Caslon Text',Georgia,serif;--dw:700;--dvs:normal;--dls:-.018em;--voice:'Libre Caslon Text',Georgia,serif;--vw:400;--vvs:normal;--read:'Libre Caslon Text',Georgia,serif;--rw:400;--rvs:normal;--ui:'Schibsted Grotesk',system-ui,sans-serif;--uvs:normal;--tT:-.07em;--wls:-.025em;height:4440px;overflow:hidden">
+<span class="ey">Brand · round 2 · 2C Wet Ink · typography 1 of 3</span>
+<h1 class="h1 d">Caslon, set bold</h1>
+<p class="lede v">The same Caslon, taken from the hairline Display cut to the sturdier Text cut in its bold. Closest to 2C; it reads as a printed book, not a fashion magazine.</p>
+<p class="fonts">Libre Caslon Text 700 · Libre Caslon Text 400 and italic · Schibsted Grotesk</p>
+
+<section class="sec" style="margin-top:56px"><div class="cmp">
+<div><div class="x" style="font-family:'Libre Caslon Display';color:#B9B6AE">Above the Tree Line</div><span class="cap">2C as it is · Libre Caslon Display</span></div>
+<div><div class="x d">Above the Tree Line</div><span class="cap">This option</span></div></div></section>
+
+<section class="sec" style="margin-top:64px"><div style="border:2px solid #1C2230;height:640px;background:#FBF9F4;display:grid;grid-template-columns:1.25fr 1fr">
+<div style="display:grid;place-items:center;border-right:1px solid #D9D4C8"><span style="display:inline-flex;flex-direction:column;align-items:center;gap:12px"><img class="pm" src="/_blob/97debc3b6fd8667339b8021cc1df06f9" alt="" style="width:240px;height:auto"><span class="tw" style="font-size:128px;color:#1C2230;display:inline-block;text-align:center"><span class="tT">T</span>rove<span class="tag" style="display:block;width:100%;border-top:1px solid #1C2230;margin-top:.16em;padding-top:.22em;font-size:.15em;text-align:center;white-space:nowrap;letter-spacing:0">the book you haven’t written yet</span></span></span></div>
+<div style="display:grid;grid-template-rows:1fr 1fr">
+<div style="display:grid;place-items:center;border-bottom:1px solid #D9D4C8"><span style="display:inline-flex;align-items:center;gap:15px"><img class="pm" src="/_blob/97debc3b6fd8667339b8021cc1df06f9" alt="" style="width:96px;height:auto"><span class="tw" style="font-size:64px;color:#1C2230;"><span class="tT">T</span>rove</span></span></div>
+<div style="display:grid;place-items:center;background:#F1ECE2"><span class="tw" style="font-size:110px;color:#1C2230;"><span class="tT">T</span>rove</span></div></div></div>
+<div style="display:flex;gap:44px;margin-top:14px"><span class="cap">Primary · stacked, with the tagline</span><span class="cap" style="margin-left:auto">Horizontal</span><span class="cap">Wordmark alone</span></div></section>
+
+<section class="sec"><div class="sh"><b class="d">Type system</b><span>The same seven jobs as 2C</span></div><div class="scale"><div class="k"><b>Display</b><span>Libre Caslon Text 700 72 / 1.0</span></div><div class="d" style="font-size:72px;line-height:1.0">Check out a person.</div><div class="m">Posters, the landing page</div><div class="k"><b>Page title</b><span>Caslon Text 700 44 / 1.05</span></div><div class="d" style="font-size:44px;line-height:1.05">Above the Tree Line</div><div class="m">Book title on its page; page titles</div><div class="k"><b>Section</b><span>Caslon Text 700 30 / 1.1</span></div><div class="d" style="font-size:30px;line-height:1.1">Changing course</div><div class="m">Shelf names, headings</div><div class="k"><b>Voice</b><span>Caslon Text italic 21 / 1.45</span></div><div class="v" style="font-size:21px;line-height:1.45">Six summers guiding in the Brooks Range, and what that does to how you plan anything.</div><div class="m">The Librarian, blurbs</div><div class="k"><b>Reading</b><span>Caslon Text 17 / 1.6</span></div><div class="r" style="font-size:17px;line-height:1.6">Every chapter is something the author could talk about for half an hour, in their own words.</div><div class="m">Chapters, long text</div><div class="k"><b>Interface</b><span>Schibsted Grotesk 500 15</span></div><div class="" style="font-size:15px;line-height:1.45;font-weight:500">Ask to check out · Save contact details</div><div class="m">Buttons, fields</div><div class="k"><b>Label</b><span>Schibsted 600 12, caps +16%</span></div><div class="lbl" style="font-size:12px;line-height:1.4">The Librarian recommends</div><div class="m">Short labels only</div></div></section>
+
+<section class="sec"><div class="sh"><b class="d">The site in it</b><span>Shelf, the Librarian’s band, and a chapter</span></div>
+<div class="site"><div class="s-top"><span style="display:inline-flex;align-items:center;gap:8px"><img class="pm" src="/_blob/97debc3b6fd8667339b8021cc1df06f9" alt="" style="width:51px;height:auto"><span class="tw" style="font-size:34px;color:#1C2230;"><span class="tT">T</span>rove</span></span><nav><b aria-current="page">Shelf</b><b>My book</b><b>Checkouts</b><b>Past meets</b></nav><span class="s-search">Search by topic</span><span class="s-av">H</span></div>
+<div class="s-band"><div><span class="s-cap">The Librarian recommends</span><div class="s-title d">Off the Clock</div><div class="s-by">by Leilani Cruz</div>
+<p class="s-voice v">From back-to-back meetings to running a surf school, and what a week looks like when you design it yourself.</p><div class="s-act"><span class="s-btn">Ask to check out</span><span class="s-note">A thirty-minute video call</span></div></div>
+<div style="display:grid;place-items:center"><div class="cv" style="width:236px;height:344px;padding:26px 16px 15px 26px;transform:rotate(2deg)" aria-label="Off the Clock, by Leilani Cruz"><img src="/_blob/6e8e94c8767e382846a8d452de106a3b" alt=""><span class="ct d" style="color:#5a2f2a;font-size:32px">Off the Clock</span><span class="cn" style="color:#5a2f2a;background:#fff;font-size:11.5px">Leilani Cruz</span></div></div></div>
+<div class="s-shelf"><div class="s-sh"><b class="d">Changing course</b><i></i><span>See all</span></div><div class="s-books"><div class="cv" style="width:176px;height:256px;padding:19px 12px 11px 19px;transform:rotate(0deg)" aria-label="Above the Tree Line, by Ingrid Solberg"><img src="/_blob/1e9415fdd6e49a24e90cb5befd197f98" alt=""><span class="ct d" style="color:#23415a;font-size:24px">Above the Tree Line</span><span class="cn" style="color:#23415a;background:#fff;font-size:8.6px">Ingrid Solberg</span></div><div class="cv" style="width:176px;height:256px;padding:19px 12px 11px 19px;transform:rotate(0deg)" aria-label="Room to Grow, by Noah Bergstrom"><img src="/_blob/f555c336b0c5f0fc55b7aae44dad590e" alt=""><span class="ct d" style="color:#283d2e;font-size:24px">Room to Grow</span><span class="cn" style="color:#283d2e;background:#fff;font-size:8.6px">Noah Bergstrom</span></div><div class="cv" style="width:176px;height:256px;padding:19px 12px 11px 19px;transform:rotate(0deg)" aria-label="After Hours, by Marcus Bell"><img src="/_blob/dc709e43fb65e3f96dfe30808af36cd5" alt=""><span class="ct d" style="color:#f6efe0;font-size:24px">After Hours</span><span class="cn" style="color:#f6efe0;background:transparent;font-size:8.6px">Marcus Bell</span></div><div class="cv" style="width:176px;height:256px;padding:19px 12px 11px 19px;transform:rotate(0deg)" aria-label="The High Desert, by Lucia Navarro"><img src="/_blob/f43fbf5c4f4949ffce7e9a58bd5951f1" alt=""><span class="ct d" style="color:#f6efe0;font-size:24px">The High Desert</span><span class="cn" style="color:#f6efe0;background:transparent;font-size:8.6px">Lucia Navarro</span></div><div class="cv" style="width:176px;height:256px;padding:19px 12px 11px 19px;transform:rotate(0deg)" aria-label="What the Desert Teaches, by Lucía Hernández-Brooks"><img src="/_blob/49a3b7b996be6b7bb76cfea36a94ef45" alt=""><span class="ct d" style="color:#6a3525;font-size:24px">What the Desert Teaches</span><span class="cn" style="color:#6a3525;background:#fff;font-size:8.6px">Lucía Hernández-Brooks</span></div><div class="cv" style="width:176px;height:256px;padding:19px 12px 11px 19px;transform:rotate(0deg)" aria-label="Notes From the Edge, by Callum O’Donnell"><img src="/_blob/09eabf0d3c4a573f24c3190ca05b4b95" alt=""><span class="ct d" style="color:#26304f;font-size:24px">Notes From the Edge</span><span class="cn" style="color:#26304f;background:#fff;font-size:8.6px">Callum O’Donnell</span></div></div></div>
+<div class="s-read"><div><span class="lbl" style="color:#5A5E68">Chapter 3</span><h3 class="d">Planning for weather you can’t see</h3><p class="r">How a guide reads a forecast that is wrong half the time, and why the plan that survives is the one with three ways out. What changes when the people you are responsible for are paying to be there, and what you do on the day it goes wrong anyway.</p></div>
+<div><span class="lbl" style="color:#5A5E68">What you said</span><q class="v" style="margin-top:14px">You don’t plan the trip. You plan the three places you can turn around.</q></div></div></div></section>
+
+<section class="sec"><div class="sh"><b class="d">Posters</b><span>The same three campus posters as 2C</span></div><div style="display:flex;gap:28px"><div class="pp" style="width:512px;height:716px"><div class="lbl" style="position:absolute;left:36px;right:36px;top:34px;display:flex;justify-content:space-between"><span>For students and alumni</span><span>Case Western Reserve</span></div><div style="position:absolute;left:0;right:0;top:78px;display:grid;place-items:center"><img class="pm" src="/_blob/97debc3b6fd8667339b8021cc1df06f9" alt="" style="width:300px;height:auto"></div><div style="position:absolute;left:36px;right:36px;bottom:110px"><div class="d" style="font-size:44px;line-height:1.02;text-wrap:balance">Somebody here knows what you’re trying to figure out.</div><div class="tag" style="font-size:19px;line-height:1.4;margin-top:14px;color:#3A4050;max-width:400px">Find their book. Ask for half an hour.</div></div><div class="foot"><span style="display:inline-flex;align-items:center;gap:7px"><img class="pm" src="/_blob/97debc3b6fd8667339b8021cc1df06f9" alt="" style="width:45px;height:auto"><span class="tw" style="font-size:30px;color:#1C2230;"><span class="tT">T</span>rove</span></span><span class="url">[link]</span></div></div><div class="pp" style="width:512px;height:716px"><div class="lbl" style="position:absolute;left:36px;right:36px;top:34px;display:flex;justify-content:space-between"><span>For students and alumni</span><span>Case Western Reserve</span></div><div style="position:absolute;left:0;right:0;top:78px;display:grid;place-items:center"><img class="pm" src="/_blob/6a62a3fbbb6d3db21fdf532dff8f2cfc" alt="" style="width:300px;height:auto"></div><div style="position:absolute;left:36px;right:36px;bottom:110px"><div class="d" style="font-size:44px;line-height:1.02;text-wrap:balance">You are the author of the book you haven’t written yet.</div><div class="tag" style="font-size:19px;line-height:1.4;margin-top:14px;color:#3A4050;max-width:400px">A short interview finds it with you.</div></div><div class="foot"><span style="display:inline-flex;align-items:center;gap:7px"><img class="pm" src="/_blob/6a62a3fbbb6d3db21fdf532dff8f2cfc" alt="" style="width:45px;height:auto"><span class="tw" style="font-size:30px;color:#1C2230;"><span class="tT">T</span>rove</span></span><span class="url">[link]</span></div></div><div class="pp" style="width:512px;height:716px"><div class="lbl" style="position:absolute;left:36px;right:36px;top:34px;display:flex;justify-content:space-between"><span>For students and alumni</span><span>Case Western Reserve</span></div><div style="position:absolute;left:0;right:0;top:78px;display:grid;place-items:center"><img class="pm" src="/_blob/9675b8a1a88c3b88ff5de795ddde075b" alt="" style="width:300px;height:auto"></div><div style="position:absolute;left:36px;right:36px;bottom:110px"><div class="d" style="font-size:44px;line-height:1.02;text-wrap:balance">Check out a person.</div><div class="tag" style="font-size:19px;line-height:1.4;margin-top:14px;color:#3A4050;max-width:400px">No feed, no followers. Books, and the people who could write them.</div></div><div class="foot"><span style="display:inline-flex;align-items:center;gap:7px"><img class="pm" src="/_blob/9675b8a1a88c3b88ff5de795ddde075b" alt="" style="width:45px;height:auto"><span class="tw" style="font-size:30px;color:#1C2230;"><span class="tT">T</span>rove</span></span><span class="url">[link]</span></div></div></div></section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1760,"height":4440}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

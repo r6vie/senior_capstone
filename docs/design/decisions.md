@@ -2,6 +2,20 @@
 
 Decisions Josef has made about Trove's look and feel. Newest first.
 
+## 2026-11-23: My book, a calmer page and a design studio (canvas page "My book"; waiting for Josef's approval)
+
+Josef rejected concepts A and B (the notebook does not belong on My book; it felt blocky, old and unbalanced) and asked for a more airy, considered page with the interview as an important block, and a design studio that is
+satisfying and adapts to categories (Strata first, then Watercolour and others, about ten designs each). Boards: how it is now, "a calmer page" (one column, the book alone on the left with its design named, the Librarian's black
+panel with the one red button as the one important block, hairlines instead of cards), "the design studio" (a page of its own: stage on a ledge, a shelf preview, category tabs, a grid of designs, Shuffle, Use this design), and
+every stage in the new look. The notebook is not on My book. New copy: "Change design", "Design", "Use this design", "Continue with the Librarian". Open product questions: whether the design can change at any time and whether it
+changes a book already on the shelf; the red button's label.
+
+## 2026-11-23: five logo options (canvas page "Logo"; waiting for Josef's choice)
+
+Five ink-only logo options for the website, chosen from twelve ideas against the mission (a book and a person, not a social network), the feel (printed, calm, literary) and the job (16px favicon, 26px header, avatar, one colour, on paper and black):
+A Ribbon (the T is a notched bookmark), B Open V (the V is an open book), C Stacked T (the T is two books), D The book (the product's book object with a T), E Stamp (a library date stamp, "Checked out"). An independent critic
+reviewed the first render; its fixes are applied (kerning, drawn wordmarks so none depends on a loaded font, true cut-outs, a small master for the book and the stamp). Its ranking: Ribbon, The book, Stacked T, Stamp, Open V.
+
 ## 2026-11-19: strata, finished (canvas page "Final designs"), waiting for Josef
 
 - **Josef:** strata has potential but the execution felt unpolished, game-like, and the arrangement not thoughtful.

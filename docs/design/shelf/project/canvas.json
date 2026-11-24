@@ -9,6 +9,62 @@
    "x": 1520,
    "y": 964
   },
+  "Brand2A.dc.html": {
+   "h": 5100,
+   "page": "brand",
+   "title": "2A · The Magpie",
+   "w": 1760,
+   "x": 1880,
+   "y": 4720
+  },
+  "Brand2B.dc.html": {
+   "h": 5100,
+   "page": "brand",
+   "title": "2B · Overprint",
+   "w": 1760,
+   "x": 3760,
+   "y": 4720
+  },
+  "Brand2C.dc.html": {
+   "h": 6860,
+   "page": "brand",
+   "title": "2C · Wet Ink",
+   "w": 1760,
+   "x": 5640,
+   "y": 4720
+  },
+  "Brand2CT1.dc.html": {
+   "h": 4440,
+   "page": "brand",
+   "title": "2C · type 1 · Caslon, set bold",
+   "w": 1760,
+   "x": 7520,
+   "y": 4720
+  },
+  "Brand2CT2.dc.html": {
+   "h": 4440,
+   "page": "brand",
+   "title": "2C · type 2 · Soft ink",
+   "w": 1760,
+   "x": 9400,
+   "y": 4720
+  },
+  "Brand2CT3.dc.html": {
+   "h": 4440,
+   "page": "brand",
+   "title": "2C · type 3 · Grotesque and book",
+   "w": 1760,
+   "x": 11280,
+   "y": 4720
+  },
+  "Brand2Think.dc.html": {
+   "h": 1720,
+   "page": "brand",
+   "title": "Round 2 · what changed",
+   "w": 1760,
+   "x": 0,
+   "y": 4720
+  },
   "BrandA.dc.html": {
    "h": 4300,
    "page": "brand",
@@ -698,6 +754,15 @@
    "x": 0,
    "y": 7000
   },
+  "MyBookD2.dc.html": {
+   "expand": "fill",
+   "h": 8000,
+   "page": "mybook",
+   "title": "My book · D, the shelf’s book",
+   "w": 1760,
+   "x": 1880,
+   "y": 0
+  },
   "MyBookNow.dc.html": {
    "expand": "fill",
    "h": 2290,
@@ -729,6 +794,30 @@
    "x": 1520,
    "y": 0
   },
+  "STCoverDawn.dc.html": {
+   "h": 1090,
+   "page": "stipple",
+   "title": "M · Dawn",
+   "w": 600,
+   "x": 2040,
+   "y": 2400
+  },
+  "STCoverDunes.dc.html": {
+   "h": 1090,
+   "page": "stipple",
+   "title": "K · Dunes",
+   "w": 600,
+   "x": 680,
+   "y": 2400
+  },
+  "STCoverErg.dc.html": {
+   "h": 1090,
+   "page": "stipple",
+   "title": "N · Erg",
+   "w": 600,
+   "x": 2720,
+   "y": 2400
+  },
   "STCoverFan.dc.html": {
    "h": 1090,
    "page": "stipple",
@@ -738,44 +827,12 @@
    "y": 1200
   },
   "STCoverFields.dc.html": {
-   "x": 0,
-   "y": 2400,
-   "w": 600,
    "h": 1090,
+   "page": "stipple",
    "title": "H · Fields",
-   "page": "stipple"
-  },
-  "STCoverDunes.dc.html": {
-   "x": 680,
-   "y": 2400,
    "w": 600,
-   "h": 1090,
-   "title": "K · Dunes",
-   "page": "stipple"
-  },
-  "STCoverNight.dc.html": {
-   "x": 1360,
-   "y": 2400,
-   "w": 600,
-   "h": 1090,
-   "title": "L · Night",
-   "page": "stipple"
-  },
-  "STCoverDawn.dc.html": {
-   "x": 2040,
-   "y": 2400,
-   "w": 600,
-   "h": 1090,
-   "title": "M · Dawn",
-   "page": "stipple"
-  },
-  "STCoverErg.dc.html": {
-   "x": 2720,
-   "y": 2400,
-   "w": 600,
-   "h": 1090,
-   "title": "N · Erg",
-   "page": "stipple"
+   "x": 0,
+   "y": 2400
   },
   "STCoverLayers.dc.html": {
    "h": 1090,
@@ -784,6 +841,14 @@
    "w": 600,
    "x": 0,
    "y": 0
+  },
+  "STCoverNight.dc.html": {
+   "h": 1090,
+   "page": "stipple",
+   "title": "L · Night",
+   "w": 600,
+   "x": 1360,
+   "y": 2400
   },
   "STCoverOrbit.dc.html": {
    "h": 1090,
@@ -863,6 +928,54 @@
    "x": 1990,
    "y": 2920
   },
+  "StartInterview.dc.html": {
+   "h": 5982,
+   "page": "start",
+   "title": "Starting the interview · the book introduces it",
+   "w": 1760,
+   "x": 3760,
+   "y": 0
+  },
+  "StartJoin.dc.html": {
+   "h": 5570,
+   "page": "start",
+   "title": "Joining · refined",
+   "w": 1760,
+   "x": 1880,
+   "y": 0
+  },
+  "StartNow.dc.html": {
+   "h": 1960,
+   "page": "start",
+   "title": "Getting started · today",
+   "w": 1760,
+   "x": 0,
+   "y": 0
+  },
+  "StartOpen.dc.html": {
+   "h": 3027,
+   "page": "start",
+   "title": "Starting the interview · A, it opens on the question",
+   "w": 1760,
+   "x": 5640,
+   "y": 0
+  },
+  "StartPaint.dc.html": {
+   "h": 1760,
+   "page": "start",
+   "title": "The blank book painting itself · test (alpine lake)",
+   "w": 1760,
+   "x": 9400,
+   "y": 0
+  },
+  "StartReveal.dc.html": {
+   "h": 7703,
+   "page": "start",
+   "title": "The book reveal",
+   "w": 1760,
+   "x": 7493,
+   "y": 0
+  },
   "StrataBook.dc.html": {
    "h": 1140,
    "page": "strata",
@@ -893,6 +1006,14 @@
    "title": "Strata · on the shelf, and how the art is made",
    "w": 1440,
    "x": 1520,
+   "y": 0
+  },
+  "StudioPaint.dc.html": {
+   "h": 1720,
+   "page": "start",
+   "title": "Picks, the reveal and the studio · covers animating in (fast; strata all ten)",
+   "w": 1760,
+   "x": 11280,
    "y": 0
   },
   "SysComponents1.dc.html": {
@@ -993,6 +1114,14 @@
    "x": 680,
    "y": 7200
   },
+  "WCBookBeach.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen · beach at sunset",
+   "w": 1440,
+   "x": 680,
+   "y": 8400
+  },
   "WCBookBlossom.dc.html": {
    "h": 1090,
    "page": "watercolor",
@@ -1024,6 +1153,22 @@
    "w": 1440,
    "x": 680,
    "y": 2400
+  },
+  "WCBookLighthouse.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen · lighthouse by day with the harbor boats",
+   "w": 1440,
+   "x": 680,
+   "y": 9600
+  },
+  "WCBookLighthouse2.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen · lighthouse at dusk with its beam",
+   "w": 1440,
+   "x": 680,
+   "y": 13200
   },
   "WCBookMesa.dc.html": {
    "h": 1090,
@@ -1113,6 +1258,14 @@
    "x": 0,
    "y": 13200
   },
+  "WCCoverLighthouse3.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover · Lighthouse by day with the harbor boats",
+   "w": 600,
+   "x": 0,
+   "y": 9600
+  },
   "WCCoverMesa.dc.html": {
    "h": 1090,
    "page": "watercolor",
@@ -1168,159 +1321,6 @@
    "w": 1440,
    "x": 1520,
    "y": 1220
-  },
-  "WCCoverLighthouse3.dc.html": {
-   "h": 1090,
-   "page": "watercolor",
-   "title": "Cover · Lighthouse by day with the harbor boats",
-   "w": 600,
-   "x": 0,
-   "y": 9600
-  },
-  "Brand2Think.dc.html": {
-   "h": 1720,
-   "page": "brand",
-   "title": "Round 2 · what changed",
-   "w": 1760,
-   "x": 0,
-   "y": 4720
-  },
-  "Brand2A.dc.html": {
-   "h": 5100,
-   "page": "brand",
-   "title": "2A · The Magpie",
-   "w": 1760,
-   "x": 1880,
-   "y": 4720
-  },
-  "Brand2B.dc.html": {
-   "h": 5100,
-   "page": "brand",
-   "title": "2B · Overprint",
-   "w": 1760,
-   "x": 3760,
-   "y": 4720
-  },
-  "Brand2C.dc.html": {
-   "h": 6860,
-   "page": "brand",
-   "title": "2C · Wet Ink",
-   "w": 1760,
-   "x": 5640,
-   "y": 4720
-  },
-  "WCBookBeach.dc.html": {
-   "h": 1090,
-   "page": "watercolor",
-   "title": "Book screen · beach at sunset",
-   "w": 1440,
-   "x": 680,
-   "y": 8400
-  },
-  "WCBookLighthouse.dc.html": {
-   "h": 1090,
-   "page": "watercolor",
-   "title": "Book screen · lighthouse by day with the harbor boats",
-   "w": 1440,
-   "x": 680,
-   "y": 9600
-  },
-  "WCBookLighthouse2.dc.html": {
-   "h": 1090,
-   "page": "watercolor",
-   "title": "Book screen · lighthouse at dusk with its beam",
-   "w": 1440,
-   "x": 680,
-   "y": 13200
-  },
-  "Brand2CT1.dc.html": {
-   "h": 4440,
-   "page": "brand",
-   "title": "2C · type 1 · Caslon, set bold",
-   "w": 1760,
-   "x": 7520,
-   "y": 4720
-  },
-  "Brand2CT2.dc.html": {
-   "h": 4440,
-   "page": "brand",
-   "title": "2C · type 2 · Soft ink",
-   "w": 1760,
-   "x": 9400,
-   "y": 4720
-  },
-  "Brand2CT3.dc.html": {
-   "h": 4440,
-   "page": "brand",
-   "title": "2C · type 3 · Grotesque and book",
-   "w": 1760,
-   "x": 11280,
-   "y": 4720
-  },
-  "MyBookD2.dc.html": {
-   "x": 1880,
-   "y": 0,
-   "w": 1760,
-   "h": 8258,
-   "page": "mybook",
-   "title": "My book · D, the shelf’s book",
-   "expand": "fill"
-  },
-  "StartNow.dc.html": {
-   "h": 1960,
-   "page": "start",
-   "title": "Getting started · today",
-   "w": 1760,
-   "x": 0,
-   "y": 0
-  },
-  "StartJoin.dc.html": {
-   "h": 5570,
-   "page": "start",
-   "title": "Joining · refined",
-   "w": 1760,
-   "x": 1880,
-   "y": 0
-  },
-  "StartInterview.dc.html": {
-   "h": 5084,
-   "page": "start",
-   "title": "Starting the interview · the book introduces it",
-   "w": 1760,
-   "x": 3760,
-   "y": 0
-  },
-  "StartReveal.dc.html": {
-   "h": 7659,
-   "page": "start",
-   "title": "The book reveal",
-   "w": 1760,
-   "x": 7520,
-   "y": 0
-  },
-  "StartPaint.dc.html": {
-   "h": 1760,
-   "page": "start",
-   "title": "The blank book painting itself · test (alpine lake)",
-   "w": 1760,
-   "x": 9400,
-   "y": 0
-  },
-  "StartOpen.dc.html": {
-   "x": 5640,
-   "y": 0,
-   "w": 1760,
-   "h": 3391,
-   "page": "start",
-   "title": "Starting the interview · C, it opens on the question"
-  },
-  "StudioPaint.dc.html": {
-   "h": 1720,
-   "page": "start",
-   "title": "Picks, the reveal and the studio · covers animating in (fast; strata all ten)",
-   "w": 1760,
-   "x": 11280,
-   "y": 0
   }
  },
  "createdOnFiles": {
@@ -1340,6 +1340,15 @@
    "w": 240,
    "x": 0,
    "y": -300
+  },
+  "brand2": {
+   "kind": "title1",
+   "maxW": 7400,
+   "page": "brand",
+   "text": "Brand · round 2: a made thing at the centre, and new typefaces for the site",
+   "w": 240,
+   "x": 0,
+   "y": 4420
   },
   "covers": {
    "kind": "title1",
@@ -1506,15 +1515,6 @@
    "w": 240,
    "x": 0,
    "y": -300
-  },
-  "brand2": {
-   "kind": "title1",
-   "maxW": 7400,
-   "page": "brand",
-   "text": "Brand · round 2: a made thing at the centre, and new typefaces for the site",
-   "w": 240,
-   "x": 0,
-   "y": 4420
   }
  },
  "order": [
