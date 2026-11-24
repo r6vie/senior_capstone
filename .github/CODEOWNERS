@@ -1,7 +1,7 @@
 # Each folder's owner is asked to review PRs that touch it. Keep in sync with docs/plan.md "Owners".
 # Shared files (no single owner) fall back to the default below.
 
-*                                   @BrozJosef @r6vie @ecolvin22 @alvisakrasniqi
+*                                   @BrozJosef @r6vie @ell13-c @alvisakrasniqi
 
 # Josef: the book and the interview
 /api/trove/books/                   @BrozJosef
@@ -16,10 +16,10 @@
 /web/src/features/discovery/        @alvisakrasniqi
 
 # Ellie: checkouts and messaging
-/api/trove/checkouts/               @ecolvin22
-/api/trove/messaging/               @ecolvin22
-/web/src/features/checkouts/        @ecolvin22
-/web/src/features/messaging/        @ecolvin22
+/api/trove/checkouts/               @ell13-c
+/api/trove/messaging/               @ell13-c
+/web/src/features/checkouts/        @ell13-c
+/web/src/features/messaging/        @ell13-c
 
 # Daniel: accounts, meetings and the app shell
 /api/trove/auth/                    @r6vie
@@ -29,3 +29,23 @@
 /web/src/features/meetings/         @r6vie
 /web/src/app/                       @r6vie
 /web/src/ui/                        @r6vie
+
+# Tests go to the owner of the feature they test.
+/api/tests/test_book*.py            @BrozJosef
+/api/tests/test_growing_books.py    @BrozJosef
+/api/tests/test_interview*.py       @BrozJosef
+/api/tests/test_librarian.py        @BrozJosef
+/api/tests/test_resume_terms.py     @BrozJosef
+/api/tests/test_ai*.py              @BrozJosef
+/api/tests/test_discovery.py        @alvisakrasniqi
+/api/tests/test_checkouts.py        @ell13-c
+/api/tests/test_did_you_meet.py     @ell13-c
+/api/tests/test_messaging.py        @ell13-c
+/api/tests/test_auth.py             @r6vie
+/api/tests/test_verification.py     @r6vie
+/api/tests/test_meetings.py         @r6vie
+
+# No owner: these change with every route change or plan update, and are reviewed with the code around them.
+/api/openapi.json
+/web/src/api/schema.ts
+/docs/plan.md
