@@ -175,7 +175,7 @@ def hull_mask(p, bx, by, bw):
     return p.poly(hull_pts(bx, by, bw))
 
 
-def boat(p, bx, by, bw, hull, trim, mast=None, seed=0):
+def boat(p, bx, by, bw, hull, trim, mast=None, seed=0, stay=True):
     """A wooden fishing boat seen side-on, painted loose: a curved sheer, the bow lifted, a painted trim band, a
     darker lower hull, a small cabin; a wobbly reflection below. Returns the boat's mask."""
     hb = hull_mask(p, bx, by, bw)
@@ -198,8 +198,9 @@ def boat(p, bx, by, bw, hull, trim, mast=None, seed=0):
                        0.1, 2), UMBER, 1.2, rim=0.2)
         p.wash(p.rough(p.stroke([(mx - 2, by - mast + 2), (mx + 2.5, by - mast + 2)], 0.7, taper=False), 0.1, 1),
                UMBER, 1.2)                                                            # the masthead
-        p.wash(p.rough(p.stroke([(mx, by - mast + 2), (bx + bw * 0.97, by - bw * 0.14)], 0.35, taper=False), 0.1, 2),
-               UMBER, 0.8)                                                            # a stay to the bow
+        if stay:
+            p.wash(p.rough(p.stroke([(mx, by - mast + 2), (bx + bw * 0.97, by - bw * 0.14)], 0.35, taper=False), 0.1,
+                           2), UMBER, 0.8)                                                            # a stay to the bow
     refl = p.soften(p.rough(p.poly([(bx + bw * 0.12, by + bw * 0.1), (bx + bw * 0.92, by + bw * 0.09),
                                     (bx + bw * 0.8, by + bw * 0.34), (bx + bw * 0.2, by + bw * 0.36)]), 1.5, 4), 1.0)
     p.wash(refl, hull, 0.55, rim=0, flow=0.5, blotch=0.04)

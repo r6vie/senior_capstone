@@ -4,7 +4,8 @@ art (art/watercolor/pages.py) and the book's dark ink. The text sits on the page
 dark one, never the cream a dark cover top takes. Sample books only: the titles and names match the cover boards.
 
 python3 watercolor_book.py <root> mesa_title=<blob> hills_title=<blob> lake_title=<blob> winter_title=<blob>
--> <root>/project/WCBook{Mesa,Hills,Lake,Winter}.dc.html"""
+  city_title=<blob> blossom_title=<blob> autumn_title=<blob> beach_title=<blob> lighthouse_title=<blob>
+-> <root>/project/WCBook{Mesa,Hills,Lake,Winter,City,Blossom,Autumn,Beach,Lighthouse}.dc.html"""
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -49,6 +50,47 @@ BOOKS = [
              ("Snow days", "Lessons that work when half the class can't make it in."),
              ("The town in the dark", "How the long nights brought people together, not apart."),
              ("The spring she left", "Handing over a classroom, and what she still carries from it.")]),
+    # the second set (Josef, 2026-11-23: "do the book screens for blossom, city and autumn"; art/watercolor/pages2.py)
+    dict(key="city", file="WCBookCity", label="Watercolor · city at night on the river", title="After Hours",
+         author="Marcus Bell", ink="#2c2d52",
+         blurb="Five years running the overnight desk at a city newsroom. What happens between midnight and the "
+               "morning edition, how to make a call with half the facts, and keeping a team awake and kind.",
+         ch=[("The handover at midnight", "What the day desk leaves behind, and the three questions he always asks."),
+             ("Deciding with half the facts", "When to publish, when to wait, and how to say which you chose."),
+             ("A small team at 3 a.m.", "Keeping four tired people sharp, honest and on speaking terms."),
+             ("Going back to days", "What the night taught him that daylight work forgot.")]),
+    dict(key="blossom", file="WCBookBlossom", label="Watercolor · blossom tree by a pond", title="Second Spring",
+         author="Aiko Tanaka", ink="#5a3048",
+         blurb="I left a career in finance at forty to train as a landscape gardener. What starting over really "
+               "costs, learning from people half my age, and building a small practice one garden at a time.",
+         ch=[("The year I quit", "The numbers she ran, the ones she ignored, and the conversation at home."),
+             ("Apprentice again", "Taking instruction at forty, and what experience is still worth."),
+             ("The first paying garden", "Pricing, a nervous client, and the plan that changed halfway."),
+             ("Growing slowly on purpose", "Why she still turns down more work than she takes.")]),
+    dict(key="autumn", file="WCBookAutumn", label="Watercolor · autumn river with a bridge", title="The Long Way Home",
+         author="Emmett Clarke", ink="#5a3420",
+         blurb="After ten years in cities I moved back to the small town I grew up in to run the family hardware "
+               "store. What changed, what didn't, and how a shop on a quiet street keeps a community going.",
+         ch=[("Coming back", "Why he said yes, and the first month of being someone's son again."),
+             ("The store as a crossroads", "How a hardware counter became where the town talks."),
+             ("Competing with the big box", "What a small shop can do that a warehouse can't."),
+             ("Staying", "Planning for the next ten years in a place that changes slowly.")]),
+    dict(key="beach", file="WCBookBeach", label="Watercolor · beach at sunset", title="Off the Clock",
+         author="Leilani Cruz", ink="#5a2f2a",
+         blurb="I burned out at a startup and spent a year running a small surf school instead. What rest actually "
+               "takes, teaching beginners to wait for the right wave, and how I came back to work differently.",
+         ch=[("The week I stopped", "The signs she ignored, and the conversation that finally made her leave."),
+             ("Running a surf school", "Bookings, weather, insurance and a team of four, on very little money."),
+             ("Waiting for the wave", "What teaching beginners taught her about pace and patience."),
+             ("Going back", "The rules she set for her next job, and the ones she has kept.")]),
+    dict(key="lighthouse", file="WCBookLighthouse", label="Watercolor · lighthouse by day with the harbor boats",
+         title="Keeping the Light", author="Maren Holt", ink="#2c3e5c",
+         blurb="Eight years restoring and running a lighthouse museum on a small island. Raising money for an old "
+               "building, keeping volunteers for years, and telling a place's story to people who come by boat.",
+         ch=[("Inheriting a ruin", "The survey, the leaking lantern, and the first grant she almost missed."),
+             ("Volunteers who stay", "How a crew of retirees and students kept coming back every summer."),
+             ("The ferry schedule decides", "Planning everything around the boats and the weather."),
+             ("Telling the story", "What visitors remember, and what she cut from the tour.")]),
 ]
 
 W, H = 1440, 1090

@@ -465,6 +465,59 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   knockout, whose box is taller than the 0.95 line, so each line's box covered the foot of the line above. The title
   has no knockout now (the art never reaches it). The name is plain Barlow Condensed 700 caps, +0.24em, in the
   cover's ink, on the white knockout only.
+- **Book screens for the city, blossom and autumn covers (Josef: "do the book screens for blossom, city and
+  autumn").** Boards `WCBook{City,Blossom,Autumn}` on "Covers: Watercolor", built like the first four
+  (`shelf/watercolor_book.py`), the page art from `art/watercolor/pages2.py`. Each sits to the right of its cover:
+  city, blossom and autumn now take the paired rows under winter; prairie and beach (no book screens) one row below,
+  the round 1 and lighthouse covers in the last row. City: the indigo night climbing the right with a pale moon, a
+  few overlapping towers rising to one spire, soft lights only near it, a long low bridge on broad arches with an
+  uneven string of lamps, broken streaks in the river, a deep violet embankment in front. Blossom: grouped blossom
+  and green trees on the far bank, a pond with an irregular shore holding the pink, a small footbridge as one solid
+  arc between grassy banks, the great tree's crown climbing the right side and reaching out low over the water,
+  petals drifting. Autumn: the same golden haze and violet wood, a long flat stone arch in the middle distance with
+  a dark fir beyond, the river winding wide toward us in loose gold and violet patches, a broken reflection, trees on
+  both banks and the great oak rising on the right. One Josef-eye critic round; its fixes are applied (fewer towers
+  and lights, no black quay or lamps, clustered far trees, no railings on the footbridge, a flatter arch, the house
+  removed) and not re-reviewed.
+  Then (Josef: one part of the blossom tree "unusually faded", "looks like a mistake"; the grass "a little too dark in
+  places"; the autumn bridge "less steep at the ends"): the crown no longer fades out softly where it nears the text
+  corner (the patches are placed clear of it instead), the grass patches are lighter and fewer with no dark near
+  corner, and the bridge is a flat crown easing down into long low ramps at both ends.
+- **The daytime lighthouse with the harbor's boats (Josef: "a new version of the day lighthouse that takes the boats
+  from harbor and put the cover next to the existing ones (not replace)").** Board `WCCoverLighthouse3` at the end of
+  the lighthouse row, the same book ("Keeping the Light", Maren Holt). `art/watercolor/lighthouse_boats.py`: round
+  1's lighthouse as it was (commit 5813d6b), plus the round 1 harbor's two wooden fishing boats in the open water on
+  the left, kept out of the sea's glazes. After one Josef-eye critic round (the boats at full size pulled focus and
+  looked pasted in), they are smaller and step back into depth, the big one near with a shorter mast and no stay, the
+  small one beyond it; the hulls are a solid weathered blue-grey and a faded ochre, each with a soft shadow at the
+  waterline. Fixes not re-reviewed.
+  Then (Josef: "I think I liked the pre-critic pass on the boats"): the boats are back at the harbor's size and
+  colours, with the mast's stay; and (Josef: "refine the house ... to be more like the harbor houses") the keeper's
+  cottage is painted like the harbor's houses: a pale lit front, a cool shaded side, a terracotta tile roof in
+  patches, an eave shadow, two small windows and a door. Round 1's lighthouse board is unchanged.
+- **Beach recoloured (Josef: "less all-orange and more gorgeous", then "add some sunset illuminated clouds", then "a
+  little less dark, a little more light and orange in the sky ... keep some violet but less night").** The sky now
+  stops at the horizon (its washes had been running down over the sea and sand, which is what made everything
+  orange): a soft violet top warming through coral to a high peach glow, a cream sun with a peach halo, and five
+  long cloud banks of soft puffs, violet on top and lit coral and peach underneath, under the title on the left and
+  higher only at the right edge. Below the horizon the light comes from the sky: deep blue at the horizon, slate
+  blue, muted aqua only in the shallows, blush beside the sun's path, the path itself broken peach and rose-gold
+  dashes; pale cream and pink sand with lavender shadows; the palms (same shapes) dark violet silhouettes. The title
+  now takes the dark ink, 4.8:1. One Josef-eye critic round on the first recolour (the sea read as midday, the path
+  khaki, the palms translucent), all applied; the clouds and the lighter sky came after it and were not reviewed.
+- **Book screens for the beach and the daytime lighthouse (Josef: "now make the book screen for the beach and the
+  updated lighthouse").** Boards `WCBookBeach` and `WCBookLighthouse`, each beside its cover in a paired row under the
+  autumn row; the prairie cover (no book screen) one row below, the round 1, harbor and dusk lighthouse covers in the
+  last row. Page art in `art/watercolor/pages2.py`. Beach: the soft violet dusk warming to coral and peach, two long
+  cloud banks lit coral underneath and one higher on the right, a big half-sunk sun, a far mauve point of land, a
+  small sailboat, the sea in slate-blue patches with the sun's path broken peach dashes, foam in broken runs, pale
+  sand with lavender shade under two palms. Lighthouse: the cover's day scene wider, a pale cerulean sky with clouds
+  left as paper, the headland climbing on the right with the white tower and its lantern (only its own shape kept
+  from the sky, no paper box), the keeper's cottage and a shed painted like the harbor's houses, rocks and soft surf
+  at the cliff's foot, the harbor's two boats at the cover's proportions, gulls, deeper water in front. One Josef-eye
+  critic round, the boats and palms held as Josef set them; its fixes are applied (the far point made clearly land,
+  the grass tufts replaced by soft shade, one cloud strip dropped; the surf soft and wet and clear of the small
+  boat's bow, fewer ripples, a deeper near plane) and not re-reviewed.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
