@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, NO_CONNECTION } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
 
@@ -29,7 +29,9 @@ export function InviteSection() {
     setBusy(true);
     setError(null);
     setCopied(false);
-    const { data, error: problem } = await api.POST("/auth/invites");
+    const { data, error: problem } = await api
+      .POST("/auth/invites")
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     setBusy(false);
     if (!data) return setError(errorMessage(problem));
     setLink(data.link);
@@ -41,10 +43,10 @@ export function InviteSection() {
 
   async function cancel(id: string) {
     setError(null);
-    const { response, error: problem } = await api.DELETE("/auth/invites/{invite_id}", {
-      params: { path: { invite_id: id } },
-    });
-    if (!response.ok) return setError(errorMessage(problem));
+    const { response, error: problem } = await api
+      .DELETE("/auth/invites/{invite_id}", { params: { path: { invite_id: id } } })
+      .catch(() => ({ response: undefined, error: NO_CONNECTION }));
+    if (!response?.ok) return setError(errorMessage(problem));
     setOpen((current) => current.filter((invite) => invite.id !== id));
   }
 

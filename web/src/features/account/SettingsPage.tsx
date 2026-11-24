@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { api } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, NO_CONNECTION } from "../../api/errors";
 import { Button } from "../../ui/Button";
 import { PageLoading } from "../../ui/Loading";
 import { TextField } from "../../ui/TextField";
@@ -54,9 +54,11 @@ function ContactSection({ email }: { email: string }) {
     event.preventDefault();
     setBusy(true);
     setNotice(null);
-    const { data, error } = await api.PUT("/auth/me/contact", {
-      body: { linkedin_url: linkedin.trim() || null, phone: phone.trim() || null },
-    });
+    const { data, error } = await api
+      .PUT("/auth/me/contact", {
+        body: { linkedin_url: linkedin.trim() || null, phone: phone.trim() || null },
+      })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     setBusy(false);
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     setLinkedin(data.linkedin_url ?? "");
@@ -105,7 +107,9 @@ function EmailSection({ initial, onChanged }: { initial: boolean; onChanged: () 
 
   async function change(next: boolean) {
     setNotice(null);
-    const { data, error } = await api.PUT("/auth/me/notifications", { body: { email_notifications: next } });
+    const { data, error } = await api
+      .PUT("/auth/me/notifications", { body: { email_notifications: next } })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     setEnabled(data.email_notifications);
     onChanged();
@@ -150,7 +154,9 @@ function MemberContextSection({
     event.preventDefault();
     setBusy(true);
     setNotice(null);
-    const { data, error } = await api.PUT("/auth/me/context", { body: { affiliations, founder } });
+    const { data, error } = await api
+      .PUT("/auth/me/context", { body: { affiliations, founder } })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     setBusy(false);
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     setAffiliations(data.affiliations ?? []);
@@ -197,8 +203,10 @@ function DeleteSection({ email }: { email: string }) {
     event.preventDefault();
     setBusy(true);
     setNotice(null);
-    const { response, error } = await api.DELETE("/auth/me", { body: { email: typed.trim() } });
-    if (!response.ok) {
+    const { response, error } = await api
+      .DELETE("/auth/me", { body: { email: typed.trim() } })
+      .catch(() => ({ response: undefined, error: NO_CONNECTION }));
+    if (!response?.ok) {
       setBusy(false);
       return setNotice({ kind: "error", text: errorMessage(error) });
     }

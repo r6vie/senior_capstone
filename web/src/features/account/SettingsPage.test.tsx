@@ -58,6 +58,18 @@ describe("SettingsPage", () => {
     expect(await screen.findByText("Contact details saved.")).toBeTruthy();
   });
 
+  it("keeps the details and frees Save when the connection drops", async () => {
+    api.PUT.mockRejectedValue(new TypeError("Failed to fetch"));
+    render(<SettingsPage />);
+    const save = screen.getByRole("button", { name: "Save contact details" });
+    await waitFor(() => expect((save as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.change(screen.getByLabelText(/Phone/), { target: { value: "216-555-0142" } });
+    fireEvent.click(save);
+    expect((await screen.findByRole("alert")).textContent).toContain("couldn't reach Trove");
+    expect((screen.getByLabelText(/Phone/) as HTMLInputElement).value).toBe("216-555-0142");
+    expect((save as HTMLButtonElement).disabled).toBe(false);
+  });
+
   it("shows the server's reason when a detail is rejected", async () => {
     api.PUT.mockResolvedValue({ error: { detail: "Enter a phone number with 7 to 15 digits." } });
     render(<SettingsPage />);

@@ -42,6 +42,16 @@ describe("InviteSection", () => {
     expect((await screen.findByRole("alert")).textContent).toContain("5 open invites");
   });
 
+  it("says the connection dropped and frees the button, rather than staying stuck", async () => {
+    api.POST.mockRejectedValue(new TypeError("Failed to fetch"));
+    render(<InviteSection />);
+    fireEvent.click(screen.getByRole("button", { name: "Make an invite link" }));
+    expect((await screen.findByRole("alert")).textContent).toContain("couldn't reach Trove");
+    expect((screen.getByRole("button", { name: "Make an invite link" }) as HTMLButtonElement).disabled).toBe(
+      false,
+    );
+  });
+
   it("cancels an invite", async () => {
     api.GET.mockResolvedValue({ data: [open] });
     api.DELETE.mockResolvedValue({ response: { ok: true } });
