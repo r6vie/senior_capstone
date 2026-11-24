@@ -479,6 +479,18 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   both banks and the great oak rising on the right. One Josef-eye critic round; its fixes are applied (fewer towers
   and lights, no black quay or lamps, clustered far trees, no railings on the footbridge, a flatter arch, the house
   removed) and not re-reviewed.
+  Then (Josef: one part of the blossom tree "unusually faded", "looks like a mistake"; the grass "a little too dark in
+  places"; the autumn bridge "less steep at the ends"): the crown no longer fades out softly where it nears the text
+  corner (the patches are placed clear of it instead), the grass patches are lighter and fewer with no dark near
+  corner, and the bridge is a flat crown easing down into long low ramps at both ends.
+- **The daytime lighthouse with the harbor's boats (Josef: "a new version of the day lighthouse that takes the boats
+  from harbor and put the cover next to the existing ones (not replace)").** Board `WCCoverLighthouse3` at the end of
+  the lighthouse row, the same book ("Keeping the Light", Maren Holt). `art/watercolor/lighthouse_boats.py`: round
+  1's lighthouse as it was (commit 5813d6b), plus the round 1 harbor's two wooden fishing boats in the open water on
+  the left, kept out of the sea's glazes. After one Josef-eye critic round (the boats at full size pulled focus and
+  looked pasted in), they are smaller and step back into depth, the big one near with a shorter mast and no stay, the
+  small one beyond it; the hulls are a solid weathered blue-grey and a faded ochre, each with a soft shadow at the
+  waterline. Fixes not re-reviewed.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 

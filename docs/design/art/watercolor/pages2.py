@@ -145,9 +145,9 @@ def blossom():
     p.loose(hm * np.clip(fade * 1.3, 0, 1), [CERUL, VIOLET, CERUL], 0.6, n=5, rough=0.5, patch=0.4)
     gt = ridge(-20, 600, 498, [(4, 260, 1.2), (3, 90, 0.4)])
     ground = p.rough(p.poly(band(gt)), 0.6, 12, fine=0.3)
-    p.loose(ground, [SAGE, SAP, LEMON, SAGE], 0.8, n=9, rough=0.8, patch=0.35, ground=0.7)
+    p.loose(ground, [SAGE, LEMON, SAP, SAGE], 0.5, n=6, rough=0.8, patch=0.35, ground=0.7)
     p.loose(p.rough(p.poly([(-20, 640), (300, 620), (600, 650), (600, 704), (-20, 704)]), 3, 24) * ground,
-            [SAP, SAGE, SAP], 0.6, n=4, rough=0.8, patch=0.5, ground=0.7)                 # deeper toward us
+            [SAP, SAGE, LEMON], 0.4, n=3, rough=0.8, patch=0.5, ground=0.7)                 # deeper toward us
     # the far bank: small trees, blossom among green, each a soft blob
     for x, r, cols, d in [(30, 16, [SAP, CYPRESS], 0.6), (50, 20, [PINK, MAUVE], 0.85), (70, 13, [BLUSH, PINK], 0.7),
                           (176, 22, [PINK, MAUVE], 0.8), (200, 15, [SAGE, CYPRESS], 0.55), (214, 12, [BLUSH, PINK], 0.6),
@@ -187,12 +187,11 @@ def blossom():
     p.wash(p.soften(p.ellipse(tx + 20, tb + 2, 46, 6), 2) * ground, CYPRESS, 0.6, rim=0)
     cr = np.zeros((H, W), np.float32)
     # clear of the text corner: whatever lies left of x 470 stays below y ~350
-    for cx, cy, rx, ry in [(500, 400, 70, 50), (540, 330, 52, 50), (520, 260, 46, 40), (470, 310, 34, 30),
+    for cx, cy, rx, ry in [(500, 400, 70, 50), (540, 330, 52, 50), (520, 260, 46, 40), (494, 312, 30, 30),
                            (440, 420, 54, 32), (380, 448, 50, 26), (330, 460, 36, 18), (560, 420, 40, 44),
                            (575, 270, 30, 40), (490, 455, 50, 22), (410, 400, 36, 26), (548, 214, 30, 26),
                            (575, 360, 30, 40), (300, 470, 24, 12), (470, 370, 40, 30)]:
         cr = np.maximum(cr, p.rough(p.ellipse(cx, cy, rx, ry), ry * 0.3, max(6, rx * 0.4), fine=0.6))
-    cr = cr * np.clip(1 - p.soften(p.poly([(-20, -20), (466, -20), (466, 352), (-20, 352)]), 10), 0, 1)
     p.loose(cr, [PINK, BLUSH, MAUVE, BLUSH, PINK], 0.95, n=22, rough=0.8, patch=0.2, ground=0.55)
     p.lift(cr * p.soften(p.ellipse(500, 300, 50, 34), 12), 0.3)
     p.wash(cr * np.clip(ramp_y(260, 480, 0.0, 1.0) * 0.6 + ramp_x(400, 600, 0.0, 1.0) * 0.5, 0, 1), MAUVE, 0.7,
@@ -209,7 +208,7 @@ def blossom():
         drift = p.soften(p.rough(p.ellipse(cx, cy, rx, ry), ry * 0.4, rx * 0.4, fine=0), ry * 0.5)
         p.loose(drift, [PINK, BLUSH], 0.6, n=3, rough=1.0, patch=0.5, ground=0.4)
     anchor = p.rough(p.poly([(-20, 640), (80, 626), (170, 646), (220, 704), (-20, 704)]), 3, 16, fine=0.5)
-    p.loose(anchor, [SAP, CYPRESS, SAGE], 0.8, n=5, rough=0.9, patch=0.45, ground=0.75)    # the near dark
+    p.loose(anchor, [SAP, SAGE, LEMON], 0.45, n=5, rough=0.9, patch=0.45, ground=0.75)    # the near dark
     p.finish()
     return p
 
@@ -262,20 +261,20 @@ def autumn():
     covers.fir(p, 180, hz + 6, 70, 13, rng)
     covers.fir(p, 160, hz + 6, 40, 9, rng)
     # the bridge: lifted to paper, then a few washes, shaded to the right; no masonry
-    top = sy - 40 + 8 * np.clip((Xw - bx) / 92, -1.0, 1.0) ** 2
-    body = ((Yw >= top) & (Yw <= sy + 6) & (np.abs(Xw - bx) <= 92 + np.clip(Yw - (sy - 20), 0, 26) * 0.9))
+    top = sy - 40 + 38 * smooth(np.abs(Xw - bx), 40, 140)                    # easing down into long low ramps
+    body = ((Yw >= top) & (Yw <= sy + 6) & (np.abs(Xw - bx) <= 140))
     hole = ((((Xw - bx) / brr) ** 2 + ((Yw - sy) / (brr * 0.98)) ** 2) < 1) & (Yw < sy + 1)
     body = p.rough(np.clip(body.astype(np.float32) - hole, 0, 1), 0.9, 6, fine=0.5)
     p.lift(np.clip(blur(body, 0.6 * S) * 1.3, 0, 1), 0.9)
     p.loose(body, [SIENNA, RAW, TERRA], 1.25, n=6, rough=0.6, patch=0.4, ground=0.9)
-    p.wash(body * ramp_x(bx - 10, bx + 86, 0.0, 1.0), UMBER, 0.6, rim=0, flow=0.4)
+    p.wash(body * ramp_x(bx - 10, bx + 140, 0.0, 1.0), UMBER, 0.6, rim=0, flow=0.4)
     p.lift(body * np.clip(1 - (Yw - top) / 5, 0, 1) * (Yw >= top), 0.35)      # the parapet catching the light
     hole_m = np.clip(blur(hole.astype(np.float32), 0.8 * S) * 1.8, 0, 1)
     p.lift(hole_m, 0.85)
     p.wash(hole_m, VIOLET, 0.9, rim=0.6, flow=0.4)                        # the shade under the arch
     p.wash(hole_m * ramp_y(sy - brr, sy - 6, 1.0, 0.3), UMBER, 1.2, rim=0, flow=0.5)
     p.wash(hole_m * ramp_y(sy - 10, sy, 0.0, 1.0), GOLD, 0.5, rim=0)        # a sliver of far water low down
-    for cx, cy, rx, ry, cols in [(196, sy + 2, 16, 9, [OLIVE, SIENNA, RAW]), (366, sy + 2, 18, 9, [SIENNA, OLIVE, GOLD]),
+    for cx, cy, rx, ry, cols in [(150, sy + 4, 14, 7, [OLIVE, SIENNA, RAW]), (412, sy + 4, 15, 7, [SIENNA, OLIVE, GOLD]),
                                  (232, sy + 6, 9, 5, [OLIVE, SIENNA]), (330, sy + 6, 9, 5, [SIENNA, OLIVE])]:
         crown(p, cx, cy, rx, ry, cols, rng, n=6)
     for dx, dy, rx, ry, c, d in [(-40, 14, 30, 6, SIENNA, 0.55), (34, 18, 26, 5, SIENNA, 0.5), (-6, 22, 18, 5, UMBER, 0.7),
