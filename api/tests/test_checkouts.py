@@ -342,3 +342,12 @@ async def test_no_contact_details_after_a_decline(client, database, sent):
     assert reading["author_contact"] is None
     assert "maya@example.com" not in str(reading)
     assert sent.accepted == []
+
+
+async def test_checkout_times_come_back_in_utc(client, database, sent):
+    await member(client, database, "Maya")
+    _, reader = await member(client, database, "Sam")
+    await check_out(client, reader, "book-of-maya")
+    listed = (await client.get("/checkouts", headers=reader)).json()["reading"][0]
+    assert listed["created_at"].endswith("Z")
+    assert listed["expires_at"].endswith("Z")
