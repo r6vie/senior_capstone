@@ -261,7 +261,7 @@ Patterns added after v1. Each entry: name, the task it solves, date, owner, snip
 The task: say what the interview is before it starts, without a band or a form. `IntroBook.tsx`.
 
 - The shelf's open book, empty, under the plain top bar (`IvTop`).
-- **The title page:** three lines type in, in Newsreader 600 30px, one letter per 30ms with a breath between lines.
+- **The title page:** three lines type in, in Newsreader 600 30px, one letter per 24ms with a breath between lines.
   Skip sits where Close sits on the shelf's book. When the lines are done they settle to 22px.
 - **The contents page:** three chapter places draw in, a number and two blank lines each, as the second line types.
 - **Under the lines:** the member's place at CWRU (Current student, Alumni, I am a founder; no helper lines) and

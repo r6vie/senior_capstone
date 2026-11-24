@@ -16,7 +16,7 @@ const LINES = [
 ];
 const PLACES = 3;
 // One letter every this many milliseconds, and a breath between lines.
-const LETTER_MS = 30;
+const LETTER_MS = 24;
 const LINE_PAUSE_MS = 350;
 
 // The API's limit on a résumé.
@@ -36,9 +36,10 @@ function useIntro(): [Progress, () => void] {
     reducedMotion() ? END : { typed: LINES.map(() => 0), drawn: 0, done: false },
   );
   const skipped = useRef(progress.done);
+  const pending = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => {
     if (skipped.current) return;
-    const timers: ReturnType<typeof setTimeout>[] = [];
+    const timers = pending.current;
     let at = 0;
     LINES.forEach((line, index) => {
       for (let letter = 1; letter <= line.length; letter++) {
@@ -74,6 +75,8 @@ function useIntro(): [Progress, () => void] {
     progress,
     () => {
       skipped.current = true;
+      // Nothing still scheduled may draw anything again once the book is at its end.
+      for (const timer of pending.current) clearTimeout(timer);
       setProgress(END);
     },
   ];
@@ -100,15 +103,25 @@ export function IntroBook({
   const [fileError, setFileError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const remove = useRef<HTMLButtonElement>(null);
   const inputId = useId();
   const titleId = useId();
   const start = useRef<HTMLDivElement>(null);
 
-  // Skipping hands the keyboard to what comes next, rather than leaving it on a button that's gone.
+  // Skipping hands the keyboard to what comes next, rather than leaving it on a button that's gone. The
+  // same happens if the lines end on their own while the keyboard is on Skip.
+  const handOff = () =>
+    requestAnimationFrame(() => start.current?.querySelector<HTMLElement>("input, button")?.focus());
   const skipNow = () => {
     skip();
-    requestAnimationFrame(() => start.current?.querySelector<HTMLElement>("input, button")?.focus());
+    handOff();
   };
+  const wasDone = useRef(progress.done);
+  useEffect(() => {
+    if (!progress.done || wasDone.current) return;
+    wasDone.current = true;
+    if (document.activeElement?.classList.contains("ib-skip")) handOff();
+  });
 
   function pick(file: File | undefined) {
     if (!file) return;
@@ -122,11 +135,17 @@ export function IntroBook({
       return;
     }
     setResume(file);
+    // The picker is gone once a file is chosen; the keyboard goes to Remove, its way back.
+    requestAnimationFrame(() => remove.current?.focus());
   }
 
   return (
     <div className="interview iv-intro">
       <IvTop />
+      {/* Outside the part that goes inert during the wait, so the wait is announced. */}
+      <p className="iv-visually-hidden" role="status">
+        {busy ?? ""}
+      </p>
       <main className="iv-intro-act" inert={Boolean(busy)} aria-busy={Boolean(busy)}>
         <div className="ib-book">
           <span className="ib-edge" aria-hidden="true" />
@@ -138,28 +157,35 @@ export function IntroBook({
                 </button>
               )}
             </div>
-            <h1 id={titleId} className="ib-says" data-done={progress.done || undefined}>
+            <div className="ib-says" data-done={progress.done || undefined}>
               {LINES.map((line, index) => {
                 const typed = progress.typed[index] ?? 0;
-                const typing = !progress.done && typed > 0 && typed < line.length;
+                // The caret is on the line being typed, or waits at the start of the next one.
+                const before = index === 0 ? line.length : (progress.typed[index - 1] ?? 0);
+                const previous = index === 0 ? "" : (LINES[index - 1] ?? "");
+                const typing =
+                  !progress.done &&
+                  typed < line.length &&
+                  (typed > 0 || index === 0 || before === previous.length);
+                const Tag = index === 0 ? "h1" : "p";
                 if (progress.done)
                   return (
-                    <span key={line} className="ib-line">
+                    <Tag key={line} id={index === 0 ? titleId : undefined} className="ib-line">
                       {line}
-                    </span>
+                    </Tag>
                   );
                 return (
-                  <span key={line} className="ib-line">
+                  <Tag key={line} id={index === 0 ? titleId : undefined} className="ib-line">
                     {/* The whole line holds its place and is what a screen reader reads; the typing is ink. */}
                     <span className="ib-full">{line}</span>
                     <span className="ib-typed" aria-hidden="true">
                       {line.slice(0, typed)}
                       {typing && <span className="iv-caret" />}
                     </span>
-                  </span>
+                  </Tag>
                 );
               })}
-            </h1>
+            </div>
             {progress.done && (
               <div className="ib-after" ref={start}>
                 <MemberContextFields
@@ -189,6 +215,7 @@ export function IntroBook({
                       <>
                         <span className="ib-file">{resume.name}</span>
                         <button
+                          ref={remove}
                           type="button"
                           className="button button-quiet"
                           onClick={() => {
@@ -245,7 +272,7 @@ export function IntroBook({
                     Start the interview
                   </Button>
                   {busy ? (
-                    <span className="ib-wait" role="status">
+                    <span className="ib-wait" aria-hidden="true">
                       {busy}
                     </span>
                   ) : (
@@ -255,14 +282,13 @@ export function IntroBook({
               </div>
             )}
           </section>
-          <section className="ib-page ib-right" aria-label="Contents">
+          {/* The empty contents are a picture of what's to come: nothing on them to read or use. */}
+          <section className="ib-page ib-right" aria-hidden="true">
             <div className="ib-head ib-head-right">
-              <span className="ib-tab" aria-current="page">
-                Contents
-              </span>
+              <span className="ib-tab">Contents</span>
             </div>
             <h2 className="ib-pname">Contents</h2>
-            <ol className="ib-places" aria-hidden="true">
+            <ol className="ib-places">
               {Array.from({ length: PLACES }, (_, index) => (
                 <li
                   // biome-ignore lint/suspicious/noArrayIndexKey: the contents' fixed, empty places

@@ -115,7 +115,6 @@
   margin: 6px 0 0;
   font: 600 30px / 1.18 var(--font-serif);
   letter-spacing: -0.012em;
-  transition: font-size 240ms ease;
 }
 .ib-says[data-done] {
   gap: 10px;
@@ -124,6 +123,8 @@
 }
 .ib-line {
   display: grid;
+  margin: 0;
+  font: inherit;
   text-wrap: pretty;
 }
 .ib-line > * {
@@ -193,6 +194,11 @@
 }
 .ib-choose {
   min-height: 40px;
+}
+/* The file input is hidden; its keyboard focus shows on Choose a PDF. */
+.ib-drop:has(input:focus-visible) .ib-choose {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 3px;
 }
 .ib-resume .message {
   margin: var(--s-2) 0 0;
@@ -265,7 +271,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ib-says,
   .ib-places li {
     transition: none;
   }
@@ -301,6 +306,9 @@
   }
   .ib-head-right {
     justify-content: flex-start;
+  }
+  .ib-head-right .ib-tab {
+    margin-left: -9px;
   }
   .ib-pname {
     display: none;
