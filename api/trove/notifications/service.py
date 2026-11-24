@@ -239,3 +239,16 @@ async def notify_verification_code(database: AsyncDatabase, user_id: str, code: 
         templates.verification_code(code, verify_url).render,
         transactional=True,
     )
+
+
+async def notify_password_reset_code(database: AsyncDatabase, user_id: str, code: str, email: str) -> str:
+    """Send a password reset code. Like a verification code, every one is a new email and ignores the
+    member's email setting."""
+    reset_url = f"{get_settings().frontend_url.rstrip('/')}/reset-password?email={quote(email)}"
+    return await notify_once(
+        database,
+        f"password-reset-code:{uuid4()}",
+        user_id,
+        templates.password_reset_code(code, reset_url).render,
+        transactional=True,
+    )

@@ -33,6 +33,21 @@ def verification_code(code: str, verify_url: str) -> Email:
     )
 
 
+def password_reset_code(code: str, reset_url: str) -> Email:
+    return Email(
+        subject=f"Your Trove password code: {code}",
+        heading="Reset your password",
+        paragraphs=[
+            f"Your code is {code}.",
+            "It works for 15 minutes. If you didn't ask to reset your password, ignore this email; "
+            "your password stays the same.",
+        ],
+        button_text="Choose a new password",
+        button_url=reset_url,
+        show_unsubscribe=False,
+    )
+
+
 def checkout_accepted_for_reader(author_name: str, book_title: str, checkouts_url: str) -> Email:
     # Link only: contact details stay in Trove, not copied into inboxes (C2, docs/trove.md §7).
     return Email(

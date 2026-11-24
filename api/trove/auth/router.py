@@ -16,6 +16,8 @@ from trove.auth.models import (
     MemberContextUpdate,
     NameUpdate,
     NotificationSettingsUpdate,
+    PasswordForgotRequest,
+    PasswordResetRequest,
     SignupRequest,
     UserResponse,
 )
@@ -35,10 +37,17 @@ from trove.auth.service import (
     set_member_context,
     token_digest,
 )
-from trove.auth.verification import code_digest, is_case_email, is_verified, new_verification
+from trove.auth.verification import (
+    check_reset_code,
+    code_digest,
+    is_case_email,
+    is_verified,
+    new_verification,
+    start_password_reset,
+)
 from trove.core.config import get_settings
 from trove.core.database import get_database
-from trove.notifications.service import notify_verification_code, notify_welcome
+from trove.notifications.service import notify_password_reset_code, notify_verification_code, notify_welcome
 
 router = APIRouter(prefix="/auth", tags=["Accounts"])
 
@@ -130,6 +139,43 @@ async def login(
         raise HTTPException(status_code=403, detail="Please confirm your case.edu email first.")
     token = await create_session(database, user["_id"])
     return LoginResponse(access_token=token, expires_in=SESSION_SECONDS)
+
+
+@router.post("/password/forgot", status_code=204, response_class=Response)
+async def forgot_password(
+    data: PasswordForgotRequest,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    database: AsyncDatabase = Depends(get_database),
+) -> Response:
+    """Email a 6-digit code for POST /auth/password/reset. It works for 15 minutes. Answers the same
+    whether or not the email has an account, and sends at most one a minute."""
+    await limit_attempts(request, database, "password-forgot", limit=5, seconds=3600)
+    sent = await start_password_reset(database, data.email, datetime.now(UTC))
+    if sent is not None:
+        user_id, code = sent
+        background_tasks.add_task(notify_password_reset_code, database, user_id, code, data.email)
+    return Response(status_code=204)
+
+
+@router.post("/password/reset", status_code=204, response_class=Response)
+async def reset_password(
+    data: PasswordResetRequest,
+    request: Request,
+    database: AsyncDatabase = Depends(get_database),
+) -> Response:
+    """Set a new password with the emailed code, and sign out everywhere. Then sign in with POST /auth/login."""
+    await limit_attempts(request, database, "password-reset", limit=10, seconds=900)
+    user_id = await check_reset_code(database, data.email, data.code, datetime.now(UTC))
+    if user_id is None:
+        raise HTTPException(
+            status_code=400, detail="That code isn't right, or it has expired. You can ask for a new one."
+        )
+    password_hash = await run_in_threadpool(password_hasher.hash, data.new_password.get_secret_value())
+    await database.users.update_one({"_id": user_id}, {"$set": {"password_hash": password_hash}})
+    # Whoever knew the old password may still be signed in somewhere.
+    await database.sessions.delete_many({"user_id": user_id})
+    return Response(status_code=204)
 
 
 @router.get("/me", response_model=UserResponse)
