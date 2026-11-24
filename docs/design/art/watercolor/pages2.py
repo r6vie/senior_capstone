@@ -563,7 +563,7 @@ def lighthouse_dusk():
     paper; the keeper's cottage with two lit windows; the sunset laid on the water; surf round the rocks."""
     from covers import GOLD_D
     p = Paper(seed=231)
-    fade = bleed(290, 430, 320)
+    fade = bleed(290, 430, 250)   # lower than at first: Josef found the dark top made the text hard to read
     hz = 500
     top = [(300, 532), (330, 516), (370, 500), (410, 486), (450, 474), (490, 462), (530, 452), (570, 446), (600, 444)]
     under = [(600, 520), (560, 526), (520, 532), (480, 540), (440, 548), (400, 556), (360, 560), (320, 560), (296, 552)]
@@ -585,17 +585,18 @@ def lighthouse_dusk():
     around = 1 - np.maximum(land, keep)
     # 1 the dusk sky, bleeding into the paper: indigo high on the right, violet, rose, then gold on the horizon
     skym = fade * p.soften(p.poly([(-20, -20), (600, -20), (600, hz + 2), (-20, hz + 2)]), 1)
-    stars = [(560, 120, 2.6), (470, 190, 1.4), (548, 196, 1.2), (590, 60, 1.3), (452, 150, 1.0)]
+    stars = [(560, 176, 2.4), (512, 206, 1.2), (590, 146, 1.2), (482, 232, 1.0), (578, 300, 1.1), (548, 334, 0.9),
+             (600, 214, 0.8)]
     starm = np.maximum.reduce([p.soften(p.ellipse(x, y, r, r), r * 0.5) for x, y, r in stars])
     sk = skym * around * (1 - starm)
-    sky(p, [ULTRA, PAYNE, VIOLET, ROSE], [(0, 470, 1.0, 0.15, 1.7), (0, 360, 1.0, 0.0, 0.9),
+    sky(p, [ULTRA, PAYNE, VIOLET, ROSE], [(0, 470, 1.0, 0.15, 1.3), (0, 360, 1.0, 0.0, 0.9),
                                          (300, 470, 0.0, 1.0, 0.9), (420, 500, 0.0, 1.0, 0.9)], sk)
     p.wash(p.soften(p.poly([(-20, 470), (380, 462), (600, 474), (600, 503), (-20, 503)]), 10) * sk, GOLD_D, 1.0,
            rim=0, flow=0.4, blotch=0.05)
-    p.wash(p.soften(p.ellipse(560, 120, 9, 9), 5) * skym * (1 - starm), LEMON, 0.35, rim=0)       # the evening star
+    p.wash(p.soften(p.ellipse(560, 176, 9, 9), 5) * skym * (1 - starm), LEMON, 0.35, rim=0)       # the evening star
     # the night gathers round the tower so its beam has a dark sky to cut through
-    night = p.soften(p.rough(p.ellipse(560, 290, 190, 120), 14, 40), 44) * around * (1 - starm)
-    p.wash(night, ULTRA, 1.0, rim=0, flow=0.4, blotch=0.05)
+    night = p.soften(p.rough(p.ellipse(570, 310, 150, 100), 14, 40), 44) * around * (1 - starm)
+    p.wash(night, ULTRA, 0.8, rim=0, flow=0.4, blotch=0.05)
     p.wash(night, PAYNE, 0.5, rim=0, flow=0.4)
     for x, y, w, h in [(40, 452, 190, 8), (150, 474, 150, 6), (290, 440, 150, 9), (420, 410, 120, 7)]:
         cl = p.soften(p.rough(p.stroke([(x, y), (x + w * 0.5, y - 3), (x + w, y - 1)], h), 3, 18, fine=0.6), 2.5)

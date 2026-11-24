@@ -1074,3 +1074,12 @@ Pending Josef's review of the new canvas.
 - **Critic round:** one; fixed folios, the slide-3 rules, the quote's attribution, the bookmark rag, the invitation's
   missing wordmark, the email's ground and body face, the tagline's width, poster double branding. Kept against it:
   "A thirty-minute video call" beside the button in the site mock, as the design system's shelf spec has it.
+
+## 2026-11-23: dusk lighthouse, stars on the cover and a lighter page top
+
+- **Josef (relayed by the stipple session):** "like the dots in the night sky. Add them to the book cover as well a
+  little bit, but reduce the amount of darkness up in the top part of the book screen for the lighthouse, since the
+  text is then hard to read." Cover: nine lifted pinpricks of stars, clear of the title, the name and the beam
+  (cream title still 6.1:1). Book screen: the sky climbs less high on the right (bleed climb 320 → 250), its top
+  wash is lighter, the dark round the tower smaller and lower, and the stars moved down into what dark remains.
+  Checked in local renders only.

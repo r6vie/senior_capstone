@@ -64,6 +64,11 @@ def lighthouse():
         under_lit = p.soften(p.rough(p.stroke([(x + 4, y + h * 0.35), (x + w - 6, y + h * 0.35 - 0.6)], h * 0.35),
                                      1.0, 8), 0.6)
         p.wash(under_lit * around, GOLD_D, 0.6, rim=0.2, flow=0.4)                    # their undersides lit
+    # 1a a light sprinkle of stars (Josef, 2026-11-23: he liked the stars on the book screen, "add them to the book
+    # cover as well a little bit"): lifted pinpricks, clear of the title and name (top left) and of the beam
+    for x, y, r in [(214, 18, 1.1), (228, 46, 0.8), (210, 74, 0.7), (226, 96, 1.0), (60, 10, 0.6), (150, 12, 0.7),
+                    (8, 108, 0.6), (232, 160, 0.7), (200, 200, 0.6)]:
+        p.lift(p.soften(p.ellipse(x, y, r, r), r * 0.6) * around, 0.95)
     # 1b the beam (Josef, 2026-11-23: "add a beam of light from the lighthouse at dusk"): lifted out of the wet sky
     # with a damp brush, so it is the paper showing through, warmed with a thin gold; a narrow core inside a wider
     # glow, both widening and fading as they leave the lantern. It runs just under the title and name, nearly level,
