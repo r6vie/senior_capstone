@@ -10,6 +10,7 @@ from trove.ai.client import describe_ai, get_claude, optional_claude, text_of
 from trove.ai.prompts import load_prompt
 from trove.ai.scripted import ScriptedClaude, ensure_scripted_allowed
 from trove.core.config import get_settings
+from trove.interview import service
 from trove.main import app
 
 SIGNUP = {"email": "theo@case.edu", "password": "a-long-password", "first_name": "Theo", "last_name": "Park"}
@@ -74,7 +75,8 @@ async def test_a_whole_interview_walks_through_on_the_scripted_ai(client, databa
 
 async def test_anything_typed_still_makes_a_grounded_book(client, headers, scripted_ai):
     answers = [
-        f"I spent year {n} fixing the thing nobody else wanted to touch. More detail." for n in range(12)
+        f"I spent year {n} fixing the thing nobody else wanted to touch. More detail."
+        for n in range(scripted.SHAPE_AFTER_ANSWERS)
     ]
     state = await walk_to_shape(client, headers, answers)
     assert state["question"] == {**state["question"], "phase": "shape", "text": scripted.LINK}
@@ -91,7 +93,7 @@ async def test_thin_answers_get_a_new_angle_and_questions_never_repeat(client, h
     assert state["question"]["text"] == scripted.THIN_ANGLES[0].question
 
     seen = []
-    for _ in range(8):
+    for _ in range(5):
         seen.append(state["question"]["text"])
         state = (await send_answer(client, headers, "Dunno.")).json()
     assert len(seen) == len(set(seen))
@@ -107,19 +109,20 @@ async def test_a_skipped_question_never_comes_back(client, headers, scripted_ai)
 
 
 async def test_the_interview_has_sweep_then_dig(client, headers, scripted_ai):
-    answers = scripted.THEO_ANSWERS[:7]
     state = (await client.post("/interview", json={}, headers=headers)).json()
     phases = [state["question"]["phase"]]
-    for answer in answers:
+    for answer in scripted.THEO_ANSWERS:
         state = (await send_answer(client, headers, answer)).json()
         phases.append(state["question"]["phase"])
-    assert phases[:5] == ["sweep"] * 5
-    assert set(phases[5:]) == {"dig"}
+    sweep = scripted.SWEEP_QUESTIONS
+    assert phases[:sweep] == ["sweep"] * sweep
+    assert set(phases[sweep:-1]) == {"dig"}
+    assert phases[-1] == "shape"
 
 
 async def test_a_thin_walk_reaches_i_need_a_little_more(client, headers, scripted_ai):
     state = (await client.post("/interview", json={}, headers=headers)).json()
-    for _ in range(10):
+    for _ in range(service.EXIT_AFTER_ANSWERS):
         state = (await send_answer(client, headers, "Not much.")).json()
     assert state["can_finish"] is True
     state = await finish_and_wait(client, headers)

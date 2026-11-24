@@ -26,8 +26,8 @@ from trove.ai.prompts import prompt_name
 DEV_ENVIRONMENTS = {"development", "dev", "local", "test"}
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
 # Sweep this many questions, then Dig, then Shape once this many are answered.
-SWEEP_QUESTIONS = 5
-SHAPE_AFTER_ANSWERS = 12
+SWEEP_QUESTIONS = 3
+SHAPE_AFTER_ANSWERS = 7
 # The book steps take longer than a question, as the real ones do.
 BOOK_STEP_SLOWER = 2
 # A quote needs this many words, or the engine drops it.
@@ -65,35 +65,13 @@ QUESTIONS = [
         "what you're studying or working on right now",
     ),
     Asked(
-        "What was the last printer you got working on your floor, and how did it end up on your desk?",
-        "the printers you fix on your floor",
-    ),
-    Asked(
         "Before you got to campus, what's something you built or fixed that nobody had asked you to touch?",
         "the jammed printer on your floor",
-    ),
-    Asked(
-        "When you first looked at the guy's bed frame down the hall, what was wrong with it, and what did "
-        "you check before you picked up a tool?",
-        "the wobbly bed frame down the hall",
     ),
     Asked(
         "Before campus, was there a job, team, or family situation where people kept handing you the "
         "problem nobody else wanted, and what was it?",
         "the bed frame and printer on your floor",
-    ),
-    Asked(
-        "In the creek project for AP Environmental Science, what was the first measurement or step that "
-        "didn't go the way you planned, and what did you change?",
-        "the creek project",
-    ),
-    Asked(
-        "What was the plan for the creek samples before the 7am Tuesday routine?",
-        "the creek project's nitrate readings",
-    ),
-    Asked(
-        "The jammed printer had paper behind the roller, but what did you check first before you opened it up?",
-        "the jammed floor printer",
     ),
     Asked(
         "On a busy night at the fry stand, when the line backed up, what did you do to get it moving again?",
@@ -103,6 +81,28 @@ QUESTIONS = [
         "When you split the fry stand line into an order taker and a fryer, who pushed back on it, and what "
         "did they say?",
         "the fry stand line you split in two",
+    ),
+    Asked(
+        "In the creek project for AP Environmental Science, what was the first measurement or step that "
+        "didn't go the way you planned, and what did you change?",
+        "the creek project",
+    ),
+    Asked(
+        "When you first looked at the guy's bed frame down the hall, what was wrong with it, and what did "
+        "you check before you picked up a tool?",
+        "the wobbly bed frame down the hall",
+    ),
+    Asked(
+        "What was the last printer you got working on your floor, and how did it end up on your desk?",
+        "the printers you fix on your floor",
+    ),
+    Asked(
+        "What was the plan for the creek samples before the 7am Tuesday routine?",
+        "the creek project's nitrate readings",
+    ),
+    Asked(
+        "The jammed printer had paper behind the roller, but what did you check first before you opened it up?",
+        "the jammed floor printer",
     ),
     Asked(
         "Your mom came around after one night of you running it that way. If a kid at that window watched "
@@ -157,31 +157,16 @@ LAST_RESORT = Asked(
     "What's one more thing you've worked out that most people haven't?", "what you've worked out"
 )
 
-# Paste these, in order, for a book that reads true.
+# Paste these, in order, for a book that reads true: the first seven questions, then Shape.
 THEO_ANSWERS = [
     "Honestly not a lot yet, I'm just a freshman. I'm probably going into biology, and most of my week is "
     "classes and figuring out the campus. I fix wobbly bed frames and printers on my floor sometimes, which "
     "takes more time than I'd expect.",
-    "Honestly it was a pretty basic one. Someone on my floor had a printer that kept jamming and nobody "
-    "wanted to deal with it, so they asked around. I opened it up and found a piece of paper stuck behind "
-    "the roller, so it was pretty quick. It's not really a big deal.",
     "Honestly not much, I don't think I've really built anything. I guess in high school I did a creek "
     "project for AP Environmental Science, but that was just a class thing.",
-    "Honestly it was mostly the bolts on one side. The frame would rock when he moved, so I checked whether "
-    "the slats were sitting right first, then tightened the bolts by hand before grabbing anything. It was "
-    "pretty simple, nothing special.",
     "Honestly my family has a fry stand at the county fair, and I worked there every summer. I guess I was "
     "the one who always got stuck with the line when it backed up, but that's just what happens when you're "
     "the kid working the fair.",
-    "Honestly the first couple months of nitrate readings were pretty useless. We were sampling at different "
-    "times of day, and some of the samples were taken right after rain, so the numbers jumped around and "
-    "didn't mean much. We changed it so we always went to the same spot at 7am every Tuesday, kept a log of "
-    "rain, and ran a blank sample each time.",
-    "Honestly the first plan was pretty loose. We were just going out whenever we had a free period or "
-    "whenever it seemed like a good day to get water, so the times kept changing. Nobody really thought "
-    "about rain until the numbers looked weird.",
-    "Honestly I just checked whether the paper tray was seated right and whether there was a jam light on. "
-    "Then I opened the back panel and saw the paper. It was pretty quick.",
     "Honestly not a lot at first, I just tried to keep up with whoever was at the window. But when I was "
     "about 16 I noticed the fryer person was stopping every time they had to take an order and make change, "
     "so I changed it so one person walks down the line taking orders and money and writes the order on the "
@@ -190,12 +175,13 @@ THEO_ANSWERS = [
     "Honestly I don't think anyone really pushed back that much. My mom was the one running the fryer, and "
     "she was skeptical at first, so I just showed her by doing it for a night. After that she didn't really "
     "argue.",
-    "Honestly I'd probably tell them to watch whoever's at the fryer for a few minutes first, to see how "
-    "often they stop to take orders or make change. That's usually where the time goes. It's not really a "
-    "complicated thing.",
-    "Honestly I'm not sure I'd know the technical side well enough to explain it. I think it was supposed "
-    "to show whether something was contaminating the samples in the lab or during collection, so we'd know "
-    "if a high number was real or just from our process.",
+    "Honestly the first couple months of nitrate readings were pretty useless. We were sampling at different "
+    "times of day, and some of the samples were taken right after rain, so the numbers jumped around and "
+    "didn't mean much. We changed it so we always went to the same spot at 7am every Tuesday, kept a log of "
+    "rain, and ran a blank sample each time.",
+    "Honestly it was mostly the bolts on one side. The frame would rock when he moved, so I checked whether "
+    "the slats were sitting right first, then tightened the bolts by hand before grabbing anything. It was "
+    "pretty simple, nothing special.",
 ]
 THEO_LINK = (
     "What does splitting the fry stand line have in common with the 7am Tuesday creek samples, if anything?"

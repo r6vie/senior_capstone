@@ -147,9 +147,10 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
     assert state["can_finish"] is False
     assert state["has_answers"] is False
 
-    state = await answer_questions(client, headers, 9)
+    early = service.EXIT_AFTER_ANSWERS - 1
+    state = await answer_questions(client, headers, early)
     assert state["has_answers"] is True
-    assert state["question"]["text"] == "Question 10?"
+    assert state["question"]["text"] == f"Question {early + 1}?"
     assert state["can_finish"] is False
     # Too early to say "I've said enough".
     assert (await client.post("/interview/finish", headers=headers)).status_code == 409
@@ -166,9 +167,9 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
     }
     # The Shape question is answered like any other.
     state = (await send_answer(client, headers, "Both paid more than they taught.")).json()
-    assert state["question"]["text"] == "Question 12?"
+    assert state["question"]["text"] == f"Question {early + 3}?"
     interview = await database.interviews.find_one({})
-    assert interview["turns"][10] == {
+    assert interview["turns"][early + 1] == {
         "question": "What do the two offers you turned down have in common?",
         "answer": "Both paid more than they taught.",
         "phase": "shape",
@@ -176,8 +177,8 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
 
     # Resuming shows the waiting question and what they were talking about.
     resumed = (await client.get("/interview", headers=headers)).json()
-    assert resumed["question"]["text"] == "Question 12?"
-    assert resumed["topic"] == "topic 11"
+    assert resumed["question"]["text"] == f"Question {early + 3}?"
+    assert resumed["topic"] == f"topic {early + 2}"
 
     state = await finish_and_wait(client, headers)
     assert state["stage"] == "choosing"
@@ -950,3 +951,4 @@ async def test_an_interview_is_open_until_it_has_made_the_book(database):
     assert await service.has_open_interview(database, "member")
     await database.interviews.update_one({"_id": "iv"}, {"$set": {"stage": "reviewing"}})
     assert not await service.has_open_interview(database, "member")
+

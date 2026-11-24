@@ -271,7 +271,7 @@ async def test_a_skip_moves_to_other_ground_and_isnt_counted_or_thin():
 
 async def test_the_status_keeps_the_sweep_wide_until_enough_areas_are_covered():
     claude = FakeClaude([reply(plan())])
-    await engine.next_turn(claude, turns=turns(2, phase="sweep"), resume_text=None)
+    await engine.next_turn(claude, turns=turns(engine.MIN_SWEEP - 1, phase="sweep"), resume_text=None)
     assert "Stay in Sweep" in sent(claude)
 
     claude = FakeClaude([reply(plan())])

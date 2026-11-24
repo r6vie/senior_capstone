@@ -47,7 +47,7 @@ from trove.interview.models import (
 )
 
 # After this many answers the member may say "I've said enough" (docs/trove.md §4).
-EXIT_AFTER_ANSWERS = 10
+EXIT_AFTER_ANSWERS = 6
 # The stages with a question waiting for an answer.
 ASKING_STAGES = ("interviewing", "adding")
 MAX_RESUME_PAGES = 20
@@ -56,11 +56,11 @@ MAX_RESUME_CHARS = 20_000
 # An abandoned interview's résumé text goes this long after the last activity (decisions.md, row 13).
 RESUME_TEXT_DAYS = 30
 # After a draft finds too little, this many more answers before another one is worth paying for.
-MORE_ANSWERS_BEFORE_REDRAFT = 3
+MORE_ANSWERS_BEFORE_REDRAFT = 2
 # "Most of the way there" shows at this many answers, a little before Shape. The scripted interview is
 # shorter than a real one, so it says so sooner.
-NEARLY_DONE_ANSWERS = 13
-NEARLY_DONE_ANSWERS_SCRIPTED = 9
+NEARLY_DONE_ANSWERS = 6
+NEARLY_DONE_ANSWERS_SCRIPTED = 5
 # Unused sparks a member may keep (docs/review/decisions.md, row 5).
 MAX_UNUSED_SPARKS = 12
 # Sparks a round can work from, so it never turns into a list of other people's titles.
