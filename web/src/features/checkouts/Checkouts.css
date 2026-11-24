@@ -80,6 +80,13 @@
   overflow-wrap: anywhere;
   font-size: 15px;
 }
+/* Links in a card or an empty state are ink, as everywhere else, never the browser's blue. */
+.co-page a:not(.button),
+.checkout-contact a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .checkout-contact-label {
   font: 700 13px / 1.6 var(--font-display);
   letter-spacing: 0.14em;
@@ -121,19 +128,6 @@
    hanging from the card's top edge near the right corner. */
 .pm-section {
   margin-top: var(--s-6);
-}
-/* Beside the rail the cards start on the rail's top rule, and the empty state takes the column. */
-@media (min-width: 1100px) {
-  .pm-page .pm-section {
-    margin-top: calc(var(--s-5) + var(--line-heavy));
-  }
-  .pm-page .pm-list {
-    max-width: none;
-  }
-  .pm-page .empty {
-    max-width: none;
-    margin-top: calc(var(--s-5) + var(--line-heavy));
-  }
 }
 .pm-list {
   display: grid;

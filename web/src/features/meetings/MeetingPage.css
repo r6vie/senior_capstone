@@ -23,6 +23,10 @@
   margin: 0;
   font: 600 26px / 1.1 var(--font-serif);
 }
+/* One measure for the work in a section: its times, its fields and its notes end at the same place. */
+.meeting-section .field {
+  max-width: 36rem;
+}
 .meeting-section .message {
   margin: 0;
 }

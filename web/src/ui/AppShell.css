@@ -92,6 +92,12 @@
   .page-rail-head > :last-child {
     margin-bottom: 0;
   }
+  /* In the rail the title steps down a size, so a long name stays a head and not the page's focal point. */
+  .page-rail-head .page-title {
+    font-size: 32px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
 }
 
 .page-wide {
@@ -125,8 +131,8 @@
 .page-row-body > * {
   margin: 0;
 }
-/* A single field keeps a measure a person can read across. */
-.page-row-body > .field {
+/* A field keeps a measure a person can read across. */
+.page-row-body .field {
   max-width: 36rem;
 }
 @media (min-width: 960px) {

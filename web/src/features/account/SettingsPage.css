@@ -23,6 +23,7 @@
   }
 }
 .settings-invites {
+  max-width: 36rem;
   display: grid;
   gap: var(--s-2);
   margin: 0;

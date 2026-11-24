@@ -258,7 +258,7 @@ Patterns added after v1. Each entry: name, the task it solves, date, owner, snip
 
 ### Wide pages (2026-11-23, Trove UI, at Josef's ask; `web/src/ui/AppShell.css`)
 
-The task: the plain pages (Settings, Checkouts, Past meets, the meeting, messages, checking out) sat in a narrow
+The task: the plain pages (Settings, Checkouts, the meeting, messages, checking out) sat in a narrow
 column against the left edge on a wide screen. They now use the width, still left-aligned, in one of two layouts.
 Phones and tablets keep the stacked page.
 
@@ -270,14 +270,17 @@ Phones and tablets keep the stacked page.
     frames it.
   - A lone field keeps a 36rem measure. Related short fields may pair up (`.settings-pair`).
   - Columns: `minmax(220px, 1fr) minmax(0, 2.2fr)`, gap `--s-8`. The page is `.page-wide`, at most 1320px.
-- **Rail (`.page-rail`, from 1100px): for pages about one checkout or one list.** The page's head (way back,
-  caption, title) holds the left column under a 3px rule. It stays in place as the page scrolls. The work reads
+- **Rail (`.page-rail`, from 1100px): for pages about one checkout.** The page's head (way back, caption,
+  title) holds the left column under a 3px rule. The title steps down to 32px there, so a long name stays a head
+  and doesn't become the page's focal point. It stays in place as the page scrolls. The work reads
   beside it in a column of at most 800px, starting on the same rule line.
   - Columns: `minmax(280px, 1fr) minmax(0, 800px)`, gap `--s-8`, at most 1320px.
   - A form in the work column sits on a `--paper-sunk` panel (the note on Check out, the reply on Messages).
   - Where the page knows its book, the book itself (`BookObject`, shelf size) goes under the head (Check out).
     Otherwise the rail is just the head: no decorative tone in it.
-- Checkouts keeps its own two-column card grid, out to the same 1320px.
+- Checkouts keeps its own two-column card grid, out to the same 1320px. Past meets stays stacked: a rail holding
+  only its title doesn't earn the width.
+- Links in these pages are ink and underlined, never the browser's blue.
 
 ```html
 <main class="shell-page page-wide"><h1 class="page-title">Settings</h1>

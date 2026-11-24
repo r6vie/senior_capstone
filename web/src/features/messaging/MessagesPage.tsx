@@ -216,15 +216,17 @@ export function MessagesPage() {
                 id={textId}
                 value={text}
                 maxLength={MAX_MESSAGE}
-                aria-describedby={hintId}
+                aria-describedby={error ? hintId : undefined}
                 onChange={(event) => {
                   setText(event.target.value);
                   setError(null);
                 }}
               />
-              <span id={hintId} className="hint" role={error ? "alert" : undefined}>
-                {error ?? "Up to 2,000 characters. New messages show up here on their own."}
-              </span>
+              {error && (
+                <span id={hintId} className="hint" role="alert">
+                  {error}
+                </span>
+              )}
             </div>
             <div>
               <Button type="submit" disabled={busy} aria-busy={busy}>

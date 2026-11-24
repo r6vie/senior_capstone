@@ -85,15 +85,8 @@ function ContactSection({ email }: { email: string }) {
             value={linkedin}
             onChange={setLinkedin}
             autoComplete="url"
-            hint="Like https://www.linkedin.com/in/your-name"
           />
-          <TextField
-            label="Phone (optional)"
-            value={phone}
-            onChange={setPhone}
-            autoComplete="tel"
-            hint="Only shown to someone whose checkout you accept."
-          />
+          <TextField label="Phone (optional)" value={phone} onChange={setPhone} autoComplete="tel" />
         </div>
         <Feedback notice={notice} />
         <div>

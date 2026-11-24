@@ -103,16 +103,18 @@ export function CheckOutPage() {
             id={noteId}
             value={note}
             maxLength={MAX_NOTE}
-            aria-describedby={hintId}
+            aria-describedby={error && !needsOwnBook ? hintId : undefined}
             onChange={(event) => {
               setNote(event.target.value);
               setError(null);
               setNeedsOwnBook(false);
             }}
           />
-          <span id={hintId} className="hint" role={error && !needsOwnBook ? "alert" : undefined}>
-            {error && !needsOwnBook ? error : "Say what you'd like to hear about. Up to 1,000 characters."}
-          </span>
+          {error && !needsOwnBook && (
+            <span id={hintId} className="hint" role="alert">
+              {error}
+            </span>
+          )}
         </div>
         {needsOwnBook && (
           <p role="alert" className="message message-error">
@@ -126,7 +128,6 @@ export function CheckOutPage() {
           <Button type="submit" disabled={busy} aria-busy={busy}>
             Ask to check out
           </Button>
-          <span className="muted">A thirty-minute video call, if the author says yes.</span>
         </div>
       </form>
     </main>

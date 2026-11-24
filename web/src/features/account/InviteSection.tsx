@@ -67,7 +67,7 @@ export function InviteSection() {
           at a time.
         </p>
       </div>
-      <div className="page-row-body page-row-bare">
+      <div className="page-row-body">
         {link && (
           <div className="stack" role="status">
             <label className="field">
