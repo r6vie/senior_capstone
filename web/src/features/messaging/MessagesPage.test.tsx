@@ -122,6 +122,18 @@ describe("MessagesPage", () => {
     expect(api.GET).toHaveBeenCalledTimes(2);
   });
 
+  it("sends once when Send is pressed twice before the first send answers", async () => {
+    renderPage();
+    const box = await screen.findByLabelText("Write to Ana Diaz");
+    fireEvent.change(box, { target: { value: "See you Tuesday!" } });
+    const form = box.closest("form") as HTMLFormElement;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    await waitFor(() => expect((box as HTMLTextAreaElement).value).toBe(""));
+    const sends = api.POST.mock.calls.filter(([path]) => path === "/messages/{checkout_id}");
+    expect(sends).toHaveLength(1);
+  });
+
   it("needs something to send", async () => {
     renderPage();
     fireEvent.click(await screen.findByRole("button", { name: "Send" }));

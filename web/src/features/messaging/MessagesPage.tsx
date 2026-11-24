@@ -64,6 +64,8 @@ export function MessagesPage() {
   const latest = useRef(0);
   // The newest message already reported as seen, so a check every 20 seconds doesn't repeat itself.
   const reported = useRef<string | null>(null);
+  // A second click or Enter before the first send answers must not post the message twice.
+  const sending = useRef(false);
 
   const load = useCallback(async () => {
     const request = ++latest.current;
@@ -121,7 +123,9 @@ export function MessagesPage() {
 
   async function send(event: FormEvent) {
     event.preventDefault();
+    if (sending.current) return;
     if (!text.trim()) return setError("Write something first.");
+    sending.current = true;
     setBusy(true);
     setError(null);
     let failure: unknown = null;
@@ -133,6 +137,7 @@ export function MessagesPage() {
     } catch {
       failure = { detail: "We couldn't send that. Check your connection and try again." };
     }
+    sending.current = false;
     setBusy(false);
     if (failure) return setError(errorMessage(failure));
     setText("");
