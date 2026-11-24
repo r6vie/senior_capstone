@@ -22,7 +22,9 @@ export function focusLine() {
 }
 
 // A wait this long gets one calm line.
-const SLOW_AFTER_MS = 15_000;
+const SLOW_AFTER_MS = 10_000;
+/** A wait shorter than this shows nothing new: what was there stays, so a quick reply never flashes a line. */
+export const WAIT_SHOWS_AFTER_MS = 300;
 
 /** A line that starts with "The Librarian" needs no label saying who speaks. Today every such line is a
  * wait; this keeps the rule for any that isn't. */
@@ -212,6 +214,14 @@ export function TypedQuestion({ text, after, onDone }: { text: string; after: nu
 }
 
 export function Waiting({ children, holding }: { children: ReactNode; holding?: ReactNode }) {
+  // For a moment the line stays as it was; a reply that quick never shows a waiting line at all.
+  const [shown, setShown] = useState(!holding);
+  useEffect(() => {
+    if (shown) return;
+    const timer = setTimeout(() => setShown(true), WAIT_SHOWS_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, [shown]);
+  if (!shown) return <>{holding}</>;
   // The line keeps the height of what it held, so the page doesn't jump while the Librarian thinks.
   return (
     <>

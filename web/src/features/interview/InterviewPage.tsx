@@ -16,6 +16,7 @@ import {
   RetryContext,
   SmallBook,
   TypedQuestion,
+  WAIT_SHOWS_AFTER_MS,
   Waiting,
 } from "./InterviewFrame";
 import {
@@ -51,6 +52,8 @@ import { UndoChanges } from "./UndoChanges";
 const GIVE_UP_AFTER_MS = 120_000;
 // "Welcome back" is for coming back, not for a refresh seconds later.
 const WELCOME_BACK_AFTER_MS = 60 * 60 * 1000;
+// Once a waiting line shows, it stays at least this long, so it can be read.
+const WAIT_MIN_SHOWN_MS = 500;
 const LOST_DEFAULT = "That didn't reach the Librarian. Try again.";
 const LOST_ANSWER = "That didn't reach the Librarian. Your answer is still here.";
 // How often to look while changes are written in the background.
@@ -294,6 +297,7 @@ export function InterviewPage({
     (field ?? document.querySelector<HTMLElement>(".iv-say"))?.focus({ preventScroll: true });
   }, [place, loaded, loadFailed, welcomedBack]);
 
+  const calling = useRef(false);
   // Runs one call with a calm waiting line at the top; the screen stays put until it answers.
   const run = useCallback(
     async (
@@ -313,6 +317,10 @@ export function InterviewPage({
         onLost?: () => void;
       } = {},
     ) => {
+      // A second press while the first is on its way (a double click, Enter twice) does nothing.
+      if (calling.current) return false;
+      calling.current = true;
+      const began = Date.now();
       setBusy(waiting);
       setError(null);
       setRetry(null);
@@ -329,7 +337,12 @@ export function InterviewPage({
         options.onSuccess?.();
       };
       try {
-        arrive(await Promise.race([call(), giveUpAfter(GIVE_UP_AFTER_MS)]));
+        const now = await Promise.race([call(), giveUpAfter(GIVE_UP_AFTER_MS)]);
+        // A waiting line that did appear stays long enough to be read, rather than flickering away.
+        const shownFor = Date.now() - began - WAIT_SHOWS_AFTER_MS;
+        if (shownFor > 0 && shownFor < WAIT_MIN_SHOWN_MS)
+          await new Promise((done) => setTimeout(done, WAIT_MIN_SHOWN_MS - shownFor));
+        arrive(now);
         return true;
       } catch (reason) {
         if (isLost(reason)) {
@@ -366,6 +379,7 @@ export function InterviewPage({
         }
         return false;
       } finally {
+        calling.current = false;
         setBusy(null);
       }
     },
@@ -494,8 +508,17 @@ export function InterviewPage({
           kind: "answer" | "skip",
           words: string | undefined,
           call: () => Promise<InterviewState>,
-        ) =>
-          run("The Librarian is thinking…", () => lookThenSend(words, call), {
+        ) => {
+          if (calling.current) return Promise.resolve(false);
+          // While the next question is prepared, the Librarian's last look at this answer is written into
+          // the notebook, so the wait shows it reading what was sent. Anything missed comes with the question.
+          client
+            .finalNotes(state.questionId ?? state.question)
+            .then((reply) => {
+              if (reply.status === "done") notebook.apply(reply.notebook);
+            })
+            .catch(() => undefined);
+          return run("The Librarian is thinking…", () => lookThenSend(words, call), {
             lost: kind === "answer" ? LOST_ANSWER : LOST_DEFAULT,
             noRetry: true,
             onLost: () => {
@@ -513,6 +536,7 @@ export function InterviewPage({
               setInterrupted(kind);
             },
           });
+        };
         if (interrupted) {
           return (
             <Frame phase={phase} say={say(state.question)} busy={Boolean(busy)}>

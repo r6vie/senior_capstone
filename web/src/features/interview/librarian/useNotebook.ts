@@ -114,18 +114,22 @@ export function useNotebook(view: LibrarianView | null | undefined, say: (line: 
       const next = view.notebook.map((entry): ShownEntry => {
         const before = known.get(entry.id);
         const marking = Boolean(before && before.entry.status === "open" && entry.status !== "open");
-        return { entry, life: before?.life === "erasing" ? "resting" : (before?.life ?? "resting"), marking };
+        // An entry the page hasn't seen (the answer's final look, when the wait's call missed it) is
+        // written in front of the member, not dropped onto the page.
+        if (!before) return { entry, life: "writing", marking };
+        return { entry, life: before.life === "erasing" ? "resting" : before.life, marking };
       });
       return [...next, ...kept.filter((shown) => shown.life === "erasing")];
     });
     for (const entry of view.notebook) {
       const before = known.get(entry.id);
+      if (!before) write(entry);
       if (before && before.entry.status === "open" && entry.status !== "open") {
         say(spokenStatus(entry));
         later(MARK_MS + 1500, () => update(entry.id, (shown) => ({ ...shown, marking: false })));
       }
     }
-  }, [view, erase, later, say, update]);
+  }, [view, erase, later, say, update, write]);
 
   // A bet called or lost, a saving ticked, an entry circled: drawn now, in front of the member.
   const settle = useCallback(

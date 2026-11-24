@@ -654,17 +654,70 @@ describe("InterviewPage", () => {
   });
 
   describe("waiting", () => {
+    it("shows no waiting line for a reply that comes back at once", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const client = at(asking);
+      let reply: (state: InterviewState) => void = () => undefined;
+      vi.spyOn(client, "skip").mockReturnValue(new Promise((done) => (reply = done)));
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: "Skip" }));
+      await act(() => vi.advanceTimersByTimeAsync(200));
+      expect(screen.queryByText("The Librarian is thinking…")).toBeNull();
+      expect(screen.getByRole("heading", { name: asking.question })).toBeTruthy();
+      await act(async () => reply({ ...asking, question: "The next question?" }));
+      expect(await screen.findByText("The next question?")).toBeTruthy();
+    });
+
+    it("writes the Librarian's last look at the answer into the notebook while the next question comes", async () => {
+      const client = at(asking);
+      vi.spyOn(client, "skip").mockReturnValue(new Promise(() => {}));
+      vi.spyOn(client, "finalNotes").mockResolvedValue({
+        status: "done",
+        silent: false,
+        marks: { keep: [], add: [], revise: [], erase: [] },
+        notebook: {
+          keep: [],
+          add: [
+            {
+              id: "n1",
+              kind: "note",
+              text: "reads the room before the chart",
+              anchors: [],
+              sourceTurns: [1],
+              status: "open",
+              struck: [],
+            },
+          ],
+          revise: [],
+          erase: [],
+        },
+      });
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: "Skip" }));
+      expect(await screen.findAllByText("reads the room before the chart")).not.toHaveLength(0);
+    });
+
+    it("sends once on a double press", async () => {
+      const client = at(asking);
+      const skip = vi.spyOn(client, "skip").mockReturnValue(new Promise(() => {}));
+      renderWith(client);
+      const button = await screen.findByRole("button", { name: "Skip" });
+      fireEvent.click(button);
+      fireEvent.click(button);
+      expect(skip).toHaveBeenCalledTimes(1);
+    });
+
     it("says it's still working once a wait runs long", async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
       const client = at(asking);
       vi.spyOn(client, "skip").mockReturnValue(new Promise(() => {}));
       renderWith(client);
       fireEvent.click(await screen.findByRole("button", { name: "Skip" }));
-      await act(() => vi.advanceTimersByTimeAsync(14_000));
+      await act(() => vi.advanceTimersByTimeAsync(9_000));
       expect(screen.queryByText(/Still working/)).toBeNull();
       await act(() => vi.advanceTimersByTimeAsync(2_000));
       expect(screen.getByText("Still working. Your answers are saved.")).toBeTruthy();
-      await act(() => vi.advanceTimersByTimeAsync(105_000));
+      await act(() => vi.advanceTimersByTimeAsync(110_000));
       expect(screen.getByRole("alert")).toBeTruthy();
       expect(screen.queryByText(/Still working/)).toBeNull();
     });

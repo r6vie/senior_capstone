@@ -97,6 +97,8 @@ export interface NotesLook {
   shown: string[];
 }
 
+export type FinalNotes = NotesReply & { status: "done" | "none" | "pending" };
+
 /** What the Librarian does now. Anything on screen that isn't kept or added is rubbed out. */
 export interface NotesReply {
   silent: boolean;
@@ -257,6 +259,10 @@ export interface InterviewClient {
   skip(id: string): Promise<InterviewState>;
   /** The Librarian reads the answer as it's typed. Never throws for want of AI: it just adds nothing. */
   notes(look: NotesLook, signal?: AbortSignal): Promise<NotesReply>;
+  /** The Librarian's last look at an answer just sent, while the next question is prepared: "done" with
+   * what to write, "none" when there's nothing to add, "pending" when it isn't ready yet (the next question
+   * brings it). */
+  finalNotes(questionId: string, signal?: AbortSignal): Promise<FinalNotes>;
   /** Write the waiting question again, after an answer was saved but the next question failed. */
   askAgain(id: string): Promise<InterviewState>;
   /** "I've said enough. Show me my book." Words still in the field are saved first. */
