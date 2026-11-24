@@ -24,7 +24,8 @@ import strata
 
 START_SPAN, PAINT_END, QUICK = 10.0, 13.5, 0.3       # the watercolours' clock (art/watercolor/paint_anim.py)
 FPS, QUICK_FPS = 12, 24
-SETTLE = 0.45                                       # a slab's drop and fade into place
+SETTLE = 1.2                                        # a slab drifts down into its course and settles
+DROP = 1.6                                          # how far above its course it appears, in courses
 
 
 def record(scene, viewport, size, course, **kw):
@@ -65,48 +66,16 @@ def record(scene, viewport, size, course, **kw):
     return [s for s in slabs if s[1]], img
 
 
-def schedule(slabs, course, plan, scene, scale, seed=5):
-    """When each slab lands, following the terrain (Josef, 2026-11-23: "understand the terrain and the layout of the
-    image"). plan gives each layer of the scene a start, a duration and how it grows:
-      rise    land and things that stand on it build up from their foot, course by course, to their top
-      sweep   a cloud drifts in from the left
-      mirror  water reflecting a ridge: each row of the reflection lands just after the ridge row it mirrors, so
-              the reflection grows down the lake as the mountain grows up; water that mirrors nothing spreads
-              from the shoreline toward us
-    Inside a course the slabs land a little out of step."""
+def schedule(slabs, seed=5):
+    """When each slab lands (Josef, 2026-11-23, after a terrain-led order: "just going from the bottom to the top,
+    nice and smooth"). One sweep up the cover, course by course, from the lowest slab to the highest; the slabs of a
+    course land a little out of step, so the front is soft, not a ruled line. Timed so the last slab has settled by
+    about 12.5 s, the watercolours' clock."""
     rng = random.Random(seed)
-    rows = {}
-    for k, rects in slabs:
-        rows.setdefault(k, []).append(rects[0][1])
-    lo = {k: min(v) for k, v in rows.items()}
-    hi = {k: max(v) for k, v in rows.items()}
-
-    def rise(k, y):
-        st, du = plan[k][0], plan[k][1]
-        return st + du * (1 - (y - lo[k]) / max(1, hi[k] - lo[k]))
-
-    times = []
-    for k, rects in slabs:
-        st, du, mode = plan[k][:3]
-        x0, y, x1, _y1, _c = rects[0]
-        if mode == "rise":
-            t = rise(k, y)
-        elif mode == "sweep":
-            t = st + du * ((x0 + x1) / 2) / scale[0]
-        elif mode == "mirror":
-            src = plan[k][3]
-            w = scene[k]
-            yw = (y + course / 2) / scale[1] * 344             # world units (the cover is 344 tall)
-            my = 2 * w.y0 - yw + (yw - w.y0) * w.squash        # the ridge row this water row reflects
-            myp = my / 344 * scale[1]
-            if lo[src] <= myp <= hi[src]:
-                t = rise(src, myp) + 0.35
-            else:
-                t = st + du * (y - lo[k]) / max(1, hi[k] - lo[k])
-        else:
-            t = st
-        times.append(t + rng.uniform(-0.18, 0.18))
-    return times
+    ys = [rects[0][1] for _k, rects in slabs]
+    top, bottom = min(ys), max(ys)
+    span = PAINT_END - 1.0 - 0.3 - SETTLE - 0.3
+    return [0.3 + span * (bottom - y) / max(1, bottom - top) + rng.uniform(-0.3, 0.3) for y in ys]
 
 
 def ease(x):
@@ -115,17 +84,19 @@ def ease(x):
 
 
 def frame(t, slabs, times, size, paper, course, k=1.0):
+    """A slab appears a little above its course (DROP courses), fading in over the first third of its SETTLE while
+    it drifts down, and slows into place (an ease-out), so the cover seems to settle rather than pop."""
     W, H = size
     img = np.empty((H, W, 3), np.float32)
     img[:] = paper
     t = t / k
-    settle = SETTLE
     for (layer, rects), t0 in zip(slabs, times):
-        u = (t - t0) / settle
+        u = (t - t0) / SETTLE
         if u <= 0:
             continue
-        a = ease(u)
-        dy = int(round(-course * 0.9 * (1 - a)))             # it drops the last part of a course into place
+        a = min(1.0, u / 0.35)
+        a = a * a * (3 - 2 * a)
+        dy = int(round(-course * DROP * (1 - ease(u))))
         for x0, y0, x1, y1, c in rects:
             ya, yb = max(0, y0 + dy), min(H, y1 + 1 + dy)
             if yb <= ya:
@@ -139,30 +110,20 @@ def frame(t, slabs, times, size, paper, course, k=1.0):
 
 
 def covers():
-    """The strata covers with their choreography. Only the lake is wired up for the demo. The lake's layers
-    (final.cover): 0 the coral sun, 1 the far haze ranges, 2 a cloud, 3 the teal massif, 4 the sage hill on the left,
-    5 the lake (mirroring the massif), 6 the near shore, 7 its trees."""
+    """The strata set 1 covers and how each is rendered. Only the lake is wired up for the demo."""
     import final
-    plan = {1: (0.3, 4.0, "rise"),                 # the horizon first: far haze rising from it
-            3: (1.0, 7.5, "rise"),                 # the massif, from its foot to the stone cap
-            5: (2.0, 8.0, "mirror", 3),            # the lake: the reflection grows down as the massif grows up
-            4: (3.0, 4.0, "rise"),                 # the nearer sage hill
-            0: (6.5, 2.8, "rise"),                 # the sun climbs up behind the peak once the mountain stands
-            2: (8.0, 2.2, "sweep"),                # a cloud drifts in
-            6: (8.6, 2.4, "rise"),                 # the near shore
-            7: (9.6, 2.4, "rise")}                 # its trees grow up last
     return {"lake": (final.cover(), dict(viewport=(0, 0, 236, 344), size=(472, 688), course=8,
-                                          paper=(255, 255, 255), clean=True), plan)}
+                                          paper=(255, 255, 255), clean=True))}
 
 
 if __name__ == "__main__":
     key = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else "lake"
-    scene, kw, plan = covers()[key]
+    scene, kw = covers()[key]
     course, size, paper = kw["course"], kw["size"], kw.get("paper", strata.PAPER)
     slabs, final_img = record(scene, kw["viewport"], size, course,
                               **{a: b for a, b in kw.items() if a not in ("viewport", "size", "course")})
-    times = schedule(slabs, course, plan, scene, size)
-    print(key, "slabs:", len(slabs), "last lands at", round(max(times) + SETTLE, 2), "s")
+    times = schedule(slabs)
+    print(key, "slabs:", len(slabs), "last settles at", round(max(times) + SETTLE, 2), "s")
     d = f"out/anim-{key}"
     os.makedirs(d, exist_ok=True)
     for f in os.listdir(d):

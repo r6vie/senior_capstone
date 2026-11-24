@@ -1251,3 +1251,8 @@ Pending Josef's review of the new canvas.
   stands; a cloud drifts in; the near shore, then its trees. All in by ~12.5 s, ends on the cover pixel for pixel at
   13.5 s; quick (studio) at 0.3 of the time. Demo board `StudioPaint` beside the watercolour lake. Only the lake so
   far, as Josef asked.
+- **Then (Josef): "just going from the bottom to the top, nice and smooth. But just them appearing is a little
+  boring ... settle slightly down into position slowly."** The terrain choreography is gone: one sweep up the
+  cover, course by course, the slabs of a course a little out of step. Each slab appears 1.6 courses above its
+  place, fades in over the first third of 1.2 s and drifts down, easing out to a stop. Last slab settled by
+  ~12.4 s; still ends on the cover pixel for pixel; quick at 0.3 of the time.
