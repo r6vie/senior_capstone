@@ -1,4 +1,5 @@
-/* The interview, direction A "The question band" (docs/design/shelf/project/InterviewA.dc.html).
+/* The interview: direction A (docs/design/shelf/project/InterviewA.dc.html), with the band replaced by the
+   Librarian's line across the top (StartReveal, 2026-11-23).
    Components come from ui/styles.css; this file lays them out. Frames are drawn at 1280 wide. */
 
 .interview {
@@ -6,12 +7,9 @@
   --act-width: 920px;
   /* Sizes this screen needs that the system's type scale doesn't name. */
   --iv-top-height: 78px;
-  --iv-say-size: 38px;
+  --iv-say-size: 32px;
   --iv-say-quiet-size: 26px;
-  --iv-wait-size: 30px;
   --iv-book-title-size: 34px;
-  /* How far the halo reaches into the band, plus a clear gap before the words. */
-  --iv-halo-reach: 340px;
   min-height: 100vh;
   padding-bottom: var(--s-8);
 }
@@ -45,34 +43,29 @@
   border-bottom-color: var(--ink);
 }
 
-/* ---------- The question band ---------- */
-/* The same slanted edge as every other band in the app. */
-.iv-band {
+/* ---------- The Librarian's line (StartReveal): no band ---------- */
+/* Across the top of the page, in the question's serif, left-aligned with the content under it. */
+.iv-line {
   position: relative;
-  overflow: hidden;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 28px), 0 100%);
-  padding: 38px var(--gutter) calc(var(--s-7) + 28px);
-}
-.iv-band .halo {
-  right: -70px;
-  top: -110px;
-  width: 420px;
-  height: 420px;
+  width: min(var(--act-width), 100% - 2 * var(--gutter));
+  margin: 0 auto;
+  padding-top: 40px;
 }
 .iv-say {
   position: relative;
-  max-width: min(var(--act-width), 100% - var(--iv-halo-reach));
+  max-width: min(980px, 100%);
   margin: 0;
-  font: 600 var(--iv-say-size) / 1.15 var(--font-serif);
-  letter-spacing: -0.01em;
+  font: 600 var(--iv-say-size) / 1.16 var(--font-serif);
+  letter-spacing: -0.012em;
+  text-wrap: pretty;
 }
-/* A sentence with a name in it, so not caps: caps are for short labels. */
 .iv-eyebrow {
-  position: relative;
   display: block;
-  margin-bottom: var(--s-3);
-  font: 400 14px / 1.3 var(--font-sans);
-  color: var(--rule);
+  margin: 0 0 14px;
+  font: 700 14px / 1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
 }
 /* Takes focus from script on arrival, as a place for the keyboard to start. */
 .iv-say:focus {
@@ -85,7 +78,7 @@
   position: relative;
   margin: var(--s-3) 0 0;
   font-size: 15px;
-  color: var(--rule);
+  color: var(--ink-2);
 }
 .iv-holding {
   visibility: hidden;
@@ -94,9 +87,10 @@
   position: absolute;
   inset: 0 auto auto 0;
 }
+/* A line that waits is italic and grey, in the same size, so nothing moves when the answer comes. */
 .iv-waiting {
-  font: italic 400 var(--iv-wait-size) / 1.2 var(--font-serif);
-  color: var(--rule);
+  font: italic 500 var(--iv-say-size) / 1.16 var(--font-serif);
+  color: var(--ink-2);
 }
 
 /* ---------- The member's side ---------- */
@@ -332,9 +326,12 @@
 }
 
 /* ---------- The reveal ---------- */
+.interview:has(.iv-picks),
+.interview:has(.iv-chapters) {
+  --act-width: 1100px;
+}
 .iv-act:has(.iv-picks),
 .iv-act:has(.iv-chapters) {
-  --act-width: 1100px;
   padding-top: var(--s-5);
 }
 .iv-picks {
@@ -537,16 +534,6 @@
   font: italic 400 20px / 1.3 var(--font-serif);
 }
 
-/* Below this the band is too narrow to keep the words clear of the halo. */
-@media (max-width: 1279px) {
-  .iv-band .halo {
-    display: none;
-  }
-  .iv-say {
-    max-width: var(--act-width);
-  }
-}
-
 /* ---------- Phone ---------- */
 @media (max-width: 719px) {
   .interview {
@@ -567,13 +554,12 @@
     gap: var(--s-5);
     font-size: 15px;
   }
-  .iv-band {
-    padding: 28px var(--gutter) calc(32px + 28px);
+  .iv-line {
+    padding-top: 20px;
   }
   .interview {
-    --iv-say-size: 27px;
+    --iv-say-size: 24px;
     --iv-say-quiet-size: 22px;
-    --iv-wait-size: 23px;
     --iv-book-title-size: 26px;
   }
   .iv-holding {

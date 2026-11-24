@@ -108,15 +108,7 @@ function toBook(book: MyBookResponse): DraftBook {
     title: book.title,
     authorName: book.author_name,
     blurb: book.blurb,
-    rewriteUnchanged: book.rewrite_unchanged,
-    hasPreviousBlurb: book.has_previous_blurb,
-    chapters: book.chapters.map(({ id, title, summary, quotes, has_previous }) => ({
-      id,
-      title,
-      summary,
-      quotes,
-      hasPrevious: has_previous,
-    })),
+    chapters: book.chapters.map(({ id, title, summary, quotes }) => ({ id, title, summary, quotes })),
   };
 }
 
@@ -372,20 +364,6 @@ export const apiInterviewClient: InterviewClient = {
   },
   async changeTitle(_id, titleId) {
     return fromBook(unwrap(await api.POST("/interview/book/title", { body: { title: Number(titleId) } })));
-  },
-  async rewriteBlurb() {
-    return fromBook(unwrap(await api.POST("/interview/book/blurb")));
-  },
-  async restoreBlurb() {
-    return fromBook(unwrap(await api.POST("/interview/book/blurb/restore")));
-  },
-  async rewriteChapter(_id, chapterId) {
-    const params = { path: { chapter_id: chapterId } };
-    return fromBook(unwrap(await api.POST("/interview/book/chapters/{chapter_id}/rewrite", { params })));
-  },
-  async restoreChapter(_id, chapterId) {
-    const params = { path: { chapter_id: chapterId } };
-    return fromBook(unwrap(await api.POST("/interview/book/chapters/{chapter_id}/restore", { params })));
   },
   async removeChapter(_id, chapterId) {
     const params = { path: { chapter_id: chapterId } };

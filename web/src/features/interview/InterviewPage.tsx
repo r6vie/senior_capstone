@@ -671,18 +671,6 @@ export function InterviewPage({
             onChangeTitle={(titleId) =>
               run("The Librarian is writing your book…", () => client.changeTitle(state.id, titleId))
             }
-            onRewriteBlurb={() =>
-              run("The Librarian is rewriting the back cover…", () => client.rewriteBlurb(state.id))
-            }
-            onRestoreBlurb={() => run("Going back to the last version…", () => client.restoreBlurb(state.id))}
-            onRewrite={(chapterId) =>
-              run("The Librarian is rewriting that chapter…", () =>
-                client.rewriteChapter(state.id, chapterId),
-              )
-            }
-            onRestore={(chapterId) =>
-              run("Going back to the last version…", () => client.restoreChapter(state.id, chapterId))
-            }
             onRemove={(chapterId) =>
               run("Removing that chapter…", () => client.removeChapter(state.id, chapterId))
             }
@@ -1132,21 +1120,16 @@ function ChapterRow({
   index,
   chapter,
   canRemove,
-  working,
-  unchanged,
   editKey,
   onEdit,
-  onAct,
+  onRemove,
 }: {
   index: number;
   chapter: DraftChapter;
   canRemove: boolean;
-  working: boolean;
   editKey: string;
   onEdit: (edit: ChapterEdit) => Promise<void>;
-  /** The rewrite just asked for here came back no better. */
-  unchanged: boolean;
-  onAct: (action: "rewrite" | "remove" | "restore") => void;
+  onRemove: () => void;
 }) {
   const [showing, setShowing] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -1181,7 +1164,7 @@ function ChapterRow({
             type="button"
             className="button button-quiet iv-sm"
             aria-label={`Remove ${chapter.title}`}
-            onClick={() => onAct("remove")}
+            onClick={onRemove}
           >
             Remove
           </button>
@@ -1199,21 +1182,6 @@ function ChapterRow({
       <div>
         <b>{chapter.title}</b>
         <span>{chapter.summary}</span>
-        {unchanged && (
-          <p className="iv-note" role="status">
-            I couldn't tell this one better from what you said. If it's not right, remove it.
-          </p>
-        )}
-        {chapter.hasPrevious && (
-          <button
-            type="button"
-            className="button button-quiet iv-sm iv-show"
-            aria-label={`Go back to the last version of ${chapter.title}`}
-            onClick={() => onAct("restore")}
-          >
-            Go back to the last version
-          </button>
-        )}
         {chapter.quotes.length > 0 && (
           <>
             <button
@@ -1244,15 +1212,6 @@ function ChapterRow({
         >
           Edit
         </button>
-        <button
-          type="button"
-          className="button button-quiet iv-sm"
-          aria-busy={working}
-          aria-label={`Rewrite ${chapter.title}`}
-          onClick={() => onAct("rewrite")}
-        >
-          Rewrite
-        </button>
         {canRemove && (
           <button
             type="button"
@@ -1278,10 +1237,6 @@ function ReviewScreen({
   error,
   loadOtherTitles,
   onChangeTitle,
-  onRewriteBlurb,
-  onRestoreBlurb,
-  onRewrite,
-  onRestore,
   onRemove,
   onShelve,
 }: {
@@ -1295,14 +1250,9 @@ function ReviewScreen({
   error: string | null;
   loadOtherTitles: () => Promise<TitleOption[]>;
   onChangeTitle: (titleId: string) => Promise<boolean>;
-  onRewriteBlurb: () => void;
-  onRestoreBlurb: () => void;
-  onRewrite: (chapterId: string) => Promise<boolean>;
-  onRestore: (chapterId: string) => Promise<boolean>;
   onRemove: (chapterId: string) => Promise<boolean>;
   onShelve: () => void;
 }) {
-  const [working, setWorking] = useState<string | null>(null);
   const [others, setOthers] = useState<TitleOption[] | null>(null);
   const [othersError, setOthersError] = useState<string | null>(null);
   const canRemove = book.chapters.length > MIN_CHAPTERS;
@@ -1312,14 +1262,9 @@ function ReviewScreen({
   // The back cover changes with a removal, and the member should be told. Until their next action.
   const [blurbAtRemoval, setBlurbAtRemoval] = useState<string | null | undefined>(undefined);
 
-  const [lastRewritten, setLastRewritten] = useState<string | null>(null);
-
-  async function act(chapterId: string, action: "rewrite" | "remove" | "restore") {
-    setBlurbAtRemoval(action === "remove" ? book.blurb : undefined);
-    setWorking(action === "rewrite" ? chapterId : null);
-    setLastRewritten(action === "rewrite" ? chapterId : null);
-    await { rewrite: onRewrite, remove: onRemove, restore: onRestore }[action](chapterId);
-    setWorking(null);
+  async function remove(chapterId: string) {
+    setBlurbAtRemoval(book.blurb);
+    await onRemove(chapterId);
   }
 
   async function seeOthers() {
@@ -1375,16 +1320,6 @@ function ReviewScreen({
                 Edit the title and back cover
               </button>
             )}
-            {book.blurb && (
-              <button type="button" className="button button-quiet iv-sm iv-show" onClick={onRewriteBlurb}>
-                Rewrite the back cover
-              </button>
-            )}
-            {book.hasPreviousBlurb && (
-              <button type="button" className="button button-quiet iv-sm iv-show" onClick={onRestoreBlurb}>
-                Go back to the last back cover
-              </button>
-            )}
             {others === null && (
               <button type="button" className="button button-quiet iv-sm iv-show" onClick={seeOthers}>
                 See the other titles
@@ -1433,11 +1368,9 @@ function ReviewScreen({
             index={index}
             chapter={chapter}
             canRemove={canRemove}
-            working={working === chapter.id}
-            unchanged={lastRewritten === chapter.id && working === null && Boolean(book.rewriteUnchanged)}
             editKey={editKeyFor(userId, `chapter:${chapter.id}`)}
             onEdit={(edit) => onEditChapter(chapter.id, edit)}
-            onAct={(action) => act(chapter.id, action)}
+            onRemove={() => remove(chapter.id)}
           />
         ))}
       </ol>

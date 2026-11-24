@@ -443,16 +443,6 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
         const title = TITLES.find((option) => option.id === titleId);
         if (title && stored.book) stored.book.title = title.title;
       }),
-    rewriteBlurb: (id) =>
-      mutate(id, (stored) => {
-        if (stored.book) stored.book.blurb = `${BLURB} I'd start with the first offer.`;
-      }),
-    rewriteChapter: (id, chapterId) =>
-      mutate(id, (stored) => {
-        const chapter = stored.book?.chapters.find((ch) => ch.id === chapterId);
-        if (chapter) chapter.summary = `${chapter.summary.replace(/\.$/, "")}, told from where I stand now.`;
-      }),
-    restoreChapter: (id) => mutate(id, () => {}),
     removeChapter: (id, chapterId) =>
       mutate(id, (stored) => {
         if (!stored.book) return;
@@ -564,7 +554,6 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
       if (blurb) stored.book.blurb = blurb;
       save(stored);
     },
-    restoreBlurb: (id) => mutate(id, () => {}),
     openRemoval: async () => null,
     cancelRemoval: async () => undefined,
     lastRound: async () => ({ empty: load()?.stage === "nothing" }),
