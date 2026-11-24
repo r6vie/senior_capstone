@@ -160,11 +160,11 @@ function MemberContextSection({
   }
 
   return (
-    <section aria-labelledby="context-heading" className="settings-section">
-      <h2 id="context-heading" className="settings-heading">
-        About you
-      </h2>
-      <form onSubmit={save} className="stack">
+    <section aria-labelledby="context-heading" className="page-row">
+      <div className="page-row-head">
+        <h2 id="context-heading">About you</h2>
+      </div>
+      <form onSubmit={save} className="page-row-body">
         <MemberContextFields
           affiliations={affiliations}
           founder={founder}
