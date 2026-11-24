@@ -24,16 +24,17 @@ Phase = Literal["sweep", "dig", "shape"]
 # Turns after the first interview: a question of an adding round (I3), or the question after a reading (I6).
 TurnPhase = Literal["sweep", "dig", "shape", "adding", "reading"]
 
-# The spec asks for about 15-25 questions. Past SHAPE_BY the Librarian is told to wrap up;
-# at MAX_QUESTIONS the reveal is forced. Before MIN_ANSWERS a reveal is never offered.
-MIN_ANSWERS = 8
-SHAPE_BY = 21
-MAX_QUESTIONS = 25
+# The interview is about 8 questions (Josef, 2026-11-23). From SHAPE_BY the Librarian is told to
+# wrap up; at MAX_QUESTIONS the reveal is forced, a few past 8 so a quiet member gets more. Before
+# MIN_ANSWERS a reveal is never offered.
+MIN_ANSWERS = 6
+SHAPE_BY = 8
+MAX_QUESTIONS = 11
 # Skipped questions don't count toward MAX_QUESTIONS (skips are never counted, §4), so a hard
 # limit on all questions keeps an interview from running forever.
-MAX_TURNS = 40
+MAX_TURNS = 18
 # Sweep covers at least this many questions before Dig, whatever the first answer offers.
-MIN_SWEEP = 4
+MIN_SWEEP = 2
 # Answers run thin (docs/trove.md §4, §9.9) when this many of the last few are short or unsure.
 # The signal is internal: it changes the angle of the next question and is never shown.
 THIN_WINDOW, THIN_SWITCH = 3, 2
@@ -41,12 +42,10 @@ SHORT_ANSWER_WORDS, UNSURE_ANSWER_WORDS = 10, 15
 MIN_CHAPTERS, MAX_CHAPTERS = 3, 5
 # A quote shorter than this can't show a chapter is theirs ("I made it.").
 MIN_QUOTE_WORDS = 5
-# A rewrite this close to the original isn't a rewrite.
-REWRITE_TOO_CLOSE = 0.9
 # A book may grow past its first version, to this many chapters (docs/review/decisions.md, row 1).
 MAX_BOOK_CHAPTERS = 8
 # A round of adding is short. Skips count only toward the second limit, so skipping can't run forever.
-MAX_ADDING_ANSWERS, MAX_ADDING_TURNS = 8, 14
+MAX_ADDING_ANSWERS, MAX_ADDING_TURNS = 5, 9
 # A proposed chapter title this close to a spark's title is someone else's title, so it's rejected.
 SPARK_TITLE_TOO_CLOSE = 0.8
 # Capitalized words that aren't names, for checking reading answers. Anything else capitalized is
@@ -182,11 +181,13 @@ MAX_BLURB = 600
 # The prompts ask for at most this, and real runs have come back a few characters over.
 MAX_SUMMARY = 300
 
-# Shape is 1-2 questions, and following a hedge can stretch it, so it gets a nudge to close here.
-MAX_SHAPE = 4
+# Shape is 0-1 questions, and following a hedge can stretch it, so it gets a nudge to close here.
+MAX_SHAPE = 2
 
-# Questions are on the member's critical path, so they think less than the one-off book steps.
-QUESTION_EFFORT = "medium"
+# Questions are on the member's critical path, so they think less than the one-off book steps. Low
+# answers in about 3 s against medium's 5-6 s, and the 8-question evals found the questions as good
+# (2026-11-23).
+QUESTION_EFFORT = "low"
 BOOK_EFFORT = "high"
 MAX_TOKENS = 16000
 
@@ -323,11 +324,6 @@ class _Draft(BaseModel):
     pool: list[_Chapter]
     titles: list[TitleOption]
     blurb: str
-
-
-class _Retold(BaseModel):
-    title: str
-    summary: Summary
 
 
 class _FinishedChapter(BaseModel):
@@ -533,42 +529,6 @@ async def write_blurb(
         if blurb and not leaks(blurb):
             return blurb
     raise ValueError("The blurb was empty, too long or carried a term the member never said.")
-
-
-async def rewrite_chapter(
-    claude: Claude,
-    *,
-    turns: list[Turn],
-    chapters: list[DraftChapter],
-    chapter_id: str,
-    leaks: Callable[[str], bool] = _never,
-    spark_titles: list[str] | None = None,
-) -> DraftChapter:
-    """The same chapter, better told: a new title and summary, keeping its id, topic and quotes. One
-    too close to the original gets one more try. After that the original comes back unchanged."""
-    current = next((chapter for chapter in chapters if chapter.id == chapter_id), None)
-    if current is None:
-        raise ValueError(f"No chapter {chapter_id!r} in this book.")
-    listing = json.dumps(
-        [{**chapter.model_dump(), "rewrite_this": chapter.id == chapter_id} for chapter in chapters],
-        indent=1,
-    )
-    content = (
-        f"{_transcript(turns)}\n\n<book_chapters>\n{listing}\n</book_chapters>\n\n"
-        "Rewrite the title and summary of the chapter marked rewrite_this."
-    )
-    for attempt in range(2):
-        note = "\n\n" + load_prompt("interview/retry_rewrite") if attempt else ""
-        raw = await _ask(claude, "interview/rewrite", content + note, _Retold, BOOK_EFFORT)
-        close = SequenceMatcher(None, current.summary, raw.summary).ratio() > REWRITE_TOO_CLOSE
-        if (
-            not close
-            and not leaks(f"{raw.title} {raw.summary}")
-            and not _too_close_to_a_spark(raw.title, spark_titles)
-        ):
-            # The quotes are what tie the chapter to its topic, so they never change on a rewrite.
-            return current.model_copy(update={"title": raw.title, "summary": raw.summary})
-    return current
 
 
 async def next_adding_turn(
@@ -963,7 +923,9 @@ def _status(turns: list[Turn], more_material: bool = False) -> str:
     if asked >= MAX_QUESTIONS or len(turns) >= MAX_TURNS:
         notes.append("That is the limit: set ready_for_reveal to true and close.")
     elif asked >= SHAPE_BY:
-        notes.append("Move to Shape now if you aren't there already.")
+        notes.append(
+            "Move to Shape now if two threads link; if none do, set ready_for_reveal to true and close."
+        )
     elif answered < MIN_ANSWERS:
         notes.append("It's too early for the reveal.")
     return " ".join(notes)

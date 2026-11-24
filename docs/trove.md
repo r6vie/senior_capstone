@@ -106,7 +106,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   - **Contrast questions** surface knowledge people take for granted: what people get wrong, what you learned the hard way, what people come to you for.
   - **Three phases:** Sweep (wide and light across school, work, turning points, side pursuits), Dig (the 2–3 strongest threads, in depth), Shape (the last 1–2 questions: when two threads from different parts of their life look like the same move, the Librarian asks the member about the link, then closes). Shape never plays back what the member said and never asks them to confirm it ("Is this you?"). Josef removed that step on 2026-11-23: the member knows what they told the Librarian, so asking them to confirm it adds nothing. Hedges, refusals and credit given to others anywhere in the interview still bind the book. Internally the interviewer keeps a light ranking of threads to decide where to dig. It is not shown.
   - **Reader lens, built into the question generator:** every next question is chosen with "what would a CWRU reader give 30 minutes for?" in mind. There is no separate critic pass.
-  - **Length:** about 20–25 minutes, roughly 15–25 questions. The Librarian decides when it has enough. After about 10 answers, the member may also say "I've said enough. Show me my book."
+  - **Length:** about 8 questions (Josef, 2026-11-23; it was 15–25): Sweep 2–3, Dig 4–5, Shape 0–1. A quiet member gets a few more, never past 11. The Librarian decides when it has enough. After 6 answers, the member may also say "I've said enough. Show me my book." The time to quote on screen is waiting on Josef's confirmation.
   - **Saved after every answer, silently.** The member can leave and resume at any time ("Last time you were telling me about…").
   - **Voice:** the browser's built-in speech recognition (no new service). An editable transcript before sending. Where it isn't supported, the member types.
   - **Résumé:** optional PDF at the start. Its text is extracted, used only to shape questions, and deleted when the interview ends. The file is never stored.
@@ -169,18 +169,18 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   that cover forward into the same full-screen book reader while the search results stay dimmed
   behind it; closing the book returns it to its result and preserves the query and results.
 - **"The Librarian recommends":** the AI recommends books to you.
-- **D3 recommendation (Alvisa, 2026-11-21):** this version stays signed-in. A member without a
+- **D3 recommendation (Alvisa, 2026-11-21; revised 2026-11-24):** this version stays signed-in. A member without a
   finished book sees the same large book graphic inviting them to create or finish theirs. Once
   their book has been published, only its author-approved public title, blurb and chapter text may
-  shape a match. Claude extracts a small, evidence-backed profile of interests, domains, knowledge,
-  experiences, explicit goals, current locations and places of origin from that text when the profile is missing or the book has
-  changed. It does not choose the match. A deterministic scorer compares exact concepts, related
-  concepts (for example, tennis and football through sports), and knowledge that complements an
-  explicitly stated goal. The strongest grounded signal supplies the one-sentence reason. Member
-  type does not filter or score matches: students, alumni, founders and non-founders may all match
-  with one another. The pick stays for seven days unless either book changes or the recommended
-  book leaves the shelf. A member's off-shelf book may privately shape their own recommendation,
-  but an off-shelf book is never recommended to somebody else.
+  shape a match. Claude acts as the Librarian and chooses one eligible book. It prioritizes the same
+  specific interest, then related interests (for example, tennis and football through sports),
+  knowledge that complements an explicit goal, specific shared experiences or domains, and finally
+  a shared current location or place of origin. It returns exact supporting excerpts from both books;
+  the API rejects an ineligible id or ungrounded evidence before showing the one-sentence reason.
+  Member type does not filter or score matches: students, alumni, founders and non-founders may all
+  match with one another. The pick stays for seven days unless either book changes or the recommended
+  book leaves the shelf. A member's off-shelf book may privately shape their own recommendation, but
+  an off-shelf book is never recommended to somebody else.
 - **Member context for matching (Alvisa, 2026-11-23):** before the first book interview, a member
   records whether they are a current student, alumni, or both, and separately whether they are a
   founder. Existing members answer once, and the values can be changed later. They are ordinary

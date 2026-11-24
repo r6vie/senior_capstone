@@ -1,5 +1,6 @@
 """The Librarian's live notes and notebook (L1): code checks, silence, caps and the notes route."""
 
+import asyncio
 import json
 from datetime import UTC, datetime
 
@@ -353,7 +354,7 @@ async def headers(client):
 @pytest.fixture
 def librarian_engine(monkeypatch, fake_claude):
     fake = FakeEngine()
-    for name in ("next_turn", "draft_book", "finish_book", "write_blurb", "rewrite_chapter"):
+    for name in ("next_turn", "draft_book", "finish_book", "write_blurb"):
         monkeypatch.setattr(engine, name, getattr(fake, name))
     return fake
 
@@ -389,7 +390,7 @@ async def test_notes_are_kept_with_the_turn_and_the_notebook_on_the_interview(
     client, database, headers, fake_claude, librarian_engine
 ):
     state = await start(client, headers)
-    fake_claude.responses.append(text_message(notes_reply(marks=[GOOD], entries=[CHAPTER])))
+    fake_claude.notes.append(text_message(notes_reply(marks=[GOOD], entries=[CHAPTER])))
     reply = (await post_notes(client, headers, state, "The intake form had nine pages nobody read.")).json()
     assert reply["silent"] is False
     assert [m["anchor"] for m in reply["marks"]["add"]] == ["nine pages"]
@@ -418,7 +419,7 @@ async def test_a_silent_answer_is_never_sent_and_rubs_out_what_it_had(
     client, database, headers, fake_claude, librarian_engine
 ):
     state = await start(client, headers)
-    fake_claude.responses.append(text_message(notes_reply(marks=[GOOD], entries=[CHAPTER])))
+    fake_claude.notes.append(text_message(notes_reply(marks=[GOOD], entries=[CHAPTER])))
     reply = (await post_notes(client, headers, state, "The intake form had nine pages nobody read.")).json()
     shown = [reply["marks"]["add"][0]["id"], reply["notebook"]["add"][0]["id"]]
     text = "The intake form had nine pages nobody read. Then my dad died that winter."
@@ -435,7 +436,7 @@ async def test_a_silent_answer_is_never_sent_and_rubs_out_what_it_had(
 
     # On the next answer the silent one is masked, never sent.
     state = (await client.get("/interview", headers=headers)).json()
-    fake_claude.responses.append(text_message(notes_reply()))
+    fake_claude.notes.append(text_message(notes_reply()))
     await post_notes(client, headers, state, "I rebuilt the intake form for the free clinic.")
     sent = json.dumps(fake_claude.requests[calls:])
     assert "my dad died" not in sent and silence.MASKED in sent
@@ -470,7 +471,7 @@ async def test_a_failed_notes_call_adds_nothing_and_is_not_an_error(
     client, headers, fake_claude, librarian_engine
 ):
     state = await start(client, headers)
-    fake_claude.responses.append(text_message("not json"))
+    fake_claude.notes.append(text_message("not json"))
     reply = await post_notes(client, headers, state, "The intake form had nine pages nobody read.")
     assert reply.status_code == 200
     assert reply.json()["marks"]["add"] == [] and reply.json()["notebook"]["add"] == []
@@ -478,7 +479,7 @@ async def test_a_failed_notes_call_adds_nothing_and_is_not_an_error(
 
 async def test_a_skip_rubs_out_that_answers_entries(client, database, headers, fake_claude, librarian_engine):
     state = await start(client, headers)
-    fake_claude.responses.append(text_message(notes_reply(entries=[CHAPTER])))
+    fake_claude.notes.append(text_message(notes_reply(entries=[CHAPTER])))
     await post_notes(client, headers, state, "The intake form had nine pages nobody read.")
     await send_skip(client, headers)
     assert (await database.interviews.find_one({}))["notebook"] == []
@@ -488,7 +489,7 @@ async def test_the_next_question_can_build_on_the_notebook(
     client, database, headers, fake_claude, librarian_engine
 ):
     state = await start(client, headers)
-    fake_claude.responses.append(text_message(notes_reply(entries=[CHAPTER])))
+    fake_claude.notes.append(text_message(notes_reply(entries=[CHAPTER])))
     reply = (await post_notes(client, headers, state, "The intake form had nine pages nobody read.")).json()
     saving_id = reply["notebook"]["add"][0]["id"]
     librarian_engine.builds_on_next = saving_id
@@ -521,7 +522,7 @@ async def test_clips_go_to_the_draft_and_the_sign_off_is_checked(
         "anchors": ["nine pages nobody read"],
         "source_turns": [1],
     }
-    fake_claude.responses.append(text_message(notes_reply(entries=[clip])))
+    fake_claude.notes.append(text_message(notes_reply(entries=[clip])))
     await post_notes(client, headers, state, "The intake form had nine pages nobody read.")
     await send_answer(client, headers, "The intake form had nine pages nobody read.")
     for n in range(9):
@@ -555,13 +556,13 @@ async def test_a_bet_settled_by_words_that_are_then_deleted_goes_back_to_open(
 ):
     state = await start(client, headers)
     bet = {"kind": "bet", "text": "betting the form wins.", "anchors": ["intake form"], "source_turns": [1]}
-    fake_claude.responses.append(text_message(notes_reply(entries=[bet])))
+    fake_claude.notes.append(text_message(notes_reply(entries=[bet])))
     reply = (await post_notes(client, headers, state, "The intake form had nine pages nobody read.")).json()
     bet_id = reply["notebook"]["add"][0]["id"]
     await send_answer(client, headers, "The intake form had nine pages nobody read.")
     state = (await client.get("/interview", headers=headers)).json()
     settle = {"id": bet_id, "outcome": "called", "anchor": "one page"}
-    fake_claude.responses.append(text_message(notes_reply(settle=[settle])))
+    fake_claude.notes.append(text_message(notes_reply(settle=[settle])))
     settled = (await post_notes(client, headers, state, "In the end the form was one page.")).json()
     assert [(e["id"], e["status"]) for e in settled["notebook"]["revise"]] == [(bet_id, "called")]
     await send_answer(client, headers, "In the end the form was shorter.")
@@ -599,3 +600,109 @@ def test_a_prompt_example_with_one_word_swapped_is_still_a_copy():
     assert "copies an example" in " ".join(
         librarian.line_problems("the toaster is in every scene.", limit=32, member_text="")
     )
+
+
+# The final look on the answer as sent (the notebook catching up after Send).
+
+
+EMPTY_DELTA = {"keep": [], "add": [], "revise": [], "erase": []}
+
+
+async def final_notes(client, headers, question_id: str) -> dict:
+    response = await client.get(
+        "/interview/notes/final", params={"question_id": question_id}, headers=headers
+    )
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+async def test_a_pasted_answer_gets_its_notes_after_send(
+    client, database, headers, fake_claude, librarian_engine
+):
+    state = await start(client, headers)
+    question_id = state["question"]["question_id"]
+    # Pasted in one go: no look while typing ever saw it.
+    fake_claude.notes.append(text_message(notes_reply(marks=[GOOD], entries=[CHAPTER])))
+    sent = (await send_answer(client, headers, "The intake form had nine pages nobody read.")).json()
+    assert any(r["model"] == librarian.NOTES_MODEL for r in fake_claude.requests)
+    # The answer's own response already carries them, for a client that never asks.
+    assert sent["librarian"]["turns"][0]["marks"][0]["anchor"] == "nine pages"
+    assert [e["kind"] for e in sent["librarian"]["notebook"]] == ["saving"]
+
+    final = await final_notes(client, headers, question_id)
+    assert final["status"] == "done" and final["silent"] is False
+    assert [m["anchor"] for m in final["marks"]["add"]] == ["nine pages"]
+    assert [e["text"] for e in final["notebook"]["add"]] == ["ask: who wrote the nine pages?"]
+    interview = await database.interviews.find_one({})
+    assert interview["notebook"][0]["turn"] == 1
+    assert interview["notes_rate"]["count"] == 1
+
+
+async def test_no_final_look_when_the_words_were_already_read(
+    client, database, headers, fake_claude, librarian_engine
+):
+    state = await start(client, headers)
+    text = "The intake form had nine pages nobody read."
+    fake_claude.notes.append(text_message(notes_reply(marks=[GOOD])))
+    await post_notes(client, headers, state, text)
+    calls = len(fake_claude.requests)
+    await send_answer(client, headers, text)
+    assert not any(r["model"] == librarian.NOTES_MODEL for r in fake_claude.requests[calls:])
+    assert (await final_notes(client, headers, state["question"]["question_id"]))["status"] == "none"
+
+
+async def test_a_failed_final_look_never_fails_the_answer(
+    client, database, headers, fake_claude, librarian_engine
+):
+    state = await start(client, headers)
+    # No notes reply queued: the look fails, and the next question comes all the same.
+    response = await send_answer(client, headers, "The intake form had nine pages nobody read.")
+    assert response.status_code == 200, response.text
+    assert response.json()["question"]["text"] == "Question 2?"
+    assert (await final_notes(client, headers, state["question"]["question_id"]))["status"] == "none"
+    assert (await database.interviews.find_one({}))["notebook"] == []
+
+
+async def test_a_final_look_that_goes_silent_rubs_the_answer_out(
+    client, database, headers, fake_claude, librarian_engine
+):
+    state = await start(client, headers)
+    fake_claude.notes.append(text_message(notes_reply(silent=True)))
+    await send_answer(client, headers, "The intake form had nine pages nobody read.")
+    final = await final_notes(client, headers, state["question"]["question_id"])
+    assert final["status"] == "done" and final["silent"] is True
+    turn = (await database.interviews.find_one({}))["turns"][0]
+    assert turn["silent"] is True and "marks" not in turn
+
+
+async def test_final_notes_are_none_for_a_skip_or_an_unknown_question(
+    client, headers, fake_claude, librarian_engine
+):
+    state = await start(client, headers)
+    calls = len(fake_claude.requests)
+    await send_skip(client, headers)
+    assert len(fake_claude.requests) == calls
+    assert (await final_notes(client, headers, state["question"]["question_id"]))["status"] == "none"
+    assert (await final_notes(client, headers, "not-a-question"))["status"] == "none"
+
+
+async def test_final_notes_wait_for_a_look_still_running(
+    client, database, headers, fake_claude, librarian_engine
+):
+    state = await start(client, headers)
+    question_id = state["question"]["question_id"]
+    await database.interviews.update_one(
+        {},
+        {"$set": {"final_look": {"question_id": question_id, "status": "running", "at": datetime.now(UTC)}}},
+    )
+
+    async def finish_later():
+        await asyncio.sleep(0.4)
+        done = {"silent": False, "marks": EMPTY_DELTA, "notebook": EMPTY_DELTA}
+        await database.interviews.update_one(
+            {}, {"$set": {"final_look.status": "done", "final_look.response": done}}
+        )
+
+    later = asyncio.create_task(finish_later())
+    assert (await final_notes(client, headers, question_id))["status"] == "done"
+    await later

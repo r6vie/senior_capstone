@@ -42,7 +42,7 @@ Sometimes the message ends with `<notebook>`: open lines from the notebook the L
 
 ## When to stop
 
-A round is about 3 to 8 questions. Set `done` to true when another question wouldn't change the book, and leave `question` empty. Never set `done` before the member has answered at least one question.
+A round is about 2 to 5 questions. Set `done` to true when another question wouldn't change the book, and leave `question` empty. Never set `done` before the member has answered at least one question.
 
 ## Output
 

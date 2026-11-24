@@ -27,12 +27,7 @@ async def replay(claude: Claude, fixture: dict, *, title_index: int = 0) -> dict
     draft = await engine.draft_book(claude, turns=turns)
     title = draft.titles[title_index].title
     finished = await engine.finish_book(claude, turns=turns, draft=draft, title=title)
-    rewritten, after_removal = await asyncio.gather(
-        engine.rewrite_chapter(
-            claude, turns=turns, chapters=finished.chapters, chapter_id=finished.chapters[-1].id
-        ),
-        engine.write_blurb(claude, turns=turns, chapters=finished.chapters[1:]),
-    )
+    after_removal = await engine.write_blurb(claude, turns=turns, chapters=finished.chapters[1:])
     return {
         **{key: fixture[key] for key in ("persona", "slug", "turns")},
         "source": f"replay of {fixture['source']}",
@@ -42,7 +37,6 @@ async def replay(claude: Claude, fixture: dict, *, title_index: int = 0) -> dict
             "title": title,
             "chapters": [_chapter(c) for c in finished.chapters],
             "blurbs": {"draft": draft.blurb, "finished": finished.blurb, "after_removal": after_removal},
-            "rewrite": _chapter(rewritten),
         },
     }
 

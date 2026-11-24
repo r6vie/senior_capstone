@@ -83,8 +83,7 @@ async def edit_my_chapter(
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
 ) -> MyBookResponse:
-    """Change a chapter's title or summary. Its quotes stay. In a draft, the last version can be
-    restored (`has_previous`, POST /interview/book/chapters/{id}/restore)."""
+    """Change a chapter's title or summary. Its quotes stay."""
     await _editable(database, user["_id"])
     try:
         book = await books.edit_chapter(

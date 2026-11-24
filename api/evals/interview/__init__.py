@@ -92,9 +92,6 @@ async def run_case(claude: Claude, case: dict) -> str:
     title = draft.titles[0].title
     finished = await engine.finish_book(counting, turns=turns, draft=draft, title=title)
     book = finished.chapters
-    rewritten = await engine.rewrite_chapter(
-        counting, turns=turns, chapters=finished.chapters, chapter_id=finished.chapters[-1].id
-    )
     after_removal = await engine.write_blurb(counting, turns=turns, chapters=finished.chapters[1:])
 
     phases = [t.phase for t in turns]
@@ -123,9 +120,8 @@ async def run_case(claude: Claude, case: dict) -> str:
                 ("After removing the first chapter", after_removal),
             ]
         ),
-        f"### Rewrite of the last chapter\n\nBefore:\n{_chapter(book[-1])}\n\nAfter:\n{_chapter(rewritten)}",
     ]
-    summaries = [c.summary for c in [*draft.pool, *book, rewritten]]
+    summaries = [c.summary for c in [*draft.pool, *book]]
     meta = [m for summary in summaries for m in re.findall(META, summary, re.I)]
     sections.insert(1, f"**Meta phrasing in summaries:** {len(meta)} ({', '.join(meta) or 'none'})")
     return "\n\n".join(sections)
