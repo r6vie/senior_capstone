@@ -131,6 +131,17 @@ generated files in the same commit as the change. CI fails if they are stale.
 **Merge conflicts in `api/openapi.json` or `web/src/api/schema.ts`: don't resolve them by hand.**
 Resolve the real conflicts in the Python code first, then rerun the generator and commit its output.
 
+## AI spending
+
+Real Claude calls in development (evals, real-AI interviews on your own copy) are paid from the team's shared key.
+**The development budget is $40** (Josef, 2026-11-24; it was $15).
+
+- To have the app enforce it, set `AI_USAGE_LOG=<a file path>` and `AI_BUDGET_USD=40` in your `.env`. The app then
+  refuses calls once that ledger reaches the budget. The ledger counts only your own machine's calls.
+- See what you've spent with `python3 scripts/ai_spend.py`.
+- Default to free: the scripted AI (`--scripted-ai`) for screens and flows, `FakeClaude` in tests.
+- The live site is capped separately, by the key's spend limit in the Anthropic console (docs/deploy.md).
+
 ## Tests
 
 - Every new route gets an API test: the success case, the main failure case (401, 404, 409 and so
