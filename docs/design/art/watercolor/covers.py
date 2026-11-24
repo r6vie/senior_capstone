@@ -64,6 +64,23 @@ def lighthouse():
         under_lit = p.soften(p.rough(p.stroke([(x + 4, y + h * 0.35), (x + w - 6, y + h * 0.35 - 0.6)], h * 0.35),
                                      1.0, 8), 0.6)
         p.wash(under_lit * around, GOLD_D, 0.6, rim=0.2, flow=0.4)                    # their undersides lit
+    # 1b the beam (Josef, 2026-11-23: "add a beam of light from the lighthouse at dusk"): lifted out of the wet sky
+    # with a damp brush, so it is the paper showing through, warmed with a thin gold; a narrow core inside a wider
+    # glow, both widening and fading as they leave the lantern. It runs just under the title and name, nearly level,
+    # dipping a little toward the sea; a short stub on the right where the beam's other side leaves the cover.
+    lx, ly = tx - 4, ty + 11
+    fade = ramp_x(-10, lx, 0.0, 1.0) ** 0.8
+    broken = np.clip(0.55 + 0.9 * (fbm(9, 41) - 0.5) + 0.6 * (fbm(3, 43) - 0.5), 0, 1)   # lifted unevenly, in patches
+    glow = p.soften(p.rough(p.poly([(lx, ly - 2), (-30, ly + 22), (-30, ly + 84), (lx, ly + 4)]), 2.5, 9), 6) * fade
+    core = p.rough(p.poly([(lx, ly - 1.2), (-30, ly + 30), (-30, ly + 60), (lx, ly + 2.8)]), 1.2, 7, fine=0.4)
+    core = np.minimum(p.soften(core, 1.0), p.soften(core, 4.0) + ramp_y(ly - 2, ly + 30, 1.0, 0.0)) * fade
+    stub = p.soften(p.poly([(tx + 4, ly - 2), (260, ly - 9), (260, ly + 12), (tx + 4, ly + 3)]), 3) \
+        * ramp_x(tx + 4, 250, 1.0, 0.45)
+    beam = np.clip(np.maximum((glow * 0.5 + core * 0.7) * (0.45 + 0.55 * broken), stub * 0.8), 0, 1) * around
+    p.lift(beam, 0.8)                                       # back toward the cream of the paper, not yellow on blue
+    near = ramp_x(lx - 90, lx, 0.0, 1.0)
+    p.wash(beam * near, GOLD_D, 0.5, rim=0, flow=0.5, blotch=0.04)   # warm only close to the lamp
+    p.wash(beam * (1 - near) * 0.6, RAW, 0.12, rim=0, flow=0.5)
     # 2 far headland
     p.wash(p.rough(p.poly([(-6, 251), (6, 245), (22, 241), (40, 242), (58, 247), (74, 251)]), 0.8, 5),
            ULTRA, 0.5, rim=1.4, flow=0.25, blotch=0.05)

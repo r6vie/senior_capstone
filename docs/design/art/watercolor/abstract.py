@@ -232,7 +232,14 @@ def winter():
             fir_m = np.maximum(fir_m, p.poly([(x, base - h + h * t0), (x + w * ww, base - h + h * t1),
                                               (x - w * ww, base - h + h * t1)]))
         fir_m = p.rough(fir_m, 0.6, 3, fine=0.35)
-        p.loose(fir_m, [col, CYPRESS, PAYNE], 1.2, n=3, rough=0.4, patch=0.55, ground=0.8)
+        # each tree is lifted back to paper first and given one even dark ground, so the part standing in the snow
+        # is as deep as the part against the sky (Josef, 2026-11-23: the bottoms looked "weirdly translucent")
+        p.lift(fir_m, 1.0)
+        p.wash(fir_m, PAYNE, 1.0, rim=0.8, flow=0.3)
+        p.loose(fir_m, [col, CYPRESS, PAYNE], 1.3, n=4, rough=0.6, patch=0.4, ground=0.9)
+        p.wash(p.soften(p.ellipse(x + w * 1.6, base + 1, w * 2.2, 2.6), 1.6) * snow * (1 - fir_m), VIOLET, 0.75,
+               rim=0, flow=0.4)                                                  # its shadow thrown right
+        p.lift(p.soften(p.rough(p.ellipse(x, base + 1.5, w * 1.15, 2.4), 0.8, 3, fine=0.4), 0.6), 1.0)   # snow over its foot
     # the lone fir on the right, and its shadow
     lx, lh, lw = 176, 46, 9
     lb = snow_y(lx) + 3
@@ -241,6 +248,8 @@ def winter():
         lone = np.maximum(lone, p.poly([(lx, lb - lh + lh * t0), (lx + lw * ww, lb - lh + lh * t1),
                                         (lx - lw * ww, lb - lh + lh * t1)]))
     lone = p.rough(lone, 0.6, 3, fine=0.35)
+    p.lift(lone, 1.0)
+    p.wash(lone, PAYNE, 0.9, rim=0.8, flow=0.3)
     p.loose(lone, [CYPRESS, TEAL, PAYNE], 1.2, n=3, rough=0.4, patch=0.55, ground=0.8)
     p.wash(p.soften(p.ellipse(lx + 18, lb + 4, 22, 3.5), 2.0) * snow, VIOLET, 0.7, rim=0, flow=0.4)   # its shadow
     p.finish()

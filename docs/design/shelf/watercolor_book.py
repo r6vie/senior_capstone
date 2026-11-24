@@ -5,7 +5,8 @@ dark one, never the cream a dark cover top takes. Sample books only: the titles 
 
 python3 watercolor_book.py <root> mesa_title=<blob> hills_title=<blob> lake_title=<blob> winter_title=<blob>
   city_title=<blob> blossom_title=<blob> autumn_title=<blob> beach_title=<blob> lighthouse_title=<blob>
--> <root>/project/WCBook{Mesa,Hills,Lake,Winter,City,Blossom,Autumn,Beach,Lighthouse}.dc.html"""
+  lighthousedusk_title=<blob>
+-> <root>/project/WCBook{Mesa,Hills,Lake,Winter,City,Blossom,Autumn,Beach,Lighthouse,Lighthouse2}.dc.html"""
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -84,6 +85,16 @@ BOOKS = [
              ("Waiting for the wave", "What teaching beginners taught her about pace and patience."),
              ("Going back", "The rules she set for her next job, and the ones she has kept.")]),
     dict(key="lighthouse", file="WCBookLighthouse", label="Watercolor · lighthouse by day with the harbor boats",
+         title="Keeping the Light", author="Maren Holt", ink="#2c3e5c",
+         blurb="Eight years restoring and running a lighthouse museum on a small island. Raising money for an old "
+               "building, keeping volunteers for years, and telling a place's story to people who come by boat.",
+         ch=[("Inheriting a ruin", "The survey, the leaking lantern, and the first grant she almost missed."),
+             ("Volunteers who stay", "How a crew of retirees and students kept coming back every summer."),
+             ("The ferry schedule decides", "Planning everything around the boats and the weather."),
+             ("Telling the story", "What visitors remember, and what she cut from the tour.")]),
+    # the dusk lighthouse with its beam (Josef, 2026-11-23: "add a beam of light from the lighthouse at dusk, and then
+    # make a book screen for it"); the same book as the daytime lighthouse, its page art pages2.lighthouse_dusk
+    dict(key="lighthousedusk", file="WCBookLighthouse2", label="Watercolor · lighthouse at dusk with its beam",
          title="Keeping the Light", author="Maren Holt", ink="#2c3e5c",
          blurb="Eight years restoring and running a lighthouse museum on a small island. Raising money for an old "
                "building, keeping volunteers for years, and telling a place's story to people who come by boat.",

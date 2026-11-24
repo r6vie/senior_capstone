@@ -80,22 +80,24 @@ def city():
         pk = p.soften(p.rough(p.ellipse(cx, cy, rx, 5), 1.2, 14), 1.4) * river
         p.lift(pk, 0.3)
         p.wash(pk, APRICOT, 0.5, rim=0)
-    # the bridge: a long low deck crossing from the left, on a few broad arches, its lamps a string of warm dots
+    # the bridge: a long low deck crossing the whole river, edge to edge (Josef, 2026-11-23: "make the bridge go all
+    # the way to the right side"), on broad arches, its lamps a string of warm dots
     dk = 566
-    deck = p.rough(p.poly([(-20, dk - 8), (360, dk - 3), (360, dk + 4), (-20, dk + 1)]), 0.4, 8, fine=0.3)
+    PIERS = [30, 100, 174, 252, 336, 426, 524]            # the spans open up toward the right, coming toward us
+    deck = p.rough(p.poly([(-20, dk - 8), (620, dk + 0.4), (620, dk + 7.4), (-20, dk + 1)]), 0.4, 8, fine=0.3)
     piers = np.zeros((H, W), np.float32)
-    for px in [30, 110, 190, 270, 340]:
+    for px in PIERS:
         y0 = dk - 8 + 5 * (px + 20) / 380
         piers = np.maximum(piers, p.poly([(px - 6, y0), (px + 6, y0), (px + 7, y0 + 30), (px - 7, y0 + 30)]))
     arches = np.zeros((H, W), np.float32)
-    for a0, a1 in [(-30, 30), (30, 110), (110, 190), (190, 270), (270, 340)]:
+    for a0, a1 in zip([-34] + PIERS, PIERS + [690]):
         y0 = dk - 4 + 5 * ((a0 + a1) / 2 + 20) / 380
         arches = np.maximum(arches, p.ellipse((a0 + a1) / 2, y0 + 26, (a1 - a0) / 2 - 4, 22) * (Yw > y0 + 3))
-    br = p.rough(np.clip(np.maximum(deck, piers) + p.poly([(-20, dk - 6), (350, dk - 2), (350, dk + 26),
+    br = p.rough(np.clip(np.maximum(deck, piers) + p.poly([(-20, dk - 6), (620, dk + 2.4), (620, dk + 34),
                                                              (-20, dk + 26)]) - arches, 0, 1), 0.4, 5, fine=0.3)
     p.wash(br, INDIGO, 1.2, rim=1.2, flow=0.4)
     p.wash(br, PAYNE, 0.6, rim=0, flow=0.4)
-    for lx in [-4, 22, 60, 84, 132, 170, 214, 236, 290, 330]:
+    for lx in [-4, 22, 60, 84, 132, 170, 214, 236, 290, 330, 372, 410, 452, 494, 536, 576]:
         ly = dk - 8 + 5 * (lx + 20) / 380 - 6
         d = p.rough(p.ellipse(lx, ly, 1.8, 1.8), 0.2, 1, fine=0.1)
         p.lift(d, 0.9)
@@ -552,7 +554,144 @@ def lighthouse():
     return p
 
 
-SCENES = {"city": city, "blossom": blossom, "autumn": autumn, "beach": beach, "lighthouse": lighthouse}
+def lighthouse_dusk():
+    """Keeping the light, at dusk, wider (Josef, 2026-11-23: "add a beam of light from the lighthouse at dusk, and
+    then make a book screen for it"): the cover's dusk, indigo climbing the right side with the evening star and a few
+    stars, melting through violet and rose to a gold band on the horizon, long dark clouds lit gold underneath; the
+    headland on the right climbing high, gone cool and dark; the white tower holding the last light, its lantern lit
+    and the beam lifted out of the wet sky, sweeping left across the page and dissolving where the sky meets the
+    paper; the keeper's cottage with two lit windows; the sunset laid on the water; surf round the rocks."""
+    from covers import GOLD_D
+    p = Paper(seed=231)
+    fade = bleed(290, 430, 320)
+    hz = 500
+    top = [(300, 532), (330, 516), (370, 500), (410, 486), (450, 474), (490, 462), (530, 452), (570, 446), (600, 444)]
+    under = [(600, 520), (560, 526), (520, 532), (480, 540), (440, 548), (400, 556), (360, 560), (320, 560), (296, 552)]
+    foot = [(600, 600), (560, 596), (510, 594), (460, 592), (410, 590), (370, 588), (330, 584), (306, 574),
+            (290, 560)]
+    face = p.rough(p.poly(under[::-1] + foot), 1.4, 9, fine=0.5)
+    grass = p.rough(p.poly(top + under), 1.6, 8, fine=0.6)
+    land = np.clip(np.maximum(face, grass) * 1.2, 0, 1)
+    tx, tb, k = 500, y_at(top, 500) + 6, 2.2
+    ty = tb - 106 * k
+    tower = p.rough(p.poly([(tx - 9 * k, tb), (tx - 6.5 * k, ty + 16 * k), (tx + 6.5 * k, ty + 16 * k), (tx + 9 * k, tb)]),
+                    0.4, 5, fine=0.2)
+    lantern = np.maximum.reduce([p.poly([(tx - 22, ty + 18 * k), (tx + 22, ty + 18 * k), (tx + 22, ty + 15 * k),
+                                         (tx - 22, ty + 15 * k)]),
+                                 p.poly([(tx - 11, ty + 15 * k), (tx + 11, ty + 15 * k), (tx + 11, ty + 7 * k),
+                                         (tx - 11, ty + 7 * k)]),
+                                 p.poly([(tx - 15, ty + 7.5 * k), (tx + 15, ty + 7.5 * k), (tx, ty - 1 * k)])])
+    keep = np.clip(np.maximum(tower, lantern), 0, 1)
+    around = 1 - np.maximum(land, keep)
+    # 1 the dusk sky, bleeding into the paper: indigo high on the right, violet, rose, then gold on the horizon
+    skym = fade * p.soften(p.poly([(-20, -20), (600, -20), (600, hz + 2), (-20, hz + 2)]), 1)
+    stars = [(560, 120, 2.6), (470, 190, 1.4), (548, 196, 1.2), (590, 60, 1.3), (452, 150, 1.0)]
+    starm = np.maximum.reduce([p.soften(p.ellipse(x, y, r, r), r * 0.5) for x, y, r in stars])
+    sk = skym * around * (1 - starm)
+    sky(p, [ULTRA, PAYNE, VIOLET, ROSE], [(0, 470, 1.0, 0.15, 1.7), (0, 360, 1.0, 0.0, 0.9),
+                                         (300, 470, 0.0, 1.0, 0.9), (420, 500, 0.0, 1.0, 0.9)], sk)
+    p.wash(p.soften(p.poly([(-20, 470), (380, 462), (600, 474), (600, 503), (-20, 503)]), 10) * sk, GOLD_D, 1.0,
+           rim=0, flow=0.4, blotch=0.05)
+    p.wash(p.soften(p.ellipse(560, 120, 9, 9), 5) * skym * (1 - starm), LEMON, 0.35, rim=0)       # the evening star
+    # the night gathers round the tower so its beam has a dark sky to cut through
+    night = p.soften(p.rough(p.ellipse(560, 290, 190, 120), 14, 40), 44) * around * (1 - starm)
+    p.wash(night, ULTRA, 1.0, rim=0, flow=0.4, blotch=0.05)
+    p.wash(night, PAYNE, 0.5, rim=0, flow=0.4)
+    for x, y, w, h in [(40, 452, 190, 8), (150, 474, 150, 6), (290, 440, 150, 9), (420, 410, 120, 7)]:
+        cl = p.soften(p.rough(p.stroke([(x, y), (x + w * 0.5, y - 3), (x + w, y - 1)], h), 3, 18, fine=0.6), 2.5)
+        p.wash(cl * sk, PAYNE, 0.6, rim=0.8, flow=0.4, blotch=0.05)                             # long dusk clouds
+        lit = p.soften(p.rough(p.stroke([(x + 8, y + h * 0.35), (x + w - 12, y + h * 0.35 - 1.2)], h * 0.35), 2, 14), 1.2)
+        p.wash(lit * sk, GOLD_D, 0.6, rim=0.2, flow=0.4)                                       # their undersides lit
+    # 2 the beam: lifted out of the wet sky with a damp brush, a narrow core in a wider glow, widening and fading
+    # as it sweeps left; over bare paper it simply ends, so the text corner stays clean
+    lx, ly = tx - 10, ty + 11 * k
+    # the cover's angle (it drops about one unit in eight), and it is spent by x ~330, inside the blue
+    gone = ramp_x(250, lx, 0.0, 1.0) ** 0.8
+    broken = np.clip(0.55 + 0.9 * (pages.warped(40 * S, 77) - 0.5), 0, 1)
+    glow = p.soften(p.rough(p.poly([(lx, ly - 6), (-40, ly + 40), (-40, ly + 150), (lx, ly + 8)]), 4, 18), 12) * gone
+    core = p.soften(p.rough(p.poly([(lx, ly - 3), (-40, ly + 52), (-40, ly + 98), (lx, ly + 5)]), 2, 14, fine=0.4), 2.5)
+    core = core * gone
+    stub = p.soften(p.poly([(tx + 10, ly - 4), (620, ly - 30), (620, ly + 4), (tx + 10, ly + 6)]), 6)
+    beam = np.clip(np.maximum((glow * 0.55 + core * 0.7) * (0.45 + 0.55 * broken), stub * 0.85), 0, 1) * around
+    p.lift(beam, 0.85)
+    near = ramp_x(lx - 150, lx, 0.0, 1.0)
+    p.wash(beam * fade * near, GOLD_D, 0.55, rim=0, flow=0.5, blotch=0.04)          # warm only near the lamp
+    # 3 a far headland on the left, cool
+    p.wash(p.rough(p.poly([(-10, hz + 1), (20, hz - 12), (70, hz - 20), (120, hz - 16), (170, hz - 6),
+                           (200, hz + 1)]), 1.0, 8), ULTRA, 0.75, rim=1.4, flow=0.25)
+    # 4 the sea: ultramarine and violet darkening toward us, the sunset laid on it as one soft lifted glow
+    sea = p.rough(p.poly([(-20, hz), (600, hz), (600, 704), (-20, 704)]), 0.4, 12)
+    p.wash(sea * around, ULTRA, 1.2, rim=1.0, flow=0.3, blotch=0.06, vary=ramp_y(hz, 684, 0.6, 1.3))
+    p.wash(sea * around, VIOLET, 0.6, rim=0, flow=0.3, blotch=0.05)
+    gl = p.soften(p.rough(p.ellipse(170, 520, 130, 26), 6, 20), 14) * around * ramp_y(502, 600, 1.0, 0.0)
+    p.lift(gl, 0.45)
+    p.wash(gl, GOLD_D, 0.8, rim=0, flow=0.5, blotch=0.05)
+    p.wash(p.soften(p.poly([(-20, 590), (600, 580), (600, 704), (-20, 704)]), 20) * around, PAYNE, 0.5, rim=0,
+           flow=0.35, vary=ramp_y(580, 684, 0.3, 1.0))
+    # 5 the cliff and the grass in loose wet patches, then glazed cool: the land has lost the light
+    p.loose(face, [RAW, SIENNA, RAW, UMBER], 1.0, n=12, rough=0.6, patch=0.35)
+    p.wash(face * ramp_x(440, 580, 0.0, 1.0), UMBER, 0.6, rim=0.6, flow=0.5, blotch=0.07)
+    p.loose(grass, [SAP, OLIVE, RAW, SAP], 0.95, n=14, rough=0.6, patch=0.3)
+    p.wash(p.soften(p.stroke(under[::-1], 10, taper=False), 4) * np.maximum(face, grass), OLIVE, 0.45, rim=0, flow=0.5)
+    p.wash(land, ULTRA, 0.95, rim=0.3, flow=0.4, blotch=0.05, vary=ramp_x(300, 600, 0.6, 1.2))
+    p.wash(land, PAYNE, 0.35, rim=0.2, flow=0.4, vary=ramp_x(300, 600, 0.3, 1.2))
+    # 6 rocks at the waterline and the surf lifted round them, pale blue-grey in the dusk
+    for x, y, rx, ry in [(470, 600, 26, 9), (360, 594, 12, 5), (296, 572, 6, 3), (560, 610, 18, 6)]:
+        r = p.rough(p.ellipse(x, y, rx, ry) * (Yw < y + ry * 0.3), rx * 0.12, 3, fine=0.4)   # sits on a flat waterline
+        p.wash(r, UMBER, 1.0, rim=1.0, gran=0.4)
+        p.wash(r * ramp_y(y - ry * 0.2, y + ry * 0.3, 0.0, 1.0), PAYNE, 1.2, rim=0.4)
+        p.wash(r * ramp_x(x - rx, x, 1.0, 0.0) * ramp_y(y - ry, y, 1.0, 0.0), SIENNA, 0.6, rim=0)   # lit top-left
+    for pts, w in [([(286, 566), (320, 586), (380, 594), (440, 600), (510, 606), (600, 608)], 10),
+                   ([(450, 626), (520, 632), (600, 634)], 6)]:
+        fm = p.soften(p.rough(p.stroke(pts, w), 2.0, 14, fine=0.5), 2.5) * (1 - face)
+        p.lift(fm, 0.55)
+        p.wash(fm, SHADOW, 0.35, rim=0.6, flow=0.3)
+    near = p.rough(p.poly([(-20, 660), (150, 652), (330, 664), (600, 650), (600, 704), (-20, 704)]), 4, 30, fine=0.5)
+    p.wash(near * around, ULTRA, 0.6, rim=1.2, flow=0.5, blotch=0.08)
+    # 7 the lighthouse holds the last light: a rose glaze on the left face, the right in violet shadow, two bands,
+    # the lamp room lit gold with its lamp lifted, a soft halo round it
+    shade = p.soften(p.poly([(tx + 1, tb), (tx + 1, ty + 16 * k), (tx + 7.5 * k, ty + 16 * k), (tx + 10 * k, tb)]), 3)
+    p.wash(tower, ROSE, 0.22, rim=0.8, flow=0.4, blotch=0.04)
+    p.loose(shade * np.clip(tower * 1.15, 0, 1), [VIOLET, ULTRA, VIOLET], 0.8, n=5, rough=0.2, patch=0.5,
+            vary=ramp_x(tx - 4, tx + 20, 0.2, 1.0))
+    p.wash(tower * ramp_x(tx + 4, tx + 20, 0.0, 1.0), ULTRA, 0.35, rim=0.4, flow=0.3)
+    for yb in (ty + 46 * k, ty + 76 * k):
+        p.wash(p.rough(p.poly([(tx - 20, yb), (tx + 20, yb), (tx + 20, yb + 9), (tx - 20, yb + 9)]), 0.5, 4) * tower,
+               VIOLET, 0.75, rim=1.0, flow=0.4)
+    room = p.rough(p.poly([(tx - 11, ty + 15 * k), (tx + 11, ty + 15 * k), (tx + 11, ty + 7 * k), (tx - 11, ty + 7 * k)]),
+                   0.4, 3)
+    p.wash(room, GOLD_D, 1.1, rim=0.8, flow=0.4)
+    p.wash(room * ramp_x(tx - 2, tx + 11, 0.0, 1.0), SIENNA, 0.6, rim=0)
+    p.lift(room * p.soften(p.ellipse(tx - 2, ty + 11.5 * k, 4.5, 5.5), 2.0), 0.6)
+    for mx in (tx - 5, tx + 5):
+        p.wash(p.rough(p.stroke([(mx, ty + 7.5 * k), (mx, ty + 14.5 * k)], 1.2, taper=False), 0.1, 1), PAYNE, 1.2, rim=0)
+    p.wash(p.rough(p.poly([(tx - 22, ty + 18 * k), (tx + 22, ty + 18 * k), (tx + 22, ty + 15 * k), (tx - 22, ty + 15 * k)]),
+                   0.4, 3), PAYNE, 2.2, rim=0.5)                                          # the gallery
+    p.wash(p.rough(p.poly([(tx - 15, ty + 7.5 * k), (tx + 15, ty + 7.5 * k), (tx, ty - 1 * k)]), 0.4, 3), PAYNE, 2.4,
+           rim=0.6)
+    halo = p.soften(p.ellipse(tx, ty + 11 * k, 36, 30), 14) * (1 - np.clip(tower * 1.2, 0, 1)) * (1 - lantern)
+    p.lift(halo * fade, 0.5)
+    p.wash(halo * fade, GOLD_D, 0.6, rim=0, flow=0.3, blotch=0.03)
+    p.wash(p.rough(p.poly([(tx - 6, tb - 2), (tx - 6, tb - 14), (tx - 1, tb - 14), (tx - 1, tb - 2)]), 0.3, 2), PAYNE,
+           0.9, rim=0.4)
+    # 8 the keeper's cottage and a shed, cool in the dusk, two windows lit
+    for hx, hw, hh, hd in [(400, 36, 22, 10), (448, 20, 14, 6)]:
+        hb = y_at(top, hx + hw / 2) + 5
+        front, side, roof = (p.rough(m, 0.6, 4, fine=0.3) for m in house_masks(p, hx, hb, hw, hh, hd, "tile"))
+        p.lift(np.clip(blur(np.maximum.reduce([front, side, roof]), 0.4 * S) * 1.4, 0, 1), 0.9)
+        p.wash(front, ROSE, 0.3, rim=1.0, flow=0.4, blotch=0.04)
+        p.wash(front, VIOLET, 0.35, rim=0.4, flow=0.4)
+        p.loose(side, [ULTRA, VIOLET, ULTRA], 0.85, n=3, rough=0.2, patch=0.7)
+        p.loose(roof, [UMBER, SIENNA, UMBER], 1.0, n=4, rough=0.2, patch=0.6)
+        for wx in ([hx + 6, hx + 24] if hw > 30 else []):
+            p.wash(p.rough(p.poly([(wx, hb - 15), (wx + 4, hb - 15), (wx + 4, hb - 9), (wx, hb - 9)]), 0.2, 1) * front,
+                   GOLD_D, 1.3, rim=0.6)
+    p.finish()
+    return p
+
+
+SCENES = {"city": city, "blossom": blossom, "autumn": autumn, "beach": beach, "lighthouse": lighthouse,
+          "lighthouse-dusk": lighthouse_dusk}
 
 if __name__ == "__main__":
     for name in sys.argv[1:] or SCENES:

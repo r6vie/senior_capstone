@@ -1039,3 +1039,21 @@ Pending Josef's review of the new canvas.
   C's mark was repainted as a gull-wing open book; invented features and job titles were taken out of the copy.
   The critics split: the first picked C, the second A.
 - Source: `docs/design/shelf/brand2_boards.py`.
+
+## 2026-11-23: the dusk lighthouse's beam and book screen; the city bridge; the winter firs
+
+- **Beam (Josef: "add a beam of light from the lighthouse at dusk").** `covers.lighthouse`: the beam is lifted out of
+  the wet sky (paper showing through, not yellow laid on blue), a narrow core in a wider glow, broken in patches,
+  dipping toward the sea and fading before the left edge, just under the title; warm only near the lamp; a short stub
+  on the right. Cream title still 6.1:1.
+- **Book screen ("then make a book screen for it").** `WCBookLighthouse2` beside the cover, both moved to a new row
+  (y 13200); page art `pages2.lighthouse_dusk`: the cover's dusk wider, night gathered round the tower so the beam
+  has a dark sky to cut through, the beam at the cover's angle and spent inside the blue, stars, lit cottage, flat
+  bottomed rocks lit top-left. Same book text as the daytime lighthouse.
+- **City page ("make the bridge go all the way to the right side").** The deck, piers, arches and lamps run edge to
+  edge; the spans widen toward the right so it isn't a picket fence.
+- **Winter cover ("the bottom of the trees are kind of weirdly translucent").** Each fir is lifted to paper and given
+  one even dark ground before its patches, so it is as deep in the snow as against the sky; snow lifted over each
+  foot and a violet shadow thrown right.
+- Critic round: one (beam airbrushed and muddy, page beam a stain, a star on the beam, smudge rocks, even arches,
+  skirt-like bottom tiers); all fixed. Checked in local renders, not on the live canvas.

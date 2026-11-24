@@ -773,36 +773,44 @@
    "x": 1360,
    "y": 1200
   },
-  "STCoverChannel.dc.html": {
-   "x": 0,
-   "y": 2400,
-   "w": 600,
-   "h": 1090,
-   "title": "G \u00b7 Channel",
-   "page": "stipple"
-  },
   "STCoverFields.dc.html": {
-   "x": 680,
+   "x": 0,
    "y": 2400,
    "w": 600,
    "h": 1090,
    "title": "H \u00b7 Fields",
    "page": "stipple"
   },
-  "STCoverSweep.dc.html": {
+  "STCoverDunes.dc.html": {
+   "x": 680,
+   "y": 2400,
+   "w": 600,
+   "h": 1090,
+   "title": "K \u00b7 Dunes",
+   "page": "stipple"
+  },
+  "STCoverNight.dc.html": {
    "x": 1360,
    "y": 2400,
    "w": 600,
    "h": 1090,
-   "title": "I \u00b7 Sweep",
+   "title": "L \u00b7 Night",
    "page": "stipple"
   },
-  "STCoverPlume.dc.html": {
+  "STCoverDawn.dc.html": {
    "x": 2040,
    "y": 2400,
    "w": 600,
    "h": 1090,
-   "title": "J \u00b7 Plume",
+   "title": "M \u00b7 Dawn",
+   "page": "stipple"
+  },
+  "STCoverErg.dc.html": {
+   "x": 2720,
+   "y": 2400,
+   "w": 600,
+   "h": 1090,
+   "title": "N \u00b7 Erg",
    "page": "stipple"
   },
   "STCoverLayers.dc.html": {
@@ -1136,10 +1144,10 @@
   "WCCoverLighthouse2.dc.html": {
    "h": 1090,
    "page": "watercolor",
-   "title": "Cover \u00b7 Lighthouse at dusk (painted to the top)",
+   "title": "Cover \u00b7 Lighthouse at dusk with its beam",
    "w": 600,
-   "x": 1360,
-   "y": 12000
+   "x": 0,
+   "y": 13200
   },
   "WCCoverMesa.dc.html": {
    "h": 1090,
@@ -1252,6 +1260,14 @@
    "w": 1440,
    "x": 680,
    "y": 9600
+  },
+  "WCBookLighthouse2.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen \u00b7 lighthouse at dusk with its beam",
+   "w": 1440,
+   "x": 680,
+   "y": 13200
   }
  },
  "createdOnFiles": {
@@ -1584,10 +1600,11 @@
   "STCoverStream.dc.html",
   "STCoverTongues.dc.html",
   "STCoverFan.dc.html",
-  "STCoverChannel.dc.html",
   "STCoverFields.dc.html",
-  "STCoverSweep.dc.html",
-  "STCoverPlume.dc.html",
+  "STCoverDunes.dc.html",
+  "STCoverNight.dc.html",
+  "STCoverDawn.dc.html",
+  "STCoverErg.dc.html",
   "WCBookCity.dc.html",
   "WCBookBlossom.dc.html",
   "WCBookAutumn.dc.html",
@@ -1601,7 +1618,8 @@
   "Brand2B.dc.html",
   "Brand2C.dc.html",
   "WCBookBeach.dc.html",
-  "WCBookLighthouse.dc.html"
+  "WCBookLighthouse.dc.html",
+  "WCBookLighthouse2.dc.html"
  ],
  "pages": [
   {
