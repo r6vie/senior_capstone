@@ -1,22 +1,8 @@
-/* Settings page: plain stacked sections from the design system's recipes (fields, choices, messages).
-   Only tokens are used for colors, type and spacing. */
+/* Settings page: each section a row (docs/design/system.md Additions, "Wide pages"): what it is on the left,
+   its controls on a sunk panel on the right. Only tokens are used for colors, type and spacing. */
 
-.settings-page {
-  max-width: 640px;
-  padding: var(--s-6) var(--s-7) var(--s-8);
-}
 .settings-page .page-title {
-  margin-bottom: var(--s-5);
-}
-.settings-section {
-  display: grid;
-  gap: var(--s-3);
-  padding: var(--s-5) 0;
-  border-top: var(--line-heavy) solid var(--ink);
-}
-.settings-heading {
-  margin: 0;
-  font: 600 26px / 1.1 var(--font-serif);
+  margin-bottom: var(--s-6);
 }
 .settings-fixed {
   display: flex;
@@ -25,8 +11,16 @@
   gap: var(--s-3);
   margin: 0;
 }
-.settings-section .message {
-  margin: 0;
+/* On a wide screen the two optional details sit side by side. */
+.settings-pair {
+  display: grid;
+  gap: var(--s-4);
+}
+@media (min-width: 1100px) {
+  .settings-pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--s-5);
+  }
 }
 .settings-invites {
   display: grid;
@@ -44,10 +38,4 @@
 }
 .settings-error {
   border-width: var(--line-heavy);
-}
-
-@media (max-width: 719px) {
-  .settings-page {
-    padding: var(--s-5) var(--s-4) var(--s-6);
-  }
 }

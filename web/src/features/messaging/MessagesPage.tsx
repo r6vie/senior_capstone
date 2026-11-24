@@ -185,51 +185,57 @@ export function MessagesPage() {
   }
 
   return (
-    <main className="shell-page messages-page">
-      <p>
-        <Link to="/checkouts">Back to Checkouts</Link>
-      </p>
-      <span className="caption">{thread.book_title}</span>
-      <h1 className="page-title">Messages with {thread.other_name}</h1>
-
-      {loadFailed && (
-        <p role="status" className="muted">
-          Couldn't check for new messages just now. We'll keep trying.
+    <main className="shell-page page-rail messages-page">
+      {/* On a wide screen the head holds the left rail (docs/design/system.md Additions, "Wide pages"). */}
+      <header className="page-rail-head">
+        <p className="messages-back">
+          <Link to="/checkouts">
+            <span aria-hidden="true">← </span>Back to Checkouts
+          </Link>
         </p>
-      )}
-      <ol className="thread" aria-label={`Conversation with ${thread.other_name}`}>
-        {thread.messages.map((message) => (
-          <MessageItem key={message.id} message={message} otherName={thread.other_name} />
-        ))}
-      </ol>
+        <span className="caption">{thread.book_title}</span>
+        <h1 className="page-title">Messages with {thread.other_name}</h1>
+      </header>
+      <div className="messages-body">
+        {loadFailed && (
+          <p role="status" className="muted">
+            Couldn't check for new messages just now. We'll keep trying.
+          </p>
+        )}
+        <ol className="thread" aria-label={`Conversation with ${thread.other_name}`}>
+          {thread.messages.map((message) => (
+            <MessageItem key={message.id} message={message} otherName={thread.other_name} />
+          ))}
+        </ol>
 
-      {thread.can_write ? (
-        <form onSubmit={send} className="stack thread-form">
-          <div className="field" data-invalid={error ? "true" : undefined}>
-            <label htmlFor={textId}>Write to {thread.other_name}</label>
-            <textarea
-              id={textId}
-              value={text}
-              maxLength={MAX_MESSAGE}
-              aria-describedby={hintId}
-              onChange={(event) => {
-                setText(event.target.value);
-                setError(null);
-              }}
-            />
-            <span id={hintId} className="hint" role={error ? "alert" : undefined}>
-              {error ?? "Up to 2,000 characters. New messages show up here on their own."}
-            </span>
-          </div>
-          <div>
-            <Button type="submit" disabled={busy} aria-busy={busy}>
-              Send
-            </Button>
-          </div>
-        </form>
-      ) : (
-        <p className="muted">This conversation is closed. You can still read it.</p>
-      )}
+        {thread.can_write ? (
+          <form onSubmit={send} className="stack thread-form">
+            <div className="field" data-invalid={error ? "true" : undefined}>
+              <label htmlFor={textId}>Write to {thread.other_name}</label>
+              <textarea
+                id={textId}
+                value={text}
+                maxLength={MAX_MESSAGE}
+                aria-describedby={hintId}
+                onChange={(event) => {
+                  setText(event.target.value);
+                  setError(null);
+                }}
+              />
+              <span id={hintId} className="hint" role={error ? "alert" : undefined}>
+                {error ?? "Up to 2,000 characters. New messages show up here on their own."}
+              </span>
+            </div>
+            <div>
+              <Button type="submit" disabled={busy} aria-busy={busy}>
+                Send
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <p className="muted">This conversation is closed. You can still read it.</p>
+        )}
+      </div>
     </main>
   );
 }

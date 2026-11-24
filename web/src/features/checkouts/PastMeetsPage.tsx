@@ -77,36 +77,41 @@ export function PastMeetsPage() {
   }, [load]);
 
   return (
-    <main className="shell-page co-page">
-      <h1 className="page-title">Past meets</h1>
-      {loadFailed && (
-        <p role="alert" className="message message-error">
-          <span>!</span>
-          <span>We couldn't load your past meets. Please refresh.</span>
-        </p>
-      )}
-      {!meets && !loadFailed && <PageLoading />}
-      {meets &&
-        (meets.length === 0 ? (
-          <div className="empty">
-            <h2>Nothing here yet</h2>
-            <p className="voice co-voice">
-              Once you've met someone through a checkout, the Librarian keeps them here, with how to reach
-              them.
-            </p>
-            <p>
-              <Link to="/checkouts">Go to Checkouts</Link>
-            </p>
-          </div>
-        ) : (
-          <section className="pm-section" aria-label="People you've met">
-            <ul className="pm-list">
-              {meets.map((meet) => (
-                <MeetItem key={meet.checkout_id} meet={meet} reload={load} />
-              ))}
-            </ul>
-          </section>
-        ))}
+    <main className="shell-page page-rail co-page pm-page">
+      {/* On a wide screen the title holds the left rail (docs/design/system.md Additions, "Wide pages"). */}
+      <header className="page-rail-head">
+        <h1 className="page-title">Past meets</h1>
+      </header>
+      <div>
+        {loadFailed && (
+          <p role="alert" className="message message-error">
+            <span>!</span>
+            <span>We couldn't load your past meets. Please refresh.</span>
+          </p>
+        )}
+        {!meets && !loadFailed && <PageLoading />}
+        {meets &&
+          (meets.length === 0 ? (
+            <div className="empty">
+              <h2>Nothing here yet</h2>
+              <p className="voice co-voice">
+                Once you've met someone through a checkout, the Librarian keeps them here, with how to reach
+                them.
+              </p>
+              <p>
+                <Link to="/checkouts">Go to Checkouts</Link>
+              </p>
+            </div>
+          ) : (
+            <section className="pm-section" aria-label="People you've met">
+              <ul className="pm-list">
+                {meets.map((meet) => (
+                  <MeetItem key={meet.checkout_id} meet={meet} reload={load} />
+                ))}
+              </ul>
+            </section>
+          ))}
+      </div>
     </main>
   );
 }

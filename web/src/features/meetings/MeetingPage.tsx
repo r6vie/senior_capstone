@@ -345,6 +345,17 @@ function BackLink() {
   );
 }
 
+/** The page's head: on a wide screen it holds the left rail (docs/design/system.md Additions, "Wide pages"). */
+function RailHead({ meeting }: { meeting: Meeting }) {
+  return (
+    <header className="page-rail-head">
+      <BackLink />
+      <p className="caption">{meeting.book_title}</p>
+      <h1 className="page-title">Meeting {meeting.other_name}</h1>
+    </header>
+  );
+}
+
 export function MeetingPage() {
   const { checkoutId = "" } = useParams();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
@@ -373,7 +384,7 @@ export function MeetingPage() {
 
   if (failed) {
     return (
-      <main className="meeting-page">
+      <main className="shell-page meeting-page">
         <h1 className="page-title">Arrange your meeting</h1>
         <p className="meeting-empty">
           We couldn't find this meeting. It opens once the author says yes.{" "}
@@ -384,7 +395,7 @@ export function MeetingPage() {
   }
   if (!meeting) {
     return (
-      <main className="meeting-page" aria-busy="true">
+      <main className="shell-page meeting-page" aria-busy="true">
         <PageLoading />
       </main>
     );
@@ -392,19 +403,19 @@ export function MeetingPage() {
 
   if (!meeting.start) {
     return (
-      <main className="meeting-page">
-        <BackLink />
-        <p className="caption">{meeting.book_title}</p>
-        <h1 className="page-title">Meeting {meeting.other_name}</h1>
-        <TimesSection meeting={meeting} onChange={setMeeting} />
-        <PickSection
-          meeting={meeting}
-          onChange={(next) => {
-            setMeeting(next);
-            backToConfirmed();
-          }}
-        />
-        <DetailsSection meeting={meeting} onChange={setMeeting} />
+      <main className="shell-page page-rail meeting-page">
+        <RailHead meeting={meeting} />
+        <div>
+          <TimesSection meeting={meeting} onChange={setMeeting} />
+          <PickSection
+            meeting={meeting}
+            onChange={(next) => {
+              setMeeting(next);
+              backToConfirmed();
+            }}
+          />
+          <DetailsSection meeting={meeting} onChange={setMeeting} />
+        </div>
       </main>
     );
   }
@@ -414,50 +425,50 @@ export function MeetingPage() {
   const showDetails = !hasDetails || editingDetails;
 
   return (
-    <main className="meeting-page">
-      <BackLink />
-      <p className="caption">{meeting.book_title}</p>
-      <h1 className="page-title">Meeting {meeting.other_name}</h1>
-      <Confirmed meeting={meeting} headingRef={confirmedHeading} />
-      <div className="meeting-actions">
-        <Toggle
-          open={changingTime}
-          onToggle={() => setChangingTime(!changingTime)}
-          closed="Change the time"
-          opened="Keep this time"
-        />
-        {hasDetails && (
+    <main className="shell-page page-rail meeting-page">
+      <RailHead meeting={meeting} />
+      <div>
+        <Confirmed meeting={meeting} headingRef={confirmedHeading} />
+        <div className="meeting-actions">
           <Toggle
-            open={editingDetails}
-            onToggle={() => setEditingDetails(!editingDetails)}
-            closed="Edit where you'll meet"
-            opened="Stop editing"
+            open={changingTime}
+            onToggle={() => setChangingTime(!changingTime)}
+            closed="Change the time"
+            opened="Keep this time"
           />
+          {hasDetails && (
+            <Toggle
+              open={editingDetails}
+              onToggle={() => setEditingDetails(!editingDetails)}
+              closed="Edit where you'll meet"
+              opened="Stop editing"
+            />
+          )}
+        </div>
+        {changingTime && (
+          <>
+            <TimesSection meeting={meeting} onChange={setMeeting} />
+            <PickSection
+              meeting={meeting}
+              onChange={(next) => {
+                setMeeting(next);
+                setChangingTime(false);
+                backToConfirmed();
+              }}
+            />
+          </>
         )}
-      </div>
-      {changingTime && (
-        <>
-          <TimesSection meeting={meeting} onChange={setMeeting} />
-          <PickSection
+        {showDetails && (
+          <DetailsSection
             meeting={meeting}
-            onChange={(next) => {
-              setMeeting(next);
-              setChangingTime(false);
+            onChange={setMeeting}
+            onSaved={() => {
+              setEditingDetails(false);
               backToConfirmed();
             }}
           />
-        </>
-      )}
-      {showDetails && (
-        <DetailsSection
-          meeting={meeting}
-          onChange={setMeeting}
-          onSaved={() => {
-            setEditingDetails(false);
-            backToConfirmed();
-          }}
-        />
-      )}
+        )}
+      </div>
     </main>
   );
 }

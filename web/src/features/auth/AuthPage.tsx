@@ -87,7 +87,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
       )}
       <form onSubmit={submit} className="stack">
         {signingUp && (
-          <>
+          <div className="auth-names">
             <TextField
               label="First name"
               value={firstName}
@@ -95,7 +95,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
               autoComplete="given-name"
             />
             <TextField label="Last name" value={lastName} onChange={setLastName} autoComplete="family-name" />
-          </>
+          </div>
         )}
         <TextField
           label="Email"

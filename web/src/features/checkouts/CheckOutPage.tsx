@@ -5,6 +5,7 @@ import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
 import { PageLoading } from "../../ui/Loading";
+import { BookObject } from "../discovery/BookObject";
 import "./Checkouts.css";
 import { usePageTitle } from "../../ui/usePageTitle";
 
@@ -82,11 +83,18 @@ export function CheckOutPage() {
   }
 
   return (
-    <main className="shell-page checkouts-page">
-      <span className="caption">Check out</span>
-      <h1 className="page-title checkout-book-title">{book.title}</h1>
-      <p className="checkout-byline">by {book.author_name}</p>
-      {book.blurb && <p className="voice checkout-blurb">{book.blurb}</p>}
+    <main className="shell-page page-rail checkouts-page">
+      {/* On a wide screen the head holds the left rail, with the book itself under it (docs/design/system.md
+          Additions, "Wide pages"). */}
+      <header className="page-rail-head">
+        <span className="caption">Check out</span>
+        <h1 className="page-title checkout-book-title">{book.title}</h1>
+        <p className="checkout-byline">by {book.author_name}</p>
+        {book.blurb && <p className="voice checkout-blurb">{book.blurb}</p>}
+        <div className="checkout-book">
+          <BookObject id={book.id} book={{ title: book.title, authorName: book.author_name }} />
+        </div>
+      </header>
 
       <form onSubmit={submit} className="stack checkout-form">
         <div className="field" data-invalid={error && !needsOwnBook ? "true" : undefined}>
