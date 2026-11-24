@@ -186,24 +186,6 @@ async def drafter(client, database):
     return person
 
 
-async def test_a_draft_chapter_edit_can_be_restored_like_a_rewrite(client, drafter):
-    edited = (await edit_chapter(client, drafter, "c0", title="My words")).json()
-    assert edited["chapters"][0]["title"] == "My words"
-    assert edited["chapters"][0]["has_previous"] is True
-    assert edited["can_undo"] is False
-
-    back = (await client.post("/interview/book/chapters/c0/restore", headers=drafter["headers"])).json()
-    assert back["chapters"][0]["title"] == "Chapter 0"
-    assert back["chapters"][0]["has_previous"] is False
-
-
-async def test_a_draft_blurb_edit_can_be_restored(client, drafter):
-    edited = (await edit(client, drafter, blurb="My own back cover.")).json()
-    assert edited["has_previous_blurb"] is True
-    back = (await client.post("/interview/book/blurb/restore", headers=drafter["headers"])).json()
-    assert back["blurb"] == "Draft blurb."
-
-
 async def test_a_draft_title_edit_stays_a_draft(client, drafter):
     edited = (await edit(client, drafter, title="My own title")).json()
     assert edited["title"] == "My own title"

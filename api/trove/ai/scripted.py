@@ -252,34 +252,6 @@ POOL = [
         ],
     },
 ]
-# A rewrite swaps a chapter for this telling; rewriting again swaps it back, so it always visibly changes.
-RETOLD = {
-    "Splitting a fry line between two jobs": {
-        "title": "The fryer kept stopping to make change",
-        "summary": "Waits at the stand ran around 25 minutes because whoever fried also took the money. Once one "
-        "person walked the line writing each order on the paper boat, they dropped under 10.",
-    },
-    "Checking the simple things before the tools": {
-        "title": "Slats and bolts before any tool",
-        "summary": "Most things that come to me broken are loose or jammed. So I look first: slats, bolts by hand, "
-        "paper tray, jam light. The back panel only comes off after that.",
-    },
-    "Why the creek numbers jumped after rain": {
-        "title": "Nitrate numbers that jumped after rain",
-        "summary": "Two months of readings told us nothing, because rain and the time of day were moving them. A "
-        "fixed 7am Tuesday, a rain log and a blank each time made the numbers mean something.",
-    },
-    "Stuck with the line at the county fair": {
-        "title": "Stuck with the line at the fair",
-        "summary": "Every summer at the county fair, the line was mine when it backed up. Being the kid at my "
-        "family's stand meant that job came to me whether I'd asked for it or not.",
-    },
-    "Running it one night for my mom": {
-        "title": "One night to convince the fryer",
-        "summary": "Arguing wasn't going to move my mom off the way she ran the fryer. I ran the new line myself for "
-        "a single night, and that settled it.",
-    },
-}
 DRAFT_BLURB = (
     "I worked my family's fry stand at the county fair every summer, and I noticed the fryer kept stopping to take "
     "orders. One person walking the line taking orders and money cut waits from around 25 minutes to under 10. On "
@@ -400,18 +372,6 @@ def _book_chapters(text: str) -> list[dict]:
 
 def _blurb(_text: str) -> dict:
     return {"blurb": REMOVED_BLURB}
-
-
-def _rewrite(text: str) -> dict:
-    chapter = next(c for c in _book_chapters(text) if c["rewrite_this"])
-    if retold := RETOLD.get(chapter["title"]):
-        return retold
-    for original, telling in RETOLD.items():
-        if telling["title"] == chapter["title"]:
-            return next(
-                {"title": c["title"], "summary": c["summary"]} for c in POOL if c["title"] == original
-            )
-    return {"title": f"{chapter['title']}, retold", "summary": chapter["summary"]}
 
 
 ADDING_QUESTIONS = [
@@ -543,7 +503,6 @@ REPLIES = {
     "interview/draft": _draft,
     "interview/finish": _finish,
     "interview/blurb": _blurb,
-    "interview/rewrite": _rewrite,
 }
 
 

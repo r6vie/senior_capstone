@@ -903,8 +903,7 @@ async def remove_chapter(
     remaining = [DraftChapter.model_validate(c) for c in book["chapters"] if c["id"] != chapter_id]
     if len(remaining) < books.MIN_CHAPTERS:
         raise conflict(f"A book needs at least {books.MIN_CHAPTERS} chapters.")
-    # The book no longer covers what it did, so the back cover is rewritten for what's left. A rewrite
-    # keeps each chapter's topic, so it leaves the blurb alone.
+    # The book no longer covers what it did, so the back cover is rewritten for what's left.
     blurb = await ask_engine(
         engine.write_blurb(
             claude, turns=book_turns(interview), chapters=remaining, leaks=leak_check(interview)
@@ -918,83 +917,9 @@ async def remove_chapter(
     return books.my_book_view(book)
 
 
-async def rewrite_chapter(
-    database: AsyncDatabase, claude: Claude, user: dict, chapter_id: str
-) -> MyBookResponse:
-    interview = await reviewing_interview(database, user)
-    book = await own_draft(database, user, chapter_id)
-    chapters = [DraftChapter.model_validate(chapter) for chapter in book["chapters"]]
-    current = next(chapter for chapter in book["chapters"] if chapter["id"] == chapter_id)
-    chapter = await ask_engine(
-        engine.rewrite_chapter(
-            claude,
-            turns=book_turns(interview),
-            chapters=chapters,
-            chapter_id=chapter_id,
-            leaks=leak_check(interview),
-            spark_titles=spark_titles_of(interview),
-        )
-    )
-    if chapter.title == current["title"] and chapter.summary == current["summary"]:
-        return books.my_book_view(book, rewrite_unchanged=True)
-    updated = await books.replace_chapter(
-        database,
-        user["_id"],
-        {
-            **chapter.model_dump(),
-            "id": chapter_id,
-            "previous": {
-                "title": current["title"],
-                "summary": current["summary"],
-                "quotes": current["quotes"],
-            },
-        },
-    )
-    if updated is None:
-        raise conflict("Your book is already on the shelf.")
-    return books.my_book_view(updated)
-
-
-async def restore_chapter(database: AsyncDatabase, user: dict, chapter_id: str) -> MyBookResponse:
-    """Go back to a chapter's last version, during the review."""
-    await reviewing_interview(database, user)
-    await own_draft(database, user, chapter_id)
-    book = await books.restore_chapter(database, user["_id"], chapter_id)
-    if book is None:
-        raise conflict("There's no earlier version of that chapter.")
-    return books.my_book_view(book)
-
-
-async def rewrite_blurb(database: AsyncDatabase, claude: Claude, user: dict) -> MyBookResponse:
-    """Write the draft's back cover again."""
-    interview = await reviewing_interview(database, user)
-    book = await books.get_book_of(database, user["_id"])
-    blurb = await ask_engine(
-        engine.write_blurb(
-            claude,
-            turns=book_turns(interview),
-            chapters=[DraftChapter.model_validate(chapter) for chapter in book["chapters"]],
-            leaks=leak_check(interview),
-        )
-    )
-    book = await books.set_draft_blurb(database, user["_id"], blurb, previous=book.get("blurb"))
-    if book is None:
-        raise conflict("Your book is already on the shelf.")
-    return books.my_book_view(book)
-
-
-async def restore_blurb(database: AsyncDatabase, user: dict) -> MyBookResponse:
-    """Go back to the last back cover, during the review."""
-    await reviewing_interview(database, user)
-    book = await books.restore_draft_blurb(database, user["_id"])
-    if book is None:
-        raise conflict("There's no earlier back cover.")
-    return books.my_book_view(book)
-
-
 async def change_title(database: AsyncDatabase, claude: Claude, user: dict, index: int) -> MyBookResponse:
     """Change to another of the three titles. The book is finished again to match, from the pool,
-    without any chapter the member removed. Earlier rewrites of chapters may be replaced."""
+    without any chapter the member removed. The member's own edits to chapters may be replaced."""
     interview = await reviewing_interview(database, user)
     book = await books.get_book_of(database, user["_id"])
     if not interview.get("draft"):

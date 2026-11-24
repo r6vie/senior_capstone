@@ -354,7 +354,7 @@ async def headers(client):
 @pytest.fixture
 def librarian_engine(monkeypatch, fake_claude):
     fake = FakeEngine()
-    for name in ("next_turn", "draft_book", "finish_book", "write_blurb", "rewrite_chapter"):
+    for name in ("next_turn", "draft_book", "finish_book", "write_blurb"):
         monkeypatch.setattr(engine, name, getattr(fake, name))
     return fake
 

@@ -42,8 +42,6 @@ SHORT_ANSWER_WORDS, UNSURE_ANSWER_WORDS = 10, 15
 MIN_CHAPTERS, MAX_CHAPTERS = 3, 5
 # A quote shorter than this can't show a chapter is theirs ("I made it.").
 MIN_QUOTE_WORDS = 5
-# A rewrite this close to the original isn't a rewrite.
-REWRITE_TOO_CLOSE = 0.9
 # A book may grow past its first version, to this many chapters (docs/review/decisions.md, row 1).
 MAX_BOOK_CHAPTERS = 8
 # A round of adding is short. Skips count only toward the second limit, so skipping can't run forever.
@@ -328,11 +326,6 @@ class _Draft(BaseModel):
     blurb: str
 
 
-class _Retold(BaseModel):
-    title: str
-    summary: Summary
-
-
 class _FinishedChapter(BaseModel):
     pool_id: str
     title: str
@@ -536,42 +529,6 @@ async def write_blurb(
         if blurb and not leaks(blurb):
             return blurb
     raise ValueError("The blurb was empty, too long or carried a term the member never said.")
-
-
-async def rewrite_chapter(
-    claude: Claude,
-    *,
-    turns: list[Turn],
-    chapters: list[DraftChapter],
-    chapter_id: str,
-    leaks: Callable[[str], bool] = _never,
-    spark_titles: list[str] | None = None,
-) -> DraftChapter:
-    """The same chapter, better told: a new title and summary, keeping its id, topic and quotes. One
-    too close to the original gets one more try. After that the original comes back unchanged."""
-    current = next((chapter for chapter in chapters if chapter.id == chapter_id), None)
-    if current is None:
-        raise ValueError(f"No chapter {chapter_id!r} in this book.")
-    listing = json.dumps(
-        [{**chapter.model_dump(), "rewrite_this": chapter.id == chapter_id} for chapter in chapters],
-        indent=1,
-    )
-    content = (
-        f"{_transcript(turns)}\n\n<book_chapters>\n{listing}\n</book_chapters>\n\n"
-        "Rewrite the title and summary of the chapter marked rewrite_this."
-    )
-    for attempt in range(2):
-        note = "\n\n" + load_prompt("interview/retry_rewrite") if attempt else ""
-        raw = await _ask(claude, "interview/rewrite", content + note, _Retold, BOOK_EFFORT)
-        close = SequenceMatcher(None, current.summary, raw.summary).ratio() > REWRITE_TOO_CLOSE
-        if (
-            not close
-            and not leaks(f"{raw.title} {raw.summary}")
-            and not _too_close_to_a_spark(raw.title, spark_titles)
-        ):
-            # The quotes are what tie the chapter to its topic, so they never change on a rewrite.
-            return current.model_copy(update={"title": raw.title, "summary": raw.summary})
-    return current
 
 
 async def next_adding_turn(

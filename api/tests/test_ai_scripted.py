@@ -61,10 +61,6 @@ async def test_a_whole_interview_walks_through_on_the_scripted_ai(client, databa
         assert all(quote.casefold() in said for quote in chapter["quotes"])
 
     first = book["chapters"][0]
-    rewritten = await client.post(f"/interview/book/chapters/{first['id']}/rewrite", headers=headers)
-    assert rewritten.json()["chapters"][0]["title"] != first["title"]
-    again = await client.post(f"/interview/book/chapters/{first['id']}/rewrite", headers=headers)
-    assert again.json()["chapters"][0]["title"] == first["title"]
 
     removed = await client.delete(f"/interview/book/chapters/{first['id']}", headers=headers)
     assert all(chapter["id"] != first["id"] for chapter in removed.json()["chapters"])

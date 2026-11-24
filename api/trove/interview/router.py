@@ -182,46 +182,6 @@ async def remove_chapter(
     return await service.remove_chapter(database, claude, user, chapter_id)
 
 
-@router.post("/book/chapters/{chapter_id}/rewrite", response_model=MyBookResponse)
-async def rewrite_chapter(
-    chapter_id: str,
-    user: dict = Depends(get_current_user),
-    database: AsyncDatabase = Depends(get_database),
-    claude: Claude = Depends(get_claude),
-) -> MyBookResponse:
-    """Tell the chapter again. `rewrite_unchanged` means it couldn't be told better, and nothing changed."""
-    return await service.rewrite_chapter(database, claude, user, chapter_id)
-
-
-@router.post("/book/chapters/{chapter_id}/restore", response_model=MyBookResponse)
-async def restore_chapter(
-    chapter_id: str,
-    user: dict = Depends(get_current_user),
-    database: AsyncDatabase = Depends(get_database),
-) -> MyBookResponse:
-    """Go back to the chapter's last version (`has_previous`), during the review."""
-    return await service.restore_chapter(database, user, chapter_id)
-
-
-@router.post("/book/blurb", response_model=MyBookResponse)
-async def rewrite_blurb(
-    user: dict = Depends(get_current_user),
-    database: AsyncDatabase = Depends(get_database),
-    claude: Claude = Depends(get_claude),
-) -> MyBookResponse:
-    """Write the draft's back cover again."""
-    return await service.rewrite_blurb(database, claude, user)
-
-
-@router.post("/book/blurb/restore", response_model=MyBookResponse)
-async def restore_blurb(
-    user: dict = Depends(get_current_user),
-    database: AsyncDatabase = Depends(get_database),
-) -> MyBookResponse:
-    """Go back to the last back cover (`has_previous_blurb`), during the review."""
-    return await service.restore_blurb(database, user)
-
-
 @router.post("/book/title", response_model=MyBookResponse)
 async def change_title(
     data: TitleRequest,

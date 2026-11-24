@@ -838,7 +838,7 @@
           "Books"
         ],
         "summary": "Edit My Chapter",
-        "description": "Change a chapter's title or summary. Its quotes stay. In a draft, the last version can be\nrestored (`has_previous`, POST /interview/book/chapters/{id}/restore).",
+        "description": "Change a chapter's title or summary. Its quotes stay.",
         "operationId": "edit_my_chapter_books_me_chapters__chapter_id__patch",
         "security": [
           {
@@ -1464,156 +1464,6 @@
             }
           }
         }
-      }
-    },
-    "/interview/book/chapters/{chapter_id}/rewrite": {
-      "post": {
-        "tags": [
-          "Interview"
-        ],
-        "summary": "Rewrite Chapter",
-        "description": "Tell the chapter again. `rewrite_unchanged` means it couldn't be told better, and nothing changed.",
-        "operationId": "rewrite_chapter_interview_book_chapters__chapter_id__rewrite_post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "chapter_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Chapter Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MyBookResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/interview/book/chapters/{chapter_id}/restore": {
-      "post": {
-        "tags": [
-          "Interview"
-        ],
-        "summary": "Restore Chapter",
-        "description": "Go back to the chapter's last version (`has_previous`), during the review.",
-        "operationId": "restore_chapter_interview_book_chapters__chapter_id__restore_post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "chapter_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Chapter Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MyBookResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/interview/book/blurb": {
-      "post": {
-        "tags": [
-          "Interview"
-        ],
-        "summary": "Rewrite Blurb",
-        "description": "Write the draft's back cover again.",
-        "operationId": "rewrite_blurb_interview_book_blurb_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MyBookResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/interview/book/blurb/restore": {
-      "post": {
-        "tags": [
-          "Interview"
-        ],
-        "summary": "Restore Blurb",
-        "description": "Go back to the last back cover (`has_previous_blurb`), during the review.",
-        "operationId": "restore_blurb_interview_book_blurb_restore_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MyBookResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
       }
     },
     "/interview/book/title": {
@@ -3094,11 +2944,6 @@
             },
             "type": "array",
             "title": "Quotes"
-          },
-          "has_previous": {
-            "type": "boolean",
-            "title": "Has Previous",
-            "default": false
           }
         },
         "type": "object",
@@ -4764,16 +4609,6 @@
               }
             ],
             "title": "Revised At"
-          },
-          "has_previous_blurb": {
-            "type": "boolean",
-            "title": "Has Previous Blurb",
-            "default": false
-          },
-          "rewrite_unchanged": {
-            "type": "boolean",
-            "title": "Rewrite Unchanged",
-            "default": false
           }
         },
         "type": "object",
