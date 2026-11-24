@@ -39,8 +39,14 @@ export function Frame({
   canLeave = true,
   quiet = false,
   eyebrow,
+  slowAfter = SLOW_AFTER_MS,
+  stillLine = "Still working. Your answers are saved.",
   children,
 }: {
+  /** How long a wait runs before it says it's still working. */
+  slowAfter?: number;
+  /** What it says then; shorter where the page already says the answers are saved. */
+  stillLine?: string;
   phase?: Phase;
   canLeave?: boolean;
   /** The line steps back, on a screen where something below it is the focus. */
@@ -56,9 +62,9 @@ export function Frame({
   useEffect(() => {
     setSlow(false);
     if (!busy) return;
-    const timer = setTimeout(() => setSlow(true), SLOW_AFTER_MS);
+    const timer = setTimeout(() => setSlow(true), slowAfter);
     return () => clearTimeout(timer);
-  }, [busy]);
+  }, [busy, slowAfter]);
   // The label steps aside with the line: only once the waiting line shows (Waiting), never for a quick reply.
   const [waitShows, setWaitShows] = useState(false);
   useEffect(() => {
@@ -107,7 +113,7 @@ export function Frame({
         </h1>
         {slow && (
           <p className="iv-still" role="status">
-            Still working. Your answers are saved.
+            {stillLine}
           </p>
         )}
       </section>
@@ -130,7 +136,9 @@ export function IvTop() {
       </Link>
       <span className="iv-grow" />
       <Link to="/my-book" className="button button-quiet">
-        Leave<span className="iv-wide-only"> for now</span>
+        {/* Whole words in each, so the button's underline runs unbroken. */}
+        <span className="iv-wide-only">Leave for now</span>
+        <span className="iv-narrow-only">Leave</span>
       </Link>
       {user && (
         <Link to="/settings" className="avatar" aria-label="Settings">

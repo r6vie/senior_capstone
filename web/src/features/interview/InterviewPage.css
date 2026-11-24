@@ -35,6 +35,26 @@
   .iv-wide-only {
     display: none;
   }
+  .iv-narrow-only {
+    display: inline;
+  }
+}
+.iv-narrow-only {
+  display: none;
+}
+/* Arriving on a question from another screen (Start, a resume) is a short crossfade, not a cut. */
+.iv-ask {
+  animation: iv-arrive 220ms ease-out both;
+}
+@keyframes iv-arrive {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .iv-ask {
+    animation: none;
+  }
 }
 .iv-phases {
   display: flex;
@@ -88,6 +108,18 @@
 }
 .iv-say[data-quiet="true"] {
   font-size: var(--iv-say-quiet-size);
+}
+/* "Still working" sits in the gap under the line or the question, so nothing under it moves when it comes. */
+.iv-line,
+.iv-question {
+  position: relative;
+}
+.iv-line > .iv-still,
+.iv-question > .iv-still {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin: 2px 0 0;
 }
 .iv-still {
   margin: var(--s-3) 0 0;

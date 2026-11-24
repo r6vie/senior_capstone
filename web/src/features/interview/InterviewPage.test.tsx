@@ -195,7 +195,9 @@ describe("InterviewPage", () => {
       await skipIntro();
       const start = await screen.findByRole("button", { name: "Start the interview" });
       expect((start as HTMLButtonElement).disabled).toBe(true);
-      expect(screen.getByText("About 10 minutes")).toBeTruthy();
+      // The minutes are said once, in the third line, not again beside Start.
+      expect(screen.getByText(/About 10 minutes\. Nobody sees it/)).toBeTruthy();
+      expect(screen.queryByText("About 10 minutes")).toBeNull();
       // Josef dropped both helper lines.
       expect(screen.queryByText(/Choose both when both apply/)).toBeNull();
       expect(screen.queryByText(/not shown on your book/)).toBeNull();
