@@ -308,48 +308,19 @@ describe("InterviewPage", () => {
       }
       expect(screen.queryByRole("button", { name: /I've said enough/ })).toBeNull();
     });
-
-    it("isn't offered on the Shape step", async () => {
-      renderWith(at({ id: "me", stage: "shaping", phase: "shape", playback: "Is this you?" }));
-      await screen.findByText("Is this you?");
-      expect(screen.queryByRole("button", { name: "Skip" })).toBeNull();
-    });
   });
 
   describe("Shape", () => {
-    const shaping: InterviewState = { id: "me", stage: "shaping", phase: "shape", playback: "Is this you?" };
-
-    it("with nothing typed, offers only Yes", async () => {
-      renderWith(at(shaping));
-      await screen.findByText("Is this you?");
-      expect(screen.getByRole("button", { name: "Yes, that's me" })).toBeTruthy();
-      expect(screen.queryByRole("button", { name: "Not quite" })).toBeNull();
-      expect(screen.queryByRole("button", { name: "Send my correction" })).toBeNull();
-    });
-
-    it("with a correction typed, the red button sends it", async () => {
-      const client = at(shaping);
-      const correct = vi.spyOn(client, "correctShape").mockResolvedValue(shaping);
-      const confirm = vi.spyOn(client, "confirmShape");
+    it("is an ordinary question, with nothing played back to confirm", async () => {
+      const question = "What do the two offers have in common, if anything?";
+      const client = at({ ...asking, phase: "shape", question });
+      const send = vi.spyOn(client, "answer");
       renderWith(client);
-      fireEvent.change(await screen.findByLabelText(/tell me what's different/), {
-        target: { value: "It was three times" },
-      });
+      await screen.findByText(question);
       expect(screen.queryByRole("button", { name: "Yes, that's me" })).toBeNull();
-      fireEvent.click(screen.getByRole("button", { name: "Send my correction" }));
-      expect(correct).toHaveBeenCalledWith("me", "It was three times");
-      expect(confirm).not.toHaveBeenCalled();
-    });
-
-    it("confirming past a typed correction has to be chosen by name", async () => {
-      const client = at(shaping);
-      const confirm = vi.spyOn(client, "confirmShape").mockResolvedValue(shaping);
-      renderWith(client);
-      fireEvent.change(await screen.findByLabelText(/tell me what's different/), {
-        target: { value: "Actually, never mind" },
-      });
-      fireEvent.click(screen.getByRole("button", { name: "Yes, that's me, ignore this" }));
-      expect(confirm).toHaveBeenCalledTimes(1);
+      await type("Both paid more than they taught");
+      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+      expect(send).toHaveBeenCalledWith("me", "Both paid more than they taught");
     });
   });
 

@@ -40,10 +40,12 @@ async def walk_to_shape(client, headers, answers: list[str]) -> dict:
 
 async def test_a_whole_interview_walks_through_on_the_scripted_ai(client, database, headers, scripted_ai):
     state = await walk_to_shape(client, headers, scripted.THEO_ANSWERS)
+    # Shape asks about a link, and never plays the answers back.
     assert state["question"]["phase"] == "shape"
-    assert "fry stand" in state["question"]["playback"]
+    assert state["question"]["text"] == scripted.THEO_LINK
+    assert "playback" not in state["question"]
 
-    state = (await client.post("/interview/shape", json={}, headers=headers)).json()
+    state = (await send_answer(client, headers, "Both were about fixing the timing, not the people.")).json()
     assert state["ready_for_reveal"] is True
 
     state = await finish_and_wait(client, headers)
@@ -75,9 +77,8 @@ async def test_anything_typed_still_makes_a_grounded_book(client, headers, scrip
         f"I spent year {n} fixing the thing nobody else wanted to touch. More detail." for n in range(12)
     ]
     state = await walk_to_shape(client, headers, answers)
-    assert state["question"]["phase"] == "shape"
-    assert "fixing the thing" in state["question"]["playback"]
-    await client.post("/interview/shape", json={}, headers=headers)
+    assert state["question"] == {**state["question"], "phase": "shape", "text": scripted.LINK}
+    await send_skip(client, headers)
     await client.post("/interview/finish", headers=headers)
     book = await choose_and_wait(client, headers, 1)
     for chapter in book["chapters"]:

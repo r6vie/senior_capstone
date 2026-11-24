@@ -64,9 +64,8 @@ class FakeEngine:
         if self.shape_next:
             self.shape_next = False
             return NextTurn(
-                question="Is this you?",
+                question="What do the two offers you turned down have in common?",
                 phase="shape",
-                playback="You walked away twice.",
                 ready_for_reveal=False,
                 topic="the second offer you turned down",
             )
@@ -74,7 +73,6 @@ class FakeEngine:
         return NextTurn(
             question=f"Question {len(turns) + 1}?",
             phase="sweep" if len(turns) < 5 else "dig",
-            playback=None,
             ready_for_reveal=self.ready_next,
             topic=f"topic {len(turns)}",
             builds_on=builds_on,
@@ -144,7 +142,6 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
         "question_id": state["question"]["question_id"],
         "text": "Question 1?",
         "phase": "sweep",
-        "playback": None,
         "builds_on": None,
     }
     assert state["can_finish"] is False
@@ -163,20 +160,17 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
     assert state["question"]["question_id"]
     assert state["question"] == {
         "question_id": state["question"]["question_id"],
-        "text": "Is this you?",
+        "text": "What do the two offers you turned down have in common?",
         "phase": "shape",
-        "playback": "You walked away twice.",
         "builds_on": None,
     }
-    # The Shape step takes a confirmation or correction, not an ordinary answer.
-    assert (await send_answer(client, headers, "x")).status_code == 409
-
-    state = (await client.post("/interview/shape", json={}, headers=headers)).json()
+    # The Shape question is answered like any other.
+    state = (await send_answer(client, headers, "Both paid more than they taught.")).json()
     assert state["question"]["text"] == "Question 12?"
     interview = await database.interviews.find_one({})
     assert interview["turns"][10] == {
-        "question": "Is this you?",
-        "answer": "Yes, that's me.",
+        "question": "What do the two offers you turned down have in common?",
+        "answer": "Both paid more than they taught.",
         "phase": "shape",
     }
 
@@ -252,7 +246,6 @@ async def test_steps_out_of_order_are_409(client, headers, fake_engine):
     await client.post("/interview", json={}, headers=headers)
     assert (await client.post("/interview/title", json={"title": 0}, headers=headers)).status_code == 409
     assert (await client.post("/interview/book/shelve", headers=headers)).status_code == 409
-    assert (await client.post("/interview/shape", json={}, headers=headers)).status_code == 409
 
 
 async def test_the_librarian_can_end_the_interview(client, headers, fake_engine):
@@ -353,13 +346,9 @@ async def test_skips_are_never_in_the_response(client, headers, fake_engine):
     assert not [key for key in state if "skip" in key]
 
 
-async def test_skip_is_409_without_a_question_and_on_the_shape_step(client, database, headers, fake_engine):
+async def test_skip_is_409_without_a_question(client, database, headers, fake_engine):
     assert (await send_skip(client, headers)).status_code == 404
     await client.post("/interview", json={}, headers=headers)
-    await database.interviews.update_one(
-        {}, {"$set": {"current": {"question": "Is this you?", "phase": "shape", "playback": "You."}}}
-    )
-    assert (await send_skip(client, headers)).status_code == 409
     await database.interviews.update_one({}, {"$set": {"current": None}})
     assert (await send_skip(client, headers)).status_code == 409
 
@@ -882,33 +871,28 @@ async def test_the_previous_back_cover_goes_when_it_no_longer_fits(client, datab
     assert "previous_blurb" not in saved
 
 
-async def test_a_stale_shape_saves_nothing_and_a_resend_is_already_saved(
+async def test_an_interview_saved_on_the_old_playback_step_still_answers(
     client, database, headers, fake_engine
 ):
+    # Interviews saved before the playback was removed may be waiting on "Is this you?" with one.
     await client.post("/interview", json={}, headers=headers)
-    fake_engine.shape_next = True
-    state = await answer_questions(client, headers, 1)
-    playback = state["question"]["question_id"]
-    body = {"correction": "Not quite: I left twice.", "question_id": playback}
-    assert (await client.post("/interview/shape", json=body, headers=headers)).status_code == 200
+    old = {
+        "question_id": "q-old",
+        "question": "Is this you?",
+        "phase": "shape",
+        "playback": "You left twice.",
+    }
+    await database.interviews.update_one({}, {"$set": {"current": old}})
+    state = (await client.get("/interview", headers=headers)).json()
+    assert state["question"]["text"] == "You left twice. Is this you?"
 
-    again = await client.post("/interview/shape", json=body, headers=headers)
-    assert again.status_code == 409
-    assert again.json()["already_saved"] is True
-
-    other = {"correction": "A different correction.", "question_id": playback}
-    late = await client.post("/interview/shape", json=other, headers=headers)
-    assert late.status_code == 409
-    assert late.json()["already_saved"] is False
-    answers = [turn["answer"] for turn in (await database.interviews.find_one({}))["turns"]]
-    assert "A different correction." not in answers
-
-
-async def test_shape_without_a_question_id_still_works(client, headers, fake_engine):
-    await client.post("/interview", json={}, headers=headers)
-    fake_engine.shape_next = True
-    await answer_questions(client, headers, 1)
-    assert (await client.post("/interview/shape", json={}, headers=headers)).status_code == 200
+    assert (await stale_send(client, headers, "q-old", "Mostly, but I had help.")).status_code == 200
+    turn = (await database.interviews.find_one({}))["turns"][-1]
+    assert turn == {
+        "question": "You left twice. Is this you?",
+        "answer": "Mostly, but I had help.",
+        "phase": "shape",
+    }
 
 
 async def test_the_closing_line_is_kept_for_the_title_wait(
@@ -921,7 +905,6 @@ async def test_the_closing_line_is_kept_for_the_title_wait(
         return NextTurn(
             question="That's enough for your book.",
             phase="shape",
-            playback=None,
             ready_for_reveal=True,
             topic="t",
         )
@@ -943,9 +926,7 @@ async def test_a_question_forced_to_end_the_interview_isnt_a_closing_line(
     await client.post("/interview", json={}, headers=headers)
 
     async def forced(claude, *, turns, resume_text, sparks=None, more_material=False, notebook=None):
-        return NextTurn(
-            question="What came next?", phase="dig", playback=None, ready_for_reveal=True, topic="t"
-        )
+        return NextTurn(question="What came next?", phase="dig", ready_for_reveal=True, topic="t")
 
     monkeypatch.setattr(engine, "next_turn", forced)
     state = await answer_questions(client, headers, 1)

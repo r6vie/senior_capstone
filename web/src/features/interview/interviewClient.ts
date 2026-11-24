@@ -134,7 +134,6 @@ export type InterviewState =
       /** "Most of the way there." The API's word, never a count. */
       nearlyDone?: boolean;
     }
-  | { id: string; stage: "shaping"; phase: "shape"; playback: string; questionId?: string }
   | { id: string; stage: "choosing"; titles: TitleOption[] }
   | {
       id: string;
@@ -268,8 +267,6 @@ export interface InterviewClient {
   askAgain(id: string): Promise<InterviewState>;
   /** "I've said enough. Show me my book." Words still in the field are saved first. */
   finish(id: string, answer?: string): Promise<InterviewState>;
-  confirmShape(id: string): Promise<InterviewState>;
-  correctShape(id: string, correction: string): Promise<InterviewState>;
   chooseTitle(id: string, titleId: string): Promise<InterviewState>;
   /** The titles the member can still go back to, while reviewing. */
   otherTitles(id: string): Promise<TitleOption[]>;

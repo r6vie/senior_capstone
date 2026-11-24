@@ -105,13 +105,6 @@ class FinishRequest(RequestBody):
     question_id: str | None = Field(None, description="The `question_id` that `answer` answers.")
 
 
-class ShapeRequest(RequestBody):
-    question_id: str | None = Field(None, description="The `question_id` of the playback being answered.")
-    correction: NonEmptyText | None = Field(
-        None, max_length=5000, description="What's different. Leave out to confirm: \"Yes, that's me\"."
-    )
-
-
 class TitleRequest(RequestBody):
     title: int = Field(ge=0, le=2, description="Which of the three titles, by position.")
 
@@ -168,8 +161,6 @@ class Question(BaseModel):
     question_id: str
     text: str
     phase: TurnPhase
-    # On the Shape step: what the Librarian heard, played back for the member to confirm or correct.
-    playback: str | None
     # The Librarian's notebook entry this question was built on: circled, or ticked if a `saving` one.
     builds_on: str | None = None
 

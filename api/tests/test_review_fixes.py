@@ -153,7 +153,6 @@ def test_the_ledger_total_skips_a_half_written_line_and_reads_only_whats_new(tmp
 
 
 def test_the_retry_nudges_are_prompt_files():
-    assert str(engine.MAX_PLAYBACK_WORDS) in load_prompt("interview/retry_playback")
     assert "too close to the original" in load_prompt("interview/retry_rewrite")
     with open(engine.__file__, encoding="utf-8") as file:
         source = file.read()

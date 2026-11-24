@@ -36,7 +36,6 @@ def plan(**overrides) -> dict:
         "threads": [{"thread": "texture without gums", "has_moment": True, "missing": "the exact steps"}],
         "phase": "dig",
         "question": "What did the first batch that worked look like?",
-        "playback": None,
         "topic": "the batch that finally worked",
         "ready_for_reveal": False,
     } | overrides
@@ -96,15 +95,13 @@ async def test_the_reveal_is_forced_at_the_question_limit():
     assert "limit" in sent(claude)
 
 
-async def test_playback_is_kept_only_in_shape():
-    claude = FakeClaude(
-        [
-            reply(plan(phase="dig", playback="stray")),
-            reply(plan(phase="shape", playback="You make sourdough.")),
-        ]
-    )
-    assert (await engine.next_turn(claude, turns=turns(), resume_text=None)).playback is None
-    assert (await engine.next_turn(claude, turns=turns(), resume_text=None)).playback == "You make sourdough."
+async def test_shape_never_plays_anything_back():
+    # Josef's call: the member knows what they said, so Shape never asks them to confirm it.
+    claude = FakeClaude([reply(plan(phase="shape", playback="You make sourdough."))])
+    result = await engine.next_turn(claude, turns=turns(), resume_text=None)
+    assert result.phase == "shape"
+    assert "playback" not in result.model_dump()
+    assert "playback" not in engine.TurnPlan.model_json_schema()["properties"]
 
 
 async def test_refusals_propagate():
@@ -303,13 +300,12 @@ async def test_one_quote_grounds_only_one_chapter():
 
 
 async def test_more_material_goes_past_the_limits_with_a_status_note():
-    claude = FakeClaude([reply(plan(ready_for_reveal=True, phase="shape", playback="You."))])
+    claude = FakeClaude([reply(plan(ready_for_reveal=True, phase="shape"))])
     result = await engine.next_turn(
         claude, turns=turns(engine.MAX_QUESTIONS), resume_text=None, more_material=True
     )
     assert result.ready_for_reveal is False
     assert result.phase == "dig"
-    assert result.playback is None
     assert "can't yet make three distinct chapters" in sent(claude)
     assert "That is the limit" not in sent(claude)
 
