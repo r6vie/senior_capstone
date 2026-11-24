@@ -266,6 +266,15 @@ async def test_the_librarian_can_end_the_interview(client, headers, fake_engine)
     assert (await finish_and_wait(client, headers))["stage"] == "choosing"
 
 
+async def test_a_failed_ai_call_logs_its_cause(client, headers, fake_engine, caplog):
+    await client.post("/interview", json={}, headers=headers)
+    fake_engine.fail_next = True
+    with caplog.at_level("WARNING", logger="trove.interview.service"):
+        response = await send_answer(client, headers, "An answer.")
+    assert response.status_code == 502
+    assert "Interview AI call failed: APIConnectionError" in caplog.text
+
+
 async def test_answers_are_saved_even_when_the_next_question_fails(client, database, headers, fake_engine):
     await client.post("/interview", json={}, headers=headers)
     fake_engine.fail_next = True
