@@ -110,6 +110,15 @@ describe("CheckoutsPage", () => {
     expect((await screen.findByRole("alert")).textContent).toContain("already been answered");
   });
 
+  it("says the connection dropped and frees Accept, rather than staying stuck", async () => {
+    api.GET.mockResolvedValue({ data: { reading: [], lending: [waitingRequest] } });
+    api.POST.mockRejectedValue(new TypeError("Failed to fetch"));
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Accept" }));
+    expect((await screen.findByRole("alert")).textContent).toContain("couldn't reach Trove");
+    expect((screen.getByRole("button", { name: "Accept" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
   it("shows contact details on both sides once the author has said yes", async () => {
     api.GET.mockResolvedValue({
       data: {
