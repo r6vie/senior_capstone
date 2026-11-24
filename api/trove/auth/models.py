@@ -18,6 +18,12 @@ class LoginRequest(RequestBody):
         return value.casefold()
 
 
+def not_blank(password: SecretStr) -> SecretStr:
+    if password.get_secret_value().isspace():
+        raise ValueError("Password cannot consist only of spaces.")
+    return password
+
+
 Name = Annotated[NonEmptyText, Field(max_length=60)]
 Affiliation = Literal["current_student", "alumni"]
 
@@ -32,9 +38,7 @@ class SignupRequest(LoginRequest):
     @field_validator("password")
     @classmethod
     def reject_blank_password(cls, value: SecretStr) -> SecretStr:
-        if value.get_secret_value().isspace():
-            raise ValueError("Password cannot consist only of spaces.")
-        return value
+        return not_blank(value)
 
 
 class NameUpdate(RequestBody):
@@ -188,3 +192,17 @@ class InviteCheckRequest(RequestBody):
 
 class InviteCheckResponse(BaseModel):
     inviter_name: str
+
+
+class PasswordForgotRequest(ResendRequest):
+    pass
+
+
+class PasswordResetRequest(VerifyRequest):
+    # The same rules as at sign-up.
+    new_password: SecretStr = Field(min_length=12, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def reject_blank_password(cls, value: SecretStr) -> SecretStr:
+        return not_blank(value)
