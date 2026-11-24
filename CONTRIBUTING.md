@@ -156,6 +156,25 @@ Resolve the real conflicts in the Python code first, then rerun the generator an
 - **When your PR merges,** mark the item done in `docs/plan.md`. Either include that change in
   the PR, or make it right after in a one-line PR.
 
+## The live site
+
+The app runs live on Render ([docs/deploy.md](docs/deploy.md)). Render rebuilds from `main`, so
+**merging a PR is releasing it**: it reaches real members in about 10 minutes.
+
+- **Merge only on green CI that has actually run.** Wait until the PR's checks appear, then until they pass.
+  "No checks reported" is not a pass.
+- **The live database keeps its data.** There are no migrations. If you change the shape of a stored
+  document, the code must still read the old shape, and the PR says how.
+- **Never point anything local at the live database** (`trove_prod`). Your `.env` uses
+  `trove_dev_<yourname>`; `scripts/dev.py` refuses to start on `trove_prod`.
+- **Don't test by writing on the live site.** Sign-ups there send real email and use the real AI. Reproduce
+  bugs locally. Make test accounts on the live site only when your human asks.
+- **A new setting** (a new value in `.env.example`) also goes into `render.yaml`, and the PR asks the Render
+  owner to set it before merging. Otherwise the live site starts without it.
+- **After a merge,** open `https://trove-q9uy.onrender.com/api/health` (it must say `"database":true`) and
+  the page you changed. If it's broken, say so in the team chat; the Render owner can roll back.
+- **Only the Render owner (Daniel)** can read its logs, change settings or keys, redeploy or roll back.
+
 ## Product questions
 
 `docs/trove.md` separates Decided, Leaning and Open. Build only what is **Decided**. When you
