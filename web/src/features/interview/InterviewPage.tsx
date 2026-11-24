@@ -44,8 +44,8 @@ import { useNotebook } from "./librarian/useNotebook";
 import { ChangesScreen, WaitBox } from "./ProposedChanges";
 import { UndoChanges } from "./UndoChanges";
 
-// The interview, direction A "The question band" (docs/design/shelf/project/InterviewA.dc.html,
-// trove.md §4). The Librarian's words stand alone on the black band; the member acts below it.
+// The interview, direction A (docs/design/shelf/project/InterviewA.dc.html, trove.md §4), with the band
+// replaced by the Librarian's line across the top (StartReveal); the member acts below it.
 
 // A wait past this limit stops and offers another try.
 const GIVE_UP_AFTER_MS = 120_000;
@@ -294,7 +294,7 @@ export function InterviewPage({
     (field ?? document.querySelector<HTMLElement>(".iv-say"))?.focus({ preventScroll: true });
   }, [place, loaded, loadFailed, welcomedBack]);
 
-  // Runs one call with a calm waiting line on the band; the screen stays put until it answers.
+  // Runs one call with a calm waiting line at the top; the screen stays put until it answers.
   const run = useCallback(
     async (
       waiting: string,
