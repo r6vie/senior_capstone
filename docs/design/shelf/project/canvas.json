@@ -1,1432 +1,1490 @@
 {
-  "v": 3,
-  "attachments": {},
-  "boards": {
-    "BookObject.dc.html": {
-      "h": 1080,
-      "title": "The book object · states and 3D notes",
-      "w": 1200,
-      "x": 1520,
-      "y": 964
-    },
-    "CoverDirections.dc.html": {
-      "expand": "fill",
-      "h": 3000,
-      "page": "covers",
-      "title": "Cover directions · round 1",
-      "w": 1440,
-      "x": 0,
-      "y": 0
-    },
-    "CoverLandscape.dc.html": {
-      "expand": "fill",
-      "h": 1500,
-      "page": "covers",
-      "title": "G · Watercolor landscapes",
-      "w": 1440,
-      "x": 0,
-      "y": 4420
-    },
-    "CoverWatercolor.dc.html": {
-      "expand": "fill",
-      "h": 1180,
-      "page": "covers",
-      "title": "F · Cherry blossom watercolor",
-      "w": 1440,
-      "x": 0,
-      "y": 3120
-    },
-    "ElevateA.dc.html": {
-      "expand": "fill",
-      "h": 5260,
-      "page": "elevate",
-      "title": "A · Bound",
-      "w": 1760,
-      "x": 0,
-      "y": 0
-    },
-    "ElevateB.dc.html": {
-      "expand": "fill",
-      "h": 5400,
-      "page": "elevate",
-      "title": "B · Inked",
-      "w": 1760,
-      "x": 1880,
-      "y": 0
-    },
-    "ElevateC.dc.html": {
-      "expand": "fill",
-      "h": 5600,
-      "page": "elevate",
-      "title": "C · Reading Room",
-      "w": 1760,
-      "x": 3760,
-      "y": 0
-    },
-    "ElevateI3.dc.html": {
-      "expand": "fill",
-      "h": 4330,
-      "page": "elevate",
-      "title": "Interview 3 · The conversation",
-      "w": 1760,
-      "x": 11280,
-      "y": 0
-    },
-    "ElevateK1.dc.html": {
-      "expand": "fill",
-      "h": 2920,
-      "page": "elevate",
-      "title": "Kit 1 · Stacked sheets",
-      "w": 1760,
-      "x": 5640,
-      "y": 0
-    },
-    "ElevateK2.dc.html": {
-      "expand": "fill",
-      "h": 2985,
-      "page": "elevate",
-      "title": "Kit 2 · Relief",
-      "w": 1760,
-      "x": 7520,
-      "y": 0
-    },
-    "ElevateK3.dc.html": {
-      "expand": "fill",
-      "h": 3060,
-      "page": "elevate",
-      "title": "Kit 3 · Folio, for build",
-      "w": 1760,
-      "x": 9400,
-      "y": 0
-    },
-    "FinalBook.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Book screen · Mountain lake",
-      "w": 1440,
-      "x": 680,
-      "y": 0
-    },
-    "FinalBookAurora.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Book screen · Winter night, aurora",
-      "w": 1440,
-      "x": 680,
-      "y": 6000
-    },
-    "FinalBookCity.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Book screen · Lakefront city at dusk",
-      "w": 1440,
-      "x": 680,
-      "y": 9600
-    },
-    "FinalBookCoast.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Book screen · Sea cliffs by moonlight",
-      "w": 1440,
-      "x": 680,
-      "y": 2400
-    },
-    "FinalBookDesert.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Book screen · Desert mesas at dusk",
-      "w": 1440,
-      "x": 680,
-      "y": 1200
-    },
-    "FinalBookForest.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Book screen · Fir forest in morning light",
-      "w": 1440,
-      "x": 680,
-      "y": 10800
-    },
-    "FinalBookKarst.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Book screen · Karst river in mist",
-      "w": 1440,
-      "x": 680,
-      "y": 4800
-    },
-    "FinalBookLagoon.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Book screen · Volcanic lagoon",
-      "w": 1440,
-      "x": 680,
-      "y": 8400
-    },
-    "FinalBookTerraces.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Book screen · Long fields at harvest",
-      "w": 1440,
-      "x": 680,
-      "y": 7200
-    },
-    "FinalBookValley.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Book screen · Autumn hills",
-      "w": 1440,
-      "x": 680,
-      "y": 3600
-    },
-    "FinalCover.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Cover · Mountain lake",
-      "w": 600,
-      "x": 0,
-      "y": 0
-    },
-    "FinalCoverAurora.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Cover · Winter night, aurora",
-      "w": 600,
-      "x": 0,
-      "y": 6000
-    },
-    "FinalCoverCity.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Cover · Lakefront city at dusk",
-      "w": 600,
-      "x": 0,
-      "y": 9600
-    },
-    "FinalCoverCoast.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Cover · Sea cliffs by moonlight",
-      "w": 600,
-      "x": 0,
-      "y": 2400
-    },
-    "FinalCoverDesert.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Cover · Desert mesas at dusk",
-      "w": 600,
-      "x": 0,
-      "y": 1200
-    },
-    "FinalCoverForest.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Cover · Fir forest in morning light",
-      "w": 600,
-      "x": 0,
-      "y": 10800
-    },
-    "FinalCoverKarst.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Cover · Karst river in mist",
-      "w": 600,
-      "x": 0,
-      "y": 4800
-    },
-    "FinalCoverLagoon.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Cover · Volcanic lagoon",
-      "w": 600,
-      "x": 0,
-      "y": 8400
-    },
-    "FinalCoverTerraces.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Cover · Long fields at harvest",
-      "w": 600,
-      "x": 0,
-      "y": 7200
-    },
-    "FinalCoverValley.dc.html": {
-      "h": 1090,
-      "page": "final",
-      "title": "Cover · Autumn hills",
-      "w": 600,
-      "x": 0,
-      "y": 3600
-    },
-    "FreshBookBlock.dc.html": {
-      "h": 1140,
-      "page": "fresh",
-      "title": "3 · Block print · the book page",
-      "w": 1440,
-      "x": 680,
-      "y": 6500
-    },
-    "FreshBookCut.dc.html": {
-      "h": 1140,
-      "page": "fresh",
-      "title": "7 · Layered cut paper · the book page",
-      "w": 1440,
-      "x": 680,
-      "y": 7800
-    },
-    "FreshBookGouache.dc.html": {
-      "h": 1140,
-      "page": "fresh",
-      "title": "4 · Gouache poster · the book page",
-      "w": 1440,
-      "x": 680,
-      "y": 5200
-    },
-    "FreshBookPencil.dc.html": {
-      "h": 1140,
-      "page": "fresh",
-      "title": "5 · Coloured pencil · the book page",
-      "w": 1440,
-      "x": 680,
-      "y": 1300
-    },
-    "FreshBookStipple.dc.html": {
-      "h": 1140,
-      "page": "fresh",
-      "title": "8 · Stippled ink · the book page",
-      "w": 1440,
-      "x": 680,
-      "y": 3900
-    },
-    "FreshBookStrata.dc.html": {
-      "h": 1140,
-      "page": "fresh",
-      "title": "9 · Strata, round 3 · the book page (book screen A)",
-      "w": 1440,
-      "x": 680,
-      "y": 0
-    },
-    "FreshBookWash.dc.html": {
-      "h": 1140,
-      "page": "fresh",
-      "title": "6 · Watercolour · the book page",
-      "w": 1440,
-      "x": 680,
-      "y": 2600
-    },
-    "FreshCover1.dc.html": {
-      "h": 1090,
-      "page": "fresh",
-      "title": "1 · Marbled paper · the cover",
-      "w": 600,
-      "x": 0,
-      "y": 9100
-    },
-    "FreshCover2.dc.html": {
-      "h": 1090,
-      "page": "fresh",
-      "title": "2 · Letterpress · the cover",
-      "w": 600,
-      "x": 0,
-      "y": 10400
-    },
-    "FreshCover3.dc.html": {
-      "h": 1090,
-      "page": "fresh",
-      "title": "3 · Block print · the cover",
-      "w": 600,
-      "x": 0,
-      "y": 6500
-    },
-    "FreshCover4.dc.html": {
-      "h": 1090,
-      "page": "fresh",
-      "title": "4 · Gouache poster · the cover",
-      "w": 600,
-      "x": 0,
-      "y": 5200
-    },
-    "FreshCover5.dc.html": {
-      "h": 1090,
-      "page": "fresh",
-      "title": "5 · Coloured pencil · the cover",
-      "w": 600,
-      "x": 0,
-      "y": 1300
-    },
-    "FreshCover6.dc.html": {
-      "h": 1090,
-      "page": "fresh",
-      "title": "6 · Watercolour · the cover",
-      "w": 600,
-      "x": 0,
-      "y": 2600
-    },
-    "FreshCover7.dc.html": {
-      "h": 1090,
-      "page": "fresh",
-      "title": "7 · Layered cut paper · the cover",
-      "w": 600,
-      "x": 0,
-      "y": 7800
-    },
-    "FreshCover8.dc.html": {
-      "h": 1090,
-      "page": "fresh",
-      "title": "8 · Stippled ink · the cover",
-      "w": 600,
-      "x": 0,
-      "y": 3900
-    },
-    "FreshReaderOpen.dc.html": {
-      "h": 2020,
-      "page": "fresh",
-      "title": "Book screen B · the book opens",
-      "w": 1440,
-      "x": 2220,
-      "y": 0
-    },
-    "FreshStrata.dc.html": {
-      "h": 1090,
-      "page": "fresh",
-      "title": "9 · Strata, round 3 · the cover",
-      "w": 600,
-      "x": 0,
-      "y": 0
-    },
-    "GrowingG1.dc.html": {
-      "expand": "fill",
-      "h": 8000,
-      "page": "growing",
-      "title": "My book",
-      "w": 1300,
-      "x": 0,
-      "y": 0
-    },
-    "GrowingG2.dc.html": {
-      "expand": "fill",
-      "h": 3976,
-      "page": "growing",
-      "title": "Adding to your book",
-      "w": 1300,
-      "x": 1420,
-      "y": 0
-    },
-    "GrowingG3.dc.html": {
-      "expand": "fill",
-      "h": 8000,
-      "page": "growing",
-      "title": "Proposed changes",
-      "w": 1300,
-      "x": 2840,
-      "y": 0
-    },
-    "GrowingG4.dc.html": {
-      "expand": "fill",
-      "h": 2700,
-      "page": "growing",
-      "title": "\"I have one like this\"",
-      "w": 1300,
-      "x": 4260,
-      "y": 0
-    },
-    "GrowingG5.dc.html": {
-      "expand": "fill",
-      "h": 2905,
-      "page": "growing",
-      "title": "The reading question",
-      "w": 1300,
-      "x": 5680,
-      "y": 0
-    },
-    "Ident1.dc.html": {
-      "h": 940,
-      "page": "identities",
-      "title": "01 · Four-colour pulp",
-      "w": 1200,
-      "x": 0,
-      "y": 0
-    },
-    "Ident2.dc.html": {
-      "h": 940,
-      "page": "identities",
-      "title": "02 · Survey chart",
-      "w": 1200,
-      "x": 1280,
-      "y": 0
-    },
-    "Ident3.dc.html": {
-      "h": 940,
-      "page": "identities",
-      "title": "03 · Manga screentone",
-      "w": 1200,
-      "x": 0,
-      "y": 1020
-    },
-    "Ident4.dc.html": {
-      "h": 940,
-      "page": "identities",
-      "title": "04 · Bauhaus primer",
-      "w": 1200,
-      "x": 1280,
-      "y": 1020
-    },
-    "Ident5.dc.html": {
-      "h": 940,
-      "page": "identities",
-      "title": "05 · Riso zine",
-      "w": 1200,
-      "x": 0,
-      "y": 2040
-    },
-    "Ident6.dc.html": {
-      "h": 940,
-      "page": "identities",
-      "title": "06 · Engraved plate",
-      "w": 1200,
-      "x": 1280,
-      "y": 2040
-    },
-    "InterviewA.dc.html": {
-      "expand": "fill",
-      "h": 4700,
-      "page": "interview",
-      "title": "A · The question band",
-      "w": 1700,
-      "x": 0,
-      "y": 0
-    },
-    "InterviewA2.dc.html": {
-      "expand": "fill",
-      "h": 1350,
-      "page": "interview",
-      "title": "A · The interview adapts",
-      "w": 1700,
-      "x": 5460,
-      "y": 0
-    },
-    "InterviewA3.dc.html": {
-      "expand": "fill",
-      "h": 2900,
-      "page": "interview",
-      "title": "A · Other states",
-      "w": 1700,
-      "x": 7280,
-      "y": 0
-    },
-    "InterviewAPhone.dc.html": {
-      "expand": "fill",
-      "h": 2262,
-      "page": "interview",
-      "title": "A · Phone",
-      "w": 1300,
-      "x": 9100,
-      "y": 0
-    },
-    "InterviewB.dc.html": {
-      "expand": "fill",
-      "h": 2900,
-      "page": "interview",
-      "title": "B · Comic page",
-      "w": 1700,
-      "x": 1820,
-      "y": 0
-    },
-    "InterviewC.dc.html": {
-      "expand": "fill",
-      "h": 2900,
-      "page": "interview",
-      "title": "C · Speech bubble",
-      "w": 1700,
-      "x": 3640,
-      "y": 0
-    },
-    "LibDesktop.dc.html": {
-      "expand": "fill",
-      "h": 4460,
-      "page": "librarian",
-      "title": "Interview 4 · The Librarian’s notebook, desktop",
-      "w": 1760,
-      "x": 0,
-      "y": 0
-    },
-    "LibMore.dc.html": {
-      "expand": "fill",
-      "h": 2620,
-      "page": "librarian",
-      "title": "Interview 4 · The Librarian: idle, paste and the sign-off",
-      "w": 1760,
-      "x": 5640,
-      "y": 0
-    },
-    "LibParts.dc.html": {
-      "expand": "fill",
-      "h": 4240,
-      "page": "librarian",
-      "title": "Interview 4 · The Librarian: the parts",
-      "w": 1760,
-      "x": 3760,
-      "y": 0
-    },
-    "LibPhone.dc.html": {
-      "expand": "fill",
-      "h": 1240,
-      "page": "librarian",
-      "title": "Interview 4 · The Librarian’s notebook, phone",
-      "w": 1760,
-      "x": 1880,
-      "y": 0
-    },
-    "LibReopened.dc.html": {
-      "expand": "fill",
-      "h": 1110,
-      "page": "librarian",
-      "title": "Interview 4 · The Librarian: reopened to add to the book",
-      "w": 1760,
-      "x": 7520,
-      "y": 0
-    },
-    "Main.dc.html": {
-      "expand": "fill",
-      "h": 2320,
-      "is_interactive": true,
-      "title": "Shelf · desktop",
-      "w": 1440,
-      "x": 0,
-      "y": 0
-    },
-    "MangaA.dc.html": {
-      "h": 1100,
-      "page": "manga",
-      "title": "A · The page · Panels on slanted gutters",
-      "w": 1440,
-      "x": 0,
-      "y": 0
-    },
-    "MangaB.dc.html": {
-      "h": 1100,
-      "page": "manga",
-      "title": "B · The strip · Black rail, one dark band, long shelves",
-      "w": 1440,
-      "x": 1520,
-      "y": 0
-    },
-    "MangaB2.dc.html": {
-      "h": 1100,
-      "page": "manga",
-      "title": "B2 · The strip, top navigation · Navigation across the top like A, banner and shelves from B",
-      "w": 1440,
-      "x": 1520,
-      "y": 1180
-    },
-    "MangaBtn.dc.html": {
-      "h": 1040,
-      "page": "manga",
-      "title": "Ask to check out · four button options",
-      "w": 1440,
-      "x": 3040,
-      "y": 1180
-    },
-    "MangaC.dc.html": {
-      "h": 1100,
-      "page": "manga",
-      "title": "C · The spread · An open book: contents left, shelves right",
-      "w": 1440,
-      "x": 3040,
-      "y": 0
-    },
-    "MarbleA.dc.html": {
-      "h": 640,
-      "title": "Marble A · polished Carrara ledge",
-      "w": 1200,
-      "x": 0,
-      "y": 5760
-    },
-    "MarbleB.dc.html": {
-      "h": 640,
-      "title": "Marble B · green marble niche",
-      "w": 1200,
-      "x": 1280,
-      "y": 5760
-    },
-    "MarbleC.dc.html": {
-      "h": 640,
-      "title": "Marble C · honed pink slab, block bookends",
-      "w": 1200,
-      "x": 2560,
-      "y": 5760
-    },
-    "MarblePage.dc.html": {
-      "expand": "fill",
-      "h": 2760,
-      "is_interactive": true,
-      "title": "Carrara · shelf page, desktop",
-      "w": 1440,
-      "x": 0,
-      "y": 7000
-    },
-    "PaperCells.dc.html": {
-      "h": 900,
-      "page": "strata",
-      "title": "Paper cells · after the reference: shaded cells, one grain per material, layered mist",
-      "w": 1440,
-      "x": 1520,
-      "y": 2160
-    },
-    "PhoneBook.dc.html": {
-      "h": 844,
-      "title": "Open book · phone",
-      "w": 390,
-      "x": 1990,
-      "y": 0
-    },
-    "PhoneShelf.dc.html": {
-      "h": 844,
-      "title": "Shelf · phone",
-      "w": 390,
-      "x": 1520,
-      "y": 0
-    },
-    "ScandiNotes.dc.html": {
-      "h": 920,
-      "title": "Daylight library · the system",
-      "w": 1200,
-      "x": 1990,
-      "y": 10360
-    },
-    "ScandiPage.dc.html": {
-      "expand": "fill",
-      "h": 1800,
-      "is_interactive": true,
-      "title": "Daylight library · shelf page, desktop",
-      "w": 1440,
-      "x": 0,
-      "y": 10360
-    },
-    "ScandiPhone.dc.html": {
-      "h": 844,
-      "title": "Daylight library · shelf, phone",
-      "w": 390,
-      "x": 1520,
-      "y": 10360
-    },
-    "ShadowPhone.dc.html": {
-      "h": 844,
-      "title": "Light and shadow · shelf, phone",
-      "w": 390,
-      "x": 1520,
-      "y": 2920
-    },
-    "ShadowShelf.dc.html": {
-      "expand": "fill",
-      "h": 2240,
-      "is_interactive": true,
-      "title": "Light and shadow · shelf, desktop",
-      "w": 1440,
-      "x": 0,
-      "y": 2920
-    },
-    "ShadowSystem.dc.html": {
-      "h": 1240,
-      "title": "Light and shadow · the system",
-      "w": 1200,
-      "x": 1990,
-      "y": 2920
-    },
-    "StrataBook.dc.html": {
-      "h": 1140,
-      "page": "strata",
-      "title": "Strata · one book, opened: the cover is a window onto its landscape",
-      "w": 1440,
-      "x": 0,
-      "y": 0
-    },
-    "StrataCover2.dc.html": {
-      "h": 1000,
-      "page": "strata",
-      "title": "Strata cover · round 2: solid slabs, more detail",
-      "w": 1440,
-      "x": 0,
-      "y": 2160
-    },
-    "StrataPlaces.dc.html": {
-      "h": 2040,
-      "page": "strata",
-      "title": "Strata · more places: phone, reveal, checkout, meeting",
-      "w": 1440,
-      "x": 3040,
-      "y": 0
-    },
-    "StrataShelf.dc.html": {
-      "h": 1180,
-      "page": "strata",
-      "title": "Strata · on the shelf, and how the art is made",
-      "w": 1440,
-      "x": 1520,
-      "y": 0
-    },
-    "SysComponents1.dc.html": {
-      "h": 2700,
-      "page": "system",
-      "title": "2 · Components: actions and forms",
-      "w": 1440,
-      "x": 1520,
-      "y": 1180
-    },
-    "SysComponents2.dc.html": {
-      "h": 3500,
-      "page": "system",
-      "title": "3 · Components: content and structure",
-      "w": 1440,
-      "x": 0,
-      "y": 4160
-    },
-    "SysFoundations.dc.html": {
-      "h": 2900,
-      "page": "system",
-      "title": "1 · Foundations: color, type, space, tone, motion",
-      "w": 1440,
-      "x": 0,
-      "y": 1180
-    },
-    "SysRules.dc.html": {
-      "h": 2600,
-      "page": "system",
-      "title": "4 · How to use it: fixed, default, free",
-      "w": 1440,
-      "x": 1520,
-      "y": 4160
-    },
-    "SysShelf.dc.html": {
-      "h": 1100,
-      "page": "system",
-      "title": "Reference screen · The shelf",
-      "w": 1440,
-      "x": 0,
-      "y": 0
-    },
-    "SysSignIn.dc.html": {
-      "h": 900,
-      "page": "system",
-      "title": "Reference screen · Sign in",
-      "w": 1440,
-      "x": 1520,
-      "y": 0
-    },
-    "ToolCirc.dc.html": {
-      "h": 1300,
-      "page": "tool",
-      "title": "C · Circulation desk: ink, stamp and highlighter",
-      "w": 1440,
-      "x": 1520,
-      "y": 1240
-    },
-    "ToolDark.dc.html": {
-      "h": 1300,
-      "page": "tool",
-      "title": "B · After hours: lamplight on white books",
-      "w": 1440,
-      "x": 0,
-      "y": 1240
-    },
-    "ToolPhone.dc.html": {
-      "h": 844,
-      "page": "tool",
-      "title": "Shelf · phone",
-      "w": 390,
-      "x": 1520,
-      "y": 0
-    },
-    "ToolShelf.dc.html": {
-      "expand": "fill",
-      "h": 1120,
-      "is_interactive": true,
-      "page": "tool",
-      "title": "A · Neutral, shelf desktop",
-      "w": 1440,
-      "x": 0,
-      "y": 0
-    },
-    "VoxelValley.dc.html": {
-      "h": 900,
-      "page": "voxel",
-      "title": "Voxel cover · The valley, round 1",
-      "w": 1440,
-      "x": 0,
-      "y": 0
-    },
-    "WCBookHills.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Book screen · patchwork hills",
-      "w": 1440,
-      "x": 680,
-      "y": 1200
-    },
-    "WCBookLake.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Book screen · alpine lake",
-      "w": 1440,
-      "x": 680,
-      "y": 2400
-    },
-    "WCBookMesa.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Book screen · desert butte at dusk",
-      "w": 1440,
-      "x": 680,
-      "y": 0
-    },
-    "WCBookWinter.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Book screen · winter dusk",
-      "w": 1440,
-      "x": 680,
-      "y": 3600
-    },
-    "WCCoverAutumn3.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Autumn river, bridge and trees reworked",
-      "w": 600,
-      "x": 2040,
-      "y": 6000
-    },
-    "WCCoverBeach.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Beach at sunset (abstract)",
-      "w": 600,
-      "x": 2040,
-      "y": 4800
-    },
-    "WCCoverBlossom.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Blossom tree by a pond (abstract)",
-      "w": 600,
-      "x": 680,
-      "y": 4800
-    },
-    "WCCoverCity.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · City at night (abstract)",
-      "w": 600,
-      "x": 0,
-      "y": 4800
-    },
-    "WCCoverHarbor.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Hillside harbor town",
-      "w": 600,
-      "x": 680,
-      "y": 6000
-    },
-    "WCCoverHills.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Patchwork hills (abstract)",
-      "w": 600,
-      "x": 0,
-      "y": 1200
-    },
-    "WCCoverLake.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Alpine lake (abstract)",
-      "w": 600,
-      "x": 0,
-      "y": 2400
-    },
-    "WCCoverLighthouse.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Lighthouse on the headland",
-      "w": 600,
-      "x": 0,
-      "y": 6000
-    },
-    "WCCoverLighthouse2.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Lighthouse at dusk (painted to the top)",
-      "w": 600,
-      "x": 1360,
-      "y": 6000
-    },
-    "WCCoverMesa.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Desert butte at dusk (abstract)",
-      "w": 600,
-      "x": 0,
-      "y": 0
-    },
-    "WCCoverPrairie.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Prairie storm (abstract)",
-      "w": 600,
-      "x": 1360,
-      "y": 4800
-    },
-    "WCCoverWinter.dc.html": {
-      "h": 1090,
-      "page": "watercolor",
-      "title": "Cover · Winter dusk (abstract)",
-      "w": 600,
-      "x": 0,
-      "y": 3600
-    },
-    "WireA.dc.html": {
-      "h": 1100,
-      "page": "wireframes",
-      "title": "A · feature, then shelves",
-      "w": 1440,
-      "x": 0,
-      "y": 0
-    },
-    "WireB.dc.html": {
-      "h": 1100,
-      "page": "wireframes",
-      "title": "B · side rail",
-      "w": 1440,
-      "x": 1520,
-      "y": 0
-    },
-    "WireC.dc.html": {
-      "h": 1100,
-      "page": "wireframes",
-      "title": "C · bookcase",
-      "w": 1440,
-      "x": 0,
-      "y": 1220
-    },
-    "WireD.dc.html": {
-      "h": 1100,
-      "page": "wireframes",
-      "title": "D · black split",
-      "w": 1440,
-      "x": 1520,
-      "y": 1220
-    },
-    "MyBookNow.dc.html": {
-      "x": 0,
-      "y": 0,
-      "w": 1760,
-      "h": 2290,
-      "title": "My book · how it is now",
-      "page": "mybook",
-      "expand": "fill"
-    },
-    "MyBookA.dc.html": {
-      "x": 1880,
-      "y": 0,
-      "w": 1760,
-      "h": 5460,
-      "title": "My book · Concept A: the book first",
-      "page": "mybook",
-      "expand": "fill"
-    },
-    "MyBookB.dc.html": {
-      "x": 3760,
-      "y": 0,
-      "w": 1760,
-      "h": 5720,
-      "title": "My book · Concept B: the desk",
-      "page": "mybook",
-      "expand": "fill"
-    },
-    "MyBookStates.dc.html": {
-      "x": 5640,
-      "y": 0,
-      "w": 1760,
-      "h": 2110,
-      "title": "My book · every stage",
-      "page": "mybook",
-      "expand": "fill"
-    }
+ "v": 3,
+ "attachments": {},
+ "boards": {
+  "BookObject.dc.html": {
+   "h": 1080,
+   "title": "The book object \u00b7 states and 3D notes",
+   "w": 1200,
+   "x": 1520,
+   "y": 964
   },
-  "createdOnFiles": {
-    "at": "2026-11-05T16:00:00Z",
-    "v": 1
+  "CoverDirections.dc.html": {
+   "expand": "fill",
+   "h": 3000,
+   "page": "covers",
+   "title": "Cover directions \u00b7 round 1",
+   "w": 1440,
+   "x": 0,
+   "y": 0
   },
-  "designSystems": [],
-  "launch": {
-    "view": "canvas"
+  "CoverLandscape.dc.html": {
+   "expand": "fill",
+   "h": 1500,
+   "page": "covers",
+   "title": "G \u00b7 Watercolor landscapes",
+   "w": 1440,
+   "x": 0,
+   "y": 4420
   },
-  "notes": {
-    "covers": {
-      "kind": "title1",
-      "maxW": 1440,
-      "page": "covers",
-      "text": "Covers · five directions on white, inspired by Japanese art forms",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
-    "final": {
-      "kind": "title1",
-      "maxW": 2120,
-      "page": "final",
-      "text": "Final designs · strata, finished",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
-    "fresh": {
-      "kind": "title1",
-      "maxW": 2120,
-      "page": "fresh",
-      "text": "Fresh directions · each cover on the left, its book page on the right; the ones with book pages first",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
-    "freshbook": {
-      "kind": "title1",
-      "maxW": 1440,
-      "page": "fresh",
-      "text": "Book screen · two ways to show one book: A the book page (left), B the book opens",
-      "w": 240,
-      "x": 2220,
-      "y": -300
-    },
-    "head": {
-      "kind": "title1",
-      "maxW": 2380,
-      "text": "Direction 1 · Cloth and oak",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
-    "head2": {
-      "kind": "title1",
-      "maxW": 3190,
-      "text": "Direction 2 · Light and shadow",
-      "w": 240,
-      "x": 0,
-      "y": 2620
-    },
-    "head3": {
-      "kind": "title1",
-      "maxW": 3760,
-      "text": "Direction 3 · Marble: three shelf options",
-      "w": 240,
-      "x": 0,
-      "y": 5460
-    },
-    "head4": {
-      "kind": "title1",
-      "maxW": 1440,
-      "text": "Direction 3 · The Carrara shelf page",
-      "w": 240,
-      "x": 0,
-      "y": 6700
-    },
-    "head5": {
-      "kind": "title1",
-      "maxW": 3190,
-      "text": "Direction 4 · Daylight library",
-      "w": 240,
-      "x": 0,
-      "y": 10060
-    },
-    "ident": {
-      "kind": "title1",
-      "maxW": 2480,
-      "page": "identities",
-      "text": "Identities · six printed-media languages to pick from",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
-    "manga": {
-      "kind": "title1",
-      "maxW": 4400,
-      "page": "manga",
-      "text": "Manga screentone · three layouts of the shelf page",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
-    "strata": {
-      "kind": "title1",
-      "maxW": 4480,
-      "page": "strata",
-      "text": "Strata · landscapes laid in slabs, on the cover and in the book",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
-    "strata2": {
-      "kind": "title1",
-      "maxW": 1440,
-      "page": "strata",
-      "text": "Round 2 · solid slabs, more detail",
-      "w": 240,
-      "x": 0,
-      "y": 1860
-    },
-    "strata3": {
-      "kind": "title1",
-      "maxW": 1440,
-      "page": "strata",
-      "text": "Round 3 · paper cells",
-      "w": 240,
-      "x": 1520,
-      "y": 1860
-    },
-    "system": {
-      "kind": "title1",
-      "maxW": 2960,
-      "page": "system",
-      "text": "Trove design system · Manga screentone, v1",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
-    "tool": {
-      "kind": "title1",
-      "maxW": 1910,
-      "page": "tool",
-      "text": "Direction 5 · Working tool: neutral, dense, white books",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
-    "voxel": {
-      "kind": "title1",
-      "maxW": 1440,
-      "page": "voxel",
-      "text": "Voxel covers · small-cube scenes rendered in 3D",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
-    "wire": {
-      "kind": "title1",
-      "maxW": 2960,
-      "page": "wireframes",
-      "text": "Shell homepage · four layouts in black and white",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
-    "mybook": {
-      "x": 0,
-      "y": -300,
-      "text": "My book · as it is, two concepts, every stage",
-      "kind": "title1",
-      "maxW": 7400,
-      "page": "mybook"
-    }
+  "CoverWatercolor.dc.html": {
+   "expand": "fill",
+   "h": 1180,
+   "page": "covers",
+   "title": "F \u00b7 Cherry blossom watercolor",
+   "w": 1440,
+   "x": 0,
+   "y": 3120
   },
-  "order": [
-    "Main.dc.html",
-    "PhoneShelf.dc.html",
-    "PhoneBook.dc.html",
-    "BookObject.dc.html",
-    "ShadowShelf.dc.html",
-    "ShadowPhone.dc.html",
-    "ShadowSystem.dc.html",
-    "MarbleA.dc.html",
-    "MarbleB.dc.html",
-    "MarbleC.dc.html",
-    "MarblePage.dc.html",
-    "ScandiPage.dc.html",
-    "ScandiPhone.dc.html",
-    "ScandiNotes.dc.html",
-    "WireA.dc.html",
-    "WireB.dc.html",
-    "WireC.dc.html",
-    "WireD.dc.html",
-    "ToolShelf.dc.html",
-    "ToolPhone.dc.html",
-    "ToolDark.dc.html",
-    "ToolCirc.dc.html",
-    "Ident1.dc.html",
-    "Ident2.dc.html",
-    "Ident3.dc.html",
-    "Ident4.dc.html",
-    "Ident5.dc.html",
-    "Ident6.dc.html",
-    "MangaA.dc.html",
-    "MangaB.dc.html",
-    "MangaC.dc.html",
-    "MangaB2.dc.html",
-    "MangaBtn.dc.html",
-    "SysShelf.dc.html",
-    "SysSignIn.dc.html",
-    "SysFoundations.dc.html",
-    "SysComponents1.dc.html",
-    "SysComponents2.dc.html",
-    "SysRules.dc.html",
-    "CoverDirections.dc.html",
-    "CoverWatercolor.dc.html",
-    "CoverLandscape.dc.html",
-    "InterviewA.dc.html",
-    "InterviewB.dc.html",
-    "InterviewC.dc.html",
-    "InterviewA2.dc.html",
-    "GrowingG1.dc.html",
-    "GrowingG2.dc.html",
-    "GrowingG3.dc.html",
-    "GrowingG4.dc.html",
-    "GrowingG5.dc.html",
-    "InterviewA3.dc.html",
-    "InterviewAPhone.dc.html",
-    "ElevateA.dc.html",
-    "ElevateB.dc.html",
-    "ElevateC.dc.html",
-    "ElevateK1.dc.html",
-    "ElevateK2.dc.html",
-    "ElevateK3.dc.html",
-    "ElevateI3.dc.html",
-    "StrataBook.dc.html",
-    "StrataShelf.dc.html",
-    "StrataPlaces.dc.html",
-    "VoxelValley.dc.html",
-    "StrataCover2.dc.html",
-    "PaperCells.dc.html",
-    "LibDesktop.dc.html",
-    "LibPhone.dc.html",
-    "LibParts.dc.html",
-    "LibMore.dc.html",
-    "LibReopened.dc.html",
-    "FreshStrata.dc.html",
-    "FreshBookStrata.dc.html",
-    "FreshCover5.dc.html",
-    "FreshBookPencil.dc.html",
-    "FreshCover6.dc.html",
-    "FreshBookWash.dc.html",
-    "FreshCover8.dc.html",
-    "FreshBookStipple.dc.html",
-    "FreshCover4.dc.html",
-    "FreshBookGouache.dc.html",
-    "FreshCover3.dc.html",
-    "FreshBookBlock.dc.html",
-    "FreshCover7.dc.html",
-    "FreshBookCut.dc.html",
-    "FreshCover1.dc.html",
-    "FreshCover2.dc.html",
-    "FreshReaderOpen.dc.html",
-    "FinalCover.dc.html",
-    "FinalBook.dc.html",
-    "FinalCoverDesert.dc.html",
-    "FinalCoverCoast.dc.html",
-    "FinalCoverValley.dc.html",
-    "FinalBookCoast.dc.html",
-    "FinalBookDesert.dc.html",
-    "FinalBookValley.dc.html",
-    "FinalCoverKarst.dc.html",
-    "FinalCoverAurora.dc.html",
-    "FinalCoverTerraces.dc.html",
-    "FinalCoverLagoon.dc.html",
-    "FinalBookKarst.dc.html",
-    "FinalBookAurora.dc.html",
-    "FinalBookTerraces.dc.html",
-    "FinalBookLagoon.dc.html",
-    "FinalCoverCity.dc.html",
-    "FinalCoverForest.dc.html",
-    "FinalBookCity.dc.html",
-    "FinalBookForest.dc.html",
-    "WCCoverLighthouse.dc.html",
-    "WCCoverHarbor.dc.html",
-    "WCCoverLighthouse2.dc.html",
-    "WCCoverAutumn3.dc.html",
-    "WCCoverMesa.dc.html",
-    "WCCoverHills.dc.html",
-    "WCCoverLake.dc.html",
-    "WCCoverWinter.dc.html",
-    "WCBookMesa.dc.html",
-    "WCBookHills.dc.html",
-    "WCBookLake.dc.html",
-    "WCBookWinter.dc.html",
-    "WCCoverCity.dc.html",
-    "WCCoverBlossom.dc.html",
-    "WCCoverPrairie.dc.html",
-    "WCCoverBeach.dc.html",
-    "MyBookNow.dc.html",
-    "MyBookA.dc.html",
-    "MyBookB.dc.html",
-    "MyBookStates.dc.html"
-  ],
-  "pages": [
-    {
-      "id": "designs",
-      "name": "Designs"
-    },
-    {
-      "id": "wireframes",
-      "name": "Wireframes"
-    },
-    {
-      "id": "tool",
-      "name": "Working tool"
-    },
-    {
-      "id": "identities",
-      "name": "Identities"
-    },
-    {
-      "id": "manga",
-      "name": "Manga screens"
-    },
-    {
-      "id": "system",
-      "name": "Design system"
-    },
-    {
-      "id": "covers",
-      "name": "Covers"
-    },
-    {
-      "id": "interview",
-      "name": "Interview"
-    },
-    {
-      "id": "growing",
-      "name": "Growing books"
-    },
-    {
-      "id": "elevate",
-      "name": "Elevate"
-    },
-    {
-      "id": "strata",
-      "name": "Strata covers"
-    },
-    {
-      "id": "voxel",
-      "name": "Voxel covers"
-    },
-    {
-      "id": "fresh",
-      "name": "Fresh directions"
-    },
-    {
-      "id": "librarian",
-      "name": "Librarian notebook"
-    },
-    {
-      "id": "final",
-      "name": "Covers: Strata"
-    },
-    {
-      "id": "watercolor",
-      "name": "Covers: Watercolor"
-    },
-    {
-      "id": "mybook",
-      "name": "My book"
-    }
-  ],
-  "title": "Trove Shelf"
+  "ElevateA.dc.html": {
+   "expand": "fill",
+   "h": 5260,
+   "page": "elevate",
+   "title": "A \u00b7 Bound",
+   "w": 1760,
+   "x": 0,
+   "y": 0
+  },
+  "ElevateB.dc.html": {
+   "expand": "fill",
+   "h": 5400,
+   "page": "elevate",
+   "title": "B \u00b7 Inked",
+   "w": 1760,
+   "x": 1880,
+   "y": 0
+  },
+  "ElevateC.dc.html": {
+   "expand": "fill",
+   "h": 5600,
+   "page": "elevate",
+   "title": "C \u00b7 Reading Room",
+   "w": 1760,
+   "x": 3760,
+   "y": 0
+  },
+  "ElevateI3.dc.html": {
+   "expand": "fill",
+   "h": 4330,
+   "page": "elevate",
+   "title": "Interview 3 \u00b7 The conversation",
+   "w": 1760,
+   "x": 11280,
+   "y": 0
+  },
+  "ElevateK1.dc.html": {
+   "expand": "fill",
+   "h": 2920,
+   "page": "elevate",
+   "title": "Kit 1 \u00b7 Stacked sheets",
+   "w": 1760,
+   "x": 5640,
+   "y": 0
+  },
+  "ElevateK2.dc.html": {
+   "expand": "fill",
+   "h": 2985,
+   "page": "elevate",
+   "title": "Kit 2 \u00b7 Relief",
+   "w": 1760,
+   "x": 7520,
+   "y": 0
+  },
+  "ElevateK3.dc.html": {
+   "expand": "fill",
+   "h": 3060,
+   "page": "elevate",
+   "title": "Kit 3 \u00b7 Folio, for build",
+   "w": 1760,
+   "x": 9400,
+   "y": 0
+  },
+  "FinalBook.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Book screen \u00b7 Mountain lake",
+   "w": 1440,
+   "x": 680,
+   "y": 0
+  },
+  "FinalBookAurora.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Book screen \u00b7 Winter night, aurora",
+   "w": 1440,
+   "x": 680,
+   "y": 6000
+  },
+  "FinalBookCity.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Book screen \u00b7 Lakefront city at dusk",
+   "w": 1440,
+   "x": 680,
+   "y": 9600
+  },
+  "FinalBookCoast.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Book screen \u00b7 Sea cliffs by moonlight",
+   "w": 1440,
+   "x": 680,
+   "y": 2400
+  },
+  "FinalBookDesert.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Book screen \u00b7 Desert mesas at dusk",
+   "w": 1440,
+   "x": 680,
+   "y": 1200
+  },
+  "FinalBookForest.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Book screen \u00b7 Fir forest in morning light",
+   "w": 1440,
+   "x": 680,
+   "y": 10800
+  },
+  "FinalBookKarst.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Book screen \u00b7 Karst river in mist",
+   "w": 1440,
+   "x": 680,
+   "y": 4800
+  },
+  "FinalBookLagoon.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Book screen \u00b7 Volcanic lagoon",
+   "w": 1440,
+   "x": 680,
+   "y": 8400
+  },
+  "FinalBookTerraces.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Book screen \u00b7 Long fields at harvest",
+   "w": 1440,
+   "x": 680,
+   "y": 7200
+  },
+  "FinalBookValley.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Book screen \u00b7 Autumn hills",
+   "w": 1440,
+   "x": 680,
+   "y": 3600
+  },
+  "FinalCover.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Cover \u00b7 Mountain lake",
+   "w": 600,
+   "x": 0,
+   "y": 0
+  },
+  "FinalCoverAurora.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Cover \u00b7 Winter night, aurora",
+   "w": 600,
+   "x": 0,
+   "y": 6000
+  },
+  "FinalCoverCity.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Cover \u00b7 Lakefront city at dusk",
+   "w": 600,
+   "x": 0,
+   "y": 9600
+  },
+  "FinalCoverCoast.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Cover \u00b7 Sea cliffs by moonlight",
+   "w": 600,
+   "x": 0,
+   "y": 2400
+  },
+  "FinalCoverDesert.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Cover \u00b7 Desert mesas at dusk",
+   "w": 600,
+   "x": 0,
+   "y": 1200
+  },
+  "FinalCoverForest.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Cover \u00b7 Fir forest in morning light",
+   "w": 600,
+   "x": 0,
+   "y": 10800
+  },
+  "FinalCoverKarst.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Cover \u00b7 Karst river in mist",
+   "w": 600,
+   "x": 0,
+   "y": 4800
+  },
+  "FinalCoverLagoon.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Cover \u00b7 Volcanic lagoon",
+   "w": 600,
+   "x": 0,
+   "y": 8400
+  },
+  "FinalCoverTerraces.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Cover \u00b7 Long fields at harvest",
+   "w": 600,
+   "x": 0,
+   "y": 7200
+  },
+  "FinalCoverValley.dc.html": {
+   "h": 1090,
+   "page": "final",
+   "title": "Cover \u00b7 Autumn hills",
+   "w": 600,
+   "x": 0,
+   "y": 3600
+  },
+  "FreshBookBlock.dc.html": {
+   "h": 1140,
+   "page": "fresh",
+   "title": "3 \u00b7 Block print \u00b7 the book page",
+   "w": 1440,
+   "x": 680,
+   "y": 6500
+  },
+  "FreshBookCut.dc.html": {
+   "h": 1140,
+   "page": "fresh",
+   "title": "7 \u00b7 Layered cut paper \u00b7 the book page",
+   "w": 1440,
+   "x": 680,
+   "y": 7800
+  },
+  "FreshBookGouache.dc.html": {
+   "h": 1140,
+   "page": "fresh",
+   "title": "4 \u00b7 Gouache poster \u00b7 the book page",
+   "w": 1440,
+   "x": 680,
+   "y": 5200
+  },
+  "FreshBookPencil.dc.html": {
+   "h": 1140,
+   "page": "fresh",
+   "title": "5 \u00b7 Coloured pencil \u00b7 the book page",
+   "w": 1440,
+   "x": 680,
+   "y": 1300
+  },
+  "FreshBookStipple.dc.html": {
+   "h": 1140,
+   "page": "fresh",
+   "title": "8 \u00b7 Stippled ink \u00b7 the book page",
+   "w": 1440,
+   "x": 680,
+   "y": 3900
+  },
+  "FreshBookStrata.dc.html": {
+   "h": 1140,
+   "page": "fresh",
+   "title": "9 \u00b7 Strata, round 3 \u00b7 the book page (book screen A)",
+   "w": 1440,
+   "x": 680,
+   "y": 0
+  },
+  "FreshBookWash.dc.html": {
+   "h": 1140,
+   "page": "fresh",
+   "title": "6 \u00b7 Watercolour \u00b7 the book page",
+   "w": 1440,
+   "x": 680,
+   "y": 2600
+  },
+  "FreshCover1.dc.html": {
+   "h": 1090,
+   "page": "fresh",
+   "title": "1 \u00b7 Marbled paper \u00b7 the cover",
+   "w": 600,
+   "x": 0,
+   "y": 9100
+  },
+  "FreshCover2.dc.html": {
+   "h": 1090,
+   "page": "fresh",
+   "title": "2 \u00b7 Letterpress \u00b7 the cover",
+   "w": 600,
+   "x": 0,
+   "y": 10400
+  },
+  "FreshCover3.dc.html": {
+   "h": 1090,
+   "page": "fresh",
+   "title": "3 \u00b7 Block print \u00b7 the cover",
+   "w": 600,
+   "x": 0,
+   "y": 6500
+  },
+  "FreshCover4.dc.html": {
+   "h": 1090,
+   "page": "fresh",
+   "title": "4 \u00b7 Gouache poster \u00b7 the cover",
+   "w": 600,
+   "x": 0,
+   "y": 5200
+  },
+  "FreshCover5.dc.html": {
+   "h": 1090,
+   "page": "fresh",
+   "title": "5 \u00b7 Coloured pencil \u00b7 the cover",
+   "w": 600,
+   "x": 0,
+   "y": 1300
+  },
+  "FreshCover6.dc.html": {
+   "h": 1090,
+   "page": "fresh",
+   "title": "6 \u00b7 Watercolour \u00b7 the cover",
+   "w": 600,
+   "x": 0,
+   "y": 2600
+  },
+  "FreshCover7.dc.html": {
+   "h": 1090,
+   "page": "fresh",
+   "title": "7 \u00b7 Layered cut paper \u00b7 the cover",
+   "w": 600,
+   "x": 0,
+   "y": 7800
+  },
+  "FreshCover8.dc.html": {
+   "h": 1090,
+   "page": "fresh",
+   "title": "8 \u00b7 Stippled ink \u00b7 the cover",
+   "w": 600,
+   "x": 0,
+   "y": 3900
+  },
+  "FreshReaderOpen.dc.html": {
+   "h": 2020,
+   "page": "fresh",
+   "title": "Book screen B \u00b7 the book opens",
+   "w": 1440,
+   "x": 2220,
+   "y": 0
+  },
+  "FreshStrata.dc.html": {
+   "h": 1090,
+   "page": "fresh",
+   "title": "9 \u00b7 Strata, round 3 \u00b7 the cover",
+   "w": 600,
+   "x": 0,
+   "y": 0
+  },
+  "GrowingG1.dc.html": {
+   "expand": "fill",
+   "h": 8000,
+   "page": "growing",
+   "title": "My book",
+   "w": 1300,
+   "x": 0,
+   "y": 0
+  },
+  "GrowingG2.dc.html": {
+   "expand": "fill",
+   "h": 3976,
+   "page": "growing",
+   "title": "Adding to your book",
+   "w": 1300,
+   "x": 1420,
+   "y": 0
+  },
+  "GrowingG3.dc.html": {
+   "expand": "fill",
+   "h": 8000,
+   "page": "growing",
+   "title": "Proposed changes",
+   "w": 1300,
+   "x": 2840,
+   "y": 0
+  },
+  "GrowingG4.dc.html": {
+   "expand": "fill",
+   "h": 2700,
+   "page": "growing",
+   "title": "\"I have one like this\"",
+   "w": 1300,
+   "x": 4260,
+   "y": 0
+  },
+  "GrowingG5.dc.html": {
+   "expand": "fill",
+   "h": 2905,
+   "page": "growing",
+   "title": "The reading question",
+   "w": 1300,
+   "x": 5680,
+   "y": 0
+  },
+  "Ident1.dc.html": {
+   "h": 940,
+   "page": "identities",
+   "title": "01 \u00b7 Four-colour pulp",
+   "w": 1200,
+   "x": 0,
+   "y": 0
+  },
+  "Ident2.dc.html": {
+   "h": 940,
+   "page": "identities",
+   "title": "02 \u00b7 Survey chart",
+   "w": 1200,
+   "x": 1280,
+   "y": 0
+  },
+  "Ident3.dc.html": {
+   "h": 940,
+   "page": "identities",
+   "title": "03 \u00b7 Manga screentone",
+   "w": 1200,
+   "x": 0,
+   "y": 1020
+  },
+  "Ident4.dc.html": {
+   "h": 940,
+   "page": "identities",
+   "title": "04 \u00b7 Bauhaus primer",
+   "w": 1200,
+   "x": 1280,
+   "y": 1020
+  },
+  "Ident5.dc.html": {
+   "h": 940,
+   "page": "identities",
+   "title": "05 \u00b7 Riso zine",
+   "w": 1200,
+   "x": 0,
+   "y": 2040
+  },
+  "Ident6.dc.html": {
+   "h": 940,
+   "page": "identities",
+   "title": "06 \u00b7 Engraved plate",
+   "w": 1200,
+   "x": 1280,
+   "y": 2040
+  },
+  "InterviewA.dc.html": {
+   "expand": "fill",
+   "h": 4700,
+   "page": "interview",
+   "title": "A \u00b7 The question band",
+   "w": 1700,
+   "x": 0,
+   "y": 0
+  },
+  "InterviewA2.dc.html": {
+   "expand": "fill",
+   "h": 1350,
+   "page": "interview",
+   "title": "A \u00b7 The interview adapts",
+   "w": 1700,
+   "x": 5460,
+   "y": 0
+  },
+  "InterviewA3.dc.html": {
+   "expand": "fill",
+   "h": 2900,
+   "page": "interview",
+   "title": "A \u00b7 Other states",
+   "w": 1700,
+   "x": 7280,
+   "y": 0
+  },
+  "InterviewAPhone.dc.html": {
+   "expand": "fill",
+   "h": 2262,
+   "page": "interview",
+   "title": "A \u00b7 Phone",
+   "w": 1300,
+   "x": 9100,
+   "y": 0
+  },
+  "InterviewB.dc.html": {
+   "expand": "fill",
+   "h": 2900,
+   "page": "interview",
+   "title": "B \u00b7 Comic page",
+   "w": 1700,
+   "x": 1820,
+   "y": 0
+  },
+  "InterviewC.dc.html": {
+   "expand": "fill",
+   "h": 2900,
+   "page": "interview",
+   "title": "C \u00b7 Speech bubble",
+   "w": 1700,
+   "x": 3640,
+   "y": 0
+  },
+  "LibDesktop.dc.html": {
+   "expand": "fill",
+   "h": 4460,
+   "page": "librarian",
+   "title": "Interview 4 \u00b7 The Librarian\u2019s notebook, desktop",
+   "w": 1760,
+   "x": 0,
+   "y": 0
+  },
+  "LibMore.dc.html": {
+   "expand": "fill",
+   "h": 2620,
+   "page": "librarian",
+   "title": "Interview 4 \u00b7 The Librarian: idle, paste and the sign-off",
+   "w": 1760,
+   "x": 5640,
+   "y": 0
+  },
+  "LibParts.dc.html": {
+   "expand": "fill",
+   "h": 4240,
+   "page": "librarian",
+   "title": "Interview 4 \u00b7 The Librarian: the parts",
+   "w": 1760,
+   "x": 3760,
+   "y": 0
+  },
+  "LibPhone.dc.html": {
+   "expand": "fill",
+   "h": 1240,
+   "page": "librarian",
+   "title": "Interview 4 \u00b7 The Librarian\u2019s notebook, phone",
+   "w": 1760,
+   "x": 1880,
+   "y": 0
+  },
+  "LibReopened.dc.html": {
+   "expand": "fill",
+   "h": 1110,
+   "page": "librarian",
+   "title": "Interview 4 \u00b7 The Librarian: reopened to add to the book",
+   "w": 1760,
+   "x": 7520,
+   "y": 0
+  },
+  "Main.dc.html": {
+   "expand": "fill",
+   "h": 2320,
+   "is_interactive": true,
+   "title": "Shelf \u00b7 desktop",
+   "w": 1440,
+   "x": 0,
+   "y": 0
+  },
+  "MangaA.dc.html": {
+   "h": 1100,
+   "page": "manga",
+   "title": "A \u00b7 The page \u00b7 Panels on slanted gutters",
+   "w": 1440,
+   "x": 0,
+   "y": 0
+  },
+  "MangaB.dc.html": {
+   "h": 1100,
+   "page": "manga",
+   "title": "B \u00b7 The strip \u00b7 Black rail, one dark band, long shelves",
+   "w": 1440,
+   "x": 1520,
+   "y": 0
+  },
+  "MangaB2.dc.html": {
+   "h": 1100,
+   "page": "manga",
+   "title": "B2 \u00b7 The strip, top navigation \u00b7 Navigation across the top like A, banner and shelves from B",
+   "w": 1440,
+   "x": 1520,
+   "y": 1180
+  },
+  "MangaBtn.dc.html": {
+   "h": 1040,
+   "page": "manga",
+   "title": "Ask to check out \u00b7 four button options",
+   "w": 1440,
+   "x": 3040,
+   "y": 1180
+  },
+  "MangaC.dc.html": {
+   "h": 1100,
+   "page": "manga",
+   "title": "C \u00b7 The spread \u00b7 An open book: contents left, shelves right",
+   "w": 1440,
+   "x": 3040,
+   "y": 0
+  },
+  "MarbleA.dc.html": {
+   "h": 640,
+   "title": "Marble A \u00b7 polished Carrara ledge",
+   "w": 1200,
+   "x": 0,
+   "y": 5760
+  },
+  "MarbleB.dc.html": {
+   "h": 640,
+   "title": "Marble B \u00b7 green marble niche",
+   "w": 1200,
+   "x": 1280,
+   "y": 5760
+  },
+  "MarbleC.dc.html": {
+   "h": 640,
+   "title": "Marble C \u00b7 honed pink slab, block bookends",
+   "w": 1200,
+   "x": 2560,
+   "y": 5760
+  },
+  "MarblePage.dc.html": {
+   "expand": "fill",
+   "h": 2760,
+   "is_interactive": true,
+   "title": "Carrara \u00b7 shelf page, desktop",
+   "w": 1440,
+   "x": 0,
+   "y": 7000
+  },
+  "PaperCells.dc.html": {
+   "h": 900,
+   "page": "strata",
+   "title": "Paper cells \u00b7 after the reference: shaded cells, one grain per material, layered mist",
+   "w": 1440,
+   "x": 1520,
+   "y": 2160
+  },
+  "PhoneBook.dc.html": {
+   "h": 844,
+   "title": "Open book \u00b7 phone",
+   "w": 390,
+   "x": 1990,
+   "y": 0
+  },
+  "PhoneShelf.dc.html": {
+   "h": 844,
+   "title": "Shelf \u00b7 phone",
+   "w": 390,
+   "x": 1520,
+   "y": 0
+  },
+  "ScandiNotes.dc.html": {
+   "h": 920,
+   "title": "Daylight library \u00b7 the system",
+   "w": 1200,
+   "x": 1990,
+   "y": 10360
+  },
+  "ScandiPage.dc.html": {
+   "expand": "fill",
+   "h": 1800,
+   "is_interactive": true,
+   "title": "Daylight library \u00b7 shelf page, desktop",
+   "w": 1440,
+   "x": 0,
+   "y": 10360
+  },
+  "ScandiPhone.dc.html": {
+   "h": 844,
+   "title": "Daylight library \u00b7 shelf, phone",
+   "w": 390,
+   "x": 1520,
+   "y": 10360
+  },
+  "ShadowPhone.dc.html": {
+   "h": 844,
+   "title": "Light and shadow \u00b7 shelf, phone",
+   "w": 390,
+   "x": 1520,
+   "y": 2920
+  },
+  "ShadowShelf.dc.html": {
+   "expand": "fill",
+   "h": 2240,
+   "is_interactive": true,
+   "title": "Light and shadow \u00b7 shelf, desktop",
+   "w": 1440,
+   "x": 0,
+   "y": 2920
+  },
+  "ShadowSystem.dc.html": {
+   "h": 1240,
+   "title": "Light and shadow \u00b7 the system",
+   "w": 1200,
+   "x": 1990,
+   "y": 2920
+  },
+  "StrataBook.dc.html": {
+   "h": 1140,
+   "page": "strata",
+   "title": "Strata \u00b7 one book, opened: the cover is a window onto its landscape",
+   "w": 1440,
+   "x": 0,
+   "y": 0
+  },
+  "StrataCover2.dc.html": {
+   "h": 1000,
+   "page": "strata",
+   "title": "Strata cover \u00b7 round 2: solid slabs, more detail",
+   "w": 1440,
+   "x": 0,
+   "y": 2160
+  },
+  "StrataPlaces.dc.html": {
+   "h": 2040,
+   "page": "strata",
+   "title": "Strata \u00b7 more places: phone, reveal, checkout, meeting",
+   "w": 1440,
+   "x": 3040,
+   "y": 0
+  },
+  "StrataShelf.dc.html": {
+   "h": 1180,
+   "page": "strata",
+   "title": "Strata \u00b7 on the shelf, and how the art is made",
+   "w": 1440,
+   "x": 1520,
+   "y": 0
+  },
+  "SysComponents1.dc.html": {
+   "h": 2700,
+   "page": "system",
+   "title": "2 \u00b7 Components: actions and forms",
+   "w": 1440,
+   "x": 1520,
+   "y": 1180
+  },
+  "SysComponents2.dc.html": {
+   "h": 3500,
+   "page": "system",
+   "title": "3 \u00b7 Components: content and structure",
+   "w": 1440,
+   "x": 0,
+   "y": 4160
+  },
+  "SysFoundations.dc.html": {
+   "h": 2900,
+   "page": "system",
+   "title": "1 \u00b7 Foundations: color, type, space, tone, motion",
+   "w": 1440,
+   "x": 0,
+   "y": 1180
+  },
+  "SysRules.dc.html": {
+   "h": 2600,
+   "page": "system",
+   "title": "4 \u00b7 How to use it: fixed, default, free",
+   "w": 1440,
+   "x": 1520,
+   "y": 4160
+  },
+  "SysShelf.dc.html": {
+   "h": 1100,
+   "page": "system",
+   "title": "Reference screen \u00b7 The shelf",
+   "w": 1440,
+   "x": 0,
+   "y": 0
+  },
+  "SysSignIn.dc.html": {
+   "h": 900,
+   "page": "system",
+   "title": "Reference screen \u00b7 Sign in",
+   "w": 1440,
+   "x": 1520,
+   "y": 0
+  },
+  "ToolCirc.dc.html": {
+   "h": 1300,
+   "page": "tool",
+   "title": "C \u00b7 Circulation desk: ink, stamp and highlighter",
+   "w": 1440,
+   "x": 1520,
+   "y": 1240
+  },
+  "ToolDark.dc.html": {
+   "h": 1300,
+   "page": "tool",
+   "title": "B \u00b7 After hours: lamplight on white books",
+   "w": 1440,
+   "x": 0,
+   "y": 1240
+  },
+  "ToolPhone.dc.html": {
+   "h": 844,
+   "page": "tool",
+   "title": "Shelf \u00b7 phone",
+   "w": 390,
+   "x": 1520,
+   "y": 0
+  },
+  "ToolShelf.dc.html": {
+   "expand": "fill",
+   "h": 1120,
+   "is_interactive": true,
+   "page": "tool",
+   "title": "A \u00b7 Neutral, shelf desktop",
+   "w": 1440,
+   "x": 0,
+   "y": 0
+  },
+  "VoxelValley.dc.html": {
+   "h": 900,
+   "page": "voxel",
+   "title": "Voxel cover \u00b7 The valley, round 1",
+   "w": 1440,
+   "x": 0,
+   "y": 0
+  },
+  "WCBookHills.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen \u00b7 patchwork hills",
+   "w": 1440,
+   "x": 680,
+   "y": 1200
+  },
+  "WCBookLake.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen \u00b7 alpine lake",
+   "w": 1440,
+   "x": 680,
+   "y": 2400
+  },
+  "WCBookMesa.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen \u00b7 desert butte at dusk",
+   "w": 1440,
+   "x": 680,
+   "y": 0
+  },
+  "WCBookWinter.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen \u00b7 winter dusk",
+   "w": 1440,
+   "x": 680,
+   "y": 3600
+  },
+  "WCCoverAutumn3.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover \u00b7 Autumn river, bridge and trees reworked",
+   "w": 600,
+   "x": 0,
+   "y": 7200
+  },
+  "WCCoverBeach.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover \u00b7 Beach at sunset (abstract)",
+   "w": 600,
+   "x": 680,
+   "y": 8400
+  },
+  "WCCoverBlossom.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover \u00b7 Blossom tree by a pond (abstract)",
+   "w": 600,
+   "x": 0,
+   "y": 6000
+  },
+  "WCCoverCity.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover \u00b7 City at night (abstract)",
+   "w": 600,
+   "x": 0,
+   "y": 4800
+  },
+  "WCCoverHarbor.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover \u00b7 Hillside harbor town",
+   "w": 600,
+   "x": 680,
+   "y": 9600
+  },
+  "WCCoverHills.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover \u00b7 Patchwork hills (abstract)",
+   "w": 600,
+   "x": 0,
+   "y": 1200
+  },
+  "WCCoverLake.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover \u00b7 Alpine lake (abstract)",
+   "w": 600,
+   "x": 0,
+   "y": 2400
+  },
+  "WCCoverLighthouse.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover \u00b7 Lighthouse on the headland",
+   "w": 600,
+   "x": 0,
+   "y": 9600
+  },
+  "WCCoverLighthouse2.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover \u00b7 Lighthouse at dusk (painted to the top)",
+   "w": 600,
+   "x": 1360,
+   "y": 9600
+  },
+  "WCCoverMesa.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover \u00b7 Desert butte at dusk (abstract)",
+   "w": 600,
+   "x": 0,
+   "y": 0
+  },
+  "WCCoverPrairie.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover \u00b7 Prairie storm (abstract)",
+   "w": 600,
+   "x": 0,
+   "y": 8400
+  },
+  "WCCoverWinter.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Cover \u00b7 Winter dusk (abstract)",
+   "w": 600,
+   "x": 0,
+   "y": 3600
+  },
+  "WireA.dc.html": {
+   "h": 1100,
+   "page": "wireframes",
+   "title": "A \u00b7 feature, then shelves",
+   "w": 1440,
+   "x": 0,
+   "y": 0
+  },
+  "WireB.dc.html": {
+   "h": 1100,
+   "page": "wireframes",
+   "title": "B \u00b7 side rail",
+   "w": 1440,
+   "x": 1520,
+   "y": 0
+  },
+  "WireC.dc.html": {
+   "h": 1100,
+   "page": "wireframes",
+   "title": "C \u00b7 bookcase",
+   "w": 1440,
+   "x": 0,
+   "y": 1220
+  },
+  "WireD.dc.html": {
+   "h": 1100,
+   "page": "wireframes",
+   "title": "D \u00b7 black split",
+   "w": 1440,
+   "x": 1520,
+   "y": 1220
+  },
+  "MyBookNow.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1760,
+   "h": 2290,
+   "title": "My book \u00b7 how it is now",
+   "page": "mybook",
+   "expand": "fill"
+  },
+  "MyBookStates.dc.html": {
+   "x": 5640,
+   "y": 0,
+   "w": 1760,
+   "h": 2450,
+   "title": "My book \u00b7 every stage",
+   "page": "mybook",
+   "expand": "fill"
+  },
+  "MyBookC.dc.html": {
+   "x": 1880,
+   "y": 0,
+   "w": 1760,
+   "h": 7760,
+   "title": "My book \u00b7 a calmer page",
+   "page": "mybook",
+   "expand": "fill"
+  },
+  "MyBookStudio.dc.html": {
+   "x": 3760,
+   "y": 0,
+   "w": 1760,
+   "h": 5190,
+   "title": "My book \u00b7 the design studio",
+   "page": "mybook",
+   "expand": "fill"
+  },
+  "STCoverLayers.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 600,
+   "h": 1090,
+   "title": "Cover \u00b7 Layers",
+   "page": "stipple"
+  },
+  "STCoverOrbit.dc.html": {
+   "x": 680,
+   "y": 0,
+   "w": 600,
+   "h": 1090,
+   "title": "Cover \u00b7 Orbit",
+   "page": "stipple"
+  },
+  "STCoverRipples.dc.html": {
+   "x": 1360,
+   "y": 0,
+   "w": 600,
+   "h": 1090,
+   "title": "Cover \u00b7 Ripples",
+   "page": "stipple"
+  },
+  "WCBookCity.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen \u00b7 city at night on the river",
+   "w": 1440,
+   "x": 680,
+   "y": 4800
+  },
+  "WCBookBlossom.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen \u00b7 blossom tree by a pond",
+   "w": 1440,
+   "x": 680,
+   "y": 6000
+  },
+  "WCBookAutumn.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen \u00b7 autumn river with a bridge",
+   "w": 1440,
+   "x": 680,
+   "y": 7200
+  }
+ },
+ "createdOnFiles": {
+  "at": "2026-11-05T16:00:00Z",
+  "v": 1
+ },
+ "designSystems": [],
+ "launch": {
+  "view": "canvas"
+ },
+ "notes": {
+  "covers": {
+   "kind": "title1",
+   "maxW": 1440,
+   "page": "covers",
+   "text": "Covers \u00b7 five directions on white, inspired by Japanese art forms",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "final": {
+   "kind": "title1",
+   "maxW": 2120,
+   "page": "final",
+   "text": "Final designs \u00b7 strata, finished",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "fresh": {
+   "kind": "title1",
+   "maxW": 2120,
+   "page": "fresh",
+   "text": "Fresh directions \u00b7 each cover on the left, its book page on the right; the ones with book pages first",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "freshbook": {
+   "kind": "title1",
+   "maxW": 1440,
+   "page": "fresh",
+   "text": "Book screen \u00b7 two ways to show one book: A the book page (left), B the book opens",
+   "w": 240,
+   "x": 2220,
+   "y": -300
+  },
+  "head": {
+   "kind": "title1",
+   "maxW": 2380,
+   "text": "Direction 1 \u00b7 Cloth and oak",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "head2": {
+   "kind": "title1",
+   "maxW": 3190,
+   "text": "Direction 2 \u00b7 Light and shadow",
+   "w": 240,
+   "x": 0,
+   "y": 2620
+  },
+  "head3": {
+   "kind": "title1",
+   "maxW": 3760,
+   "text": "Direction 3 \u00b7 Marble: three shelf options",
+   "w": 240,
+   "x": 0,
+   "y": 5460
+  },
+  "head4": {
+   "kind": "title1",
+   "maxW": 1440,
+   "text": "Direction 3 \u00b7 The Carrara shelf page",
+   "w": 240,
+   "x": 0,
+   "y": 6700
+  },
+  "head5": {
+   "kind": "title1",
+   "maxW": 3190,
+   "text": "Direction 4 \u00b7 Daylight library",
+   "w": 240,
+   "x": 0,
+   "y": 10060
+  },
+  "ident": {
+   "kind": "title1",
+   "maxW": 2480,
+   "page": "identities",
+   "text": "Identities \u00b7 six printed-media languages to pick from",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "manga": {
+   "kind": "title1",
+   "maxW": 4400,
+   "page": "manga",
+   "text": "Manga screentone \u00b7 three layouts of the shelf page",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "strata": {
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "strata",
+   "text": "Strata \u00b7 landscapes laid in slabs, on the cover and in the book",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "strata2": {
+   "kind": "title1",
+   "maxW": 1440,
+   "page": "strata",
+   "text": "Round 2 \u00b7 solid slabs, more detail",
+   "w": 240,
+   "x": 0,
+   "y": 1860
+  },
+  "strata3": {
+   "kind": "title1",
+   "maxW": 1440,
+   "page": "strata",
+   "text": "Round 3 \u00b7 paper cells",
+   "w": 240,
+   "x": 1520,
+   "y": 1860
+  },
+  "system": {
+   "kind": "title1",
+   "maxW": 2960,
+   "page": "system",
+   "text": "Trove design system \u00b7 Manga screentone, v1",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "tool": {
+   "kind": "title1",
+   "maxW": 1910,
+   "page": "tool",
+   "text": "Direction 5 \u00b7 Working tool: neutral, dense, white books",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "voxel": {
+   "kind": "title1",
+   "maxW": 1440,
+   "page": "voxel",
+   "text": "Voxel covers \u00b7 small-cube scenes rendered in 3D",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "wire": {
+   "kind": "title1",
+   "maxW": 2960,
+   "page": "wireframes",
+   "text": "Shell homepage \u00b7 four layouts in black and white",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "mybook": {
+   "x": 0,
+   "y": -300,
+   "text": "My book \u00b7 as it is, a calmer page, the design studio, every stage",
+   "kind": "title1",
+   "maxW": 7400,
+   "page": "mybook"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "PhoneShelf.dc.html",
+  "PhoneBook.dc.html",
+  "BookObject.dc.html",
+  "ShadowShelf.dc.html",
+  "ShadowPhone.dc.html",
+  "ShadowSystem.dc.html",
+  "MarbleA.dc.html",
+  "MarbleB.dc.html",
+  "MarbleC.dc.html",
+  "MarblePage.dc.html",
+  "ScandiPage.dc.html",
+  "ScandiPhone.dc.html",
+  "ScandiNotes.dc.html",
+  "WireA.dc.html",
+  "WireB.dc.html",
+  "WireC.dc.html",
+  "WireD.dc.html",
+  "ToolShelf.dc.html",
+  "ToolPhone.dc.html",
+  "ToolDark.dc.html",
+  "ToolCirc.dc.html",
+  "Ident1.dc.html",
+  "Ident2.dc.html",
+  "Ident3.dc.html",
+  "Ident4.dc.html",
+  "Ident5.dc.html",
+  "Ident6.dc.html",
+  "MangaA.dc.html",
+  "MangaB.dc.html",
+  "MangaC.dc.html",
+  "MangaB2.dc.html",
+  "MangaBtn.dc.html",
+  "SysShelf.dc.html",
+  "SysSignIn.dc.html",
+  "SysFoundations.dc.html",
+  "SysComponents1.dc.html",
+  "SysComponents2.dc.html",
+  "SysRules.dc.html",
+  "CoverDirections.dc.html",
+  "CoverWatercolor.dc.html",
+  "CoverLandscape.dc.html",
+  "InterviewA.dc.html",
+  "InterviewB.dc.html",
+  "InterviewC.dc.html",
+  "InterviewA2.dc.html",
+  "GrowingG1.dc.html",
+  "GrowingG2.dc.html",
+  "GrowingG3.dc.html",
+  "GrowingG4.dc.html",
+  "GrowingG5.dc.html",
+  "InterviewA3.dc.html",
+  "InterviewAPhone.dc.html",
+  "ElevateA.dc.html",
+  "ElevateB.dc.html",
+  "ElevateC.dc.html",
+  "ElevateK1.dc.html",
+  "ElevateK2.dc.html",
+  "ElevateK3.dc.html",
+  "ElevateI3.dc.html",
+  "StrataBook.dc.html",
+  "StrataShelf.dc.html",
+  "StrataPlaces.dc.html",
+  "VoxelValley.dc.html",
+  "StrataCover2.dc.html",
+  "PaperCells.dc.html",
+  "LibDesktop.dc.html",
+  "LibPhone.dc.html",
+  "LibParts.dc.html",
+  "LibMore.dc.html",
+  "LibReopened.dc.html",
+  "FreshStrata.dc.html",
+  "FreshBookStrata.dc.html",
+  "FreshCover5.dc.html",
+  "FreshBookPencil.dc.html",
+  "FreshCover6.dc.html",
+  "FreshBookWash.dc.html",
+  "FreshCover8.dc.html",
+  "FreshBookStipple.dc.html",
+  "FreshCover4.dc.html",
+  "FreshBookGouache.dc.html",
+  "FreshCover3.dc.html",
+  "FreshBookBlock.dc.html",
+  "FreshCover7.dc.html",
+  "FreshBookCut.dc.html",
+  "FreshCover1.dc.html",
+  "FreshCover2.dc.html",
+  "FreshReaderOpen.dc.html",
+  "FinalCover.dc.html",
+  "FinalBook.dc.html",
+  "FinalCoverDesert.dc.html",
+  "FinalCoverCoast.dc.html",
+  "FinalCoverValley.dc.html",
+  "FinalBookCoast.dc.html",
+  "FinalBookDesert.dc.html",
+  "FinalBookValley.dc.html",
+  "FinalCoverKarst.dc.html",
+  "FinalCoverAurora.dc.html",
+  "FinalCoverTerraces.dc.html",
+  "FinalCoverLagoon.dc.html",
+  "FinalBookKarst.dc.html",
+  "FinalBookAurora.dc.html",
+  "FinalBookTerraces.dc.html",
+  "FinalBookLagoon.dc.html",
+  "FinalCoverCity.dc.html",
+  "FinalCoverForest.dc.html",
+  "FinalBookCity.dc.html",
+  "FinalBookForest.dc.html",
+  "WCCoverLighthouse.dc.html",
+  "WCCoverHarbor.dc.html",
+  "WCCoverLighthouse2.dc.html",
+  "WCCoverAutumn3.dc.html",
+  "WCCoverMesa.dc.html",
+  "WCCoverHills.dc.html",
+  "WCCoverLake.dc.html",
+  "WCCoverWinter.dc.html",
+  "WCBookMesa.dc.html",
+  "WCBookHills.dc.html",
+  "WCBookLake.dc.html",
+  "WCBookWinter.dc.html",
+  "WCCoverCity.dc.html",
+  "WCCoverBlossom.dc.html",
+  "WCCoverPrairie.dc.html",
+  "WCCoverBeach.dc.html",
+  "MyBookNow.dc.html",
+  "MyBookStates.dc.html",
+  "MyBookC.dc.html",
+  "MyBookStudio.dc.html",
+  "STCoverLayers.dc.html",
+  "STCoverOrbit.dc.html",
+  "STCoverRipples.dc.html",
+  "WCBookCity.dc.html",
+  "WCBookBlossom.dc.html",
+  "WCBookAutumn.dc.html"
+ ],
+ "pages": [
+  {
+   "id": "designs",
+   "name": "Designs"
+  },
+  {
+   "id": "wireframes",
+   "name": "Wireframes"
+  },
+  {
+   "id": "tool",
+   "name": "Working tool"
+  },
+  {
+   "id": "identities",
+   "name": "Identities"
+  },
+  {
+   "id": "manga",
+   "name": "Manga screens"
+  },
+  {
+   "id": "system",
+   "name": "Design system"
+  },
+  {
+   "id": "covers",
+   "name": "Covers"
+  },
+  {
+   "id": "interview",
+   "name": "Interview"
+  },
+  {
+   "id": "growing",
+   "name": "Growing books"
+  },
+  {
+   "id": "elevate",
+   "name": "Elevate"
+  },
+  {
+   "id": "strata",
+   "name": "Strata covers"
+  },
+  {
+   "id": "voxel",
+   "name": "Voxel covers"
+  },
+  {
+   "id": "fresh",
+   "name": "Fresh directions"
+  },
+  {
+   "id": "librarian",
+   "name": "Librarian notebook"
+  },
+  {
+   "id": "final",
+   "name": "Covers: Strata"
+  },
+  {
+   "id": "watercolor",
+   "name": "Covers: Watercolor"
+  },
+  {
+   "id": "mybook",
+   "name": "My book"
+  },
+  {
+   "id": "stipple",
+   "name": "Covers: Stippled ink"
+  }
+ ],
+ "title": "Trove Shelf"
 }

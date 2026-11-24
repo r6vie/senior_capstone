@@ -465,6 +465,20 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   knockout, whose box is taller than the 0.95 line, so each line's box covered the foot of the line above. The title
   has no knockout now (the art never reaches it). The name is plain Barlow Condensed 700 caps, +0.24em, in the
   cover's ink, on the white knockout only.
+- **Book screens for the city, blossom and autumn covers (Josef: "do the book screens for blossom, city and
+  autumn").** Boards `WCBook{City,Blossom,Autumn}` on "Covers: Watercolor", built like the first four
+  (`shelf/watercolor_book.py`), the page art from `art/watercolor/pages2.py`. Each sits to the right of its cover:
+  city, blossom and autumn now take the paired rows under winter; prairie and beach (no book screens) one row below,
+  the round 1 and lighthouse covers in the last row. City: the indigo night climbing the right with a pale moon, a
+  few overlapping towers rising to one spire, soft lights only near it, a long low bridge on broad arches with an
+  uneven string of lamps, broken streaks in the river, a deep violet embankment in front. Blossom: grouped blossom
+  and green trees on the far bank, a pond with an irregular shore holding the pink, a small footbridge as one solid
+  arc between grassy banks, the great tree's crown climbing the right side and reaching out low over the water,
+  petals drifting. Autumn: the same golden haze and violet wood, a long flat stone arch in the middle distance with
+  a dark fir beyond, the river winding wide toward us in loose gold and violet patches, a broken reflection, trees on
+  both banks and the great oak rising on the right. One Josef-eye critic round; its fixes are applied (fewer towers
+  and lights, no black quay or lamps, clustered far trees, no railings on the footbridge, a flatter arch, the house
+  removed) and not re-reviewed.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
