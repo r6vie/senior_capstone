@@ -3,15 +3,14 @@ are one of your picks, "so it's all nice and unified", the timing matching the w
 appropriate for that art style").
 
 Watercolour arrives as wet paint spreading; strata is built, so it arrives the way it is made: slab by slab. The
-renderer runs once with every slab recorded (its rectangles and which layer of the scene it belongs to). Playback
-lays the scene's layers far to near, in the renderer's own order, each one built up from its bottom course to its
-top, like masonry or settling sediment; inside a course the slabs land a little out of step. Each slab drops a
-little way into its course and settles, fading in as it does. The clock is the watercolours' (paint_anim.py): every
-layer has started by 10 s, everything has landed by about 12.5 s, the reveal ends on the finished cover at 13.5 s,
-and the design studio's quick version is the same build at 0.3 of the time.
+renderer runs once with every slab recorded (its rectangles). Playback lays them back in one sweep from the foot of
+the cover to the top, racing at first and slowing as it climbs; each slab appears a little above its course and
+drifts down into place, the top ones settling slowest. The schedule is written on the watercolours' clock
+(paint_anim.py, settled by ~11.7 s, the cover at 13.5 s) and played at QUICK (0.3) of it: about 4 s, the same as the
+watercolours' quick version. The last frame is the cover, pixel for pixel.
 
-python3 strata_anim.py lake [--preview] -> out/anim-<key>/reveal_XXXX.png (12 fps), quick_XXXX.png (24 fps),
-out/anim-<key>-poster.png"""
+python3 strata_anim.py [key ...] [--preview] -> out/anim-<key>/quick_XXXX.png (24 fps, about 4 s): the only version.
+Josef, 2026-11-23: strata plays fast everywhere it appears (the reveal, the picks, the studio), never slow."""
 import math
 import os
 import random
@@ -22,8 +21,8 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, ".")
 import strata
 
-START_SPAN, PAINT_END, QUICK = 10.0, 13.5, 0.3       # the watercolours' clock (art/watercolor/paint_anim.py)
-FPS, QUICK_FPS = 12, 24
+PAINT_END, QUICK = 13.5, 0.3                         # the watercolours' clock (art/watercolor/paint_anim.py)
+QUICK_FPS = 24
 SWEEP, EASE = 9.0, 2.4                              # the front reaches the top at 9 s, racing first, slowing last
 SETTLE_FAST, SETTLE_SLOW = 0.8, 2.2                 # a slab's drift into place: quick at the foot, slow at the top
 DROP = 1.6                                          # how far above its course it appears, in courses
@@ -118,30 +117,47 @@ def frame(t, slabs, times, size, paper, course, k=1.0):
 
 
 def covers():
-    """The strata set 1 covers and how each is rendered. Only the lake is wired up for the demo."""
+    """The ten strata set 1 covers, by their set keys: (scene, render arguments), exactly as each script renders its
+    472 x 688 cover (set-1/covers/<key>.webp)."""
     import final
-    return {"lake": (final.cover(), dict(viewport=(0, 0, 236, 344), size=(472, 688), course=8,
-                                          paper=(255, 255, 255), clean=True))}
+    import covers_more
+    import covers_new
+    import covers_us
+    import fields
+    base = dict(viewport=(0, 0, 236, 344), size=(472, 688), course=8, paper=(255, 255, 255), clean=True)
+    return {
+        "lake": (final.cover(), base),
+        "desert": (covers_more.desert(), dict(base, jitter=0.017)),
+        "coast": (covers_more.coast(), dict(base, jitter=0.05)),
+        "valley": (covers_more.valley(), dict(base, jitter=0.05)),
+        "karst": (covers_new.karst(), dict(base, jitter=0.04)),
+        "winter": (covers_new.aurora(), dict(base, jitter=0.04)),
+        "lagoon": (covers_new.lagoon(), dict(base, jitter=0.04)),
+        "city": (covers_us.city(), dict(base, jitter=0.04)),
+        "forest": (covers_us.forest(), dict(base, jitter=0.04)),
+        "fields": (fields.cover(), dict(base, jitter=0.04)),
+    }
 
 
 if __name__ == "__main__":
-    key = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else "lake"
-    scene, kw = covers()[key]
-    course, size, paper = kw["course"], kw["size"], kw.get("paper", strata.PAPER)
-    slabs, final_img = record(scene, kw["viewport"], size, course,
-                              **{a: b for a, b in kw.items() if a not in ("viewport", "size", "course")})
-    times = schedule(slabs)
-    print(key, "slabs:", len(slabs), "last settles at", round(max(t0 + st for t0, st in times), 2), "s")
-    d = f"out/anim-{key}"
-    os.makedirs(d, exist_ok=True)
-    for f in os.listdir(d):
-        os.remove(f"{d}/{f}")
-    step = 12 if "--preview" in sys.argv else 1
-    for n in range(0, int(PAINT_END * FPS) + 1, step):
-        Image.fromarray(frame(n / FPS, slabs, times, size, paper, course)).save(f"{d}/reveal_{n:04d}.png")
-    for n in range(0, int(PAINT_END * QUICK * QUICK_FPS) + 1, step):
-        Image.fromarray(frame(n / QUICK_FPS, slabs, times, size, paper, course, k=QUICK)).save(f"{d}/quick_{n:04d}.png")
-    done = frame(PAINT_END, slabs, times, size, paper, course)
-    Image.fromarray(done).save(f"out/anim-{key}-poster.png")
-    ref = np.asarray(final_img.convert("RGB")).astype(int)
-    print(key, "finished frame vs the cover: max diff", int(np.abs(done.astype(int) - ref).max()))
+    # Josef, 2026-11-23: strata never plays slow (the slow timing is only watercolour's, on the sign-in intro); the
+    # book reveal, the picks and the design studio all use this quick build
+    keys = [a for a in sys.argv[1:] if not a.startswith("-")] or list(covers())
+    allc = covers()
+    for key in keys:
+        scene, kw = allc[key]
+        course, size, paper = kw["course"], kw["size"], kw.get("paper", strata.PAPER)
+        slabs, final_img = record(scene, kw["viewport"], size, course,
+                                  **{a: b for a, b in kw.items() if a not in ("viewport", "size", "course")})
+        times = schedule(slabs)
+        d = f"out/anim-{key}"
+        os.makedirs(d, exist_ok=True)
+        for f in os.listdir(d):
+            os.remove(f"{d}/{f}")
+        step = 12 if "--preview" in sys.argv else 1
+        for n in range(0, int(PAINT_END * QUICK * QUICK_FPS) + 1, step):
+            Image.fromarray(frame(n / QUICK_FPS, slabs, times, size, paper, course, k=QUICK)).save(f"{d}/quick_{n:04d}.png")
+        done = frame(PAINT_END, slabs, times, size, paper, course)
+        ref = np.asarray(Image.open(f"set-1/covers/{key}.webp").convert("RGB")).astype(int)
+        print(key, "slabs", len(slabs), "settled by", round(QUICK * max(t0 + st for t0, st in times), 2), "s;",
+              "finished frame vs set-1 cover: max diff", int(np.abs(done.astype(int) - ref).max()), flush=True)

@@ -1260,3 +1260,16 @@ Pending Josef's review of the new canvas.
   watercolours ("right now it's a little too long").** The front reaches the top over 9 s on an ease-out (most of
   the cover is up within ~5 s), and each slab's settle lengthens from 0.8 s at the foot to 2.2 s at the top. Last
   slab settled at ~11.7 s; still ends on the cover pixel for pixel at 13.5 s; quick at 0.3 of the time.
+
+## 2026-11-23: fast everywhere but the intro; strata animations for all ten
+
+- **Josef:** "the slower animation is only going to be used for watercolor in the intro screen, and then even at
+  the reveal of your books and in the design studio, it's going to be the fast animations ... drop the slow Strata
+  animation, only fast Strata animations ... render the rest of Strata and send everything over for
+  implementation."
+- Strata: `strata_anim.py` renders only the quick build (24 fps, ~4 s, every slab settled by 3.5 s) for all ten set 1
+  covers, each matching its `set-1/covers/<key>.webp` pixel for pixel; `strata/set-1/anim/<key>-quick.{mp4,webm}`
+  (2.2 MB in all), manifest (`category: strata`, `anim`) and README updated.
+- Watercolour: the `reveal` clips are removed from `watercolor/set-1/anim/`; the reveal, the picks and the studio
+  use `quick`; `loop` (sign-in intro only) is the one slow animation. Manifest, README and `encode_anim.sh` follow.
+- Board `StudioPaint` shows the two styles' quick versions side by side and all ten strata covers at shelf size.
