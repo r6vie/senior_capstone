@@ -285,7 +285,7 @@ The task: say what the interview is before it starts, without a band or a form. 
 - **The contents page:** three chapter places draw in, a number and two blank lines each, as the second line types.
 - **Under the lines:** the member's place at CWRU (Current student, Alumni, I am a founder; no helper lines) and
   one optional résumé line ("A résumé, if you like", Drop a PDF here, Choose a PDF; then the file's name and
-  Remove). The résumé goes with Start. Start stays greyed until an affiliation is ticked, with "About 20
+  Remove). The résumé goes with Start. Start stays greyed until an affiliation is ticked, with "About 10
   minutes" beside it, and the wait's line takes that place after Start.
 - Skip, and reduced motion, open on the end. On a narrower screen the two pages stack.
 

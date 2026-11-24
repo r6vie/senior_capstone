@@ -12,7 +12,7 @@ import "./IntroBook.css";
 const LINES = [
   "I’ll ask you one question at a time.",
   "What you tell me becomes the chapters of your book.",
-  "About 20 minutes. Nobody sees it until you put it on the shelf.",
+  "About 10 minutes. Nobody sees it until you put it on the shelf.",
 ];
 const PLACES = 3;
 // One letter every this many milliseconds, and a breath between lines.
@@ -276,7 +276,7 @@ export function IntroBook({
                       {busy}
                     </span>
                   ) : (
-                    <span className="ib-minutes">About 20 minutes</span>
+                    <span className="ib-minutes">About 10 minutes</span>
                   )}
                 </div>
               </div>

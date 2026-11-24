@@ -195,7 +195,7 @@ describe("InterviewPage", () => {
       await skipIntro();
       const start = await screen.findByRole("button", { name: "Start the interview" });
       expect((start as HTMLButtonElement).disabled).toBe(true);
-      expect(screen.getByText("About 20 minutes")).toBeTruthy();
+      expect(screen.getByText("About 10 minutes")).toBeTruthy();
       // Josef dropped both helper lines.
       expect(screen.queryByText(/Choose both when both apply/)).toBeNull();
       expect(screen.queryByText(/not shown on your book/)).toBeNull();
@@ -1045,7 +1045,7 @@ describe("InterviewPage", () => {
       expect(screen.queryByText("Remove this chapter?")).toBeNull();
       fireEvent.click(screen.getByRole("button", { name: `Remove ${title}` }));
       fireEvent.click(screen.getByRole("button", { name: `Remove ${title}` }));
-      expect(remove).toHaveBeenCalledWith("me", "0");
+      await waitFor(() => expect(remove).toHaveBeenCalledWith("me", "0"));
     });
 
     it("at three chapters, a chapter's page has no Remove", async () => {

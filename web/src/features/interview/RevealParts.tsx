@@ -19,6 +19,9 @@ function useTitleTyping(titles: TitleOption[]): number[] {
   const [typed, setTyped] = useState<number[]>(() =>
     reducedMotion() ? titles.map((option) => option.title.length) : titles.map(() => 0),
   );
+  // Restarts only for other titles, not for the same titles sent again.
+  const key = titles.map((option) => option.id).join();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed by the titles' ids on purpose
   useEffect(() => {
     if (reducedMotion()) return;
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -38,7 +41,7 @@ function useTitleTyping(titles: TitleOption[]): number[] {
     return () => {
       for (const timer of timers) clearTimeout(timer);
     };
-  }, [titles]);
+  }, [key]);
   return typed;
 }
 
@@ -167,9 +170,18 @@ export function WritingBook({
         </div>
       }
       right={
-        <div aria-hidden="true">
+        <div>
+          <div className="ib-head ib-head-right">
+            <span className="rv-tabs" aria-hidden="true">
+              <span aria-current="page">Contents</span>
+              {Array.from({ length: places }, (_, index) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: the book's fixed, empty pages
+                <span key={index}>{index + 1}</span>
+              ))}
+            </span>
+          </div>
           <h2 className="ib-pname">Contents</h2>
-          <ol className="ib-places">
+          <ol className="ib-places" aria-hidden="true">
             {Array.from({ length: places }, (_, index) => (
               <li
                 // biome-ignore lint/suspicious/noArrayIndexKey: the contents' fixed, empty places
@@ -200,47 +212,67 @@ function AutoField({
   label,
   value,
   onSave,
+  track,
   className,
   long,
 }: {
   label: string;
   value: string;
   onSave: (text: string) => Promise<void>;
+  /** Hands each save to the book, so shelving or removing waits for it. */
+  track: (save: Promise<void>) => void;
   className?: string;
   long?: boolean;
 }) {
   const id = useId();
+  const problemId = useId();
   const [text, setText] = useState(value);
   const [problem, setProblem] = useState<string | null>(null);
   const saved = useRef(value);
   const focused = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // The book changing elsewhere (a removal, another field) shows here unless the member is typing in it.
+  // Saves go one after another, so an older reply can never land after a newer one.
+  const chain = useRef<Promise<void>>(Promise.resolve());
+  const inFlight = useRef(0);
+  const live = useRef(true);
+  // The book changing elsewhere (a removal, another field) shows here, unless the member is typing in it or
+  // its own save is still on its way.
   useEffect(() => {
-    if (!focused.current) {
+    if (!focused.current && inFlight.current === 0) {
       setText(value);
       saved.current = value;
     }
   }, [value]);
-  const save = async (now: string) => {
+  const save = (now: string) => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
     const trimmed = now.trim();
     if (!trimmed || trimmed === saved.current.trim()) return;
-    try {
-      await onSave(trimmed);
-      saved.current = trimmed;
-      setProblem(null);
-    } catch (reason) {
-      setProblem(reason instanceof Error ? reason.message : "That didn't save. Try again.");
-    }
+    inFlight.current += 1;
+    const done = chain.current.then(async () => {
+      try {
+        await onSave(trimmed);
+        saved.current = trimmed;
+        if (live.current) setProblem(null);
+      } catch (reason) {
+        // Said here, or, once the field has gone (another tab), by the book.
+        const message = reason instanceof Error ? reason.message : "That didn't save. Try again.";
+        if (live.current) setProblem(message);
+        else throw reason;
+      } finally {
+        inFlight.current -= 1;
+      }
+    });
+    chain.current = done.catch(() => undefined);
+    track(done);
   };
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    live.current = true;
+    return () => {
+      live.current = false;
       if (timer.current) clearTimeout(timer.current);
-    },
-    [],
-  );
+    };
+  }, []);
   return (
     <div className={`rv-field${className ? ` ${className}` : ""}`} data-long={long || undefined}>
       <label htmlFor={id} className="iv-visually-hidden">
@@ -252,11 +284,17 @@ function AutoField({
         value={text}
         rows={1}
         aria-invalid={problem ? true : undefined}
+        aria-describedby={problem ? problemId : undefined}
         onFocus={() => {
           focused.current = true;
         }}
         onBlur={() => {
           focused.current = false;
+          // An emptied field isn't saved, so it shows what is.
+          if (!text.trim()) {
+            setText(saved.current);
+            return;
+          }
           save(text);
         }}
         onChange={(event) => {
@@ -267,7 +305,7 @@ function AutoField({
         }}
       />
       {problem && (
-        <p className="message message-error rv-problem" role="alert">
+        <p id={problemId} className="message message-error rv-problem" role="alert">
           <span>!</span>
           <span>{problem}</span>
         </p>
@@ -285,7 +323,9 @@ export function ReviewBook({
   onEditBook,
   onEditChapter,
   onRemove,
-  under,
+  onShelve,
+  busy,
+  others,
   notes,
 }: {
   book: DraftBook;
@@ -295,13 +335,34 @@ export function ReviewBook({
   onEditBook: (edit: BookEdit) => Promise<void>;
   onEditChapter: (chapterId: string, edit: ChapterEdit) => Promise<void>;
   onRemove: (chapterId: string) => Promise<boolean>;
-  /** Put it on the shelf, and See the other titles, under the book. */
-  under: ReactNode;
+  /** Put it on the shelf: only once every save under way has landed. */
+  onShelve: () => void;
+  busy: boolean;
+  /** See the other titles, beside Put it on the shelf. */
+  others: ReactNode;
   /** Said under the book after a change, such as the back cover rewritten to match. */
   notes?: ReactNode;
 }) {
   const [page, setPage] = useState<Page>({ kind: "contents" });
   const [confirming, setConfirming] = useState(false);
+  // Saves under way, so shelving or removing never runs ahead of the member's last words.
+  const pending = useRef(new Set<Promise<void>>());
+  const [lost, setLost] = useState<string | null>(null);
+  const track = (save: Promise<void>) => {
+    pending.current.add(save);
+    save
+      .catch((reason) => setLost(reason instanceof Error ? reason.message : "That didn't save. Try again."))
+      .finally(() => pending.current.delete(save));
+  };
+  const settled = () => Promise.allSettled([...pending.current]);
+  // Moving to another page puts the keyboard on its heading, rather than on a button that's gone.
+  const heading = useRef<HTMLHeadingElement>(null);
+  const moved = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the page changes, by design
+  useEffect(() => {
+    if (!moved.current) return;
+    heading.current?.focus({ preventScroll: true });
+  }, [page]);
   const chapter = page.kind === "chapter" ? book.chapters.find((item) => item.id === page.id) : undefined;
   const at = chapter ? book.chapters.indexOf(chapter) : -1;
   // A removed chapter's page closes back to the contents.
@@ -309,6 +370,7 @@ export function ReviewBook({
     if (page.kind === "chapter" && !chapter) setPage({ kind: "contents" });
   }, [page, chapter]);
   const go = (next: Page) => {
+    moved.current = true;
     setConfirming(false);
     setPage(next);
   };
@@ -351,10 +413,13 @@ export function ReviewBook({
         <span className="rv-num" aria-hidden="true">
           {at + 1}
         </span>
-        <h2 className="iv-visually-hidden">Chapter {at + 1}</h2>
+        <h2 className="iv-visually-hidden" ref={heading} tabIndex={-1}>
+          Chapter {at + 1}
+        </h2>
         <AutoField
           key={`t-${chapter.id}`}
           label={`Chapter ${at + 1} title`}
+          track={track}
           className="rv-ct"
           value={chapter.title}
           onSave={(title) => onEditChapter(chapter.id, { title })}
@@ -362,6 +427,7 @@ export function ReviewBook({
         <AutoField
           key={`s-${chapter.id}`}
           label={`Chapter ${at + 1} text`}
+          track={track}
           className="rv-text"
           long
           value={chapter.summary}
@@ -377,6 +443,8 @@ export function ReviewBook({
                 aria-label={`Remove ${chapter.title}`}
                 onClick={async () => {
                   setConfirming(false);
+                  await settled();
+                  moved.current = true;
                   await onRemove(chapter.id);
                 }}
               >
@@ -403,9 +471,12 @@ export function ReviewBook({
   } else if (page.kind === "back" && book.blurb !== null) {
     right = (
       <div className="rv-back">
-        <h2 className="ib-pname">Back cover</h2>
+        <h2 className="ib-pname" ref={heading} tabIndex={-1}>
+          Back cover
+        </h2>
         <AutoField
           label="Back cover"
+          track={track}
           className="rv-text"
           long
           value={book.blurb}
@@ -416,7 +487,9 @@ export function ReviewBook({
   } else {
     right = (
       <>
-        <h2 className="ib-pname">Contents</h2>
+        <h2 className="ib-pname" ref={heading} tabIndex={-1}>
+          Contents
+        </h2>
         <ol className="rv-toc" data-arriving={reducedMotion() ? undefined : true}>
           {book.chapters.map((item, index) => (
             <li key={item.id} style={{ "--i": index } as CSSProperties}>
@@ -450,6 +523,7 @@ export function ReviewBook({
           <div className="rv-titlepage">
             <AutoField
               label="Title"
+              track={track}
               className="rv-booktitle"
               value={book.title}
               onSave={(title) => onEditBook({ title })}
@@ -465,8 +539,25 @@ export function ReviewBook({
           </>
         }
       />
+      {lost && (
+        <p className="message message-error rv-problem" role="alert">
+          <span>!</span>
+          <span>{lost}</span>
+        </p>
+      )}
       {notes}
-      <div className="rv-under">{under}</div>
+      <div className="rv-under">
+        <Button
+          aria-busy={busy}
+          onClick={async () => {
+            await settled();
+            onShelve();
+          }}
+        >
+          Put it on the shelf
+        </Button>
+        {others}
+      </div>
     </div>
   );
 }

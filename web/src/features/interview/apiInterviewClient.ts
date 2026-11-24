@@ -319,14 +319,29 @@ export const apiInterviewClient: InterviewClient = {
   },
   // Never an error for want of AI: past the limits the API keeps what holds and adds nothing. A 409 (the
   // question moved on) or a dropped call is the same to the screen: nothing new to draw.
-  // GET /interview/notes/final isn't in the API yet (the interview session is adding it). Until it is, the
-  // next question's response brings the final look's entries, and the notebook writes them on arrival.
-  async finalNotes() {
+  // The Librarian's last look at the answer just sent, held by the API until it's ready (up to about 8s).
+  // Failing is never an error: the next question's response brings the same entries.
+  async finalNotes(questionId, signal) {
+    const { data } = await api.GET("/interview/notes/final", {
+      params: { query: { question_id: questionId } },
+      signal,
+    });
+    if (!data) throw new InterviewError("The Librarian had nothing to add.");
     return {
-      status: "none",
-      silent: false,
-      marks: { keep: [], add: [], revise: [], erase: [] },
-      notebook: { keep: [], add: [], revise: [], erase: [] },
+      status: data.status,
+      silent: data.silent,
+      marks: {
+        keep: data.marks.keep,
+        add: data.marks.add.map(toMark),
+        revise: data.marks.revise.map(toMark),
+        erase: data.marks.erase,
+      },
+      notebook: {
+        keep: data.notebook.keep,
+        add: data.notebook.add.map(toEntry),
+        revise: data.notebook.revise.map(toEntry),
+        erase: data.notebook.erase,
+      },
     };
   },
   async notes(look, signal) {

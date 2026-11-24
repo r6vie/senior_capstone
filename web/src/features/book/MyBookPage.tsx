@@ -69,7 +69,7 @@ function NoBookYet({ stage }: { stage: BookStage }) {
     <div className="empty">
       <h3>You haven't started your book yet.</h3>
       <p>
-        About twenty minutes. You can stop sooner, and leave and come back at any time. Nobody sees your book
+        About ten minutes. You can stop sooner, and leave and come back at any time. Nobody sees your book
         until you put it on the shelf.
       </p>
       <div className="iv-row mb-empty-act">

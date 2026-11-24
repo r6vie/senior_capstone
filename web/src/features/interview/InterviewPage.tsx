@@ -43,6 +43,7 @@ import { useAnnouncer } from "./librarian/useAnnouncer";
 import { useNotebook } from "./librarian/useNotebook";
 import { ChangesScreen, WaitBox } from "./ProposedChanges";
 import { ReviewBook, TitleShelf, WritingBook } from "./RevealParts";
+import { type LandingBook, ShelfLanding } from "./ShelfLanding";
 import { UndoChanges } from "./UndoChanges";
 
 // The interview, direction A (docs/design/shelf/project/InterviewA.dc.html, trove.md §4), with the band
@@ -139,6 +140,8 @@ export function InterviewPage({
   const [justShelved, setJustShelved] = useState(false);
   // The title the member chose, so the book stays on screen, open, while it's written.
   const [chosenTitle, setChosenTitle] = useState<string | null>(null);
+  // Where the review's book stood when the member shelved it: the landing flies from there.
+  const [landingFrom, setLandingFrom] = useState<DOMRect | null>(null);
   const [leftAsIs, setLeftAsIs] = useState(false);
   // What the last send tried to save, when the reply never came, so nobody can tell if it arrived.
   const unsure = useRef<string | null>(null);
@@ -672,7 +675,14 @@ export function InterviewPage({
             busy={busy}
             error={error}
             onChoose={(titleId) => {
-              setChosenTitle(state.titles.find((option) => option.id === titleId)?.title ?? null);
+              const title = state.titles.find((option) => option.id === titleId)?.title ?? null;
+              setChosenTitle(title);
+              // Kept for a refresh during the writing, so the open book still shows its title.
+              try {
+                if (title) sessionStorage.setItem(`trove_chosen:${state.id}`, title);
+              } catch {
+                // Without storage the book shows its title bar until the book arrives.
+              }
               return run("The Librarian is writing your book…", () => client.chooseTitle(state.id, titleId));
             }}
           />
@@ -699,16 +709,18 @@ export function InterviewPage({
             onRemove={(chapterId) =>
               run("Removing that chapter…", () => client.removeChapter(state.id, chapterId))
             }
-            onShelve={() =>
-              run("Putting your book on the shelf…", () => client.putOnShelf(state.id), {
+            onShelve={() => {
+              // Where the book is now, so it can fly from there to the shelf.
+              setLandingFrom(document.querySelector(".rv-open .ib-left")?.getBoundingClientRect() ?? null);
+              return run("Putting your book on the shelf…", () => client.putOnShelf(state.id), {
                 onSuccess: () => setJustShelved(true),
-              })
-            }
+              });
+            }}
           />
         );
       case "done":
         if (!justShelved) return <Navigate to="/my-book" replace state={{ leftAsIs }} />;
-        return <DoneScreen book={state.book} />;
+        return <DoneScreen book={state.book} from={landingFrom} />;
       case "drafting":
         if (state.failed) {
           const about = state.about === "titles" ? "your titles" : "your book";
@@ -745,7 +757,9 @@ export function InterviewPage({
             }
           >
             {/* While the book is written, the chosen book is open on screen, its contents still blank. */}
-            {state.about === "book" && <WritingBook title={chosenTitle} author={authorName} />}
+            {state.about === "book" && (
+              <WritingBook title={chosenTitle ?? storedTitle(state.id)} author={authorName} />
+            )}
             <p className="iv-note iv-note-big rv-saved">{savedLine}</p>
           </Frame>
         );
@@ -982,6 +996,14 @@ function RevealScreen({
   );
 }
 
+function storedTitle(interviewId: string): string | null {
+  try {
+    return sessionStorage.getItem(`trove_chosen:${interviewId}`);
+  } catch {
+    return null;
+  }
+}
+
 // ---------- Your book ----------
 
 const REVIEW_SAY = "Here is your book. Edit or remove anything that doesn't sound like you.";
@@ -1088,17 +1110,14 @@ function ReviewScreen({
             <ErrorMessage message={error} />
           </>
         }
-        under={
-          <>
-            <Button onClick={onShelve} aria-busy={Boolean(busy)}>
-              Put it on the shelf
-            </Button>
-            {others === null && (
-              <button type="button" className="button button-quiet" onClick={seeOthers}>
-                See the other titles
-              </button>
-            )}
-          </>
+        onShelve={onShelve}
+        busy={Boolean(busy)}
+        others={
+          others === null && (
+            <button type="button" className="button button-quiet" onClick={seeOthers}>
+              See the other titles
+            </button>
+          )
         }
       />
     </Frame>
@@ -1130,16 +1149,39 @@ function SignOff({ line }: { line: string }) {
   );
 }
 
-function DoneScreen({ book }: { book: DraftBook }) {
+function DoneScreen({ book, from }: { book: DraftBook; from: DOMRect | null }) {
+  // The book lands on the real shelf (StartReveal, step 7): its own id gives its cover art, and a few of the
+  // shelf's books stand either side of it.
+  const [shelf, setShelf] = useState<{ id: string; neighbours: LandingBook[] } | null>(null);
+  useEffect(() => {
+    let live = true;
+    Promise.all([api.GET("/books/me"), api.GET("/books", { params: { query: { limit: 12 } } })])
+      .then(([mine, all]) => {
+        if (!live || !mine.data) return;
+        const id = mine.data.id;
+        const neighbours = (all.data?.books ?? [])
+          .filter((other) => other.id !== id)
+          .slice(0, 6)
+          .map((other) => ({ id: other.id, title: other.title, authorName: other.author_name }));
+        setShelf({ id, neighbours });
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, []);
   return (
     <Frame say="Your book is on the shelf." canLeave={false}>
-      <div className="panel iv-done">
-        <span className="book">
-          <span className="book-cover">
-            <span className="book-title">{book.title}</span>
-            <span className="book-author">{book.authorName}</span>
-          </span>
-        </span>
+      <div className="iv-landing">
+        {shelf ? (
+          <ShelfLanding
+            book={{ id: shelf.id, title: book.title, authorName: book.authorName }}
+            neighbours={shelf.neighbours}
+            from={from}
+          />
+        ) : (
+          <div className="iv-landing-wait" aria-hidden="true" />
+        )}
         <div className="iv-done-text">
           <p>
             Other members can find it now. When someone asks to check it out, you say yes or no. Your contact

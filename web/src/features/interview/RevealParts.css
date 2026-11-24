@@ -130,6 +130,7 @@
   background: var(--ink);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%);
   opacity: 0;
+  transform: translateY(-80px);
   transition:
     transform 250ms ease,
     opacity 250ms ease;
@@ -147,7 +148,6 @@
 /* The other two sit back, as the unchosen designs do in the design picker. */
 .rv-shelf[data-picked] .rv-book:not([data-on]) {
   opacity: 0.5;
-  filter: saturate(0.45);
   transform: scale(0.92);
 }
 .rv-ledge {
@@ -238,7 +238,8 @@
   flex-wrap: wrap;
   gap: 4px;
 }
-.rv-tabs button {
+.rv-tabs button,
+.rv-tabs > span {
   display: inline-grid;
   place-items: center;
   min-width: 36px;
@@ -253,7 +254,7 @@
   text-transform: uppercase;
   cursor: pointer;
 }
-.rv-tabs button[aria-current] {
+.rv-tabs [aria-current] {
   color: var(--ink);
   border-bottom-color: var(--ink);
 }
@@ -371,7 +372,7 @@
   flex: 1;
   min-height: 0;
   margin-top: 12px;
-  font: 400 17px / 1.6 var(--font-serif);
+  font: 400 18px / 1.5 var(--font-serif);
 }
 .rv-field[data-long] .rv-fld {
   height: 100%;
@@ -479,8 +480,12 @@
   .rv-shelf[data-picked] .rv-book:not([data-on]) {
     transform: none;
   }
+  .rv-book:disabled .rv-why-beside {
+    opacity: 0;
+  }
   .rv-why-beside {
     display: block;
+    transition: opacity 300ms ease;
     font: italic 400 15.5px / 1.4 var(--font-serif);
   }
   .rv-ledge,
@@ -490,11 +495,59 @@
   .rv-go > .button {
     width: 100%;
   }
+  /* The page tabs stay on one line and scroll sideways if they must. */
+  .rv-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .rv-tabs button,
+  .rv-tabs > span {
+    padding: 0 7px;
+  }
+  .rv-toc {
+    margin-top: var(--s-2);
+  }
   .rv-booktitle,
   .rv-booktitle .rv-fld {
     font-size: 34px;
   }
   .rv-ct {
     font-size: 28px;
+  }
+}
+
+/* ---------- On the shelf (step 7): ShelfLanding's shelf, then the words and the two ways on ---------- */
+.iv-act:has(.iv-landing) {
+  --act-width: 1180px;
+}
+.iv-landing {
+  display: grid;
+  gap: var(--s-6);
+  padding-top: var(--s-5);
+}
+.iv-landing-wait {
+  height: 380px;
+}
+.iv-landing .iv-done-text {
+  display: grid;
+  justify-items: center;
+  gap: 22px;
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+.iv-landing .iv-done-text p {
+  margin: 0;
+  font: italic 400 21px / 1.5 var(--font-serif);
+}
+.iv-landing .iv-row {
+  justify-content: center;
+}
+@media (max-width: 719px) {
+  .iv-landing-wait {
+    height: 240px;
+  }
+  .iv-landing .iv-done-text p {
+    font-size: 18px;
   }
 }
