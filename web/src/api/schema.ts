@@ -331,8 +331,7 @@ export interface paths {
         head?: never;
         /**
          * Edit My Chapter
-         * @description Change a chapter's title or summary. Its quotes stay. In a draft, the last version can be
-         *     restored (`has_previous`, POST /interview/book/chapters/{id}/restore).
+         * @description Change a chapter's title or summary. Its quotes stay.
          */
         patch: operations["edit_my_chapter_books_me_chapters__chapter_id__patch"];
         trace?: never;
@@ -502,6 +501,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/interview/notes/final": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Final Notes
+         * @description The Librarian's last look at the answer to `question_id`, made while the next question is written.
+         *     Ask for it alongside POST /interview/answers: it waits up to about 8 seconds for the look. Never an
+         *     error: `none` when there's nothing to add, `pending` if it's still being written.
+         */
+        get: operations["final_notes_interview_notes_final_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/interview/finish": {
         parameters: {
             query?: never;
@@ -537,8 +558,9 @@ export interface paths {
         put?: never;
         /**
          * Choose Title
-         * @description Choose one of the three titles. Stage goes to `finishing`, and the book is written to match in
-         *     the background (`step_status`). After a failure, send this again.
+         * @description Choose one of the three titles. When its book was already prepared while the titles were shown,
+         *     the stage goes straight to `reviewing`. Otherwise it goes to `finishing`, and the book is written to
+         *     match in the background (`step_status`). After a failure, send this again.
          */
         post: operations["choose_title_interview_title_post"];
         delete?: never;
@@ -562,86 +584,6 @@ export interface paths {
          * @description Remove a chapter from the draft. The blurb is rewritten for the chapters that are left.
          */
         delete: operations["remove_chapter_interview_book_chapters__chapter_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/interview/book/chapters/{chapter_id}/rewrite": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Rewrite Chapter
-         * @description Tell the chapter again. `rewrite_unchanged` means it couldn't be told better, and nothing changed.
-         */
-        post: operations["rewrite_chapter_interview_book_chapters__chapter_id__rewrite_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/interview/book/chapters/{chapter_id}/restore": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Restore Chapter
-         * @description Go back to the chapter's last version (`has_previous`), during the review.
-         */
-        post: operations["restore_chapter_interview_book_chapters__chapter_id__restore_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/interview/book/blurb": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Rewrite Blurb
-         * @description Write the draft's back cover again.
-         */
-        post: operations["rewrite_blurb_interview_book_blurb_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/interview/book/blurb/restore": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Restore Blurb
-         * @description Go back to the last back cover (`has_previous_blurb`), during the review.
-         */
-        post: operations["restore_blurb_interview_book_blurb_restore_post"];
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1297,11 +1239,6 @@ export interface components {
             summary: string;
             /** Quotes */
             quotes: string[];
-            /**
-             * Has Previous
-             * @default false
-             */
-            has_previous: boolean;
         };
         /**
          * BookCard
@@ -1496,6 +1433,23 @@ export interface components {
             struck: string[];
             /** Outcome Note */
             outcome_note?: string | null;
+        };
+        /**
+         * FinalNotesResponse
+         * @description The Librarian's last look at an answer as sent. `done`: apply it like a `/interview/notes` reply.
+         *     `none`: there was nothing new to read (or no look). `pending`: still being written; the answer's
+         *     own response brings it.
+         */
+        FinalNotesResponse: {
+            /** Silent */
+            silent: boolean;
+            marks: components["schemas"]["MarksDelta"];
+            notebook: components["schemas"]["NotebookDelta"];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "done" | "none" | "pending";
         };
         /** FinishRequest */
         FinishRequest: {
@@ -1859,16 +1813,6 @@ export interface components {
             can_undo: boolean;
             /** Revised At */
             revised_at?: string | null;
-            /**
-             * Has Previous Blurb
-             * @default false
-             */
-            has_previous_blurb: boolean;
-            /**
-             * Rewrite Unchanged
-             * @default false
-             */
-            rewrite_unchanged: boolean;
         };
         /** MyCheckouts */
         MyCheckouts: {
@@ -3202,6 +3146,37 @@ export interface operations {
             };
         };
     };
+    final_notes_interview_notes_final_get: {
+        parameters: {
+            query: {
+                question_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinalNotesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     finish_interview_finish_post: {
         parameters: {
             query?: never;
@@ -3304,108 +3279,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    rewrite_chapter_interview_book_chapters__chapter_id__rewrite_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                chapter_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MyBookResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    restore_chapter_interview_book_chapters__chapter_id__restore_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                chapter_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MyBookResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    rewrite_blurb_interview_book_blurb_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MyBookResponse"];
-                };
-            };
-        };
-    };
-    restore_blurb_interview_book_blurb_restore_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MyBookResponse"];
                 };
             };
         };

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../ui/Button";
 import { addedWords } from "./addedWords";
-import { ErrorMessage, Frame, focusBand, Waiting } from "./InterviewFrame";
+import { ErrorMessage, Frame, focusLine, Waiting } from "./InterviewFrame";
 import type { InterviewState } from "./interviewClient";
 import "./ProposedChanges.css";
 
@@ -14,7 +14,7 @@ type Choices = Record<string, Choice>;
 
 const NOTE_NOT_LIVE = "Until you confirm, your book on the shelf stays exactly as it is.";
 
-/** The band says what's happening, so this only says what the member can do about it. */
+/** The Librarian's line says what's happening, so this only says what the member can do about it. */
 export function WaitBox() {
   return (
     <div className="empty iv-waitbox" aria-busy="true">
@@ -264,7 +264,7 @@ export function ChangesScreen({
 
   useEffect(() => writeChoices(key, choices), [key, choices]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: each step is a new screen for the keyboard
-  useEffect(() => focusBand(), [step]);
+  useEffect(() => focusLine(), [step]);
 
   const approved = changes.filter((change) => choices[change.id] === "approve");
   const others = changes.filter((change) => choices[change.id] !== "approve");

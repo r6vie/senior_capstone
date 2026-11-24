@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { artFor } from "../../ui/art/bookArt";
 import { forgetLoadedBooks } from "./bookPreload";
 import { ShelfPage } from "./ShelfPage";
 
@@ -343,7 +344,11 @@ describe("D1 shelf and reader", () => {
           ],
         });
       if (path === "/books/me")
-        return response({ title: "The Coil Was Never the Problem", author_name: "Nora Valdez" });
+        return response({
+          id: "nora-book",
+          title: "The Coil Was Never the Problem",
+          author_name: "Nora Valdez",
+        });
       return response({ books: [book], next: null });
     });
     renderShelf();
@@ -356,6 +361,8 @@ describe("D1 shelf and reader", () => {
     const mine = await screen.findByRole("region", { name: "Your book" });
     expect(mine.textContent).toContain("The Coil Was Never the Problem");
     expect(within(mine).getByRole("link", { name: "Open" }).getAttribute("href")).toBe("/my-book");
+    // The small book is the member's own, in its cover art.
+    expect(mine.querySelector("img.book-art")?.getAttribute("src")).toBe(artFor("nora-book").cover);
   });
   it("leaves the request block out when nothing is waiting", async () => {
     api.GET.mockImplementation(async (path: string) => {

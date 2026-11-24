@@ -102,30 +102,72 @@ export function useNotebook(view: LibrarianView | null | undefined, say: (line: 
   // A new state from the API: it is the truth. Keep what's on screen as it is, circle or tick whatever
   // the new question was built on, and rub out anything the API no longer has.
   const lastView = useRef(view);
+  // Every entry id the page has shown. The first view the page gets is its baseline, shown at rest (a
+  // member coming back sees their notebook, not a rewrite of it); after that, only an id never seen is
+  // written out, so an entry rubbed out here and kept by the API comes back quietly.
+  const seen = useRef(new Set((view?.notebook ?? []).map((entry) => entry.id)));
+  const seeded = useRef(Boolean(view));
+  // Entries kept on the page after the API moved past them; they stay for the rest of the visit.
+  const kept = useRef(new Set<string>());
   useEffect(() => {
     if (view === lastView.current) return;
     lastView.current = view;
     if (!view) return;
+    const baseline = !seeded.current;
+    seeded.current = true;
     const known = new Map(current.current.map((shown) => [shown.entry.id, shown]));
+    const unseen = new Set(
+      baseline ? [] : view.notebook.filter((entry) => !seen.current.has(entry.id)).map((entry) => entry.id),
+    );
+    for (const entry of view.notebook) seen.current.add(entry.id);
     const fresh = new Set(view.notebook.map((entry) => entry.id));
-    for (const shown of current.current) if (!fresh.has(shown.entry.id)) erase(shown.entry.id);
+    // What the member's last answer brought stays on the page when the next question arrives, even once the
+    // API has moved past it: an "ask" the question took up is ticked, never wiped as the question lands.
+    const answered = view.answered;
+    const stays = (shown: ShownEntry) =>
+      shown.life !== "erasing" &&
+      shown.entry.sourceTurns.length > 0 &&
+      Math.max(...shown.entry.sourceTurns) === answered;
+    const staying = new Set(
+      current.current
+        .filter((shown) => !fresh.has(shown.entry.id) && (stays(shown) || kept.current.has(shown.entry.id)))
+        .map((shown) => shown.entry.id),
+    );
+    for (const id of staying) kept.current.add(id);
+    for (const shown of current.current)
+      if (!fresh.has(shown.entry.id) && !staying.has(shown.entry.id)) erase(shown.entry.id);
     setEntries((all) => {
-      const kept = all.filter((shown) => !fresh.has(shown.entry.id));
+      const left = all
+        .filter((shown) => !fresh.has(shown.entry.id))
+        .map(
+          (shown): ShownEntry =>
+            staying.has(shown.entry.id) && shown.entry.kind === "saving"
+              ? { ...shown, entry: { ...shown.entry, status: "ticked" } }
+              : shown,
+        );
       const next = view.notebook.map((entry): ShownEntry => {
         const before = known.get(entry.id);
         const marking = Boolean(before && before.entry.status === "open" && entry.status !== "open");
-        return { entry, life: before?.life === "erasing" ? "resting" : (before?.life ?? "resting"), marking };
+        // An entry the page hasn't seen (the answer's final look, when the wait's call missed it) is
+        // written in front of the member, not dropped onto the page.
+        if (unseen.has(entry.id)) return { entry, life: "writing", marking };
+        return { entry, life: !before || before.life === "erasing" ? "resting" : before.life, marking };
       });
-      return [...next, ...kept.filter((shown) => shown.life === "erasing")];
+      return [
+        ...next,
+        ...left.filter((shown) => staying.has(shown.entry.id)),
+        ...left.filter((shown) => shown.life === "erasing"),
+      ];
     });
     for (const entry of view.notebook) {
       const before = known.get(entry.id);
+      if (unseen.has(entry.id)) write(entry);
       if (before && before.entry.status === "open" && entry.status !== "open") {
         say(spokenStatus(entry));
         later(MARK_MS + 1500, () => update(entry.id, (shown) => ({ ...shown, marking: false })));
       }
     }
-  }, [view, erase, later, say, update]);
+  }, [view, erase, later, say, update, write]);
 
   // A bet called or lost, a saving ticked, an entry circled: drawn now, in front of the member.
   const settle = useCallback(
@@ -141,6 +183,7 @@ export function useNotebook(view: LibrarianView | null | undefined, say: (line: 
     (delta: NotesReply["notebook"]) => {
       const have = new Set(current.current.map((shown) => shown.entry.id));
       const added = delta.add.filter((entry) => !have.has(entry.id));
+      for (const entry of added) seen.current.add(entry.id);
       if (added.length) {
         setEntries((all) => [
           ...all,

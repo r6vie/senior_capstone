@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { artFor } from "../../ui/art/bookArt";
 import { AuthProvider } from "../auth/AuthProvider";
 import { createFakeInterviewClient } from "../interview/fakeInterviewClient";
 import type {
@@ -11,6 +12,9 @@ import type {
 } from "../interview/interviewClient";
 import { leaveWords } from "../interview/LeftoverWords";
 import { MyBookPage } from "./MyBookPage";
+
+// The book's id, which chooses its cover art, comes from /books/me.
+vi.mock("../discovery/bookPreload", () => ({ loadOwnBook: async () => ({ id: "nora-book" }) }));
 
 const book: MyBook = {
   title: "The Coil Was Never the Problem",
@@ -59,6 +63,20 @@ function show(c: InterviewClient) {
 function linkTo(name: string) {
   return screen.getByRole("link", { name }).getAttribute("href");
 }
+
+describe("my book's cover", () => {
+  it("shows the book's own cover art, at both sizes, with the type in the art's ink", async () => {
+    show(client("shelf"));
+    await screen.findByRole("heading", { level: 1, name: book.title });
+    const art = artFor("nora-book");
+    const covers = [...document.querySelectorAll(".mb-head .book-cover")] as HTMLElement[];
+    expect(covers).toHaveLength(2);
+    for (const cover of covers) {
+      expect(cover.querySelector("img.book-art")?.getAttribute("src")).toBe(art.cover);
+      expect(cover.style.getPropertyValue("--art-ink")).toBe(art.ink);
+    }
+  });
+});
 
 describe("editing my book", () => {
   beforeEach(() => localStorage.clear());

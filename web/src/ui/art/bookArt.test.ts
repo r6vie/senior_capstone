@@ -21,6 +21,13 @@ describe("book art", () => {
     expect(seen.size).toBe(BOOK_ARTS.length);
   });
 
+  it("gives every cover its quick paint-in clip, its own and in both formats", () => {
+    for (const art of BOOK_ARTS) {
+      expect(art.anim?.webm).toMatch(new RegExp(`${art.key}-quick.*\\.webm`));
+      expect(art.anim?.mp4).toMatch(new RegExp(`${art.key}-quick.*\\.mp4`));
+    }
+  });
+
   it("keeps the knockout behind the name on strata covers only", () => {
     for (const art of BOOK_ARTS) expect(art.knockout).toBe(art.category === "strata");
   });

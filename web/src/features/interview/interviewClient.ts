@@ -16,8 +16,6 @@ export interface DraftChapter {
   summary: string;
   /** The member's own words behind this chapter. Only they ever see them. */
   quotes: string[];
-  /** In review, the last rewrite can be taken back. */
-  hasPrevious?: boolean;
 }
 
 export interface DraftBook {
@@ -26,10 +24,6 @@ export interface DraftBook {
   /** The back-cover blurb, in the member's own voice. Null on books written before blurbs. */
   blurb: string | null;
   chapters: DraftChapter[];
-  /** The last rewrite couldn't be told better from what the member said, so nothing changed. */
-  rewriteUnchanged?: boolean;
-  /** In review, the last back cover rewrite can be taken back. */
-  hasPreviousBlurb?: boolean;
 }
 
 /** One proposed change to a book on the shelf. Nothing here is live until the member confirms. */
@@ -103,6 +97,8 @@ export interface NotesLook {
   shown: string[];
 }
 
+export type FinalNotes = NotesReply & { status: "done" | "none" | "pending" };
+
 /** What the Librarian does now. Anything on screen that isn't kept or added is rubbed out. */
 export interface NotesReply {
   silent: boolean;
@@ -152,7 +148,7 @@ export type InterviewState =
       about: "titles" | "book";
       failed?: boolean;
       retryTitle?: string;
-      /** The Librarian's last line, held on the band during the wait. */
+      /** The Librarian's last line, held at the top during the wait. */
       closingLine?: string;
     }
   /** Not enough yet for three chapters. Never a dead end: the Librarian keeps asking (decision 14). */
@@ -263,6 +259,10 @@ export interface InterviewClient {
   skip(id: string): Promise<InterviewState>;
   /** The Librarian reads the answer as it's typed. Never throws for want of AI: it just adds nothing. */
   notes(look: NotesLook, signal?: AbortSignal): Promise<NotesReply>;
+  /** The Librarian's last look at an answer just sent, while the next question is prepared: "done" with
+   * what to write, "none" when there's nothing to add, "pending" when it isn't ready yet (the next question
+   * brings it). */
+  finalNotes(questionId: string, signal?: AbortSignal): Promise<FinalNotes>;
   /** Write the waiting question again, after an answer was saved but the next question failed. */
   askAgain(id: string): Promise<InterviewState>;
   /** "I've said enough. Show me my book." Words still in the field are saved first. */
@@ -270,14 +270,8 @@ export interface InterviewClient {
   chooseTitle(id: string, titleId: string): Promise<InterviewState>;
   /** The titles the member can still go back to, while reviewing. */
   otherTitles(id: string): Promise<TitleOption[]>;
-  /** Pick another title. This writes the book again, so chapter rewrites may be replaced. */
+  /** Pick another title. This writes the book again, so chapter edits may be replaced. */
   changeTitle(id: string, titleId: string): Promise<InterviewState>;
-  rewriteBlurb(id: string): Promise<InterviewState>;
-  /** Go back to the back cover before the last rewrite. */
-  restoreBlurb(id: string): Promise<InterviewState>;
-  rewriteChapter(id: string, chapterId: string): Promise<InterviewState>;
-  /** Go back to the chapter's last version. */
-  restoreChapter(id: string, chapterId: string): Promise<InterviewState>;
   removeChapter(id: string, chapterId: string): Promise<InterviewState>;
   putOnShelf(id: string): Promise<InterviewState>;
 

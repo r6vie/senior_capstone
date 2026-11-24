@@ -1620,3 +1620,25 @@ async def test_someone_elses_question_is_404(client, database, author, reader, f
             f"/interview/reading-questions/{question}/{path}", json=body, headers=reader["headers"]
         )
         assert response.status_code == 404
+
+
+@pytest.mark.parametrize("choice", ["use", "keep"])
+async def test_the_member_chooses_the_back_cover_even_after_editing_it(
+    client, database, author, fake_claude, choice
+):
+    # Their own words, from an edit on My book.
+    await database.books.update_one(
+        {"author_id": author["id"]}, {"$set": {"blurb": "My own words.", "blurb_edited": True}}
+    )
+    state = await propose(client, author, fake_claude, change(quotes=[PART_ONE]))
+    ids = [item["id"] for item in state["changes"]]
+    applied = await client.post(
+        "/interview/revision", json={"approved": ids, "blurb": choice}, headers=author["headers"]
+    )
+    assert applied.status_code == 200, applied.text
+    saved = await database.books.find_one({"author_id": author["id"]})
+    if choice == "use":
+        # Choosing the Librarian's back cover is the member's own call, and it's the Librarian's words again.
+        assert (saved["blurb"], saved["blurb_edited"]) == ("The proposed blurb.", False)
+    else:
+        assert (saved["blurb"], saved["blurb_edited"]) == ("My own words.", True)

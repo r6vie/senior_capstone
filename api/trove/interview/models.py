@@ -76,6 +76,14 @@ class NotesResponse(BaseModel):
     notebook: NotebookDelta
 
 
+class FinalNotesResponse(NotesResponse):
+    """The Librarian's last look at an answer as sent. `done`: apply it like a `/interview/notes` reply.
+    `none`: there was nothing new to read (or no look). `pending`: still being written; the answer's
+    own response brings it."""
+
+    status: Literal["done", "none", "pending"]
+
+
 class AnsweredTurn(BaseModel):
     """An answered or skipped question, with the marks the Librarian left on it, for going back."""
 

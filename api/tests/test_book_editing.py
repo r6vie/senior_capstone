@@ -62,6 +62,8 @@ async def test_an_edit_on_the_shelf_is_live_at_once_and_undo_takes_it_back(clien
     assert undone["title"] == "The Book"
     assert undone["blurb"] == "The old blurb."
     assert undone["can_undo"] is False
+    # Undo puts back whose words the back cover was, too.
+    assert (await database.books.find_one({"author_id": author["id"]})).get("blurb_edited") is False
 
 
 async def test_a_chapter_edit_keeps_its_quotes_and_can_be_undone(client, database, author):
@@ -184,24 +186,6 @@ async def drafter(client, database):
         }
     )
     return person
-
-
-async def test_a_draft_chapter_edit_can_be_restored_like_a_rewrite(client, drafter):
-    edited = (await edit_chapter(client, drafter, "c0", title="My words")).json()
-    assert edited["chapters"][0]["title"] == "My words"
-    assert edited["chapters"][0]["has_previous"] is True
-    assert edited["can_undo"] is False
-
-    back = (await client.post("/interview/book/chapters/c0/restore", headers=drafter["headers"])).json()
-    assert back["chapters"][0]["title"] == "Chapter 0"
-    assert back["chapters"][0]["has_previous"] is False
-
-
-async def test_a_draft_blurb_edit_can_be_restored(client, drafter):
-    edited = (await edit(client, drafter, blurb="My own back cover.")).json()
-    assert edited["has_previous_blurb"] is True
-    back = (await client.post("/interview/book/blurb/restore", headers=drafter["headers"])).json()
-    assert back["blurb"] == "Draft blurb."
 
 
 async def test_a_draft_title_edit_stays_a_draft(client, drafter):

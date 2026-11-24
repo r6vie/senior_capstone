@@ -27,6 +27,9 @@ from trove.interview.engine import Turn
 NOTES_MODEL = "claude-haiku-5-5"
 NOTES_EFFORT = "low"
 NOTES_MAX_TOKENS = 8000
+# The look after Send has to land while the next question is still being written (about 3 s), so it
+# doesn't think, has a small budget and drops what fails the checks instead of trying again.
+QUICK_MAX_TOKENS = 1500
 NOTE_CHARS = 32
 ENTRY_CHARS = 60
 SIGN_OFF_CHARS = 24
@@ -570,14 +573,16 @@ def on_notes_model(claude: Claude) -> Claude:
     return notes
 
 
-async def _ask(claude: Claude, messages: list[dict], effort: str = NOTES_EFFORT) -> tuple[_Notes, str]:
+async def _ask(
+    claude: Claude, messages: list[dict], effort: str = NOTES_EFFORT, *, quick: bool = False
+) -> tuple[_Notes, str]:
     response = await claude.create(
-        max_tokens=NOTES_MAX_TOKENS,
+        max_tokens=QUICK_MAX_TOKENS if quick else NOTES_MAX_TOKENS,
         # Cached across every answer of every interview.
         system=[
             {"type": "text", "text": load_prompt("interview/notes"), "cache_control": {"type": "ephemeral"}}
         ],
-        thinking={"type": "adaptive"},
+        thinking={"type": "disabled"} if quick else {"type": "adaptive"},
         output_config={
             "effort": effort,
             "format": {"type": "json_schema", "schema": transform_schema(_Notes)},
@@ -632,9 +637,10 @@ def _problems(raw: _Notes, context: Context) -> list[str]:
     return listed
 
 
-async def look(claude: Claude, context: Context, *, effort: str = NOTES_EFFORT) -> Notes:
+async def look(claude: Claude, context: Context, *, effort: str = NOTES_EFFORT, quick: bool = False) -> Notes:
     """One look at the answer as it stands: what to keep, add, revise and erase. Raises like the
-    engine (ClaudeRefused, SDK errors, ValueError); the service degrades to keeping everything."""
+    engine (ClaudeRefused, SDK errors, ValueError); the service degrades to keeping everything.
+    `quick` is the look after Send: no thinking and no retry, so it lands during the question wait."""
     messages = [
         {
             "role": "user",
@@ -644,8 +650,8 @@ async def look(claude: Claude, context: Context, *, effort: str = NOTES_EFFORT) 
             ],
         }
     ]
-    raw, text = await _ask(claude, messages, effort)
-    if not raw.silent and (problems := _problems(raw, context)):
+    raw, text = await _ask(claude, messages, effort, quick=quick)
+    if not quick and not raw.silent and (problems := _problems(raw, context)):
         retry = [
             *messages,
             {"role": "assistant", "content": text},

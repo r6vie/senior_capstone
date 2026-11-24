@@ -256,6 +256,84 @@ so leave the art layer out (keep a place for one image under each page's content
 
 Patterns added after v1. Each entry: name, the task it solves, date, owner, snippet or link.
 
+### The reveal: titles on a shelf, the book open while it's written, review in the book (StartReveal, 2026-11-24, Trove UI; approved by Josef)
+
+`RevealParts.tsx`, with the book frame from `IntroBook.css`.
+
+- **Titles:** three white books rise onto a shelf, 120ms apart. Each title types onto its cover (24ms a letter), its
+  reason fades up under the shelf, and the next book starts 0.7s later. The whole book is the choice (a pressed
+  button). The pick lifts 26px in 0.25s, its outline thickens and its bookmark slides in, with "Your pick" over
+  its reason. The other two sit back at 92%, half opacity, desaturated, as in the design picker. On a phone each
+  book is a row with its reason beside it.
+- **The book opens (Josef, 2026-11-24):** after Choose, the other two books slide away (0.32s), then the chosen
+  book comes forward and opens as the reader's does: from about the shelf book's size, its right half where the
+  book stood, its cover swings open about the spine (850ms on the reader's open ease) while the board's left
+  half appears under it. It lands on review, or, if the book isn't written yet, on the open book with the
+  writing line until it is; never a blank page. It opens once per pick, never after a reload. Narrower screens
+  and reduced motion crossfade.
+- **Writing:** the chosen book stays open on screen for the whole wait: its title page, and a contents page of
+  blank places.
+- **Review:** the same open book. The title is a field from the start, with the name and the Librarian's sign-off
+  under it. The contents have no dividers, and each entry's text is clamped to two lines. The back cover is the
+  last entry, in italics with no number, and has its own tab. A chapter opens to its title and text as fields;
+  the back cover opens to one field. Every field saves a moment after typing stops, and on leaving it. Remove
+  chapter is on the chapter's own page and asks in place. "Put it on the shelf" (red) and "See the other
+  titles" sit under the book. The contents fill row by row as review opens.
+- Reduced motion: everything is there at once.
+
+### The interview's first screen: the book introduces it (StartInterview, 2026-11-23, Trove UI; approved by Josef)
+
+The task: say what the interview is before it starts, without a band or a form. `IntroBook.tsx`.
+
+- The shelf's open book, empty, under the plain top bar (`IvTop`).
+- **The title page:** three lines type in, in Newsreader 600 30px, one letter per 24ms with a breath between lines.
+  Skip sits where Close sits on the shelf's book. When the lines are done they settle to 22px.
+- **The contents page:** three chapter places draw in, a number and two blank lines each, as the second line types.
+- **Under the lines:** the member's place at CWRU (Current student, Alumni, I am a founder; no helper lines) and
+  one optional résumé line ("A résumé, if you like", Drop a PDF here, Choose a PDF; then the file's name and
+  Remove). The résumé goes with Start. Start stays greyed until an affiliation is ticked, with "About 10
+  minutes" beside it, and the wait's line takes that place after Start.
+- Skip, and reduced motion, open on the end. On a narrower screen the two pages stack.
+
+### The interview opens on question one (StartOpen, 2026-11-23, Trove UI; approved by Josef)
+
+The task: a new interview should feel like the Librarian greeting you, not a form. After Start, the question
+screen itself is the welcome.
+
+- **Layout, every question:** the question runs the content's width across the top, at most 980px. The answer
+  card and the notebook sit under it, side by side, their tops level.
+- **The welcome (option A, Josef 2026-11-23):** page one of the notebook writes only "hello, <first name>." in the
+  Librarian's hand (`Notebook` `welcome`), at 0.35 of the notebook's pen pace (Hand `pace`).
+- **The question:** it types in at the top at once, beside the hello, one letter per 28ms (`TypedQuestion`). Its
+  place is held at its final size from the first letter, so nothing under it moves. Then the keyboard goes to the
+  answer, unless the member has already gone somewhere.
+- **The notebook is a fixed sheet:** its height comes from the screen, never its content: from where it starts down
+  to 44px above the window's foot. The phone's sheet is unchanged.
+- **Reduced motion:** everything is there at once. An interview already under way opens without the welcome.
+### A book landing on the shelf (2026-11-24, built from board StartReveal step 7, which Josef approved; `web/src/features/interview/ShelfLanding.{tsx,css}`)
+
+The task: the payoff at the end of the interview. The member's book, still white, goes onto the shelf among other
+members' books and its cover arrives. Only the shelf is the component; the interview page keeps the Librarian's
+line, the words and the buttons.
+
+- **The still frame.** Books stand on one `.ledge`. The member's book is the large book (236 x 344) in the middle,
+  pulled slightly forward: it stands 18px proud of its neighbours (17px on a phone). The neighbours are shelf books
+  (176 x 257; 141 x 206 on a phone) under a light dot tone of paper dots, never a blur or fade. 48px of room is kept
+  above the books, so a lifted book is never cut off. Neighbours past the edges are cut off
+  sideways; the page never scrolls sideways.
+- **Landing (1.6s).** The closed white book starts where the open book closed, turns to face the member about
+  its spine (from 18°, in its first 0.64s) and travels down on one move. Its neighbours slide apart to open its gap (0.9s). It settles on one soft ease-out
+  (`cubic-bezier(0.25, 0, 0.1, 1)`), with no bounce and no overshoot. Its dot shadow comes as it touches the shelf.
+  Transforms only, as in the open book.
+- **The cover arrives (about 4s).** The art's quick clip (`anim` in `ui/art/bookArt.ts`; Josef chose the quick
+  timing over the board's 13.5s) plays muted, inline and without controls, exactly where the cover art sits,
+  under the title and name. Those are in ink on the white cover and take the cover's own ink as the paint
+  reaches them. The clip's last frame is the cover, so on `ended` the still cover takes its place with no jump.
+  If the clip can't start within 2.5s, the still cover fades in (480ms) instead.
+- **Reduced motion.** A 200ms crossfade to the finished frame, with the still cover.
+- **On a phone** the shelf books keep their desktop look and art for this screen (the board's phone frame), at
+  the sizes above.
+
 ### Wide pages (2026-11-23, Trove UI, at Josef's ask; `web/src/ui/AppShell.css`)
 
 The task: the plain pages (Settings, Checkouts, the meeting, messages, checking out) sat in a narrow

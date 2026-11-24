@@ -838,7 +838,7 @@
           "Books"
         ],
         "summary": "Edit My Chapter",
-        "description": "Change a chapter's title or summary. Its quotes stay. In a draft, the last version can be\nrestored (`has_previous`, POST /interview/book/chapters/{id}/restore).",
+        "description": "Change a chapter's title or summary. Its quotes stay.",
         "operationId": "edit_my_chapter_books_me_chapters__chapter_id__patch",
         "security": [
           {
@@ -1259,6 +1259,54 @@
         ]
       }
     },
+    "/interview/notes/final": {
+      "get": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Final Notes",
+        "description": "The Librarian's last look at the answer to `question_id`, made while the next question is written.\nAsk for it alongside POST /interview/answers: it waits up to about 8 seconds for the look. Never an\nerror: `none` when there's nothing to add, `pending` if it's still being written.",
+        "operationId": "final_notes_interview_notes_final_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "question_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Question Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinalNotesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/interview/finish": {
       "post": {
         "tags": [
@@ -1329,7 +1377,7 @@
           "Interview"
         ],
         "summary": "Choose Title",
-        "description": "Choose one of the three titles. Stage goes to `finishing`, and the book is written to match in\nthe background (`step_status`). After a failure, send this again.",
+        "description": "Choose one of the three titles. When its book was already prepared while the titles were shown,\nthe stage goes straight to `reviewing`. Otherwise it goes to `finishing`, and the book is written to\nmatch in the background (`step_status`). After a failure, send this again.",
         "operationId": "choose_title_interview_title_post",
         "requestBody": {
           "content": {
@@ -1416,156 +1464,6 @@
             }
           }
         }
-      }
-    },
-    "/interview/book/chapters/{chapter_id}/rewrite": {
-      "post": {
-        "tags": [
-          "Interview"
-        ],
-        "summary": "Rewrite Chapter",
-        "description": "Tell the chapter again. `rewrite_unchanged` means it couldn't be told better, and nothing changed.",
-        "operationId": "rewrite_chapter_interview_book_chapters__chapter_id__rewrite_post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "chapter_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Chapter Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MyBookResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/interview/book/chapters/{chapter_id}/restore": {
-      "post": {
-        "tags": [
-          "Interview"
-        ],
-        "summary": "Restore Chapter",
-        "description": "Go back to the chapter's last version (`has_previous`), during the review.",
-        "operationId": "restore_chapter_interview_book_chapters__chapter_id__restore_post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "chapter_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Chapter Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MyBookResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/interview/book/blurb": {
-      "post": {
-        "tags": [
-          "Interview"
-        ],
-        "summary": "Rewrite Blurb",
-        "description": "Write the draft's back cover again.",
-        "operationId": "rewrite_blurb_interview_book_blurb_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MyBookResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/interview/book/blurb/restore": {
-      "post": {
-        "tags": [
-          "Interview"
-        ],
-        "summary": "Restore Blurb",
-        "description": "Go back to the last back cover (`has_previous_blurb`), during the review.",
-        "operationId": "restore_blurb_interview_book_blurb_restore_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MyBookResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
       }
     },
     "/interview/book/title": {
@@ -3046,11 +2944,6 @@
             },
             "type": "array",
             "title": "Quotes"
-          },
-          "has_previous": {
-            "type": "boolean",
-            "title": "Has Previous",
-            "default": false
           }
         },
         "type": "object",
@@ -3605,6 +3498,38 @@
         ],
         "title": "Entry",
         "description": "One line in the notebook. `anchors` are the member's words it was built on; when those words\nleave the answer, the entry is rubbed out. `source_turns` are interview turn numbers, 1 first."
+      },
+      "FinalNotesResponse": {
+        "properties": {
+          "silent": {
+            "type": "boolean",
+            "title": "Silent"
+          },
+          "marks": {
+            "$ref": "#/components/schemas/MarksDelta"
+          },
+          "notebook": {
+            "$ref": "#/components/schemas/NotebookDelta"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "done",
+              "none",
+              "pending"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "silent",
+          "marks",
+          "notebook",
+          "status"
+        ],
+        "title": "FinalNotesResponse",
+        "description": "The Librarian's last look at an answer as sent. `done`: apply it like a `/interview/notes` reply.\n`none`: there was nothing new to read (or no look). `pending`: still being written; the answer's\nown response brings it."
       },
       "FinishRequest": {
         "properties": {
@@ -4684,16 +4609,6 @@
               }
             ],
             "title": "Revised At"
-          },
-          "has_previous_blurb": {
-            "type": "boolean",
-            "title": "Has Previous Blurb",
-            "default": false
-          },
-          "rewrite_unchanged": {
-            "type": "boolean",
-            "title": "Rewrite Unchanged",
-            "default": false
           }
         },
         "type": "object",

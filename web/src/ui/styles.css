@@ -778,9 +778,31 @@ body {
    and its type read better, with a narrow hinge and strata cover type, the name right under the title; the large
    book the same scaled by 1.34. A cover with art (.book-art, from ui/art/bookArt.ts) shows it full-bleed under the
    outline, its type in the art's ink (--art-ink) and, on a strata cover, the name on a white knockout (--art-knockout). The phone and the other sizes keep
-   the book above until they are decided, so the art is desktop-only too. */
+   the book above, with its art. */
+/* Art at every size and width (2026-11-24, applying Josef's approved covers everywhere, so no book of yours is
+   ever white): the same picture cropped to fill the cover, its type in the art's ink and the name right under the
+   title, in the space each art leaves for the type at the top left. The desktop rules below refine it. */
 .book-art {
-  display: none;
+  position: absolute;
+  left: calc(-1 * var(--line));
+  top: calc(-1 * var(--line));
+  width: calc(100% + 2 * var(--line));
+  height: calc(100% + 2 * var(--line));
+  object-fit: cover;
+}
+.book-cover:has(> .book-art)::before {
+  z-index: 1;
+}
+.book-cover:has(> .book-art) :is(.book-title, .book-author) {
+  position: relative;
+  z-index: 1;
+  color: var(--art-ink, var(--ink));
+}
+.book-cover:has(> .book-art) .book-author {
+  align-self: flex-start;
+  margin: 0.7em 0 0 -0.3em;
+  padding: 0 0.3em 0.05em;
+  background: var(--art-knockout, var(--white));
 }
 /* A book's picture still arriving (ui/art/ArtImage.tsx): hidden, so it appears whole rather than drawn in strips. */
 img[data-pending] {

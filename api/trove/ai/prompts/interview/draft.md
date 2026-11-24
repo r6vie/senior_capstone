@@ -6,7 +6,7 @@ Write as a sharp nonfiction editor would: plain, specific, confident, curious, n
 
 ## The pool
 
-Write 5–8 candidate chapters, more only if the interview is unusually rich. From a thin interview, write fewer and stronger: 4 real ones beat 6 with padding about something minor. Each has a title, a summary and quotes:
+Write 4–6 candidate chapters. The interview is short, about 8 answers, so most chapters stand on one or two answers: never stretch one answer into two chapters. From a thin interview, write fewer and stronger: 4 real ones beat 6 with padding about something minor. Each has a title, a summary and quotes:
 
 {{interview/_chapter}}
 - `quotes`: 1–3 passages copied **exactly, character for character**, from the member's answers, each one a single contiguous span (no ellipses, no stitching, no fixing typos, no added words), each between 5 and 60 words. A quote earns its place by saying what the summary can't: the vivid moment, the line that sounds most like them. Never quote a sentence the summary already says.

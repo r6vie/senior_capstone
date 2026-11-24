@@ -108,15 +108,7 @@ function toBook(book: MyBookResponse): DraftBook {
     title: book.title,
     authorName: book.author_name,
     blurb: book.blurb,
-    rewriteUnchanged: book.rewrite_unchanged,
-    hasPreviousBlurb: book.has_previous_blurb,
-    chapters: book.chapters.map(({ id, title, summary, quotes, has_previous }) => ({
-      id,
-      title,
-      summary,
-      quotes,
-      hasPrevious: has_previous,
-    })),
+    chapters: book.chapters.map(({ id, title, summary, quotes }) => ({ id, title, summary, quotes })),
   };
 }
 
@@ -327,6 +319,31 @@ export const apiInterviewClient: InterviewClient = {
   },
   // Never an error for want of AI: past the limits the API keeps what holds and adds nothing. A 409 (the
   // question moved on) or a dropped call is the same to the screen: nothing new to draw.
+  // The Librarian's last look at the answer just sent, held by the API until it's ready (up to about 8s).
+  // Failing is never an error: the next question's response brings the same entries.
+  async finalNotes(questionId, signal) {
+    const { data } = await api.GET("/interview/notes/final", {
+      params: { query: { question_id: questionId } },
+      signal,
+    });
+    if (!data) throw new InterviewError("The Librarian had nothing to add.");
+    return {
+      status: data.status,
+      silent: data.silent,
+      marks: {
+        keep: data.marks.keep,
+        add: data.marks.add.map(toMark),
+        revise: data.marks.revise.map(toMark),
+        erase: data.marks.erase,
+      },
+      notebook: {
+        keep: data.notebook.keep,
+        add: data.notebook.add.map(toEntry),
+        revise: data.notebook.revise.map(toEntry),
+        erase: data.notebook.erase,
+      },
+    };
+  },
   async notes(look, signal) {
     const { data } = await api.POST("/interview/notes", {
       body: {
@@ -372,20 +389,6 @@ export const apiInterviewClient: InterviewClient = {
   },
   async changeTitle(_id, titleId) {
     return fromBook(unwrap(await api.POST("/interview/book/title", { body: { title: Number(titleId) } })));
-  },
-  async rewriteBlurb() {
-    return fromBook(unwrap(await api.POST("/interview/book/blurb")));
-  },
-  async restoreBlurb() {
-    return fromBook(unwrap(await api.POST("/interview/book/blurb/restore")));
-  },
-  async rewriteChapter(_id, chapterId) {
-    const params = { path: { chapter_id: chapterId } };
-    return fromBook(unwrap(await api.POST("/interview/book/chapters/{chapter_id}/rewrite", { params })));
-  },
-  async restoreChapter(_id, chapterId) {
-    const params = { path: { chapter_id: chapterId } };
-    return fromBook(unwrap(await api.POST("/interview/book/chapters/{chapter_id}/restore", { params })));
   },
   async removeChapter(_id, chapterId) {
     const params = { path: { chapter_id: chapterId } };

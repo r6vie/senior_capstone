@@ -162,6 +162,8 @@ interface Stored {
   /** The Librarian's notebook, and its marks on the answer being written. */
   notebook?: NotebookEntry[];
   marks?: LibMark[];
+  /** The answer just sent, for the Librarian's final look during the wait. */
+  lastSent?: string;
 }
 
 function scripted(index: number) {
@@ -388,6 +390,7 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
     answer: (id, text) =>
       mutate(id, (stored) => {
         stored.marks = [];
+        stored.lastSent = text;
         if (stored.stage === "adding") {
           stored.addingAnswers = (stored.addingAnswers ?? 0) + 1;
           return;
@@ -395,6 +398,32 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
         stored.answers.push(text);
         if (stored.answers.length >= QUESTIONS.length) stored.stage = "choosing";
       }),
+    // The final look at the answer just sent: a little after the answer is saved, as the API's arrives.
+    async finalNotes(questionId) {
+      // Ready during the wait for the next question, as the API's is.
+      await wait(delay * 0.6);
+      const stored = load();
+      const sent = stored?.lastSent;
+      const none = {
+        status: "none" as const,
+        silent: false,
+        marks: { keep: [], add: [], revise: [], erase: [] },
+        notebook: { keep: [], add: [], revise: [], erase: [] },
+      };
+      if (!stored || !sent?.trim()) return none;
+      const notebook = stored.notebook ?? [];
+      const reply = fakeNotes(
+        { questionId, text: sent, previousText: "", pasted: true, shown: notebook.map((entry) => entry.id) },
+        notebook,
+        stored.answers.length,
+      );
+      const have = new Set(notebook.map((entry) => entry.id));
+      const added = reply.notebook.add.filter((entry) => !have.has(entry.id));
+      stored.notebook = [...notebook, ...added];
+      stored.lastSent = undefined;
+      save(stored);
+      return added.length ? { ...reply, notebook: { ...reply.notebook, add: added }, status: "done" } : none;
+    },
     async notes(look) {
       await wait(delay);
       const stored = load();
@@ -443,16 +472,6 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
         const title = TITLES.find((option) => option.id === titleId);
         if (title && stored.book) stored.book.title = title.title;
       }),
-    rewriteBlurb: (id) =>
-      mutate(id, (stored) => {
-        if (stored.book) stored.book.blurb = `${BLURB} I'd start with the first offer.`;
-      }),
-    rewriteChapter: (id, chapterId) =>
-      mutate(id, (stored) => {
-        const chapter = stored.book?.chapters.find((ch) => ch.id === chapterId);
-        if (chapter) chapter.summary = `${chapter.summary.replace(/\.$/, "")}, told from where I stand now.`;
-      }),
-    restoreChapter: (id) => mutate(id, () => {}),
     removeChapter: (id, chapterId) =>
       mutate(id, (stored) => {
         if (!stored.book) return;
@@ -564,7 +583,6 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
       if (blurb) stored.book.blurb = blurb;
       save(stored);
     },
-    restoreBlurb: (id) => mutate(id, () => {}),
     openRemoval: async () => null,
     cancelRemoval: async () => undefined,
     lastRound: async () => ({ empty: load()?.stage === "nothing" }),
