@@ -89,3 +89,58 @@ async def check_code(database: AsyncDatabase, email: str, code: str, now: dateti
         {"_id": user["_id"]}, {"$set": {"verified": True}, "$unset": {"verification": ""}}
     )
     return user["_id"]
+
+
+# Password resets use the same kind of code, kept apart from the sign-up one so asking for a reset
+# never replaces a code someone is about to enter at /auth/verify.
+
+
+def reset_digest(user_id: str, code: str) -> str:
+    return token_digest(f"reset:{user_id}:{code}")
+
+
+async def start_password_reset(database: AsyncDatabase, email: str, now: datetime) -> tuple[str, str] | None:
+    """A reset code for an active account, unless one was sent in the last minute.
+
+    Returns (user_id, code), or None when there is nothing to send; the caller answers the same either way.
+    """
+    user = await database.users.find_one({"email": email, "is_active": True}, {"_id": 1})
+    if user is None:
+        return None
+    code, record = new_verification(user["_id"], now)
+    record["code_hash"] = reset_digest(user["_id"], code)
+    sent = await database.users.update_one(
+        {
+            "_id": user["_id"],
+            "$or": [
+                {"password_reset.sent_at": {"$lte": now - timedelta(seconds=RESEND_SECONDS)}},
+                {"password_reset": None},
+            ],
+        },
+        {"$set": {"password_reset": record}},
+    )
+    return (user["_id"], code) if sent.modified_count else None
+
+
+async def check_reset_code(database: AsyncDatabase, email: str, code: str, now: datetime) -> str | None:
+    """Use up the reset code if it's right; every try counts, and 5 wrong ones end it. Returns the user's id."""
+    user = await database.users.find_one_and_update(
+        {
+            "email": email,
+            "is_active": True,
+            "password_reset.expires_at": {"$gt": now},
+            "password_reset.attempts": {"$lt": MAX_ATTEMPTS},
+        },
+        {"$inc": {"password_reset.attempts": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if user is None:
+        return None
+    digest = user["password_reset"]["code_hash"]
+    if not hmac.compare_digest(digest, reset_digest(user["_id"], code)):
+        return None
+    # Matching on the hash makes the code single-use even if two right guesses arrive together.
+    used = await database.users.update_one(
+        {"_id": user["_id"], "password_reset.code_hash": digest}, {"$unset": {"password_reset": ""}}
+    )
+    return user["_id"] if used.modified_count else None

@@ -11,4 +11,7 @@ collections directly.
 Membership (docs/trove.md §9.2): students confirm a 6-digit code sent to their case.edu email
 (`verification.py`); alumni sign up with a single-use invite from a verified member (`invites.py`).
 Accounts made before this existed count as verified.
+
+A forgotten password is reset with the same kind of emailed code (`verification.py`); a reset
+signs the member out everywhere.
 """
