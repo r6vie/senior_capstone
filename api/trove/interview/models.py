@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from trove.core.models import NonEmptyText, RequestBody
 from trove.interview.engine import Change, TitleOption, TurnPhase
+from trove.interview.librarian import Entry, Mark
 
 # interviewing → choosing (three titles shown) → reviewing (draft book) → done (on the shelf).
 # Later, done → adding (a short new round) → revising (proposed changes to approve) → done.
@@ -35,6 +36,74 @@ class SkipRequest(RequestBody):
     question_id: str = Field(description="The `question_id` of the question being skipped.")
 
 
+class NotesRequest(RequestBody):
+    """One look at the answer while the member types. Earlier turns are already on the server."""
+
+    question_id: str = Field(description="The `question_id` of the question being answered.")
+    text: str = Field(max_length=5000, description="The answer as it stands.")
+    previous_text: str = Field("", max_length=5000, description="The answer at the last call.")
+    pasted: bool = Field(False, description="Whether some of the text was pasted.")
+    shown: list[str] = Field(
+        default_factory=list, max_length=200, description="Ids of the marks and entries on screen now."
+    )
+
+
+class MarksDelta(BaseModel):
+    # Marks to leave in place. Anything on screen in none of these lists is rubbed out.
+    keep: list[str]
+    add: list[Mark]
+    # Same id, changed: an edit credited ("better."), with the old note in `struck_note`.
+    revise: list[Mark]
+    erase: list[str]
+
+
+class NotebookDelta(BaseModel):
+    keep: list[str]
+    add: list[Entry]
+    # Same id, new wording: strike the old text and write the new.
+    revise: list[Entry]
+    # Rub these out.
+    erase: list[str]
+
+
+class NotesResponse(BaseModel):
+    """What the Librarian does now. Place a mark only while its anchor and occurrence still match the
+    text: a late reply is then harmless. On `silent`, rub everything from this answer out and write
+    nothing more on it."""
+
+    silent: bool
+    marks: MarksDelta
+    notebook: NotebookDelta
+
+
+class FinalNotesResponse(NotesResponse):
+    """The Librarian's last look at an answer as sent. `done`: apply it like a `/interview/notes` reply.
+    `none`: there was nothing new to read (or no look). `pending`: still being written; the answer's
+    own response brings it."""
+
+    status: Literal["done", "none", "pending"]
+
+
+class AnsweredTurn(BaseModel):
+    """An answered or skipped question, with the marks the Librarian left on it, for going back."""
+
+    question: str
+    answer: str
+    marks: list[Mark]
+    silent: bool
+
+
+class LibrarianState(BaseModel):
+    """Everything the Librarian left so far, so going back and resuming show exactly what was there.
+    Only while interviewing or adding: it's hidden after the reveal, never deleted."""
+
+    turns: list[AnsweredTurn]
+    # The marks on the answer being written, and whether it has gone quiet.
+    current_marks: list[Mark]
+    current_silent: bool
+    notebook: list[Entry]
+
+
 class FinishRequest(RequestBody):
     answer: NonEmptyText | None = Field(
         None,
@@ -42,13 +111,6 @@ class FinishRequest(RequestBody):
         description="What's in the field: saved as the waiting question's answer first.",
     )
     question_id: str | None = Field(None, description="The `question_id` that `answer` answers.")
-
-
-class ShapeRequest(RequestBody):
-    question_id: str | None = Field(None, description="The `question_id` of the playback being answered.")
-    correction: NonEmptyText | None = Field(
-        None, max_length=5000, description="What's different. Leave out to confirm: \"Yes, that's me\"."
-    )
 
 
 class TitleRequest(RequestBody):
@@ -107,8 +169,8 @@ class Question(BaseModel):
     question_id: str
     text: str
     phase: TurnPhase
-    # On the Shape step: what the Librarian heard, played back for the member to confirm or correct.
-    playback: str | None
+    # The Librarian's notebook entry this question was built on: circled, or ticked if a `saving` one.
+    builds_on: str | None = None
 
 
 class InterviewResponse(BaseModel):
@@ -167,6 +229,10 @@ class InterviewResponse(BaseModel):
     # words that counted as names, in the order they said them. Null otherwise.
     reading_answer: str | None
     dropped_words: list[str] | None
+    # The Librarian's marks and notebook while interviewing or adding (L1). Null otherwise.
+    librarian: LibrarianState | None = None
+    # The Librarian's handwritten line under the title, at the reveal of the finished book.
+    sign_off: str | None = None
 
 
 class StaleQuestionResponse(BaseModel):

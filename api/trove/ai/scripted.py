@@ -26,27 +26,32 @@ from trove.ai.prompts import prompt_name
 DEV_ENVIRONMENTS = {"development", "dev", "local", "test"}
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
 # Sweep this many questions, then Dig, then Shape once this many are answered.
-SWEEP_QUESTIONS = 5
-SHAPE_AFTER_ANSWERS = 12
+SWEEP_QUESTIONS = 3
+SHAPE_AFTER_ANSWERS = 7
 # The book steps take longer than a question, as the real ones do.
 BOOK_STEP_SLOWER = 2
 # A quote needs this many words, or the engine drops it.
 QUOTE_WORDS = 5
 
 
-def ensure_scripted_allowed(settings) -> None:
-    """Raise unless this is plainly a developer's machine. Canned replies must never reach a member."""
+def scripted_refusal(settings) -> str | None:
+    """Why canned replies can't run here, or None when they can (or aren't asked for)."""
     if settings.ai_mode != "scripted":
-        return
+        return None
     if settings.environment.lower() not in DEV_ENVIRONMENTS:
-        raise RuntimeError(f"AI_MODE=scripted is for development, not ENVIRONMENT={settings.environment}.")
+        return f"AI_MODE=scripted is for development, not ENVIRONMENT={settings.environment}."
     for url in (settings.frontend_url, settings.api_url):
         if urlparse(url).hostname not in LOCAL_HOSTS:
-            raise RuntimeError(f"AI_MODE=scripted only runs on local URLs, not {url}.")
+            return f"AI_MODE=scripted only runs on local URLs, not {url}."
     if not settings.mongodb_database.startswith("trove_dev"):
-        raise RuntimeError(
-            f"AI_MODE=scripted only runs on a trove_dev database, not {settings.mongodb_database}."
-        )
+        return f"AI_MODE=scripted only runs on a trove_dev database, not {settings.mongodb_database}."
+    return None
+
+
+def ensure_scripted_allowed(settings) -> None:
+    """Raise unless this is plainly a developer's machine. Canned replies must never reach a member."""
+    if refusal := scripted_refusal(settings):
+        raise RuntimeError(refusal)
 
 
 class Asked(NamedTuple):
@@ -60,35 +65,13 @@ QUESTIONS = [
         "what you're studying or working on right now",
     ),
     Asked(
-        "What was the last printer you got working on your floor, and how did it end up on your desk?",
-        "the printers you fix on your floor",
-    ),
-    Asked(
         "Before you got to campus, what's something you built or fixed that nobody had asked you to touch?",
         "the jammed printer on your floor",
-    ),
-    Asked(
-        "When you first looked at the guy's bed frame down the hall, what was wrong with it, and what did "
-        "you check before you picked up a tool?",
-        "the wobbly bed frame down the hall",
     ),
     Asked(
         "Before campus, was there a job, team, or family situation where people kept handing you the "
         "problem nobody else wanted, and what was it?",
         "the bed frame and printer on your floor",
-    ),
-    Asked(
-        "In the creek project for AP Environmental Science, what was the first measurement or step that "
-        "didn't go the way you planned, and what did you change?",
-        "the creek project",
-    ),
-    Asked(
-        "What was the plan for the creek samples before the 7am Tuesday routine?",
-        "the creek project's nitrate readings",
-    ),
-    Asked(
-        "The jammed printer had paper behind the roller, but what did you check first before you opened it up?",
-        "the jammed floor printer",
     ),
     Asked(
         "On a busy night at the fry stand, when the line backed up, what did you do to get it moving again?",
@@ -98,6 +81,28 @@ QUESTIONS = [
         "When you split the fry stand line into an order taker and a fryer, who pushed back on it, and what "
         "did they say?",
         "the fry stand line you split in two",
+    ),
+    Asked(
+        "In the creek project for AP Environmental Science, what was the first measurement or step that "
+        "didn't go the way you planned, and what did you change?",
+        "the creek project",
+    ),
+    Asked(
+        "When you first looked at the guy's bed frame down the hall, what was wrong with it, and what did "
+        "you check before you picked up a tool?",
+        "the wobbly bed frame down the hall",
+    ),
+    Asked(
+        "What was the last printer you got working on your floor, and how did it end up on your desk?",
+        "the printers you fix on your floor",
+    ),
+    Asked(
+        "What was the plan for the creek samples before the 7am Tuesday routine?",
+        "the creek project's nitrate readings",
+    ),
+    Asked(
+        "The jammed printer had paper behind the roller, but what did you check first before you opened it up?",
+        "the jammed floor printer",
     ),
     Asked(
         "Your mom came around after one night of you running it that way. If a kid at that window watched "
@@ -152,31 +157,16 @@ LAST_RESORT = Asked(
     "What's one more thing you've worked out that most people haven't?", "what you've worked out"
 )
 
-# Paste these, in order, for a book that reads true.
+# Paste these, in order, for a book that reads true: the first seven questions, then Shape.
 THEO_ANSWERS = [
     "Honestly not a lot yet, I'm just a freshman. I'm probably going into biology, and most of my week is "
     "classes and figuring out the campus. I fix wobbly bed frames and printers on my floor sometimes, which "
     "takes more time than I'd expect.",
-    "Honestly it was a pretty basic one. Someone on my floor had a printer that kept jamming and nobody "
-    "wanted to deal with it, so they asked around. I opened it up and found a piece of paper stuck behind "
-    "the roller, so it was pretty quick. It's not really a big deal.",
     "Honestly not much, I don't think I've really built anything. I guess in high school I did a creek "
     "project for AP Environmental Science, but that was just a class thing.",
-    "Honestly it was mostly the bolts on one side. The frame would rock when he moved, so I checked whether "
-    "the slats were sitting right first, then tightened the bolts by hand before grabbing anything. It was "
-    "pretty simple, nothing special.",
     "Honestly my family has a fry stand at the county fair, and I worked there every summer. I guess I was "
     "the one who always got stuck with the line when it backed up, but that's just what happens when you're "
     "the kid working the fair.",
-    "Honestly the first couple months of nitrate readings were pretty useless. We were sampling at different "
-    "times of day, and some of the samples were taken right after rain, so the numbers jumped around and "
-    "didn't mean much. We changed it so we always went to the same spot at 7am every Tuesday, kept a log of "
-    "rain, and ran a blank sample each time.",
-    "Honestly the first plan was pretty loose. We were just going out whenever we had a free period or "
-    "whenever it seemed like a good day to get water, so the times kept changing. Nobody really thought "
-    "about rain until the numbers looked weird.",
-    "Honestly I just checked whether the paper tray was seated right and whether there was a jam light on. "
-    "Then I opened the back panel and saw the paper. It was pretty quick.",
     "Honestly not a lot at first, I just tried to keep up with whoever was at the window. But when I was "
     "about 16 I noticed the fryer person was stopping every time they had to take an order and make change, "
     "so I changed it so one person walks down the line taking orders and money and writes the order on the "
@@ -185,19 +175,18 @@ THEO_ANSWERS = [
     "Honestly I don't think anyone really pushed back that much. My mom was the one running the fryer, and "
     "she was skeptical at first, so I just showed her by doing it for a night. After that she didn't really "
     "argue.",
-    "Honestly I'd probably tell them to watch whoever's at the fryer for a few minutes first, to see how "
-    "often they stop to take orders or make change. That's usually where the time goes. It's not really a "
-    "complicated thing.",
-    "Honestly I'm not sure I'd know the technical side well enough to explain it. I think it was supposed "
-    "to show whether something was contaminating the samples in the lab or during collection, so we'd know "
-    "if a high number was real or just from our process.",
+    "Honestly the first couple months of nitrate readings were pretty useless. We were sampling at different "
+    "times of day, and some of the samples were taken right after rain, so the numbers jumped around and "
+    "didn't mean much. We changed it so we always went to the same spot at 7am every Tuesday, kept a log of "
+    "rain, and ran a blank sample each time.",
+    "Honestly it was mostly the bolts on one side. The frame would rock when he moved, so I checked whether "
+    "the slats were sitting right first, then tightened the bolts by hand before grabbing anything. It was "
+    "pretty simple, nothing special.",
 ]
-THEO_PLAYBACK = (
-    "You split the fry stand line at 16 so one person takes orders and money while the fryer only cooks, and "
-    "waits went from about 25 minutes to under 10. You also check the bolts and the slats before touching a "
-    "tool, and you learned the creek samples only meant something once they moved to a fixed 7am Tuesday with "
-    "a rain log."
+THEO_LINK = (
+    "What does splitting the fry stand line have in common with the 7am Tuesday creek samples, if anything?"
 )
+LINK = "Which two things you've told me feel like the same move to you, if any?"
 TITLES = [
     {
         "title": "Check the slats first",
@@ -263,34 +252,6 @@ POOL = [
         ],
     },
 ]
-# A rewrite swaps a chapter for this telling; rewriting again swaps it back, so it always visibly changes.
-RETOLD = {
-    "Splitting a fry line between two jobs": {
-        "title": "The fryer kept stopping to make change",
-        "summary": "Waits at the stand ran around 25 minutes because whoever fried also took the money. Once one "
-        "person walked the line writing each order on the paper boat, they dropped under 10.",
-    },
-    "Checking the simple things before the tools": {
-        "title": "Slats and bolts before any tool",
-        "summary": "Most things that come to me broken are loose or jammed. So I look first: slats, bolts by hand, "
-        "paper tray, jam light. The back panel only comes off after that.",
-    },
-    "Why the creek numbers jumped after rain": {
-        "title": "Nitrate numbers that jumped after rain",
-        "summary": "Two months of readings told us nothing, because rain and the time of day were moving them. A "
-        "fixed 7am Tuesday, a rain log and a blank each time made the numbers mean something.",
-    },
-    "Stuck with the line at the county fair": {
-        "title": "Stuck with the line at the fair",
-        "summary": "Every summer at the county fair, the line was mine when it backed up. Being the kid at my "
-        "family's stand meant that job came to me whether I'd asked for it or not.",
-    },
-    "Running it one night for my mom": {
-        "title": "One night to convince the fryer",
-        "summary": "Arguing wasn't going to move my mom off the way she ran the fryer. I ran the new line myself for "
-        "a single night, and that settled it.",
-    },
-}
 DRAFT_BLURB = (
     "I worked my family's fry stand at the county fair every summer, and I noticed the fryer kept stopping to take "
     "orders. One person walking the line taking orders and money cut waits from around 25 minutes to under 10. On "
@@ -334,8 +295,8 @@ def _turns(text: str) -> list[ParsedTurn]:
 
 
 def _answers(turns: list[ParsedTurn]) -> list[str]:
-    """What the member actually said: no skips, and not their "yes" to the Shape playback."""
-    return [turn.answer.strip() for turn in turns if turn.answer != SKIPPED and turn.phase != "shape"]
+    """What the member actually said, without the skips."""
+    return [turn.answer.strip() for turn in turns if turn.answer != SKIPPED]
 
 
 def _first_sentence(answer: str) -> str:
@@ -365,12 +326,11 @@ def _next_question(turns: list[ParsedTurn], thin: bool) -> Asked:
     return next((option for option in order if option.question not in asked), LAST_RESORT)
 
 
-def _plan(phase: str, question: str, topic: str, *, playback: str | None = None, ready: bool = False) -> dict:
+def _plan(phase: str, question: str, topic: str, *, ready: bool = False) -> dict:
     return {
         "threads": [{"thread": topic, "has_moment": False, "missing": "A specific moment."}],
         "phase": phase,
         "question": question,
-        "playback": playback,
         "topic": topic,
         "ready_for_reveal": ready,
     }
@@ -385,12 +345,9 @@ def _interviewer(text: str) -> dict:
         return _plan("shape", "Thanks, I have enough to start your book.", "your book", ready=True)
     answers = _answers(turns)
     if len(answers) >= SHAPE_AFTER_ANSWERS:
-        if "fry stand" in " ".join(answers).casefold():
-            playback = THEO_PLAYBACK
-        else:
-            longest = sorted(answers, key=len, reverse=True)[:2]
-            playback = "You told me: " + " ".join(_first_sentence(answer) for answer in longest)
-        return _plan("shape", "Is this you?", "what you've told me so far", playback=playback)
+        # Shape asks about a link between two threads, and never plays the answers back.
+        link = THEO_LINK if "fry stand" in " ".join(answers).casefold() else LINK
+        return _plan("shape", link, "what links your stories")
     # Answers ran thin, or the member is skipping: the next question comes from other ground.
     thin = "Answers are running thin" in text
     question, topic = _next_question(turns, thin)
@@ -415,18 +372,6 @@ def _book_chapters(text: str) -> list[dict]:
 
 def _blurb(_text: str) -> dict:
     return {"blurb": REMOVED_BLURB}
-
-
-def _rewrite(text: str) -> dict:
-    chapter = next(c for c in _book_chapters(text) if c["rewrite_this"])
-    if retold := RETOLD.get(chapter["title"]):
-        return retold
-    for original, telling in RETOLD.items():
-        if telling["title"] == chapter["title"]:
-            return next(
-                {"title": c["title"], "summary": c["summary"]} for c in POOL if c["title"] == original
-            )
-    return {"title": f"{chapter['title']}, retold", "summary": chapter["summary"]}
 
 
 ADDING_QUESTIONS = [
@@ -466,7 +411,9 @@ def _adding(text: str) -> dict:
         return {"question": "", "topic": "what you've just added", "done": True}
     asked = {turn.question for turn in new}
     # A spark stands in for the next question, asked as the member's own version.
-    spark = re.search(r"^- \[(.+?)\] (.+)$", text, re.MULTILINE)
+    # Only the sparks block: the notebook's lines look the same.
+    sparks = re.search(r"<sparks>\n(.*?)\n</sparks>", text, re.DOTALL)
+    spark = re.search(r"^- \[(.+?)\] (.+)$", sparks[1], re.MULTILINE) if sparks else None
     if spark:
         return {
             "question": f"You saved {spark[2]!r}. What's your own version? Tell me about one specific time.",
@@ -515,14 +462,47 @@ def _revise(text: str) -> dict:
     return {"changes": changes, "blurb": FINISHED_BLURB}
 
 
+def _between(text: str, tag: str) -> str:
+    match = re.search(rf"<{tag}>\n?(.*?)\n?</{tag}>", text, re.S)
+    return match.group(1) if match else ""
+
+
+def _notes(text: str) -> dict:
+    """A plain stand-in for the Librarian's notes: once an answer has a long enough word in it, an
+    underline with a fixed note on it, and a `saving` entry naming it. Never sharp, always grounded."""
+    answer = _between(text, "answer")
+    number = re.search(r"answer number (\d+)", text)
+    turn = int(number.group(1)) if number else 1
+    words = [w for w in re.findall(r"[A-Za-z]{6,}", answer)]
+    reply = {"silent": False, "keep_marks": [], "marks": [], "keep_entries": [], "revise": [], "erase": []}
+    current = json.loads(_between(text, "current_marks") or "[]")
+    reply["keep_marks"] = [mark["id"] for mark in current]
+    reply["entries"] = []
+    if words and not current:
+        word = max(words, key=len)
+        reply["marks"] = [
+            {"move": "underline", "anchor": word, "occurrence": 1, "note": "a number would help."}
+        ]
+        reply["entries"] = [
+            {
+                "kind": "saving",
+                "text": f"ask: what came after the {word.lower()}?",
+                "anchors": [word],
+                "source_turns": [turn],
+            }
+        ]
+    return reply
+
+
 REPLIES = {
+    "interview/notes": _notes,
+    "interview/sign_off": lambda _text: {"sign_off": "it took some red ink."},
     "interview/adding": _adding,
     "interview/revise": _revise,
     "interview/interviewer": _interviewer,
     "interview/draft": _draft,
     "interview/finish": _finish,
     "interview/blurb": _blurb,
-    "interview/rewrite": _rewrite,
 }
 
 
@@ -554,7 +534,7 @@ class ScriptedClaude:
         name = prompt_name(params.get("system"))
         if name not in REPLIES:
             raise ValueError(f"The scripted AI has no reply for the prompt {name!r}.")
-        asking = name in ("interview/interviewer", "interview/adding")
+        asking = name in ("interview/interviewer", "interview/adding", "interview/notes")
         await asyncio.sleep(self.delay_seconds * (1 if asking else BOOK_STEP_SLOWER))
         text = _text_of(params["messages"][-1]["content"])
         if _triggered_failure(name, text, asking):

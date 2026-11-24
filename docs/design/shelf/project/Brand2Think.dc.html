@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brand round 2 · what changed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&amp;family=Big+Shoulders+Display:wght@800;900&amp;family=Libre+Franklin:wght@400;600&amp;family=Libre+Caslon+Display&amp;family=Libre+Caslon+Text:ital@0;1&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Literata:ital,opsz,wght@1,7..72,400&amp;display=swap&amp;family=Inter:wght@600&amp;family=Space+Grotesk:wght@600&amp;family=Fraunces:ital@1&amp;family=Instrument+Serif&amp;family=IBM+Plex+Sans&amp;family=Barlow+Condensed:wght@800">
+<style>
+
+body{margin:0}
+.b2{width:1760px;padding:72px 80px 96px;background:var(--pg);color:var(--ink);font-family:var(--ui);font-size:16px;line-height:1.5}
+.b2,.b2 *{box-sizing:border-box}
+:where(.b2) :is(h1,h2,h3,p,ul,ol,figure,blockquote){margin:0;padding:0}
+.ey{font:600 13px var(--ui);letter-spacing:.16em;text-transform:uppercase;color:var(--ink2)}
+.h1{font-family:var(--disp);font-size:84px;line-height:1;letter-spacing:-.01em;margin-top:16px;font-weight:var(--dw,400)}
+.lede{font-family:var(--voice);font-style:italic;font-size:26px;line-height:1.35;max-width:980px;margin-top:20px}
+.story{margin-top:16px;max-width:980px;font-size:17px;color:var(--ink2)}
+.sec{margin-top:88px}
+.sh{display:flex;align-items:baseline;gap:20px;border-top:2px solid var(--ink);padding-top:14px;margin-bottom:32px}
+.sh b{font-family:var(--disp);font-weight:var(--dw,400);font-size:36px;line-height:1}
+.sh span{color:var(--ink2);font-size:15px}
+.cap{display:block;margin-top:10px;font:600 12px var(--ui);letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
+.row{display:flex;gap:44px;align-items:flex-end;flex-wrap:wrap}
+.cv{position:relative;flex:none;border:1.5px solid var(--ink);display:flex;flex-direction:column;background:#fff;overflow:hidden}
+.cv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cv::before{content:"";position:absolute;left:4.5%;top:0;bottom:0;width:1.5px;background:rgba(0,0,0,.55);z-index:1}
+.cv .ct{position:relative;z-index:2;text-wrap:balance;max-width:90%}
+.cv .cn{position:relative;z-index:2;align-self:flex-start;margin-top:.8em;padding:0 .35em 0 0;font-family:var(--ui);font-weight:700;letter-spacing:.14em;text-transform:uppercase;line-height:1.3}
+.spec{display:grid;grid-template-columns:repeat(3,1fr);gap:36px}
+.spec>div{border-top:1.5px solid var(--ink);padding-top:14px}
+.spec .big{margin-top:14px;line-height:1}
+.spec p{margin-top:12px;font-size:14px;color:var(--ink2);max-width:440px}
+.sws{display:flex;gap:18px;flex-wrap:wrap}
+.sw{width:168px}
+.sw i{display:block;height:110px;border:1.5px solid var(--ink)}
+.sw b{display:block;margin-top:10px;font:700 13px var(--ui);letter-spacing:.12em;text-transform:uppercase}
+.sw span{display:block;font-size:13px;color:var(--ink2);line-height:1.35}
+/* the site, set in this identity */
+.site{border:2px solid var(--ink);background:var(--pg);overflow:hidden}
+.s-top{display:flex;align-items:center;gap:40px;height:76px;padding:0 40px;border-bottom:1.5px solid var(--ink)}
+.s-top nav{display:flex;gap:28px;font:var(--navf);letter-spacing:var(--navls,0);text-transform:var(--navtt,none)}
+.s-top nav b{font-weight:inherit;padding:6px 0}
+.s-top nav b[aria-current]{border-bottom:2px solid var(--ink)}
+.s-search{margin-left:auto;width:240px;height:42px;border:1.5px solid var(--ink);border-radius:999px;display:flex;align-items:center;padding:0 18px;font-size:14px;color:var(--ink2);background:#fff}
+.s-av{width:42px;height:42px;border-radius:999px;border:1.5px solid var(--ink);display:grid;place-items:center;font-weight:700;background:#fff}
+.s-band{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:40px;padding:44px 40px 48px;background:var(--band);color:var(--bandfg)}
+.s-cap{font:600 13px var(--ui);letter-spacing:.16em;text-transform:uppercase;opacity:.8}
+.s-title{font-family:var(--disp);font-weight:var(--dw,400);font-size:56px;line-height:1.02;margin-top:14px;max-width:760px}
+.s-by{margin-top:12px;font:600 14px var(--ui);letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+.s-voice{margin-top:20px;font-family:var(--voice);font-style:italic;font-size:22px;line-height:1.38;max-width:720px}
+.s-act{margin-top:28px;display:flex;align-items:center;gap:20px}
+.s-btn{display:inline-flex;align-items:center;height:50px;padding:0 26px;background:#D42A27;color:#fff;font:var(--btnf);letter-spacing:var(--btnls,0);text-transform:var(--btntt,none)}
+.s-note{font-size:14px;opacity:.8}
+.s-shelf{padding:34px 40px 40px}
+.s-sh{display:flex;align-items:baseline;gap:18px;margin-bottom:22px}
+.s-sh b{font-family:var(--disp);font-weight:var(--dw,400);font-size:32px;line-height:1}
+.s-sh i{flex:1;height:1.5px;background:var(--ink);align-self:center}
+.s-sh span{font-size:14px}
+.s-books{display:flex;gap:30px}
+.mk{display:grid;grid-template-columns:repeat(12,1fr);gap:28px;align-items:start}
+.pst{position:relative;overflow:hidden;border:1.5px solid var(--ink)}
+.voice{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.voice div{border-top:2px solid var(--ink);padding-top:16px;font-family:var(--disp);font-weight:var(--dw,400);font-size:34px;line-height:1.08}
+.voice span{display:block;margin-top:12px;font:400 14px/1.45 var(--ui);color:var(--ink2)}
+.btab{display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 14px;background:#fff;border:1.5px solid #ccc;border-bottom:none;border-radius:8px 8px 0 0;font:13px system-ui}
+.btab svg,.btab img{width:16px;height:16px}
+.ovw{position:relative;display:inline-block;font-family:'Big Shoulders Display';font-weight:900;letter-spacing:.005em;line-height:.9;isolation:isolate}
+.ovw span{display:block;position:relative;mix-blend-mode:multiply}
+.ovw span:first-child{position:absolute;left:0;top:0}
+.pm{display:block;object-fit:contain}
+.wl{display:inline-flex;flex-direction:column;align-items:center;gap:.06em;line-height:1}
+.wlh{flex-direction:row;gap:.22em}
+.wlw{font-family:'Libre Caslon Display';letter-spacing:-.005em;line-height:.9}
+.ico{width:120px;height:120px;border-radius:27px;display:grid;place-items:center;overflow:hidden}
+
+.b2{--pg:#FAFAF7;--ink:#141414;--ink2:#55554F;--disp:'Gloock',Georgia,serif;--voice:'Literata',Georgia,serif;--ui:'Hanken Grotesk',system-ui,sans-serif}
+
+.cols{display:grid;grid-template-columns:repeat(2,1fr);gap:48px}
+.lst{list-style:none;display:grid;gap:16px;font-size:18px}
+.lst li{border-top:1.5px solid var(--ink);padding-top:12px}
+.lst b{display:block;font-family:Gloock;font-weight:400;font-size:26px;line-height:1.1;margin-bottom:4px}
+.avoid{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:1.5px solid var(--ink)}
+.avoid div{padding:18px;border-right:1.5px solid var(--ink);background:#fff}
+.avoid div:last-child{border-right:none}
+.avoid em{display:block;font-style:normal;font-size:30px;line-height:1.1;text-decoration:line-through;text-decoration-thickness:2px;color:#55554F}
+.avoid span{display:block;margin-top:8px;font-size:13px;color:#55554F}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+.three>div{border:2px solid var(--ink);background:#fff;padding:28px;min-height:420px;display:flex;flex-direction:column;gap:16px}
+.three .tp{font-size:15px;color:#55554F}
+
+</style>
+</helmet>
+<div class="b2" style="height:1720px;overflow:hidden">
+<span class="ey">Brand · round 2 · what changed</span><h1 class="h1">Less logo, more craft</h1>
+<p class="lede">Josef: all three were too basic, and the fonts can change to move the site away from the AI-generated look.</p>
+<section class="sec"><div class="cols">
+<div><div class="sh"><b>Why round 1 was basic</b></div><ul class="lst">
+<li><b>One idea, one flat shape.</b>A T, a silhouette, a rectangle: an icon, not an identity.</li>
+<li><b>Borrowed type.</b>The wordmarks were the site's own fonts, so nothing in them was ownable.</li>
+<li><b>No colour, no hand.</b>Ink on paper only; nothing that could only have been made by someone.</li></ul></div>
+<div><div class="sh"><b>What round 2 does</b></div><ul class="lst">
+<li><b>A made thing at the centre.</b>A drawn bird, a two-ink print, a painted wash: each shows a hand.</li>
+<li><b>Its own typefaces.</b>Each direction brings a family with character, and shows the site retyped in it.</li>
+<li><b>Colour with a reason.</b>A sheen, two inks, or the members' own paints. Red stays only for the one action.</li></ul></div>
+</div></section>
+<section class="sec"><div class="sh"><b>Faces we're leaving</b><span>What reads as generated, and what we use today</span></div><div class="avoid"><div><em style="font-family:Inter,system-ui;font-weight:600">Inter</em><span>The default of every generated app</span></div><div><em style="font-family:'Space Grotesk',system-ui;font-weight:600">Space Grotesk</em><span>The 'techy' default</span></div><div><em style="font-family:Fraunces,Georgia,serif;font-style:italic">Fraunces</em><span>The 'warm' AI serif</span></div><div><em style="font-family:'Instrument Serif',Georgia,serif">Instrument Serif</em><span>The 2025 landing page</span></div><div><em style="font-family:'IBM Plex Sans',system-ui">IBM Plex</em><span>Ours today: clean, anonymous</span></div><div><em style="font-family:'Barlow Condensed',sans-serif;font-weight:800;text-transform:uppercase">Barlow</em><span>Ours today: sporty caps</span></div></div></section>
+<section class="sec"><div class="sh"><b>The three</b><span>Full boards to the right</span></div><div class="three">
+<div><span class="ey">A · publisher</span><svg width="155" height="180" viewBox="0 0 172 200" aria-hidden="true"><ellipse cx="86" cy="100" rx="82" ry="96" fill="#F6F2E9" stroke="#141414" stroke-width="3.4"/><ellipse cx="86" cy="100" rx="62" ry="76" fill="none" stroke="#141414" stroke-width="1.1"/><path id="ct1" d="M19 100 A67 81 0 0 1 153 100" fill="none"/><path id="cb2" d="M13 100 A73 87 0 0 0 159 100" fill="none"/><text font-family="Gloock" font-size="16" letter-spacing="4.5" fill="#141414" text-anchor="middle"><textPath href="#ct1" startOffset="50%">TROVE</textPath></text><text font-family="Hanken Grotesk" font-weight="600" font-size="6.6" letter-spacing="2.4" fill="#141414" text-anchor="middle"><textPath href="#cb2" startOffset="50%">CLEVELAND · MMXXVI</textPath></text><g transform="translate(19 37) scale(0.58)"><path d="M34 63.5 L50 56.5 C52 47 62 45 70 48.5 C78 52 82 60 86 68 C100 80 116 90 130 99 L189 130 L195 137 L186 154 L124 114 C114 122 104 128 94 128 C78 128 66 118 62 104 C58 92 56 80 56 72 C54 68 52 66.5 50 66.5 Z" fill="#141414"/><path d="M89 126 L87 147 M98 126 L100 147" stroke="#141414" stroke-width="3.2" fill="none"/><path d="M80 147 H107" stroke="#141414" stroke-width="3" fill="none"/><path d="M46 148 H174 V151.5 H47 C41 151.5 38.5 157 38.5 162.5 C38.5 168 41 173.5 47 173.5 H174 V177 H46 C37 177 32 170 32 162.5 C32 155 37 148 46 148 Z" fill="#141414"/><path d="M46 156.5 H170 M46 162.5 H170 M46 168.5 H170" stroke="#141414" stroke-width="1.6"/><path d="M90 90 C106 101 126 111 152 123" stroke="#F6F2E9" stroke-width="1.3" fill="none" stroke-linecap="round"/><circle cx="63" cy="56.5" r="2.2" fill="#F6F2E9"/><path d="M70 104 C74 116 86 124 98 124 C108 122 114 116 116 110 C104 108 88 104 78 98 Z" fill="#F6F2E9"/><path d="M82 77 C96 84 110 92 122 99 C112 99.5 98 94 85 85 Z" fill="#F6F2E9"/><path d="M60 72 L64 70.6 L61.4 86 Z" fill="#F6F2E9"/><path d="M58.6 90 L62 88.6 L63 100 Z" fill="#F6F2E9"/><path d="M140 108 L176 129 L175 131 Z" fill="#F6F2E9"/><path d="M146 116 L181 137.6 L179.6 139.4 Z" fill="#F6F2E9"/><path d="M108 103 L132 113 L131.4 114.6 Z" fill="#F6F2E9"/></g></svg><b style="font-family:Gloock;font-weight:400;font-size:40px;line-height:1">The Magpie</b>
+<p class="tp">A colophon: a magpie on a closed book, cut like a linocut. Gloock, Literata, Hanken Grotesk. Black and white with a blue-green sheen.</p></div>
+<div><span class="ey">B · print shop</span><div style="display:flex;align-items:center;gap:18px"><svg width="150" height="150" viewBox="0 0 120 120" aria-hidden="true" style="isolation:isolate"><defs><filter id="gr3" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.3" numOctaves="2" seed="4" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 -0.9 1.3" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter></defs><g filter="url(#gr3)" style="mix-blend-mode:multiply" fill="#00838A" transform="translate(46 62) rotate(-11)"><rect x="-24" y="-38" width="48" height="76"/><rect x="-17" y="-38" width="2.4" height="76" fill="#F3EFE4"/><path d="M16 -34 V34 M19.5 -34 V34" stroke="#F3EFE4" stroke-width="1.2"/></g><g filter="url(#gr3)" style="mix-blend-mode:multiply" fill="#FFE800" transform="translate(74 62) rotate(11)"><rect x="-24" y="-38" width="48" height="76"/><rect x="-17" y="-38" width="2.4" height="76" fill="#fff" fill-opacity=".55"/><path d="M16 -34 V34 M19.5 -34 V34" stroke="#fff" stroke-opacity=".6" stroke-width="1.2"/></g></svg><span class="ovw" style="font-size:80px"><span style="color:#FFE800;transform:translate(2.4px,1.8px)">trove</span><span style="color:#00838A">trove</span></span></div><b style="font-family:'Big Shoulders Display';font-weight:800;font-size:44px;line-height:1">Overprint</b>
+<p class="tp">Two riso inks, teal and yellow; two books leaning together make green where they overlap. Big Shoulders and Libre Franklin.</p></div>
+<div><span class="ey">C · the brush</span><div style="display:flex;align-items:center;gap:6px"><img class="pm" src="/_blob/97debc3b6fd8667339b8021cc1df06f9" alt="" style="width:150px;height:auto"><img class="pm" src="/_blob/6a62a3fbbb6d3db21fdf532dff8f2cfc" alt="" style="width:110px;height:auto"><img class="pm" src="/_blob/9675b8a1a88c3b88ff5de795ddde075b" alt="" style="width:80px;height:auto"></div><b style="font-family:'Libre Caslon Display';font-weight:400;font-size:44px;line-height:1">Wet Ink</b>
+<p class="tp">A painted open book, a different pair of colours for every member. Libre Caslon and Schibsted Grotesk, blue-black ink.</p></div></div></section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1760,"height":1720}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

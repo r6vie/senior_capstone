@@ -25,8 +25,6 @@ class Chapter(BaseModel):
 class AuthorChapter(Chapter):
     # The member's own interview words this chapter is grounded in. Only the author sees them.
     quotes: list[str]
-    # In review, a rewrite can be taken back (POST /interview/book/chapters/{id}/restore).
-    has_previous: bool = False
 
 
 class BookCard(BaseModel):
@@ -70,10 +68,6 @@ class MyBookResponse(BaseModel):
     can_undo: bool = False
     # When the last revision was applied, for "Your book was updated on Nov 9." Null once undone.
     revised_at: datetime | None = None
-    # In review, a rewritten back cover can be taken back (POST /interview/book/blurb/restore).
-    has_previous_blurb: bool = False
-    # After a rewrite: it couldn't be told better from what the member said, so nothing changed.
-    rewrite_unchanged: bool = False
 
 
 class BookEdit(RequestBody):

@@ -85,6 +85,7 @@ ink 18:1; rule on ink 11.4:1.
 | Nav, buttons | Barlow Condensed 600–700, +0.10–0.14em | 17 / 1 | CAPS |
 | Caption chip | Barlow Condensed 600, +0.14em | 14 | CAPS |
 | Book title | Newsreader 600 | 13.5 shelf, 27 feature | Sentence |
+| Book title on a strata cover (Josef, 2026-11-20; sizes 2026-11-21) | Barlow Condensed 800, +0.01em, line-height 0.92, set left | 29 on the 176 shelf book (78 on the 472 board cover, the same book scaled) | CAPS, no knockout; the full name right under it (10px gap), Barlow Condensed 700 13px caps +0.16em in the cover's ink, on a white knockout where the art rises into it. Watercolour covers (2026-11-23): the same type with no knockout, title and name in the art's cover ink, cream on a dark sky |
 | Book author (full name) | Plex Sans 600, +0.12em, line-height 1.3 | 9.5 | CAPS, wraps to 4 lines |
 | The Librarian's voice | Newsreader italic | 19–22 / 1.3 | Sentence |
 | Body, labels | Plex Sans 400/600 | 15–16 / 1.5 | Sentence |
@@ -185,10 +186,12 @@ Page ground `--paper`. Four stacked parts:
    then `.ledge` that runs full-bleed to the page edge (margin `0 -44px 0 -8px`). Shelf names are placeholders
    ("Changing course", "Starting over").
 4. Row of books overflows horizontally with `overflow-x:auto` and scroll-snap when there are more than fit (at 1440
-   nine 122px books fit per row). Add 36px of space below the last ledge for its dot shadow.
+   six to seven 176px books fit per row). Add 36px of space below the last ledge for its dot shadow.
 
-**Book** (`.book` 122×178, `.book-lg` 236×344, `.book-sm` 92×136): white cover, 2px ink outline (3px on lg), hinge line at
-left 12px, dot shadow offset 8px right and down, title Newsreader 600 13.5px (27px on lg) at top, full name Plex 600
+**Book** (`.book` 176×257 on the shelf, `.book-lg` 236×344, `.book-sm` 92×136; the shelf book was 122×178 until
+2026-11-21, when Josef chose the larger size so the cover art and its type read better; shelf gap 36px): white cover, 2px ink outline (3px on lg), a narrow hinge:
+a 1.5px ink line 8px in from the left edge, with the cover's type starting 18px in (Josef, 2026-11-21: the old
+hinge at 12px with type at 21px took too much of the cover), dot shadow offset 8px right and down, title Newsreader 600 13.5px (27px on lg) at top, full name Plex 600
 9.5px caps at bottom. A long name wraps (also at a hyphen) and stops at 4 lines with an ellipsis, so a real full name is never cut (it was 3 until 2026-11-15, when long names hit the limit; Josef approved 4); "ALEXANDRA OKONKWO-BRENNAN" takes 3 lines on `.book` and `.book-sm`, 2 on `.book-lg` (measured in the app with the real fonts). Title and full name only; never a headline, employer, genre, count or badge. Make the book an `<a>`
 (or `<button>`) with `aria-label="<Title>, by <Full name>"`, a focus ring and the hover lift (`translateY(-4px)`).
 
@@ -213,9 +216,221 @@ Breakpoint: below 720px. Same parts, rearranged:
 Desktop layout with 24px gutters, the search shrinks to 180px, band title 40px, the feature book stays on the right
 at width−300px, rows scroll horizontally.
 
+## Handoff: the open book (book screen B)
+
+**Approved by Josef, 2026-11-19.** Build this in place of the current `BookReader` look. Source of truth:
+`docs/design/shelf/project/FreshReaderOpen.dc.html` (canvas page "Fresh directions", board "Book screen B · the book
+opens"). **No art for now:** pages are plain `--paper`; the art inside the book and on the covers is still to be decided,
+so leave the art layer out (keep a place for one image under each page's content).
+
+- **Around the book.** The page keeps the shelf's top bar exactly as on the shelf. Below it the shelf stays in place at
+  60% opacity under fine ink dots (`.9px` dots on a 5px grid, opacity .4); the opened book's place on the shelf stays
+  empty. There is no other toolbar, backdrop or button outside the book.
+- **The book.** Centred, 1180 × 724 at 1440 wide. One board in the book's cover colour (use `--ink` until covers are
+  decided), radius 4, 8px larger than the pages all round; the spine shows as a 24px tab at head and foot of the
+  gutter; one sheet of page edge (white, 1.5px ink) 6px proud of the pages. Two pages, each a flat plane 570 × 684,
+  `--paper`, 2px ink outline (1px where they meet at the gutter), and a 36px strip of dot shade down the gutter.
+  No curves, blur or stacked layers: each page is one plane that carries all of its own content.
+- **Controls live in the book.** Left page head: "✕ Close the book" (Esc too). Right page head: page tabs
+  Contents, 1, 2, … (the current one underlined). The lifted corner at the right page's foot turns forward;
+  ← → and swipe turn too. No page numbers or turn links at the feet. No helper sentences anywhere.
+- **Spread 1:** left, the title page: title (Newsreader 600, 42px), "by" full name (byline), blurb, then
+  "Ask to check out" (`.button-primary`). Right, the contents: numbered rows (number, chapter title, one-line summary,
+  ›), dotted rules, hover shades the row `--paper-sunk`.
+- **Spread 2 (a chapter):** left, the contents again, compact (no summaries), the current chapter reversed in ink,
+  and "Ask to check out" under the list. Right, the chapter: a large number (Barlow Condensed 800, 120px), the title
+  (Newsreader 600, 38px), the summary (Newsreader 19px). **Never put Ask to check out under a chapter**: it would
+  read as checking out that chapter.
+- **Motion (Josef, 2026-11-19).** Clicking a book on the shelf is a 3D move: the view zooms in on that book where it
+  stands, then the book opens up in 3D, the cover swinging about the spine, into the open spread. A page turn
+  rotates a page plane about the spine in 3D (`transform-style: preserve-3d`, the content on the plane turns with
+  it). Reduced motion swaps states with a short fade. Built and workshopped with Josef on 2026-11-21: see Additions,
+  "The open book in motion", which replaces the zoom with the book itself flying forward.
+- **Demo before anything is pushed.** Josef wants to see a working demo of the open and the turns first and will
+  likely workshop them with the implementation session. Nothing of this screen goes to main until he has.
+- **Removed:** "I have one like this" (sparks) is not on the book screen. `docs/trove.md` still lists sparks; that
+  plan change is the orchestrator's.
+- **Phone:** not drawn yet. Until it is, show one page at a time at full width with the same head controls.
+
 ## Additions
 
 Patterns added after v1. Each entry: name, the task it solves, date, owner, snippet or link.
+
+### The reveal: titles on a shelf, the book open while it's written, review in the book (StartReveal, 2026-11-24, Trove UI; approved by Josef)
+
+`RevealParts.tsx`, with the book frame from `IntroBook.css`.
+
+- **Titles:** three white books rise onto a shelf, 120ms apart. Each title types onto its cover (24ms a letter), its
+  reason fades up under the shelf, and the next book starts 0.7s later. The whole book is the choice (a pressed
+  button). The pick lifts 26px in 0.25s, its outline thickens and its bookmark slides in, with "Your pick" over
+  its reason. The other two sit back at 92%, half opacity, desaturated, as in the design picker. On a phone each
+  book is a row with its reason beside it.
+- **The book opens (Josef, 2026-11-24):** after Choose, the other two books slide away (0.32s), then the chosen
+  book comes forward and opens as the reader's does: from about the shelf book's size, its right half where the
+  book stood, its cover swings open about the spine (850ms on the reader's open ease) while the board's left
+  half appears under it. It lands on review, or, if the book isn't written yet, on the open book with the
+  writing line until it is; never a blank page. It opens once per pick, never after a reload. Narrower screens
+  and reduced motion crossfade.
+- **Writing:** the chosen book stays open on screen for the whole wait: its title page, and a contents page of
+  blank places.
+- **Review:** the same open book. The title is a field from the start, with the name and the Librarian's sign-off
+  under it. The contents have no dividers, and each entry's text is clamped to two lines. The back cover is the
+  last entry, in italics with no number, and has its own tab. A chapter opens to its title and text as fields;
+  the back cover opens to one field. Every field saves a moment after typing stops, and on leaving it. Remove
+  chapter is on the chapter's own page and asks in place. "Put it on the shelf" (red) and "See the other
+  titles" sit under the book. The contents fill row by row as review opens.
+- Reduced motion: everything is there at once.
+
+### The interview's first screen: the book introduces it (StartInterview, 2026-11-23, Trove UI; approved by Josef)
+
+The task: say what the interview is before it starts, without a band or a form. `IntroBook.tsx`.
+
+- The shelf's open book, empty, under the plain top bar (`IvTop`).
+- **The title page:** three lines type in, in Newsreader 600 30px, one letter per 24ms with a breath between lines.
+  Skip sits where Close sits on the shelf's book. When the lines are done they settle to 22px.
+- **The contents page:** three chapter places draw in, a number and two blank lines each, as the second line types.
+- **Under the lines:** the member's place at CWRU (Current student, Alumni, I am a founder; no helper lines) and
+  one optional résumé line ("A résumé, if you like", Drop a PDF here, Choose a PDF; then the file's name and
+  Remove). The résumé goes with Start. Start stays greyed until an affiliation is ticked, with "About 10
+  minutes" beside it, and the wait's line takes that place after Start.
+- Skip, and reduced motion, open on the end. On a narrower screen the two pages stack.
+
+### The interview opens on question one (StartOpen, 2026-11-23, Trove UI; approved by Josef)
+
+The task: a new interview should feel like the Librarian greeting you, not a form. After Start, the question
+screen itself is the welcome.
+
+- **Layout, every question:** the question runs the content's width across the top, at most 980px. The answer
+  card and the notebook sit under it, side by side, their tops level.
+- **The welcome (option A, Josef 2026-11-23):** page one of the notebook writes only "hello, <first name>." in the
+  Librarian's hand (`Notebook` `welcome`), at 0.35 of the notebook's pen pace (Hand `pace`).
+- **The question:** it types in at the top at once, beside the hello, one letter per 28ms (`TypedQuestion`). Its
+  place is held at its final size from the first letter, so nothing under it moves. Then the keyboard goes to the
+  answer, unless the member has already gone somewhere.
+- **The notebook is a fixed sheet:** its height comes from the screen, never its content: from where it starts down
+  to 44px above the window's foot. The phone's sheet is unchanged.
+- **Reduced motion:** everything is there at once. An interview already under way opens without the welcome.
+### A book landing on the shelf (2026-11-24, built from board StartReveal step 7, which Josef approved; `web/src/features/interview/ShelfLanding.{tsx,css}`)
+
+The task: the payoff at the end of the interview. The member's book, still white, goes onto the shelf among other
+members' books and its cover arrives. Only the shelf is the component; the interview page keeps the Librarian's
+line, the words and the buttons.
+
+- **The still frame.** Books stand on one `.ledge`. The member's book is the large book (236 x 344) in the middle,
+  pulled slightly forward: it stands 18px proud of its neighbours (17px on a phone). The neighbours are shelf books
+  (176 x 257; 141 x 206 on a phone) under a light dot tone of paper dots, never a blur or fade. 48px of room is kept
+  above the books, so a lifted book is never cut off. Neighbours past the edges are cut off
+  sideways; the page never scrolls sideways.
+- **Landing (1.6s).** The closed white book starts where the open book closed, turns to face the member about
+  its spine (from 18°, in its first 0.64s) and travels down on one move. Its neighbours slide apart to open its gap (0.9s). It settles on one soft ease-out
+  (`cubic-bezier(0.25, 0, 0.1, 1)`), with no bounce and no overshoot. Its dot shadow comes as it touches the shelf.
+  Transforms only, as in the open book.
+- **The cover arrives (about 4s).** The art's quick clip (`anim` in `ui/art/bookArt.ts`; Josef chose the quick
+  timing over the board's 13.5s) plays muted, inline and without controls, exactly where the cover art sits,
+  under the title and name. Those are in ink on the white cover and take the cover's own ink as the paint
+  reaches them. The clip's last frame is the cover, so on `ended` the still cover takes its place with no jump.
+  If the clip can't start within 2.5s, the still cover fades in (480ms) instead.
+- **Reduced motion.** A 200ms crossfade to the finished frame, with the still cover.
+- **On a phone** the shelf books keep their desktop look and art for this screen (the board's phone frame), at
+  the sizes above.
+
+### Wide pages (2026-11-23, Trove UI, at Josef's ask; `web/src/ui/AppShell.css`)
+
+The task: the plain pages (Settings, Checkouts, the meeting, messages, checking out) sat in a narrow
+column against the left edge on a wide screen. They now use the width, still left-aligned, in one of two layouts.
+Phones and tablets keep the stacked page.
+
+- **Rows (`.page-row`, from 960px): for settings-like pages.** Each section is a row under a 3px ink rule.
+  - Left (`.page-row-head`): the section's heading (Newsreader 26) and what it means, in `--ink-2`, at most 34ch.
+  - Right (`.page-row-body`): its controls on a `--paper-sunk` panel (5px radius, `--s-6` padding). White
+    fields read clearly on it.
+  - A row whose whole content is one checkbox or button adds `.page-row-bare`: no panel, since the rule already
+    frames it.
+  - A lone field keeps a 36rem measure. Related short fields may pair up (`.settings-pair`).
+  - Columns: `minmax(220px, 1fr) minmax(0, 2.2fr)`, gap `--s-8`. The page is `.page-wide`, at most 1320px.
+- **Rail (`.page-rail`, from 1100px): for pages about one checkout.** The page's head (way back, caption,
+  title) holds the left column under a 3px rule. The title steps down to 32px there, so a long name stays a head
+  and doesn't become the page's focal point. It stays in place as the page scrolls. The work reads
+  beside it in a column of at most 800px, starting on the same rule line.
+  - Columns: `minmax(280px, 1fr) minmax(0, 800px)`, gap `--s-8`, at most 1320px.
+  - A form in the work column sits on a `--paper-sunk` panel (the note on Check out, the reply on Messages).
+  - Where the page knows its book, the book itself (`BookObject`, shelf size) goes under the head (Check out).
+    Otherwise the rail is just the head: no decorative tone in it.
+- Checkouts keeps its own two-column card grid, out to the same 1320px. Past meets stays stacked: a rail holding
+  only its title doesn't earn the width.
+- Links in these pages are ink and underlined, never the browser's blue.
+
+```html
+<main class="shell-page page-wide"><h1 class="page-title">Settings</h1>
+  <section class="page-row"><div class="page-row-head"><h2>Email</h2><p>…</p></div>
+    <div class="page-row-body page-row-bare">…</div></section></main>
+<main class="shell-page page-rail"><header class="page-rail-head">…<h1 class="page-title">…</h1></header>
+  <div>…the work…</div></main>
+```
+
+### Searching the library (D2, 2026-11-22, Alvisa)
+
+- The square search field in the header is the entrance, not an editable field. Clicking it, focusing it, or
+  pressing `/` opens a full-window native modal over the current page. The modal is paper at 94% opacity, so the
+  page remains faintly visible but is inert. Escape and the top-right close button return focus to the header field.
+- The modal repeats the field at reading width with one Search button. Two characters start a search after 200ms;
+  typing further replaces the results live, while Search or Enter runs immediately. Search covers only published
+  book text and authors' full names, and does not expose interview quotes or other private source material.
+- Results are books, not generic text rows: each one uses the same physical cover as the shelf and has a short
+  matching excerpt beneath it. Selecting the cover moves directly into the existing full-screen book reader.
+- The result shelf is five columns on a wide screen, three on a tablet and two on a phone. Loading, empty and error
+  states stay in the same results area, without counts, filters or suggestions generated by AI.
+
+### A page that broke (2026-11-22, Ellie; `web/src/ui/ErrorBoundary.tsx`)
+
+Task: a bug in one page never blanks the app. The page's place shows the empty-state frame (`.empty`, dotted)
+with a Newsreader heading "Something went wrong on this page", one plain line ("It's not something you did. Try it
+again, or go back to the shelf."), a secondary "Try again" and a quiet "Go to the shelf". The top bar stays, and
+moving to another page clears it. The tab icon is the wordmark's tilted ink square on paper (`web/public/favicon.svg`).
+
+### Opening a reader's book (D1, 2026-11-18, Alvisa)
+
+- A modal book spread covers the whole app, with an ink backdrop at 94% opacity. This stronger
+  dimming and the slower opening are Alvisa's explicit choices for focusing on the selected book.
+- The closed cover starts at the selected book's position. Growth and its leftward hinge rotation
+  overlap, settling into a two-page spread. This action-triggered opening is an exception to the
+  usual 120ms motion; reduced-motion preferences remove the travel and page turns entirely.
+- The left page carries the title and full name. The right page starts with Contents; chapter
+  titles are measured at the actual page width and paginated to fit, never truncated to fit more.
+  Selecting an entry turns to its summary. Back to contents and previous/next page controls are
+  quiet; Ask to check out is the one red action. Escape or Back to shelf closes the reader.
+- The spread stays two pages on small screens, with smaller gutters, wrapping text and scrollable
+  page content when necessary. Native modal focus containment keeps the background inert.
+- Implementation: `web/src/features/discovery/BookReader.tsx` and `BookReader.css`. The static
+  Librarian example remains; its preview identifies itself as an example and cannot be checked out.
+
+### The open book in motion (D1, 2026-11-21, Trove UI with Josef)
+
+Task: open, read and close a book as one physical object. Built in `web/src/features/discovery/BookReader.{tsx,css}`,
+workshopped with Josef frame by frame. Rules it keeps, for any later change:
+
+- **One object, printed.** The book is a 3D object (`preserve-3d`): cover slab with rims on all four sides, page block
+  with fore-edge, head, foot and spine faces, a board and a spine strip. Closed, it is the shelf book exactly: its
+  type, hinge, padding and line breaks are measured from the very copy clicked and frozen (`printCover`,
+  `.br-line`), its art stretched to the cover. Everything on a page is printed on it: the spine's dot shade
+  (`.br-left::after` / `.br-right::after`) and the turned-down corners travel with the paper. Nothing fades,
+  scales or reflows on its own, and nothing appears mid-flight: a book's contents and art load when it is pointed
+  at, and it waits closed in its place (at most 0.6s) until they are in.
+- **Opening (850ms).** It lifts from its shelf place, turns about its upright axis only (head and foot never tip),
+  lands a touch large (1.2%) and settles; the cover lifts at once and slows into the spread; the spine strip
+  unfolds from the spine line on the cover's curve. Only transforms and opacity animate, so it runs on the
+  compositor.
+- **Closing (560ms).** Its own curve, not the opening reversed: prompt from the first frame, no swell, slowing onto
+  the shelf, back to the copy it came from (a book on two shelves leaves only the clicked copy's place empty).
+- **Around it.** One full-window layer of paper at 55% and dots at 62% ink over the shelf (the shelf itself is never
+  faded, which flashed it); the clicked copy's dot shadow dissolves out as it lifts and back as it returns.
+- **Turning.** Each leaf is six hinged strips that curl as it turns (edge leading, then trailing); a jump turns a
+  leaf per spread passed (up to four, 110ms apart), each stacking above the last. Both pages carry a corner:
+  forward at the right page's foot, back at the left's from the first chapter on.
+- **Art inside.** The book's page art lies behind every left page, the title page and each contents page alike,
+  anchored to the foot.
+- **The Librarian's pick** on desktop is 260 x 379 with 33px / 15px cover type, and the words beside it stop 24px
+  before the burst at every width.
 
 ### Growing books (T33, 2026-11-08, design session)
 
@@ -270,14 +485,57 @@ Frames: canvas page "Growing books" (boards `GrowingG1`..`G5`), each at desktop 
   off-shelf book's caption is "Off the shelf", a plain note says what that means, and "Put back on the shelf" is
   the page's red action.
 
-- **Checkout list** (2026-11-15, Ellie, `web/src/features/checkouts/Checkouts.css`). Task: answer or follow
-  checkouts without a feed. Sections under a 3px ink rule; each item is a name or title, the other member's note
-  as `.checkout-note` (a 3px ink rule on the left, Newsreader italic), one line of status, and secondary/quiet
-  buttons. **No red on this page**: no single action is the next step for everyone. Declining asks once, in
-  place ("Decline …? Decline / Keep it"), not in a dialog.
+- **Checkouts page** (2026-11-15, Ellie; regrouped 2026-11-22, `web/src/features/checkouts/Checkouts.css`, `.co-*`).
+  Task: see what needs you, then follow the rest, without a feed. Three groups under display-caps headings with a
+  rule: **Waiting on you** (a request for your book, a "Did you meet?" to answer; "Nothing needs you right now." when
+  empty), **Under way**, and **Earlier** (closed checkouts as one dotted-ruled line each: title, "<name> · <status>",
+  and a Past meets link when there is one). Your book and books you've checked out mix within a group. Live
+  checkouts are Folio `.surf` cards, two to a row from 820px: the name or title in Newsreader, one meta line, and a
+  status label at the top right (above the name on a phone): outlined while it waits on someone ("Asks for your
+  book", "Waiting"), solid ink once "Accepted". The other member's note (`.checkout-note`) shows only while it's
+  waiting. **No red on this page**: no single action is the next step for everyone. Declining asks once, in place
+  ("Decline …? Decline / Keep it"), not in a dialog. The unread sign is a dot and "New message", never a number.
 - **Check out form** (2026-11-15, Ellie, `CheckOutPage.tsx`). The book's title, byline and blurb, then one
   textarea and the screen's one red button, "Ask to check out", with the note "A thirty-minute video call, if
   the author says yes."
+- **Conversation** (2026-11-18, Ellie, `web/src/features/messaging/MessagesPage.css`). Task: read and write a short
+  thread inside a checkout. Each message is a `.bubble` (speech is the one rounded shape) in the working face,
+  not the Librarian's italic, because these are people's own words to read. Everything stays left-aligned;
+  your own messages get a fine dot-tone fill instead of moving to the right. App notes (a confirmed time) are a
+  plain line between dotted rules, never a bubble. One red button, "Send". No read receipts, typing dots or
+  counts; the only unread sign is the private "New message" caption on the Checkouts page.
+- **"Did you meet?"** (2026-11-18, Ellie, `web/src/features/checkouts/DidYouMeet.tsx`). Task: answer privately
+  whether the reading happened. A `--paper-sunk` box with the question in Newsreader ("Did you meet <name>?"), one
+  muted line ("Only you see your answer. Yes or No returns the copy."), then secondary "Yes, we met" and quiet "Not
+  yet" and "No". A chosen "Not
+  yet" is filled ink, as the toggle pair. Never red, and no confirm step: the line says what a final answer does
+  before the press. Once the copy is back, "Not yet" isn't offered.
+- **Past meets** (2026-11-18, Ellie; cards 2026-11-22, `PastMeetsPage.tsx`). Task: find the people you've met again.
+  One column of Folio `.surf` cards (at most 760px, newest first, so a list of people reads top to bottom and no
+  card leaves a hole beside another), each with a bookmark hanging from its top edge near the right corner (an ink
+  ribbon with a notched tail, `.past-meet-bookmark`, 16 by 64px): the other person's name and their book, which book
+  was checked out and when it was returned, a "Did you meet?" box if they haven't answered, the contact line, and
+  "Your conversation". No counts and no red.
+- **Loading** (2026-11-22, Ellie, `web/src/ui/Loading.tsx`). Task: a page appears whole, never piece by piece.
+  A page renders `<PageLoading />` while it fetches what it needs; the screen stays hidden until none is left and
+  the fonts are in, then shows at once. A load under 200ms shows nothing in between. A slower one shows one quiet
+  word in the middle of the page, "Loading" in `--ink-2` display caps after the wordmark's ink square: no
+  boxes, no spinner and no loop, since nothing animates on load. The top bar waits with the first page, then stays up while later pages load.
+  Something slow and optional (the Librarian's pick) keeps its own placeholder in place instead of holding the
+  page.
+- **Contact line** (2026-11-22, Ellie, `ContactDetails.tsx`). The reveal as one wrapping line: a small display-caps
+  "Reach <name>" in `--ink-2`, then the email, LinkedIn profile and phone as links. Used on Checkouts and Past meets.
+- **Date-due slip** (2026-11-22, Ellie, `web/src/features/checkouts/Slips.tsx`). Task: see a checkout's one date at
+  a glance. A small white card with a 2px ink line, tilted 1.5°: a display-caps label ("Answer by", "Answer due",
+  "Meeting") over one printed rule, then the date in display caps ("FRI, NOV 27", or "THU, DEC 3 · 3:00 PM" with
+  "Add to calendar" beside it). A plain sentence under it says what happens. Never red.
+- **Met stamp** (2026-11-22, Ellie, `Slips.tsx`). Task: mark the moment two people met. An ink rubber stamp, a 4px
+  double rule at −8°, "MET" and the day in display caps, on white. On "Yes, we met" it lands on the card with one
+  120ms press (motion that answers the click; none with reduced motion) and stays a moment before the card moves to
+  Earlier. On Past meets it sits at the card's lower right, below the text on a phone. Ink, never red.
+- **The Librarian's empty states** (2026-11-22, Ellie). An empty Checkouts or Past meets page, and an empty "Waiting
+  on you", says what will appear in one Newsreader italic line in `--ink-2`, with the Librarian in the third person
+  ("the Librarian sets it out here"), then one next step.
 
 ### Folio: the shelf front page look (2026-11-19, design session; screens: canvas page "Elevate", board `ElevateK3` "Kit 3 · Folio, for build")
 
@@ -308,3 +566,19 @@ Task: while a member types an answer in the interview, the Librarian marks it an
   Each sits a little off-level (rotation, left offset and size vary per entry) and may carry its own underline or a word rewritten above. A revised entry is struck with a line and rewritten;
   an erased one is rubbed out. A question built on an entry circles it, or ticks a saving.
 - **Phone.** The notebook is a sheet that lifts from a one-line peek above the composer; the dot scrim sits behind it.
+
+### Signed-out pages (2026-11-22, Ellie; `web/src/features/auth/AuthLayout.tsx`, `Auth.css`)
+
+Task: sign in, join or confirm your email. The form side of "Reference screen · Sign in" (`SysSignIn.dc.html`), set as
+one card in the middle of a comic dot ground:
+
+- **Top:** a plain paper strip with a 3px ink rule under it, holding the wordmark and one quiet link to the other page
+  ("Create an account" / "Sign in"). The strip keeps the tone from running behind them.
+- **Card:** Folio's `.surf` (white face, ink line, dot shadow), centred, at most 30rem wide. Inside, left-aligned as
+  always: a caption, a Newsreader page title, one line in the Librarian's voice (`--ink-2`), then the form with one red
+  button. Errors use `.message-error`.
+- **Ground:** 7px screentone dots, full strength at the page edges and fading to clean paper around the card, so no
+  text sits on tone.
+
+Centred, not left-aligned (a default): a sign-in page has one task and nothing to read beside it, so the card is the
+focal point. The reference's dark panel with a book was left out: it needed a sample book.

@@ -1,16 +1,22 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { type Location, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
 import { TextField } from "../../ui/TextField";
+import { usePageTitle } from "../../ui/usePageTitle";
+import { AuthLayout } from "./AuthLayout";
 import { NeedsVerification, useAuth } from "./AuthProvider";
 
 type Invite = { inviter: string } | { problem: string } | null;
 
 export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
+  usePageTitle(mode === "sign-up" ? "Join" : "Sign in");
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  // Sent here from a page (RequireAuth): go back to it after signing in.
+  const arrival = useLocation().state as { from?: Location; sessionEnded?: boolean } | null;
+  const back = arrival?.from ? `${arrival.from.pathname}${arrival.from.search}${arrival.from.hash}` : "/";
   const [params] = useSearchParams();
   const invite = params.get("invite");
   const [firstName, setFirstName] = useState("");
@@ -43,7 +49,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
       let next = "signed-in";
       if (signingUp) next = await signUp(firstName, lastName, email, password, invite ?? undefined);
       else await signIn(email, password);
-      navigate(next === "verify" ? `/verify?email=${encodeURIComponent(email)}` : "/");
+      navigate(next === "verify" ? `/verify?email=${encodeURIComponent(email)}` : signingUp ? "/" : back);
     } catch (caught) {
       if (caught instanceof NeedsVerification) navigate(`/verify?email=${encodeURIComponent(email)}`);
       else setError(caught instanceof Error ? caught.message : "Something went wrong.");
@@ -55,8 +61,20 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
   const invited = inviteCheck !== null && "inviter" in inviteCheck;
 
   return (
-    <main className="narrow-page">
-      <h1>{signingUp ? "Join Trove" : "Sign in to Trove"}</h1>
+    <AuthLayout
+      caption={signingUp ? "Join" : "Sign in"}
+      title={signingUp ? "Join Trove." : "Welcome back."}
+      voice={
+        signingUp
+          ? "You are the author of the book you haven't written yet."
+          : arrival?.sessionEnded
+            ? "Your session ended. Sign in to pick up where you left off."
+            : "Your book is where you left it."
+      }
+      across={
+        signingUp ? { to: "/sign-in", label: "Sign in" } : { to: "/sign-up", label: "Create an account" }
+      }
+    >
       {signingUp && inviteCheck && (
         <p role={invited ? "status" : "alert"} className={invited ? "message" : "message message-error"}>
           <span>{invited ? "✓" : "!"}</span>
@@ -69,7 +87,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
       )}
       <form onSubmit={submit} className="stack">
         {signingUp && (
-          <>
+          <div className="auth-names">
             <TextField
               label="First name"
               value={firstName}
@@ -77,7 +95,7 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
               autoComplete="given-name"
             />
             <TextField label="Last name" value={lastName} onChange={setLastName} autoComplete="family-name" />
-          </>
+          </div>
         )}
         <TextField
           label="Email"
@@ -100,25 +118,15 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
           hint={signingUp ? "At least 12 characters." : undefined}
         />
         {error && (
-          <p role="alert" className="error">
-            {error}
+          <p role="alert" className="message message-error">
+            <span>!</span>
+            <span>{error}</span>
           </p>
         )}
-        <Button type="submit" disabled={busy}>
+        <Button type="submit" disabled={busy} aria-busy={busy || undefined}>
           {signingUp ? "Create account" : "Sign in"}
         </Button>
       </form>
-      <p className="muted">
-        {signingUp ? (
-          <>
-            Already have an account? <Link to="/sign-in">Sign in</Link>
-          </>
-        ) : (
-          <>
-            New here? <Link to="/sign-up">Create an account</Link>
-          </>
-        )}
-      </p>
-    </main>
+    </AuthLayout>
   );
 }

@@ -1,14 +1,19 @@
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, NO_CONNECTION } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { Button } from "../../ui/Button";
+import { PageLoading } from "../../ui/Loading";
 import { TextField } from "../../ui/TextField";
+import { downloadInvite } from "./invite";
 import "./MeetingPage.css";
+import { usePageTitle } from "../../ui/usePageTitle";
 
 // Arranging the meeting (plan item M1, docs/trove.md §9.7): each person offers a few times, the app shows
 // where they overlap, either person confirms one, and the video link goes here. Nothing more.
+// Once a time is confirmed, the confirmed meeting is the page: changing the time, and changing details
+// already saved, wait behind a button each, so the page reads as arranged rather than still asking.
 
 type Meeting = components["schemas"]["MeetingView"];
 type Notice = { kind: "saved" | "error"; text: string } | null;
@@ -77,10 +82,12 @@ function TimesSection({ meeting, onChange }: { meeting: Meeting; onChange: (next
   async function save() {
     setBusy(true);
     setNotice(null);
-    const { data, error } = await api.PUT("/meetings/{checkout_id}/times", {
-      params: { path: { checkout_id: meeting.checkout_id } },
-      body: { times },
-    });
+    const { data, error } = await api
+      .PUT("/meetings/{checkout_id}/times", {
+        params: { path: { checkout_id: meeting.checkout_id } },
+        body: { times },
+      })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     setBusy(false);
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     onChange(data);
@@ -157,10 +164,12 @@ function PickSection({ meeting, onChange }: { meeting: Meeting; onChange: (next:
   async function confirm(start: string) {
     setBusy(true);
     setNotice(null);
-    const { data, error } = await api.PUT("/meetings/{checkout_id}/confirm", {
-      params: { path: { checkout_id: meeting.checkout_id } },
-      body: { start },
-    });
+    const { data, error } = await api
+      .PUT("/meetings/{checkout_id}/confirm", {
+        params: { path: { checkout_id: meeting.checkout_id } },
+        body: { start },
+      })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     setBusy(false);
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     onChange(data);
@@ -205,7 +214,15 @@ function PickSection({ meeting, onChange }: { meeting: Meeting; onChange: (next:
   );
 }
 
-function DetailsSection({ meeting, onChange }: { meeting: Meeting; onChange: (next: Meeting) => void }) {
+function DetailsSection({
+  meeting,
+  onChange,
+  onSaved,
+}: {
+  meeting: Meeting;
+  onChange: (next: Meeting) => void;
+  onSaved?: () => void;
+}) {
   const [link, setLink] = useState(meeting.video_link ?? "");
   const [place, setPlace] = useState(meeting.place_note ?? "");
   const [busy, setBusy] = useState(false);
@@ -215,16 +232,19 @@ function DetailsSection({ meeting, onChange }: { meeting: Meeting; onChange: (ne
     event.preventDefault();
     setBusy(true);
     setNotice(null);
-    const { data, error } = await api.PUT("/meetings/{checkout_id}/details", {
-      params: { path: { checkout_id: meeting.checkout_id } },
-      body: { video_link: link.trim() || null, place_note: place.trim() || null },
-    });
+    const { data, error } = await api
+      .PUT("/meetings/{checkout_id}/details", {
+        params: { path: { checkout_id: meeting.checkout_id } },
+        body: { video_link: link.trim() || null, place_note: place.trim() || null },
+      })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     setBusy(false);
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     onChange(data);
     setLink(data.video_link ?? "");
     setPlace(data.place_note ?? "");
     setNotice({ kind: "saved", text: "Saved. Both of you can see this." });
+    onSaved?.();
   }
 
   return (
@@ -260,30 +280,26 @@ function DetailsSection({ meeting, onChange }: { meeting: Meeting; onChange: (ne
   );
 }
 
-function Confirmed({ meeting }: { meeting: Meeting }) {
+function Confirmed({
+  meeting,
+  headingRef,
+}: {
+  meeting: Meeting;
+  headingRef: RefObject<HTMLHeadingElement | null>;
+}) {
   const [notice, setNotice] = useState<Notice>(null);
 
-  // The calendar file needs the signed-in request, so a plain link won't do: fetch it, then save it.
   async function download() {
     setNotice(null);
-    const { data, error } = await api.GET("/meetings/{checkout_id}/invite.ics", {
-      params: { path: { checkout_id: meeting.checkout_id } },
-      parseAs: "blob",
-    });
-    if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
-    const url = URL.createObjectURL(data as Blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "trove-meeting.ics";
-    link.click();
-    URL.revokeObjectURL(url);
+    const problem = await downloadInvite(meeting.checkout_id);
+    if (problem) setNotice({ kind: "error", text: problem });
   }
 
   if (!meeting.start) return null;
   return (
     <section aria-labelledby="confirmed-heading" className="meeting-confirmed">
       <p className="caption">Confirmed</p>
-      <h2 id="confirmed-heading" className="meeting-when">
+      <h2 id="confirmed-heading" className="meeting-when" ref={headingRef} tabIndex={-1}>
         {when(meeting.start)}
       </h2>
       <p>
@@ -307,19 +323,72 @@ function Confirmed({ meeting }: { meeting: Meeting }) {
   );
 }
 
+function Toggle({
+  open,
+  onToggle,
+  closed,
+  opened,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  closed: string;
+  opened: string;
+}) {
+  return (
+    <Button variant="quiet" aria-expanded={open} onClick={onToggle}>
+      {open ? opened : closed}
+    </Button>
+  );
+}
+
+function BackLink() {
+  return (
+    <p className="meeting-back">
+      <Link to="/checkouts">
+        <span aria-hidden="true">← </span>Back to Checkouts
+      </Link>
+    </p>
+  );
+}
+
+/** The page's head: on a wide screen it holds the left rail (docs/design/system.md Additions, "Wide pages"). */
+function RailHead({ meeting }: { meeting: Meeting }) {
+  return (
+    <header className="page-rail-head">
+      <BackLink />
+      <p className="caption">{meeting.book_title}</p>
+      <h1 className="page-title">Meeting {meeting.other_name}</h1>
+    </header>
+  );
+}
+
 export function MeetingPage() {
   const { checkoutId = "" } = useParams();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
+  const [changingTime, setChangingTime] = useState(false);
+  const [editingDetails, setEditingDetails] = useState(false);
+  // The button just pressed goes away when a change is saved, so focus moves to the meeting it changed.
+  const confirmedHeading = useRef<HTMLHeadingElement>(null);
+  const backToConfirmed = () => requestAnimationFrame(() => confirmedHeading.current?.focus());
+  usePageTitle(meeting ? `Meeting ${meeting.other_name}` : "Arrange your meeting");
+  // Only a real "not found" means there is no meeting; a failed call or a dropped connection is worth another try.
+  const [missing, setMissing] = useState(false);
   const [failed, setFailed] = useState(false);
 
   const load = useCallback(() => {
     // A late answer from an earlier request must not replace a newer one.
     let stale = false;
-    api.GET("/meetings/{checkout_id}", { params: { path: { checkout_id: checkoutId } } }).then(({ data }) => {
-      if (stale) return;
-      if (data) setMeeting(data);
-      else setFailed(true);
-    });
+    api
+      .GET("/meetings/{checkout_id}", { params: { path: { checkout_id: checkoutId } } })
+      .then(({ data, response }) => {
+        if (stale) return;
+        if (data) setMeeting(data);
+        else if (response.status === 404) setMissing(true);
+        else setFailed(true);
+      })
+      .catch(() => {
+        if (!stale) setFailed(true);
+      });
     return () => {
       stale = true;
     };
@@ -327,9 +396,9 @@ export function MeetingPage() {
 
   useEffect(() => load(), [load]);
 
-  if (failed) {
+  if (missing) {
     return (
-      <main className="meeting-page">
+      <main className="shell-page meeting-page">
         <h1 className="page-title">Arrange your meeting</h1>
         <p className="meeting-empty">
           We couldn't find this meeting. It opens once the author says yes.{" "}
@@ -338,16 +407,104 @@ export function MeetingPage() {
       </main>
     );
   }
-  if (!meeting) return <main className="meeting-page" aria-busy="true" />;
+  if (failed && !meeting) {
+    return (
+      <main className="shell-page meeting-page">
+        <h1 className="page-title">Arrange your meeting</h1>
+        <p role="alert" className="message message-error">
+          <span>!</span>
+          <span>
+            We couldn't load this meeting.{" "}
+            <Button
+              variant="quiet"
+              onClick={() => {
+                setFailed(false);
+                load();
+              }}
+            >
+              Try again
+            </Button>
+          </span>
+        </p>
+      </main>
+    );
+  }
+  if (!meeting) {
+    return (
+      <main className="shell-page meeting-page" aria-busy="true">
+        <PageLoading />
+      </main>
+    );
+  }
+
+  if (!meeting.start) {
+    return (
+      <main className="shell-page page-rail meeting-page">
+        <RailHead meeting={meeting} />
+        <div>
+          <TimesSection meeting={meeting} onChange={setMeeting} />
+          <PickSection
+            meeting={meeting}
+            onChange={(next) => {
+              setMeeting(next);
+              backToConfirmed();
+            }}
+          />
+          <DetailsSection meeting={meeting} onChange={setMeeting} />
+        </div>
+      </main>
+    );
+  }
+
+  // Details nobody has added yet are the next thing to do, so that form stays open until something is saved.
+  const hasDetails = Boolean(meeting.video_link || meeting.place_note);
+  const showDetails = !hasDetails || editingDetails;
 
   return (
-    <main className="meeting-page">
-      <p className="caption">{meeting.book_title}</p>
-      <h1 className="page-title">Meeting {meeting.other_name}</h1>
-      <Confirmed meeting={meeting} />
-      <TimesSection meeting={meeting} onChange={setMeeting} />
-      <PickSection meeting={meeting} onChange={setMeeting} />
-      <DetailsSection meeting={meeting} onChange={setMeeting} />
+    <main className="shell-page page-rail meeting-page">
+      <RailHead meeting={meeting} />
+      <div>
+        <Confirmed meeting={meeting} headingRef={confirmedHeading} />
+        <div className="meeting-actions">
+          <Toggle
+            open={changingTime}
+            onToggle={() => setChangingTime(!changingTime)}
+            closed="Change the time"
+            opened="Keep this time"
+          />
+          {hasDetails && (
+            <Toggle
+              open={editingDetails}
+              onToggle={() => setEditingDetails(!editingDetails)}
+              closed="Edit where you'll meet"
+              opened="Stop editing"
+            />
+          )}
+        </div>
+        {changingTime && (
+          <>
+            <TimesSection meeting={meeting} onChange={setMeeting} />
+            <PickSection
+              meeting={meeting}
+              onChange={(next) => {
+                setMeeting(next);
+                setChangingTime(false);
+                backToConfirmed();
+              }}
+            />
+          </>
+        )}
+        {showDetails && (
+          <DetailsSection
+            meeting={meeting}
+            onChange={setMeeting}
+            onSaved={() => {
+              setEditingDetails(false);
+              backToConfirmed();
+            }}
+          />
+        )}
+      </div>
     </main>
   );
 }

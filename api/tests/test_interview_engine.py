@@ -36,7 +36,6 @@ def plan(**overrides) -> dict:
         "threads": [{"thread": "texture without gums", "has_moment": True, "missing": "the exact steps"}],
         "phase": "dig",
         "question": "What did the first batch that worked look like?",
-        "playback": None,
         "topic": "the batch that finally worked",
         "ready_for_reveal": False,
     } | overrides
@@ -96,15 +95,13 @@ async def test_the_reveal_is_forced_at_the_question_limit():
     assert "limit" in sent(claude)
 
 
-async def test_playback_is_kept_only_in_shape():
-    claude = FakeClaude(
-        [
-            reply(plan(phase="dig", playback="stray")),
-            reply(plan(phase="shape", playback="You make sourdough.")),
-        ]
-    )
-    assert (await engine.next_turn(claude, turns=turns(), resume_text=None)).playback is None
-    assert (await engine.next_turn(claude, turns=turns(), resume_text=None)).playback == "You make sourdough."
+async def test_shape_never_plays_anything_back():
+    # Josef's call: the member knows what they said, so Shape never asks them to confirm it.
+    claude = FakeClaude([reply(plan(phase="shape", playback="You make sourdough."))])
+    result = await engine.next_turn(claude, turns=turns(), resume_text=None)
+    assert result.phase == "shape"
+    assert "playback" not in result.model_dump()
+    assert "playback" not in engine.TurnPlan.model_json_schema()["properties"]
 
 
 async def test_refusals_propagate():
@@ -196,27 +193,8 @@ async def test_write_blurb_sees_only_the_chapters_left_and_retries_once():
         await engine.write_blurb(claude, turns=turns(), chapters=book)
 
 
-async def test_rewrite_keeps_the_id_topic_and_quotes_and_changes_only_title_and_summary():
-    book = a_draft().pool[:3]
-    claude = FakeClaude([reply({"title": "Sundays for the business", "summary": "Retold."})])
-    rewritten = await engine.rewrite_chapter(claude, turns=turns(), chapters=book, chapter_id="c1")
-
-    assert rewritten.id == "c1"
-    assert (rewritten.title, rewritten.summary) == ("Sundays for the business", "Retold.")
-    assert rewritten.quotes == book[1].quotes
-    sent = claude.requests[0]["messages"][0]["content"]
-    assert '"rewrite_this": true' in sent
-
-
-async def test_rewrite_rejects_an_unknown_chapter_without_calling_claude():
-    claude = FakeClaude()
-    with pytest.raises(ValueError):
-        await engine.rewrite_chapter(claude, turns=turns(), chapters=a_draft().pool, chapter_id="missing")
-    assert claude.requests == []
-
-
 def test_prompts_state_the_grounding_rule():
-    for name in ("draft", "finish", "rewrite", "blurb"):
+    for name in ("draft", "finish", "blurb"):
         assert "Grounding" in load_prompt(f"interview/{name}")
 
 
@@ -274,7 +252,7 @@ async def test_a_skip_moves_to_other_ground_and_isnt_counted_or_thin():
 
 async def test_the_status_keeps_the_sweep_wide_until_enough_areas_are_covered():
     claude = FakeClaude([reply(plan())])
-    await engine.next_turn(claude, turns=turns(2, phase="sweep"), resume_text=None)
+    await engine.next_turn(claude, turns=turns(engine.MIN_SWEEP - 1, phase="sweep"), resume_text=None)
     assert "Stay in Sweep" in sent(claude)
 
     claude = FakeClaude([reply(plan())])
@@ -303,13 +281,12 @@ async def test_one_quote_grounds_only_one_chapter():
 
 
 async def test_more_material_goes_past_the_limits_with_a_status_note():
-    claude = FakeClaude([reply(plan(ready_for_reveal=True, phase="shape", playback="You."))])
+    claude = FakeClaude([reply(plan(ready_for_reveal=True, phase="shape"))])
     result = await engine.next_turn(
         claude, turns=turns(engine.MAX_QUESTIONS), resume_text=None, more_material=True
     )
     assert result.ready_for_reveal is False
     assert result.phase == "dig"
-    assert result.playback is None
     assert "can't yet make three distinct chapters" in sent(claude)
     assert "That is the limit" not in sent(claude)
 
@@ -318,37 +295,6 @@ def test_a_quote_needs_five_words():
     said = [engine.Turn(question="Q?", answer="I made it. I made it work on the third try.", phase="dig")]
     assert engine.grounded_quotes(["I made it."], said) == []
     assert engine.grounded_quotes(["I made it work on"], said) == ["I made it work on"]
-
-
-async def test_rewrite_too_close_tries_once_more_then_keeps_the_original():
-    book = [
-        DraftChapter(
-            id="c0", title="Old", summary="I split the line so the fryer only had to cook.", quotes=["q"]
-        ),
-    ]
-    close = {"title": "New", "summary": "I split the line so the fryer only had to cook!"}
-    claude = FakeClaude([reply(close), reply(close)])
-    result = await engine.rewrite_chapter(claude, turns=turns(1), chapters=book, chapter_id="c0")
-    assert result == book[0]
-    assert len(claude.requests) == 2
-    assert "too close to the original" in sent(claude)
-
-
-async def test_rewrite_second_try_can_succeed():
-    book = [
-        DraftChapter(id="c0", title="Old", summary="I split the line so the fryer only cooked.", quotes=["q"])
-    ]
-    claude = FakeClaude(
-        [
-            reply({"title": "New", "summary": "I split the line so the fryer only cooked."}),
-            reply(
-                {"title": "New", "summary": "The window stopped backing up once orders moved down the line."}
-            ),
-        ]
-    )
-    result = await engine.rewrite_chapter(claude, turns=turns(1), chapters=book, chapter_id="c0")
-    assert result.title == "New"
-    assert result.quotes == ["q"]
 
 
 async def test_book_output_with_a_resume_only_term_retries_then_drops_it():
@@ -492,18 +438,6 @@ async def test_finish_rejects_a_title_close_to_a_spark():
     )
     assert book.chapters[0].title == "Pool 0"
     assert book.chapters[1].title == "Mine 1"
-
-
-async def test_a_rewrite_cant_take_a_sparks_title():
-    book = [
-        DraftChapter(id="c0", title="Old", summary="I split the line so the fryer only cooked.", quotes=["q"])
-    ]
-    copied = {"title": "Why gums feel wrong", "summary": "The window stopped backing up once orders moved."}
-    claude = FakeClaude([reply(copied), reply(copied)])
-    result = await engine.rewrite_chapter(
-        claude, turns=turns(1), chapters=book, chapter_id="c0", spark_titles=["why gums feel wrong"]
-    )
-    assert result == book[0]
 
 
 async def test_every_skip_of_a_round_stays_in_the_status():

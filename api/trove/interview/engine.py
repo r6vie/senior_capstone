@@ -24,16 +24,17 @@ Phase = Literal["sweep", "dig", "shape"]
 # Turns after the first interview: a question of an adding round (I3), or the question after a reading (I6).
 TurnPhase = Literal["sweep", "dig", "shape", "adding", "reading"]
 
-# The spec asks for about 15-25 questions. Past SHAPE_BY the Librarian is told to wrap up;
-# at MAX_QUESTIONS the reveal is forced. Before MIN_ANSWERS a reveal is never offered.
-MIN_ANSWERS = 8
-SHAPE_BY = 21
-MAX_QUESTIONS = 25
+# The interview is about 8 questions (Josef, 2026-11-23). From SHAPE_BY the Librarian is told to
+# wrap up; at MAX_QUESTIONS the reveal is forced, a few past 8 so a quiet member gets more. Before
+# MIN_ANSWERS a reveal is never offered.
+MIN_ANSWERS = 6
+SHAPE_BY = 8
+MAX_QUESTIONS = 11
 # Skipped questions don't count toward MAX_QUESTIONS (skips are never counted, §4), so a hard
 # limit on all questions keeps an interview from running forever.
-MAX_TURNS = 40
+MAX_TURNS = 18
 # Sweep covers at least this many questions before Dig, whatever the first answer offers.
-MIN_SWEEP = 4
+MIN_SWEEP = 2
 # Answers run thin (docs/trove.md §4, §9.9) when this many of the last few are short or unsure.
 # The signal is internal: it changes the angle of the next question and is never shown.
 THIN_WINDOW, THIN_SWITCH = 3, 2
@@ -41,12 +42,10 @@ SHORT_ANSWER_WORDS, UNSURE_ANSWER_WORDS = 10, 15
 MIN_CHAPTERS, MAX_CHAPTERS = 3, 5
 # A quote shorter than this can't show a chapter is theirs ("I made it.").
 MIN_QUOTE_WORDS = 5
-# A rewrite this close to the original isn't a rewrite.
-REWRITE_TOO_CLOSE = 0.9
 # A book may grow past its first version, to this many chapters (docs/review/decisions.md, row 1).
 MAX_BOOK_CHAPTERS = 8
 # A round of adding is short. Skips count only toward the second limit, so skipping can't run forever.
-MAX_ADDING_ANSWERS, MAX_ADDING_TURNS = 8, 14
+MAX_ADDING_ANSWERS, MAX_ADDING_TURNS = 5, 9
 # A proposed chapter title this close to a spark's title is someone else's title, so it's rejected.
 SPARK_TITLE_TOO_CLOSE = 0.8
 # Capitalized words that aren't names, for checking reading answers. Anything else capitalized is
@@ -182,13 +181,13 @@ MAX_BLURB = 600
 # The prompts ask for at most this, and real runs have come back a few characters over.
 MAX_SUMMARY = 300
 
-# "Is this you?" is the most personal moment of the interview, on a phone (R1-14 in the quality notes).
-MAX_PLAYBACK_WORDS = 30
-# Shape is 1-3 questions, and following a hedge can stretch it, so it gets a nudge to close here.
-MAX_SHAPE = 4
+# Shape is 0-1 questions, and following a hedge can stretch it, so it gets a nudge to close here.
+MAX_SHAPE = 2
 
-# Questions are on the member's critical path, so they think less than the one-off book steps.
-QUESTION_EFFORT = "medium"
+# Questions are on the member's critical path, so they think less than the one-off book steps. Low
+# answers in about 3 s against medium's 5-6 s, and the 8-question evals found the questions as good
+# (2026-11-23).
+QUESTION_EFFORT = "low"
 BOOK_EFFORT = "high"
 MAX_TOKENS = 16000
 
@@ -207,13 +206,13 @@ class Turn(BaseModel):
 class NextTurn(BaseModel):
     question: str
     phase: Phase
-    # Set only in Shape: the one-or-two-line "Is this you?" summary in the member's own words.
-    playback: str | None
     ready_for_reveal: bool
     # A few words for "Last time you were telling me about {topic}." Display only, never the book.
     topic: str
     # The spark this question works from, if any.
     spark_id: str | None = None
+    # The notebook entry this question builds on, if any. Checked by the caller against the notebook.
+    builds_on: str | None = None
 
 
 class AddingTurn(BaseModel):
@@ -223,6 +222,7 @@ class AddingTurn(BaseModel):
     topic: str
     done: bool
     spark_id: str | None = Field(None, description="The id of the spark this question works from, if any.")
+    builds_on: str | None = Field(None, description="The id of the notebook entry this builds on, if any.")
 
 
 class DraftChapter(BaseModel):
@@ -295,10 +295,10 @@ class TurnPlan(BaseModel):
     threads: list[Thread] = Field(description="Private ranking, strongest first.")
     phase: Phase
     question: str
-    playback: str | None
     topic: str
     ready_for_reveal: bool
     spark_id: str | None = Field(None, description="The id of the spark this question works from, if any.")
+    builds_on: str | None = Field(None, description="The id of the notebook entry this builds on, if any.")
 
 
 def _fit_summary(summary: str) -> str:
@@ -324,11 +324,6 @@ class _Draft(BaseModel):
     pool: list[_Chapter]
     titles: list[TitleOption]
     blurb: str
-
-
-class _Retold(BaseModel):
-    title: str
-    summary: Summary
 
 
 class _FinishedChapter(BaseModel):
@@ -370,19 +365,25 @@ async def next_turn(
     resume_text: str | None,
     sparks: list[dict] | None = None,
     more_material: bool = False,
+    notebook: list[dict] | None = None,
 ) -> NextTurn:
     """The Librarian's next question, given every turn so far. `more_material` means a draft has just
     found too little, so the interview carries on past its usual limits."""
     plan = await plan_turn(
-        claude, turns=turns, resume_text=resume_text, sparks=sparks, more_material=more_material
+        claude,
+        turns=turns,
+        resume_text=resume_text,
+        sparks=sparks,
+        more_material=more_material,
+        notebook=notebook,
     )
     return NextTurn(
         question=plan.question,
         phase=plan.phase,
-        playback=plan.playback,
         ready_for_reveal=plan.ready_for_reveal,
         topic=plan.topic,
         spark_id=plan.spark_id,
+        builds_on=plan.builds_on,
     )
 
 
@@ -393,14 +394,11 @@ async def plan_turn(
     resume_text: str | None,
     sparks: list[dict] | None = None,
     more_material: bool = False,
+    notebook: list[dict] | None = None,
 ) -> TurnPlan:
     """next_turn plus the private thread ranking, which the evals read."""
-    blocks = _turn_blocks(turns, resume_text, sparks, more_material)
+    blocks = _turn_blocks(turns, resume_text, sparks, more_material, notebook)
     plan = await _ask(claude, "interview/interviewer", blocks, TurnPlan, QUESTION_EFFORT)
-    if plan.phase == "shape" and len((plan.playback or "").split()) > MAX_PLAYBACK_WORDS:
-        limit = "\n\n" + load_prompt("interview/retry_playback")
-        retry = [*blocks[:-1], {**blocks[-1], "text": blocks[-1]["text"] + limit}]
-        plan = await _ask(claude, "interview/interviewer", retry, TurnPlan, QUESTION_EFFORT)
 
     answered = sum(1 for turn in turns if turn.answer.strip())
     if not turns:
@@ -413,8 +411,6 @@ async def plan_turn(
     if more_material:
         plan.ready_for_reveal = False
         plan.phase = "dig"
-    if plan.phase != "shape":
-        plan.playback = None
     return plan
 
 
@@ -428,12 +424,13 @@ async def draft_book(
     turns: list[Turn],
     leaks: Callable[[str], bool] = _never,
     spark_titles: list[str] | None = None,
+    clips: list[str] | None = None,
 ) -> Draft:
     """One shared pool of grounded chapters, three titles that read it differently (§9.4), and a
     back-cover blurb. `leaks` says whether text carries a term from outside the member's answers: that
     forces one retry, and after that the item is dropped. Raises NotEnoughMaterial if too few chapters
     survive, because then only more answers can help."""
-    content = f"{_transcript(turns)}\n\nDraft the pool of chapters, the three titles and the blurb."
+    content = f"{_transcript(turns)}{_clips_block(clips)}\n\nDraft the pool of chapters, the three titles and the blurb."
     pool: list[DraftChapter] = []
     for attempt in range(2):
         raw = await _ask(claude, "interview/draft", content, _Draft, BOOK_EFFORT)
@@ -534,42 +531,6 @@ async def write_blurb(
     raise ValueError("The blurb was empty, too long or carried a term the member never said.")
 
 
-async def rewrite_chapter(
-    claude: Claude,
-    *,
-    turns: list[Turn],
-    chapters: list[DraftChapter],
-    chapter_id: str,
-    leaks: Callable[[str], bool] = _never,
-    spark_titles: list[str] | None = None,
-) -> DraftChapter:
-    """The same chapter, better told: a new title and summary, keeping its id, topic and quotes. One
-    too close to the original gets one more try. After that the original comes back unchanged."""
-    current = next((chapter for chapter in chapters if chapter.id == chapter_id), None)
-    if current is None:
-        raise ValueError(f"No chapter {chapter_id!r} in this book.")
-    listing = json.dumps(
-        [{**chapter.model_dump(), "rewrite_this": chapter.id == chapter_id} for chapter in chapters],
-        indent=1,
-    )
-    content = (
-        f"{_transcript(turns)}\n\n<book_chapters>\n{listing}\n</book_chapters>\n\n"
-        "Rewrite the title and summary of the chapter marked rewrite_this."
-    )
-    for attempt in range(2):
-        note = "\n\n" + load_prompt("interview/retry_rewrite") if attempt else ""
-        raw = await _ask(claude, "interview/rewrite", content + note, _Retold, BOOK_EFFORT)
-        close = SequenceMatcher(None, current.summary, raw.summary).ratio() > REWRITE_TOO_CLOSE
-        if (
-            not close
-            and not leaks(f"{raw.title} {raw.summary}")
-            and not _too_close_to_a_spark(raw.title, spark_titles)
-        ):
-            # The quotes are what tie the chapter to its topic, so they never change on a rewrite.
-            return current.model_copy(update={"title": raw.title, "summary": raw.summary})
-    return current
-
-
 async def next_adding_turn(
     claude: Claude,
     *,
@@ -578,6 +539,7 @@ async def next_adding_turn(
     chapters: list[DraftChapter],
     sparks: list[dict],
     off_limits: list[dict] | None = None,
+    notebook: list[dict] | None = None,
 ) -> AddingTurn:
     """The next question of a round of adding to a book on the shelf, or the end of the round."""
     new = turns[round_start:]
@@ -588,7 +550,7 @@ async def next_adding_turn(
     plan = await _ask(
         claude,
         "interview/adding",
-        _adding_blocks(turns, round_start, chapters, sparks, off_limits),
+        _adding_blocks(turns, round_start, chapters, sparks, off_limits, notebook),
         AddingTurn,
         QUESTION_EFFORT,
     )
@@ -610,6 +572,7 @@ async def revise_book(
     member_names: list[str] | None = None,
     spark_titles: list[str] | None = None,
     leaks: Callable[[str], bool] = _never,
+    clips: list[str] | None = None,
 ) -> Revision:
     """Proposed changes to the book from the round's answers. Grounding is checked here: a change
     must quote the member verbatim, and at least once from this round. An empty list is a real
@@ -620,7 +583,7 @@ async def revise_book(
     content = (
         f"{_transcript(turns[:round_start])}\n\n{_new_round(turns, round_start)}\n\n"
         f"<book_chapters>\n{listing}\n</book_chapters>\n\n"
-        f"<current_blurb>{blurb or ''}</current_blurb>\n\n<room>{room}</room>{_off_limits_block(off_limits)}\n\n"
+        f"<current_blurb>{blurb or ''}</current_blurb>\n\n<room>{room}</room>{_off_limits_block(off_limits)}{_clips_block(clips)}\n\n"
         "Propose the changes these new answers earn."
     )
     raw = await _ask(claude, "interview/revise", content, _Revision, BOOK_EFFORT)
@@ -756,6 +719,21 @@ def _new_round(turns: list[Turn], round_start: int) -> str:
     return "\n".join(["<new_round>", *rendered, "</new_round>"])
 
 
+def _notebook_block(notebook: list[dict] | None) -> str:
+    """Open `saving` and `chapter` lines from the Librarian's notebook, which the next question may
+    build on. They're the Librarian's notes on the member's own answers."""
+    if not notebook:
+        return ""
+    listed = "\n".join(f"- [{entry['id']}] {entry['kind']}: {entry['text']}" for entry in notebook)
+    return f"\n\n<notebook>\n{listed}\n</notebook>"
+
+
+def _clips_block(clips: list[str] | None) -> str:
+    if not clips:
+        return ""
+    return "\n\n<clips>\n" + "\n".join(f"- {clip}" for clip in clips) + "\n</clips>"
+
+
 def _sparks_block(sparks: list[dict] | None) -> str:
     """Only titles of other people's chapters, as a cue. The prompts say none of it is about the member."""
     if not sparks:
@@ -770,6 +748,7 @@ def _adding_blocks(
     chapters: list[DraftChapter],
     sparks: list[dict],
     off_limits: list[dict] | None = None,
+    notebook: list[dict] | None = None,
 ) -> list[dict]:
     """The book and the earlier interview, then one block per new turn with a cache breakpoint on
     the newest, so each question of the round reads what came before from the cache."""
@@ -797,7 +776,7 @@ def _adding_blocks(
         status += (
             " The book is at its limit of chapters. Only improve: hunt for what's thin, not for new chapters."
         )
-    tail = f"{status}{_sparks_block(sparks)}{_off_limits_block(off_limits)}"
+    tail = f"{status}{_sparks_block(sparks)}{_off_limits_block(off_limits)}{_notebook_block(notebook)}"
     blocks.append({"type": "text", "text": f"</new_round>\n\n{tail}"})
     return blocks
 
@@ -886,7 +865,11 @@ def _questions_asked(turns: list[Turn]) -> int:
 
 
 def _turn_blocks(
-    turns: list[Turn], resume_text: str | None, sparks: list[dict] | None = None, more_material: bool = False
+    turns: list[Turn],
+    resume_text: str | None,
+    sparks: list[dict] | None = None,
+    more_material: bool = False,
+    notebook: list[dict] | None = None,
 ) -> list[dict]:
     """The transcript as one content block per turn, with a cache breakpoint on the newest turn.
     Each request then extends the previous one's prefix, so the interview so far is read from
@@ -898,7 +881,11 @@ def _turn_blocks(
     blocks += [{"type": "text", "text": _render(n, turn)} for n, turn in enumerate(turns, start=1)]
     blocks[-1]["cache_control"] = {"type": "ephemeral"}
     blocks.append(
-        {"type": "text", "text": f"</interview>\n\n{_status(turns, more_material)}{_sparks_block(sparks)}"}
+        {
+            "type": "text",
+            "text": f"</interview>\n\n{_status(turns, more_material)}{_sparks_block(sparks)}"
+            f"{_notebook_block(notebook)}",
+        }
     )
     return blocks
 
@@ -936,7 +923,9 @@ def _status(turns: list[Turn], more_material: bool = False) -> str:
     if asked >= MAX_QUESTIONS or len(turns) >= MAX_TURNS:
         notes.append("That is the limit: set ready_for_reveal to true and close.")
     elif asked >= SHAPE_BY:
-        notes.append("Move to Shape now if you aren't there already.")
+        notes.append(
+            "Move to Shape now if two threads link; if none do, set ready_for_reveal to true and close."
+        )
     elif answered < MIN_ANSWERS:
         notes.append("It's too early for the reveal.")
     return " ".join(notes)

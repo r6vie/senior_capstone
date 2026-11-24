@@ -131,12 +131,27 @@ generated files in the same commit as the change. CI fails if they are stale.
 **Merge conflicts in `api/openapi.json` or `web/src/api/schema.ts`: don't resolve them by hand.**
 Resolve the real conflicts in the Python code first, then rerun the generator and commit its output.
 
+## AI spending
+
+Real Claude calls in development (evals, real-AI interviews on your own copy) are paid from the team's shared key.
+**The development budget is $40** (Josef, 2026-11-24; it was $15).
+
+- To have the app enforce it, set `AI_USAGE_LOG=<a file path>` and `AI_BUDGET_USD=40` in your `.env`. The app then
+  refuses calls once that ledger reaches the budget. The ledger counts only your own machine's calls.
+- See what you've spent with `python3 scripts/ai_spend.py`.
+- Default to free: the scripted AI (`--scripted-ai`) for screens and flows, `FakeClaude` in tests.
+- The live site is capped separately, by the key's spend limit in the Anthropic console (docs/deploy.md).
+
 ## Tests
 
 - Every new route gets an API test: the success case, the main failure case (401, 404, 409 and so
   on), and any product rule it enforces (for example, "names stay hidden before a yes").
 - Database tests use a real MongoDB. Take the `client` fixture, or `database` for direct access.
   Each test run gets a throwaway database, emptied between tests.
+- **Run them on a local MongoDB.** Against the shared Atlas cluster the API suite takes 10 minutes to over an
+  hour, and it competes with the live site for the cluster's limits. Locally it takes about 2, as in CI. Run
+  `docker run -d --name trove-test-mongo -p 27017:27017 --restart unless-stopped mongo:7.0` once, and put
+  `TROVE_TEST_MONGODB_URI=mongodb://localhost:27017` in your `.env`.
 - **Never call the real Claude API in tests.** Use the `fake_claude` fixture and script its
   responses with `text_message(...)` from `tests/fakes.py`.
 - Never send real email. Tests run with SMTP turned off automatically.
@@ -155,6 +170,25 @@ Resolve the real conflicts in the Python code first, then rerun the generator an
 - **PRs are squash-merged** after one approving review from a teammate and green CI.
 - **When your PR merges,** mark the item done in `docs/plan.md`. Either include that change in
   the PR, or make it right after in a one-line PR.
+
+## The live site
+
+The app runs live on Render ([docs/deploy.md](docs/deploy.md)). Render rebuilds from `main`, so
+**merging a PR is releasing it**: it reaches real members in about 10 minutes.
+
+- **Merge only on green CI that has actually run.** Wait until the PR's checks appear, then until they pass.
+  "No checks reported" is not a pass.
+- **The live database keeps its data.** There are no migrations. If you change the shape of a stored
+  document, the code must still read the old shape, and the PR says how.
+- **Never point anything local at the live database** (`trove_prod`). Your `.env` uses
+  `trove_dev_<yourname>`; `scripts/dev.py` refuses to start on `trove_prod`.
+- **Don't test by writing on the live site.** Sign-ups there send real email and use the real AI. Reproduce
+  bugs locally. Make test accounts on the live site only when your human asks.
+- **A new setting** (a new value in `.env.example`) also goes into `render.yaml`, and the PR asks the Render
+  owner to set it before merging. Otherwise the live site starts without it.
+- **After a merge,** open `https://trove-q9uy.onrender.com/api/health` (it must say `"database":true`) and
+  the page you changed. If it's broken, say so in the team chat; the Render owner can roll back.
+- **Only the Render owner (Daniel)** can read its logs, change settings or keys, redeploy or roll back.
 
 ## Product questions
 

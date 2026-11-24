@@ -10,14 +10,16 @@ from trove.core.database import get_database
 from trove.interview import service
 from trove.interview.models import (
     AnswerRequest,
+    FinalNotesResponse,
     FinishRequest,
     InterviewResponse,
+    NotesRequest,
+    NotesResponse,
     ReadingAnswerRequest,
     ReadingQuestionResponse,
     RemovalRequest,
     RevisionChoicesRequest,
     RevisionRequest,
-    ShapeRequest,
     SkipRequest,
     SparkRequest,
     SparkResponse,
@@ -50,15 +52,15 @@ async def start(
     return interview_view(await service.start(database, claude, user, data.resume_pdf))
 
 
-@router.get("", response_model=InterviewResponse)
+@router.get("", response_model=InterviewResponse | None)
 async def current(
     background: BackgroundTasks,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
     claude: Claude | None = Depends(optional_claude),
-) -> InterviewResponse:
-    """The member's interview, for resuming where they left off. If writing proposed changes failed,
-    a return tries once more on its own."""
+) -> InterviewResponse | None:
+    """The member's interview, for resuming where they left off, or null before they start. If writing
+    proposed changes failed, a return tries once more on its own."""
     return await service.current_view(database, user, claude, background)
 
 
@@ -82,9 +84,7 @@ async def answer(
     """Answer the waiting question. The answer is saved first, then the next question is written."""
     try:
         return interview_view(
-            await service.answer(
-                database, claude, user, data.answer, shape=False, question_id=data.question_id
-            )
+            await service.answer(database, claude, user, data.answer, question_id=data.question_id)
         )
     except service.StaleQuestion as error:
         return stale_question(error)
@@ -104,21 +104,30 @@ async def skip(
         return stale_question(error)
 
 
-@router.post("/shape", response_model=InterviewResponse, responses=STALE_QUESTION_RESPONSES)
-async def shape(
-    data: ShapeRequest,
+@router.post("/notes", response_model=NotesResponse)
+async def notes(
+    data: NotesRequest,
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
-    claude: Claude = Depends(get_claude),
-) -> InterviewResponse:
-    """Confirm the Librarian's playback ("Yes, that's me"), or correct it."""
-    text = data.correction or service.SHAPE_CONFIRMED
-    try:
-        return interview_view(
-            await service.answer(database, claude, user, text, shape=True, question_id=data.question_id)
-        )
-    except service.StaleQuestion as error:
-        return stale_question(error)
+    claude: Claude | None = Depends(optional_claude),
+) -> NotesResponse:
+    """The Librarian reads the answer as it's typed: marks to keep and add, and notebook entries to
+    keep, add, revise and erase. Call on a pause, a finished sentence or about 7 new words, never per
+    keystroke, and drop a reply once the member has moved to another question. It never fails for
+    want of AI: it just adds nothing. 409 if `question_id` isn't the question waiting."""
+    return await service.notes(database, claude, user, data)
+
+
+@router.get("/notes/final", response_model=FinalNotesResponse)
+async def final_notes(
+    question_id: str,
+    user: dict = Depends(get_current_user),
+    database: AsyncDatabase = Depends(get_database),
+) -> FinalNotesResponse:
+    """The Librarian's last look at the answer to `question_id`, made while the next question is written.
+    Ask for it alongside POST /interview/answers: it waits up to about 8 seconds for the look. Never an
+    error: `none` when there's nothing to add, `pending` if it's still being written."""
+    return await service.final_notes_of(database, user, question_id)
 
 
 @router.post("/finish", response_model=InterviewResponse, responses=STALE_QUESTION_RESPONSES)
@@ -157,9 +166,11 @@ async def choose_title(
     database: AsyncDatabase = Depends(get_database),
     claude: Claude = Depends(get_claude),
 ) -> InterviewResponse:
-    """Choose one of the three titles. Stage goes to `finishing`, and the book is written to match in
-    the background (`step_status`). After a failure, send this again."""
-    return interview_view(await service.choose_title(database, claude, user, data.title, background))
+    """Choose one of the three titles. When its book was already prepared while the titles were shown,
+    the stage goes straight to `reviewing`. Otherwise it goes to `finishing`, and the book is written to
+    match in the background (`step_status`). After a failure, send this again."""
+    chosen = await service.choose_title(database, claude, user, data.title, background)
+    return await service.view_with_book(database, chosen)
 
 
 @router.delete("/book/chapters/{chapter_id}", response_model=MyBookResponse)
@@ -171,46 +182,6 @@ async def remove_chapter(
 ) -> MyBookResponse:
     """Remove a chapter from the draft. The blurb is rewritten for the chapters that are left."""
     return await service.remove_chapter(database, claude, user, chapter_id)
-
-
-@router.post("/book/chapters/{chapter_id}/rewrite", response_model=MyBookResponse)
-async def rewrite_chapter(
-    chapter_id: str,
-    user: dict = Depends(get_current_user),
-    database: AsyncDatabase = Depends(get_database),
-    claude: Claude = Depends(get_claude),
-) -> MyBookResponse:
-    """Tell the chapter again. `rewrite_unchanged` means it couldn't be told better, and nothing changed."""
-    return await service.rewrite_chapter(database, claude, user, chapter_id)
-
-
-@router.post("/book/chapters/{chapter_id}/restore", response_model=MyBookResponse)
-async def restore_chapter(
-    chapter_id: str,
-    user: dict = Depends(get_current_user),
-    database: AsyncDatabase = Depends(get_database),
-) -> MyBookResponse:
-    """Go back to the chapter's last version (`has_previous`), during the review."""
-    return await service.restore_chapter(database, user, chapter_id)
-
-
-@router.post("/book/blurb", response_model=MyBookResponse)
-async def rewrite_blurb(
-    user: dict = Depends(get_current_user),
-    database: AsyncDatabase = Depends(get_database),
-    claude: Claude = Depends(get_claude),
-) -> MyBookResponse:
-    """Write the draft's back cover again."""
-    return await service.rewrite_blurb(database, claude, user)
-
-
-@router.post("/book/blurb/restore", response_model=MyBookResponse)
-async def restore_blurb(
-    user: dict = Depends(get_current_user),
-    database: AsyncDatabase = Depends(get_database),
-) -> MyBookResponse:
-    """Go back to the last back cover (`has_previous_blurb`), during the review."""
-    return await service.restore_blurb(database, user)
 
 
 @router.post("/book/title", response_model=MyBookResponse)

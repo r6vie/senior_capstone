@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "../../ui/Button";
+import { usePageTitle } from "../../ui/usePageTitle";
 import { apiInterviewClient } from "./apiInterviewClient";
-import { ErrorMessage, Frame, focusBand, Waiting } from "./InterviewFrame";
+import { ErrorMessage, Frame, focusLine, Waiting } from "./InterviewFrame";
 import type { InterviewClient, MyBook } from "./interviewClient";
 import { BackCover, ChangeCard, WaitBox } from "./ProposedChanges";
 
@@ -13,6 +14,7 @@ import { BackCover, ChangeCard, WaitBox } from "./ProposedChanges";
 const MIN_CHAPTERS = 3;
 
 export function RemovalPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
+  usePageTitle("Remove a chapter");
   const { chapterId = "" } = useParams();
   const [search] = useSearchParams();
   const navigate = useNavigate();
@@ -57,7 +59,7 @@ export function RemovalPage({ client = apiInterviewClient }: { client?: Intervie
   const arrived = book !== undefined;
   // biome-ignore lint/correctness/useExhaustiveDependencies: each step is a new screen for the keyboard
   useEffect(() => {
-    if (arrived) focusBand();
+    if (arrived) focusLine();
   }, [arrived, started, writing]);
 
   if (book === undefined) return <Frame busy say={<Waiting>The Librarian is finding your place…</Waiting>} />;

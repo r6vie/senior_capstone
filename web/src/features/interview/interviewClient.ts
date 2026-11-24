@@ -16,8 +16,6 @@ export interface DraftChapter {
   summary: string;
   /** The member's own words behind this chapter. Only they ever see them. */
   quotes: string[];
-  /** In review, the last rewrite can be taken back. */
-  hasPrevious?: boolean;
 }
 
 export interface DraftBook {
@@ -26,10 +24,6 @@ export interface DraftBook {
   /** The back-cover blurb, in the member's own voice. Null on books written before blurbs. */
   blurb: string | null;
   chapters: DraftChapter[];
-  /** The last rewrite couldn't be told better from what the member said, so nothing changed. */
-  rewriteUnchanged?: boolean;
-  /** In review, the last back cover rewrite can be taken back. */
-  hasPreviousBlurb?: boolean;
 }
 
 /** One proposed change to a book on the shelf. Nothing here is live until the member confirms. */
@@ -44,10 +38,81 @@ export interface ProposedChange {
   now: { title: string; summary: string } | null;
 }
 
+// ---------- The Librarian (docs/librarian-plan.md) ----------
+
+/** What the Librarian draws on the answer. A strike's note is the better word. "circle" is the running bit,
+ * with its count; "back_cover" is the one big double underline of the interview. */
+export type MarkMove = "underline" | "strike" | "circle" | "note" | "back_cover";
+
+/** A mark on the member's exact words: whole words, `occurrence` 1 for the first. */
+export interface LibMark {
+  id: string;
+  move: MarkMove;
+  anchor: string;
+  occurrence: number;
+  note: string | null;
+  /** The running bit's count, 3 to 6: drawn as "×3." before the note. */
+  count?: number | null;
+  /** Its own earlier note, struck through, when it credits an edit ("better." written above). */
+  struckNote?: string | null;
+}
+
+export type EntryKind = "chapter" | "connection" | "saving" | "clip" | "note" | "bet";
+
+/** One line in the Librarian's notebook. Commentary, never a copy of the answer, except a clip. */
+export interface NotebookEntry {
+  id: string;
+  kind: EntryKind;
+  text: string;
+  /** The member's words it was built on. When they leave the answer, the entry is rubbed out. */
+  anchors: string[];
+  /** Interview turns it draws on, 1 first. */
+  sourceTurns: number[];
+  /** Circled when a question was built on it; a saving is ticked instead. A bet is called (ticked) or
+   * lost (struck) when a later answer settles it. */
+  status: "open" | "circled" | "ticked" | "called" | "lost";
+  /** Written beside a settled bet: "called it." or "wrong. good." */
+  outcomeNote?: string | null;
+  /** Earlier wordings, oldest first, struck through. */
+  struck: string[];
+}
+
+/** Everything the Librarian left so far, so going back and resuming show exactly what was there. */
+export interface LibrarianView {
+  /** How many answers came before this one. The first question gets no idle lines. */
+  answered: number;
+  /** The marks on the answer being written. */
+  marks: LibMark[];
+  silent: boolean;
+  notebook: NotebookEntry[];
+}
+
+/** One look at the answer while the member types. */
+export interface NotesLook {
+  questionId: string;
+  text: string;
+  previousText: string;
+  pasted: boolean;
+  /** Ids of the marks and entries on screen. */
+  shown: string[];
+}
+
+export type FinalNotes = NotesReply & { status: "done" | "none" | "pending" };
+
+/** What the Librarian does now. Anything on screen that isn't kept or added is rubbed out. */
+export interface NotesReply {
+  silent: boolean;
+  /** `revise`: same id, changed; rubbed out and drawn again. */
+  marks: { keep: string[]; add: LibMark[]; revise: LibMark[]; erase: string[] };
+  notebook: { keep: string[]; add: NotebookEntry[]; revise: NotebookEntry[]; erase: string[] };
+}
+
 export type InterviewState =
   | {
       id: string;
       stage: "asking";
+      /** The Librarian's marks and notebook. Absent where the API has none to give. */
+      librarian?: LibrarianView | null;
       /** "adding" is a short new round on a shelved book: no phases, and a different way out. */
       round?: "first" | "adding";
       phase: Phase;
@@ -65,9 +130,14 @@ export type InterviewState =
       /** "Most of the way there." The API's word, never a count. */
       nearlyDone?: boolean;
     }
-  | { id: string; stage: "shaping"; phase: "shape"; playback: string; questionId?: string }
   | { id: string; stage: "choosing"; titles: TitleOption[] }
-  | { id: string; stage: "reviewing"; book: DraftBook }
+  | {
+      id: string;
+      stage: "reviewing";
+      book: DraftBook;
+      /** The Librarian's handwritten line under the title, at the reveal of the finished book. */
+      signOff?: string | null;
+    }
   | { id: string; stage: "done"; book: DraftBook }
   /** The changes are being written in the background. */
   | { id: string; stage: "writing" }
@@ -78,7 +148,7 @@ export type InterviewState =
       about: "titles" | "book";
       failed?: boolean;
       retryTitle?: string;
-      /** The Librarian's last line, held on the band during the wait. */
+      /** The Librarian's last line, held at the top during the wait. */
       closingLine?: string;
     }
   /** Not enough yet for three chapters. Never a dead end: the Librarian keeps asking (decision 14). */
@@ -187,23 +257,21 @@ export interface InterviewClient {
   answer(id: string, text: string): Promise<InterviewState>;
   /** Move past this question. Skips are never shown or counted. */
   skip(id: string): Promise<InterviewState>;
+  /** The Librarian reads the answer as it's typed. Never throws for want of AI: it just adds nothing. */
+  notes(look: NotesLook, signal?: AbortSignal): Promise<NotesReply>;
+  /** The Librarian's last look at an answer just sent, while the next question is prepared: "done" with
+   * what to write, "none" when there's nothing to add, "pending" when it isn't ready yet (the next question
+   * brings it). */
+  finalNotes(questionId: string, signal?: AbortSignal): Promise<FinalNotes>;
   /** Write the waiting question again, after an answer was saved but the next question failed. */
   askAgain(id: string): Promise<InterviewState>;
   /** "I've said enough. Show me my book." Words still in the field are saved first. */
   finish(id: string, answer?: string): Promise<InterviewState>;
-  confirmShape(id: string): Promise<InterviewState>;
-  correctShape(id: string, correction: string): Promise<InterviewState>;
   chooseTitle(id: string, titleId: string): Promise<InterviewState>;
   /** The titles the member can still go back to, while reviewing. */
   otherTitles(id: string): Promise<TitleOption[]>;
-  /** Pick another title. This writes the book again, so chapter rewrites may be replaced. */
+  /** Pick another title. This writes the book again, so chapter edits may be replaced. */
   changeTitle(id: string, titleId: string): Promise<InterviewState>;
-  rewriteBlurb(id: string): Promise<InterviewState>;
-  /** Go back to the back cover before the last rewrite. */
-  restoreBlurb(id: string): Promise<InterviewState>;
-  rewriteChapter(id: string, chapterId: string): Promise<InterviewState>;
-  /** Go back to the chapter's last version. */
-  restoreChapter(id: string, chapterId: string): Promise<InterviewState>;
   removeChapter(id: string, chapterId: string): Promise<InterviewState>;
   putOnShelf(id: string): Promise<InterviewState>;
 

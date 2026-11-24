@@ -1,0 +1,224 @@
+{
+  "set": "watercolor-1",
+  "category": "watercolor",
+  "approved": "2026-11-23",
+  "approvedBy": "Josef",
+  "cover": {
+    "file": "472x688 webp, the 236x344 cover world at 2x, painted edge to edge",
+    "shelfBook": "176x257 CSS px",
+    "largeBook": "236x344 CSS px"
+  },
+  "page": {
+    "file": "1140x1368 webp, the 570x684 title page at 2x",
+    "fills": "the left (title) page of the opened book, behind the text"
+  },
+  "arts": [
+    {
+      "key": "mesa",
+      "name": "Desert butte at dusk",
+      "coverInk": "#f6efe0",
+      "pageInk": "#3a2c3a",
+      "coverInkContrast": 7.4,
+      "cover": "covers/mesa.webp",
+      "page": "pages/mesa.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/mesa-loop.mp4",
+          "webm": "anim/mesa-loop.webm"
+        },
+        "quick": {
+          "mp4": "anim/mesa-quick.mp4",
+          "webm": "anim/mesa-quick.webm"
+        },
+        "poster": "anim/mesa-poster.webp"
+      }
+    },
+    {
+      "key": "hills",
+      "name": "Patchwork hills",
+      "coverInk": "#4a4a2e",
+      "pageInk": "#4a4a2e",
+      "coverInkContrast": 7.57,
+      "cover": "covers/hills.webp",
+      "page": "pages/hills.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/hills-loop.mp4",
+          "webm": "anim/hills-loop.webm"
+        },
+        "quick": {
+          "mp4": "anim/hills-quick.mp4",
+          "webm": "anim/hills-quick.webm"
+        },
+        "poster": "anim/hills-poster.webp"
+      }
+    },
+    {
+      "key": "lake",
+      "name": "Alpine lake",
+      "coverInk": "#23415a",
+      "pageInk": "#23415a",
+      "coverInkContrast": 5.36,
+      "cover": "covers/lake.webp",
+      "page": "pages/lake.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/lake-loop.mp4",
+          "webm": "anim/lake-loop.webm"
+        },
+        "quick": {
+          "mp4": "anim/lake-quick.mp4",
+          "webm": "anim/lake-quick.webm"
+        },
+        "poster": "anim/lake-poster.webp"
+      }
+    },
+    {
+      "key": "winter",
+      "name": "Winter dusk with firs",
+      "coverInk": "#3e2b45",
+      "pageInk": "#3e2b45",
+      "coverInkContrast": 5.63,
+      "cover": "covers/winter.webp",
+      "page": "pages/winter.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/winter-loop.mp4",
+          "webm": "anim/winter-loop.webm"
+        },
+        "quick": {
+          "mp4": "anim/winter-quick.mp4",
+          "webm": "anim/winter-quick.webm"
+        },
+        "poster": "anim/winter-poster.webp"
+      }
+    },
+    {
+      "key": "city",
+      "name": "City at night on the river",
+      "coverInk": "#f6efe0",
+      "pageInk": "#2c2d52",
+      "coverInkContrast": 4.98,
+      "cover": "covers/city.webp",
+      "page": "pages/city.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/city-loop.mp4",
+          "webm": "anim/city-loop.webm"
+        },
+        "quick": {
+          "mp4": "anim/city-quick.mp4",
+          "webm": "anim/city-quick.webm"
+        },
+        "poster": "anim/city-poster.webp"
+      }
+    },
+    {
+      "key": "blossom",
+      "name": "Blossom tree by a pond",
+      "coverInk": "#5a3048",
+      "pageInk": "#5a3048",
+      "coverInkContrast": 8.54,
+      "cover": "covers/blossom.webp",
+      "page": "pages/blossom.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/blossom-loop.mp4",
+          "webm": "anim/blossom-loop.webm"
+        },
+        "quick": {
+          "mp4": "anim/blossom-quick.mp4",
+          "webm": "anim/blossom-quick.webm"
+        },
+        "poster": "anim/blossom-poster.webp"
+      }
+    },
+    {
+      "key": "autumn",
+      "name": "Autumn river with a bridge",
+      "coverInk": "#5a3420",
+      "pageInk": "#5a3420",
+      "coverInkContrast": 6.08,
+      "cover": "covers/autumn.webp",
+      "page": "pages/autumn.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/autumn-loop.mp4",
+          "webm": "anim/autumn-loop.webm"
+        },
+        "quick": {
+          "mp4": "anim/autumn-quick.mp4",
+          "webm": "anim/autumn-quick.webm"
+        },
+        "poster": "anim/autumn-poster.webp"
+      }
+    },
+    {
+      "key": "beach",
+      "name": "Beach at sunset",
+      "coverInk": "#5a2f2a",
+      "pageInk": "#5a2f2a",
+      "coverInkContrast": 4.83,
+      "cover": "covers/beach.webp",
+      "page": "pages/beach.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/beach-loop.mp4",
+          "webm": "anim/beach-loop.webm"
+        },
+        "quick": {
+          "mp4": "anim/beach-quick.mp4",
+          "webm": "anim/beach-quick.webm"
+        },
+        "poster": "anim/beach-poster.webp"
+      }
+    },
+    {
+      "key": "lighthouse-day",
+      "name": "Lighthouse by day with the harbor boats",
+      "coverInk": "#2c3e5c",
+      "pageInk": "#2c3e5c",
+      "coverInkContrast": 10.38,
+      "cover": "covers/lighthouse-day.webp",
+      "page": "pages/lighthouse-day.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/lighthouse-day-loop.mp4",
+          "webm": "anim/lighthouse-day-loop.webm"
+        },
+        "quick": {
+          "mp4": "anim/lighthouse-day-quick.mp4",
+          "webm": "anim/lighthouse-day-quick.webm"
+        },
+        "poster": "anim/lighthouse-day-poster.webp"
+      }
+    },
+    {
+      "key": "lighthouse-dusk",
+      "name": "Lighthouse at dusk with its beam",
+      "coverInk": "#f6efe0",
+      "pageInk": "#2c3e5c",
+      "coverInkContrast": 6.1,
+      "cover": "covers/lighthouse-dusk.webp",
+      "page": "pages/lighthouse-dusk.webp",
+      "anim": {
+        "loop": {
+          "mp4": "anim/lighthouse-dusk-loop.mp4",
+          "webm": "anim/lighthouse-dusk-loop.webm"
+        },
+        "quick": {
+          "mp4": "anim/lighthouse-dusk-quick.mp4",
+          "webm": "anim/lighthouse-dusk-quick.webm"
+        },
+        "poster": "anim/lighthouse-dusk-poster.webp"
+      }
+    }
+  ],
+  "animation": {
+    "size": "472x688, the cover at 2x, muted, no audio; MP4 (H.264) and WebM (VP9) of each",
+    "loop": "the sign-in intro only: paints in (all glazes by ~12.3 s), rests from 13.5 s, washes back to paper 18.5-23.5 s, 1.5 s clean paper; 25 s, 12 fps, seamless. The only slow animation.",
+    "quick": "the book reveal, your picks and the design studio: the painting at 0.3 of the time, ending on the finished cover at ~4 s; 24 fps",
+    "poster": "the finished cover; for reduced motion and before a video loads",
+    "endsOnCover": "the last frame of quick is the cover image (mean difference under 0.1 levels of 255), so swapping to the still is invisible"
+  }
+}

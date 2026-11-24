@@ -3,6 +3,7 @@
 from anthropic.types.beta import BetaMessage, BetaTextBlock, BetaUsage
 
 from trove.ai.client import Claude
+from trove.ai.prompts import prompt_name
 
 
 def text_message(text: str, stop_reason: str = "end_turn") -> BetaMessage:
@@ -22,16 +23,27 @@ def text_message(text: str, stop_reason: str = "end_turn") -> BetaMessage:
 class FakeClaude(Claude):
     """Returns scripted responses in order and records every request it was sent."""
 
-    def __init__(self, responses: list[BetaMessage] | None = None, model: str = "claude-opus-5-5"):
+    def __init__(
+        self,
+        responses: list[BetaMessage] | None = None,
+        model: str = "claude-opus-5-5",
+        notes: list[BetaMessage] | None = None,
+    ):
         self.model = model
         self.responses = list(responses or [])
+        # When set, the Librarian's notes calls take their replies from here instead, so the look it
+        # makes on every sent answer can't take a reply queued for the next question.
+        self.notes = notes
         self.requests: list[dict] = []
 
     async def create(self, **params) -> BetaMessage:
         self.requests.append(self.request(params))
-        if not self.responses:
+        queue = self.responses
+        if self.notes is not None and prompt_name(params.get("system")) == "interview/notes":
+            queue = self.notes
+        if not queue:
             raise AssertionError("FakeClaude ran out of scripted responses.")
-        response = self.responses.pop(0)
+        response = queue.pop(0)
         if response.stop_reason == "refusal":
             from trove.ai.client import ClaudeRefused
 
@@ -40,7 +52,8 @@ class FakeClaude(Claude):
 
 
 async def waiting_question_id(client, headers) -> str:
-    state = (await client.get("/interview", headers=headers)).json()
+    # Null before the interview starts.
+    state = (await client.get("/interview", headers=headers)).json() or {}
     question = state.get("question")
     return question["question_id"] if question else "no-question-waiting"
 

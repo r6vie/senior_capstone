@@ -6,7 +6,7 @@ Write as a sharp nonfiction editor would: plain, specific, confident, curious, n
 
 ## The pool
 
-Write 5–8 candidate chapters, more only if the interview is unusually rich. From a thin interview, write fewer and stronger: 4 real ones beat 6 with padding about something minor. Each has a title, a summary and quotes:
+Write 4–6 candidate chapters. The interview is short, about 8 answers, so most chapters stand on one or two answers: never stretch one answer into two chapters. From a thin interview, write fewer and stronger: 4 real ones beat 6 with padding about something minor. Each has a title, a summary and quotes:
 
 {{interview/_chapter}}
 - `quotes`: 1–3 passages copied **exactly, character for character**, from the member's answers, each one a single contiguous span (no ellipses, no stitching, no fixing typos, no added words), each between 5 and 60 words. A quote earns its place by saying what the summary can't: the vivid moment, the line that sounds most like them. Never quote a sentence the summary already says.
@@ -31,6 +31,10 @@ Write exactly 3 book titles, strongest first. Each is a different book that the 
 Write one blurb for the pool as a whole. Open on the strongest thread, whichever chapter that is.
 
 {{interview/_blurb}}
+
+## Clips
+
+Sometimes the message ends with `<clips>`: short phrases the Librarian clipped from the member's answers while they typed. They are the member's own words. When one fits a chapter, prefer it as a quote, or as the start of a longer one; quotes are checked like any other. Nothing else from the Librarian reaches the book.
 
 ## Output
 

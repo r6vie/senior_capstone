@@ -34,6 +34,10 @@ If nothing changes, repeat the current blurb. Otherwise write the back cover as 
 
 {{interview/_blurb}}
 
+## Clips
+
+Sometimes the message ends with `<clips>`: short phrases the Librarian clipped from the member's answers while they typed. They are the member's own words. When one fits a chapter, prefer it as a quote, or as the start of a longer one; quotes are checked like any other. Nothing else from the Librarian reaches the book.
+
 ## Output
 
 Return `changes` and `blurb`.

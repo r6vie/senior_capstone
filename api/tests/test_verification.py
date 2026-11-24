@@ -260,3 +260,12 @@ async def test_the_code_email_prints_when_email_is_not_configured(client, capsys
     await client.post("/auth/signup", json=STUDENT)
     await client.post("/auth/verify/resend", json={"email": STUDENT["email"]})
     assert "Your Trove code:" in capsys.readouterr().out
+
+
+async def test_invite_times_come_back_in_utc(client, database):
+    host = await make_member(client, database)
+    await client.post("/auth/invites", headers=host)
+    listed = (await client.get("/auth/invites", headers=host)).json()
+    # Without a zone the browser reads it as local time, and "Open until" moves a day in the evening.
+    assert listed[0]["expires_at"].endswith("Z")
+    assert listed[0]["created_at"].endswith("Z")

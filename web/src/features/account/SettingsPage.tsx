@@ -1,11 +1,14 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { api } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, NO_CONNECTION } from "../../api/errors";
 import { Button } from "../../ui/Button";
+import { PageLoading } from "../../ui/Loading";
 import { TextField } from "../../ui/TextField";
 import { useAuth } from "../auth/AuthProvider";
 import { InviteSection } from "./InviteSection";
+import { type Affiliation, MemberContextFields } from "./MemberContextFields";
 import "./SettingsPage.css";
+import { usePageTitle } from "../../ui/usePageTitle";
 
 // Account settings (plan item A1): what to share when an author says yes, the one email switch, and
 // deleting the account. Contact details never appear on a book (docs/trove.md §9.1).
@@ -51,9 +54,11 @@ function ContactSection({ email }: { email: string }) {
     event.preventDefault();
     setBusy(true);
     setNotice(null);
-    const { data, error } = await api.PUT("/auth/me/contact", {
-      body: { linkedin_url: linkedin.trim() || null, phone: phone.trim() || null },
-    });
+    const { data, error } = await api
+      .PUT("/auth/me/contact", {
+        body: { linkedin_url: linkedin.trim() || null, phone: phone.trim() || null },
+      })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     setBusy(false);
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     setLinkedin(data.linkedin_url ?? "");
@@ -62,32 +67,29 @@ function ContactSection({ email }: { email: string }) {
   }
 
   return (
-    <section aria-labelledby="contact-heading" className="settings-section">
-      <h2 id="contact-heading" className="settings-heading">
-        Contact details
-      </h2>
-      <p className="muted">
-        Shared only with someone whose checkout you accept, or the author who accepts yours. Never on your
-        book.
-      </p>
-      <form onSubmit={save} className="stack">
+    <section aria-labelledby="contact-heading" className="page-row">
+      {/* Settings appears once the contact details are in, so the fields don't fill in under the cursor. */}
+      {!loaded && !notice && <PageLoading />}
+      <div className="page-row-head">
+        <h2 id="contact-heading">Contact details</h2>
+        <p>
+          Shared only with someone whose checkout you accept, or the author who accepts yours. Never on your
+          book.
+        </p>
+      </div>
+      <form onSubmit={save} className="page-row-body">
         <p className="settings-fixed">
           <span className="caption">Always shared</span> {email}
         </p>
-        <TextField
-          label="LinkedIn profile (optional)"
-          value={linkedin}
-          onChange={setLinkedin}
-          autoComplete="url"
-          hint="Like https://www.linkedin.com/in/your-name"
-        />
-        <TextField
-          label="Phone (optional)"
-          value={phone}
-          onChange={setPhone}
-          autoComplete="tel"
-          hint="Only shown to someone whose checkout you accept."
-        />
+        <div className="settings-pair">
+          <TextField
+            label="LinkedIn profile (optional)"
+            value={linkedin}
+            onChange={setLinkedin}
+            autoComplete="url"
+          />
+          <TextField label="Phone (optional)" value={phone} onChange={setPhone} autoComplete="tel" />
+        </div>
         <Feedback notice={notice} />
         <div>
           <Button type="submit" disabled={busy || !loaded} aria-busy={busy}>
@@ -105,7 +107,9 @@ function EmailSection({ initial, onChanged }: { initial: boolean; onChanged: () 
 
   async function change(next: boolean) {
     setNotice(null);
-    const { data, error } = await api.PUT("/auth/me/notifications", { body: { email_notifications: next } });
+    const { data, error } = await api
+      .PUT("/auth/me/notifications", { body: { email_notifications: next } })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
     if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
     setEnabled(data.email_notifications);
     onChanged();
@@ -116,16 +120,75 @@ function EmailSection({ initial, onChanged }: { initial: boolean; onChanged: () 
   }
 
   return (
-    <section aria-labelledby="email-heading" className="settings-section">
-      <h2 id="email-heading" className="settings-heading">
-        Email
-      </h2>
-      <label className="choice">
-        <input type="checkbox" checked={enabled} onChange={(event) => change(event.target.checked)} />
-        <span>Email me about checkouts and messages</span>
-      </label>
-      <p className="muted">Account emails, like your welcome message, are sent either way.</p>
-      <Feedback notice={notice} />
+    <section aria-labelledby="email-heading" className="page-row">
+      <div className="page-row-head">
+        <h2 id="email-heading">Email</h2>
+        <p>Account emails, like your welcome message, are sent either way.</p>
+      </div>
+      <div className="page-row-body page-row-bare">
+        <label className="choice">
+          <input type="checkbox" checked={enabled} onChange={(event) => change(event.target.checked)} />
+          <span>Email me about checkouts and messages</span>
+        </label>
+        <Feedback notice={notice} />
+      </div>
+    </section>
+  );
+}
+
+function MemberContextSection({
+  initialAffiliations,
+  initialFounder,
+  onChanged,
+}: {
+  initialAffiliations: Affiliation[];
+  initialFounder: boolean;
+  onChanged: () => Promise<void>;
+}) {
+  const [affiliations, setAffiliations] = useState(initialAffiliations);
+  const [founder, setFounder] = useState(initialFounder);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<Notice>(null);
+
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setNotice(null);
+    const { data, error } = await api
+      .PUT("/auth/me/context", { body: { affiliations, founder } })
+      .catch(() => ({ data: undefined, error: NO_CONNECTION }));
+    setBusy(false);
+    if (!data) return setNotice({ kind: "error", text: errorMessage(error) });
+    setAffiliations(data.affiliations ?? []);
+    setFounder(data.founder ?? false);
+    await Promise.resolve(onChanged()).catch(() => undefined);
+    setNotice({ kind: "saved", text: "Community context saved." });
+  }
+
+  return (
+    <section aria-labelledby="context-heading" className="page-row">
+      <div className="page-row-head">
+        <h2 id="context-heading">About you</h2>
+      </div>
+      <form onSubmit={save} className="page-row-body">
+        <MemberContextFields
+          affiliations={affiliations}
+          founder={founder}
+          onAffiliationsChange={setAffiliations}
+          onFounderChange={setFounder}
+        />
+        <Feedback notice={notice} />
+        <div>
+          <Button
+            type="submit"
+            variant="secondary"
+            disabled={busy || affiliations.length === 0}
+            aria-busy={busy}
+          >
+            Save community context
+          </Button>
+        </div>
+      </form>
     </section>
   );
 }
@@ -140,8 +203,10 @@ function DeleteSection({ email }: { email: string }) {
     event.preventDefault();
     setBusy(true);
     setNotice(null);
-    const { response, error } = await api.DELETE("/auth/me", { body: { email: typed.trim() } });
-    if (!response.ok) {
+    const { response, error } = await api
+      .DELETE("/auth/me", { body: { email: typed.trim() } })
+      .catch(() => ({ response: undefined, error: NO_CONNECTION }));
+    if (!response?.ok) {
       setBusy(false);
       return setNotice({ kind: "error", text: errorMessage(error) });
     }
@@ -149,15 +214,15 @@ function DeleteSection({ email }: { email: string }) {
   }
 
   return (
-    <section aria-labelledby="delete-heading" className="settings-section">
-      <h2 id="delete-heading" className="settings-heading">
-        Delete your account
-      </h2>
-      <p className="muted">
-        This removes your account, your book, and your checkouts and meetings, for the other person too. It
-        can't be undone. To confirm, type your email address: <strong>{email}</strong>
-      </p>
-      <form onSubmit={remove} className="stack">
+    <section aria-labelledby="delete-heading" className="page-row">
+      <div className="page-row-head">
+        <h2 id="delete-heading">Delete your account</h2>
+        <p>
+          This removes your account, your book, and your checkouts and meetings, for the other person too. It
+          can't be undone. To confirm, type your email address: <strong>{email}</strong>
+        </p>
+      </div>
+      <form onSubmit={remove} className="page-row-body">
         <TextField
           label="Your email address"
           type="email"
@@ -182,12 +247,18 @@ function DeleteSection({ email }: { email: string }) {
 }
 
 export function SettingsPage() {
+  usePageTitle("Settings");
   const { user, refreshUser } = useAuth();
   if (!user) return null;
 
   return (
-    <main className="settings-page">
+    <main className="shell-page page-wide settings-page">
       <h1 className="page-title">Settings</h1>
+      <MemberContextSection
+        initialAffiliations={user.affiliations ?? []}
+        initialFounder={user.founder ?? false}
+        onChanged={refreshUser}
+      />
       <ContactSection email={user.email} />
       <EmailSection initial={user.email_notifications} onChanged={refreshUser} />
       <InviteSection />

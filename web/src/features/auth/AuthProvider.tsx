@@ -1,5 +1,5 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { api, session } from "../../api/client";
+import { api, SESSION_ENDED, session } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
 import { clearAllDrafts } from "../interview/AnswerPanel";
@@ -16,6 +16,8 @@ export class NeedsVerification extends Error {
 interface AuthValue {
   user: User | null;
   loading: boolean;
+  // The session ended on its own while the app was open (not a sign-out), so sign-in can say so.
+  sessionEnded: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   // "verify" when a code was sent to a case.edu address; "signed-in" when the account is ready (an invite).
   signUp: (
@@ -36,6 +38,19 @@ const AuthContext = createContext<AuthValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(Boolean(session.get()));
+  const [sessionEnded, setSessionEnded] = useState(false);
+
+  // Any call that finds the session gone signs the member out where they are (api/client.ts). Unlike signOut,
+  // their unsent drafts stay: they are coming straight back.
+  useEffect(() => {
+    const ended = () => {
+      setUser(null);
+      setSessionEnded(true);
+      setLoading(false);
+    };
+    window.addEventListener(SESSION_ENDED, ended);
+    return () => window.removeEventListener(SESSION_ENDED, ended);
+  }, []);
 
   const loadUser = useCallback(async () => {
     const { data, response } = await api.GET("/auth/me");
@@ -56,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(errorMessage(error));
       }
       session.set(data.access_token);
+      setSessionEnded(false);
       await loadUser();
     },
     [loadUser],
@@ -90,12 +106,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Unsent interview answers and edits stay in this browser's storage; on a shared computer the next
     // person shouldn't find them there.
     clearAllDrafts();
+    setSessionEnded(false);
     setUser(null);
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, signIn, signUp, verifyEmail, signOut, refreshUser: loadUser }),
-    [user, loading, signIn, signUp, verifyEmail, signOut, loadUser],
+    () => ({ user, loading, sessionEnded, signIn, signUp, verifyEmail, signOut, refreshUser: loadUser }),
+    [user, loading, sessionEnded, signIn, signUp, verifyEmail, signOut, loadUser],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

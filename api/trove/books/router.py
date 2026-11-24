@@ -35,14 +35,16 @@ async def shelf(
     )
 
 
-@router.get("/me", response_model=MyBookResponse)
+@router.get("/me", response_model=MyBookResponse | None)
 async def my_book(
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
-) -> MyBookResponse:
+) -> MyBookResponse | None:
+    """The member's own book, or null before they have one: an answer, not an error, since the shelf
+    asks on every visit."""
     book = await get_book_of(database, user["_id"])
     if book is None:
-        raise HTTPException(status_code=404, detail="You don't have a book yet.")
+        return None
     return my_book_view(book, undoable=await nothing_open(database, user["_id"]))
 
 
@@ -81,8 +83,7 @@ async def edit_my_chapter(
     user: dict = Depends(get_current_user),
     database: AsyncDatabase = Depends(get_database),
 ) -> MyBookResponse:
-    """Change a chapter's title or summary. Its quotes stay. In a draft, the last version can be
-    restored (`has_previous`, POST /interview/book/chapters/{id}/restore)."""
+    """Change a chapter's title or summary. Its quotes stay."""
     await _editable(database, user["_id"])
     try:
         book = await books.edit_chapter(

@@ -67,8 +67,36 @@ describe("CheckOutPage", () => {
   });
 
   it("says a book off the shelf isn't available", async () => {
-    api.GET.mockResolvedValue({ error: { detail: "This book isn't on the shelf." } });
+    api.GET.mockResolvedValue({
+      error: { detail: "This book isn't on the shelf." },
+      response: { status: 404 },
+    });
     renderPage();
     expect(await screen.findByText("This book isn't available right now.")).toBeTruthy();
+  });
+
+  it("offers to try again when the book couldn't be loaded, instead of calling it unavailable", async () => {
+    api.GET.mockResolvedValueOnce({ error: { detail: "Unavailable" }, response: { status: 503 } });
+    renderPage();
+    expect((await screen.findByRole("alert")).textContent).toContain("couldn't load this book");
+    expect(screen.queryByText("This book isn't available right now.")).toBeNull();
+    api.GET.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect((await screen.findByRole("alert")).textContent).toContain("couldn't load this book");
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByLabelText(/Your note to/)).toBeTruthy();
+  });
+
+  it("keeps the note and frees the button when the connection drops on sending", async () => {
+    renderPage();
+    const box = await screen.findByLabelText(/Your note to/);
+    fireEvent.change(box, { target: { value: "Hi there" } });
+    api.POST.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    fireEvent.click(screen.getByRole("button", { name: "Ask to check out" }));
+    expect((await screen.findByRole("alert")).textContent).toContain("couldn't reach Trove");
+    expect((box as HTMLTextAreaElement).value).toBe("Hi there");
+    expect((screen.getByRole("button", { name: "Ask to check out" }) as HTMLButtonElement).disabled).toBe(
+      false,
+    );
   });
 });

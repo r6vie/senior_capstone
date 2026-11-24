@@ -5,6 +5,7 @@ import anthropic
 import pytest
 
 from tests.fakes import choose_and_wait, finish_and_wait, send_answer, send_skip
+from trove.books import service as books
 from trove.interview import engine, service
 from trove.interview.engine import Draft, DraftChapter, FinishedBook, NextTurn, TitleOption
 
@@ -54,31 +55,32 @@ class FakeEngine:
         self.ready_next = False
         self.fail_next = False
         self.fail_blurb = False
+        self.builds_on_next: str | None = None
 
-    async def next_turn(self, claude, *, turns, resume_text, sparks=None, more_material=False):
-        self.calls.append(("next_turn", {"turns": turns, "resume_text": resume_text}))
+    async def next_turn(self, claude, *, turns, resume_text, sparks=None, more_material=False, notebook=None):
+        self.calls.append(("next_turn", {"turns": turns, "resume_text": resume_text, "notebook": notebook}))
         if self.fail_next:
             self.fail_next = False
             raise anthropic.APIConnectionError(request=None)
         if self.shape_next:
             self.shape_next = False
             return NextTurn(
-                question="Is this you?",
+                question="What do the two offers you turned down have in common?",
                 phase="shape",
-                playback="You walked away twice.",
                 ready_for_reveal=False,
                 topic="the second offer you turned down",
             )
+        builds_on, self.builds_on_next = self.builds_on_next, None
         return NextTurn(
             question=f"Question {len(turns) + 1}?",
             phase="sweep" if len(turns) < 5 else "dig",
-            playback=None,
             ready_for_reveal=self.ready_next,
             topic=f"topic {len(turns)}",
+            builds_on=builds_on,
         )
 
-    async def draft_book(self, claude, *, turns, **_):
-        self.calls.append(("draft_book", {"turns": turns}))
+    async def draft_book(self, claude, *, turns, clips=None, **_):
+        self.calls.append(("draft_book", {"turns": turns, "clips": clips}))
         return Draft(pool=POOL, titles=TITLES, blurb="I know the pool.")
 
     async def finish_book(self, claude, *, turns, draft, title, **_):
@@ -92,15 +94,11 @@ class FakeEngine:
             raise ValueError("unusable")
         return "I know " + ", ".join(c.id for c in chapters) + "."
 
-    async def rewrite_chapter(self, claude, *, turns, chapters, chapter_id, **_):
-        self.calls.append(("rewrite_chapter", {"chapter_id": chapter_id}))
-        return DraftChapter(id=chapter_id, title="Rewritten", summary="Better.", quotes=["Quote 1."])
-
 
 @pytest.fixture
 def fake_engine(monkeypatch, fake_claude):
     fake = FakeEngine()
-    for name in ("next_turn", "draft_book", "finish_book", "write_blurb", "rewrite_chapter"):
+    for name in ("next_turn", "draft_book", "finish_book", "write_blurb"):
         monkeypatch.setattr(engine, name, getattr(fake, name))
     return fake
 
@@ -129,7 +127,8 @@ async def test_routes_require_sign_in(client):
 
 
 async def test_full_flow_from_first_question_to_the_shelf(client, database, headers, fake_engine):
-    assert (await client.get("/interview", headers=headers)).status_code == 404
+    before = await client.get("/interview", headers=headers)
+    assert (before.status_code, before.json()) == (200, None)
 
     started = await client.post("/interview", json={}, headers=headers)
     assert started.status_code == 201
@@ -140,14 +139,15 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
         "question_id": state["question"]["question_id"],
         "text": "Question 1?",
         "phase": "sweep",
-        "playback": None,
+        "builds_on": None,
     }
     assert state["can_finish"] is False
     assert state["has_answers"] is False
 
-    state = await answer_questions(client, headers, 9)
+    early = service.EXIT_AFTER_ANSWERS - 1
+    state = await answer_questions(client, headers, early)
     assert state["has_answers"] is True
-    assert state["question"]["text"] == "Question 10?"
+    assert state["question"]["text"] == f"Question {early + 1}?"
     assert state["can_finish"] is False
     # Too early to say "I've said enough".
     assert (await client.post("/interview/finish", headers=headers)).status_code == 409
@@ -158,26 +158,24 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
     assert state["question"]["question_id"]
     assert state["question"] == {
         "question_id": state["question"]["question_id"],
-        "text": "Is this you?",
+        "text": "What do the two offers you turned down have in common?",
         "phase": "shape",
-        "playback": "You walked away twice.",
+        "builds_on": None,
     }
-    # The Shape step takes a confirmation or correction, not an ordinary answer.
-    assert (await send_answer(client, headers, "x")).status_code == 409
-
-    state = (await client.post("/interview/shape", json={}, headers=headers)).json()
-    assert state["question"]["text"] == "Question 12?"
+    # The Shape question is answered like any other.
+    state = (await send_answer(client, headers, "Both paid more than they taught.")).json()
+    assert state["question"]["text"] == f"Question {early + 3}?"
     interview = await database.interviews.find_one({})
-    assert interview["turns"][10] == {
-        "question": "Is this you?",
-        "answer": "Yes, that's me.",
+    assert interview["turns"][early + 1] == {
+        "question": "What do the two offers you turned down have in common?",
+        "answer": "Both paid more than they taught.",
         "phase": "shape",
     }
 
     # Resuming shows the waiting question and what they were talking about.
     resumed = (await client.get("/interview", headers=headers)).json()
-    assert resumed["question"]["text"] == "Question 12?"
-    assert resumed["topic"] == "topic 11"
+    assert resumed["question"]["text"] == f"Question {early + 3}?"
+    assert resumed["topic"] == f"topic {early + 2}"
 
     state = await finish_and_wait(client, headers)
     assert state["stage"] == "choosing"
@@ -205,17 +203,6 @@ async def test_full_flow_from_first_question_to_the_shelf(client, database, head
     # Three chapters is the minimum.
     assert (await client.delete("/interview/book/chapters/c1", headers=headers)).status_code == 409
     assert (await client.delete("/interview/book/chapters/nope", headers=headers)).status_code == 404
-
-    book = (await client.post("/interview/book/chapters/c3/rewrite", headers=headers)).json()
-    assert book["chapters"][1] == {
-        "id": "c3",
-        "title": "Rewritten",
-        "summary": "Better.",
-        "quotes": ["Quote 1."],
-        "has_previous": True,
-    }
-    # A rewrite keeps the chapter's topic, so the blurb stays.
-    assert book["blurb"] == "I know c1, c3, c4."
 
     shelved = await client.post("/interview/book/shelve", headers=headers)
     assert shelved.status_code == 200
@@ -246,7 +233,6 @@ async def test_steps_out_of_order_are_409(client, headers, fake_engine):
     await client.post("/interview", json={}, headers=headers)
     assert (await client.post("/interview/title", json={"title": 0}, headers=headers)).status_code == 409
     assert (await client.post("/interview/book/shelve", headers=headers)).status_code == 409
-    assert (await client.post("/interview/shape", json={}, headers=headers)).status_code == 409
 
 
 async def test_the_librarian_can_end_the_interview(client, headers, fake_engine):
@@ -258,6 +244,15 @@ async def test_the_librarian_can_end_the_interview(client, headers, fake_engine)
     assert state["can_finish"] is True
     assert state["question"] is None
     assert (await finish_and_wait(client, headers))["stage"] == "choosing"
+
+
+async def test_a_failed_ai_call_logs_its_cause(client, headers, fake_engine, caplog):
+    await client.post("/interview", json={}, headers=headers)
+    fake_engine.fail_next = True
+    with caplog.at_level("WARNING", logger="trove.interview.service"):
+        response = await send_answer(client, headers, "An answer.")
+    assert response.status_code == 502
+    assert "Interview AI call failed: APIConnectionError" in caplog.text
 
 
 async def test_answers_are_saved_even_when_the_next_question_fails(client, database, headers, fake_engine):
@@ -338,13 +333,9 @@ async def test_skips_are_never_in_the_response(client, headers, fake_engine):
     assert not [key for key in state if "skip" in key]
 
 
-async def test_skip_is_409_without_a_question_and_on_the_shape_step(client, database, headers, fake_engine):
+async def test_skip_is_409_without_a_question(client, database, headers, fake_engine):
     assert (await send_skip(client, headers)).status_code == 404
     await client.post("/interview", json={}, headers=headers)
-    await database.interviews.update_one(
-        {}, {"$set": {"current": {"question": "Is this you?", "phase": "shape", "playback": "You."}}}
-    )
-    assert (await send_skip(client, headers)).status_code == 409
     await database.interviews.update_one({}, {"$set": {"current": None}})
     assert (await send_skip(client, headers)).status_code == 409
 
@@ -451,59 +442,54 @@ async def test_a_removed_chapter_stays_out_when_the_title_changes(client, header
     assert gone not in seen["pool"]
 
 
-async def test_title_and_blurb_routes_only_in_review(client, headers, fake_engine):
+async def test_removing_a_chapter_keeps_a_back_cover_the_member_edited(client, headers, fake_engine):
+    book = await to_review(client, headers, fake_engine)
+    mine = "My own back cover, in my words."
+    assert (await client.patch("/books/me", json={"blurb": mine}, headers=headers)).status_code == 200
+    calls = len(fake_engine.calls)
+    removed = await client.delete(f"/interview/book/chapters/{book['chapters'][0]['id']}", headers=headers)
+    assert removed.status_code == 200
+    assert removed.json()["blurb"] == mine
+    # No back cover was written: the Librarian wasn't asked.
+    assert len(fake_engine.calls) == calls
+
+
+async def test_changing_the_title_keeps_a_back_cover_the_member_edited(client, headers, fake_engine):
+    await to_review(client, headers, fake_engine)
+    mine = "My own back cover, in my words."
+    assert (await client.patch("/books/me", json={"blurb": mine}, headers=headers)).status_code == 200
+    changed = (await client.post("/interview/book/title", json={"title": 2}, headers=headers)).json()
+    assert (changed["title"], changed["blurb"]) == ("Title 2", mine)
+
+
+async def test_a_back_cover_the_member_never_touched_is_still_rewritten(
+    client, database, headers, fake_engine
+):
+    book = await to_review(client, headers, fake_engine)
+    removed = (
+        await client.delete(f"/interview/book/chapters/{book['chapters'][0]['id']}", headers=headers)
+    ).json()
+    assert removed["blurb"].startswith("I know ")
+    # Books saved before the flag count as unedited.
+    await database.books.update_one({}, {"$unset": {"blurb_edited": ""}})
+    changed = (await client.post("/interview/book/title", json={"title": 2}, headers=headers)).json()
+    assert changed["blurb"] == "I know Title 2."
+
+
+async def test_an_edit_saved_while_the_back_cover_is_rewritten_is_kept(
+    database, headers, client, fake_engine
+):
+    # The flag is checked in the update itself, so an edit landing during the Librarian's rewrite wins.
+    await to_review(client, headers, fake_engine)
+    book = await database.books.find_one({})
+    await database.books.update_one({}, {"$set": {"blurb": "Mine, just now.", "blurb_edited": True}})
+    kept = await books._set_unedited_blurb(database, book, "The Librarian's version.")
+    assert kept["blurb"] == "Mine, just now."
+
+
+async def test_title_route_only_in_review(client, headers, fake_engine):
     await client.post("/interview", json={}, headers=headers)
-    assert (await client.post("/interview/book/blurb", headers=headers)).status_code == 409
     assert (await client.post("/interview/book/title", json={"title": 1}, headers=headers)).status_code == 409
-
-
-async def test_rewrite_the_back_cover(client, database, headers, fake_engine):
-    book = await to_review(client, headers, fake_engine)
-    response = await client.post("/interview/book/blurb", headers=headers)
-    assert response.status_code == 200
-    assert response.json()["blurb"] == "I know " + ", ".join(c["id"] for c in book["chapters"]) + "."
-
-    fake_engine.fail_blurb = True
-    failed = await client.post("/interview/book/blurb", headers=headers)
-    assert failed.status_code == 502
-    assert (await client.get("/books/me", headers=headers)).json()["blurb"] == response.json()["blurb"]
-
-
-async def test_a_rewrite_can_be_taken_back_until_the_shelf(client, database, headers, fake_engine):
-    book = await to_review(client, headers, fake_engine)
-    first = book["chapters"][0]
-    assert first["has_previous"] is False
-
-    restored_none = await client.post(f"/interview/book/chapters/{first['id']}/restore", headers=headers)
-    assert restored_none.status_code == 409
-
-    rewritten = (await client.post(f"/interview/book/chapters/{first['id']}/rewrite", headers=headers)).json()
-    assert rewritten["chapters"][0]["title"] == "Rewritten"
-    assert rewritten["chapters"][0]["has_previous"] is True
-
-    back = (await client.post(f"/interview/book/chapters/{first['id']}/restore", headers=headers)).json()
-    assert back["chapters"][0]["title"] == first["title"]
-    assert back["chapters"][0]["summary"] == first["summary"]
-    assert back["chapters"][0]["has_previous"] is False
-
-    await client.post(f"/interview/book/chapters/{first['id']}/rewrite", headers=headers)
-    await client.post("/interview/book/shelve", headers=headers)
-    saved = await database.books.find_one({})
-    assert all("previous" not in chapter for chapter in saved["chapters"])
-
-
-async def test_a_rewrite_that_changes_nothing_says_so(client, headers, monkeypatch, fake_engine):
-    book = await to_review(client, headers, fake_engine)
-    first = book["chapters"][0]
-
-    async def same(claude, *, turns, chapters, chapter_id, **_):
-        return next(c for c in chapters if c.id == chapter_id)
-
-    monkeypatch.setattr(engine, "rewrite_chapter", same)
-    response = (await client.post(f"/interview/book/chapters/{first['id']}/rewrite", headers=headers)).json()
-    assert response["rewrite_unchanged"] is True
-    assert response["chapters"][0]["title"] == first["title"]
-    assert response["chapters"][0]["has_previous"] is False
 
 
 async def too_little(claude, *, turns, **_):
@@ -625,10 +611,12 @@ async def test_finish_sets_the_stage_first_and_writes_after(client, database, he
     assert (await client.get("/interview", headers=headers)).json()["stage"] == "choosing"
 
 
-async def test_title_sets_the_stage_first_and_writes_after(client, headers, fake_engine):
+async def test_title_sets_the_stage_first_and_writes_after(client, database, headers, fake_engine):
     await client.post("/interview", json={}, headers=headers)
     await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
     await client.post("/interview/finish", headers=headers)
+    # A book not prepared in time is written after the response.
+    await database.interviews.update_one({}, {"$set": {"prepared": {}, "prepare_status": "done"}})
     state = (await client.post("/interview/title", json={"title": 1}, headers=headers)).json()
     assert state["stage"] == "finishing"
     assert state["chosen_title"] == TITLES[1].title
@@ -692,6 +680,8 @@ async def test_a_failed_book_can_be_tried_again_with_any_title(
     await client.post("/interview", json={}, headers=headers)
     await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
     await client.post("/interview/finish", headers=headers)
+    # Without the books prepared while choosing, so the pick has to write its own.
+    await database.interviews.update_one({}, {"$set": {"prepared": {}}})
     good = engine.finish_book
 
     async def failing(claude, *, turns, draft, title, **_):
@@ -700,7 +690,7 @@ async def test_a_failed_book_can_be_tried_again_with_any_title(
     monkeypatch.setattr(engine, "finish_book", failing)
     await client.post("/interview/title", json={"title": 0}, headers=headers)
     assert (await database.interviews.find_one({}))["write_status"] == "failed"
-    assert (await client.get("/books/me", headers=headers)).status_code == 404
+    assert (await client.get("/books/me", headers=headers)).json() is None
 
     monkeypatch.setattr(engine, "finish_book", good)
     book = await choose_and_wait(client, headers, 2)
@@ -837,63 +827,28 @@ async def test_a_stale_skip_after_a_skip_is_already_saved_but_not_after_an_answe
     assert late.json()["already_saved"] is False
 
 
-async def test_a_rewritten_back_cover_can_be_taken_back(client, database, headers, fake_engine):
-    book = await to_review(client, headers, fake_engine)
-    assert book["has_previous_blurb"] is False
-    assert (await client.post("/interview/book/blurb/restore", headers=headers)).status_code == 409
-
-    rewritten = (await client.post("/interview/book/blurb", headers=headers)).json()
-    assert rewritten["blurb"] != book["blurb"]
-    assert rewritten["has_previous_blurb"] is True
-
-    back = (await client.post("/interview/book/blurb/restore", headers=headers)).json()
-    assert back["blurb"] == book["blurb"]
-    assert back["has_previous_blurb"] is False
-
-
-async def test_the_previous_back_cover_goes_when_it_no_longer_fits(client, database, headers, fake_engine):
-    book = await to_review(client, headers, fake_engine)
-    await client.post("/interview/book/blurb", headers=headers)
-    removed = await client.delete(f"/interview/book/chapters/{book['chapters'][0]['id']}", headers=headers)
-    assert removed.json()["has_previous_blurb"] is False
-
-    await client.post("/interview/book/blurb", headers=headers)
-    retitled = await client.post("/interview/book/title", json={"title": 2}, headers=headers)
-    assert retitled.json()["has_previous_blurb"] is False
-
-    await client.post("/interview/book/blurb", headers=headers)
-    await client.post("/interview/book/shelve", headers=headers)
-    saved = await database.books.find_one({})
-    assert "previous_blurb" not in saved
-
-
-async def test_a_stale_shape_saves_nothing_and_a_resend_is_already_saved(
+async def test_an_interview_saved_on_the_old_playback_step_still_answers(
     client, database, headers, fake_engine
 ):
+    # Interviews saved before the playback was removed may be waiting on "Is this you?" with one.
     await client.post("/interview", json={}, headers=headers)
-    fake_engine.shape_next = True
-    state = await answer_questions(client, headers, 1)
-    playback = state["question"]["question_id"]
-    body = {"correction": "Not quite: I left twice.", "question_id": playback}
-    assert (await client.post("/interview/shape", json=body, headers=headers)).status_code == 200
+    old = {
+        "question_id": "q-old",
+        "question": "Is this you?",
+        "phase": "shape",
+        "playback": "You left twice.",
+    }
+    await database.interviews.update_one({}, {"$set": {"current": old}})
+    state = (await client.get("/interview", headers=headers)).json()
+    assert state["question"]["text"] == "You left twice. Is this you?"
 
-    again = await client.post("/interview/shape", json=body, headers=headers)
-    assert again.status_code == 409
-    assert again.json()["already_saved"] is True
-
-    other = {"correction": "A different correction.", "question_id": playback}
-    late = await client.post("/interview/shape", json=other, headers=headers)
-    assert late.status_code == 409
-    assert late.json()["already_saved"] is False
-    answers = [turn["answer"] for turn in (await database.interviews.find_one({}))["turns"]]
-    assert "A different correction." not in answers
-
-
-async def test_shape_without_a_question_id_still_works(client, headers, fake_engine):
-    await client.post("/interview", json={}, headers=headers)
-    fake_engine.shape_next = True
-    await answer_questions(client, headers, 1)
-    assert (await client.post("/interview/shape", json={}, headers=headers)).status_code == 200
+    assert (await stale_send(client, headers, "q-old", "Mostly, but I had help.")).status_code == 200
+    turn = (await database.interviews.find_one({}))["turns"][-1]
+    assert turn == {
+        "question": "You left twice. Is this you?",
+        "answer": "Mostly, but I had help.",
+        "phase": "shape",
+    }
 
 
 async def test_the_closing_line_is_kept_for_the_title_wait(
@@ -902,11 +857,10 @@ async def test_the_closing_line_is_kept_for_the_title_wait(
     await client.post("/interview", json={}, headers=headers)
     await answer_questions(client, headers, engine.MIN_ANSWERS - 1)
 
-    async def closing(claude, *, turns, resume_text, sparks=None, more_material=False):
+    async def closing(claude, *, turns, resume_text, sparks=None, more_material=False, notebook=None):
         return NextTurn(
             question="That's enough for your book.",
             phase="shape",
-            playback=None,
             ready_for_reveal=True,
             topic="t",
         )
@@ -927,22 +881,62 @@ async def test_a_question_forced_to_end_the_interview_isnt_a_closing_line(
 ):
     await client.post("/interview", json={}, headers=headers)
 
-    async def forced(claude, *, turns, resume_text, sparks=None, more_material=False):
-        return NextTurn(
-            question="What came next?", phase="dig", playback=None, ready_for_reveal=True, topic="t"
-        )
+    async def forced(claude, *, turns, resume_text, sparks=None, more_material=False, notebook=None):
+        return NextTurn(question="What came next?", phase="dig", ready_for_reveal=True, topic="t")
 
     monkeypatch.setattr(engine, "next_turn", forced)
     state = await answer_questions(client, headers, 1)
     assert state["closing_line"] is None
 
 
-async def test_restoring_a_rewrite_brings_its_quotes_back(client, headers, fake_engine):
-    book = await to_review(client, headers, fake_engine)
-    # The fake rewrite's quotes are chapter 1's, so use another chapter to see them change.
-    first = book["chapters"][1]
-    rewritten = (await client.post(f"/interview/book/chapters/{first['id']}/rewrite", headers=headers)).json()
-    assert rewritten["chapters"][1]["quotes"] != first["quotes"]
-    back = (await client.post(f"/interview/book/chapters/{first['id']}/restore", headers=headers)).json()
-    assert back["chapters"][1]["quotes"] == first["quotes"]
-    assert back["chapters"][1]["summary"] == first["summary"]
+async def test_an_interview_is_open_until_it_has_made_the_book(database):
+    assert not await service.has_open_interview(database, "member")
+    await database.interviews.insert_one({"_id": "iv", "user_id": "member", "stage": "choosing"})
+    assert await service.has_open_interview(database, "member")
+    await database.interviews.update_one({"_id": "iv"}, {"$set": {"stage": "reviewing"}})
+    assert not await service.has_open_interview(database, "member")
+
+
+async def test_the_book_for_each_title_is_ready_before_the_pick(client, database, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    await finish_and_wait(client, headers)
+    finished = [call["title"] for name, call in fake_engine.calls if name == "finish_book"]
+    assert sorted(finished) == ["Title 0", "Title 1", "Title 2"]
+    interview = await database.interviews.find_one({})
+    assert interview["prepare_status"] == "done"
+
+    # The pick uses the book already written, so it goes straight to review with no wait at all.
+    calls = len(fake_engine.calls)
+    picked = (await client.post("/interview/title", json={"title": 1}, headers=headers)).json()
+    assert picked["stage"] == "reviewing"
+    assert picked["blurb"] == "I know Title 1."
+    book = (await client.get("/books/me", headers=headers)).json()
+    assert book["title"] == "Title 1" and book["blurb"] == "I know Title 1."
+    assert not [name for name, _ in fake_engine.calls[calls:] if name == "finish_book"]
+
+    # Changing to another title in review uses its prepared book too, while nothing was removed.
+    changed = (await client.post("/interview/book/title", json={"title": 2}, headers=headers)).json()
+    assert changed["blurb"] == "I know Title 2."
+    assert not [name for name, _ in fake_engine.calls[calls:] if name == "finish_book"]
+
+
+async def test_a_title_whose_book_failed_to_prepare_is_written_on_the_pick(
+    client, database, headers, monkeypatch, fake_engine
+):
+    original = fake_engine.finish_book
+
+    async def flaky(claude, *, title, **kwargs):
+        if title == "Title 1" and not flaky.failed:
+            flaky.failed = True
+            raise ValueError("unusable")
+        return await original(claude, title=title, **kwargs)
+
+    flaky.failed = False
+    monkeypatch.setattr(engine, "finish_book", flaky)
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    await finish_and_wait(client, headers)
+    assert set((await database.interviews.find_one({}))["prepared"]) == {"0", "2"}
+    book = await choose_and_wait(client, headers, 1)
+    assert book["blurb"] == "I know Title 1."

@@ -3,7 +3,11 @@ import type {
   DraftBook,
   InterviewClient,
   InterviewState,
+  LibMark,
   MyBook,
+  NotebookEntry,
+  NotesLook,
+  NotesReply,
   Phase,
   ProposedChange,
   ReadingQuestion,
@@ -79,9 +83,6 @@ const QUESTIONS: { phase: Phase; text: string; topic: string }[] = [
   },
 ];
 
-const PLAYBACK =
-  "Here is what I heard. You walked away from graduate school twice, and both times it was because the work in front of you taught you faster. Is this you?";
-
 const TITLES = [
   {
     id: "title-1",
@@ -151,7 +152,6 @@ interface Stored {
   id: string;
   answers: string[];
   stage: InterviewState["stage"] | "adding";
-  corrected: boolean;
   book: DraftBook | null;
   addingAnswers?: number;
   canUndo?: boolean;
@@ -159,6 +159,11 @@ interface Stored {
   previous?: DraftBook;
   sparks?: Spark[];
   reading?: ReadingQuestion[];
+  /** The Librarian's notebook, and its marks on the answer being written. */
+  notebook?: NotebookEntry[];
+  marks?: LibMark[];
+  /** The answer just sent, for the Librarian's final look during the wait. */
+  lastSent?: string;
 }
 
 function scripted(index: number) {
@@ -227,23 +232,27 @@ function view(stored: Stored, authorName: string): InterviewState {
         nearlyDone: answered(stored) >= CAN_FINISH_AFTER,
         hasAnswers: answered(stored) > 0,
         lastTopic: stored.answers.length > 0 ? previous.topic : null,
+        librarian: {
+          answered: stored.answers.length,
+          marks: stored.marks ?? [],
+          silent: false,
+          notebook: stored.notebook ?? [],
+        },
       };
     }
-    case "shaping":
-      return {
-        id,
-        stage: "shaping",
-        phase: "shape",
-        playback: stored.corrected
-          ? "Here is what I heard, with your correction. You left graduate school twice to keep learning from the work itself, and you'd do it again. Is this you?"
-          : PLAYBACK,
-      };
     case "choosing":
       return { id, stage: "choosing", titles: TITLES };
     case "drafting":
       return { id, stage: "drafting", about: "book" };
     case "notEnough":
       return { id, stage: "notEnough" };
+    case "reviewing":
+      return {
+        id,
+        stage: "reviewing",
+        book: stored.book ?? emptyBook(authorName),
+        signOff: "took some editing.",
+      };
     default:
       return { id, stage: stored.stage, book: stored.book ?? emptyBook(authorName) };
   }
@@ -267,7 +276,6 @@ function stageOf(stored: Stored | null): BookStage {
     case undefined:
       return "none";
     case "asking":
-    case "shaping":
       return "interviewing";
     case "choosing":
       return "titles";
@@ -285,6 +293,64 @@ function stageOf(stored: Stored | null): BookStage {
     default:
       return "shelf";
   }
+}
+
+// A stand-in Librarian with no AI: a few fixed reactions, so the screen can be tried and tested free.
+const SCRIPT: { anchor: string; move: LibMark["move"]; note: string }[] = [
+  { anchor: "leveraged", move: "strike", note: "used." },
+  { anchor: "everyone", move: "underline", note: "says who?" },
+  { anchor: "a long time", move: "underline", note: "how long?" },
+  { anchor: "stale cache", move: "circle", note: "this is the chapter." },
+];
+
+function fakeId(...parts: string[]): string {
+  let hash = 0;
+  for (const char of parts.join("|")) hash = (Math.imul(hash, 31) + char.charCodeAt(0)) | 0;
+  return `lib-${(hash >>> 0).toString(36)}`;
+}
+
+export function fakeNotes(look: NotesLook, notebook: NotebookEntry[], turn: number): NotesReply {
+  const lower = look.text.toLowerCase();
+  const marks = SCRIPT.filter((line) => new RegExp(`\\b${line.anchor}\\b`).test(lower)).map(
+    (line): LibMark => ({
+      id: fakeId(line.move, line.anchor),
+      move: line.move,
+      anchor: look.text.slice(lower.indexOf(line.anchor), lower.indexOf(line.anchor) + line.anchor.length),
+      occurrence: 1,
+      note: line.note,
+    }),
+  );
+  const words = look.text.match(/[A-Za-z]{5,}/g) ?? [];
+  const mine = notebook.filter((entry) => entry.sourceTurns.includes(turn));
+  const add: NotebookEntry[] = [];
+  const first = words[0];
+  if (first && words.length >= 6 && !mine.some((entry) => entry.kind === "chapter")) {
+    add.push({
+      id: fakeId("chapter", String(turn), first),
+      kind: "chapter",
+      text: `ch. ? the ${first.toLowerCase()} story`,
+      anchors: [first],
+      sourceTurns: [turn],
+      status: "open",
+      struck: [],
+    });
+  }
+  const shown = new Set(look.shown);
+  return {
+    silent: false,
+    marks: {
+      keep: marks.filter((mark) => shown.has(mark.id)).map((mark) => mark.id),
+      add: marks.filter((mark) => !shown.has(mark.id)),
+      revise: [],
+      erase: [],
+    },
+    notebook: {
+      keep: notebook.map((entry) => entry.id).filter((id) => shown.has(id)),
+      add,
+      revise: [],
+      erase: [],
+    },
+  };
 }
 
 export function createFakeInterviewClient(authorName: string, delay = 1200): InterviewClient {
@@ -316,7 +382,6 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
         id: crypto.randomUUID(),
         answers: [],
         stage: "asking",
-        corrected: false,
         book: null,
       };
       save(stored);
@@ -324,18 +389,59 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
     },
     answer: (id, text) =>
       mutate(id, (stored) => {
+        stored.marks = [];
+        stored.lastSent = text;
         if (stored.stage === "adding") {
           stored.addingAnswers = (stored.addingAnswers ?? 0) + 1;
           return;
         }
         stored.answers.push(text);
-        if (stored.answers.length >= QUESTIONS.length) stored.stage = "shaping";
+        if (stored.answers.length >= QUESTIONS.length) stored.stage = "choosing";
       }),
+    // The final look at the answer just sent: a little after the answer is saved, as the API's arrives.
+    async finalNotes(questionId) {
+      // Ready during the wait for the next question, as the API's is.
+      await wait(delay * 0.6);
+      const stored = load();
+      const sent = stored?.lastSent;
+      const none = {
+        status: "none" as const,
+        silent: false,
+        marks: { keep: [], add: [], revise: [], erase: [] },
+        notebook: { keep: [], add: [], revise: [], erase: [] },
+      };
+      if (!stored || !sent?.trim()) return none;
+      const notebook = stored.notebook ?? [];
+      const reply = fakeNotes(
+        { questionId, text: sent, previousText: "", pasted: true, shown: notebook.map((entry) => entry.id) },
+        notebook,
+        stored.answers.length,
+      );
+      const have = new Set(notebook.map((entry) => entry.id));
+      const added = reply.notebook.add.filter((entry) => !have.has(entry.id));
+      stored.notebook = [...notebook, ...added];
+      stored.lastSent = undefined;
+      save(stored);
+      return added.length ? { ...reply, notebook: { ...reply.notebook, add: added }, status: "done" } : none;
+    },
+    async notes(look) {
+      await wait(delay);
+      const stored = load();
+      if (!stored) throw new Error("This interview has ended.");
+      const notebook = stored.notebook ?? [];
+      const reply = fakeNotes(look, notebook, stored.answers.length + 1);
+      const kept = (stored.marks ?? []).filter((mark) => reply.marks.keep.includes(mark.id));
+      stored.marks = [...kept, ...reply.marks.add];
+      stored.notebook = [...notebook, ...reply.notebook.add];
+      save(stored);
+      return reply;
+    },
     skip: (id) =>
       mutate(id, (stored) => {
+        stored.marks = [];
         if (stored.stage === "adding") return;
         stored.answers.push("");
-        if (stored.answers.length >= QUESTIONS.length) stored.stage = "shaping";
+        if (stored.answers.length >= QUESTIONS.length) stored.stage = "choosing";
       }),
     askAgain: (id) => mutate(id, () => {}),
     finish: (id, answer) =>
@@ -346,15 +452,7 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
         }
         if (answer) stored.answers.push(answer);
         if (answered(stored) < CAN_FINISH_AFTER) throw new Error("Answer a few more questions first.");
-        stored.stage = "shaping";
-      }),
-    confirmShape: (id) =>
-      mutate(id, (stored) => {
         stored.stage = "choosing";
-      }),
-    correctShape: (id) =>
-      mutate(id, (stored) => {
-        stored.corrected = true;
       }),
     chooseTitle: (id, titleId) =>
       mutate(id, (stored) => {
@@ -374,16 +472,6 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
         const title = TITLES.find((option) => option.id === titleId);
         if (title && stored.book) stored.book.title = title.title;
       }),
-    rewriteBlurb: (id) =>
-      mutate(id, (stored) => {
-        if (stored.book) stored.book.blurb = `${BLURB} I'd start with the first offer.`;
-      }),
-    rewriteChapter: (id, chapterId) =>
-      mutate(id, (stored) => {
-        const chapter = stored.book?.chapters.find((ch) => ch.id === chapterId);
-        if (chapter) chapter.summary = `${chapter.summary.replace(/\.$/, "")}, told from where I stand now.`;
-      }),
-    restoreChapter: (id) => mutate(id, () => {}),
     removeChapter: (id, chapterId) =>
       mutate(id, (stored) => {
         if (!stored.book) return;
@@ -495,7 +583,6 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
       if (blurb) stored.book.blurb = blurb;
       save(stored);
     },
-    restoreBlurb: (id) => mutate(id, () => {}),
     openRemoval: async () => null,
     cancelRemoval: async () => undefined,
     lastRound: async () => ({ empty: load()?.stage === "nothing" }),

@@ -1,11 +1,23 @@
-import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { api } from "../../api/client";
+import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
+import { usePageTitle } from "../../ui/usePageTitle";
+import type { Affiliation, MemberContext } from "../account/MemberContextFields";
 import { useAuth } from "../auth/AuthProvider";
-import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, readDraft, takeOrphanDrafts } from "./AnswerPanel";
+import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, takeOrphanDrafts } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
-import { EditForm, editKeyFor, hasEditDraft } from "./EditInPlace";
-import { ErrorMessage, Frame, RetryContext, SmallBook, Waiting } from "./InterviewFrame";
+import {
+  AskFrame,
+  ErrorMessage,
+  Frame,
+  RetryContext,
+  TypedQuestion,
+  WAIT_SHOWS_AFTER_MS,
+  Waiting,
+} from "./InterviewFrame";
+import { IntroBook } from "./IntroBook";
 import {
   type BookEdit,
   type ChapterEdit,
@@ -24,20 +36,32 @@ import {
   STARTED_FOR_EARLIER,
   useSavedLine,
 } from "./LeftoverWords";
+import { Hand } from "./librarian/Hand";
+import { Notebook } from "./librarian/Notebook";
+import { reducedMotion } from "./librarian/pen";
+import { useAnnouncer } from "./librarian/useAnnouncer";
+import { useNotebook } from "./librarian/useNotebook";
 import { ChangesScreen, WaitBox } from "./ProposedChanges";
+import { ReviewBook, TitleShelf, WritingBook } from "./RevealParts";
+import { type LandingBook, ShelfLanding } from "./ShelfLanding";
 import { UndoChanges } from "./UndoChanges";
 
-// The interview, direction A "The question band" (docs/design/shelf/project/InterviewA.dc.html,
-// trove.md §4). The Librarian's words stand alone on the black band; the member acts below it.
+// The interview, direction A (docs/design/shelf/project/InterviewA.dc.html, trove.md §4), with the band
+// replaced by the Librarian's line across the top (StartReveal); the member acts below it.
 
 // A wait past this limit stops and offers another try.
 const GIVE_UP_AFTER_MS = 120_000;
 // "Welcome back" is for coming back, not for a refresh seconds later.
 const WELCOME_BACK_AFTER_MS = 60 * 60 * 1000;
+// Once a waiting line shows, it stays at least this long, so it can be read.
+const WAIT_MIN_SHOWN_MS = 500;
 const LOST_DEFAULT = "That didn't reach the Librarian. Try again.";
 const LOST_ANSWER = "That didn't reach the Librarian. Your answer is still here.";
 // How often to look while changes are written in the background.
 const LOOK_AGAIN_MS = 4000;
+// For the first moments of a wait the book is usually nearly ready: look this often until then.
+const LOOK_FAST_MS = 300;
+const LOOK_FAST_FOR_MS = 5000;
 
 class TimedOut extends Error {}
 
@@ -71,12 +95,23 @@ function writeSeen(key: string) {
 function placeOf(state: InterviewState | null): string {
   if (!state) return "";
   if (state.stage === "asking") return `asking:${state.questionId ?? state.question}`;
-  if (state.stage === "shaping") return `shaping:${state.questionId ?? state.playback}`;
   return state.stage === "drafting" && state.failed ? "draftingFailed" : state.stage;
 }
 
-export function InterviewPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
-  const { user } = useAuth();
+async function saveContext(context: MemberContext): Promise<void> {
+  const { data, error } = await api.PUT("/auth/me/context", { body: context });
+  if (!data) throw new InterviewError(errorMessage(error));
+}
+
+export function InterviewPage({
+  client = apiInterviewClient,
+  saveMemberContext,
+}: {
+  client?: InterviewClient;
+  saveMemberContext?: (context: MemberContext) => Promise<void>;
+}) {
+  usePageTitle("Your interview");
+  const { user, refreshUser } = useAuth();
   // Books carry the full name; it falls back to the first name for accounts made before last names.
   const authorName = user?.full_name ?? "";
 
@@ -90,6 +125,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState<(() => void) | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [loadProblem, setLoadProblem] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
   // The answer or skip is saved, but the next question didn't come through.
   const [interrupted, setInterrupted] = useState<"answer" | "skip" | null>(null);
@@ -105,6 +141,17 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   // "Your book is on the shelf" is for the moment of shelving, from the review. Anything else that
   // arrives at done belongs on My book.
   const [justShelved, setJustShelved] = useState(false);
+  // The title the member chose, so the book stays on screen, open, while it's written.
+  const [chosenTitle, setChosenTitle] = useState<string | null>(null);
+  // Where the review's book stood when the member shelved it: the landing flies from there.
+  const [landingFrom, setLandingFrom] = useState<DOMRect | null>(null);
+  // Just chosen: the book arrives closed and opens, once, on whichever open-book screen comes first.
+  const [bookOpens, setBookOpens] = useState(false);
+  useEffect(() => {
+    if (!bookOpens || (stageOf(state) !== "drafting" && stageOf(state) !== "reviewing")) return;
+    const timer = setTimeout(() => setBookOpens(false), OPEN_MS + 200);
+    return () => clearTimeout(timer);
+  }, [bookOpens, state]);
   const [leftAsIs, setLeftAsIs] = useState(false);
   // What the last send tried to save, when the reply never came, so nobody can tell if it arrived.
   const unsure = useRef<string | null>(null);
@@ -143,8 +190,19 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
       leaveWords(userId, NOT_SAVED_ANOTHER_SCREEN, words);
     }
   };
+  // The opening (StartOpen): an interview started on this visit opens with the Librarian's welcome
+  // written in its notebook, then the first question typing in. One already under way skips it.
+  const [opening, setOpening] = useState<{ place: string | null; writing: boolean } | null>(null);
+  // Josef, 2026-11-23 (option A): the welcome is only the hello; the question types in at once beside it.
+  const welcomeLines = useMemo(
+    () => [`hello, ${(user?.first_name ?? "").toLowerCase()}.`],
+    [user?.first_name],
+  );
   const [hasSparks, setHasSparks] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  // The Librarian's notebook lives for the whole interview, so the next question can circle an entry.
+  const announcer = useAnnouncer();
+  const notebook = useNotebook(state?.stage === "asking" ? state.librarian : undefined, announcer.say);
   const savedLine = useSavedLine();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: loadAttempt is what asks for another try
@@ -160,7 +218,12 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         setWelcomedBack(away && current?.stage === "asking" && current.hasAnswers);
         writeSeen(seenKey);
       })
-      .catch(() => live && setLoadFailed(true))
+      .catch((reason) => {
+        if (!live) return;
+        setLoadFailed(true);
+        // On a developer's machine the API's reason (often a missing key) is the fastest way to the fix.
+        setLoadProblem(import.meta.env.DEV && reason instanceof InterviewError ? reason.message : null);
+      })
       .finally(() => live && setLoaded(true));
     return () => {
       live = false;
@@ -169,11 +232,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
 
   // Words typed here that were never sent, because another screen moved the interview on.
   const placeForDrafts =
-    state?.stage === "asking"
-      ? draftKeyFor(userId, state.questionId ?? state.question)
-      : state?.stage === "shaping"
-        ? draftKeyFor(userId, `shape:${state.questionId ?? state.playback}`)
-        : null;
+    state?.stage === "asking" ? draftKeyFor(userId, state.questionId ?? state.question) : null;
   useEffect(() => {
     if (!loaded || !placeForDrafts) return;
     for (const text of takeOrphanDrafts(userId, placeForDrafts))
@@ -195,17 +254,33 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   // The writing happens in the background, so the screen moves on by itself when it's done.
   const stage = state?.stage;
   const place = placeOf(state);
+  // Right after a pick the book is usually ready within moments, so it looks often at first, then settles.
   useEffect(() => {
     if (stage !== "writing" && place !== "drafting") return;
-    const timer = setInterval(() => {
-      client
-        .current()
-        .then((now) => {
-          if (now && placeOf(now) !== place) setState(now);
-        })
-        .catch(() => undefined);
-    }, LOOK_AGAIN_MS);
-    return () => clearInterval(timer);
+    const began = Date.now();
+    let timer: ReturnType<typeof setTimeout>;
+    let live = true;
+    const look = () => {
+      const soon = Date.now() - began < LOOK_FAST_FOR_MS;
+      timer = setTimeout(
+        () => {
+          client
+            .current()
+            .then((now) => {
+              if (!live) return;
+              if (now && placeOf(now) !== place) setState(now);
+              else look();
+            })
+            .catch(() => live && look());
+        },
+        soon ? LOOK_FAST_MS : LOOK_AGAIN_MS,
+      );
+    };
+    look();
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
   }, [client, stage, place]);
 
   // While the Librarian works the member's side is inert, which drops keyboard focus to the page.
@@ -224,18 +299,44 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     }
   }, [busy]);
 
+  // The opening's first question gets its place as soon as it arrives; after that it is fixed.
+  useEffect(() => {
+    if (opening && opening.place === null && place.startsWith("asking:"))
+      setOpening({ place, writing: opening.writing });
+  }, [opening, place]);
+  const openingWrites = Boolean(opening?.writing && opening.place === place);
+  // The typed question stays in place once typed, so the heading's words don't change and aren't read twice.
+  const openingHere = Boolean(opening && opening.place === place);
+
+  // Whether the opening is about to write or is writing, read by the focus below without re-running it when
+  // the opening ends: by then the member may be somewhere else, and TypedQuestion's onDone moves the keyboard.
+  const openingPending = useRef(false);
+  openingPending.current = Boolean(opening?.writing && (opening.place === null || opening.place === place));
+
   // A new question or screen starts at the top with the Librarian's words in view. Where there's a real
   // keyboard the member can start typing at once; on a phone that would cover the question.
   useEffect(() => {
     if (!loaded || loadFailed) return;
     document.documentElement.scrollTop = 0;
-    const asking = place.startsWith("asking:") && !welcomedBack;
+    // While the opening writes, the keyboard waits at the question; it moves to the answer once typed.
+    const asking = place.startsWith("asking:") && !welcomedBack && !openingPending.current;
     const hasKeyboard = window.matchMedia?.("(hover: hover)").matches;
-    const field = asking && hasKeyboard ? document.querySelector<HTMLElement>(".iv-answer textarea") : null;
+    const field =
+      asking && hasKeyboard
+        ? document.querySelector<HTMLElement>(".iv-answer textarea, .iv-answer [role=textbox]")
+        : null;
     (field ?? document.querySelector<HTMLElement>(".iv-say"))?.focus({ preventScroll: true });
   }, [place, loaded, loadFailed, welcomedBack]);
 
-  // Runs one call with a calm waiting line on the band; the screen stays put until it answers.
+  const calling = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  // Runs one call with a calm waiting line at the top; the screen stays put until it answers.
   const run = useCallback(
     async (
       waiting: string,
@@ -254,6 +355,10 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         onLost?: () => void;
       } = {},
     ) => {
+      // A second press while the first is on its way (a double click, Enter twice) does nothing.
+      if (calling.current) return false;
+      calling.current = true;
+      const began = Date.now();
       setBusy(waiting);
       setError(null);
       setRetry(null);
@@ -270,7 +375,12 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         options.onSuccess?.();
       };
       try {
-        arrive(await Promise.race([call(), giveUpAfter(GIVE_UP_AFTER_MS)]));
+        const now = await Promise.race([call(), giveUpAfter(GIVE_UP_AFTER_MS)]);
+        // A waiting line that did appear stays long enough to be read, rather than flickering away.
+        const shownFor = Date.now() - began - WAIT_SHOWS_AFTER_MS;
+        if (shownFor > 0 && shownFor < WAIT_MIN_SHOWN_MS)
+          await new Promise((done) => setTimeout(done, WAIT_MIN_SHOWN_MS - shownFor));
+        arrive(now);
         return true;
       } catch (reason) {
         if (isLost(reason)) {
@@ -307,6 +417,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         }
         return false;
       } finally {
+        calling.current = false;
         setBusy(null);
       }
     },
@@ -320,6 +431,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     if (loadFailed) {
       return (
         <Frame say="I couldn't find your place just now. Nothing you've said is lost.">
+          {loadProblem && <p className="iv-note">{loadProblem}</p>}
           <div className="iv-row">
             <Button
               onClick={() => {
@@ -370,17 +482,37 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     }
 
     if (!state) {
+      const persistContext =
+        saveMemberContext ??
+        (async (context: MemberContext) => {
+          await saveContext(context);
+          await refreshUser().catch(() => undefined);
+        });
       return (
         <StartScreen
-          hasSparks={hasSparks}
           busy={busy}
           error={error}
-          onStart={(resume) =>
+          started={Boolean(retry)}
+          initialAffiliations={user?.affiliations ?? []}
+          initialFounder={user?.founder ?? false}
+          onStart={(resume, context) =>
             run(
               resume ? "The Librarian is reading your résumé…" : "The Librarian is getting ready…",
-              () => client.start(resume),
-              // A 502 here means the interview exists but its first question failed.
-              { retryWith: () => client.askAgain("") },
+              // "Already started" means an earlier press got through: load that interview rather than refuse.
+              () =>
+                persistContext(context)
+                  .then(() => client.start(resume))
+                  .catch(async (reason) => {
+                    if (!(reason instanceof InterviewError && reason.conflict)) throw reason;
+                    const now = await client.current();
+                    if (!now) throw reason;
+                    return now;
+                  }),
+              {
+                // A 502 here means the interview exists but its first question failed.
+                retryWith: () => client.askAgain(""),
+                onSuccess: () => setOpening({ place: null, writing: !reducedMotion() }),
+              },
             )
           }
         />
@@ -413,8 +545,21 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           kind: "answer" | "skip",
           words: string | undefined,
           call: () => Promise<InterviewState>,
-        ) =>
-          run("The Librarian is thinking…", () => lookThenSend(words, call), {
+        ) => {
+          if (calling.current) return Promise.resolve(false);
+          // While the next question is prepared, the Librarian's last look at this answer is written into
+          // the notebook, so the wait shows it reading what was sent. Anything missed comes with the question.
+          // A reply that lands once the next question is here, or after leaving, is dropped: the next
+          // question's own notebook already carries it.
+          const sentAt = placeOf(state);
+          client
+            .finalNotes(state.questionId ?? state.question)
+            .then((reply) => {
+              if (reply.status !== "done" || !mounted.current || placeOf(latest.current) !== sentAt) return;
+              notebook.apply(reply.notebook);
+            })
+            .catch(() => undefined);
+          return run("The Librarian is thinking…", () => lookThenSend(words, call), {
             lost: kind === "answer" ? LOST_ANSWER : LOST_DEFAULT,
             noRetry: true,
             onLost: () => {
@@ -432,6 +577,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
               setInterrupted(kind);
             },
           });
+        };
         if (interrupted) {
           return (
             <Frame phase={phase} say={say(state.question)} busy={Boolean(busy)}>
@@ -456,8 +602,34 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             </Frame>
           );
         }
+        const welcome = opening && !inAdding ? { lines: welcomeLines, writing: openingWrites } : undefined;
         return (
-          <Frame phase={phase} say={say(state.question)} busy={Boolean(busy)}>
+          <AskFrame
+            eyebrow={inAdding ? "Adding to your book" : "Question"}
+            question={
+              openingHere && !busy ? (
+                <TypedQuestion
+                  text={state.question}
+                  after={0}
+                  onDone={() => {
+                    setOpening((now) => (now ? { ...now, writing: false } : now));
+                    // Only if the member hasn't gone somewhere themselves in the meantime.
+                    const focused = document.activeElement;
+                    if (focused && focused !== document.body && !focused.classList.contains("iv-say")) return;
+                    if (!window.matchMedia?.("(hover: hover)").matches) return;
+                    document
+                      .querySelector<HTMLElement>(".iv-answer textarea, .iv-answer [role=textbox]")
+                      ?.focus({ preventScroll: true });
+                  }}
+                />
+              ) : (
+                say(state.question)
+              )
+            }
+            typing={openingWrites}
+            busy={Boolean(busy)}
+            aside={<Notebook entries={notebook.entries} welcome={welcome} />}
+          >
             <ErrorMessage message={error} />
             {notice && (
               <p className="iv-note" role="status">
@@ -507,47 +679,17 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
                     }
                   : undefined
               }
+              librarian={{
+                client,
+                interviewId: state.id,
+                questionId: state.questionId ?? state.question,
+                view: state.librarian,
+                notebook,
+                say: announcer.say,
+              }}
             />
-          </Frame>
-        );
-      }
-      case "shaping": {
-        const draftKey = draftKeyFor(userId, `shape:${state.questionId ?? state.playback}`);
-        const options = (words: string | undefined) => ({
-          lost: words ? LOST_ANSWER : LOST_DEFAULT,
-          noRetry: true,
-          retryWith: () => client.askAgain(state.id),
-          onLost: () => {
-            unsure.current = words ?? "";
-          },
-          onSuccess: () => {
-            unsure.current = null;
-            clearDraft(draftKey);
-          },
-          onMoved: onMoved(words),
-        });
-        return (
-          <ShapeScreen
-            key={draftKey}
-            draftKey={draftKey}
-            playback={say(state.playback)}
-            busy={busy}
-            error={error}
-            onConfirm={() =>
-              run(
-                "The Librarian is finding your titles…",
-                () => lookThenSend(undefined, () => client.confirmShape(state.id)),
-                options(undefined),
-              )
-            }
-            onCorrect={(correction) =>
-              run(
-                "The Librarian is listening again…",
-                () => lookThenSend(correction, () => client.correctShape(state.id, correction)),
-                options(correction),
-              )
-            }
-          />
+            {announcer.region}
+          </AskFrame>
         );
       }
       case "choosing":
@@ -558,16 +700,26 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             author={authorName}
             busy={busy}
             error={error}
-            onChoose={(titleId) =>
-              run("The Librarian is writing your book…", () => client.chooseTitle(state.id, titleId))
-            }
+            onChoose={(titleId) => {
+              const title = state.titles.find((option) => option.id === titleId)?.title ?? null;
+              setChosenTitle(title);
+              setBookOpens(true);
+              // Kept for a refresh during the writing, so the open book still shows its title.
+              try {
+                if (title) sessionStorage.setItem(`trove_chosen:${state.id}`, title);
+              } catch {
+                // Without storage the book shows its title bar until the book arrives.
+              }
+              return run("The Librarian is writing your book…", () => client.chooseTitle(state.id, titleId));
+            }}
           />
         );
       case "reviewing":
         return (
           <ReviewScreen
             book={state.book}
-            userId={userId}
+            opening={bookOpens}
+            signOff={state.signOff ?? null}
             onEditBook={async (edit) => {
               const book = await client.editBook(edit);
               setState({ id: state.id, stage: "reviewing", book });
@@ -582,31 +734,21 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             onChangeTitle={(titleId) =>
               run("The Librarian is writing your book…", () => client.changeTitle(state.id, titleId))
             }
-            onRewriteBlurb={() =>
-              run("The Librarian is rewriting the back cover…", () => client.rewriteBlurb(state.id))
-            }
-            onRestoreBlurb={() => run("Going back to the last version…", () => client.restoreBlurb(state.id))}
-            onRewrite={(chapterId) =>
-              run("The Librarian is rewriting that chapter…", () =>
-                client.rewriteChapter(state.id, chapterId),
-              )
-            }
-            onRestore={(chapterId) =>
-              run("Going back to the last version…", () => client.restoreChapter(state.id, chapterId))
-            }
             onRemove={(chapterId) =>
               run("Removing that chapter…", () => client.removeChapter(state.id, chapterId))
             }
-            onShelve={() =>
-              run("Putting your book on the shelf…", () => client.putOnShelf(state.id), {
+            onShelve={() => {
+              // Where the book is now, so it can fly from there to the shelf.
+              setLandingFrom(document.querySelector(".rv-open .ib-left")?.getBoundingClientRect() ?? null);
+              return run("Putting your book on the shelf…", () => client.putOnShelf(state.id), {
                 onSuccess: () => setJustShelved(true),
-              })
-            }
+              });
+            }}
           />
         );
       case "done":
         if (!justShelved) return <Navigate to="/my-book" replace state={{ leftAsIs }} />;
-        return <DoneScreen book={state.book} />;
+        return <DoneScreen book={state.book} from={landingFrom} />;
       case "drafting":
         if (state.failed) {
           const about = state.about === "titles" ? "your titles" : "your book";
@@ -632,6 +774,10 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         return (
           <Frame
             busy
+            // The titles take a while with the real Librarian; "still working" waits until it's news, and
+            // the page already says the answers are saved, once.
+            slowAfter={state.about === "titles" ? 45_000 : undefined}
+            stillLine="Still working."
             say={
               state.closingLine ?? (
                 <Waiting>
@@ -642,7 +788,15 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
               )
             }
           >
-            <p className="iv-note iv-note-big">{savedLine}</p>
+            {/* While the book is written, the chosen book is open on screen, its contents still blank. */}
+            {state.about === "book" && (
+              <WritingBook
+                title={chosenTitle ?? storedTitle(state.id)}
+                author={authorName}
+                opening={bookOpens}
+              />
+            )}
+            <p className="iv-note iv-note-big rv-saved">{savedLine}</p>
           </Frame>
         );
       case "notEnough":
@@ -805,207 +959,50 @@ function messageOf(reason: unknown): string {
 const START_SAY =
   "I'll ask you one question at a time, to find the book you haven't written yet. Nobody sees it until you put it on the shelf.";
 
-// The API's limit on a résumé.
-const MAX_RESUME_BYTES = 5 * 1024 * 1024;
-
 function StartScreen({
-  hasSparks,
   busy,
   error,
+  started,
+  initialAffiliations,
+  initialFounder,
   onStart,
 }: {
-  hasSparks: boolean;
   busy: string | null;
   error: string | null;
-  onStart: (resume: File | null) => void;
+  /** The interview exists and only its first question failed, so Try again is the one way on. */
+  started: boolean;
+  initialAffiliations: Affiliation[];
+  initialFounder: boolean;
+  onStart: (resume: File | null, context: MemberContext) => void;
 }) {
-  const [resume, setResume] = useState<File | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
-  const [dragging, setDragging] = useState(false);
-  const [addingResume, setAddingResume] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
-  const inputId = useId();
-
-  function pick(file: File | undefined) {
-    if (!file) return;
-    setFileError(null);
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      setFileError("That isn't a PDF. Choose a PDF, or start without one.");
-      return;
-    }
-    if (file.size > MAX_RESUME_BYTES) {
-      setFileError("That PDF is over 5 MB. Choose a smaller one, or start without it.");
-      return;
-    }
-    setFileError(null);
-    setResume(file);
-  }
-
-  return (
-    <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={START_SAY}>{busy}</Waiting> : START_SAY}>
-      <ErrorMessage message={error} />
-      {error && resume && (
-        <button type="button" className="iv-textlink" onClick={() => onStart(null)}>
-          Start without it
-        </button>
-      )}
-      <div className="iv-row">
-        <Button onClick={() => onStart(resume)} aria-busy={Boolean(busy)}>
-          Start the interview
-        </Button>
-        <span className="iv-quiet-note">
-          About twenty minutes. You can stop sooner, and leave and come back at any time.
-        </span>
-      </div>
-      {hasSparks && (
-        <p className="iv-note">I'll use the chapters you marked to shape some of the questions.</p>
-      )}
-      {!addingResume && (
-        <button type="button" className="iv-textlink" onClick={() => setAddingResume(true)}>
-          Have a résumé? Add a PDF so my first questions fit you.
-        </button>
-      )}
-      {addingResume && (
-        <div className="panel iv-resume">
-          <h2>A résumé, if you like</h2>
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: a drop target for the mouse; "Choose a PDF" is the keyboard path */}
-          <div
-            className="iv-drop"
-            data-dragging={dragging}
-            onDragOver={(event) => {
-              event.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={(event) => {
-              event.preventDefault();
-              setDragging(false);
-              pick(event.dataTransfer.files[0]);
-            }}
-          >
-            {resume ? (
-              <>
-                <span className="iv-file">{resume.name}</span>
-                <button
-                  type="button"
-                  className="button button-quiet"
-                  onClick={() => {
-                    setResume(null);
-                    input.current?.focus();
-                  }}
-                >
-                  Remove
-                </button>
-              </>
-            ) : (
-              <>
-                <span className="iv-drop-text">Drop a PDF here</span>
-                <label htmlFor={inputId} className="button button-secondary iv-sm">
-                  Choose a PDF
-                </label>
-              </>
-            )}
-            <input
-              id={inputId}
-              ref={input}
-              type="file"
-              accept="application/pdf,.pdf"
-              className="iv-visually-hidden"
-              tabIndex={resume ? -1 : undefined}
-              onChange={(event) => {
-                pick(event.target.files?.[0]);
-                event.target.value = "";
-              }}
-            />
-          </div>
-          {fileError && (
-            <p className="message" role="status">
-              {fileError}
-            </p>
-          )}
-          <p className="iv-note">
-            Optional. I read it for places to dig. The file isn't kept, its text is deleted when the interview
-            ends, and nothing from it goes into your book.
-          </p>
-        </div>
-      )}
-    </Frame>
-  );
-}
-
-// ---------- Shape ----------
-
-function ShapeScreen({
-  draftKey,
-  playback,
-  busy,
-  error,
-  onConfirm,
-  onCorrect,
-}: {
-  draftKey: string;
-  playback: ReactNode;
-  busy: string | null;
-  error: string | null;
-  onConfirm: () => void;
-  onCorrect: (correction: string) => Promise<boolean>;
-}) {
-  // Saved like an answer: this is the most personal thing typed in the interview.
-  const [correction, setCorrection] = useState(() => readDraft(draftKey));
-  const fieldId = useId();
-  const words = correction.trim();
-
+  // Stays set through the retry's wait, so Start doesn't flash back while Try again is working.
+  const [exists, setExists] = useState(started);
   useEffect(() => {
-    const timer = setTimeout(() => keepDraft(draftKey, correction), 600);
-    return () => clearTimeout(timer);
-  }, [draftKey, correction]);
+    if (started) setExists(true);
+  }, [started]);
 
-  async function correct() {
-    await onCorrect(words);
+  // Starting again would only be refused: the interview is there, waiting for its first question.
+  if (exists || started) {
+    return (
+      <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={START_SAY}>{busy}</Waiting> : START_SAY}>
+        <ErrorMessage message={error} />
+      </Frame>
+    );
   }
 
   return (
-    <Frame phase="shape" say={playback} busy={Boolean(busy)}>
-      <div className="field iv-answer iv-answer-short">
-        <label htmlFor={fieldId}>Yes, or tell me what's different</label>
-        <textarea
-          id={fieldId}
-          value={correction}
-          placeholder="It's close, but…"
-          onChange={(event) => setCorrection(event.target.value)}
-          onKeyDown={(event) => {
-            if (words && event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-              event.preventDefault();
-              correct();
-            }
-          }}
-        />
-      </div>
-      <ErrorMessage message={error} />
-      {/* The red button always does what the field says, so a typed correction can't be lost to it. */}
-      {words ? (
-        <div className="iv-row">
-          <Button onClick={correct} aria-busy={Boolean(busy)} aria-keyshortcuts="Meta+Enter Control+Enter">
-            Send my correction
-          </Button>
-          <button type="button" className="iv-textlink" onClick={onConfirm}>
-            Yes, that's me, ignore this
-          </button>
-        </div>
-      ) : (
-        <div className="iv-row">
-          <Button onClick={onConfirm} aria-busy={Boolean(busy)}>
-            Yes, that's me
-          </Button>
-        </div>
-      )}
-    </Frame>
+    <IntroBook
+      error={error}
+      busy={busy}
+      initialAffiliations={initialAffiliations}
+      initialFounder={initialFounder}
+      onStart={onStart}
+    />
   );
 }
 
 // ---------- The reveal ----------
 
-const REVEAL_STEP_MS = 700;
 const REVEAL_SAY = "Here are three titles for your book.";
 
 function RevealScreen({
@@ -1021,246 +1018,77 @@ function RevealScreen({
   error: string | null;
   onChoose: (titleId: string) => void;
 }) {
-  const reduceMotion = useMemo(
-    () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
-    [],
-  );
-  // The three titles arrive one at a time (trove.md §4), unless the member asked for less motion.
-  const [shown, setShown] = useState(reduceMotion ? titles.length : 1);
-  const [picked, setPicked] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (shown >= titles.length) return;
-    const timer = setTimeout(() => setShown((count) => count + 1), REVEAL_STEP_MS);
-    return () => clearTimeout(timer);
-  }, [shown, titles.length]);
-
   return (
     <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={REVEAL_SAY}>{busy}</Waiting> : REVEAL_SAY}>
-      <fieldset className="iv-picks">
-        <legend className="iv-visually-hidden">Choose a title</legend>
-        {titles.map((option, index) => (
-          <label key={option.id} className="iv-pick" data-on={picked === option.id} hidden={index >= shown}>
-            <SmallBook title={option.title} author={author} />
-            <input
-              type="radio"
-              name="title"
-              value={option.id}
-              checked={picked === option.id}
-              onChange={() => setPicked(option.id)}
-            />
-            <b>{option.title}</b>
-            <span className="iv-why">{option.why}</span>
-          </label>
-        ))}
-      </fieldset>
-      <ErrorMessage message={error} />
-      <div className="iv-row">
-        <Button disabled={!picked} aria-busy={Boolean(busy)} onClick={() => picked && onChoose(picked)}>
-          Choose this title
-        </Button>
-        {!picked && shown >= titles.length && (
-          <span className="iv-quiet-note">Pick the one that sounds most like you.</span>
-        )}
-      </div>
+      {/* The three titles as white books on a shelf (StartReveal): the whole book is what you choose. */}
+      <TitleShelf
+        titles={titles}
+        author={author}
+        busy={Boolean(busy)}
+        error={<ErrorMessage message={error} />}
+        failed={Boolean(error)}
+        onChoose={onChoose}
+      />
     </Frame>
   );
 }
 
+// The reader's open (BookReader.css --open-time).
+const OPEN_MS = 850;
+
+function stageOf(state: InterviewState | null): string | null {
+  return state?.stage ?? null;
+}
+
+function storedTitle(interviewId: string): string | null {
+  try {
+    return sessionStorage.getItem(`trove_chosen:${interviewId}`);
+  } catch {
+    return null;
+  }
+}
+
 // ---------- Your book ----------
 
-const REVIEW_SAY = "Here is your book. Rewrite or remove anything that doesn't sound like you.";
+const REVIEW_SAY = "Here is your book. Edit or remove anything that doesn't sound like you.";
 const MIN_CHAPTERS = 3;
-
-function ChapterRow({
-  index,
-  chapter,
-  canRemove,
-  working,
-  unchanged,
-  editKey,
-  onEdit,
-  onAct,
-}: {
-  index: number;
-  chapter: DraftChapter;
-  canRemove: boolean;
-  working: boolean;
-  editKey: string;
-  onEdit: (edit: ChapterEdit) => Promise<void>;
-  /** The rewrite just asked for here came back no better. */
-  unchanged: boolean;
-  onAct: (action: "rewrite" | "remove" | "restore") => void;
-}) {
-  const [showing, setShowing] = useState(false);
-  const [removing, setRemoving] = useState(false);
-  const [editing, setEditing] = useState(() => hasEditDraft(editKey));
-
-  if (editing) {
-    return (
-      <li>
-        <span className="iv-n">{index + 1}</span>
-        <div className="ed-row">
-          <EditForm
-            fields={chapterFields(chapter)}
-            draftKey={editKey}
-            onSave={onEdit}
-            onClose={() => setEditing(false)}
-          />
-        </div>
-      </li>
-    );
-  }
-
-  if (removing) {
-    return (
-      <li className="iv-confirm">
-        <span className="iv-n">{index + 1}</span>
-        <div>
-          <b>Remove this chapter?</b>
-          <span>{chapter.title}</span>
-        </div>
-        <div className="iv-ch-act">
-          <button
-            type="button"
-            className="button button-quiet iv-sm"
-            aria-label={`Remove ${chapter.title}`}
-            onClick={() => onAct("remove")}
-          >
-            Remove
-          </button>
-          <button type="button" className="button button-quiet iv-sm" onClick={() => setRemoving(false)}>
-            Keep it
-          </button>
-        </div>
-      </li>
-    );
-  }
-
-  return (
-    <li>
-      <span className="iv-n">{index + 1}</span>
-      <div>
-        <b>{chapter.title}</b>
-        <span>{chapter.summary}</span>
-        {unchanged && (
-          <p className="iv-note" role="status">
-            I couldn't tell this one better from what you said. If it's not right, remove it.
-          </p>
-        )}
-        {chapter.hasPrevious && (
-          <button
-            type="button"
-            className="button button-quiet iv-sm iv-show"
-            aria-label={`Go back to the last version of ${chapter.title}`}
-            onClick={() => onAct("restore")}
-          >
-            Go back to the last version
-          </button>
-        )}
-        {chapter.quotes.length > 0 && (
-          <>
-            <button
-              type="button"
-              className="button button-quiet iv-sm iv-show"
-              aria-expanded={showing}
-              aria-label={`${showing ? "Hide" : "Show"} what you said for ${chapter.title}`}
-              onClick={() => setShowing((now) => !now)}
-            >
-              {showing ? "Hide what you said" : "Show what you said"}
-            </button>
-            {showing && (
-              <div className="iv-quotes">
-                {chapter.quotes.map((quote) => (
-                  <p key={quote}>{quote}</p>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-      <div className="iv-ch-act">
-        <button
-          type="button"
-          className="button button-quiet iv-sm"
-          aria-label={`Edit ${chapter.title}`}
-          onClick={() => setEditing(true)}
-        >
-          Edit
-        </button>
-        <button
-          type="button"
-          className="button button-quiet iv-sm"
-          aria-busy={working}
-          aria-label={`Rewrite ${chapter.title}`}
-          onClick={() => onAct("rewrite")}
-        >
-          Rewrite
-        </button>
-        {canRemove && (
-          <button
-            type="button"
-            className="button button-quiet iv-sm"
-            aria-label={`Remove ${chapter.title}`}
-            onClick={() => setRemoving(true)}
-          >
-            Remove
-          </button>
-        )}
-      </div>
-    </li>
-  );
-}
 
 function ReviewScreen({
   book,
-  userId,
+  opening,
+  signOff,
   onEditBook,
   onEditChapter,
   busy,
   error,
   loadOtherTitles,
   onChangeTitle,
-  onRewriteBlurb,
-  onRestoreBlurb,
-  onRewrite,
-  onRestore,
   onRemove,
   onShelve,
 }: {
   book: DraftBook;
-  userId: string;
+  /** Arriving straight from the pick: the book comes forward closed and opens. */
+  opening?: boolean;
+  /** The Librarian's one line under the title, in its hand. */
+  signOff: string | null;
   onEditBook: (edit: BookEdit) => Promise<void>;
   onEditChapter: (chapterId: string, edit: ChapterEdit) => Promise<void>;
   busy: string | null;
   error: string | null;
   loadOtherTitles: () => Promise<TitleOption[]>;
   onChangeTitle: (titleId: string) => Promise<boolean>;
-  onRewriteBlurb: () => void;
-  onRestoreBlurb: () => void;
-  onRewrite: (chapterId: string) => Promise<boolean>;
-  onRestore: (chapterId: string) => Promise<boolean>;
   onRemove: (chapterId: string) => Promise<boolean>;
   onShelve: () => void;
 }) {
-  const [working, setWorking] = useState<string | null>(null);
   const [others, setOthers] = useState<TitleOption[] | null>(null);
   const [othersError, setOthersError] = useState<string | null>(null);
   const canRemove = book.chapters.length > MIN_CHAPTERS;
-  const bookKey = editKeyFor(userId, "book");
-  // An edit under way before a refresh opens again with the member's words.
-  const [editingBook, setEditingBook] = useState(() => hasEditDraft(bookKey));
   // The back cover changes with a removal, and the member should be told. Until their next action.
   const [blurbAtRemoval, setBlurbAtRemoval] = useState<string | null | undefined>(undefined);
 
-  const [lastRewritten, setLastRewritten] = useState<string | null>(null);
-
-  async function act(chapterId: string, action: "rewrite" | "remove" | "restore") {
-    setBlurbAtRemoval(action === "remove" ? book.blurb : undefined);
-    setWorking(action === "rewrite" ? chapterId : null);
-    setLastRewritten(action === "rewrite" ? chapterId : null);
-    await { rewrite: onRewrite, remove: onRemove, restore: onRestore }[action](chapterId);
-    setWorking(null);
+  async function remove(chapterId: string) {
+    setBlurbAtRemoval(book.blurb);
+    await onRemove(chapterId);
   }
 
   async function seeOthers() {
@@ -1278,132 +1106,130 @@ function ReviewScreen({
       busy={Boolean(busy)}
       say={busy ? <Waiting holding={REVIEW_SAY}>{busy}</Waiting> : REVIEW_SAY}
     >
-      <div className="iv-booktitle">
-        <span className="book iv-book-wide" aria-hidden="true">
-          <span className="book-cover">
-            <span className="book-title">{book.title}</span>
-            <span className="book-author">{book.authorName}</span>
-          </span>
-        </span>
-        <div>
-          {editingBook ? (
-            <EditForm
-              fields={bookFields(book)}
-              draftKey={bookKey}
-              onSave={onEditBook}
-              onClose={() => setEditingBook(false)}
-            />
-          ) : (
-            <h2>{book.title}</h2>
-          )}
-          <p className="iv-by">by {book.authorName}</p>
-          {/* On a phone the book comes after the title, at the small size, on its own row. */}
-          <SmallBook title={book.title} author={book.authorName} />
-          {book.blurb && !editingBook && <p className="iv-blurb">{book.blurb}</p>}
-          {blurbAtRemoval !== undefined && blurbAtRemoval !== book.blurb && (
-            <p className="iv-note" role="status">
-              Back cover rewritten to match.
-            </p>
-          )}
-          <div className="iv-head-act">
-            {!editingBook && (
-              <button
-                type="button"
-                className="button button-quiet iv-sm iv-show"
-                onClick={() => setEditingBook(true)}
-              >
-                Edit the title and back cover
-              </button>
+      {/* Review is the shelf's open book (StartReveal): every word a field that saves itself. */}
+      <ReviewBook
+        book={book}
+        opening={opening}
+        signOff={signOff ? <SignOff line={signOff} /> : null}
+        canRemove={canRemove}
+        onEditBook={onEditBook}
+        onEditChapter={onEditChapter}
+        onRemove={async (chapterId) => {
+          await remove(chapterId);
+          return true;
+        }}
+        notes={
+          <>
+            {blurbAtRemoval !== undefined && blurbAtRemoval !== book.blurb && (
+              <p className="iv-note" role="status">
+                Back cover rewritten to match.
+              </p>
             )}
-            {book.blurb && (
-              <button type="button" className="button button-quiet iv-sm iv-show" onClick={onRewriteBlurb}>
-                Rewrite the back cover
-              </button>
-            )}
-            {book.hasPreviousBlurb && (
-              <button type="button" className="button button-quiet iv-sm iv-show" onClick={onRestoreBlurb}>
-                Go back to the last back cover
-              </button>
-            )}
-            {others === null && (
-              <button type="button" className="button button-quiet iv-sm iv-show" onClick={seeOthers}>
-                See the other titles
-              </button>
-            )}
-          </div>
-          {others !== null && (
-            <div className="iv-others">
-              <p className="iv-note">This rewrites your chapters to fit the new title.</p>
-              {others.map((option) => (
+            {others !== null && (
+              <div className="iv-others">
+                <p className="iv-note">This rewrites your chapters to fit the new title.</p>
+                {others.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className="iv-other"
+                    onClick={async () => {
+                      if (await onChangeTitle(option.id)) setOthers(null);
+                    }}
+                  >
+                    <b>{option.title}</b>
+                    <span className="iv-why">{option.why}</span>
+                  </button>
+                ))}
                 <button
-                  key={option.id}
                   type="button"
-                  className="iv-other"
-                  onClick={async () => {
-                    if (await onChangeTitle(option.id)) setOthers(null);
-                  }}
+                  className="button button-quiet iv-sm iv-show"
+                  onClick={() => setOthers(null)}
                 >
-                  <b>{option.title}</b>
-                  <span className="iv-why">{option.why}</span>
+                  Keep this title
                 </button>
-              ))}
-              <button
-                type="button"
-                className="button button-quiet iv-sm iv-show"
-                onClick={() => setOthers(null)}
-              >
-                Keep this title
-              </button>
-            </div>
-          )}
-          {othersError && (
-            <p className="message" role="status">
-              {othersError}
-            </p>
-          )}
-        </div>
-      </div>
-      <p className="iv-note">
-        "Show what you said" opens your own words behind each chapter. Only you see those.
-      </p>
-      <ol className="iv-chapters">
-        {book.chapters.map((chapter, index) => (
-          <ChapterRow
-            key={chapter.id}
-            index={index}
-            chapter={chapter}
-            canRemove={canRemove}
-            working={working === chapter.id}
-            unchanged={lastRewritten === chapter.id && working === null && Boolean(book.rewriteUnchanged)}
-            editKey={editKeyFor(userId, `chapter:${chapter.id}`)}
-            onEdit={(edit) => onEditChapter(chapter.id, edit)}
-            onAct={(action) => act(chapter.id, action)}
-          />
-        ))}
-      </ol>
-      {!canRemove && <p className="iv-note">A book keeps at least three chapters.</p>}
-      <ErrorMessage message={error} />
-      <div className="iv-row">
-        <Button onClick={onShelve} aria-busy={Boolean(busy)}>
-          Put it on the shelf
-        </Button>
-      </div>
+              </div>
+            )}
+            {othersError && (
+              <p className="message" role="status">
+                {othersError}
+              </p>
+            )}
+            <ErrorMessage message={error} />
+          </>
+        }
+        onShelve={onShelve}
+        busy={Boolean(busy)}
+        others={
+          others === null && (
+            <button type="button" className="button button-quiet" onClick={seeOthers}>
+              See the other titles
+            </button>
+          )
+        }
+      />
     </Frame>
   );
 }
 
 // ---------- Done ----------
 
-function DoneScreen({ book }: { book: DraftBook }) {
+// Written once, at pen pace, the first time the book is shown; at rest after that.
+function SignOff({ line }: { line: string }) {
+  const [life, setLife] = useState<"writing" | "resting">(() =>
+    sessionStorage.getItem(`trove_signoff:${line}`) ? "resting" : "writing",
+  );
+  useEffect(() => {
+    if (life !== "writing") return;
+    try {
+      sessionStorage.setItem(`trove_signoff:${line}`, "1");
+    } catch {
+      // It just writes again next time.
+    }
+    const timer = setTimeout(() => setLife("resting"), 4000);
+    return () => clearTimeout(timer);
+  }, [life, line]);
+  return (
+    <p className="lib-signoff">
+      <span className="iv-visually-hidden">Librarian: {line}</span>
+      <Hand text={line} life={life} delay={0.4} />
+    </p>
+  );
+}
+
+function DoneScreen({ book, from }: { book: DraftBook; from: DOMRect | null }) {
+  // The book lands on the real shelf (StartReveal, step 7): its own id gives its cover art, and a few of the
+  // shelf's books stand either side of it.
+  const [shelf, setShelf] = useState<{ id: string; neighbours: LandingBook[] } | null>(null);
+  useEffect(() => {
+    let live = true;
+    Promise.all([api.GET("/books/me"), api.GET("/books", { params: { query: { limit: 12 } } })])
+      .then(([mine, all]) => {
+        if (!live || !mine.data) return;
+        const id = mine.data.id;
+        const neighbours = (all.data?.books ?? [])
+          .filter((other) => other.id !== id)
+          .slice(0, 6)
+          .map((other) => ({ id: other.id, title: other.title, authorName: other.author_name }));
+        setShelf({ id, neighbours });
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, []);
   return (
     <Frame say="Your book is on the shelf." canLeave={false}>
-      <div className="panel iv-done">
-        <span className="book">
-          <span className="book-cover">
-            <span className="book-title">{book.title}</span>
-            <span className="book-author">{book.authorName}</span>
-          </span>
-        </span>
+      <div className="iv-landing">
+        {shelf ? (
+          <ShelfLanding
+            book={{ id: shelf.id, title: book.title, authorName: book.authorName }}
+            neighbours={shelf.neighbours}
+            from={from}
+          />
+        ) : (
+          <div className="iv-landing-wait" aria-hidden="true" />
+        )}
         <div className="iv-done-text">
           <p>
             Other members can find it now. When someone asks to check it out, you say yes or no. Your contact

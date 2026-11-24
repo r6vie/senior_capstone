@@ -129,7 +129,7 @@ async def test_a_round_keeps_the_old_turns_and_marks_where_it_starts(client, dat
         "question_id": state["question"]["question_id"],
         "text": "What did you do next?",
         "phase": "adding",
-        "playback": None,
+        "builds_on": None,
     }
     assert state["can_finish"] is False
 
@@ -174,11 +174,6 @@ async def test_finishing_a_round_keeps_what_is_in_the_field(client, database, au
         "answer": NEW_ANSWER,
         "phase": "adding",
     }
-
-
-async def test_the_shape_step_doesnt_exist_in_a_round(client, author, fake_claude):
-    await start_round(client, author, fake_claude)
-    assert (await client.post("/interview/shape", json={}, headers=author["headers"])).status_code == 409
 
 
 async def test_the_librarian_can_end_the_round(client, author, fake_claude):
@@ -332,7 +327,7 @@ async def first_interview(client, person, resume_pdf: str | None = None):
     await client.post("/interview", json=body, headers=person["headers"])
     for answer in scripted.THEO_ANSWERS:
         await send_answer(client, person["headers"], answer)
-    await client.post("/interview/shape", json={}, headers=person["headers"])
+    await send_answer(client, person["headers"], "Both came down to timing.")
     await client.post("/interview/finish", headers=person["headers"])
     await client.post("/interview/title", json={"title": 0}, headers=person["headers"])
     await client.post("/interview/book/shelve", headers=person["headers"])
@@ -370,7 +365,7 @@ async def test_a_resume_only_term_stays_out_of_book_steps_and_the_saved_intervie
     )
     for answer in scripted.THEO_ANSWERS:
         await send_answer(client, person["headers"], answer)
-    await client.post("/interview/shape", json={}, headers=person["headers"])
+    await send_answer(client, person["headers"], "Both came down to timing.")
     await client.post("/interview/finish", headers=person["headers"])
 
     draft_request = next(r for r in scripted_ai.requests if r["system"] == load_prompt("interview/draft"))
@@ -1128,7 +1123,6 @@ async def test_a_spark_title_stays_out_of_a_first_book(client, database, author,
                     "threads": [],
                     "phase": "sweep",
                     "question": "You saved Chapter 0. Yours?",
-                    "playback": None,
                     "topic": "t",
                     "ready_for_reveal": False,
                     "spark_id": saved["id"],
@@ -1626,3 +1620,25 @@ async def test_someone_elses_question_is_404(client, database, author, reader, f
             f"/interview/reading-questions/{question}/{path}", json=body, headers=reader["headers"]
         )
         assert response.status_code == 404
+
+
+@pytest.mark.parametrize("choice", ["use", "keep"])
+async def test_the_member_chooses_the_back_cover_even_after_editing_it(
+    client, database, author, fake_claude, choice
+):
+    # Their own words, from an edit on My book.
+    await database.books.update_one(
+        {"author_id": author["id"]}, {"$set": {"blurb": "My own words.", "blurb_edited": True}}
+    )
+    state = await propose(client, author, fake_claude, change(quotes=[PART_ONE]))
+    ids = [item["id"] for item in state["changes"]]
+    applied = await client.post(
+        "/interview/revision", json={"approved": ids, "blurb": choice}, headers=author["headers"]
+    )
+    assert applied.status_code == 200, applied.text
+    saved = await database.books.find_one({"author_id": author["id"]})
+    if choice == "use":
+        # Choosing the Librarian's back cover is the member's own call, and it's the Librarian's words again.
+        assert (saved["blurb"], saved["blurb_edited"]) == ("The proposed blurb.", False)
+    else:
+        assert (saved["blurb"], saved["blurb_edited"]) == ("My own words.", True)

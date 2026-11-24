@@ -8,7 +8,7 @@ type InterviewResponse = components["schemas"]["InterviewResponse"];
 function interview(overrides: Partial<InterviewResponse>): InterviewResponse {
   return {
     stage: "interviewing",
-    question: { question_id: "q0", text: "What do people come to you for?", phase: "sweep", playback: null },
+    question: { question_id: "q0", text: "What do people come to you for?", phase: "sweep" },
     topic: null,
     has_answers: false,
     can_finish: false,
@@ -44,32 +44,53 @@ describe("apiInterviewClient", () => {
   afterEach(() => vi.restoreAllMocks());
 
   it("treats a missing interview as not started", async () => {
-    vi.spyOn(api, "GET").mockResolvedValue({
-      data: undefined,
-      error: { detail: "Not started" },
-      response: new Response(null, { status: 404 }),
-    } as never);
+    vi.spyOn(api, "GET").mockResolvedValue(ok(null));
     expect(await apiInterviewClient.current()).toBeNull();
   });
 
-  it("shows the Shape step as the playback followed by its question", async () => {
+  describe("a 503", () => {
+    const notSetUp = {
+      data: undefined,
+      error: { detail: "AI isn't set up. Add ANTHROPIC_API_KEY to .env and restart." },
+      response: new Response(null, { status: 503 }),
+    } as never;
+    afterEach(() => vi.unstubAllEnvs());
+
+    it("shows a developer the API's own reason", async () => {
+      vi.stubEnv("DEV", true);
+      vi.spyOn(api, "POST").mockResolvedValue(notSetUp);
+      await expect(apiInterviewClient.start(null)).rejects.toThrow(/Add ANTHROPIC_API_KEY to .env/);
+    });
+
+    it("shows a member only the calm sentence", async () => {
+      vi.stubEnv("DEV", false);
+      vi.spyOn(api, "POST").mockResolvedValue(notSetUp);
+      await expect(apiInterviewClient.start(null)).rejects.toThrow(
+        "Something's wrong on our side. Nothing you said is lost.",
+      );
+    });
+  });
+
+  it("reads a member with no interview and no book as not started", async () => {
+    const get = vi.spyOn(api, "GET").mockResolvedValue(ok(null));
+    expect(await apiInterviewClient.stage()).toBe("none");
+    expect(await apiInterviewClient.myBook()).toBeNull();
+    expect(get.mock.calls.map((call) => (call as unknown[])[0])).toEqual([
+      "/interview",
+      "/books/me",
+      "/books/me",
+    ]);
+  });
+
+  it("asks a Shape question like any other, with nothing played back", async () => {
+    const text = "What does leaving grad school have in common with the bakery, if anything?";
     vi.spyOn(api, "POST").mockResolvedValue(
-      ok(
-        interview({
-          question: {
-            question_id: "q1",
-            text: "Is this you?",
-            phase: "shape",
-            playback: "You left grad school twice.",
-          },
-        }),
-      ),
+      ok(interview({ question: { question_id: "q1", text, phase: "shape" } })),
     );
-    expect(await apiInterviewClient.answer("me", "An answer")).toEqual({
-      id: "me",
-      stage: "shaping",
+    expect(await apiInterviewClient.answer("me", "An answer")).toMatchObject({
+      stage: "asking",
       phase: "shape",
-      playback: "You left grad school twice. Is this you?",
+      question: text,
       questionId: "q1",
     });
   });
@@ -81,7 +102,7 @@ describe("apiInterviewClient", () => {
       .mockResolvedValueOnce(
         ok(interview({ stage: "choosing", question: null, titles: [{ title: "A", why: "B" }] })),
       );
-    const state = await apiInterviewClient.confirmShape("me");
+    const state = await apiInterviewClient.answer("me", "An answer");
     expect(post).toHaveBeenLastCalledWith("/interview/finish", {});
     expect(state).toEqual({ id: "me", stage: "choosing", titles: [{ id: "0", title: "A", why: "B" }] });
   });
@@ -222,6 +243,8 @@ describe("apiInterviewClient", () => {
   });
 
   it("never shows a member the API's words for a database or a field", async () => {
+    // What a member's build shows; a developer's build names the reason (see "a 503").
+    vi.stubEnv("DEV", false);
     const fails = (status: number, detail: unknown) =>
       vi.spyOn(api, "POST").mockResolvedValueOnce({
         data: undefined,
@@ -236,9 +259,10 @@ describe("apiInterviewClient", () => {
     await expect(apiInterviewClient.answer("me", "An answer")).rejects.toThrow(
       "That didn't go through. Check it and try again.",
     );
+    vi.unstubAllEnvs();
   });
 
-  it("carries a chapter's quotes to the member's own review", async () => {
+  it("carries a chapter's quotes into review when the book is written again", async () => {
     vi.spyOn(api, "POST").mockResolvedValue(
       ok({
         title: "T",
@@ -248,7 +272,7 @@ describe("apiInterviewClient", () => {
         chapters: [{ id: "1", title: "C", summary: "S", quotes: ["My words."] }],
       }),
     );
-    const state = await apiInterviewClient.rewriteChapter("me", "1");
+    const state = await apiInterviewClient.changeTitle("me", "1");
     expect(state).toMatchObject({ stage: "reviewing", book: { chapters: [{ quotes: ["My words."] }] } });
   });
 
@@ -338,7 +362,7 @@ describe("apiInterviewClient", () => {
     const post = vi.spyOn(api, "POST").mockResolvedValue(ok(offShelf));
     await apiInterviewClient.takeOffShelf();
     expect(post).toHaveBeenLastCalledWith("/books/me/take-down");
-    await expect(apiInterviewClient.rewriteChapter("me", "c1")).resolves.toMatchObject({ stage: "done" });
+    await expect(apiInterviewClient.changeTitle("me", "1")).resolves.toMatchObject({ stage: "done" });
   });
 
   it("marks a 409 as out of date", async () => {
@@ -353,9 +377,7 @@ describe("apiInterviewClient", () => {
   it("sends the question's id back once the API gives one", async () => {
     const post = vi
       .spyOn(api, "POST")
-      .mockResolvedValue(
-        ok(interview({ question: { question_id: "q1", text: "Q", phase: "sweep", playback: null } })),
-      );
+      .mockResolvedValue(ok(interview({ question: { question_id: "q1", text: "Q", phase: "sweep" } })));
     await apiInterviewClient.askAgain("me");
     await apiInterviewClient.answer("me", "An answer");
     expect(post).toHaveBeenLastCalledWith("/interview/answers", {
@@ -374,23 +396,7 @@ describe("apiInterviewClient", () => {
     expect(post).not.toHaveBeenCalled();
   });
 
-  it("carries what a rewrite did to the book", async () => {
-    vi.spyOn(api, "POST").mockResolvedValue(
-      ok({
-        title: "T",
-        author_name: "A",
-        blurb: null,
-        status: "draft",
-        rewrite_unchanged: true,
-        chapters: [{ id: "1", title: "C", summary: "S", quotes: [], has_previous: true }],
-      }),
-    );
-    await expect(apiInterviewClient.rewriteChapter("me", "1")).resolves.toMatchObject({
-      book: { rewriteUnchanged: true, chapters: [{ hasPrevious: true }] },
-    });
-  });
-
-  it("sends the question's id with a correction, and carries the closing line to the wait", async () => {
+  it("carries the closing line to the wait", async () => {
     const post = vi.spyOn(api, "POST").mockResolvedValue(
       ok({
         ...interview({ question: null, closing_line: "That's enough for your book." }),
@@ -398,12 +404,10 @@ describe("apiInterviewClient", () => {
       }),
     );
     await apiInterviewClient.askAgain("me");
-    await expect(apiInterviewClient.correctShape("me", "It was three times")).resolves.toMatchObject({
+    await expect(apiInterviewClient.answer("me", "It was three times")).resolves.toMatchObject({
       closingLine: "That's enough for your book.",
     });
-    expect(post).toHaveBeenLastCalledWith("/interview/shape", {
-      body: { correction: "It was three times", question_id: undefined },
-    });
+    expect(post.mock.lastCall?.[0]).toBe("/interview/answers");
   });
 
   it("reads the writing stages after a refresh", async () => {
@@ -476,5 +480,109 @@ describe("apiInterviewClient", () => {
       response: new Response(null, { status: 409 }),
     } as never);
     await expect(apiInterviewClient.putOnShelf("me")).rejects.toThrow("A book needs at least 3 chapters.");
+  });
+
+  it("brings the Librarian's marks and notebook with the question, the circle already on its source", async () => {
+    vi.spyOn(api, "GET").mockResolvedValue(
+      ok(
+        interview({
+          librarian: {
+            turns: [{ question: "First?", answer: "The build broke.", marks: [], silent: false }],
+            current_marks: [
+              { id: "m_1", move: "circle", anchor: "whiteboard", occurrence: 1, note: "tenure.", count: 3 },
+            ],
+            current_silent: false,
+            notebook: [
+              {
+                id: "n_1",
+                kind: "bet",
+                text: "betting this ends in a spreadsheet.",
+                anchors: ["build"],
+                source_turns: [1],
+                status: "called",
+                struck: [],
+                outcome_note: "called it.",
+              },
+            ],
+          },
+        }),
+      ),
+    );
+    const state = await apiInterviewClient.current();
+    expect(state?.stage === "asking" && state.librarian).toEqual({
+      answered: 1,
+      marks: [
+        {
+          id: "m_1",
+          move: "circle",
+          anchor: "whiteboard",
+          occurrence: 1,
+          note: "tenure.",
+          count: 3,
+          struckNote: null,
+        },
+      ],
+      silent: false,
+      notebook: [
+        {
+          id: "n_1",
+          kind: "bet",
+          text: "betting this ends in a spreadsheet.",
+          anchors: ["build"],
+          sourceTurns: [1],
+          status: "called",
+          struck: [],
+          outcomeNote: "called it.",
+        },
+      ],
+    });
+  });
+
+  it("sends a look at the answer and maps what the Librarian does", async () => {
+    const post = vi.spyOn(api, "POST").mockResolvedValue(
+      ok({
+        silent: false,
+        marks: {
+          keep: ["m_0"],
+          add: [],
+          revise: [
+            {
+              id: "m_1",
+              move: "underline",
+              anchor: "11 weeks",
+              occurrence: 1,
+              note: "better.",
+              struck_note: "how long?",
+            },
+          ],
+          erase: ["m_2"],
+        },
+        notebook: { keep: [], add: [], revise: [], erase: ["n_3"] },
+      }),
+    );
+    const reply = await apiInterviewClient.notes({
+      questionId: "q4",
+      text: "It took 11 weeks.",
+      previousText: "It took a long time.",
+      pasted: false,
+      shown: ["m_0", "m_1", "m_2", "n_3"],
+    });
+    expect(post).toHaveBeenCalledWith("/interview/notes", {
+      body: {
+        question_id: "q4",
+        text: "It took 11 weeks.",
+        previous_text: "It took a long time.",
+        pasted: false,
+        shown: ["m_0", "m_1", "m_2", "n_3"],
+      },
+      signal: undefined,
+    });
+    expect(reply.marks.revise[0]).toMatchObject({
+      anchor: "11 weeks",
+      note: "better.",
+      struckNote: "how long?",
+    });
+    expect(reply.marks.erase).toEqual(["m_2"]);
+    expect(reply.notebook.erase).toEqual(["n_3"]);
   });
 });

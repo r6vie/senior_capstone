@@ -24,7 +24,9 @@ def connect(uri: str) -> AsyncMongoClient:
     # Atlas (mongodb+srv) uses TLS; python.org builds of Python on macOS ship without root
     # certificates, so verify against certifi's bundle instead.
     tls = {"tlsCAFile": certifi.where()} if uri.startswith("mongodb+srv://") else {}
-    return AsyncMongoClient(uri, timeoutMS=10000, serverSelectionTimeoutMS=5000, **tls)
+    # tz_aware: MongoDB stores UTC, but PyMongo hands back naive datetimes by default, which then reach
+    # the browser without a zone and are read as local time. Aware ones serialize with their Z.
+    return AsyncMongoClient(uri, timeoutMS=10000, serverSelectionTimeoutMS=5000, tz_aware=True, **tls)
 
 
 async def setup_indexes(database: AsyncDatabase, index_setups: list[IndexSetup]) -> None:

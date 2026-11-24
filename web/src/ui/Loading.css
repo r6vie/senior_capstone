@@ -1,0 +1,35 @@
+/* Pages appear whole (Loading.tsx). The page is laid out and fetching underneath, just not visible yet. */
+.loading-root[data-hidden] {
+  visibility: hidden;
+}
+/* After the first screen the top bar stays up across page changes; only the page waits. */
+.loading-root[data-hidden][data-settled] .top-bar {
+  visibility: visible;
+}
+
+/* The still placeholder for a slow load: the wordmark's ink square and one word, in the middle of the page. */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.loading-say {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin: 0;
+  font: 700 15px / 1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.loading-say::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  background: var(--ink);
+  transform: rotate(-6deg);
+}

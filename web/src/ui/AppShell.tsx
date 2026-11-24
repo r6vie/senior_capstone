@@ -1,6 +1,10 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthProvider";
+import { SearchControl } from "../features/discovery/SearchControl";
 import "./AppShell.css";
+import { ErrorBoundary, PageBroke } from "./ErrorBoundary";
+import { usePageFocus } from "./usePageFocus";
 
 // The signed-in frame: top bar, navigation and the page's room. Settings is reached from the avatar,
 // so the nav keeps the design's four items (docs/design/system.md, "Navigation").
@@ -13,11 +17,31 @@ export const NAV_ITEMS = [
 
 export function AppShell() {
   const { user } = useAuth();
+  const search = useRef<HTMLInputElement>(null);
+  const topBar = useRef<HTMLElement>(null);
+  const page = useRef<HTMLDivElement>(null);
+  const { pathname } = useLocation();
+  usePageFocus(page, topBar);
+
+  // "/" goes to the search, as the key hint in the field says, unless the member is already typing.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable]")) return;
+      event.preventDefault();
+      search.current?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
     <div className="app-shell">
-      <header className="top-bar">
-        <span className="wordmark">Trove</span>
+      <header className="top-bar" ref={topBar}>
+        <Link className="wordmark" to="/" aria-label="Trove home">
+          Trove
+        </Link>
         <nav className="nav" aria-label="Main">
           {NAV_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.to === "/"}>
@@ -26,20 +50,29 @@ export function AppShell() {
           ))}
         </nav>
         <div className="top-bar-end">
-          {/* Drawn only: topic search is wired up by the discovery feature (D2). */}
-          <label className="search">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-            <input type="search" placeholder="Search by topic" aria-label="Search by topic" />
-          </label>
+          <SearchControl triggerRef={search} />
           <NavLink to="/settings" className="avatar" aria-label="Settings">
             {user?.first_name.charAt(0)}
           </NavLink>
         </div>
       </header>
-      <Outlet />
+      <div ref={page}>
+        <ErrorBoundary
+          resetKey={pathname}
+          fallback={(retry) => (
+            <PageBroke
+              retry={retry}
+              home={
+                <Link className="button button-quiet" to="/">
+                  Go to the shelf
+                </Link>
+              }
+            />
+          )}
+        >
+          <Outlet />
+        </ErrorBoundary>
+      </div>
     </div>
   );
 }

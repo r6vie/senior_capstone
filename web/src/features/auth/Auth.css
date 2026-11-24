@@ -1,0 +1,105 @@
+/* The signed-out pages: one centred card on a comic dot ground (docs/design/system.md, Additions, "Signed-out pages"). */
+.auth {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  /* dvh, not vh: phones count their address bar in vh, so 100vh is taller than the screen you see. */
+  min-height: 100dvh;
+  overflow: hidden;
+  background: var(--paper);
+}
+/* Screentone: bold at the edges, fading to clean paper around the card, so no text ever sits on dots. */
+.auth-tone {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(circle, var(--ink) 1.6px, transparent 2px) 0 0 / 7px 7px;
+  -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 52%, transparent 38%, #000 100%);
+  mask-image: radial-gradient(ellipse 75% 70% at 50% 52%, transparent 38%, #000 100%);
+}
+/* A plain strip, so the wordmark and the link never sit on the tone. */
+.auth-top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-5);
+  background: var(--paper);
+  border-bottom: var(--line-heavy) solid var(--ink);
+}
+/* The quiet link's underline hangs below its letters: lift the letters to the wordmark's middle and keep the
+   underline clear of the strip's rule, without shrinking the 44px target. */
+.auth-top .button-quiet {
+  padding-bottom: var(--s-2);
+}
+.auth-card {
+  box-sizing: border-box;
+  display: grid;
+  align-content: start;
+  gap: var(--s-5);
+  justify-self: center;
+  align-self: center;
+  width: calc(100% - 2 * var(--s-4));
+  max-width: 30rem;
+  margin: var(--s-5) 0 var(--s-8);
+  padding: var(--s-6);
+}
+.auth-head {
+  display: grid;
+  justify-items: start;
+  gap: var(--s-4);
+}
+.auth-head .page-title {
+  margin-top: var(--s-1);
+}
+.auth-voice {
+  margin: 0;
+  color: var(--ink-2);
+  /* A line that wraps does so evenly, never leaving one word on its own. */
+  text-wrap: balance;
+}
+/* First and last name share a row wherever the card is wide enough for both. */
+.auth-names {
+  display: grid;
+  gap: var(--s-4);
+}
+.auth-names .field,
+.auth-names input {
+  min-width: 0;
+}
+@media (min-width: 480px) {
+  .auth-names {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.auth-card form > .button {
+  justify-self: start;
+}
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4);
+}
+/* A phone has room for the wordmark and "Create an account" side by side only if both are a little smaller. */
+@media (max-width: 479px) {
+  .auth-top .wordmark {
+    font-size: 22px;
+  }
+  .auth-top .button-quiet {
+    padding: 0 0 var(--s-2);
+    font-size: 15px;
+    letter-spacing: 0.1em;
+  }
+}
+@media (min-width: 960px) {
+  .auth-top {
+    padding: var(--s-5) var(--s-6);
+  }
+  .auth-card {
+    margin: var(--s-7) 0 var(--s-8);
+    padding: var(--s-7);
+  }
+}

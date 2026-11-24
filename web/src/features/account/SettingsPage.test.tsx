@@ -4,7 +4,13 @@ import { SettingsPage } from "./SettingsPage";
 
 const api = vi.hoisted(() => ({ GET: vi.fn(), PUT: vi.fn(), POST: vi.fn(), DELETE: vi.fn() }));
 const auth = vi.hoisted(() => ({
-  user: { id: "u1", email: "maya@example.com", email_notifications: true },
+  user: {
+    id: "u1",
+    email: "maya@example.com",
+    email_notifications: true,
+    affiliations: null as ("current_student" | "alumni")[] | null,
+    founder: null as boolean | null,
+  },
   signOut: vi.fn(),
   refreshUser: vi.fn(),
 }));
@@ -16,7 +22,13 @@ const contact = { email: "maya@example.com", linkedin_url: null, phone: null };
 
 beforeEach(() => {
   vi.resetAllMocks();
-  auth.user = { id: "u1", email: "maya@example.com", email_notifications: true };
+  auth.user = {
+    id: "u1",
+    email: "maya@example.com",
+    email_notifications: true,
+    affiliations: null,
+    founder: null,
+  };
   api.GET.mockImplementation(async (path: string) => ({ data: path === "/auth/invites" ? [] : contact }));
 });
 
@@ -46,6 +58,18 @@ describe("SettingsPage", () => {
     expect(await screen.findByText("Contact details saved.")).toBeTruthy();
   });
 
+  it("keeps the details and frees Save when the connection drops", async () => {
+    api.PUT.mockRejectedValue(new TypeError("Failed to fetch"));
+    render(<SettingsPage />);
+    const save = screen.getByRole("button", { name: "Save contact details" });
+    await waitFor(() => expect((save as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.change(screen.getByLabelText(/Phone/), { target: { value: "216-555-0142" } });
+    fireEvent.click(save);
+    expect((await screen.findByRole("alert")).textContent).toContain("couldn't reach Trove");
+    expect((screen.getByLabelText(/Phone/) as HTMLInputElement).value).toBe("216-555-0142");
+    expect((save as HTMLButtonElement).disabled).toBe(false);
+  });
+
   it("shows the server's reason when a detail is rejected", async () => {
     api.PUT.mockResolvedValue({ error: { detail: "Enter a phone number with 7 to 15 digits." } });
     render(<SettingsPage />);
@@ -61,6 +85,26 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByLabelText("Email me about checkouts and messages"));
     expect(api.PUT).toHaveBeenCalledWith("/auth/me/notifications", { body: { email_notifications: false } });
     expect(await screen.findByText("Email notifications are off.")).toBeTruthy();
+    expect(auth.refreshUser).toHaveBeenCalled();
+  });
+
+  it("saves student, alumni and founder context independently", async () => {
+    api.PUT.mockResolvedValue({
+      data: { ...auth.user, affiliations: ["current_student", "alumni"], founder: true },
+    });
+    render(<SettingsPage />);
+    const save = screen.getByRole("button", { name: "Save community context" }) as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+
+    fireEvent.click(screen.getByLabelText("Current student"));
+    fireEvent.click(screen.getByLabelText("Alumni"));
+    fireEvent.click(screen.getByLabelText("I am a founder"));
+    fireEvent.click(save);
+
+    expect(api.PUT).toHaveBeenCalledWith("/auth/me/context", {
+      body: { affiliations: ["current_student", "alumni"], founder: true },
+    });
+    expect(await screen.findByText("Community context saved.")).toBeTruthy();
     expect(auth.refreshUser).toHaveBeenCalled();
   });
 

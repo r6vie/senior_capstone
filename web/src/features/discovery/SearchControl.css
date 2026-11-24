@@ -1,0 +1,169 @@
+.search-overlay {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  color: var(--ink);
+}
+.search-overlay::backdrop {
+  background: transparent;
+}
+.search-overlay-inner {
+  min-height: 100%;
+  padding: var(--s-7);
+}
+.search-close {
+  position: fixed;
+  z-index: 1;
+  top: var(--s-5);
+  right: var(--s-6);
+  display: grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  border: var(--line) solid transparent;
+  background: transparent;
+  color: var(--ink);
+  font: 300 34px / 1 var(--font-sans);
+  cursor: pointer;
+}
+.search-close:is(:hover, :focus-visible) {
+  border-color: var(--ink);
+  outline: 0;
+}
+.search-overlay-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s-3);
+  width: min(760px, calc(100% - 2 * var(--s-8)));
+  margin: var(--s-6) auto 0;
+}
+.search-overlay-form > label {
+  grid-column: 1 / -1;
+  font: 600 14px / 1 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.search-overlay-field {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--tap);
+  border-bottom: var(--line-heavy) solid var(--ink);
+}
+.search-overlay-field svg {
+  flex: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+}
+.search-overlay-field input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 500 22px / 1.25 var(--font-sans);
+}
+.search-overlay-field:focus-within {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: var(--s-1);
+}
+.search-results {
+  width: min(1120px, 100%);
+  margin: var(--s-8) auto 0;
+}
+.search-results > h1,
+.search-intro h1 {
+  margin: 0;
+  font: 600 36px / 1.1 var(--font-serif);
+}
+.search-intro {
+  max-width: 680px;
+  margin: var(--s-8) auto 0;
+  text-align: center;
+}
+.search-intro p {
+  margin: var(--s-3) 0 0;
+  color: var(--ink-2);
+  font-size: 18px;
+}
+.search-results-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--s-7) var(--s-5);
+  margin-top: var(--s-6);
+}
+.search-result {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+.search-result p {
+  width: 100%;
+  margin: 0;
+  color: var(--ink-2);
+  font: 400 15px / 1.45 var(--font-sans);
+}
+.search-result .book {
+  margin-inline: auto;
+}
+/* The selected cover has flown into the reader. Its place stays open so closing can return it here. */
+.search-result .book[data-out] .book-cover {
+  visibility: hidden;
+}
+.search-result .book[data-out]::before {
+  opacity: 0;
+}
+.search-result .book[data-out][data-returning]::before {
+  opacity: 1;
+  transition-duration: 480ms;
+}
+
+@media (max-width: 1099px) {
+  .search-results-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 719px) {
+  .search-overlay-inner {
+    padding: var(--s-6) var(--s-4);
+  }
+  .search-close {
+    top: var(--s-2);
+    right: var(--s-2);
+  }
+  .search-overlay-form {
+    grid-template-columns: 1fr;
+    width: 100%;
+    margin-top: var(--s-6);
+    padding-right: var(--s-7);
+  }
+  .search-overlay-form .button {
+    width: 100%;
+  }
+  .search-results {
+    margin-top: var(--s-7);
+  }
+  .search-results > h1,
+  .search-intro h1 {
+    font-size: 30px;
+  }
+  .search-results-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-6) var(--s-3);
+  }
+}
