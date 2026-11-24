@@ -5,7 +5,7 @@ import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
 import { TextField } from "../../ui/TextField";
 import { usePageTitle } from "../../ui/usePageTitle";
-import { AuthLayout, PasswordField } from "./AuthLayout";
+import { AuthLayout, keepJoiningName, PasswordField } from "./AuthLayout";
 import { NeedsVerification, useAuth } from "./AuthProvider";
 
 type Invite = { inviter: string } | { problem: string } | null;
@@ -49,12 +49,14 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
       let next = "signed-in";
       if (signingUp) next = await signUp(firstName, lastName, email, password, invite ?? undefined);
       else await signIn(email, password);
-      // The confirm page keeps the name on the book, so it travels in the navigation, not the address.
-      if (next === "verify")
+      // The confirm page keeps the name on the book: it travels in the navigation and this tab's storage, not the
+      // address.
+      if (next === "verify") {
+        keepJoiningName(`${firstName.trim()} ${lastName.trim()}`.trim());
         navigate(`/verify?email=${encodeURIComponent(email)}`, {
           state: { name: `${firstName.trim()} ${lastName.trim()}`.trim() },
         });
-      else navigate(signingUp ? "/" : back);
+      } else navigate(signingUp ? "/" : back);
     } catch (caught) {
       if (caught instanceof NeedsVerification) navigate(`/verify?email=${encodeURIComponent(email)}`);
       else setError(caught instanceof Error ? caught.message : "Something went wrong.");

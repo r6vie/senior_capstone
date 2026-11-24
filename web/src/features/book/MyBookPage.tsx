@@ -88,8 +88,11 @@ function ShelfSwitch({
       className="mb-switch"
       aria-checked={on}
       aria-busy={busy || undefined}
-      disabled={busy}
-      onClick={() => onChange(!on)}
+      // Never disabled, so the keyboard stays on it; a press while the last one is on its way waits for it.
+      aria-disabled={busy || undefined}
+      onClick={() => {
+        if (!busy) onChange(!on);
+      }}
     >
       <span>On the shelf</span>
       <i aria-hidden="true" />
@@ -196,7 +199,16 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   const [lastRound, setLastRound] = useState<LastRound>({ empty: false });
   const [question, setQuestion] = useState<string | null>(null);
   const [switching, setSwitching] = useState(false);
+  // The switch moves at once; the server catches up, and if it refuses, the page shows what's true.
+  const [wanted, setWanted] = useState<boolean | null>(null);
   const [designing, setDesigning] = useState(false);
+  // Leaving the picker hands the keyboard back to the pen that opened it.
+  const backToPen = useRef(false);
+  useEffect(() => {
+    if (designing || !backToPen.current) return;
+    backToPen.current = false;
+    document.querySelector<HTMLElement>(".mb-pen")?.focus({ preventScroll: true });
+  }, [designing]);
   const [savingDesign, setSavingDesign] = useState(false);
   const [designProblem, setDesignProblem] = useState<string | null>(null);
   const leftAsIs = Boolean((useLocation().state as { leftAsIs?: boolean } | null)?.leftAsIs);
@@ -327,14 +339,16 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
         {title}
         {onShelf && (
           <ShelfSwitch
-            on={book.status === "on_shelf"}
+            on={wanted ?? book.status === "on_shelf"}
             busy={switching}
             onChange={async (on) => {
+              setWanted(on);
               setSwitching(true);
               await attempt(
                 async () => setBook(await (on ? client.putBackOnShelf() : client.takeOffShelf())),
                 () => undefined,
               );
+              setWanted(null);
               setSwitching(false);
             }}
           />
@@ -349,6 +363,7 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
           error={designProblem}
           onUse={async (chosen) => {
             if (chosen.id === art.id) {
+              backToPen.current = true;
               setDesigning(false);
               return;
             }
@@ -357,6 +372,7 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
             try {
               setBook(await client.editBook({ design: chosen.id }));
               forgetOwnBook();
+              backToPen.current = true;
               setDesigning(false);
             } catch (reason) {
               setDesignProblem(reason instanceof Error ? reason.message : "That didn't save. Try again.");
@@ -366,6 +382,7 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
           }}
           onBack={() => {
             setDesignProblem(null);
+            backToPen.current = true;
             setDesigning(false);
           }}
         />

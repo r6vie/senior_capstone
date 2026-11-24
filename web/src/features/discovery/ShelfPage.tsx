@@ -329,10 +329,11 @@ export function ShelfPage() {
               <BookObject
                 key={book.id}
                 id={book.id}
+                design={book.design}
                 book={{ title: book.title, authorName: book.author_name }}
                 out={outPlace === `recent/${book.id}`}
                 onOpen={(element) => open(book, element, `recent/${book.id}`)}
-                onInterest={() => interest(book.id)}
+                onInterest={() => interest(book.id, book.design)}
               />
             ))}
           </ShelfRow>

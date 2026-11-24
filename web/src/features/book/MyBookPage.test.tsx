@@ -150,6 +150,20 @@ describe("on the shelf", () => {
     expect(back).toHaveBeenCalledTimes(1);
   });
 
+  it("moves at once and keeps the keyboard while the server catches up", async () => {
+    let finish: (value: MyBook) => void = () => {};
+    const down = vi.fn(() => new Promise<MyBook>((resolve) => (finish = resolve)));
+    show(client("shelf", { takeOffShelf: down }));
+    const toggle = await screen.findByRole("switch", { name: "On the shelf" });
+    toggle.focus();
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+    expect((toggle as HTMLButtonElement).disabled).toBe(false);
+    expect(document.activeElement).toBe(toggle);
+    await act(async () => finish({ ...book, status: "off_shelf" }));
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+  });
+
   it("isn't there for a draft, which isn't on the shelf yet", async () => {
     show(client("draft"));
     expect(await titleField()).toBeTruthy();
@@ -186,11 +200,14 @@ describe("changing the design", () => {
     expect(document.querySelector("img.mb-page-art")?.getAttribute("src")).toBe(next?.page);
   });
 
-  it("goes back to the book as it was", async () => {
+  it("goes back to the book as it was, with the keyboard on the pen", async () => {
     show(client("shelf"));
     fireEvent.click(await screen.findByRole("button", { name: "Change the design" }));
     fireEvent.click(screen.getByRole("button", { name: "Back to my book" }));
     expect(await titleField()).toBeTruthy();
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Change the design" })),
+    );
     expect(document.querySelector("img.mb-page-art")?.getAttribute("src")).toBe(artFor("nora-book").page);
   });
 });

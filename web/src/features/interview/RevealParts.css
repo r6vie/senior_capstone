@@ -501,8 +501,12 @@
     flex-wrap: nowrap;
     overflow-x: auto;
   }
+  .rv-tabs {
+    gap: 0;
+  }
   .rv-tabs button,
   .rv-tabs > span {
+    min-width: 32px;
     padding: 0 7px;
   }
   .rv-toc {

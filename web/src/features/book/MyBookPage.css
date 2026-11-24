@@ -258,17 +258,38 @@
   align-items: start;
   margin-top: var(--s-2);
 }
+/* The pen closes the book: its cover swings shut about the spine while the closed book slides left and shrinks
+   into its column. */
 .mb-closed {
   padding: var(--s-3) 0 0 18px;
-  animation: mb-step-aside 420ms ease-out both;
+  animation: mb-step-aside 560ms ease-in-out both;
 }
 .mb-closed .book {
   zoom: 1.6;
+  perspective: 1600px;
+}
+.mb-closed .book-cover {
+  transform-origin: left center;
+  animation: mb-shut 420ms ease-in both;
 }
 @keyframes mb-step-aside {
   from {
+    transform: translateX(28%) scale(1.25);
+  }
+}
+@keyframes mb-shut {
+  from {
+    transform: rotateY(-85deg);
+  }
+}
+/* The book's shadow lands once it is shut, and the designs arrive once it has stepped aside. */
+.mb-closed .book::before,
+.mb-pick {
+  animation: mb-arrive 240ms ease-out 400ms both;
+}
+@keyframes mb-arrive {
+  from {
     opacity: 0;
-    transform: translateX(24%) scale(1.08);
   }
 }
 /* A new design: the cover fades back to paper, then its clip paints it in from the white cover. */
@@ -280,6 +301,9 @@
 }
 .mb-closed[data-phase="paint"] img.book-art {
   visibility: hidden;
+}
+.mb-closed[data-cut][data-phase="paper"] img.book-art {
+  transition: none;
 }
 .mb-clip {
   z-index: 0;
@@ -384,8 +408,25 @@
   margin-top: var(--s-6);
 }
 
+/* The reader's size exactly: the pages are 684px tall on every spread, so turning a page never moves the book or
+   what's under it, and a long contents scrolls inside its page as the reader's does. */
+@media (min-width: 1100px) {
+  .mb-own .ib-page {
+    height: 684px;
+    min-height: 0;
+  }
+  .mb-own .ib-page > .rv-toc {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .mb-closed {
+  .mb-closed,
+  .mb-closed .book-cover,
+  .mb-closed .book::before,
+  .mb-pick {
     animation: none;
   }
   .mb-closed img.book-art,

@@ -38,7 +38,6 @@
 .auth-l {
   display: flex;
   flex-direction: column;
-  gap: 26px;
   padding-top: 22px;
   overflow: hidden;
   background:
@@ -50,7 +49,7 @@
 .auth-cap {
   align-self: flex-start;
   max-width: 520px;
-  margin: 0 var(--s-4);
+  margin: 0 var(--s-4) 26px;
   padding: var(--s-3) var(--s-4) 14px;
   background: var(--white);
   border: var(--line-heavy) solid var(--ink);
@@ -63,7 +62,9 @@
   font: italic 500 21px / 1.2 var(--font-serif);
   letter-spacing: -0.005em;
 }
+/* The stage takes the free height and stands the book at its foot, right on the shelf, at any window height. */
 .auth-stage {
+  flex: 1;
   position: relative;
   isolation: isolate;
   display: flex;
@@ -169,6 +170,7 @@
 /* The shelf the book stands on, with hatching for its shade. */
 .auth-shelf {
   position: relative;
+  flex: none;
   height: 14px;
   margin-bottom: 28px;
   background: var(--ink);
@@ -270,7 +272,7 @@
   position: relative;
   display: grid;
 }
-.auth-pw input {
+.field .auth-pw input {
   padding-right: 72px;
 }
 .auth-show {
@@ -364,14 +366,12 @@
     align-content: stretch;
   }
   .auth-l {
-    justify-content: space-between;
-    gap: var(--s-6);
     padding-top: 56px;
     border-bottom: 0;
     border-right: var(--line-heavy) solid var(--ink);
   }
   .auth-cap {
-    margin: 0 56px;
+    margin: 0 56px var(--s-6);
     padding: 18px var(--s-5) 20px;
   }
   .auth-cap p {

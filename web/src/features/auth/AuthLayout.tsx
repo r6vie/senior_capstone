@@ -126,6 +126,25 @@ export function PasswordField({
   );
 }
 
+// The name joining lettered onto the book, kept for the confirm page so a reload there doesn't lose it. This tab only.
+const NAME_KEY = "trove_joining_name";
+
+export function keepJoiningName(name: string): void {
+  try {
+    sessionStorage.setItem(NAME_KEY, name);
+  } catch {
+    // Storage blocked: the confirm page shows the book without the name.
+  }
+}
+
+export function joiningName(): string | null {
+  try {
+    return sessionStorage.getItem(NAME_KEY);
+  } catch {
+    return null;
+  }
+}
+
 const DIGITS = 6;
 
 /** The emailed code as six boxes, three and three. One real field sits over them, so typing, pasting and the
@@ -144,7 +163,6 @@ export function CodeField({ value, onChange }: { value: string; onChange: (value
           value={value}
           inputMode="numeric"
           autoComplete="one-time-code"
-          maxLength={DIGITS}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           onChange={(event) => onChange(event.target.value.replace(/\D/g, "").slice(0, DIGITS))}

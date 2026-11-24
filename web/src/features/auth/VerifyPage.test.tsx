@@ -29,6 +29,20 @@ describe("VerifyPage", () => {
     expect(screen.queryByLabelText("Email")).toBeNull();
   });
 
+  it("fills all six boxes from a pasted code with a space in front", () => {
+    renderPage();
+    fireEvent.change(screen.getByLabelText("Code"), { target: { value: " 482915" } });
+    expect((screen.getByLabelText("Code") as HTMLInputElement).value).toBe("482915");
+    expect((screen.getByRole("button", { name: "Confirm" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("keeps the joining name on the book through a reload", () => {
+    sessionStorage.setItem("trove_joining_name", "Ingrid Solberg");
+    renderPage();
+    expect(document.querySelector(".auth-author")?.textContent).toBe("Ingrid Solberg");
+    sessionStorage.clear();
+  });
+
   it("asks for the email when the page is opened without one", () => {
     renderPage("/verify");
     expect(screen.getByLabelText("Email")).toBeTruthy();

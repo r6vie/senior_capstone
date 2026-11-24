@@ -5,7 +5,7 @@ import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
 import { TextField } from "../../ui/TextField";
 import { usePageTitle } from "../../ui/usePageTitle";
-import { AuthLayout, CodeField } from "./AuthLayout";
+import { AuthLayout, CodeField, joiningName } from "./AuthLayout";
 import { useAuth } from "./AuthProvider";
 
 // Students confirm the code we emailed to their case.edu address (docs/trove.md §9.2).
@@ -16,7 +16,7 @@ export function VerifyPage() {
   const [params] = useSearchParams();
   const knownEmail = params.get("email");
   // The name joining lettered onto the book, so the book keeps it here.
-  const name = (useLocation().state as { name?: string } | null)?.name;
+  const name = (useLocation().state as { name?: string } | null)?.name || joiningName();
   const [email, setEmail] = useState(knownEmail ?? "");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);

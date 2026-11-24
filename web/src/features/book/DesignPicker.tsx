@@ -53,6 +53,8 @@ export function DesignPicker({
   // What the closed book shows: it changes only once it has faded to paper.
   const [shown, setShown] = useState(current);
   const [phase, setPhase] = useState<Phase>("still");
+  // A new choice cut into a clip: the half-painted cover goes straight to paper, never back to the last still.
+  const [cut, setCut] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const video = useRef<HTMLVideoElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -68,6 +70,7 @@ export function DesignPicker({
     if (art.id === chosen.id) return;
     setChosen(art);
     if (timer.current) clearTimeout(timer.current);
+    setCut(phase === "paint");
     if (reducedMotion()) {
       setShown(art);
       setPhase("still");
@@ -104,7 +107,7 @@ export function DesignPicker({
 
   return (
     <div className="mb-design">
-      <div className="mb-closed" data-phase={phase} aria-hidden="true">
+      <div className="mb-closed" data-phase={phase} data-cut={cut || undefined} aria-hidden="true">
         <span className="book book-lg">
           <span className="book-cover" style={coverInk(shown)}>
             <ArtImage className="book-art" src={shown.cover} />
