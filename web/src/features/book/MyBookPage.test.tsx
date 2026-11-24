@@ -91,6 +91,19 @@ describe("my book, open", () => {
     await waitFor(() => expect(edit).toHaveBeenCalledWith("1", { title: "Two, again" }));
   });
 
+  it("shows a chapter's own text when it has one, and saves edits to it", async () => {
+    const body = "The demo failed at eleven.\n\nThe fault was a cache nobody cleared.";
+    const withBody = { ...book, chapters: book.chapters.map((c, i) => (i === 0 ? { ...c, body } : c)) };
+    const edit = vi.fn(async () => withBody);
+    show(client("shelf", { myBook: async () => withBody, editChapter: edit }));
+    fireEvent.click(await screen.findByRole("button", { name: "Chapter 1" }));
+    const text = screen.getByLabelText("Chapter 1 text") as HTMLTextAreaElement;
+    expect(text.value).toBe(body);
+    fireEvent.change(text, { target: { value: `${body}\n\nAnd then I fixed it.` } });
+    fireEvent.blur(text);
+    await waitFor(() => expect(edit).toHaveBeenCalledWith("0", { body: `${body}\n\nAnd then I fixed it.` }));
+  });
+
   it("opens the back cover as one field that saves itself", async () => {
     const edit = vi.fn(async () => book);
     show(client("shelf", { editBook: edit }));

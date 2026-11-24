@@ -109,7 +109,13 @@ function toBook(book: MyBookResponse): DraftBook {
     title: book.title,
     authorName: book.author_name,
     blurb: book.blurb,
-    chapters: book.chapters.map(({ id, title, summary, quotes }) => ({ id, title, summary, quotes })),
+    chapters: book.chapters.map(({ id, title, summary, body, quotes }) => ({
+      id,
+      title,
+      summary,
+      body: body ?? null,
+      quotes,
+    })),
   };
 }
 

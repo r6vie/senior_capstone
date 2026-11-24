@@ -14,6 +14,8 @@ export interface DraftChapter {
   id: string;
   title: string;
   summary: string;
+  /** The chapter's own text, 2–3 paragraphs split by a blank line; null until written (show the summary then). */
+  body?: string | null;
   /** The member's own words behind this chapter. Only they ever see them. */
   quotes: string[];
 }
@@ -206,6 +208,7 @@ export interface BookEdit {
 export interface ChapterEdit {
   title?: string;
   summary?: string;
+  body?: string;
 }
 
 export interface MyBook extends DraftBook {

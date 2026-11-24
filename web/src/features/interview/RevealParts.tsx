@@ -474,8 +474,9 @@ export function ReviewBook({
           track={track}
           className="rv-text"
           long
-          value={chapter.summary}
-          onSave={(summary) => onEditChapter(chapter.id, { summary })}
+          // The chapter's own text once it's written; until then its summary stands in, and is what's edited.
+          value={chapter.body ?? chapter.summary}
+          onSave={(text) => onEditChapter(chapter.id, chapter.body ? { body: text } : { summary: text })}
         />
         {canRemove &&
           (confirming ? (
