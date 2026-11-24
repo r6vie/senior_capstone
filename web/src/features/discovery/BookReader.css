@@ -291,6 +291,8 @@
 }
 .br-title {
   margin: 0;
+  /* The art's dark ink for its title page (ui/art/bookArt.ts, pageInk). */
+  color: var(--page-ink, var(--ink));
   font: 600 42px / 1.04 var(--font-serif);
   letter-spacing: -0.015em;
   text-wrap: balance;
@@ -710,7 +712,7 @@
   width: fit-content;
   margin: var(--print-gap, calc(10px * var(--sx))) 0 0 calc(-3px * var(--sx));
   padding: 0 calc(3px * var(--sx)) calc(1px * var(--sx));
-  background: var(--white);
+  background: var(--art-knockout, var(--white));
   font: 700 var(--print-name, calc(13px * var(--sx))) / 1.15 var(--font-display);
   overflow-wrap: anywhere;
   letter-spacing: 0.16em;
