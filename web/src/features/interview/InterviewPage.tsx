@@ -9,7 +9,15 @@ import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, takeOrphanDrafts } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
 import { EditForm, editKeyFor, hasEditDraft } from "./EditInPlace";
-import { AskFrame, ErrorMessage, Frame, RetryContext, SmallBook, Waiting } from "./InterviewFrame";
+import {
+  AskFrame,
+  ErrorMessage,
+  Frame,
+  RetryContext,
+  SmallBook,
+  TypedQuestion,
+  Waiting,
+} from "./InterviewFrame";
 import {
   type BookEdit,
   type ChapterEdit,
@@ -29,7 +37,8 @@ import {
   useSavedLine,
 } from "./LeftoverWords";
 import { Hand } from "./librarian/Hand";
-import { Notebook } from "./librarian/Notebook";
+import { Notebook, welcomeTimes } from "./librarian/Notebook";
+import { reducedMotion } from "./librarian/pen";
 import { useAnnouncer } from "./librarian/useAnnouncer";
 import { useNotebook } from "./librarian/useNotebook";
 import { ChangesScreen, WaitBox } from "./ProposedChanges";
@@ -163,6 +172,18 @@ export function InterviewPage({
       leaveWords(userId, NOT_SAVED_ANOTHER_SCREEN, words);
     }
   };
+  // The opening (StartOpen): an interview started on this visit opens with the Librarian's welcome
+  // written in its notebook, then the first question typing in. One already under way skips it.
+  const [opening, setOpening] = useState<{ place: string | null; writing: boolean } | null>(null);
+  const welcomeLines = useMemo(
+    () => [
+      `hello, ${(user?.first_name ?? "").toLowerCase()}.`,
+      "one question at a time. type or speak.",
+      "about 20 minutes. stop whenever you like.",
+      "nobody sees any of it till you shelve it.",
+    ],
+    [user?.first_name],
+  );
   const [hasSparks, setHasSparks] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   // The Librarian's notebook lives for the whole interview, so the next question can circle an entry.
@@ -248,19 +269,36 @@ export function InterviewPage({
     }
   }, [busy]);
 
+  // The opening's first question gets its place as soon as it arrives; after that it is fixed.
+  useEffect(() => {
+    if (opening && opening.place === null && place.startsWith("asking:"))
+      setOpening({ place, writing: opening.writing });
+  }, [opening, place]);
+  const openingWrites = Boolean(opening?.writing && opening.place === place);
+  // The typed question stays in place once typed, so the heading's words don't change and aren't read twice.
+  const openingHere = Boolean(opening && opening.place === place);
+  // On a wide screen the question types in while the welcome's last two lines are written. On a phone
+  // only the hello shows, in the notebook's peek, so the question types in once that is written.
+  const openingDelay = useMemo(() => {
+    const times = welcomeTimes(welcomeLines);
+    const narrow = window.matchMedia?.("(max-width: 1099px)").matches;
+    return (narrow ? (times.starts[1] ?? times.end) : (times.starts[2] ?? times.end)) * 1000;
+  }, [welcomeLines]);
+
   // A new question or screen starts at the top with the Librarian's words in view. Where there's a real
   // keyboard the member can start typing at once; on a phone that would cover the question.
   useEffect(() => {
     if (!loaded || loadFailed) return;
     document.documentElement.scrollTop = 0;
-    const asking = place.startsWith("asking:") && !welcomedBack;
+    // While the opening writes, the keyboard waits at the question; it moves to the answer once typed.
+    const asking = place.startsWith("asking:") && !welcomedBack && !openingWrites;
     const hasKeyboard = window.matchMedia?.("(hover: hover)").matches;
     const field =
       asking && hasKeyboard
         ? document.querySelector<HTMLElement>(".iv-answer textarea, .iv-answer [role=textbox]")
         : null;
     (field ?? document.querySelector<HTMLElement>(".iv-say"))?.focus({ preventScroll: true });
-  }, [place, loaded, loadFailed, welcomedBack]);
+  }, [place, loaded, loadFailed, welcomedBack, openingWrites]);
 
   // Runs one call with a calm waiting line on the band; the screen stays put until it answers.
   const run = useCallback(
@@ -425,8 +463,11 @@ export function InterviewPage({
                     if (!now) throw reason;
                     return now;
                   }),
-              // A 502 here means the interview exists but its first question failed.
-              { retryWith: () => client.askAgain("") },
+              {
+                // A 502 here means the interview exists but its first question failed.
+                retryWith: () => client.askAgain(""),
+                onSuccess: () => setOpening({ place: null, writing: !reducedMotion() }),
+              },
             )
           }
         />
@@ -502,12 +543,33 @@ export function InterviewPage({
             </Frame>
           );
         }
+        const welcome = opening && !inAdding ? { lines: welcomeLines, writing: openingWrites } : undefined;
         return (
           <AskFrame
             eyebrow={inAdding ? "Adding to your book" : "Question"}
-            question={say(state.question)}
+            question={
+              openingHere && !busy ? (
+                <TypedQuestion
+                  text={state.question}
+                  after={openingDelay}
+                  onDone={() => {
+                    setOpening((now) => (now ? { ...now, writing: false } : now));
+                    // Only if the member hasn't gone somewhere themselves in the meantime.
+                    const focused = document.activeElement;
+                    if (focused && focused !== document.body && !focused.classList.contains("iv-say")) return;
+                    if (!window.matchMedia?.("(hover: hover)").matches) return;
+                    document
+                      .querySelector<HTMLElement>(".iv-answer textarea, .iv-answer [role=textbox]")
+                      ?.focus({ preventScroll: true });
+                  }}
+                />
+              ) : (
+                say(state.question)
+              )
+            }
+            typing={openingWrites}
             busy={Boolean(busy)}
-            aside={<Notebook entries={notebook.entries} />}
+            aside={<Notebook entries={notebook.entries} welcome={welcome} />}
           >
             <ErrorMessage message={error} />
             {notice && (

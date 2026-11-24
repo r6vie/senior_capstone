@@ -125,8 +125,15 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
-.iv-q {
-  max-width: 660px;
+/* The question runs the content's full width over the answer and the notebook (StartOpen). */
+.iv-ask .iv-question {
+  margin-bottom: var(--s-5);
+}
+.iv-ask .iv-q {
+  margin-bottom: 0;
+}
+.iv-say.iv-q {
+  max-width: min(980px, 100%);
   margin: 0 0 6px;
   font: 600 32px / 1.16 var(--font-serif);
   letter-spacing: -0.012em;
@@ -134,6 +141,35 @@
 }
 .iv-q:focus {
   outline: none;
+}
+/* While the first question types in, its place is held at the question's own final size (the whole
+   question, invisible, under the typed letters), so nothing under it moves. */
+.iv-typed {
+  display: grid;
+}
+.iv-typed > * {
+  grid-area: 1 / 1;
+}
+.iv-typed-full {
+  color: transparent;
+}
+/* Where the system sets the colours, transparent text would show: there the question is simply whole. */
+@media (forced-colors: active) {
+  .iv-typed-full {
+    color: CanvasText;
+  }
+  .iv-typed-now {
+    display: none;
+  }
+}
+/* The typing cursor: a plain ink bar that stands still (motion only answers what the member does). */
+.iv-caret {
+  display: inline-block;
+  width: 2px;
+  height: 0.72em;
+  margin-left: 2px;
+  background: var(--ink);
+  vertical-align: -0.12em;
 }
 .iv-question .iv-still {
   color: var(--ink-2);
@@ -392,6 +428,10 @@
 .lib-en {
   position: relative;
   margin-left: var(--ml, 0);
+}
+/* The welcome is page one's opening; the Librarian's notes start a little below it. */
+.lib-welcome + .lib-en:not(.lib-welcome) {
+  margin-top: 10px;
 }
 .lib-en-tx {
   display: grid;

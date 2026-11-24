@@ -1,7 +1,7 @@
 import { type CSSProperties, useEffect, useId, useRef, useState } from "react";
 import type { NotebookEntry } from "../interviewClient";
 import { fold } from "./anchors";
-import { Hand } from "./Hand";
+import { Hand, writeTime } from "./Hand";
 import { seeded } from "./pen";
 import { strokeOf } from "./shapes";
 import type { ShownEntry } from "./useNotebook";
@@ -140,9 +140,76 @@ function Entry({ shown }: { shown: ShownEntry }) {
   );
 }
 
-function Pages({ entries }: { entries: ShownEntry[] }) {
+/** The welcome the Librarian writes on page one when an interview starts (StartOpen): its lines, and
+ * whether it is being written now, line after line at pen pace, or is already on the page. */
+export interface Welcome {
+  lines: string[];
+  writing: boolean;
+}
+
+// Each welcome line's lean, as drawn on the board (StartOpen), so the hello always looks the same.
+const WELCOME_LEAN = [
+  { rot: -0.55, ml: 9, fs: 26 },
+  { rot: -1.65, ml: 9, fs: 24 },
+  { rot: -1.1, ml: 2, fs: 23 },
+  { rot: -1.1, ml: 7, fs: 23 },
+];
+// The welcome is written quicker than a note, so the question isn't kept waiting, with a breath between lines.
+const WELCOME_PACE = 0.35;
+const LINE_PAUSE_S = 0.25;
+
+/** When each welcome line starts, in seconds, and when the last one is finished. */
+export function welcomeTimes(lines: string[]): { starts: number[]; end: number } {
+  const starts: number[] = [];
+  let at = 0;
+  for (const line of lines) {
+    starts.push(at);
+    at += writeTime(line) * WELCOME_PACE + LINE_PAUSE_S;
+  }
+  return { starts, end: at };
+}
+
+function WelcomeLines({ welcome }: { welcome: Welcome }) {
+  const { starts } = welcomeTimes(welcome.lines);
+  return (
+    <>
+      {welcome.lines.map((line, index) => {
+        const lean = WELCOME_LEAN[index % WELCOME_LEAN.length] ?? WELCOME_LEAN[0];
+        return (
+          <li
+            // biome-ignore lint/suspicious/noArrayIndexKey: the welcome's fixed lines, in order
+            key={index}
+            className="lib-en lib-welcome"
+            style={
+              {
+                "--rot": `${lean?.rot}deg`,
+                "--ml": `${lean?.ml}px`,
+                "--fs": `${lean?.fs}px`,
+              } as CSSProperties
+            }
+          >
+            <span className="iv-visually-hidden">{line}</span>
+            <span className="lib-en-tx">
+              <span className="lib-line">
+                <Hand
+                  text={line}
+                  life={welcome.writing ? "writing" : "resting"}
+                  delay={starts[index] ?? 0}
+                  pace={WELCOME_PACE}
+                />
+              </span>
+            </span>
+          </li>
+        );
+      })}
+    </>
+  );
+}
+
+function Pages({ entries, welcome }: { entries: ShownEntry[]; welcome?: Welcome }) {
   return (
     <ol className="lib-nbl">
+      {welcome && <WelcomeLines welcome={welcome} />}
       {entries.map((shown) => (
         <Entry key={shown.entry.id} shown={shown} />
       ))}
@@ -150,7 +217,7 @@ function Pages({ entries }: { entries: ShownEntry[] }) {
   );
 }
 
-export function Notebook({ entries }: { entries: ShownEntry[] }) {
+export function Notebook({ entries, welcome }: { entries: ShownEntry[]; welcome?: Welcome }) {
   const heading = useId();
   const [open, setOpen] = useState(false);
   const sheet = useRef<HTMLDivElement>(null);
@@ -186,16 +253,25 @@ export function Notebook({ entries }: { entries: ShownEntry[] }) {
         <h2 id={heading} className="lib-nbh">
           The Librarian’s notebook
         </h2>
-        <Pages entries={entries} />
+        <Pages entries={entries} welcome={welcome} />
       </section>
 
-      {newest && !open && (
+      {(newest || welcome) && !open && (
         <div className="lib-peek">
           <span className="lib-peekl" aria-hidden="true">
             Notes
           </span>
           <span className="lib-peek-line" aria-hidden="true">
-            <Hand text={shownText(newest.entry)} life={newest.life} />
+            {newest ? (
+              <Hand text={shownText(newest.entry)} life={newest.life} />
+            ) : (
+              // Before the Librarian has any notes, the peek holds the welcome's hello.
+              <Hand
+                text={welcome?.lines[0] ?? ""}
+                life={welcome?.writing ? "writing" : "resting"}
+                pace={WELCOME_PACE}
+              />
+            )}
           </span>
           <button
             type="button"
@@ -232,7 +308,7 @@ export function Notebook({ entries }: { entries: ShownEntry[] }) {
                 <Chevron />
               </button>
             </div>
-            <Pages entries={entries} />
+            <Pages entries={entries} welcome={welcome} />
           </div>
         </>
       )}

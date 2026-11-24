@@ -99,6 +99,7 @@ export function Hand({
   text,
   life,
   delay = 0,
+  pace = 1,
   className,
   underline,
 }: {
@@ -106,6 +107,8 @@ export function Hand({
   life: Life;
   /** Seconds before the pen starts, as when a note follows its stroke. */
   delay?: number;
+  /** Times the usual pen speed's durations: under 1 writes faster, as the opening's welcome does. */
+  pace?: number;
   className?: string;
   /** One word underlined by hand, as the notebook does with the word an entry hangs on. */
   underline?: { word: number; double: boolean; shape?: string };
@@ -152,8 +155,8 @@ export function Hand({
                   className="lib-g"
                   style={
                     {
-                      "--s": `${(delay + letter.start).toFixed(3)}s`,
-                      "--t": `${letter.duration.toFixed(3)}s`,
+                      "--s": `${(delay + letter.start * pace).toFixed(3)}s`,
+                      "--t": `${(letter.duration * pace).toFixed(3)}s`,
                       "--o": letter.opacity.toFixed(2),
                       "--y": `${letter.lift.toFixed(2)}px`,
                       "--r": `${letter.turn.toFixed(2)}deg`,

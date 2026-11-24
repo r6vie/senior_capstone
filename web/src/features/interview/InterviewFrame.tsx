@@ -4,6 +4,7 @@ import { Button } from "../../ui/Button";
 import { useAuth } from "../auth/AuthProvider";
 import type { Phase } from "./interviewClient";
 import { LeftoverWords } from "./LeftoverWords";
+import { reducedMotion } from "./librarian/pen";
 import "./InterviewPage.css";
 
 // The question band and its top bar, shared by every interview screen: the first interview, adding to
@@ -96,6 +97,7 @@ export function Frame({
 export function AskFrame({
   eyebrow,
   question,
+  typing = false,
   busy,
   aside,
   children,
@@ -103,6 +105,8 @@ export function AskFrame({
   /** "Question", or "Adding to your book" in a round on a shelved book. */
   eyebrow: string;
   question: ReactNode;
+  /** The question is typing in (StartOpen): its place keeps two lines, so the cards under it hold still. */
+  typing?: boolean;
   busy?: boolean;
   /** The notebook. */
   aside?: ReactNode;
@@ -135,25 +139,63 @@ export function AskFrame({
       {/* Outside the part that goes inert during a wait: these words have to stay selectable. */}
       <LeftoverWords />
       <main className="iv-act" tabIndex={-1} inert={busy} aria-busy={busy}>
+        {/* The question runs the full width; the answer and the notebook start level under it (StartOpen). */}
+        <div className="iv-question">
+          <p className="iv-qeye">{eyebrow}</p>
+          <h1 className="iv-say iv-q" data-typing={typing || undefined} tabIndex={-1} aria-live="polite">
+            {question}
+          </h1>
+          {slow && (
+            <p className="iv-still" role="status">
+              Still working. Your answers are saved.
+            </p>
+          )}
+        </div>
         <div className="lib-cols">
-          <div className="lib-main">
-            <div className="iv-question">
-              <p className="iv-qeye">{eyebrow}</p>
-              <h1 className="iv-say iv-q" tabIndex={-1} aria-live="polite">
-                {question}
-              </h1>
-              {slow && (
-                <p className="iv-still" role="status">
-                  Still working. Your answers are saved.
-                </p>
-              )}
-            </div>
-            {children}
-          </div>
+          <div className="lib-main">{children}</div>
           {aside}
         </div>
       </main>
     </div>
+  );
+}
+
+// One letter of the first question every this many milliseconds: quick, but readable as typing.
+const TYPE_MS = 28;
+
+/** The first question typing in at the top (StartOpen), letter by letter, once `after` milliseconds
+ * have passed. */
+export function TypedQuestion({ text, after, onDone }: { text: string; after: number; onDone: () => void }) {
+  // With reduced motion the question is simply there, whole.
+  const [still] = useState(reducedMotion);
+  const [count, setCount] = useState(still ? text.length : 0);
+  const done = useRef(onDone);
+  done.current = onDone;
+  useEffect(() => {
+    if (still) return;
+    let timer: ReturnType<typeof setTimeout>;
+    let typed = 0;
+    const tick = () => {
+      typed += 1;
+      setCount(typed);
+      if (typed < text.length) timer = setTimeout(tick, TYPE_MS);
+      else done.current();
+    };
+    timer = setTimeout(tick, after);
+    return () => clearTimeout(timer);
+  }, [text, after, still]);
+  // The whole question sits invisibly under the typed letters, so its place is its final size from the
+  // first letter and nothing under it moves as it wraps. Screen readers read that whole question, once.
+  return (
+    <>
+      <span className="iv-typed">
+        <span className="iv-typed-full">{text}</span>
+        <span className="iv-typed-now" aria-hidden="true">
+          {text.slice(0, count)}
+          {count < text.length && <span className="iv-caret" />}
+        </span>
+      </span>
+    </>
   );
 }
 

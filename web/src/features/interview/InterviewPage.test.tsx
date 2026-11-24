@@ -100,6 +100,69 @@ describe("InterviewPage", () => {
     session.clear();
   });
 
+  describe("the opening (StartOpen)", () => {
+    function signIn() {
+      session.set("token");
+      vi.spyOn(api, "GET").mockResolvedValue({
+        data: {
+          id: "u1",
+          first_name: "Ingrid",
+          last_name: "Solberg",
+          full_name: "Ingrid Solberg",
+          email: "i@example.com",
+          created_at: "2026-11-07T00:00:00Z",
+        },
+        response: new Response(null, { status: 200 }),
+      } as never);
+    }
+    async function chooseAndStart() {
+      const start = await screen.findByRole("button", { name: "Start the interview" });
+      fireEvent.click(screen.getByLabelText("Current student"));
+      fireEvent.click(start);
+    }
+    function stubMotion(reduce: boolean) {
+      vi.stubGlobal("matchMedia", (query: string) => ({
+        matches: query === "(hover: hover)" || (reduce && query === "(prefers-reduced-motion: reduce)"),
+      }));
+    }
+
+    it("writes the welcome in the notebook, then types the first question in", async () => {
+      signIn();
+      stubMotion(false);
+      renderWith(fake());
+      await chooseAndStart();
+      expect(await screen.findAllByText("hello, ingrid.")).not.toHaveLength(0);
+      expect(screen.getAllByText("nobody sees any of it till you shelve it.")).not.toHaveLength(0);
+      // The question's place keeps two lines while its letters type in; readers get it whole at once.
+      const question = document.querySelector(".iv-q");
+      expect(question?.hasAttribute("data-typing")).toBe(true);
+      expect(question?.querySelector(".iv-caret")).toBeTruthy();
+      expect(screen.getByText(/spent years getting good at/)).toBeTruthy();
+    });
+
+    it("with reduced motion, shows the welcome and the whole question at once", async () => {
+      signIn();
+      stubMotion(true);
+      renderWith(fake());
+      await chooseAndStart();
+      expect(await screen.findAllByText("hello, ingrid.")).not.toHaveLength(0);
+      const question = document.querySelector(".iv-q");
+      expect(question?.hasAttribute("data-typing")).toBe(false);
+      expect(question?.querySelector(".iv-caret")).toBeNull();
+      expect(question?.textContent).toMatch(/spent years getting good at/);
+      await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText("Your answer")));
+    });
+
+    it("skips the welcome when the member comes back to an interview under way", async () => {
+      signIn();
+      stubMotion(false);
+      renderWith(at(asking));
+      expect(await screen.findByText(asking.question)).toBeTruthy();
+      expect(screen.queryByText("hello, ingrid.")).toBeNull();
+      expect(document.querySelector(".iv-q")?.hasAttribute("data-typing")).toBe(false);
+    });
+  });
+
   describe("start", () => {
     it("leads with Start and keeps the résumé behind one quiet line", async () => {
       const saveContext = vi.fn(async () => undefined);
