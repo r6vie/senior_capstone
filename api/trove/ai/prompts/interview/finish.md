@@ -8,6 +8,8 @@ For each chosen chapter, return its `pool_id` exactly as given, and a `title` an
 
 {{interview/_chapter}}
 
+No chapter shares the book's title, or nearly does: the title names the whole book, so a chapter that repeats it reads like a misprint on the contents page. If a pool chapter's title is the chosen title, give that chapter a new one.
+
 Each chapter already has its quotes, shown in the pool. Don't repeat them in the summary.
 
 Then write the blurb for the finished book: it draws on the chapters you chose, fits the chosen title's angle, and opens on the strongest thread rather than the first chapter.

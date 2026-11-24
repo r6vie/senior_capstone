@@ -181,6 +181,46 @@ async def test_the_quick_look_after_send_doesnt_think_or_retry():
     assert only["max_tokens"] == librarian.QUICK_MAX_TOKENS
 
 
+async def test_an_anchor_past_eight_words_is_cut_back_rather_than_lost():
+    # The real notes model often quotes a 9-10 word anchor; the look after Send has no retry.
+    answer = "I fix wobbly bed frames and printers on my floor sometimes, which takes more time."
+    long = "I fix wobbly bed frames and printers on my floor sometimes"
+    entry = {"kind": "note", "text": "the printers are the real job.", "anchors": [long], "source_turns": [2]}
+    mark = {"move": "underline", "anchor": long, "occurrence": 1, "note": "the real job."}
+    claude = FakeClaude([text_message(notes_reply(marks=[mark], entries=[entry]))])
+    notes = await librarian.look(claude, context(answer), quick=True)
+    assert [e.anchors for e in notes.added_entries] == [["I fix wobbly bed frames and printers on"]]
+    assert [m.anchor for m in notes.marks] == ["I fix wobbly bed frames and printers on"]
+
+    # A cut that would point at an earlier copy of the same words is left alone, and dropped.
+    twice = "The old van ran out of road again on Monday. Then the old van ran out of road again today."
+    mark = {
+        "move": "underline",
+        "anchor": "the old van ran out of road again today",
+        "occurrence": 1,
+        "note": "x.",
+    }
+    trimmed = librarian._trim_anchors(
+        librarian._Notes.model_validate_json(notes_reply(marks=[mark])), context(twice)
+    )
+    assert trimmed.marks[0].anchor == mark["anchor"]
+
+
+def test_the_first_answers_are_asked_for_one_entry_until_they_have_one():
+    early = librarian._now(context("The intake form had nine pages."))
+    assert librarian.EARLY_ASK in early
+    later = librarian._now(
+        context("The intake form had nine pages.", question_number=librarian.EARLY_ANSWERS + 1)
+    )
+    assert "Usually write nothing new." in later and librarian.EARLY_ASK not in later
+    one = Entry(
+        id="n_1", kind="note", text="nine pages, no reader.", anchors=["nine pages"], source_turns=[2]
+    )
+    assert librarian.EARLY_ASK not in librarian._now(
+        context("The intake form had nine pages.", entries=[one])
+    )
+
+
 async def test_caps_on_marks_and_notebook_additions():
     answer = "The intake form had nine pages, nine fields, and nobody read the nine pages at all."
     marks = [

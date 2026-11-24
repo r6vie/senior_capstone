@@ -35,6 +35,7 @@ PUBLIC_FIELDS = {
     "chapters.id": 1,
     "chapters.title": 1,
     "chapters.summary": 1,
+    "chapters.body": 1,
     "copies": 1,
     "published_at": 1,
 }
@@ -230,10 +231,18 @@ async def retitle_draft(
 ) -> dict | None:
     """Replace the author's draft with one finished for another title, keeping a back cover the member
     wrote themselves. None if they have no draft."""
+    old = await database.books.find_one({"author_id": author_id, "status": DRAFT})
+    if old is None:
+        return None
     book = await database.books.find_one_and_update(
-        {"author_id": author_id, "status": DRAFT},
+        # Read and written together, so a text the member saves meanwhile isn't lost.
+        {"_id": old["_id"], "status": DRAFT, "updated_at": old["updated_at"]},
         {
-            "$set": {"title": title, "chapters": chapters, "updated_at": datetime.now(UTC)},
+            "$set": {
+                "title": title,
+                "chapters": keep_edited_bodies(old["chapters"], chapters),
+                "updated_at": datetime.now(UTC),
+            },
             # The old back cover described the old book.
             "$unset": {"previous_blurb": ""},
         },
@@ -242,15 +251,46 @@ async def retitle_draft(
     return await _named(database, await _set_unedited_blurb(database, book, blurb))
 
 
+def body_edited(chapter: dict) -> bool:
+    """Whether the member wrote this chapter's text themselves. The Librarian never rewrites it."""
+    return bool(chapter.get("body_edited"))
+
+
+def keep_edited_bodies(old: list[dict], new: list[dict]) -> list[dict]:
+    """`new`, with the text the member wrote on any chapter that carries on (by id) kept as they wrote it."""
+    edited = {c["id"]: c for c in old if body_edited(c)}
+    return [
+        {**chapter, "body": edited[chapter["id"]]["body"], "body_edited": True}
+        if chapter["id"] in edited
+        else chapter
+        for chapter in new
+    ]
+
+
+async def set_chapter_bodies(database: AsyncDatabase, author_id: str, bodies: dict[str, str]) -> None:
+    """Put the Librarian's text on the author's chapters, by chapter id, where the chapter has none yet
+    and the member hasn't written their own. Each chapter is checked in its own update, so an edit
+    saved meanwhile is never overwritten."""
+    for chapter_id, body in bodies.items():
+        if not body:
+            continue
+        await database.books.update_one(
+            {"author_id": author_id},
+            {"$set": {"chapters.$[c].body": body}},
+            array_filters=[{"c.id": chapter_id, "c.body": None, "c.body_edited": {"$ne": True}}],
+        )
+
+
 def revised_chapters(
     chapters: list[dict], *, improved: list[dict], added: list[dict], removed: list[str]
 ) -> list[dict]:
     """The chapters after a revision. `improved` replace the ones with their ids, in place. `added`
     each go where their `position` says (1 is first), or at the end without one."""
     replacements = {chapter["id"]: chapter for chapter in improved}
-    result = [
-        replacements.get(chapter["id"], chapter) for chapter in chapters if chapter["id"] not in removed
-    ]
+    result = keep_edited_bodies(
+        chapters,
+        [replacements.get(chapter["id"], chapter) for chapter in chapters if chapter["id"] not in removed],
+    )
     for chapter in added:
         position = chapter.get("position")
         index = len(result) if position is None else max(0, min(position - 1, len(result)))
@@ -427,17 +467,23 @@ async def edit_chapter(
     *,
     title: str | None = None,
     summary: str | None = None,
+    body: str | None = None,
 ) -> dict:
-    """Save the member's own chapter title or summary. Its quotes stay. On a published book, undo
+    """Save the member's own chapter title, summary or text. Its quotes stay. On a published book, undo
     takes it back."""
-    check_text(title, summary)
+    check_text(title, summary, body)
     book = await _own_book(database, author_id)
     index = next((n for n, c in enumerate(book["chapters"]) if c["id"] == chapter_id), None)
     if index is None:
         raise EditRefused(404, "That chapter isn't in your book.")
-    chapter = book["chapters"][index]
-    edited = {**chapter, "title": title or chapter["title"], "summary": summary or chapter["summary"]}
-    changes: dict = {f"chapters.{index}": edited}
+    # Field by field, so the Librarian's text landing on this chapter meanwhile isn't written back out.
+    changes: dict = {}
+    if title is not None:
+        changes[f"chapters.{index}.title"] = title
+    if summary is not None:
+        changes[f"chapters.{index}.summary"] = summary
+    if body is not None:
+        changes |= {f"chapters.{index}.body": body, f"chapters.{index}.body_edited": True}
     if book["status"] != DRAFT:
         changes["previous_version"] = _snapshot(book)
     return await _save(database, book, changes)

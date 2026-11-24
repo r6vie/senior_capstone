@@ -61,7 +61,7 @@ async def database(mongo_database):
 
 @pytest.fixture
 def fake_claude():
-    claude = FakeClaude(notes=[])
+    claude = FakeClaude(notes=[], bodies=[])
     app.dependency_overrides[get_claude] = lambda: claude
     yield claude
     app.dependency_overrides.pop(get_claude, None)

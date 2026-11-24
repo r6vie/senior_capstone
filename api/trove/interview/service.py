@@ -719,7 +719,42 @@ async def write_draft(database: AsyncDatabase, claude: Claude, interview_id: str
     if updated is not None:
         # The interview has ended, so the résumé text goes (docs/trove.md §4).
         await database.resume_texts.delete_one({"_id": interview_id})
-        await prepare_books(database, claude, updated)
+        await asyncio.gather(
+            prepare_books(database, claude, updated), prepare_bodies(database, claude, updated)
+        )
+
+
+async def prepare_bodies(database: AsyncDatabase, claude: Claude, interview: dict) -> None:
+    """Write the text of every chapter in the pool, once for all three titles: a title changes a chapter's
+    angle, never its facts. Kept on the interview by chapter id, and put on the book if it's there already."""
+    draft = Draft.model_validate(interview["draft"])
+    bodies = await engine.write_bodies(
+        claude, turns=book_turns(interview), chapters=draft.pool, leaks=leak_check(interview)
+    )
+    await database.interviews.update_one({"_id": interview["_id"]}, {"$set": {"bodies": bodies}})
+    await books.set_chapter_bodies(database, interview["user_id"], bodies)
+
+
+def with_bodies(interview: dict, chapters: list[DraftChapter]) -> list[dict]:
+    """The chapters as the book stores them, with the text written for each, where there is one yet."""
+    bodies = interview.get("bodies") or {}
+    return [{**chapter.model_dump(), "body": bodies.get(chapter.id)} for chapter in chapters]
+
+
+async def write_changed_bodies(
+    database: AsyncDatabase, claude: Claude, interview_id: str, chapters: list[dict]
+) -> None:
+    """Runs in the background after a revision: text for the chapters it added or changed."""
+    interview = await database.interviews.find_one({"_id": interview_id})
+    if interview is None or not chapters:
+        return
+    bodies = await engine.write_bodies(
+        claude,
+        turns=book_turns(interview),
+        chapters=[DraftChapter.model_validate(chapter) for chapter in chapters],
+        leaks=leak_check(interview),
+    )
+    await books.set_chapter_bodies(database, interview["user_id"], bodies)
 
 
 # While the member reads the three titles, the book for each is finished in the background, so the one
@@ -883,9 +918,12 @@ async def write_book(database: AsyncDatabase, claude: Claude, interview_id: str)
             database,
             author_id=interview["user_id"],
             title=interview["chosen_title"],
-            chapters=[chapter.model_dump() for chapter in finished.chapters],
+            chapters=with_bodies(interview, finished.chapters),
             blurb=finished.blurb,
         )
+    # Text written after this interview was read, before the book was there to take it.
+    fresh = await database.interviews.find_one({"_id": interview_id}, {"bodies": 1})
+    await books.set_chapter_bodies(database, interview["user_id"], (fresh or {}).get("bodies") or {})
     await database.interviews.update_one(
         {"_id": interview_id, "stage": "finishing"},
         {
@@ -966,7 +1004,7 @@ async def change_title(database: AsyncDatabase, claude: Claude, user: dict, inde
         database,
         user["_id"],
         title=title,
-        chapters=[chapter.model_dump() for chapter in finished.chapters],
+        chapters=with_bodies(interview, finished.chapters),
         blurb=finished.blurb,
     )
     if book is None:
@@ -1357,6 +1395,8 @@ async def apply_revision(
             raise conflict("That can't be applied to your book as it is now. Please look at it again.")
         if removed:
             await remember_removed(database, interview["_id"], removed)
+        changed = [*parts["improved"], *parts["added"]]
+        background.add_task(write_changed_bodies, database, claude, interview["_id"], changed)
     declined = [
         _remembered(change)
         for change in proposal["changes"]

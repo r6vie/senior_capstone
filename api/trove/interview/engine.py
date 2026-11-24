@@ -7,6 +7,7 @@ Errors: ClaudeRefused when Claude declines, Anthropic SDK errors as they come, a
 (pydantic's ValidationError is one) when a reply is unusable even after a retry.
 """
 
+import asyncio
 import json
 import re
 from collections.abc import Callable
@@ -180,6 +181,11 @@ NOT_NAMES = frozenset(
 MAX_BLURB = 600
 # The prompts ask for at most this, and real runs have come back a few characters over.
 MAX_SUMMARY = 300
+# A chapter's text: the prompt asks for 150-250 words. Outside these it's thin or padded, and dropped.
+BODY_WORDS = (90, 320)
+_FRAMING = re.compile(
+    r"\b(this chapter|the chapter|the reader|readers|this book|my book|the call|a call)\b", re.I
+)
 
 # Shape is 0-1 questions, and following a hedge can stretch it, so it gets a nudge to close here.
 MAX_SHAPE = 2
@@ -341,6 +347,10 @@ class _Blurb(BaseModel):
     blurb: str
 
 
+class _Body(BaseModel):
+    body: str = Field(description="The chapter's text: 2 or 3 short paragraphs, separated by a blank line.")
+
+
 class _Change(BaseModel):
     kind: Literal["new", "improve"]
     chapter_id: str | None
@@ -486,13 +496,21 @@ async def finish_book(
     raw = await _ask(claude, "interview/finish", content, _Finished, BOOK_EFFORT)
     if any(leaks(f"{c.title} {c.summary}") for c in raw.chapters) or leaks(raw.blurb):
         raw = await _ask(claude, "interview/finish", content, _Finished, BOOK_EFFORT)
+    elif any(_echoes_title(c.title, title) for c in raw.chapters):
+        again = (
+            f"{content}\n\nNo chapter may be titled the same as the book, or nearly: retitle that chapter."
+        )
+        raw = await _ask(claude, "interview/finish", again, _Finished, BOOK_EFFORT)
 
     chapters: list[DraftChapter] = []
     for chosen in raw.chapters:
         source = pool.get(chosen.pool_id)
         if source and all(c.id != source.id for c in chapters):
-            unusable = leaks(f"{chosen.title} {chosen.summary}") or _too_close_to_a_spark(
-                chosen.title, spark_titles
+            unusable = (
+                leaks(f"{chosen.title} {chosen.summary}")
+                or _too_close_to_a_spark(chosen.title, spark_titles)
+                # The pool's own title, unless that one is the book's title too.
+                or (_echoes_title(chosen.title, title) and not _echoes_title(source.title, title))
             )
             chapters.append(
                 source
@@ -529,6 +547,59 @@ async def write_blurb(
         if blurb and not leaks(blurb):
             return blurb
     raise ValueError("The blurb was empty, too long or carried a term the member never said.")
+
+
+def body_problems(body: str, turns: list[Turn], leaks: Callable[[str], bool] = _never) -> list[str]:
+    """What the code can check of a chapter's text. A number the member never said is the invented
+    claim that's easiest to catch."""
+    problems = []
+    words = len(body.split())
+    if not BODY_WORDS[0] <= words <= BODY_WORDS[1]:
+        problems.append(f"it's {words} words; write 150 to 250")
+    said = " ".join(turn.answer for turn in turns)
+    for number in sorted(
+        set(re.findall(r"\d+(?:[.,]\d+)?", body)) - set(re.findall(r"\d+(?:[.,]\d+)?", said))
+    ):
+        problems.append(f"the member never said the number {number}")
+    if found := _FRAMING.search(body):
+        problems.append(f"it talks about the book or the reader ({found.group(0)!r})")
+    if leaks(body):
+        problems.append("it uses a term the member never said")
+    return problems
+
+
+async def write_body(
+    claude: Claude, *, turns: list[Turn], chapter: DraftChapter, leaks: Callable[[str], bool] = _never
+) -> str | None:
+    """The text of one chapter, in the member's voice and from their answers. One retry with what broke,
+    then None: a chapter without text shows its summary, which is better than a line they never said."""
+    listing = json.dumps(
+        {"title": chapter.title, "summary": chapter.summary, "quotes": chapter.quotes}, indent=1
+    )
+    content = f"{_transcript(turns)}\n\n<chapter>\n{listing}\n</chapter>\n\nWrite this chapter's text."
+    for _ in range(2):
+        body = (await _ask(claude, "interview/body", content, _Body, BOOK_EFFORT)).body.strip()
+        body = re.sub(r"\n\s*\n+", "\n\n", body)
+        problems = body_problems(body, turns, leaks)
+        if not problems:
+            return body
+        content += "\n\nYour last text broke these rules. Write it again:\n- " + "\n- ".join(problems)
+    return None
+
+
+async def write_bodies(
+    claude: Claude, *, turns: list[Turn], chapters: list[DraftChapter], leaks: Callable[[str], bool] = _never
+) -> dict[str, str]:
+    """The text of each chapter, by chapter id, written at the same time. A chapter that fails is left out."""
+
+    async def one(chapter: DraftChapter) -> tuple[str, str | None]:
+        try:
+            return chapter.id, await write_body(claude, turns=turns, chapter=chapter, leaks=leaks)
+        except Exception:
+            return chapter.id, None
+
+    written = await asyncio.gather(*(one(chapter) for chapter in chapters))
+    return {chapter_id: body for chapter_id, body in written if body}
 
 
 async def next_adding_turn(
@@ -706,6 +777,20 @@ def _too_close_to_a_spark(title: str, spark_titles: list[str] | None) -> bool:
         SequenceMatcher(None, title.casefold(), spark.casefold()).ratio() >= SPARK_TITLE_TOO_CLOSE
         for spark in spark_titles or []
     )
+
+
+def _echoes_title(chapter_title: str, book_title: str) -> bool:
+    """A chapter titled the same as its book, or with one title inside the other ("Almost nothing is
+    really lost" in a book of that name): the contents page would read like a misprint."""
+    chapter = " ".join(re.findall(r"[a-z0-9']+", _normalize(chapter_title)))
+    book = " ".join(re.findall(r"[a-z0-9']+", _normalize(book_title)))
+    if not chapter or not book:
+        return False
+    # Containment counts only for 3 words or more: "The line" in "Stuck with the line" is fine.
+    inside = (len(book.split()) >= 3 and f" {book} " in f" {chapter} ") or (
+        len(chapter.split()) >= 3 and f" {chapter} " in f" {book} "
+    )
+    return chapter == book or inside
 
 
 def _off_limits_block(off_limits: list[dict] | None) -> str:

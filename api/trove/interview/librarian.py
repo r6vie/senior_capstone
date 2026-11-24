@@ -58,6 +58,8 @@ CREDIT_NOTES = ("better.", "there it is.")
 CLIP_SHARE = 5
 # Cost controls.
 MAX_CALLS_PER_ANSWER = 8
+# The first answers each get a notebook entry: an empty notebook early on reads as nobody reading.
+EARLY_ANSWERS = 4
 MAX_CALLS_PER_HOUR = 200
 # The model sees this many earlier answers, newest last.
 EARLIER_ANSWERS = 8
@@ -541,8 +543,20 @@ def _now(context: Context) -> str:
         f"<marks_whose_words_left>\n{json.dumps(lost, indent=1)}\n</marks_whose_words_left>\n\n"
         f"<counts>{counts}{' No room for new marks.' if room <= 0 else ''}{pasted}</counts>\n\n"
         f"<answer>\n{context.answer}\n</answer>\n\n"
-        "Look at the answer as it stands. Usually write nothing new."
+        + (EARLY_ASK if _early(context) else "Look at the answer as it stands. Usually write nothing new.")
     )
+
+
+EARLY_ASK = (
+    "Look at the answer as it stands. This is one of the first answers and the notebook has nothing on it"
+    " yet. Unless the answer silences you, `entries` must hold exactly one new entry, even for a thin or"
+    " modest answer: a chapter, saving or note on the most specific thing in it, under 50 characters,"
+    " anchored on 2-6 of its words."
+)
+
+
+def _early(context: Context) -> bool:
+    return context.question_number <= EARLY_ANSWERS and not context.entries
 
 
 def _member_text(context: Context) -> str:
@@ -591,6 +605,40 @@ async def _ask(
     )
     raw = text_of(response)
     return _Notes.model_validate_json(raw), raw
+
+
+def _trimmed(anchor: str) -> str:
+    return " ".join(anchor.split()[:ANCHOR_WORDS]).rstrip(",;:.!?")
+
+
+def _trim_anchors(raw: _Notes, context: Context) -> _Notes:
+    """Cut an anchor that runs past 8 words to its first 8, when those still point at the same words:
+    the line is usually fine, and without this the look after Send, which has no retry, loses it."""
+    turns = _readable_turns(context)
+    entries = []
+    for entry in raw.entries:
+        anchors = []
+        for anchor in entry.anchors:
+            short = _trimmed(anchor)
+            if word_count(anchor) > ANCHOR_WORDS and any(
+                occurrences(_answer_of(turns, t), short) for t in entry.source_turns
+            ):
+                anchor = short
+            anchors.append(anchor)
+        entries.append(entry.model_copy(update={"anchors": anchors}))
+    marks = []
+    for mark in raw.marks:
+        short = _trimmed(mark.anchor)
+        # Only when the shorter words occur as often as the longer ones, so the occurrence still counts
+        # to the same place.
+        if (
+            mark.move != "back_cover"
+            and word_count(mark.anchor) > ANCHOR_WORDS
+            and occurrences(context.answer, short) == occurrences(context.answer, mark.anchor)
+        ):
+            mark = mark.model_copy(update={"anchor": short})
+        marks.append(mark)
+    return raw.model_copy(update={"entries": entries, "marks": marks})
 
 
 def _problems(raw: _Notes, context: Context) -> list[str]:
@@ -651,6 +699,7 @@ async def look(claude: Claude, context: Context, *, effort: str = NOTES_EFFORT, 
         }
     ]
     raw, text = await _ask(claude, messages, effort, quick=quick)
+    raw = _trim_anchors(raw, context)
     if not quick and not raw.silent and (problems := _problems(raw, context)):
         retry = [
             *messages,

@@ -1,10 +1,10 @@
-"""Write a book from a saved interview: draft, finish, blurb after a removal, one rewrite.
+"""Write a book from a saved interview: draft, finish, each chapter's text, blurb after a removal.
 
     uv run python -m evals.book                     # lists the fixtures; spends nothing
     uv run python -m evals.book dana theo ruth      # writes evals/out/book/<timestamp>/<slug>.{json,md}
     uv run python -m evals.book dana --title 2      # finish with the second title
 
-No interview happens, so this costs a fraction of evals.interview: about 5 Opus calls a persona.
+No interview happens, so this costs a fraction of evals.interview: about 10 Opus calls a persona.
 Lint the results with evals.lint, and judge them with evals/rubric.md.
 """
 
@@ -27,6 +27,7 @@ async def replay(claude: Claude, fixture: dict, *, title_index: int = 0) -> dict
     draft = await engine.draft_book(claude, turns=turns)
     title = draft.titles[title_index].title
     finished = await engine.finish_book(claude, turns=turns, draft=draft, title=title)
+    bodies = await engine.write_bodies(claude, turns=turns, chapters=draft.pool)
     after_removal = await engine.write_blurb(claude, turns=turns, chapters=finished.chapters[1:])
     return {
         **{key: fixture[key] for key in ("persona", "slug", "turns")},
@@ -35,7 +36,7 @@ async def replay(claude: Claude, fixture: dict, *, title_index: int = 0) -> dict
             "titles": [t.model_dump() for t in draft.titles],
             "pool": [_chapter(c) for c in draft.pool],
             "title": title,
-            "chapters": [_chapter(c) for c in finished.chapters],
+            "chapters": [{**_chapter(c), "body": bodies.get(c.id)} for c in finished.chapters],
             "blurbs": {"draft": draft.blurb, "finished": finished.blurb, "after_removal": after_removal},
         },
     }
