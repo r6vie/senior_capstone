@@ -39,7 +39,9 @@ export function AppShell() {
   return (
     <div className="app-shell">
       <header className="top-bar" ref={topBar}>
-        <span className="wordmark">Trove</span>
+        <Link className="wordmark" to="/" aria-label="Trove home">
+          Trove
+        </Link>
         <nav className="nav" aria-label="Main">
           {NAV_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.to === "/"}>
