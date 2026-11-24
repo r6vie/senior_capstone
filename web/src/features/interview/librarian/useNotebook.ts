@@ -107,6 +107,8 @@ export function useNotebook(view: LibrarianView | null | undefined, say: (line: 
   // written out, so an entry rubbed out here and kept by the API comes back quietly.
   const seen = useRef(new Set((view?.notebook ?? []).map((entry) => entry.id)));
   const seeded = useRef(Boolean(view));
+  // Entries kept on the page after the API moved past them; they stay for the rest of the visit.
+  const kept = useRef(new Set<string>());
   useEffect(() => {
     if (view === lastView.current) return;
     lastView.current = view;
@@ -119,9 +121,30 @@ export function useNotebook(view: LibrarianView | null | undefined, say: (line: 
     );
     for (const entry of view.notebook) seen.current.add(entry.id);
     const fresh = new Set(view.notebook.map((entry) => entry.id));
-    for (const shown of current.current) if (!fresh.has(shown.entry.id)) erase(shown.entry.id);
+    // What the member's last answer brought stays on the page when the next question arrives, even once the
+    // API has moved past it: an "ask" the question took up is ticked, never wiped as the question lands.
+    const answered = view.answered;
+    const stays = (shown: ShownEntry) =>
+      shown.life !== "erasing" &&
+      shown.entry.sourceTurns.length > 0 &&
+      Math.max(...shown.entry.sourceTurns) === answered;
+    const staying = new Set(
+      current.current
+        .filter((shown) => !fresh.has(shown.entry.id) && (stays(shown) || kept.current.has(shown.entry.id)))
+        .map((shown) => shown.entry.id),
+    );
+    for (const id of staying) kept.current.add(id);
+    for (const shown of current.current)
+      if (!fresh.has(shown.entry.id) && !staying.has(shown.entry.id)) erase(shown.entry.id);
     setEntries((all) => {
-      const kept = all.filter((shown) => !fresh.has(shown.entry.id));
+      const left = all
+        .filter((shown) => !fresh.has(shown.entry.id))
+        .map(
+          (shown): ShownEntry =>
+            staying.has(shown.entry.id) && shown.entry.kind === "saving"
+              ? { ...shown, entry: { ...shown.entry, status: "ticked" } }
+              : shown,
+        );
       const next = view.notebook.map((entry): ShownEntry => {
         const before = known.get(entry.id);
         const marking = Boolean(before && before.entry.status === "open" && entry.status !== "open");
@@ -130,7 +153,11 @@ export function useNotebook(view: LibrarianView | null | undefined, say: (line: 
         if (unseen.has(entry.id)) return { entry, life: "writing", marking };
         return { entry, life: !before || before.life === "erasing" ? "resting" : before.life, marking };
       });
-      return [...next, ...kept.filter((shown) => shown.life === "erasing")];
+      return [
+        ...next,
+        ...left.filter((shown) => staying.has(shown.entry.id)),
+        ...left.filter((shown) => shown.life === "erasing"),
+      ];
     });
     for (const entry of view.notebook) {
       const before = known.get(entry.id);

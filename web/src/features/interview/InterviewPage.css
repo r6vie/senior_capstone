@@ -23,6 +23,19 @@
   height: var(--iv-top-height);
   padding: 0 var(--gutter);
 }
+/* The plain top bar (IvTop): the question screens and the intro book. On a phone it stays on one line:
+   the wordmark, "Leave" and the avatar. */
+.iv-top-plain .avatar {
+  text-decoration: none;
+}
+@media (max-width: 719px) {
+  .iv-top.iv-top-plain {
+    flex-wrap: nowrap;
+  }
+  .iv-wide-only {
+    display: none;
+  }
+}
 .iv-phases {
   display: flex;
   gap: 30px;
@@ -327,12 +340,10 @@
 }
 
 /* ---------- The reveal ---------- */
-.interview:has(.iv-picks),
-.interview:has(.iv-chapters) {
-  --act-width: 1100px;
-}
+/* Only the content widens for the titles and the review; the line stays where it is on every screen. */
 .iv-act:has(.iv-picks),
 .iv-act:has(.iv-chapters) {
+  --act-width: 1100px;
   padding-top: var(--s-5);
 }
 .iv-picks {

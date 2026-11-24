@@ -1014,13 +1014,15 @@ function RevealScreen({
 
 // ---------- Your book ----------
 
-const REVIEW_SAY = "Here is your book. Rewrite or remove anything that doesn't sound like you.";
+const REVIEW_SAY = "Here is your book. Edit or remove anything that doesn't sound like you.";
 const MIN_CHAPTERS = 3;
 
 function ChapterRow({
   index,
   chapter,
   canRemove,
+  removing,
+  onAskRemove,
   editKey,
   onEdit,
   onRemove,
@@ -1028,12 +1030,14 @@ function ChapterRow({
   index: number;
   chapter: DraftChapter;
   canRemove: boolean;
+  /** "Remove this chapter?" is open on this row. Only one row asks at a time. */
+  removing: boolean;
+  onAskRemove: (asking: boolean) => void;
   editKey: string;
   onEdit: (edit: ChapterEdit) => Promise<void>;
   onRemove: () => void;
 }) {
   const [showing, setShowing] = useState(false);
-  const [removing, setRemoving] = useState(false);
   const [editing, setEditing] = useState(() => hasEditDraft(editKey));
 
   if (editing) {
@@ -1052,7 +1056,7 @@ function ChapterRow({
     );
   }
 
-  if (removing) {
+  if (removing && canRemove) {
     return (
       <li className="iv-confirm">
         <span className="iv-n">{index + 1}</span>
@@ -1069,7 +1073,7 @@ function ChapterRow({
           >
             Remove
           </button>
-          <button type="button" className="button button-quiet iv-sm" onClick={() => setRemoving(false)}>
+          <button type="button" className="button button-quiet iv-sm" onClick={() => onAskRemove(false)}>
             Keep it
           </button>
         </div>
@@ -1118,7 +1122,7 @@ function ChapterRow({
             type="button"
             className="button button-quiet iv-sm"
             aria-label={`Remove ${chapter.title}`}
-            onClick={() => setRemoving(true)}
+            onClick={() => onAskRemove(true)}
           >
             Remove
           </button>
@@ -1163,7 +1167,10 @@ function ReviewScreen({
   // The back cover changes with a removal, and the member should be told. Until their next action.
   const [blurbAtRemoval, setBlurbAtRemoval] = useState<string | null | undefined>(undefined);
 
+  // The row asking "Remove this chapter?", if any.
+  const [confirming, setConfirming] = useState<string | null>(null);
   async function remove(chapterId: string) {
+    setConfirming(null);
     setBlurbAtRemoval(book.blurb);
     await onRemove(chapterId);
   }
@@ -1269,6 +1276,8 @@ function ReviewScreen({
             index={index}
             chapter={chapter}
             canRemove={canRemove}
+            removing={confirming === chapter.id}
+            onAskRemove={(asking) => setConfirming(asking ? chapter.id : null)}
             editKey={editKeyFor(userId, `chapter:${chapter.id}`)}
             onEdit={(edit) => onEditChapter(chapter.id, edit)}
             onRemove={() => remove(chapter.id)}

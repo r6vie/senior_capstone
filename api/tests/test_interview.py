@@ -455,6 +455,18 @@ async def test_a_removed_chapter_stays_out_when_the_title_changes(client, header
     assert gone not in seen["pool"]
 
 
+async def test_removing_a_chapter_keeps_a_back_cover_the_member_edited(client, headers, fake_engine):
+    book = await to_review(client, headers, fake_engine)
+    mine = "My own back cover, in my words."
+    assert (await client.patch("/books/me", json={"blurb": mine}, headers=headers)).status_code == 200
+    calls = len(fake_engine.calls)
+    removed = await client.delete(f"/interview/book/chapters/{book['chapters'][0]['id']}", headers=headers)
+    assert removed.status_code == 200
+    assert removed.json()["blurb"] == mine
+    # No back cover was written: the Librarian wasn't asked.
+    assert len(fake_engine.calls) == calls
+
+
 async def test_title_and_blurb_routes_only_in_review(client, headers, fake_engine):
     await client.post("/interview", json={}, headers=headers)
     assert (await client.post("/interview/book/blurb", headers=headers)).status_code == 409

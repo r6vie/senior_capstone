@@ -435,6 +435,8 @@ async def edit_book(
         changes["title"] = title
     if blurb is not None:
         changes["blurb"] = blurb
+        # The member's own words now: nothing the Librarian does later writes over them.
+        changes["blurb_edited"] = True
         if book["status"] == DRAFT:
             changes["previous_blurb"] = book.get("blurb")
     if book["status"] != DRAFT:

@@ -806,13 +806,15 @@ async def remove_chapter(
     remaining = [DraftChapter.model_validate(c) for c in book["chapters"] if c["id"] != chapter_id]
     if len(remaining) < books.MIN_CHAPTERS:
         raise conflict(f"A book needs at least {books.MIN_CHAPTERS} chapters.")
-    # The book no longer covers what it did, so the back cover is rewritten for what's left. A rewrite
-    # keeps each chapter's topic, so it leaves the blurb alone.
-    blurb = await ask_engine(
-        engine.write_blurb(
-            claude, turns=book_turns(interview), chapters=remaining, leaks=leak_check(interview)
+    # The book no longer covers what it did, so the Librarian's back cover is rewritten for what's left.
+    # One the member has edited is their own words, and stays as they wrote it.
+    blurb = None
+    if not book.get("blurb_edited"):
+        blurb = await ask_engine(
+            engine.write_blurb(
+                claude, turns=book_turns(interview), chapters=remaining, leaks=leak_check(interview)
+            )
         )
-    )
     gone = next(chapter for chapter in book["chapters"] if chapter["id"] == chapter_id)
     book = await books.remove_chapter(database, user["_id"], chapter_id, blurb=blurb)
     if book is None:

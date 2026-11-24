@@ -759,6 +759,47 @@ describe("InterviewPage", () => {
       expect(screen.queryByText("too late")).toBeNull();
     });
 
+    it("keeps the note an answer brought when the next question arrives without it", async () => {
+      const client = at({ ...asking, librarian: { answered: 0, marks: [], silent: false, notebook: [] } });
+      let next: (state: InterviewState) => void = () => undefined;
+      vi.spyOn(client, "skip").mockReturnValue(new Promise((done) => (next = done)));
+      vi.spyOn(client, "finalNotes").mockResolvedValue({
+        status: "done",
+        silent: false,
+        marks: { keep: [], add: [], revise: [], erase: [] },
+        notebook: {
+          keep: [],
+          add: [
+            {
+              id: "ask1",
+              kind: "saving",
+              text: "ask: what came after the reseat?",
+              anchors: [],
+              sourceTurns: [1],
+              status: "open",
+              struck: [],
+            },
+          ],
+          revise: [],
+          erase: [],
+        },
+      });
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: "Skip" }));
+      expect(await screen.findAllByText("ask: what came after the reseat?")).not.toHaveLength(0);
+      await act(async () =>
+        next({
+          ...asking,
+          question: "What came after the reseat?",
+          librarian: { answered: 1, marks: [], silent: false, notebook: [] },
+        }),
+      );
+      expect(await screen.findByText("What came after the reseat?")).toBeTruthy();
+      await act(() => new Promise((done) => setTimeout(done, 700)));
+      // Still there, now ticked: the question took it up.
+      expect(screen.getAllByText(/ask: what came after the reseat\? \(ticked off/)).not.toHaveLength(0);
+    });
+
     it("sends once on a double press", async () => {
       const client = at(asking);
       const skip = vi.spyOn(client, "skip").mockReturnValue(new Promise(() => {}));
@@ -878,7 +919,7 @@ describe("InterviewPage", () => {
       // Josef removed Rewrite chapter and Rewrite back cover (2026-11-23).
       expect(screen.queryByRole("button", { name: /^Rewrite/ })).toBeNull();
       expect(document.querySelector(".iv-booktitle .book")).toBeTruthy();
-      expect(screen.getByText(/Rewrite or remove anything that doesn't sound like you/)).toBeTruthy();
+      expect(screen.getByText(/Edit or remove anything that doesn't sound like you/)).toBeTruthy();
       expect(document.body.textContent).not.toMatch(/Change anything/);
     });
 
@@ -968,6 +1009,13 @@ describe("InterviewPage", () => {
         expect(await screen.findByRole("button", { name: `Edit ${title}` })).toBeTruthy();
         expect(screen.getByRole("button", { name: `Remove ${title}` })).toBeTruthy();
       }
+    });
+
+    it("asks about one chapter's removal at a time", async () => {
+      renderWith(at(reviewing()));
+      fireEvent.click(await screen.findByRole("button", { name: `Remove ${CHAPTER_TITLES[0]}` }));
+      fireEvent.click(screen.getByRole("button", { name: `Remove ${CHAPTER_TITLES[1]}` }));
+      expect(screen.getAllByText("Remove this chapter?")).toHaveLength(1);
     });
 
     it("asks in place before removing a chapter", async () => {
