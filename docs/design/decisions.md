@@ -1205,3 +1205,19 @@ Pending Josef's review of the new canvas.
   `category`, `coverInk` chosen from the paint, `pageInk` for the title page), a contact sheet and a README with
   what differs from strata (painted to the top, two inks, no knockout behind the name). Cover inks checked against
   the published boards: all ten match.
+
+## 2026-11-23: the blank book paints itself (test, Getting started page)
+
+- **Request (via the My Book Screen session):** a moving watercolour for the blank cover on the Getting started
+  screens. A first abstract version (drops blooming and washing out, `art/watercolor/blank_loop.py`) was set aside
+  when **Josef** asked instead to "animate the art that we already have being drawn on ... one of the colors starts
+  slowly being drawn in, dropping in, like watercolor art would look like. And then in the end, just like fades, and
+  then a new cover comes to life", as a test on one cover (the alpine lake suggested).
+- `art/watercolor/paint_anim.py` runs a cover's own scene with every wash and lift recorded, then lays the 46 glazes
+  back down in painting order: each lands near the top of its shape and spreads along a broad, lobed wet front, big
+  washes slowly and small patches quickly, paler while still wet. 0–22 s painting, 5 s rest, 5 s wash back to paper,
+  1.5 s clean paper; the loop's last frame is the first. 472 x 688, 12 fps: MP4 0.55 MB, WebM 0.47 MB, a poster of the
+  finished cover for reduced motion.
+- New board `StartPaint` ("The blank book painting itself · test") on the Getting started page, drawing StartJoin's
+  left half (dot ground, caption box, the book on the shelf bar) with the video in the cover at 270px and 150px.
+  StartJoin itself is untouched. Not yet: the chain to the next cover, a critic round.
