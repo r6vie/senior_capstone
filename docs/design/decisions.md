@@ -672,6 +672,115 @@ Decisions Josef has made about Trove's look and feel. Newest first.
 - **Cover art is not UI:** coral (`#E87457` family) is the warm note and is not the UI red.
 
 Pending Josef's feedback.
+## 2026-11-19: Kit 3 "Folio" APPROVED by Josef and sent for implementation, without the interview (the interview is the Librarian's notebook)
+
+Josef asked for the polished Kit 3 direction to be sent for implementation. The Kit 3 board now holds only the parts sheet and the shelf front page; its interview frames are removed, because the interview is the
+Librarian's notebook (canvas page "Librarian notebook"). Approved by Josef on 2026-11-19 ("I approve all six", relayed by the orchestrator). The six changes to the fixed tier this look makes: cross-hatch shade on card spines and under shelf ledges (dots stay for cast shadows); a 5px corner radius
+(8px on the black cover, 3 to 5px on the book cover) in place of square corners; a square search field and avatar; a notched ribbon bookmark on the one line that needs you; shelf arrows that scroll each
+shelf in place instead of "See the whole shelf"; the black cover's book has no dot shadow. The genre tabs and filter chips are gone from the front page. Record: docs/design/system.md, Additions, "Folio".
+
+## 2026-11-19: the Librarian's notebook, round 2 (Interview 4; APPROVED by Josef, 2026-11-19, canvas v127)
+
+Scope answers came from Josef through the orchestrator: red ink (approved as an exception to "red is the primary action and nothing else"), a commentary notebook (chapter, connection, saving,
+clip, note), the next question circling or ticking its source, the notebook hidden after the reveal and returning trimmed when the author reopens the interview, and the extras: pasted and
+résumé-speak highlight, idle lines, the handwritten sign-off. Out: doodles, swear strikes, the self-correcting question, the short-answer hold.
+Josef then asked, directly: red marker, no bullets in the notebook, text starting just after the spine, a messier and more human notebook (things underlined and rewritten above), and no footer line,
+"Only you see this" or "Command and Return sends".
+- Canvas page "Librarian notebook": `LibDesktop` (five moments), `LibPhone`, `LibParts`, `LibMore` (idle, paste, sign-off), `LibReopened`. The red exception is recorded in `docs/design/system.md`.
+- Approved with the screen: red ink for the Librarian (exception to the red rule), the handwriting face Caveat (a fourth typeface, Librarian's hand only), and the notebook, marks and phone sheet as new components. Josef approved the screen as drawn; he did not list these separately.
+
+## 2026-11-19: one interview redesign, as a conversation (replaces the two earlier ones; waiting for Josef's choice)
+
+Josef removed "The thread" and "Question and answer pages" and asked for a third that is more UX friendly and familiar. Board "Interview 3 · The conversation": the Librarian's
+question is a message on the left, your answers are messages on the right (each with Edit), the thread scrolls, and a composer is docked at the bottom with the field, Speak and one
+red Send. Skip is a quiet "Skip this question" under the question. Phases stay as index tabs.
+- Needs Josef's yes: Return sends and Shift and Return starts a new line (the earlier boards had Command and Return send); the current question at 26px with no leading letter;
+  earlier messages stay on the page, which hints at progress (decision 26); a square ink "L" tile for the Librarian.
+
+## 2026-11-19: Folio front page: shelves out of the folder, "My book" beside the bookmark (Josef: no large folder)
+
+On Kit 3's example page the two shelves no longer sit in a tabbed folio card. They are Kit 1's shelf: a name, a rule and "See the whole shelf" over a
+row of books standing on one ink ledge with a hatch cast, straight on the page. The genre tabs are gone from this page. Under the hero are two equal
+blocks: the bookmarked "Review request" and a new "Your book" block (small cover, title, Open), as in Kit 2. Waiting for Josef's choice.
+
+## 2026-11-18: two new complete interview redesigns on Folio v4 (waiting for Josef's choice)
+
+Boards "Interview 1 · The thread" and "Interview 2 · Question and answer pages" on the Elevate page, each with the question, sending, the next
+question setting in, and a phone. Also: the ribbon bookmark on the front page now has a notched, two-triangle bottom (needs Josef's yes: a diagonal cut).
+- **1, the thread:** earlier questions and answers stack above as plain cards (with Edit); the open question is the one focal folio at the bottom, with the
+  phases as its index tabs and Speak, Skip and Send in its footer. Needs Josef's yes: a growing thread hints at progress (decision 26); 60px leading letter.
+- **2, question and answer pages:** a two-page card, black page with the Librarian's question in Newsreader italic and "Skip this question", white page with a tall
+  answer box, Speak and Send; earlier answers in a row of plain cards below. Needs Josef's yes: a black page inside a card (the system allows black for the
+  Librarian's band only); a growing row of answers hints at progress.
+
+## 2026-11-18: Folio v4: new header, plain list rows, interview rebuilt (Josef: rows, header and interview did not look right)
+
+- **Corners (Josef: not so sharp):** Kit 3 now has a small corner radius, 5px on cards, buttons, fields, tabs, the avatar and the search; 8px on the black cover; 3 to 5px on book covers (first tried at 8px, 12px, 4 to 8px; Josef asked for smaller). Needs Josef's yes: the fixed tier says square corners.
+- **Header:** the search field and the avatar are square, 44px, 2px ink, like the buttons (the avatar is an ink tile with white initials and a dot
+  shadow; the search has an icon and a "/" key hint). Needs Josef's yes: the system allows a pill for both today.
+- **List rows:** plain ruled rows (title, one line of the answer), no square markers, no dotted rules; the selected row has a full-height bar at the left edge.
+- **Interview question, rebuilt from scratch:** one composed card (the question with a smaller two-line leading letter, an ordinary answer box, a footer
+  strip with Speak, Skip, the hint and the one red Send), phases as index tabs, earlier answers in a plain card beside it. Frames: ask, sending,
+  next question setting in, and a phone. Needs Josef's yes: the 68px leading letter (type table stops at 22).
+
+## 2026-11-18: Folio v3 (Josef: too busy, no stripes, shade with cross-hatching)
+
+Folio was too busy and its secondary buttons were unreadable. v3: no stripes anywhere (including under buttons); page thickness and the spine are
+shaded with diagonal cross-hatching and dots stay only for cast shadow; tabs are low and the open tab is the page's own paper; the cover is plain
+black with one book on a ledge and a compact burst; shelves are one ink ledge with a light hatch below; the dashboard tiles became one bookmarked line.
+Then Josef: the paper plate under the Librarian's book looked worse and was dropped. Three ways to stand the book are drawn under the interview (A on the black with a clear halo, B stepping out over the bottom edge, C an open two-page cover). Josef then chose A with Kit 2's full burst and no shadow on the book as the decision for Kit 3; options B and C were removed. The shelf page has the book on the black with the burst converging on a point to its right (as in Kit 2, with a dark faded hole and slightly fewer rays), without its dot shadow (needs Josef's yes: the book object without its dot shadow, on the Librarian's black only). Then Josef: a card is only the card and its dot shadow (the hatched page-thickness layers were removed; hatching stays for the spine and under ledges). Secondary buttons now have a white face and invert on hover (also fixed on Kits 1 and 2). Needs Josef's yes: cross-hatching as the shade
+(replaces "dots for shade" in the fixed tier), index tabs, the ribbon bookmark, the large letter.
+
+## 2026-11-18: Folio chosen to refine (Josef: "looks promising")
+
+Kit 3 on the Elevate page is now "Folio, refined", with the shelf front page and the interview question built from it. Added: a stitched
+spine, a hatched page edge that wraps the corner, a ribbon bookmark on the one request waiting for the author (no number), a library slip for
+that request, a bookend at the end of each shelf, the pick standing on its own ledge, and the phases as index tabs on the interview folio.
+Still not decided; fixed-tier flags are listed on the board (hatched edge, tabs, stitched spine, ribbon, bookend, printed cover frame, large letter).
+
+## 2026-11-18: three depth kits for C (Josef: flat and boring, rectangles read as placeholders, drop the diagonal)
+
+Boards "Kit 1 · Stacked sheets", "Kit 2 · Relief" and "Kit 3 · Folio" on the Elevate page. Each is a small UI kit (buttons with hover, press and
+disabled, fields, filters or tabs, list rows, surfaces, shelf and books) plus the shelf front page built from it. The Librarian's band is a
+plain rectangle in all three; the diagonal is gone. Nothing is decided and no app code changed.
+
+- **Kit 1, stacked sheets:** each important surface and button is the top sheet of a stack of outlined sheets with dot tone beneath; the pick's
+  book steps out over the band's top edge. Needs Josef's yes: outlined stacked sheets as a depth cue (7px and 14px offsets); a book overlapping a frame.
+- **Kit 2, relief:** raised surfaces and keycap buttons with a solid ink edge and a growing dot shadow; shelves and fields are recessed wells.
+  Needs Josef's yes: the hard ink edge (5 to 6px) and recessed paper-sunk wells with inner dot shade.
+- **Kit 3, folio:** thick folios with a hatched fore-edge, spine shade, index tabs and a hardcover pick with a printed frame. Needs Josef's yes:
+  the hatched fore-edge (line art), tabs in place of filter chips, the printed frame inside the black cover.
+
+## 2026-11-17: direction C, Reading Room (Josef: A's details, but a usable, professional layout)
+
+Josef liked A's details (the page shading, the large letter) and found its cards and lined text box confusing, and wanted a UI that is fast
+to use and feels like a professional network, not a game. Board "C · Reading Room" on the Elevate page. Nothing is decided and no app code changed.
+
+- **Layout:** every screen is a top bar, a main column and a side column. The answer is an ordinary text box with Speak, Skip and one red Send.
+  Earlier answers are a plain list at the side (reread or fix one there). Titles are a radio list beside one large suggested title. The review
+  keeps the red Put it on the shelf in the side card so it is always in view. The shelf has a side column (your book, waiting on you), the
+  Librarian's band, topic filters and the shelves.
+- **Kept from A, used once each:** screentone falling from the header; a binding shade on the one focal card; the large letter on the question
+  and the back cover; the red button pressing into its dot shadow; the ink date stamp; the library checkout card for contact details.
+- **Dropped from A:** facing pages, index cards, the ruled-paper text box, the page-turn.
+- **Needs Josef's yes:** dot shadow under the focal card and the red button; the binding shade; the large letter (76 to 118px, type table stops
+  at 22); the 40px caps stamp word; dotted 2px list rules; and the answers list implying progress (decision 26), shown without a number.
+- **Placeholder copy:** "Skip any you like", "Reading what you said…", "Waiting on you / Sam Okafor asked to check out your book", the topic filters.
+
+## 2026-11-17: two ways to elevate the Manga screentone look (waiting for Josef's choice)
+
+Boards "A · Bound" and "B · Inked" on the Elevate page. Each draws the interview question (desktop and phone), the wait after Send, the title
+reveal, the book review (and the book being written), "on the shelf" (the moment and at rest), the shelf front page, the checkout contact
+details, and hover, press and busy states. Nothing here is decided and no app code changed.
+
+- **A · Bound (print craft):** an open book on a desk; question and answer are facing pages, answers are filed on index cards, titles are
+  turned like pages, the shelved date is stamped on the back-cover slip. Needs Josef's yes: the book's dot shadow under pages, cards, slips
+  and the red button; a black page inside a white spread for the Librarian's pick; hairline ruled lines on the answer sheet.
+- **B · Inked (graphic novel):** every screen is a comic page; the question is a black panel, the answer a panel, filed answers small panels,
+  titles wipe in along a diagonal, the shelved moment opens the burst. Needs Josef's yes: black panels beyond the band, the band's slant
+  reused, a second burst on the shelved moment, display-size Newsreader italic, a 62px caps stamp word.
+- **Both need a decision on progress:** a stack of cards (A) or a strip of panels (B) grows with each answer. That shows progress without a
+  number, which decision 26 limits to one late sign.
 
 ## 2026-11-09: close-out of the quality notes for the frames
 

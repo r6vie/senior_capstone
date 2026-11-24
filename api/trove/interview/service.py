@@ -28,10 +28,17 @@ from trove.books import service as books
 from trove.books.models import MyBookResponse
 from trove.checkouts import service as checkouts
 from trove.core.config import get_settings
-from trove.interview import engine, resume_terms
+from trove.interview import engine, librarian, resume_terms, silence
 from trove.interview.engine import Change, Draft, DraftChapter, Turn
+from trove.interview.librarian import Entry, Mark
 from trove.interview.models import (
+    AnsweredTurn,
     InterviewResponse,
+    LibrarianState,
+    MarksDelta,
+    NotebookDelta,
+    NotesRequest,
+    NotesResponse,
     Question,
     ReadingQuestionResponse,
     SparkResponse,
@@ -157,6 +164,7 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
             text=current["question"],
             phase=current["phase"],
             playback=current.get("playback"),
+            builds_on=current.get("builds_on"),
         )
         if current
         else None,
@@ -187,6 +195,8 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
         reading_question_id=interview.get("reading_question_id") if dropped else None,
         reading_answer=_last_reading_answer(interview) if dropped else None,
         dropped_words=interview.get("dropped_words", []) if dropped else None,
+        librarian=librarian_view(interview) if stage in ASKING_STAGES else None,
+        sign_off=interview.get("sign_off") if stage == "reviewing" else None,
     )
 
 
@@ -227,8 +237,11 @@ def nearly_done(interview: dict, answered: int) -> bool:
 
 async def current_view(
     database: AsyncDatabase, user: dict, claude: Claude | None, background: BackgroundTasks
-) -> InterviewResponse:
-    interview = await get_interview(database, user["_id"])
+) -> InterviewResponse | None:
+    interview = await database.interviews.find_one({"user_id": user["_id"]})
+    if interview is None:
+        # Not started yet is an answer, not an error: a new member's page asks this on every visit.
+        return None
     failed = (
         revision_status(interview) == "failed"
         if interview["stage"] == "revising"
@@ -237,12 +250,21 @@ async def current_view(
     if claude and failed and not interview.get("write_retried"):
         # The member came back to a failed write: try once more without asking them to.
         interview = await restart_writing(database, claude, interview, background)
-    book = (
-        await books.get_book_of(database, user["_id"])
-        if interview["stage"] in ("reviewing", "done", "adding", "revising")
-        else None
-    )
+    book = await books.get_book_of(database, user["_id"]) if interview["stage"] in BOOK_STAGES else None
     return interview_view(interview, book)
+
+
+# Stages from which the interview has made the member's book (it is reviewed, done or growing).
+BOOK_STAGES = ("reviewing", "done", "adding", "revising")
+
+
+async def has_open_interview(database: AsyncDatabase, user_id: str) -> bool:
+    """Whether the member has started an interview that hasn't made their book yet, for other features
+    (the shelf asks this to say "continue" rather than "create")."""
+    open_interview = await database.interviews.find_one(
+        {"user_id": user_id, "stage": {"$nin": list(BOOK_STAGES)}}, {"_id": 1}
+    )
+    return open_interview is not None
 
 
 async def get_interview(database: AsyncDatabase, user_id: str) -> dict:
@@ -365,6 +387,7 @@ async def write_question(
     """The next question to save, what the member was last talking about, whether that's enough, and
     the spark the question works from."""
     sparks = await spark_cues(database, interview)
+    notebook = buildable_entries(interview)
     if interview["stage"] == "adding":
         book = await books.get_book_of(database, interview["user_id"])
         turn = await ask_engine(
@@ -375,9 +398,12 @@ async def write_question(
                 chapters=[DraftChapter.model_validate(chapter) for chapter in book["chapters"]],
                 sparks=sparks,
                 off_limits=off_limits_of(interview),
+                notebook=notebook,
             )
         )
         question = {"question": turn.question, "phase": "adding", "playback": None}
+        if question and not turn.done:
+            question["builds_on"] = _checked_builds_on(turn.builds_on, notebook)
         return None if turn.done else question, turn.topic, turn.done, turn.spark_id, None
     turn = await ask_engine(
         engine.next_turn(
@@ -386,10 +412,13 @@ async def write_question(
             resume_text=await resume_text_of(database, interview),
             sparks=sparks,
             more_material=needs_more_material(interview),
+            notebook=notebook,
         )
     )
     ready = turn.ready_for_reveal
     question = None if ready else turn.model_dump(include={"question", "phase", "playback"})
+    if question:
+        question["builds_on"] = _checked_builds_on(turn.builds_on, notebook)
     return question, turn.topic, ready, turn.spark_id, closing_line_of(turn) if ready else None
 
 
@@ -450,6 +479,8 @@ async def ask_next_question(database: AsyncDatabase, claude: Claude, interview: 
     )
     if updated and spark_id and question:
         updated = await use_spark(database, updated, spark_id)
+    if updated and question and question.get("builds_on"):
+        updated = await mark_built_on(database, updated, question["builds_on"])
     return updated or await get_interview(database, interview["user_id"])
 
 
@@ -512,7 +543,7 @@ async def answer(
         raise conflict("There's no question waiting for an answer.")
     if (current["phase"] == "shape") != shape:
         raise conflict("This step is the Shape step." if not shape else "This isn't the Shape step.")
-    turn = {"question": current["question"], "answer": text, "phase": current["phase"]}
+    turn, notebook = final_notes(interview, text)
     # Saved before the next question is written, so a failure there never loses the answer.
     saved = await database.interviews.find_one_and_update(
         {"_id": interview["_id"], "stage": interview["stage"], "current": current},
@@ -520,6 +551,7 @@ async def answer(
             "$push": {"turns": turn},
             "$set": {
                 "current": None,
+                "notebook": notebook,
                 "last_question_id": current.get("question_id"),
                 "updated_at": datetime.now(UTC),
             },
@@ -544,7 +576,7 @@ async def save_last_answer(database: AsyncDatabase, interview: dict, text: str) 
     current = interview["current"]
     if interview["stage"] not in ASKING_STAGES or current is None:
         raise conflict("There's no question waiting for an answer.")
-    turn = {"question": current["question"], "answer": text, "phase": current["phase"]}
+    turn, notebook = final_notes(interview, text)
     if not interview_view({**interview, "turns": [*interview["turns"], turn]}).can_finish:
         raise conflict("Keep going a little longer first.")
     saved = await database.interviews.find_one_and_update(
@@ -553,6 +585,7 @@ async def save_last_answer(database: AsyncDatabase, interview: dict, text: str) 
             "$push": {"turns": turn},
             "$set": {
                 "current": None,
+                "notebook": notebook,
                 "last_question_id": current.get("question_id"),
                 "updated_at": datetime.now(UTC),
             },
@@ -628,6 +661,7 @@ async def write_draft(database: AsyncDatabase, claude: Claude, interview_id: str
             turns=book_turns(interview),
             leaks=leak_check(interview),
             spark_titles=spark_titles_of(interview),
+            clips=librarian.clips_of(interview.get("notebook", [])),
         )
     except engine.NotEnoughMaterial:
         with contextlib.suppress(HTTPException):  # A failed question can be asked again.
@@ -743,7 +777,14 @@ async def write_book(database: AsyncDatabase, claude: Claude, interview_id: str)
         )
     await database.interviews.update_one(
         {"_id": interview_id, "stage": "finishing"},
-        {"$set": {"stage": "reviewing", "write_status": None, "updated_at": datetime.now(UTC)}},
+        {
+            "$set": {
+                "stage": "reviewing",
+                "write_status": None,
+                "sign_off": await sign_off_for(claude, interview, interview["chosen_title"], finished),
+                "updated_at": datetime.now(UTC),
+            }
+        },
     )
 
 
@@ -885,6 +926,10 @@ async def change_title(database: AsyncDatabase, claude: Claude, user: dict, inde
     )
     if book is None:
         raise conflict("Your book is already on the shelf.")
+    await database.interviews.update_one(
+        {"_id": interview["_id"]},
+        {"$set": {"sign_off": await sign_off_for(claude, interview, title, finished)}},
+    )
     return books.my_book_view(book)
 
 
@@ -951,6 +996,8 @@ async def reopen(database: AsyncDatabase, claude: Claude, user: dict) -> dict:
                 "nothing_new": False,
                 "dropped_for_names": False,
                 "sparks_asked": 0,
+                # The notebook comes back, trimmed to make room for new notes.
+                "notebook": librarian.trim_for_adding(interview.get("notebook", [])),
                 "updated_at": datetime.now(UTC),
             }
         },
@@ -1045,6 +1092,7 @@ async def write_proposal(database: AsyncDatabase, claude: Claude, interview_id: 
             member_names=list(names.values()),
             spark_titles=spark_titles_of(interview),
             leaks=leak_check(interview),
+            clips=librarian.clips_of(interview.get("notebook", [])),
         )
     except Exception:
         logger.exception("Couldn't write the proposed changes for interview %s", interview_id)
@@ -1625,3 +1673,282 @@ async def delete_interview_of(database: AsyncDatabase, user_id: str) -> None:
     book = await books.get_book_of(database, user_id)
     pointing_here = [{"book_author_id": user_id}] + ([{"book_id": book["_id"]}] if book else [])
     await database.sparks.delete_many({"used_at": None, "$or": pointing_here})
+
+
+# The Librarian's live notes (L1, docs/librarian-plan.md). Marks and notebook entries are kept on the
+# interview: a working set on the waiting question, final marks on each turn, and one notebook.
+
+
+def _turn_number(interview: dict) -> int:
+    """The turn number of the answer being written, 1 for the first."""
+    return len(interview["turns"]) + 1
+
+
+def _working(current: dict) -> dict:
+    return current.get("librarian") or {"marks": [], "calls": 0, "silent": False, "last_text": ""}
+
+
+def _silent_turns(interview: dict) -> list[int]:
+    return [n for n, turn in enumerate(interview["turns"], start=1) if turn.get("silent")]
+
+
+def _member_words(interview: dict) -> str:
+    silent = set(_silent_turns(interview))
+    return " ".join(turn["answer"] for n, turn in enumerate(interview["turns"], start=1) if n not in silent)
+
+
+def librarian_view(interview: dict) -> LibrarianState:
+    current = interview.get("current") or {}
+    working = _working(current) if current else {"marks": [], "silent": False}
+    return LibrarianState(
+        turns=[
+            AnsweredTurn(
+                question=turn["question"],
+                answer=turn["answer"],
+                marks=[Mark.model_validate(mark) for mark in turn.get("marks", [])],
+                silent=turn.get("silent", False),
+            )
+            for turn in interview["turns"]
+        ],
+        current_marks=[Mark.model_validate(mark) for mark in working["marks"]],
+        current_silent=working["silent"],
+        notebook=[Entry.model_validate(entry) for entry in interview.get("notebook", [])],
+    )
+
+
+def buildable_entries(interview: dict) -> list[dict]:
+    """What the next question may build on: open `saving` entries, and `chapter` entries."""
+    return [
+        {"id": entry["id"], "kind": entry["kind"], "text": entry["text"]}
+        for entry in interview.get("notebook", [])
+        if (entry["kind"] == "saving" and entry.get("status", "open") == "open") or entry["kind"] == "chapter"
+    ]
+
+
+def _checked_builds_on(entry_id: str | None, notebook: list[dict]) -> str | None:
+    """Only an entry the question writer was actually shown counts."""
+    return entry_id if entry_id and any(entry["id"] == entry_id for entry in notebook) else None
+
+
+async def mark_built_on(database: AsyncDatabase, interview: dict, entry_id: str) -> dict:
+    """The question is out: circle its source entry, and tick it off if it was a `saving` entry."""
+    notebook = [
+        {**entry, "status": "ticked" if entry["kind"] == "saving" else "circled"}
+        if entry["id"] == entry_id
+        else entry
+        for entry in interview.get("notebook", [])
+    ]
+    updated = await database.interviews.find_one_and_update(
+        {"_id": interview["_id"]}, {"$set": {"notebook": notebook}}, return_document=ReturnDocument.AFTER
+    )
+    return updated or interview
+
+
+def final_notes(interview: dict, text: str) -> tuple[dict, list[dict]]:
+    """The turn as saved on Send or Skip, with the marks that still hold on the final words, and the
+    notebook with this answer's entries that no longer hold rubbed out. A silent or skipped answer
+    keeps none of either."""
+    current = interview["current"]
+    number = _turn_number(interview)
+    working = _working(current)
+    silent = bool(text.strip()) and (working["silent"] or silence.is_silent(text))
+    marks = (
+        []
+        if silent
+        else [
+            mark.model_dump()
+            for mark in librarian.marks_that_hold([Mark.model_validate(m) for m in working["marks"]], text)
+        ]
+    )
+    # A bet this answer settled stays settled only if the words that settled it were sent.
+    notebook = _reopen_bets(interview.get("notebook", []), number, "" if silent else text)
+    mine = [Entry.model_validate(entry) for entry in notebook if entry.get("turn") == number]
+    held = set() if silent or not text.strip() else {e.id for e in librarian.entries_that_hold(mine, text)}
+    notebook = [entry for entry in notebook if entry.get("turn") != number or entry["id"] in held]
+    turn = {"question": current["question"], "answer": text, "phase": current["phase"]}
+    # Only what's there is stored, so a turn with no Librarian on it looks as it always did.
+    if marks:
+        turn["marks"] = marks
+    if silent:
+        turn["silent"] = True
+    return turn, notebook
+
+
+def _used(interview: dict, current_marks: list[Mark], move: str) -> bool:
+    saved = [mark for turn in interview["turns"] for mark in turn.get("marks", [])]
+    return any(mark["move"] == move for mark in saved) or any(mark.move == move for mark in current_marks)
+
+
+def _within_rate(interview: dict, now: datetime) -> tuple[bool, dict]:
+    rate = interview.get("notes_rate") or {}
+    since = rate.get("since")
+    if since is not None and since.tzinfo is None:
+        since = since.replace(tzinfo=UTC)
+    if since is None or now - since >= timedelta(hours=1):
+        rate = {"since": now, "count": 0}
+    return rate["count"] < librarian.MAX_CALLS_PER_HOUR, rate
+
+
+def _reopen_bets(notebook: list[dict], number: int, text: str) -> list[dict]:
+    """A bet this answer settled goes back to open if the words that settled it are gone."""
+    reopened = []
+    for entry in notebook:
+        if entry.get("settled_turn") == number and not librarian.occurrences(
+            text, entry.get("settled_by", "")
+        ):
+            entry = {
+                **entry,
+                "status": "open",
+                "outcome_note": None,
+                "settled_turn": None,
+                "settled_by": None,
+            }
+        reopened.append(entry)
+    return reopened
+
+
+async def notes(
+    database: AsyncDatabase, claude: Claude | None, user: dict, data: NotesRequest
+) -> NotesResponse:
+    """One look at the answer as it's typed. Model calls are skipped unless a sentence has ended since
+    the last look, when the answer has gone silent, past the per-answer and hourly caps, and when AI isn't
+    set up; then the marks and entries that still hold are kept and nothing is added. A failed call
+    degrades the same way: the Librarian failing to be sharp is never an error for the member."""
+    interview = await get_interview(database, user["_id"])
+    current = interview.get("current")
+    if (
+        interview["stage"] not in ASKING_STAGES
+        or current is None
+        or current.get("question_id") != data.question_id
+    ):
+        raise conflict("That isn't the question waiting for an answer.")
+    number = _turn_number(interview)
+    working = _working(current)
+    text = data.text
+    before = _reopen_bets(interview.get("notebook", []), number, text)
+    mine = [Entry.model_validate(entry) for entry in before if entry.get("turn") == number]
+    others = [entry for entry in before if entry.get("turn") != number]
+    held = [Mark.model_validate(m) for m in working["marks"]]
+    marks = librarian.marks_that_hold(held, text)
+    lost = [mark for mark in held if mark not in marks]
+    entries = librarian.entries_that_hold(mine, text)
+    erased = [entry.id for entry in mine if entry not in entries]
+    added_marks: list[Mark] = []
+    revised_marks: list[Mark] = []
+    added_entries: list[Entry] = []
+    revised: list[Entry] = []
+    conceded = interview.get("conceded", False)
+    silent = working["silent"] or silence.is_silent(text)
+    calls, now = working["calls"], datetime.now(UTC)
+    within, rate = _within_rate(interview, now)
+    # The shortcut compares with the text at the last real look, so typing a word at a time adds up.
+    looked_at = working["last_text"] or data.previous_text
+    may_call = not silent and claude is not None and within and calls < librarian.MAX_CALLS_PER_ANSWER
+    if may_call and not librarian.nothing_to_read(looked_at, text):
+        context = librarian.Context(
+            question=current["question"],
+            question_number=number,
+            setting="a round of adding to their book" if interview["stage"] == "adding" else "the interview",
+            earlier=turns_of(interview),
+            silent_turns=_silent_turns(interview),
+            answer=text,
+            pasted=data.pasted,
+            marks=marks,
+            entries=entries,
+            notebook=[Entry.model_validate(entry) for entry in others],
+            lost_marks=lost,
+            back_cover_used=_used(interview, marks, "back_cover"),
+            running_bit_used=_used(interview, marks, "circle"),
+            conceded=conceded,
+        )
+        calls += 1
+        looked_at = text
+        rate = {**rate, "count": rate["count"] + 1}
+        try:
+            looked = await librarian.look(librarian.on_notes_model(claude), context)
+        except (ClaudeRefused, BudgetExceeded, anthropic.APIError, ValueError):
+            logger.warning("The Librarian's notes call failed for interview %s", interview["_id"])
+        else:
+            silent = looked.silent
+            if not silent:
+                marks, added_marks, revised_marks = looked.marks, looked.added_marks, looked.revised_marks
+                entries, added_entries = looked.entries, looked.added_entries
+                revised = looked.revised_entries
+                erased += [entry_id for entry_id in looked.erased_entries if entry_id not in erased]
+                conceded = conceded or looked.conceded
+                settled = {bet.id: (bet, anchor) for bet, anchor in looked.settled}
+                others = [
+                    {
+                        **entry,
+                        **settled[entry["id"]][0].model_dump(),
+                        "settled_turn": number,
+                        "settled_by": settled[entry["id"]][1],
+                    }
+                    if entry["id"] in settled
+                    else entry
+                    for entry in others
+                ]
+                revised += [bet for bet, _ in looked.settled]
+    if silent:
+        # Everything this answer put on the page is rubbed out, and it gets nothing more.
+        erased = [entry.id for entry in mine]
+        marks, entries, added_marks, revised_marks, added_entries, revised = [], [], [], [], [], []
+        others = _reopen_bets(others, number, "")
+    stamped = [{**entry.model_dump(), "turn": number} for entry in entries]
+    saved_working = {
+        "marks": [m.model_dump() for m in marks],
+        "calls": calls,
+        "silent": silent,
+        "last_text": looked_at,
+    }
+    await database.interviews.update_one(
+        {"_id": interview["_id"], "current.question_id": data.question_id},
+        {
+            "$set": {
+                "current.librarian": saved_working,
+                "notebook": [*others, *stamped],
+                "notes_rate": rate,
+                "conceded": conceded,
+            }
+        },
+    )
+    live_entries = {entry["id"] for entry in [*others, *stamped]}
+    live_marks = {mark.id for mark in marks}
+    changed_marks = {mark.id for mark in [*added_marks, *revised_marks]}
+    changed_entries = {entry.id for entry in [*added_entries, *revised]}
+    shown = set(data.shown)
+    return NotesResponse(
+        silent=silent,
+        marks=MarksDelta(
+            keep=sorted(live_marks - changed_marks),
+            add=added_marks,
+            revise=revised_marks,
+            erase=sorted(
+                {m.id for m in lost} - live_marks | {i for i in shown if i.startswith("m_")} - live_marks
+            ),
+        ),
+        notebook=NotebookDelta(
+            keep=sorted(live_entries - changed_entries),
+            add=added_entries,
+            revise=revised,
+            erase=sorted({*erased, *(i for i in shown if i.startswith("n_") and i not in live_entries)}),
+        ),
+    )
+
+
+async def sign_off_for(
+    claude: Claude, interview: dict, title: str, finished: engine.FinishedBook
+) -> str | None:
+    """The Librarian's handwritten line under the title. A failure leaves it out: the book never
+    waits on it, and the member never sees an error for it."""
+    try:
+        return await librarian.write_sign_off(
+            claude,
+            title=title,
+            blurb=finished.blurb,
+            chapter_titles=[chapter.title for chapter in finished.chapters],
+            member_text=_member_words(interview),
+        )
+    except Exception:
+        logger.warning("The Librarian's sign-off failed for interview %s", interview["_id"])
+        return None

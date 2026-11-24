@@ -7,9 +7,25 @@ from trove.core.models import NonEmptyText, RequestBody
 
 # What a reader sees. Declined and expired both show as "unavailable", so a reader can't tell a no
 # from no answer (docs/trove.md §6).
-ReaderStatus = Literal["waiting", "accepted", "cancelled", "unavailable"]
+ReaderStatus = Literal["waiting", "accepted", "cancelled", "unavailable", "returned"]
 # Authors see only their open checkouts.
 AuthorStatus = Literal["waiting", "accepted"]
+
+
+# "Did you meet?" (docs/trove.md §8): "met" and "no" end the reading; "not_yet" keeps it open.
+MeetAnswer = Literal["met", "not_yet", "no"]
+
+
+class DidYouMeet(BaseModel):
+    """This member's own side of "Did you meet?". Never includes the other person's answer."""
+
+    # True once it's being asked and this member can (still) answer.
+    can_answer: bool
+    my_answer: MeetAnswer | None
+
+
+class MeetAnswerRequest(RequestBody):
+    answer: MeetAnswer
 
 
 class CheckoutRequest(RequestBody):
@@ -39,6 +55,12 @@ class ReadingCheckout(BaseModel):
     expires_at: datetime | None
     # The author's contact details, only once they've accepted.
     author_contact: Contact | None = None
+    # True when the conversation has something you haven't read. Private to you; never a count.
+    new_messages: bool = False
+    # The confirmed meeting time (M1), on an accepted checkout once both agreed on one; None until then.
+    meeting_start: datetime | None = None
+    # Set once "Did you meet?" is being asked (after the meeting time), and after the reading.
+    did_you_meet: DidYouMeet | None = None
 
 
 class ReaderBook(BaseModel):
@@ -61,6 +83,12 @@ class LendingCheckout(BaseModel):
     expires_at: datetime | None
     # The reader's contact details, only once you've accepted.
     reader_contact: Contact | None = None
+    # True when the conversation has something you haven't read. Private to you; never a count.
+    new_messages: bool = False
+    # The confirmed meeting time (M1), on an accepted checkout once both agreed on one; None until then.
+    meeting_start: datetime | None = None
+    # Set once "Did you meet?" is being asked (after the meeting time).
+    did_you_meet: DidYouMeet | None = None
 
 
 class MyCheckouts(BaseModel):
@@ -68,3 +96,21 @@ class MyCheckouts(BaseModel):
     reading: list[ReadingCheckout]
     # Open checkouts of your book, newest first.
     lending: list[LendingCheckout]
+
+
+class PastMeet(BaseModel):
+    """Someone you met through a checkout (docs/trove.md §8). Both people get one."""
+
+    checkout_id: str
+    # The book that was checked out.
+    book_title: str
+    # Whether you were the one who checked out the book, or its author.
+    you_were: Literal["reader", "author"]
+    other_name: str
+    # The other person's own book, if it's on the shelf.
+    other_book: ReaderBook | None
+    # Their contact details stay available after a meeting.
+    contact: Contact | None
+    met_on: datetime
+    # You can still give your own answer if you haven't (for example, "no" if you didn't meet).
+    did_you_meet: DidYouMeet

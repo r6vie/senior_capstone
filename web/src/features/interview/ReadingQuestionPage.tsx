@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { usePageTitle } from "../../ui/usePageTitle";
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
@@ -18,6 +19,7 @@ export function readingCaption(question: ReadingQuestion): string {
 }
 
 export function ReadingQuestionPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
+  usePageTitle("A question from a reading");
   const { questionId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();

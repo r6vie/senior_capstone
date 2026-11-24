@@ -44,10 +44,79 @@ export interface ProposedChange {
   now: { title: string; summary: string } | null;
 }
 
+// ---------- The Librarian (docs/librarian-plan.md) ----------
+
+/** What the Librarian draws on the answer. A strike's note is the better word. "circle" is the running bit,
+ * with its count; "back_cover" is the one big double underline of the interview. */
+export type MarkMove = "underline" | "strike" | "circle" | "note" | "back_cover";
+
+/** A mark on the member's exact words: whole words, `occurrence` 1 for the first. */
+export interface LibMark {
+  id: string;
+  move: MarkMove;
+  anchor: string;
+  occurrence: number;
+  note: string | null;
+  /** The running bit's count, 3 to 6: drawn as "×3." before the note. */
+  count?: number | null;
+  /** Its own earlier note, struck through, when it credits an edit ("better." written above). */
+  struckNote?: string | null;
+}
+
+export type EntryKind = "chapter" | "connection" | "saving" | "clip" | "note" | "bet";
+
+/** One line in the Librarian's notebook. Commentary, never a copy of the answer, except a clip. */
+export interface NotebookEntry {
+  id: string;
+  kind: EntryKind;
+  text: string;
+  /** The member's words it was built on. When they leave the answer, the entry is rubbed out. */
+  anchors: string[];
+  /** Interview turns it draws on, 1 first. */
+  sourceTurns: number[];
+  /** Circled when a question was built on it; a saving is ticked instead. A bet is called (ticked) or
+   * lost (struck) when a later answer settles it. */
+  status: "open" | "circled" | "ticked" | "called" | "lost";
+  /** Written beside a settled bet: "called it." or "wrong. good." */
+  outcomeNote?: string | null;
+  /** Earlier wordings, oldest first, struck through. */
+  struck: string[];
+}
+
+/** Everything the Librarian left so far, so going back and resuming show exactly what was there. */
+export interface LibrarianView {
+  /** How many answers came before this one. The first question gets no idle lines. */
+  answered: number;
+  /** The marks on the answer being written. */
+  marks: LibMark[];
+  silent: boolean;
+  notebook: NotebookEntry[];
+}
+
+/** One look at the answer while the member types. */
+export interface NotesLook {
+  questionId: string;
+  text: string;
+  previousText: string;
+  pasted: boolean;
+  /** Ids of the marks and entries on screen. */
+  shown: string[];
+}
+
+/** What the Librarian does now. Anything on screen that isn't kept or added is rubbed out. */
+export interface NotesReply {
+  silent: boolean;
+  /** `revise`: same id, changed; rubbed out and drawn again. */
+  marks: { keep: string[]; add: LibMark[]; revise: LibMark[]; erase: string[] };
+  notebook: { keep: string[]; add: NotebookEntry[]; revise: NotebookEntry[]; erase: string[] };
+}
+
 export type InterviewState =
   | {
       id: string;
       stage: "asking";
+      /** The Librarian's marks and notebook. Absent where the API has none to give. */
+      librarian?: LibrarianView | null;
       /** "adding" is a short new round on a shelved book: no phases, and a different way out. */
       round?: "first" | "adding";
       phase: Phase;
@@ -67,7 +136,13 @@ export type InterviewState =
     }
   | { id: string; stage: "shaping"; phase: "shape"; playback: string; questionId?: string }
   | { id: string; stage: "choosing"; titles: TitleOption[] }
-  | { id: string; stage: "reviewing"; book: DraftBook }
+  | {
+      id: string;
+      stage: "reviewing";
+      book: DraftBook;
+      /** The Librarian's handwritten line under the title, at the reveal of the finished book. */
+      signOff?: string | null;
+    }
   | { id: string; stage: "done"; book: DraftBook }
   /** The changes are being written in the background. */
   | { id: string; stage: "writing" }
@@ -187,6 +262,8 @@ export interface InterviewClient {
   answer(id: string, text: string): Promise<InterviewState>;
   /** Move past this question. Skips are never shown or counted. */
   skip(id: string): Promise<InterviewState>;
+  /** The Librarian reads the answer as it's typed. Never throws for want of AI: it just adds nothing. */
+  notes(look: NotesLook, signal?: AbortSignal): Promise<NotesReply>;
   /** Write the waiting question again, after an answer was saved but the next question failed. */
   askAgain(id: string): Promise<InterviewState>;
   /** "I've said enough. Show me my book." Words still in the field are saved first. */

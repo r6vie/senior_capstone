@@ -7,7 +7,10 @@ import {
   type InterviewClient,
   InterviewError,
   type InterviewState,
+  type LibMark,
+  type LibrarianView,
   LostError,
+  type NotebookEntry,
   type ProposedChange,
 } from "./interviewClient";
 
@@ -17,8 +20,49 @@ import {
 type MyBookResponse = components["schemas"]["MyBookResponse"];
 type ChangeResponse = components["schemas"]["Change"];
 type InterviewResponse = components["schemas"]["InterviewResponse"];
+type MarkResponse = components["schemas"]["Mark"];
+type EntryResponse = components["schemas"]["Entry"];
+type LibrarianResponse = components["schemas"]["LibrarianState"];
+
+function toMark(mark: MarkResponse): LibMark {
+  return {
+    id: mark.id,
+    move: mark.move,
+    anchor: mark.anchor,
+    occurrence: mark.occurrence,
+    note: mark.note,
+    count: mark.count ?? null,
+    struckNote: mark.struck_note ?? null,
+  };
+}
+
+function toEntry(entry: EntryResponse): NotebookEntry {
+  return {
+    id: entry.id,
+    kind: entry.kind,
+    text: entry.text,
+    anchors: entry.anchors,
+    sourceTurns: entry.source_turns,
+    status: entry.status,
+    struck: entry.struck,
+    outcomeNote: entry.outcome_note ?? null,
+  };
+}
+
+// The notebook in the response already carries the new question's circle or tick (`builds_on`).
+function toLibrarian(librarian: LibrarianResponse | null | undefined): LibrarianView | null {
+  if (!librarian) return null;
+  return {
+    answered: librarian.turns.length,
+    marks: librarian.current_marks.map(toMark),
+    silent: librarian.current_silent,
+    notebook: librarian.notebook.map(toEntry),
+  };
+}
 
 const ID = "me";
+
+const SOMETHING_WRONG = "Something's wrong on our side. Nothing you said is lost.";
 
 interface Result<T> {
   data?: T;
@@ -28,10 +72,13 @@ interface Result<T> {
 
 function unwrap<T>({ data, error, response }: Result<T>): T {
   if (data !== undefined) return data;
-  // Neither of these reaches a member in the API's own words: one names a database, one names a field.
-  if (response?.status === 503)
-    throw new InterviewError("Something's wrong on our side. Nothing you said is lost.");
   const detail = error && typeof error === "object" && "detail" in error ? error.detail : undefined;
+  // A member never sees the API's own words for a 503, which can name a database. A developer does: on their
+  // machine it's usually a missing ANTHROPIC_API_KEY, and the API says exactly that.
+  if (response?.status === 503) {
+    const why = import.meta.env.DEV && typeof detail === "string" ? detail : SOMETHING_WRONG;
+    throw new InterviewError(why);
+  }
   // A list here is a schema error, which names fields. A sentence is the API talking to the member.
   if (response?.status === 422 && typeof detail !== "string") {
     throw new InterviewError("That didn't go through. Check it and try again.");
@@ -92,8 +139,26 @@ function toChange(change: ChangeResponse): ProposedChange {
   };
 }
 
+// Both answer null before the member has started, or has a book: an answer, not an error.
+async function readInterview(): Promise<InterviewResponse | null> {
+  return unwrap(await api.GET("/interview"));
+}
+
+async function readBook(): Promise<MyBookResponse | null> {
+  return unwrap(await api.GET("/books/me"));
+}
+
+// For a step that only makes sense once the interview exists.
+async function openInterview(): Promise<InterviewResponse> {
+  const now = await readInterview();
+  if (!now) throw new InterviewError("You haven't started your interview yet.");
+  return now;
+}
+
 async function myBook(): Promise<InterviewState> {
-  return fromBook(unwrap(await api.GET("/books/me")));
+  const book = await readBook();
+  if (!book) throw new InterviewError("You don't have a book yet.");
+  return fromBook(book);
 }
 
 // Turns the API's flat response into one screen. Two cases need another call first: the Librarian
@@ -128,8 +193,11 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
         stage: "choosing",
         titles: (response.titles ?? []).map((option, index) => ({ id: String(index), ...option })),
       };
-    case "reviewing":
-      return myBook();
+    case "reviewing": {
+      // The Librarian's sign-off comes only on the interview, under the title at the reveal.
+      const state = await myBook();
+      return state.stage === "reviewing" ? { ...state, signOff: response.sign_off ?? null } : state;
+    }
     case "done":
       return response.nothing_new
         ? {
@@ -183,6 +251,7 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
         lastTopic: response.topic,
         needsMore: response.needs_more,
         nearlyDone: response.nearly_done,
+        librarian: toLibrarian(response.librarian),
       };
     }
   }
@@ -196,7 +265,7 @@ function removalOf(chapterId: string): Promise<string> {
   const known = removals.get(chapterId);
   if (known) return known;
   const asking = (async () => {
-    const now: InterviewResponse = unwrap(await api.GET("/interview"));
+    const now = await openInterview();
     const open = now.changes?.find((change) => change.kind === "remove" && change.chapter_id === chapterId);
     if (open) return open.id;
     const proposed = unwrap(await api.POST("/interview/removal", { body: { chapter_id: chapterId } }));
@@ -220,7 +289,7 @@ async function writeSelectionBlurb(approved: string[]): Promise<string | null> {
   const started = Date.now();
   let asked = false;
   while (Date.now() - started < BLURB_GIVE_UP_MS) {
-    const now: InterviewResponse = unwrap(await api.GET("/interview"));
+    const now = await openInterview();
     const status = now.selection_blurb_status;
     if (status === "ready") return now.selection_blurb;
     if (status === "failed" && asked) throw new InterviewError(COULD_NOT_WRITE_BLURB);
@@ -245,9 +314,8 @@ function readBase64(file: File): Promise<string> {
 
 export const apiInterviewClient: InterviewClient = {
   async current() {
-    const { data, error, response } = await api.GET("/interview");
-    if (response.status === 404) return null;
-    return toState(unwrap<InterviewResponse>({ data, error, response }));
+    const now = await readInterview();
+    return now ? toState(now) : null;
   },
   async start(resume) {
     const body = resume ? { resume_pdf: await readBase64(resume) } : {};
@@ -260,6 +328,36 @@ export const apiInterviewClient: InterviewClient = {
   async skip() {
     const body = { question_id: waitingQuestionId };
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/skip", { body })));
+  },
+  // Never an error for want of AI: past the limits the API keeps what holds and adds nothing. A 409 (the
+  // question moved on) or a dropped call is the same to the screen: nothing new to draw.
+  async notes(look, signal) {
+    const { data } = await api.POST("/interview/notes", {
+      body: {
+        question_id: look.questionId,
+        text: look.text,
+        previous_text: look.previousText,
+        pasted: look.pasted,
+        shown: look.shown,
+      },
+      signal,
+    });
+    if (!data) throw new InterviewError("The Librarian had nothing to add.");
+    return {
+      silent: data.silent,
+      marks: {
+        keep: data.marks.keep,
+        add: data.marks.add.map(toMark),
+        revise: data.marks.revise.map(toMark),
+        erase: data.marks.erase,
+      },
+      notebook: {
+        keep: data.notebook.keep,
+        add: data.notebook.add.map(toEntry),
+        revise: data.notebook.revise.map(toEntry),
+        erase: data.notebook.erase,
+      },
+    };
   },
   async askAgain() {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/question")));
@@ -281,7 +379,7 @@ export const apiInterviewClient: InterviewClient = {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/title", { body })));
   },
   async otherTitles() {
-    const response: InterviewResponse = unwrap(await api.GET("/interview"));
+    const response = await openInterview();
     return (response.titles ?? []).map((option, index) => ({ id: String(index), ...option }));
   },
   async changeTitle(_id, titleId) {
@@ -310,13 +408,9 @@ export const apiInterviewClient: InterviewClient = {
   },
 
   async stage() {
-    const { data, error, response } = await api.GET("/interview");
-    if (response.status === 404) {
-      // A book can be on the shelf with no interview behind it, such as a sample.
-      const book = await api.GET("/books/me");
-      return book.data ? "shelf" : "none";
-    }
-    const now: InterviewResponse = unwrap({ data, error, response });
+    const now = await readInterview();
+    // A book can be on the shelf with no interview behind it, such as a sample.
+    if (!now) return (await readBook()) ? "shelf" : "none";
     const stages: Record<InterviewResponse["stage"], BookStage> = {
       interviewing: "interviewing",
       // A failed step is the interview page's to offer again, so My book points there.
@@ -332,10 +426,8 @@ export const apiInterviewClient: InterviewClient = {
     return stages[now.stage];
   },
   async myBook() {
-    const { data, error, response } = await api.GET("/books/me");
-    if (response.status === 404) return null;
-    const book = unwrap<MyBookResponse>({ data, error, response });
-    return toMyBook(book);
+    const book = await readBook();
+    return book ? toMyBook(book) : null;
   },
   async reopen() {
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/reopen")));
@@ -395,8 +487,8 @@ export const apiInterviewClient: InterviewClient = {
     return toMyBook(unwrap(await api.POST("/books/me/put-back")));
   },
   async openRemoval() {
-    const { data, response } = await api.GET("/interview");
-    if (response.status === 404 || !data) return null;
+    const { data } = await api.GET("/interview");
+    if (!data) return null;
     const [only, ...rest] = data.changes ?? [];
     if (!only || rest.length || only.kind !== "remove" || !only.chapter_id) return null;
     return { chapterId: only.chapter_id, title: only.current?.title ?? only.title };

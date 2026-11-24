@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import { api, session } from "../../api/client";
 import { AuthProvider } from "../auth/AuthProvider";
 import { clearAllDrafts, draftKeyFor } from "./AnswerPanel";
+import { answerOf, setAnswer } from "./answerField.testing";
 import { createFakeInterviewClient, resetFakeInterview } from "./fakeInterviewClient";
 import { InterviewPage } from "./InterviewPage";
 import {
@@ -66,7 +67,7 @@ function settled() {
 }
 
 async function type(text: string) {
-  fireEvent.change(await screen.findByLabelText("Your answer"), { target: { value: text } });
+  setAnswer(await screen.findByLabelText("Your answer"), text);
 }
 
 async function answer(text: string) {
@@ -134,6 +135,34 @@ describe("InterviewPage", () => {
       expect(start).toHaveBeenLastCalledWith(null);
     });
 
+    it("when the first question fails, offers only Try again, not a second Start", async () => {
+      const client = fake();
+      vi.spyOn(client, "start").mockRejectedValueOnce(
+        new InterviewError("The Librarian couldn't answer just now. Please try again.", true),
+      );
+      const askAgain = vi.spyOn(client, "askAgain").mockResolvedValue(asking);
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: "Start the interview" }));
+      const retry = await screen.findByRole("button", { name: "Try again" });
+      expect(screen.queryByRole("button", { name: "Start the interview" })).toBeNull();
+      expect(screen.queryByRole("button", { name: /Have a résumé\?/ })).toBeNull();
+      fireEvent.click(retry);
+      expect(await screen.findByText(asking.question)).toBeTruthy();
+      expect(askAgain).toHaveBeenCalledTimes(1);
+    });
+
+    it("when an earlier Start already got through, opens that interview instead of refusing", async () => {
+      const client = fake();
+      vi.spyOn(client, "start").mockRejectedValueOnce(
+        new InterviewError("You've already started your interview.", false, true),
+      );
+      vi.spyOn(client, "current").mockResolvedValueOnce(null).mockResolvedValue(asking);
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: "Start the interview" }));
+      expect(await screen.findByText(asking.question)).toBeTruthy();
+      expect(document.body.textContent).not.toMatch(/already started/);
+    });
+
     it("turns down a résumé over the size limit in a plain sentence", async () => {
       renderWith(fake());
       fireEvent.click(await screen.findByRole("button", { name: /Have a résumé\?/ }));
@@ -163,12 +192,13 @@ describe("InterviewPage", () => {
       expect(document.body.textContent).not.toMatch(/\b10\b/);
     }, 20_000);
 
-    it("names the steps in plain words, as a list, and says when it's mostly done", async () => {
+    it("asks on a plain page: the question as words, the answer card, and when it's mostly done", async () => {
       renderWith(at({ ...asking, phase: "dig", canFinish: true, nearlyDone: true }));
       await screen.findByLabelText("Your answer");
-      const steps = screen.getByRole("list", { name: "Where we are" });
-      expect(steps.textContent).toBe("First lookDeeperCheck");
-      expect(steps.querySelector('[aria-current="step"]')?.textContent).toBe("Deeper");
+      // LibDesktop: no band and no step names on the question screen.
+      expect(screen.queryByRole("list", { name: "Where we are" })).toBeNull();
+      expect(screen.getByText("Question")).toBeTruthy();
+      expect(screen.getByRole("heading", { level: 1, name: asking.question })).toBeTruthy();
       expect(screen.getByText("Most of the way there.")).toBeTruthy();
     });
 
@@ -211,7 +241,7 @@ describe("InterviewPage", () => {
       expect(screen.getByText(/longer than I can take in one go/)).toBeTruthy();
       const send = screen.getByRole("button", { name: "Send answer" }) as HTMLButtonElement;
       expect(send.disabled).toBe(true);
-      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe(long);
+      expect(answerOf(screen.getByLabelText("Your answer"))).toBe(long);
     });
 
     it("sends with Ctrl or Cmd and Enter", async () => {
@@ -363,7 +393,7 @@ describe("InterviewPage", () => {
       expect(await screen.findByText("The next question?")).toBeTruthy();
       expect(screen.getByText("Your answer was saved.")).toBeTruthy();
       expect(screen.queryByRole("alert")).toBeNull();
-      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("");
+      expect(answerOf(screen.getByLabelText("Your answer"))).toBe("");
       expect(localStorage.getItem(draftKeyFor("anon", asking.question))).toBeNull();
     });
 
@@ -374,7 +404,7 @@ describe("InterviewPage", () => {
       expect(await screen.findByText("The next question?")).toBeTruthy();
       expect(screen.getByText(/already moved past that question on another screen/)).toBeTruthy();
       expect(screen.queryByText("Your answer was saved.")).toBeNull();
-      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("My careful answer");
+      expect(answerOf(screen.getByLabelText("Your answer"))).toBe("My careful answer");
       expect(localStorage.getItem(draftKeyFor("anon", next.question))).toBe("My careful answer");
     });
 
@@ -389,7 +419,7 @@ describe("InterviewPage", () => {
       await type("My last words");
       fireEvent.click(screen.getByRole("button", { name: "Send this, then show me my book" }));
       expect(await screen.findByText("The next question?")).toBeTruthy();
-      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("My last words");
+      expect(answerOf(screen.getByLabelText("Your answer"))).toBe("My last words");
     });
 
     const lost = () => new TypeError("Failed to fetch");
@@ -437,7 +467,7 @@ describe("InterviewPage", () => {
       fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
       expect(await screen.findByText("The next question?")).toBeTruthy();
       expect(screen.getByText(/Your first version was saved. Your changes are still here/)).toBeTruthy();
-      expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe("New better words");
+      expect(answerOf(screen.getByLabelText("Your answer"))).toBe("New better words");
       expect(send).toHaveBeenCalledTimes(1);
     });
 
@@ -447,9 +477,7 @@ describe("InterviewPage", () => {
       renderWith(client);
       await type("My answer");
       fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
-      await waitFor(() =>
-        expect((screen.getByLabelText("Your answer") as HTMLTextAreaElement).value).toBe(""),
-      );
+      await waitFor(() => expect(answerOf(screen.getByLabelText("Your answer"))).toBe(""));
     });
 
     it("says so when asking for the next question fails again", async () => {
@@ -526,6 +554,27 @@ describe("InterviewPage", () => {
       fireEvent.click(await screen.findByRole("button", { name: "Skip" }));
       expect(await screen.findByText(/The next question didn't come through/)).toBeTruthy();
       expect(screen.queryByText(/Your answer is saved/)).toBeNull();
+    });
+
+    it("on a developer's machine, says why the interview couldn't be loaded", async () => {
+      vi.stubEnv("DEV", true);
+      const client = fake();
+      vi.spyOn(client, "current").mockRejectedValueOnce(
+        new InterviewError("AI_MODE=scripted only runs on a trove_dev database, not alvisa."),
+      );
+      renderWith(client);
+      expect(await screen.findByText(/only runs on a trove_dev database/)).toBeTruthy();
+      vi.unstubAllEnvs();
+    });
+
+    it("never shows a member the reason behind a failed load", async () => {
+      vi.stubEnv("DEV", false);
+      const client = fake();
+      vi.spyOn(client, "current").mockRejectedValueOnce(new InterviewError("database connection failed"));
+      renderWith(client);
+      expect(await screen.findByText(/Nothing you've said is lost/)).toBeTruthy();
+      expect(document.body.textContent).not.toMatch(/database connection failed/);
+      vi.unstubAllEnvs();
     });
 
     it("when the interview can't be loaded, offers Try again rather than the start screen", async () => {

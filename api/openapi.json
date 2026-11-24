@@ -711,6 +711,7 @@
           "Books"
         ],
         "summary": "My Book",
+        "description": "The member's own book, or null before they have one: an answer, not an error, since the shelf\nasks on every visit.",
         "operationId": "my_book_books_me_get",
         "responses": {
           "200": {
@@ -718,7 +719,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MyBookResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/MyBookResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response My Book Books Me Get"
                 }
               }
             }
@@ -941,7 +950,7 @@
           "Interview"
         ],
         "summary": "Current",
-        "description": "The member's interview, for resuming where they left off. If writing proposed changes failed,\na return tries once more on its own.",
+        "description": "The member's interview, for resuming where they left off, or null before they start. If writing\nproposed changes failed, a return tries once more on its own.",
         "operationId": "current_interview_get",
         "responses": {
           "200": {
@@ -949,7 +958,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InterviewResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InterviewResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Current Interview Get"
                 }
               }
             }
@@ -1126,6 +1143,53 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StaleQuestionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/interview/notes": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Notes",
+        "description": "The Librarian reads the answer as it's typed: marks to keep and add, and notebook entries to\nkeep, add, revise and erase. Call on a pause, a finished sentence or about 7 new words, never per\nkeystroke, and drop a reply once the member has moved to another question. It never fails for\nwant of AI: it just adds nothing. 409 if `question_id` isn't the question waiting.",
+        "operationId": "notes_interview_notes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotesResponse"
                 }
               }
             }
@@ -2302,6 +2366,95 @@
         }
       }
     },
+    "/checkouts/{checkout_id}/met": {
+      "post": {
+        "tags": [
+          "Checkouts"
+        ],
+        "summary": "Did You Meet",
+        "description": "Answer \"Did you meet?\" for yourself. Your answer is never shown to the other person.",
+        "operationId": "did_you_meet_checkouts__checkout_id__met_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeetAnswerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DidYouMeet"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/checkouts/past-meets": {
+      "get": {
+        "tags": [
+          "Checkouts"
+        ],
+        "summary": "Past Meets",
+        "description": "The people you've met through checkouts, newest first, with their contact details.",
+        "operationId": "past_meets_checkouts_past_meets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PastMeet"
+                  },
+                  "type": "array",
+                  "title": "Response Past Meets Checkouts Past Meets Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/meetings/{checkout_id}": {
       "get": {
         "tags": [
@@ -2565,6 +2718,241 @@
         }
       }
     },
+    "/messages/{checkout_id}": {
+      "get": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Thread",
+        "description": "The conversation on an accepted checkout, oldest first, starting with the reader's checkout note.",
+        "operationId": "thread_messages__checkout_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Thread"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Send",
+        "description": "Write in the conversation. The other person is emailed, at most once every 10 minutes.",
+        "operationId": "send_messages__checkout_id__post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/{checkout_id}/read": {
+      "post": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Mark Read",
+        "description": "You've seen this conversation up to `seen_up_to`. Only you ever know this.",
+        "operationId": "mark_read_messages__checkout_id__read_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkout_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "title": "Checkout Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/discovery/search": {
+      "get": {
+        "tags": [
+          "Discovery"
+        ],
+        "summary": "Search",
+        "description": "Available books matching public story text or the author's full name.",
+        "operationId": "search_discovery_search_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "default": "",
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/discovery/recommendation": {
+      "get": {
+        "tags": [
+          "Discovery"
+        ],
+        "summary": "Recommendation",
+        "description": "The Librarian's one current pick, based only on this member's own book.",
+        "operationId": "recommendation_discovery_recommendation_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibrarianRecommendation"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -2615,6 +3003,38 @@
           "question_id"
         ],
         "title": "AnswerRequest"
+      },
+      "AnsweredTurn": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "marks": {
+            "items": {
+              "$ref": "#/components/schemas/Mark"
+            },
+            "type": "array",
+            "title": "Marks"
+          },
+          "silent": {
+            "type": "boolean",
+            "title": "Silent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question",
+          "answer",
+          "marks",
+          "silent"
+        ],
+        "title": "AnsweredTurn",
+        "description": "An answered or skipped question, with the marks the Librarian left on it, for going back."
       },
       "AuthorChapter": {
         "properties": {
@@ -3086,6 +3506,116 @@
         "type": "object",
         "title": "DetailsUpdate"
       },
+      "DidYouMeet": {
+        "properties": {
+          "can_answer": {
+            "type": "boolean",
+            "title": "Can Answer"
+          },
+          "my_answer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "met",
+                  "not_yet",
+                  "no"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "My Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "can_answer",
+          "my_answer"
+        ],
+        "title": "DidYouMeet",
+        "description": "This member's own side of \"Did you meet?\". Never includes the other person's answer."
+      },
+      "Entry": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "chapter",
+              "connection",
+              "saving",
+              "clip",
+              "note",
+              "bet"
+            ],
+            "title": "Kind"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "anchors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Anchors"
+          },
+          "source_turns": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Source Turns"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "circled",
+              "ticked",
+              "called",
+              "lost"
+            ],
+            "title": "Status",
+            "default": "open"
+          },
+          "struck": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Struck",
+            "default": []
+          },
+          "outcome_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "text",
+          "anchors",
+          "source_turns"
+        ],
+        "title": "Entry",
+        "description": "One line in the notebook. `anchors` are the member's words it was built on; when those words\nleave the answer, the entry is rubbed out. `source_turns` are interview turn numbers, 1 first."
+      },
       "FinishRequest": {
         "properties": {
           "answer": {
@@ -3381,6 +3911,27 @@
               }
             ],
             "title": "Dropped Words"
+          },
+          "librarian": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LibrarianState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sign_off": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign Off"
           }
         },
         "type": "object",
@@ -3563,6 +4114,33 @@
                 "type": "null"
               }
             ]
+          },
+          "new_messages": {
+            "type": "boolean",
+            "title": "New Messages",
+            "default": false
+          },
+          "meeting_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting Start"
+          },
+          "did_you_meet": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DidYouMeet"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -3579,6 +4157,87 @@
         ],
         "title": "LendingCheckout",
         "description": "A checkout of your book, as its author sees it."
+      },
+      "LibrarianRecommendation": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "create_book",
+              "continue_interview",
+              "finish_book",
+              "recommendation",
+              "empty_shelf",
+              "unavailable"
+            ],
+            "title": "State"
+          },
+          "book": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BookCard"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state"
+        ],
+        "title": "LibrarianRecommendation",
+        "description": "What the shelf's Librarian cover shows for this signed-in member."
+      },
+      "LibrarianState": {
+        "properties": {
+          "turns": {
+            "items": {
+              "$ref": "#/components/schemas/AnsweredTurn"
+            },
+            "type": "array",
+            "title": "Turns"
+          },
+          "current_marks": {
+            "items": {
+              "$ref": "#/components/schemas/Mark"
+            },
+            "type": "array",
+            "title": "Current Marks"
+          },
+          "current_silent": {
+            "type": "boolean",
+            "title": "Current Silent"
+          },
+          "notebook": {
+            "items": {
+              "$ref": "#/components/schemas/Entry"
+            },
+            "type": "array",
+            "title": "Notebook"
+          }
+        },
+        "type": "object",
+        "required": [
+          "turns",
+          "current_marks",
+          "current_silent",
+          "notebook"
+        ],
+        "title": "LibrarianState",
+        "description": "Everything the Librarian left so far, so going back and resuming show exactly what was there.\nOnly while interviewing or adding: it's hidden after the reveal, never deleted."
       },
       "LoginRequest": {
         "properties": {
@@ -3627,6 +4286,135 @@
           "expires_in"
         ],
         "title": "LoginResponse"
+      },
+      "Mark": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "move": {
+            "type": "string",
+            "enum": [
+              "underline",
+              "strike",
+              "circle",
+              "note",
+              "back_cover"
+            ],
+            "title": "Move"
+          },
+          "anchor": {
+            "type": "string",
+            "title": "Anchor"
+          },
+          "occurrence": {
+            "type": "integer",
+            "title": "Occurrence"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "struck_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Struck Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "move",
+          "anchor",
+          "occurrence",
+          "note"
+        ],
+        "title": "Mark",
+        "description": "A mark on the member's exact words: `anchor` is a substring of the answer, `occurrence` which\none (1 is the first). The client places it only while the anchor still matches."
+      },
+      "MarksDelta": {
+        "properties": {
+          "keep": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keep"
+          },
+          "add": {
+            "items": {
+              "$ref": "#/components/schemas/Mark"
+            },
+            "type": "array",
+            "title": "Add"
+          },
+          "revise": {
+            "items": {
+              "$ref": "#/components/schemas/Mark"
+            },
+            "type": "array",
+            "title": "Revise"
+          },
+          "erase": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Erase"
+          }
+        },
+        "type": "object",
+        "required": [
+          "keep",
+          "add",
+          "revise",
+          "erase"
+        ],
+        "title": "MarksDelta"
+      },
+      "MeetAnswerRequest": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "enum": [
+              "met",
+              "not_yet",
+              "no"
+            ],
+            "title": "Answer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "answer"
+        ],
+        "title": "MeetAnswerRequest"
       },
       "MeetingView": {
         "properties": {
@@ -3719,6 +4507,66 @@
           "place_note"
         ],
         "title": "MeetingView"
+      },
+      "Message": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "checkout_note",
+              "message",
+              "note"
+            ],
+            "title": "Kind"
+          },
+          "from_me": {
+            "type": "boolean",
+            "title": "From Me"
+          },
+          "sender_name": {
+            "type": "string",
+            "title": "Sender Name"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sent At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "from_me",
+          "sender_name",
+          "text",
+          "sent_at"
+        ],
+        "title": "Message"
+      },
+      "MessageRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "MessageRequest"
       },
       "MyBookResponse": {
         "properties": {
@@ -3904,6 +4752,113 @@
         "title": "NameUpdate",
         "description": "Change the name on the account. Leave out a field to keep it."
       },
+      "NotebookDelta": {
+        "properties": {
+          "keep": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keep"
+          },
+          "add": {
+            "items": {
+              "$ref": "#/components/schemas/Entry"
+            },
+            "type": "array",
+            "title": "Add"
+          },
+          "revise": {
+            "items": {
+              "$ref": "#/components/schemas/Entry"
+            },
+            "type": "array",
+            "title": "Revise"
+          },
+          "erase": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Erase"
+          }
+        },
+        "type": "object",
+        "required": [
+          "keep",
+          "add",
+          "revise",
+          "erase"
+        ],
+        "title": "NotebookDelta"
+      },
+      "NotesRequest": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id",
+            "description": "The `question_id` of the question being answered."
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 5000,
+            "title": "Text",
+            "description": "The answer as it stands."
+          },
+          "previous_text": {
+            "type": "string",
+            "maxLength": 5000,
+            "title": "Previous Text",
+            "description": "The answer at the last call.",
+            "default": ""
+          },
+          "pasted": {
+            "type": "boolean",
+            "title": "Pasted",
+            "description": "Whether some of the text was pasted.",
+            "default": false
+          },
+          "shown": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "title": "Shown",
+            "description": "Ids of the marks and entries on screen now."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "question_id",
+          "text"
+        ],
+        "title": "NotesRequest",
+        "description": "One look at the answer while the member types. Earlier turns are already on the server."
+      },
+      "NotesResponse": {
+        "properties": {
+          "silent": {
+            "type": "boolean",
+            "title": "Silent"
+          },
+          "marks": {
+            "$ref": "#/components/schemas/MarksDelta"
+          },
+          "notebook": {
+            "$ref": "#/components/schemas/NotebookDelta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "silent",
+          "marks",
+          "notebook"
+        ],
+        "title": "NotesResponse",
+        "description": "What the Librarian does now. Place a mark only while its anchor and occurrence still match the\ntext: a late reply is then harmless. On `silent`, rub everything from this answer out and write\nnothing more on it."
+      },
       "NotificationSettingsUpdate": {
         "properties": {
           "email_notifications": {
@@ -3918,6 +4873,71 @@
         ],
         "title": "NotificationSettingsUpdate",
         "description": "The one email switch. Account emails, like the welcome message, are sent either way."
+      },
+      "PastMeet": {
+        "properties": {
+          "checkout_id": {
+            "type": "string",
+            "title": "Checkout Id"
+          },
+          "book_title": {
+            "type": "string",
+            "title": "Book Title"
+          },
+          "you_were": {
+            "type": "string",
+            "enum": [
+              "reader",
+              "author"
+            ],
+            "title": "You Were"
+          },
+          "other_name": {
+            "type": "string",
+            "title": "Other Name"
+          },
+          "other_book": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReaderBook"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Contact"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "met_on": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Met On"
+          },
+          "did_you_meet": {
+            "$ref": "#/components/schemas/DidYouMeet"
+          }
+        },
+        "type": "object",
+        "required": [
+          "checkout_id",
+          "book_title",
+          "you_were",
+          "other_name",
+          "other_book",
+          "contact",
+          "met_on",
+          "did_you_meet"
+        ],
+        "title": "PastMeet",
+        "description": "Someone you met through a checkout (docs/trove.md \u00a78). Both people get one."
       },
       "PublicBookResponse": {
         "properties": {
@@ -4009,6 +5029,17 @@
               }
             ],
             "title": "Playback"
+          },
+          "builds_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Builds On"
           }
         },
         "type": "object",
@@ -4019,6 +5050,21 @@
           "playback"
         ],
         "title": "Question"
+      },
+      "ReadRequest": {
+        "properties": {
+          "seen_up_to": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Seen Up To"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "seen_up_to"
+        ],
+        "title": "ReadRequest"
       },
       "ReaderBook": {
         "properties": {
@@ -4082,7 +5128,8 @@
               "waiting",
               "accepted",
               "cancelled",
-              "unavailable"
+              "unavailable",
+              "returned"
             ],
             "title": "Status"
           },
@@ -4107,6 +5154,33 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/Contact"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_messages": {
+            "type": "boolean",
+            "title": "New Messages",
+            "default": false
+          },
+          "meeting_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting Start"
+          },
+          "did_you_meet": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DidYouMeet"
               },
               {
                 "type": "null"
@@ -4239,6 +5313,39 @@
           "approved"
         ],
         "title": "RevisionRequest"
+      },
+      "SearchResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SearchResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "SearchResponse"
+      },
+      "SearchResult": {
+        "properties": {
+          "book": {
+            "$ref": "#/components/schemas/BookCard"
+          },
+          "excerpt": {
+            "type": "string",
+            "title": "Excerpt"
+          }
+        },
+        "type": "object",
+        "required": [
+          "book",
+          "excerpt"
+        ],
+        "title": "SearchResult"
       },
       "ShapeRequest": {
         "properties": {
@@ -4463,6 +5570,42 @@
         "additionalProperties": false,
         "type": "object",
         "title": "StartRequest"
+      },
+      "Thread": {
+        "properties": {
+          "checkout_id": {
+            "type": "string",
+            "title": "Checkout Id"
+          },
+          "book_title": {
+            "type": "string",
+            "title": "Book Title"
+          },
+          "other_name": {
+            "type": "string",
+            "title": "Other Name"
+          },
+          "can_write": {
+            "type": "boolean",
+            "title": "Can Write"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            },
+            "type": "array",
+            "title": "Messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "checkout_id",
+          "book_title",
+          "other_name",
+          "can_write",
+          "messages"
+        ],
+        "title": "Thread"
       },
       "TimesUpdate": {
         "properties": {

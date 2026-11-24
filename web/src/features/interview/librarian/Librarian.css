@@ -1,0 +1,646 @@
+/* The Librarian in the interview (canvas page "Librarian notebook": LibDesktop, LibPhone, LibParts,
+   LibMore, LibReopened). Red here is the approved exception: handwriting and thin line-work only, and
+   one fill, the paste highlight at 20%. Strokes are hand-drawn SVG used as masks, so they take the ink. */
+
+.interview {
+  --lib-under: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%2010'%20preserveAspectRatio='none'%3E%3Cpath%20d='M0%206.4C18%203.2%2040%207.6%2062%204.6S90%203.8%20100%204.2'%20fill='none'%20stroke='black'%20stroke-width='2.4'%20stroke-linecap='round'%20stroke-linejoin='round'%20vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --lib-double: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%2012'%20preserveAspectRatio='none'%3E%3Cpath%20d='M1%203.4C16%201.8%2030%204.4%2048%202.9S80%202.3%2099%203.6'%20fill='none'%20stroke='black'%20stroke-width='2.2'%20stroke-linecap='round'%20stroke-linejoin='round'%20vector-effect='non-scaling-stroke'/%3E%3Cpath%20d='M2%209.2C18%207.4%2034%2010.2%2052%208.7S84%208.4%2098%209.4'%20fill='none'%20stroke='black'%20stroke-width='2.2'%20stroke-linecap='round'%20stroke-linejoin='round'%20vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --lib-strike: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%208'%20preserveAspectRatio='none'%3E%3Cpath%20d='M2%205.4C10%203%2022%206.6%2036%204.2C52%201.8%2060%206.2%2078%203.6C88%202.4%2095%203.8%2099%202.2'%20fill='none'%20stroke='black'%20stroke-width='2.4'%20stroke-linecap='round'%20vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --lib-circle: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%2040'%20preserveAspectRatio='none'%3E%3Cpath%20d='M19%209C8%2012%202%2022%208%2029C16%2038%2070%2041%2091%2031C103%2024%2098%209%2077%205C57%200%2027%201%2014%2012C10%2015%209%2019%2011%2023'%20fill='none'%20stroke='black'%20stroke-width='2.2'%20stroke-linecap='round'%20stroke-linejoin='round'%20vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --lib-small: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%207'%20preserveAspectRatio='none'%3E%3Cpath%20d='M1%204.3C14%202.3%2027%205.6%2043%203.8S75%202.7%2099%204.5'%20fill='none'%20stroke='black'%20stroke-width='2.2'%20stroke-linecap='round'%20stroke-linejoin='round'%20vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --lib-tick: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2022%2024'%3E%3Cpath%20d='M4%2011.4C6%2012.8%207.6%2015%208.8%2017.6C11.2%2011.6%2015%206.2%2019.6%202.4'%20fill='none'%20stroke='black'%20stroke-width='2.4'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E");
+  --lib-hatch:
+    repeating-linear-gradient(45deg, var(--ink) 0 1.4px, transparent 1.4px 5px),
+    repeating-linear-gradient(-45deg, var(--ink) 0 1.4px, transparent 1.4px 5px);
+  /* How far a marked line opens for its note. */
+  --lib-open: 30px;
+}
+
+/* ---------- The hand ---------- */
+.lib-hand {
+  display: inline;
+  font: 600 23px / 1.12 var(--font-hand);
+  letter-spacing: 0.01em;
+  color: var(--lib);
+}
+.lib-word {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+.lib-g {
+  display: inline-block;
+  opacity: var(--o, 1);
+  transform: translateY(var(--y, 0)) rotate(var(--r, 0));
+}
+/* Each letter is drawn as the pen moves (Hand.tsx): its outline's own stroke, revealed along its dash,
+   uncovers the letter in writing order. Never a fade. */
+.lib-drawn {
+  display: inline-block;
+  overflow: visible;
+  /* The text's own letter-spacing, so the line doesn't move when the drawn letters become text at rest. */
+  margin-right: 0.01em;
+}
+.lib-pen-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: lib-pen var(--t) cubic-bezier(0.3, 0.1, 0.6, 1) var(--s) both;
+}
+@keyframes lib-pen {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+/* For the moment before the letter shapes have loaded: each letter appears at its time, whole. */
+.lib-hand[data-life="writing"]:not([data-drawn]) .lib-g {
+  animation: lib-appear 0s linear var(--s) both;
+}
+@keyframes lib-appear {
+  from {
+    visibility: hidden;
+  }
+  to {
+    visibility: visible;
+  }
+}
+/* Rubbed out from the left: an eraser edge sweeps across, with the ink still there behind it. */
+.lib-hand[data-life="erasing"],
+.lib-mark[data-life="erasing"] .lib-stroke,
+.lib-en[data-life="erasing"] .lib-en-tx {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0 45%, #000 55%);
+  mask-image: linear-gradient(90deg, transparent 0 45%, #000 55%);
+  -webkit-mask-size: 220% 100%;
+  mask-size: 220% 100%;
+  animation: lib-rub var(--rub, 0.3s) linear both;
+}
+.lib-mark[data-life="erasing"] .lib-note .lib-hand {
+  animation-delay: 0.12s;
+}
+@keyframes lib-rub {
+  from {
+    -webkit-mask-position: 100% 0;
+    mask-position: 100% 0;
+  }
+  to {
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+  }
+}
+/* The word an entry hangs on, underlined by hand. */
+.lib-u::after,
+.lib-u2::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -3px;
+  background: var(--lib);
+  pointer-events: none;
+}
+.lib-u::after {
+  bottom: -1px;
+  height: 7px;
+  -webkit-mask: var(--shape, var(--lib-small)) 0 0 / 100% 100% no-repeat;
+  mask: var(--shape, var(--lib-small)) 0 0 / 100% 100% no-repeat;
+  transform: rotate(-1.4deg);
+}
+.lib-u2::after {
+  bottom: -4px;
+  height: 12px;
+  -webkit-mask: var(--shape, var(--lib-double)) 0 0 / 100% 100% no-repeat;
+  mask: var(--shape, var(--lib-double)) 0 0 / 100% 100% no-repeat;
+  transform: rotate(1deg);
+}
+
+/* ---------- The question page (LibDesktop): no band; the question is words on the page ---------- */
+.iv-ask .iv-top .avatar {
+  text-decoration: none;
+}
+.iv-ask .iv-act {
+  padding-top: var(--s-7);
+}
+.iv-qeye {
+  margin: 0 0 14px;
+  color: var(--ink-2);
+  font: 700 14px / 1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.iv-q {
+  max-width: 660px;
+  margin: 0 0 6px;
+  font: 600 32px / 1.16 var(--font-serif);
+  letter-spacing: -0.012em;
+  text-wrap: pretty;
+}
+.iv-q:focus {
+  outline: none;
+}
+.iv-question .iv-still {
+  color: var(--ink-2);
+}
+/* The answer card: "Your answer", the field, and its buttons in a footer strip. */
+.lib-card.surf {
+  padding: 0;
+}
+.lib-card:focus-within {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 4px;
+}
+.lib-card-lab {
+  margin: 0;
+  padding: 18px 28px 0;
+  font: 600 14px / 1.3 var(--font-sans);
+}
+.lib-card .field.lib-answer .lib-field {
+  min-height: 250px;
+  padding: 12px 28px 26px;
+  border: 0;
+  background: transparent;
+}
+.lib-card .field.lib-answer .lib-field:focus {
+  outline: none;
+}
+.lib-afoot {
+  padding: 14px 28px 18px;
+  border-top: var(--line) solid var(--ink);
+  border-radius: 0 0 var(--r, 0) var(--r, 0);
+  background: var(--paper-sunk);
+}
+
+/* ---------- The answer field ---------- */
+.lib-box {
+  position: relative;
+}
+.field.lib-answer .lib-field {
+  min-height: 170px;
+  padding: var(--s-4) 18px var(--s-5);
+  border: var(--line) solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+  font: 400 19px / 30px var(--font-sans);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  outline: none;
+  cursor: text;
+}
+.field.iv-answer-edit .lib-field {
+  min-height: 210px;
+}
+.field.lib-answer .lib-field:focus-visible,
+.field.lib-answer .lib-field:focus {
+  outline: var(--line-heavy) solid var(--ink);
+  outline-offset: 2px;
+}
+.field.lib-answer[data-invalid="true"] .lib-field {
+  border-color: var(--ink);
+  border-width: var(--line-heavy);
+}
+.lib-field[data-empty="true"]::before {
+  content: attr(data-placeholder);
+  color: var(--ink-2);
+  pointer-events: none;
+}
+/* A marked phrase. With a note above it, only its own line opens. */
+.lib-at {
+  transition: padding-top 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+}
+.lib-at[data-open] {
+  display: inline-block;
+  max-width: 100%;
+  padding-top: 0;
+}
+.lib-at[data-open="true"] {
+  padding-top: var(--lib-open);
+}
+.lib-at[data-open="true"][data-move="circle"] {
+  padding-top: calc(var(--lib-open) + 8px);
+}
+.lib-at[data-open="true"][data-move="credit"] {
+  padding-top: calc(2 * var(--lib-open) - 4px);
+}
+.lib-at[data-move="strike"] {
+  color: var(--ink-2);
+}
+
+/* The ink layer: above the words, never in the way of the caret or a tap. */
+.lib-ink {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.lib-mark {
+  position: absolute;
+  inset: 0;
+}
+.lib-stroke {
+  position: absolute;
+}
+.lib-stroke > i {
+  position: absolute;
+  background: var(--lib);
+  transform: rotate(var(--r, 0deg));
+  transform-origin: 0 60%;
+}
+.lib-mark[data-move="underline"] .lib-stroke > i {
+  left: -1px;
+  right: -1px;
+  bottom: -3px;
+  height: 7px;
+  -webkit-mask: var(--shape, var(--lib-under)) 0 0 / 100% 100% no-repeat;
+  mask: var(--shape, var(--lib-under)) 0 0 / 100% 100% no-repeat;
+}
+/* The back-cover line: the one big double underline of the interview. */
+.lib-mark[data-move="back_cover"] .lib-stroke > i {
+  left: -1px;
+  right: -1px;
+  bottom: -7px;
+  height: 12px;
+  -webkit-mask: var(--shape, var(--lib-double)) 0 0 / 100% 100% no-repeat;
+  mask: var(--shape, var(--lib-double)) 0 0 / 100% 100% no-repeat;
+}
+.lib-mark[data-move="strike"] .lib-stroke > i {
+  left: -3px;
+  right: -3px;
+  top: calc(50% - 4px);
+  height: 9px;
+  -webkit-mask: var(--shape, var(--lib-strike)) 0 0 / 100% 100% no-repeat;
+  mask: var(--shape, var(--lib-strike)) 0 0 / 100% 100% no-repeat;
+}
+.lib-mark[data-move="circle"] .lib-stroke > i {
+  left: -10px;
+  right: -10px;
+  top: -8px;
+  bottom: -9px;
+  -webkit-mask: var(--shape, var(--lib-circle)) 0 0 / 100% 100% no-repeat;
+  mask: var(--shape, var(--lib-circle)) 0 0 / 100% 100% no-repeat;
+}
+/* The one fill: red at 20%, multiplied, so the words still read through it. */
+.lib-mark[data-move="highlight"] .lib-stroke > i {
+  inset: -1px -3px -2px;
+  opacity: 0.2;
+  mix-blend-mode: multiply;
+  transform: none;
+}
+.lib-mark[data-life="writing"] .lib-stroke > i {
+  animation: lib-draw 0.3s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+@keyframes lib-draw {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.lib-note {
+  position: absolute;
+  transform: translateY(-100%) rotate(var(--rot, -2deg));
+  transform-origin: 0 100%;
+  white-space: nowrap;
+}
+.lib-mark[data-move="circle"] .lib-note {
+  margin-top: -9px;
+}
+/* Crediting an edit: its old note struck where it was, "better." written just above it. */
+.lib-note-struck .lib-hand {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--lib);
+}
+.lib-note-above {
+  margin-top: calc(-1 * var(--lib-open) + 4px);
+}
+.lib-note .lib-hand {
+  font-size: 23px;
+  line-height: 1;
+}
+/* Below the answer: an idle line, or the line about contact details. */
+.lib-margin {
+  margin: var(--s-3) 0 0;
+  transform: rotate(-2deg);
+  transform-origin: 0 100%;
+}
+
+/* ---------- The notebook ---------- */
+.iv-act:has(.lib-cols) {
+  width: min(1128px, 100% - 2 * var(--gutter));
+}
+.lib-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 372px;
+  gap: var(--s-7);
+  align-items: start;
+}
+.lib-main {
+  display: grid;
+  gap: 20px;
+  align-content: start;
+  min-width: 0;
+}
+/* The notebook is a Folio card (.surf .surf-spine in ui/styles.css): its face, line, dot shadow and
+   hatched spine come from there. Here it only stays in view and scrolls its own pages. */
+.lib-nbook.surf {
+  position: sticky;
+  top: var(--s-5);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 2 * var(--s-5));
+  min-height: 560px;
+  padding: 0;
+}
+.lib-nbook > .lib-nbl {
+  flex: 1;
+  overflow: auto;
+}
+/* The spine: the cross-hatch every card's binding has, fading into the page. */
+.lib-sheet::before,
+.lib-peek::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 34px;
+  background-image: var(--lib-hatch);
+  -webkit-mask-image: linear-gradient(90deg, #000 0, rgb(0 0 0 / 0.4) 55%, transparent);
+  mask-image: linear-gradient(90deg, #000 0, rgb(0 0 0 / 0.4) 55%, transparent);
+  pointer-events: none;
+}
+.lib-sheet::before {
+  position: fixed;
+  top: 20vh;
+}
+.lib-nbh {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  padding: 20px 18px 12px 46px;
+  font: 700 14px / 1 var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.lib-nbl {
+  display: grid;
+  gap: 26px;
+  align-content: start;
+  margin: 0;
+  padding: 12px 16px 26px 42px;
+  list-style: none;
+}
+.lib-en {
+  position: relative;
+  margin-left: var(--ml, 0);
+}
+.lib-en-tx {
+  display: grid;
+  justify-items: start;
+  transform: rotate(var(--rot, 0deg));
+  transform-origin: 0 60%;
+}
+.lib-en .lib-hand {
+  font-size: var(--fs, 23px);
+}
+.lib-old {
+  margin-bottom: 6px;
+  font: 600 calc(var(--fs, 23px) - 2px) / 1.12 var(--font-hand);
+  color: var(--lib);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--lib);
+}
+/* Built on: a loose oval round the entry, or a tick for a saving that was asked. */
+.lib-en[data-status="circled"]::after {
+  content: "";
+  position: absolute;
+  left: -12px;
+  right: -12px;
+  top: -10px;
+  bottom: -11px;
+  background: var(--lib);
+  -webkit-mask: var(--lib-circle) 0 0 / 100% 100% no-repeat;
+  mask: var(--lib-circle) 0 0 / 100% 100% no-repeat;
+  pointer-events: none;
+}
+/* A few words rewritten: struck where they were, the new ones written above, a little askew. */
+.lib-rw {
+  position: relative;
+  display: inline-block;
+}
+.lib-rw > s {
+  font: 600 var(--fs, 23px) / 1.12 var(--font-hand);
+  color: var(--lib);
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--lib);
+}
+.lib-rw-new {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  margin-bottom: -4px;
+  transform: translateX(-50%) rotate(-5deg);
+  white-space: nowrap;
+}
+.lib-rw-new .lib-hand {
+  font-size: calc(var(--fs, 23px) * 0.82);
+}
+.lib-en:has(.lib-rw) {
+  padding-top: 16px;
+}
+/* A bet a later answer contradicted: struck, with the concession beside it. */
+.lib-en[data-status="lost"] .lib-line .lib-hand {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--lib);
+}
+.lib-outcome {
+  margin-top: 2px;
+  margin-left: var(--s-4);
+  transform: rotate(-3deg);
+  transform-origin: 0 100%;
+}
+.lib-outcome .lib-hand {
+  font-size: calc(var(--fs, 23px) - 2px);
+}
+.lib-en[data-status="called"] .lib-en-tx,
+.lib-en[data-status="ticked"] .lib-en-tx {
+  padding-left: 28px;
+}
+.lib-tick {
+  position: absolute;
+  left: -2px;
+  top: -5px;
+  width: 24px;
+  height: 26px;
+  background: var(--lib);
+  -webkit-mask: var(--lib-tick) center / contain no-repeat;
+  mask: var(--lib-tick) center / contain no-repeat;
+}
+.lib-en[data-marking]::after,
+.lib-en[data-marking] .lib-tick {
+  animation: lib-draw 0.6s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+
+/* ---------- The sign-off, under the title at the reveal ---------- */
+.lib-signoff {
+  margin: var(--s-2) 0 var(--s-3);
+  transform: rotate(-2deg);
+  transform-origin: 0 100%;
+}
+.lib-signoff .lib-hand {
+  font-size: 28px;
+  line-height: 1;
+}
+
+/* ---------- Phone and narrow screens: a peek above the buttons, and a sheet ---------- */
+.lib-peek,
+.lib-sheet,
+.lib-shade {
+  display: none;
+}
+@media (max-width: 1099px) {
+  .iv-act:has(.lib-cols) {
+    width: min(var(--act-width), 100% - 2 * var(--gutter));
+  }
+  .lib-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lib-nbook.surf {
+    display: none;
+  }
+  /* One line, a fixed height: nothing moves under the thumb. */
+  .lib-peek {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    height: 62px;
+    margin: 0 calc(-1 * var(--gutter));
+    padding: 0 var(--s-3) 0 46px;
+    background: var(--white);
+    border-top: var(--line-heavy) solid var(--ink);
+    overflow: hidden;
+  }
+  .lib-peekl {
+    flex: none;
+    font: 700 12px / 1 var(--font-display);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .lib-peek-line {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .lib-peek-line .lib-hand {
+    font-size: 22px;
+  }
+  .lib-ibtn {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: var(--tap, 44px);
+    height: var(--tap, 44px);
+    border: var(--line) solid var(--ink);
+    background: var(--white);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .lib-shade {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: block;
+    background:
+      radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 6px 6px,
+      var(--paper);
+    opacity: 0.85;
+  }
+  .lib-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 20vh;
+    z-index: 31;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    background: var(--white);
+    border: var(--line-heavy) solid var(--ink);
+    border-bottom: 0;
+  }
+  .lib-sheet .lib-nbh {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 12px 14px 10px 44px;
+    background: var(--white);
+  }
+  .lib-sheet .lib-nbl {
+    padding: 6px 18px 18px 42px;
+  }
+}
+@media (max-width: 719px) {
+  .iv-q {
+    font-size: 23px;
+  }
+  .iv-ask .iv-act {
+    padding-top: var(--s-4);
+  }
+  .lib-card-lab {
+    padding: 14px 16px 0;
+  }
+  .lib-card .field.lib-answer .lib-field {
+    min-height: 160px;
+    padding: 8px 16px 18px;
+  }
+  .lib-afoot {
+    padding: 12px 16px 14px;
+  }
+  .field.lib-answer .lib-field {
+    font-size: 16.5px;
+    line-height: 26px;
+    padding: var(--s-3) var(--s-4) var(--s-4);
+    min-height: 140px;
+  }
+  .lib-note .lib-hand {
+    font-size: 21px;
+  }
+}
+
+/* Reduced motion: handwriting and strokes fade in, erasing is a short fade, lines open at once. */
+@media (prefers-reduced-motion: reduce) {
+  .lib-hand[data-life="writing"]:not([data-drawn]) .lib-g,
+  .lib-mark[data-life="writing"] .lib-stroke > i,
+  .lib-en[data-marking]::after,
+  .lib-en[data-marking] .lib-tick {
+    -webkit-mask-image: none;
+    mask-image: none;
+    clip-path: none;
+    animation: lib-fade-in 0.3s ease-out both;
+  }
+  .lib-hand[data-life="erasing"],
+  .lib-mark[data-life="erasing"] .lib-stroke,
+  .lib-en[data-life="erasing"] .lib-en-tx {
+    -webkit-mask-image: none;
+    mask-image: none;
+    animation: lib-fade-out 0.2s ease-in both;
+  }
+}
+@keyframes lib-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes lib-fade-out {
+  to {
+    opacity: 0;
+  }
+}

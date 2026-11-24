@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "../../ui/Button";
+import { PageLoading } from "../../ui/Loading";
 import { useAuth } from "../auth/AuthProvider";
 import { draftKeyFor, keepDraft } from "../interview/AnswerPanel";
 import { apiInterviewClient } from "../interview/apiInterviewClient";
@@ -21,6 +22,7 @@ import { LeftoverWords } from "../interview/LeftoverWords";
 import { readingCaption } from "../interview/ReadingQuestionPage";
 import { UndoChanges } from "../interview/UndoChanges";
 import "./MyBookPage.css";
+import { usePageTitle } from "../../ui/usePageTitle";
 
 // The member's own page (board G1): their book as an object, and the one next step for its stage.
 // It shows no numbers of any kind: no checkouts, no sparks count, no copies.
@@ -409,6 +411,7 @@ function NextStep({
 }
 
 export function MyBookPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
+  usePageTitle("My book");
   const [stage, setStage] = useState<BookStage | null>(null);
   const [book, setBook] = useState<MyBook | null>(null);
   const [sparks, setSparks] = useState<Spark[]>([]);
@@ -514,6 +517,7 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   if (!stage) {
     return (
       <main className="mb-page" aria-busy="true">
+        <PageLoading />
         <h1 className="mb-title">My book</h1>
         <p className="mb-note">Finding your book…</p>
       </main>

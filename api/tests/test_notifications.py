@@ -92,3 +92,30 @@ async def test_accepted_emails_respect_each_persons_email_switch(database, capsy
     # Without SMTP, emails are printed instead of sent: only the author's went out.
     assert "To user author-1: You said yes to Sam Lee" in printed
     assert "reader-1" not in printed
+
+
+def test_new_message_email_says_who_and_links_without_the_text():
+    from trove.notifications.templates import new_message
+
+    subject, text, _ = new_message("Sam Lee", "My book", "http://app/checkouts/c1/messages").render(
+        "http://u"
+    )
+    assert subject == "Sam Lee sent you a message"
+    assert 'Sam Lee sent you a message about "My book".' in text
+    assert "http://app/checkouts/c1/messages" in text
+
+    subject, text, _ = new_message("", "My book", "http://app/checkouts/c1/messages").render("http://u")
+    assert subject == 'An update about "My book"'
+
+
+async def test_new_message_emails_respect_the_email_switch(database, capsys):
+    from trove.notifications.service import notify_new_message
+
+    await database.users.insert_one(
+        {"_id": "u1", "email": "a@example.com", "is_active": True, "email_notifications": False}
+    )
+    status = await notify_new_message(
+        database, message_id="m1", checkout_id="c1", recipient_id="u1", sender_name="Sam", book_title="B"
+    )
+    assert status == "skipped"
+    assert "u1" not in capsys.readouterr().out

@@ -58,7 +58,9 @@ local stub with the same signature and swap it out when the real one merges.
 | `auth.contact_details_of(db, user_id)` | Daniel | The contact details the member chose to share on a yes | checkouts (reveal) |
 | `checkouts.get_checkout_for(db, checkout_id, user_id)` | Ellie | The checkout if this user is its reader or author, else `None` | messaging, meetings |
 | `checkouts.fully_checked_out(db, books)` | Ellie | The ids of the books (each with `_id` and `copies`) whose copies are all out, so the shelf can hide them. Never shown to readers as a label or count | books, discovery (the shelf) |
-| `checkouts.past_meets(db, user_id)` | Ellie | People this member has met: checkout id, other person's full name, book id | discovery (recommend to someone you've met) |
+| `checkouts.past_meets(db, user_id)` | Ellie | People this member has met, newest first: `checkout_id`, `other_id`, `other_name` (full name), `book_id` (the book that was checked out) | discovery (recommend to someone you've met) |
+| `messaging.post_note(db, checkout_id, text)` | Ellie | Posts a short app note (up to 300 characters) into an accepted checkout's thread, such as a confirmed meeting time. Returns the note, or `None` if the thread isn't open | meetings (if wanted) |
+| `messaging.email_new_message(db, message)` | Ellie | Emails whoever didn't write the message or note, at most once per 10 minutes per thread each. Run it as a background task | meetings (with `post_note`) |
 
 When you change one of these, tell the people in the "Used by" column.
 
@@ -143,25 +145,24 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Screens first, approved by Josef, then the engine, API and UI.
 - Evals: the quiet personas (e.g. Dana) should reach a full book without hitting the cap.
 
-**D1 · The shelf and opening a book** · Alvisa · `todo`
+**D1 · The shelf and opening a book** · Alvisa · `done`
 - The home page shows shelves of books (start with "Recently added" until the categories are
   decided), and a book page opens one.
 - Uses only `books.get_public_book` and `books.list_shelf`.
 - Has a "Check out" button that leads into C1.
 
-**D2 · Smart search** · Alvisa · `todo`
-- Search by topic, never by name.
-- Decide first: how to search.
-  - **Recommended:** at publish time, Claude writes hidden search terms for each book, and a
-    MongoDB text index covers title, chapters and those terms. No new provider needed.
-  - Alternative: vector search, which needs an embeddings provider.
+**D2 · Smart search** · Alvisa · `doing`
+- Search every public word in a book and the author's full name. No additional Claude call or
+  embeddings provider (decision recorded in trove.md).
+- The existing top-bar field opens a translucent paper overlay. Results update while typing and
+  show each matching book with one public excerpt.
 
 **C2 · Accepting and the reveal** · Ellie · `done`
 - When the author accepts, both people see each other's full name and the contact details they
   chose (`auth.contact_details_of`), at the same moment, and both get an email.
 - Done when: names and contacts are visible only to those two people, and only after accept.
 
-**C3 · Messages inside a checkout** · Ellie · `todo`
+**C3 · Messages inside a checkout** · Ellie · `done`
 - A plain thread per checkout. No messages outside a checkout (trove.md §9.8).
 - Email notification for new messages, at most one every 10 minutes per thread.
 
@@ -179,7 +180,7 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 ### Wave 3: closing the loop
 
-**C4 · "Did you meet?" and past meets** · Ellie · `todo`
+**C4 · "Did you meet?" and past meets** · Ellie · `done`
 - After the meeting time, both people are asked "Did you meet?". The answer returns the copy, and
   the book comes back on the shelf if it was fully lent.
 - The answer is also stored as a private no-show signal.
@@ -190,9 +191,14 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 - Reopen the interview from your book at any time. New material is rewritten into the book
   (not just appended), and the author approves the changes.
 
-**D3 · The Librarian recommends** · Alvisa · `todo`
+**D3 · The Librarian recommends** · Alvisa · `doing`
 - One recommended book at a time, each with a one-line reason for why you two should talk.
+- Claude extracts grounded signals from approved public book text; deterministic scoring, not
+  Claude, chooses among available books. Member type is recorded separately but does not gate or
+  score a match.
 - Quietly favors books that are checked out less (trove.md §9.6).
+- **Waiting on Ellie:** a server-only checkout-load contract so discovery can apply that preference
+  without reading the checkouts collection or exposing counts to members.
 
 **D4 · Recommend a book to someone** · Alvisa · `todo`
 - Recommend a book to someone in your Past meets, inside the app (uses `checkouts.past_meets`),
@@ -207,6 +213,14 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 ### Wave 4: demo readiness
 
+**G1 · Get the app live** · Daniel · `doing`
+- One free Render service serves the website and the API (`api/trove/serve.py`, `Dockerfile`, `render.yaml`).
+  Steps, and what each person must supply (Atlas access, an Anthropic spend cap, SMTP, a Render account):
+  [docs/deploy.md](deploy.md).
+- Done when: the service is up at its free address, a case.edu sign-up receives a real code by email, and
+  the attempt-limit check in deploy.md passes.
+- A real domain (a free `.me` from the GitHub Student Developer Pack) comes after, and is only a DNS change.
+
 **Q1 · End-to-end pass** · everyone
 - Run the whole loop with two real accounts.
 - Fix what breaks, in the owner's feature.
@@ -214,9 +228,9 @@ the owner answers them. Each item's "Decide first" lists the known ones.
 
 ### Later: after the whole loop works
 
-Josef asked for these early. Both are built on `josef/full-build` against stubs, and neither runs for real until its teammate's piece lands: I5 needs `SparkButton` mounted on D1's book page, and I6 needs C4 to call `interview.service.ask_after_reading`.
+Josef asked for these early. I6 runs for real now: C4 calls `interview.service.ask_after_reading` after "Did you meet?".
 
-**I5 · Sparks from other books** · Josef · `done`
+**I5 · Sparks from other books** · Josef · `dropped` (2026-11-19: Josef removed "I have one like this" from the book screen and dropped sparks entirely; the backend stays unused until it's removed)
 - On a chapter of someone else's book, "I have one like this" saves a private prompt for the
   reader's own next interview (I3). Never content, never visible to the other author.
 
@@ -224,10 +238,18 @@ Josef asked for these early. Both are built on `josef/full-build` against stubs,
 - After "Did you meet?" (C4), the author answers one question: "What did they ask you about that
   surprised you?". The answer can become or improve a chapter, with the author's approval (I3).
 
+**L1 · The Librarian** · Josef · `in progress`
+- While the member types, the Librarian marks the answer in red and keeps a notebook beside it, and the
+  notebook drives the next question. The plan is `docs/librarian-plan.md`, adapted from
+  `docs/LIBRARIAN_SPEC.md`.
+- The backend is on main: `POST /interview/notes`, the notebook on the interview, `builds_on` and the sign-off.
+- The frontend is waiting to be wired to the generated client.
+- The eval (`evals/librarian`) needs Josef's yes before each run.
+
 ## Open questions waiting on the team
 
 Cross-feature questions to settle at the next sync:
 
 - Shelf categories (trove.md §5).
 - Whether books show a seniority or stage marker (trove.md §3).
-- The Librarian's tone. (The visual design is decided: `docs/design/system.md`.)
+- The Librarian's tone is decided: a sharp senior editor (`docs/librarian-plan.md`). Its visual design is in `docs/design/system.md`.

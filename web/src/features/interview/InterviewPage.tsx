@@ -1,11 +1,12 @@
 import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "../../ui/Button";
+import { usePageTitle } from "../../ui/usePageTitle";
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, readDraft, takeOrphanDrafts } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
 import { EditForm, editKeyFor, hasEditDraft } from "./EditInPlace";
-import { ErrorMessage, Frame, RetryContext, SmallBook, Waiting } from "./InterviewFrame";
+import { AskFrame, ErrorMessage, Frame, RetryContext, SmallBook, Waiting } from "./InterviewFrame";
 import {
   type BookEdit,
   type ChapterEdit,
@@ -24,6 +25,10 @@ import {
   STARTED_FOR_EARLIER,
   useSavedLine,
 } from "./LeftoverWords";
+import { Hand } from "./librarian/Hand";
+import { Notebook } from "./librarian/Notebook";
+import { useAnnouncer } from "./librarian/useAnnouncer";
+import { useNotebook } from "./librarian/useNotebook";
 import { ChangesScreen, WaitBox } from "./ProposedChanges";
 import { UndoChanges } from "./UndoChanges";
 
@@ -76,6 +81,7 @@ function placeOf(state: InterviewState | null): string {
 }
 
 export function InterviewPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
+  usePageTitle("Your interview");
   const { user } = useAuth();
   // Books carry the full name; it falls back to the first name for accounts made before last names.
   const authorName = user?.full_name ?? "";
@@ -90,6 +96,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState<(() => void) | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [loadProblem, setLoadProblem] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
   // The answer or skip is saved, but the next question didn't come through.
   const [interrupted, setInterrupted] = useState<"answer" | "skip" | null>(null);
@@ -145,6 +152,9 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
   };
   const [hasSparks, setHasSparks] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  // The Librarian's notebook lives for the whole interview, so the next question can circle an entry.
+  const announcer = useAnnouncer();
+  const notebook = useNotebook(state?.stage === "asking" ? state.librarian : undefined, announcer.say);
   const savedLine = useSavedLine();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: loadAttempt is what asks for another try
@@ -160,7 +170,12 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         setWelcomedBack(away && current?.stage === "asking" && current.hasAnswers);
         writeSeen(seenKey);
       })
-      .catch(() => live && setLoadFailed(true))
+      .catch((reason) => {
+        if (!live) return;
+        setLoadFailed(true);
+        // On a developer's machine the API's reason (often a missing key) is the fastest way to the fix.
+        setLoadProblem(import.meta.env.DEV && reason instanceof InterviewError ? reason.message : null);
+      })
       .finally(() => live && setLoaded(true));
     return () => {
       live = false;
@@ -231,7 +246,10 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     document.documentElement.scrollTop = 0;
     const asking = place.startsWith("asking:") && !welcomedBack;
     const hasKeyboard = window.matchMedia?.("(hover: hover)").matches;
-    const field = asking && hasKeyboard ? document.querySelector<HTMLElement>(".iv-answer textarea") : null;
+    const field =
+      asking && hasKeyboard
+        ? document.querySelector<HTMLElement>(".iv-answer textarea, .iv-answer [role=textbox]")
+        : null;
     (field ?? document.querySelector<HTMLElement>(".iv-say"))?.focus({ preventScroll: true });
   }, [place, loaded, loadFailed, welcomedBack]);
 
@@ -320,6 +338,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     if (loadFailed) {
       return (
         <Frame say="I couldn't find your place just now. Nothing you've said is lost.">
+          {loadProblem && <p className="iv-note">{loadProblem}</p>}
           <div className="iv-row">
             <Button
               onClick={() => {
@@ -375,10 +394,18 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           hasSparks={hasSparks}
           busy={busy}
           error={error}
+          started={Boolean(retry)}
           onStart={(resume) =>
             run(
               resume ? "The Librarian is reading your résumé…" : "The Librarian is getting ready…",
-              () => client.start(resume),
+              // "Already started" means an earlier press got through: load that interview rather than refuse.
+              () =>
+                client.start(resume).catch(async (reason) => {
+                  if (!(reason instanceof InterviewError && reason.conflict)) throw reason;
+                  const now = await client.current();
+                  if (!now) throw reason;
+                  return now;
+                }),
               // A 502 here means the interview exists but its first question failed.
               { retryWith: () => client.askAgain("") },
             )
@@ -457,7 +484,12 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
           );
         }
         return (
-          <Frame phase={phase} say={say(state.question)} busy={Boolean(busy)}>
+          <AskFrame
+            eyebrow={inAdding ? "Adding to your book" : "Question"}
+            question={say(state.question)}
+            busy={Boolean(busy)}
+            aside={<Notebook entries={notebook.entries} />}
+          >
             <ErrorMessage message={error} />
             {notice && (
               <p className="iv-note" role="status">
@@ -507,8 +539,17 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
                     }
                   : undefined
               }
+              librarian={{
+                client,
+                interviewId: state.id,
+                questionId: state.questionId ?? state.question,
+                view: state.librarian,
+                notebook,
+                say: announcer.say,
+              }}
             />
-          </Frame>
+            {announcer.region}
+          </AskFrame>
         );
       }
       case "shaping": {
@@ -567,6 +608,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
         return (
           <ReviewScreen
             book={state.book}
+            signOff={state.signOff ?? null}
             userId={userId}
             onEditBook={async (edit) => {
               const book = await client.editBook(edit);
@@ -812,11 +854,14 @@ function StartScreen({
   hasSparks,
   busy,
   error,
+  started,
   onStart,
 }: {
   hasSparks: boolean;
   busy: string | null;
   error: string | null;
+  /** The interview exists and only its first question failed, so Try again is the one way on. */
+  started: boolean;
   onStart: (resume: File | null) => void;
 }) {
   const [resume, setResume] = useState<File | null>(null);
@@ -825,6 +870,11 @@ function StartScreen({
   const [addingResume, setAddingResume] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const inputId = useId();
+  // Stays set through the retry's wait, so Start doesn't flash back while Try again is working.
+  const [exists, setExists] = useState(started);
+  useEffect(() => {
+    if (started) setExists(true);
+  }, [started]);
 
   function pick(file: File | undefined) {
     if (!file) return;
@@ -839,6 +889,15 @@ function StartScreen({
     }
     setFileError(null);
     setResume(file);
+  }
+
+  // Starting again would only be refused: the interview is there, waiting for its first question.
+  if (exists || started) {
+    return (
+      <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={START_SAY}>{busy}</Waiting> : START_SAY}>
+        <ErrorMessage message={error} />
+      </Frame>
+    );
   }
 
   return (
@@ -1214,6 +1273,7 @@ function ChapterRow({
 
 function ReviewScreen({
   book,
+  signOff,
   userId,
   onEditBook,
   onEditChapter,
@@ -1229,6 +1289,8 @@ function ReviewScreen({
   onShelve,
 }: {
   book: DraftBook;
+  /** The Librarian's one line under the title, in its hand. */
+  signOff: string | null;
   userId: string;
   onEditBook: (edit: BookEdit) => Promise<void>;
   onEditChapter: (chapterId: string, edit: ChapterEdit) => Promise<void>;
@@ -1296,6 +1358,7 @@ function ReviewScreen({
           ) : (
             <h2>{book.title}</h2>
           )}
+          {signOff && !editingBook && <SignOff line={signOff} />}
           <p className="iv-by">by {book.authorName}</p>
           {/* On a phone the book comes after the title, at the small size, on its own row. */}
           <SmallBook title={book.title} author={book.authorName} />
@@ -1393,6 +1456,29 @@ function ReviewScreen({
 }
 
 // ---------- Done ----------
+
+// Written once, at pen pace, the first time the book is shown; at rest after that.
+function SignOff({ line }: { line: string }) {
+  const [life, setLife] = useState<"writing" | "resting">(() =>
+    sessionStorage.getItem(`trove_signoff:${line}`) ? "resting" : "writing",
+  );
+  useEffect(() => {
+    if (life !== "writing") return;
+    try {
+      sessionStorage.setItem(`trove_signoff:${line}`, "1");
+    } catch {
+      // It just writes again next time.
+    }
+    const timer = setTimeout(() => setLife("resting"), 4000);
+    return () => clearTimeout(timer);
+  }, [life, line]);
+  return (
+    <p className="lib-signoff">
+      <span className="iv-visually-hidden">Librarian: {line}</span>
+      <Hand text={line} life={life} delay={0.4} />
+    </p>
+  );
+}
 
 function DoneScreen({ book }: { book: DraftBook }) {
   return (

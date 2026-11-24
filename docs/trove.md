@@ -125,9 +125,16 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   - The interview changes angle early instead of reaching the question cap with a thin pool.
   - Signals are internal: never shown, never a score. Grounding is unchanged.
 - **Built early, waiting on teammates' pieces to run for real** (§9.9; choices in `docs/review/decisions.md`):
-  - **Sparks from other books:** while reading someone's book, a member taps "I have one like this" on a chapter. It saves a private prompt for their own next interview, never content.
+  - **Sparks from other books: dropped** (2026-11-19). The book screen no longer has "I have one like this", and sparks are not part of Trove.
   - **Each reading grows the book:** after "Did you meet?", the author answers one quick question, "What did they ask you about that surprised you?". The answer can become a new chapter or improve one, with the author's approval (through I3).
-- **On hold until the interview works:** the Librarian reacting in the margins, bursts on strong lines, the card drawer for the sweep, bookmark tabs, the pencil-to-ink spine, the shelf stamp and live cleanup of spoken answers. A practical "how-to" chapter is welcome but not enforced.
+- **The Librarian reads over the member's shoulder** (decided 2026-11-19; L1; `docs/librarian-plan.md`).
+  - While the member types, it marks the answer in red handwriting and keeps a notebook beside it. The notebook holds chapters taking shape, connections, questions it's saving, bets, and short clips of the member's own words.
+  - The notebook drives the next question.
+  - Its voice is a sharp senior editor: dry and wry, teasing the writing, never the person. It goes silent on sensitive topics.
+  - Only clips, which are the member's own words, can reach the book.
+  - The notebook is hidden after the reveal and comes back, trimmed, when the author adds to the book.
+  - It runs on Haiku 5.5.
+- **On hold until the interview works:** bursts on strong lines, the card drawer for the sweep, bookmark tabs, the pencil-to-ink spine, the shelf stamp and live cleanup of spoken answers. A practical "how-to" chapter is welcome but not enforced.
 
 ### Open
 
@@ -140,9 +147,43 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 
 ### Decided
 
+- **D1 reader (Alvisa, 2026-11-18, updated 2026-11-19):** D1 began with a hardcoded Librarian
+  recommendation. Restore the earlier Changing course and Starting over rows using the
+  matching seeded sample books; these are preview groupings, not the final category decision.
+  Recently added loads every published book from the existing books API. Selecting a book lifts
+  it from its shelf position, enlarging it while the front cover opens to the left. Everything
+  behind it, including navigation, is very dim. The settled spread has the title and full author
+  name on the left and the table of contents on the right. Contents continue onto another page
+  when they do not fit; selecting a chapter turns to its summary, with Back to contents available.
+  Close or Escape returns to the shelf. The existing checkout form is reached from the reader.
+  Reduced-motion users get the same reader without the movement.
+
 - **Shelves will be grouped by categories.** The categories are still to be defined, and they will not be genres.
-- **Smart search** finds books relevant to what you're looking for. Never search by name.
+- **D2 smart search (Alvisa, 2026-11-22):** search the public text already in each available book:
+  title, author's full name, blurb, chapter titles and chapter summaries. Do not make another
+  Claude call, and never search grounding quotes, interview answers, contacts or checkout data.
+  The existing top-bar field stays visible; focusing it opens a paper-colored translucent layer
+  over the current page. After two characters, results update 200 ms after typing and show the
+  book cover plus one matching public excerpt. Search and Enter run immediately. The underlying
+  page remains faintly visible but cannot be used until Search is closed.
 - **"The Librarian recommends":** the AI recommends books to you.
+- **D3 recommendation (Alvisa, 2026-11-21):** this version stays signed-in. A member without a
+  finished book sees the same large book graphic inviting them to create or finish theirs. Once
+  their book has been published, only its author-approved public title, blurb and chapter text may
+  shape a match. Claude extracts a small, evidence-backed profile of interests, domains, knowledge,
+  experiences, explicit goals, current locations and places of origin from that text when the profile is missing or the book has
+  changed. It does not choose the match. A deterministic scorer compares exact concepts, related
+  concepts (for example, tennis and football through sports), and knowledge that complements an
+  explicitly stated goal. The strongest grounded signal supplies the one-sentence reason. Member
+  type does not filter or score matches: students, alumni, founders and non-founders may all match
+  with one another. The pick stays for seven days unless either book changes or the recommended
+  book leaves the shelf. A member's off-shelf book may privately shape their own recommendation,
+  but an off-shelf book is never recommended to somebody else.
+- **Member context for matching (Alvisa, 2026-11-23):** before the first book interview, a member
+  records whether they are a current student, alumni, or both, and separately whether they are a
+  founder. Existing members answer once, and the values can be changed later. They are ordinary
+  member metadata but are not shown prominently or required on the book. They provide context for
+  future matching work; the D3 scorer does not prefer or exclude a pairing because of them.
 - **Recommend a book:** you can recommend a book in the app to anyone you've met (your Past meets), or to anyone else by sharing a link (§9.5).
 - **No friends or follows.** Meeting someone is the only way to become connected.
 
@@ -175,10 +216,18 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **Messaging lives in the app.** The thread is where you check out a book, coordinate the meeting and share the video link. A member can choose to get communications by email instead.
 - **"Did you meet?" matters:** answering it returns the copy, which frees it for the next reader.
 - **Messaging is a small thread inside each checkout** (§9.8). Messages exist only inside a checkout, so there are no cold DMs.
+- **How messages work** (decided 2026-11-18, C3):
+  - The thread opens when the author accepts. While a checkout waits, the reader's note is the whole ask, so nobody can nudge an author who hasn't decided. The note is the thread's first message.
+  - After the reading ("Did you meet?", C4), the thread stays in Past meets as read-only history.
+  - A message is up to 2,000 characters. Each person can send at most 30 messages an hour in a thread.
+  - The new-message email says who wrote and links to the thread; no message text is copied into it. At most one every 10 minutes per thread, for each person, and it respects the email switch.
+  - The thread has its own page, `/checkouts/<id>/messages`, linked from each accepted checkout.
+  - The app can post short notes into a thread (for example a confirmed meeting time) through the messaging feature. Notes look different from people's messages. Each feature decides whether to post them.
+  - A private "New message" marker on your Checkouts page shows a thread you haven't read since the last message. The other person never learns whether you've read anything, and it is a label, never a count.
 
 ### Open
 
-- How soon a copy returns if nobody confirms a meeting.
+- _None for now._ (How soon a copy returns if nobody answers "Did you meet?" was decided in C4, §8.)
 
 ## 7. The reading
 
@@ -203,6 +252,12 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **Past meets:** a section listing the books whose authors you've met, with a bookmark on each.
 - **Contact details stay available after a meeting**, so people can keep talking through their usual channels.
 - **A private "Did you meet?" check** returns the copy. It is also a quiet signal for spotting no-shows.
+- **How "Did you meet?" works** (decided 2026-11-18, C4):
+  - It's asked once the confirmed meeting time has passed. If no time was confirmed, it's asked 14 days after the author said yes. It shows in the app (on the Checkouts page, and on Past meets for the person who hasn't answered yet); there is no email for now.
+  - Each person answers "Yes, we met", "Not yet" or "No". "Not yet" keeps the checkout open to reschedule. The first Yes or No from either person returns the copy, and the book comes back on the shelf if it was fully lent. The other person can still answer afterwards.
+  - It's a Past meet when someone said Yes and nobody said No. If the answers disagree, it isn't one. Answers are kept privately as a possible no-show signal; nobody is ever shown them.
+  - If nobody answers, the copy returns 14 days after the question is asked, and it isn't a Past meet.
+  - Both people get the Past meet: each sees the other's full name and book, their contact details, and a link to the conversation, which is now read-only history.
 
 ## 9. Reasoning behind decisions
 
@@ -365,3 +420,10 @@ Membership verification (decided 2026-11-16, A2, Daniel):
 - **2026-11-16, the reveal (C2, Ellie):**
   - On accept, both people see each other's contact details on the Checkouts page (the sign-in email, plus LinkedIn and phone if added), read fresh from Settings.
   - Both get an email that only links to Trove; contact details are never copied into emails. It respects each member's email switch.
+- **2026-11-18, messages (C3, Ellie):**
+  - The thread opens on accept and becomes read-only history after the reading; 2,000 characters a message, 30 an hour per person.
+  - The new-message email names the sender and links to the thread, at most one per 10 minutes per thread; it respects the email switch.
+  - Its own page, app notes other features can post (such as a confirmed meeting time), and a private "New message" marker (§6).
+- **2026-11-18, "Did you meet?" and Past meets (C4, Ellie):**
+  - Asked after the confirmed meeting time (or 14 days after the yes); Yes / Not yet / No; the first Yes or No returns the copy; unanswered copies return after 14 days (closing that open question in §6).
+  - A Past meet needs a Yes and no No, and both people get it, with name, book, contacts and the read-only conversation. In the app only for now (§8).

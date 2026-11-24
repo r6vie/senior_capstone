@@ -1,3 +1,4 @@
+import { usePageTitle } from "../../ui/usePageTitle";
 import { SparkButton } from "./SparkButton";
 
 // Dev only: lets SparkButton be seen before the reader's book page (D1) mounts it. Registered in App.tsx
@@ -5,6 +6,7 @@ import { SparkButton } from "./SparkButton";
 // shows the failed state unless they match a real chapter.
 
 export function SparkPreviewPage() {
+  usePageTitle("SparkButton preview");
   return (
     <main className="narrow-page">
       <h1>SparkButton preview</h1>

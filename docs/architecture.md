@@ -23,7 +23,11 @@ removing the `/api` prefix. The frontend never talks to MongoDB or Claude direct
 - `trove/core/config.py` reads settings from the root `.env`; real environment variables win.
 - **Sessions:** `POST /auth/login` returns a random bearer token. Only its SHA-256 hash is
   stored, in `sessions`, with a TTL index for expiry. `get_current_user` checks the session and
-  the account on every request.
+  the account on every request, in one database trip (a `$lookup`, so MongoDB 5.0 or later).
+- **Speed:** the database is in the cloud, so every trip costs a network delay (tens of
+  milliseconds). A route that shows a list reads each kind of related data once for the whole
+  list (`$in`), not once per item, and runs independent reads together with `asyncio.gather`. See
+  `Lookups` in `trove/checkouts/router.py`.
 - **Errors:** validation errors never echo submitted values, and database errors become a
   generic 503. Every response is `Cache-Control: no-store` except the API docs.
 
@@ -35,7 +39,11 @@ removing the `/api` prefix. The frontend never talks to MongoDB or Claude direct
 | `sessions` | auth | Token hash, expiry via TTL index |
 | `auth_attempts` | auth | Rate-limit counters, TTL index |
 | `notifications` | notifications | One document per email sent, `_id` = dedupe key |
-| `checkouts` | checkouts | One per checkout. `open` is true while requested or accepted; unique on reader + book while open. Unanswered ones expire on read, no background job |
+| `checkouts` | checkouts | One per checkout. `open` is true while requested or accepted; unique on reader + book while open. Unanswered ones expire on read, no background job. After "Did you meet?": `status` `returned`, each person's private answer under `answers.<user id>`, and `met` (a Past meet). Overdue readings return on read too |
+| `messages` | messaging | One per message or app note (`sender_id` null for a note), with the checkout id and both people. The checkout note isn't copied here |
+| `message_threads` | messaging | One per checkout (`_id` = checkout id): each person's last read, latest incoming message and last email, for the private marker and the 10-minute email gap |
+| `recommendations` | discovery | One seven-day Librarian pick per member; invalidated when either public book changes or the recommended book leaves the shelf |
+| `match_profiles` | discovery | One grounded, versioned set of matching signals per book, extracted only from its author-approved public text and refreshed when that text changes |
 
 Each new feature adds its rows here in the PR that creates its collections.
 
@@ -54,10 +62,23 @@ Each new feature adds its rows here in the PR that creates its collections.
 - `src/app/App.tsx` is the route table. Pages live in `src/features/<feature>/`.
 - `src/api/client.ts` is an `openapi-fetch` client typed by the generated `src/api/schema.ts`. A
   middleware adds the bearer token from `sessionStorage`.
+- **Every page** names the browser tab with `usePageTitle("…")` (`src/ui/usePageTitle.ts`): "<title> · Trove".
+  After a page change, focus moves to the new page's `h1` unless the page placed it itself
+  (`src/ui/usePageFocus.ts`). A page that throws shows a short error in place of the page, with the
+  top bar still working (`src/ui/ErrorBoundary.tsx`); `main.tsx` has a last one around the whole app.
 - `src/features/auth/AuthProvider.tsx` holds the signed-in member. `RequireAuth` guards pages that
-  need a session.
+  need a session; with a session on the device, the page starts fetching while the account is checked.
+- **Loading:** pages appear whole. A page renders `<PageLoading />` (`src/ui/Loading.tsx`) while it
+  fetches what it needs to show, and the `LoadingGate` in `App.tsx` keeps the screen hidden until none
+  is left, with a still placeholder after 200ms. Signed-in pages are split out with `lazy` and preloaded
+  once the first screen is up.
 - Design tokens are CSS variables in `src/ui/styles.css`. The look is the Manga screentone design system:
   rules in `docs/design/system.md`, reference CSS in `docs/design/system/tokens.css`.
+
+## Hosting
+
+For going live, the API also serves the built website (`trove/serve.py`), so one service answers both.
+See [deploy.md](deploy.md).
 
 ## Testing
 

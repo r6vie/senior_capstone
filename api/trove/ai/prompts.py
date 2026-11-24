@@ -26,5 +26,8 @@ def _names_by_text() -> dict[str, str]:
 
 
 def prompt_name(system: object) -> str | None:
-    """Which prompt file a request's `system` text came from, or None if it isn't one of them."""
+    """Which prompt file a request's `system` came from, or None if it isn't one of them. A system
+    given as blocks, to cache it, is named by its first text block."""
+    if isinstance(system, list) and system and isinstance(system[0], dict):
+        system = system[0].get("text")
     return _names_by_text().get(system) if isinstance(system, str) else None

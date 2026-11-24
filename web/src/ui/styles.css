@@ -16,6 +16,8 @@
   --red: #d42a27; /* white text 5.0:1 */
   --red-hover: #b82220;
   --red-press: #9e1c1a;
+  /* The Librarian's ink: the system red, as thin line-work and handwriting only. */
+  --lib: var(--red);
 
   /* Context. Inside .dark these swap, and every component follows. */
   --fg: var(--ink);
@@ -26,6 +28,8 @@
     "Barlow Condensed", "Arial Narrow", sans-serif; /* labels, nav, buttons, shelf names. Caps. */
   --font-serif: "Newsreader", Georgia, serif; /* book titles, page titles, the Librarian's voice */
   --font-sans: "IBM Plex Sans", system-ui, sans-serif; /* working text */
+  /* The Librarian's hand in the interview, and nothing else (system.md, Additions). */
+  --font-hand: "Caveat", "Segoe Print", cursive;
 
   /* Space: 4px base. 44px is the page gutter. */
   --s-1: 4px;
@@ -40,11 +44,20 @@
   /* Line, radius, size */
   --line: 2px; /* controls, book outline */
   --line-heavy: 3px; /* panels, bubbles, dialogs */
-  --radius-pill: 999px; /* search field and avatar only */
+  /* Folio (2026-11-19): a small radius on everything you touch or read on a card. */
+  --r: 5px;
+  --r-cover: 8px; /* the Librarian's black cover */
+  --r-book: 3px 5px 5px 3px; /* a book: tighter at the spine */
+  --radius-pill: 999px; /* no longer used by the search field or avatar, which are square (Folio) */
   --radius-bubble: 26px; /* speech bubbles only */
   --tap: 44px;
   --control: 48px;
   --ease: 120ms ease;
+  /* Shade. Dots are for cast shadows; diagonal cross-hatching is for shade on spines and under ledges. */
+  --dots: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+  --hatch:
+    repeating-linear-gradient(45deg, var(--ink) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(-45deg, var(--ink) 0 1px, transparent 1px 6px);
 
   /* Compatibility with the tokens the app already uses */
   --color-text: var(--ink);
@@ -53,7 +66,7 @@
   --color-error: var(--ink);
   --color-border: var(--rule);
   --color-background: var(--paper);
-  --radius: 0;
+  --radius: var(--r);
   --space-1: var(--s-1);
   --space-2: var(--s-2);
   --space-3: var(--s-4);
@@ -165,7 +178,7 @@ body {
   padding: 0 26px;
   white-space: nowrap;
   border: var(--line) solid var(--fg);
-  border-radius: 0;
+  border-radius: var(--r);
   font: 700 17px / 1 var(--font-display);
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -176,6 +189,49 @@ body {
     color var(--ease),
     border-color var(--ease);
 }
+/* Folio: a button sits over a dot shadow, lifts off it on hover and presses into it. The shadow is
+   behind the button (z-index -1, so it stays under the face) and moves the other way, so it stays put.
+   It moves by offset, not transform: a transform would lift the shadow above the face. */
+.button-primary,
+.button-secondary {
+  position: relative;
+  top: 0;
+  left: 0;
+  transition:
+    background var(--ease),
+    color var(--ease),
+    border-color var(--ease),
+    top var(--ease),
+    left var(--ease);
+}
+.button-primary::before,
+.button-secondary::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 5px -7px -7px 5px;
+  border-radius: var(--r);
+  background: var(--dots);
+  pointer-events: none;
+  transition: inset var(--ease);
+}
+.dark :is(.button-primary, .button-secondary)::before {
+  background: radial-gradient(circle, var(--white) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+}
+:is(.button-primary, .button-secondary):is(:hover, .is-hover) {
+  top: -2px;
+  left: -2px;
+}
+:is(.button-primary, .button-secondary):is(:hover, .is-hover)::before {
+  inset: 7px -9px -9px 7px;
+}
+:is(.button-primary, .button-secondary):is(:active, .is-press) {
+  top: 5px;
+  left: 5px;
+}
+:is(.button-primary, .button-secondary):is(:active, .is-press)::before {
+  inset: -2px;
+}
 .button-primary {
   background: var(--red);
   color: var(--white);
@@ -185,20 +241,19 @@ body {
 }
 .button-primary:is(:active, .is-press) {
   background: var(--red-press);
-  transform: translateY(1px);
 }
+/* A white face, so it reads over a shadow or a pattern; ink on hover. */
 .button-secondary {
+  background: var(--white);
+  color: var(--ink);
+}
+.dark .button-secondary {
   background: transparent;
   color: var(--fg);
 }
-.button-secondary:is(:hover, .is-hover) {
+.button-secondary:is(:hover, .is-hover, :active, .is-press) {
   background: var(--fg);
   color: var(--bg);
-}
-.button-secondary:is(:active, .is-press) {
-  background: var(--fg);
-  color: var(--bg);
-  transform: translateY(1px);
 }
 .button-quiet {
   min-height: var(--tap);
@@ -214,11 +269,16 @@ body {
   background: color-mix(in srgb, var(--fg) 10%, transparent);
 }
 .button:is(:disabled, [aria-disabled="true"]) {
+  top: 0;
+  left: 0;
   background: var(--rule);
   border-color: var(--ink-3);
   color: var(--ink-2);
   cursor: not-allowed;
   transform: none;
+}
+.button:is(:disabled, [aria-disabled="true"])::before {
+  display: none;
 }
 .button[aria-busy="true"] {
   cursor: progress;
@@ -237,7 +297,7 @@ body {
   min-height: var(--control);
   padding: 0 14px;
   border: var(--line) solid var(--ink);
-  border-radius: 0;
+  border-radius: var(--r);
   background: var(--white);
   color: var(--ink);
   font: 400 16px / 1.4 var(--font-sans);
@@ -359,33 +419,59 @@ body {
   background: var(--ink);
   transform: rotate(-6deg);
 }
+/* Folio: the search field and avatar are square, on the same 2px line and 44px height as the buttons. */
 .search {
   display: flex;
   align-items: center;
-  gap: var(--s-2);
-  height: 40px;
-  width: 230px;
-  padding: 0 14px;
+  gap: 10px;
+  height: var(--tap);
+  width: 330px;
+  padding: 0 10px 0 14px;
   border: var(--line) solid var(--ink);
-  border-radius: var(--radius-pill);
+  border-radius: var(--r);
   background: var(--white);
   color: var(--ink-2);
-  font-size: 13px;
+  font: 400 15px / 1 var(--font-sans);
+}
+.search .search-key {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: var(--line) solid var(--ink);
+  border-radius: 3px;
+  color: var(--ink);
+  font: 700 12px / 1 var(--font-display);
 }
 .avatar {
+  position: relative;
+  isolation: isolate;
   display: grid;
+  flex: none;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border: var(--line) solid var(--fg);
-  border-radius: 50%;
-  font: 700 14px / 1 var(--font-display);
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: var(--r);
+  background: var(--ink);
+  color: var(--white);
+  font: 700 16px / 1 var(--font-display);
+  letter-spacing: 0.08em;
+}
+.avatar::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 4px -4px -4px 4px;
+  border-radius: var(--r);
+  background: radial-gradient(circle, var(--ink) 1.2px, transparent 1.6px) 0 0 / 5px 5px;
 }
 
 /* ---------- Labels, voice, lists ---------- */
 .caption {
   display: inline-block;
   padding: 5px 12px;
+  border-radius: 3px;
   background: var(--fg);
   color: var(--bg);
   font: 600 14px / 1.2 var(--font-display);
@@ -452,24 +538,62 @@ body {
 }
 
 /* ---------- Surfaces ---------- */
-.panel {
+/* Folio's card: a white face, a 2px ink line, a small radius and a dot shadow under it. Nothing else.
+   The face is its own layer above the shadow, inside the card's stacking, so a button on the card can
+   still cast its own shadow onto the face. */
+.panel,
+.surf {
+  position: relative;
+  isolation: isolate;
   padding: 22px 24px;
-  border: var(--line-heavy) solid var(--ink);
-  background: var(--white);
+  border: var(--line) solid transparent;
+  border-radius: var(--r);
   color: var(--ink);
 }
-.panel > h2,
-.panel > h3 {
-  margin: 0 0 var(--s-4);
-  font: 800 24px / 1 var(--font-display);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.panel::before,
+.surf::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: calc(-1 * var(--line));
+  border: var(--line) solid var(--ink);
+  border-radius: var(--r);
+  background: var(--face, var(--white));
+  pointer-events: none;
+}
+.panel::after,
+.surf::after {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  inset: 9px -11px -11px 9px;
+  border-radius: var(--r);
+  background: var(--dots);
+  pointer-events: none;
+}
+/* The spine: a cross-hatch down the left edge that fades into the page. Content starts after it. */
+.surf-spine {
+  padding-left: 62px;
+}
+.surf-spine::before {
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / 0) 0, rgb(255 255 255 / 0.55) 15px, var(--white) 37px) 0 0 / 44px
+    100% no-repeat,
+    repeating-linear-gradient(45deg, var(--ink) 0 1px, transparent 1px 6px) 0 0 / 44px 100% no-repeat,
+    repeating-linear-gradient(-45deg, var(--ink) 0 1px, transparent 1px 6px) 0 0 / 44px 100% no-repeat,
+    var(--white);
+}
+/* Boxes with a face of their own hold their buttons' shadows, so those stay visible. */
+.message,
+.empty {
+  isolation: isolate;
 }
 .message {
   display: flex;
   gap: var(--s-3);
   padding: 14px 18px;
   border: var(--line) solid var(--ink);
+  border-radius: var(--r);
   background: var(--white);
   color: var(--ink);
 }
@@ -487,6 +611,7 @@ body {
 }
 .empty {
   padding: var(--s-6);
+  border-radius: var(--r);
   border: var(--line-heavy) dotted var(--ink);
   color: var(--fg);
 }
@@ -498,6 +623,7 @@ body {
   position: relative;
   padding: 26px 28px;
   border: var(--line-heavy) solid var(--ink);
+  border-radius: var(--r);
   background: var(--white);
   color: var(--ink);
 }
@@ -506,7 +632,8 @@ body {
   position: absolute;
   z-index: -1;
   inset: 8px -8px -8px 8px;
-  background: radial-gradient(circle, var(--ink) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+  border-radius: var(--r);
+  background: var(--dots);
 }
 .scrim {
   background:
@@ -538,7 +665,10 @@ body {
   top: 8px;
   right: -8px;
   bottom: -8px;
+  border-radius: var(--r-book);
   background: radial-gradient(circle, var(--fg) 1.3px, transparent 1.7px) 0 0 / 5px 5px;
+  /* Dissolves out and back as the book leaves its shelf and returns (ShelfPage.css, data-out). */
+  transition: opacity 320ms ease-out;
 }
 .book-cover {
   position: relative;
@@ -549,13 +679,15 @@ body {
   height: 100%;
   padding: 16px 10px 10px 21px;
   border: var(--line) solid var(--ink);
+  border-radius: var(--r-book);
+  /* --crease is where the paper folds at the hinge, so the shade around the hinge line follows it. */
   background: linear-gradient(
     90deg,
     #e4e4df 0,
-    #f5f5f1 7px,
-    var(--white) 8px 11px,
-    #f2f2ee 12px,
-    var(--white) 16px
+    #f5f5f1 calc(var(--crease, 12px) - 5px),
+    var(--white) calc(var(--crease, 12px) - 4px) calc(var(--crease, 12px) - 1px),
+    #f2f2ee var(--crease, 12px),
+    var(--white) calc(var(--crease, 12px) + 4px)
   );
   overflow: hidden;
 }
@@ -631,6 +763,79 @@ body {
   font-size: 8.5px;
 }
 
+/* The desktop books (Josef, 2026-11-21; docs/design/art/strata/set-1/README.md): the shelf book larger, so the cover
+   and its type read better, with a narrow hinge and strata cover type, the name right under the title; the large
+   book the same scaled by 1.34. A cover with art (.book-art, from ui/art/bookArt.ts) shows it full-bleed under the
+   outline, its type in the art's ink (--art-ink) and the name on a white knockout. The phone and the other sizes keep
+   the book above until they are decided, so the art is desktop-only too. */
+.book-art {
+  display: none;
+}
+@media (min-width: 720px) {
+  .book:not(.book-lg, .book-sm, .book-xs) {
+    width: 176px;
+    height: 257px;
+  }
+  .book:not(.book-sm, .book-xs) .book-cover {
+    --crease: 8px;
+    padding: 20px 13px 14px 18px;
+  }
+  .book:not(.book-sm, .book-xs) .book-cover::before {
+    z-index: 1;
+    left: 8px;
+  }
+  .book:not(.book-sm, .book-xs) .book-art {
+    display: block;
+    position: absolute;
+    left: calc(-1 * var(--line));
+    top: calc(-1 * var(--line));
+    width: calc(100% + 2 * var(--line));
+    height: calc(100% + 2 * var(--line));
+    object-fit: cover;
+  }
+  .book:not(.book-sm, .book-xs) .book-title {
+    position: relative;
+    z-index: 1;
+    font: 800 29px / 0.92 var(--font-display);
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    text-wrap: balance;
+    color: var(--art-ink, var(--ink));
+  }
+  .book:not(.book-sm, .book-xs) .book-author {
+    position: relative;
+    z-index: 1;
+    align-self: flex-start;
+    margin: 10px 0 0 -3px;
+    padding: 0 3px 1px;
+    background: var(--white);
+    font: 700 13px / 1.15 var(--font-display);
+    letter-spacing: 0.16em;
+    color: var(--art-ink, var(--ink));
+  }
+  .book-lg:not(.book-sm, .book-xs) .book-cover {
+    --crease: 11px;
+    padding: 27px 17px 19px 24px;
+  }
+  .book-lg:not(.book-sm, .book-xs) .book-cover::before {
+    left: 11px;
+    width: 2px;
+  }
+  .book-lg:not(.book-sm, .book-xs) .book-art {
+    left: calc(-1 * var(--line-heavy));
+    top: calc(-1 * var(--line-heavy));
+    width: calc(100% + 2 * var(--line-heavy));
+    height: calc(100% + 2 * var(--line-heavy));
+  }
+  .book-lg:not(.book-sm, .book-xs) .book-title {
+    font-size: 39px;
+  }
+  .book-lg:not(.book-sm, .book-xs) .book-author {
+    margin-top: 13px;
+    font-size: 17px;
+  }
+}
+
 .shelf-head {
   display: flex;
   align-items: center;
@@ -654,12 +859,13 @@ body {
 }
 .shelf-books {
   display: flex;
-  gap: 28px;
+  gap: 36px;
   padding: 0 var(--s-1);
 }
 .ledge {
   position: relative;
   height: 14px;
+  border-radius: 3px;
   background: var(--ink);
 }
 .ledge::after {
@@ -668,8 +874,9 @@ body {
   left: 0;
   right: 0;
   top: 14px;
-  height: 22px;
-  background: radial-gradient(circle, var(--ink) 1.4px, transparent 1.8px) 0 0 / 5px 5px;
+  height: 16px;
+  /* The ledge's shade on the wall: a light diagonal hatch (Folio), fading downwards. */
+  background-image: repeating-linear-gradient(45deg, var(--ink) 0 1.2px, transparent 1.2px 8px);
   -webkit-mask-image: linear-gradient(#000, transparent);
   mask-image: linear-gradient(#000, transparent);
 }

@@ -2,10 +2,11 @@ import json
 from types import SimpleNamespace
 
 import pytest
+from fastapi import HTTPException
 
 from tests.fakes import choose_and_wait, finish_and_wait, send_answer, send_skip
 from trove.ai import scripted
-from trove.ai.client import get_claude, text_of
+from trove.ai.client import describe_ai, get_claude, optional_claude, text_of
 from trove.ai.prompts import load_prompt
 from trove.ai.scripted import ScriptedClaude, ensure_scripted_allowed
 from trove.core.config import get_settings
@@ -181,11 +182,45 @@ def test_get_claude_returns_the_stand_in_with_no_key(monkeypatch):
     assert isinstance(get_claude(), ScriptedClaude)
 
 
-def test_get_claude_refuses_outside_dev(monkeypatch):
+def test_get_claude_refuses_outside_dev_with_the_reason(monkeypatch):
     monkeypatch.setattr(get_settings(), "ai_mode", "scripted")
     monkeypatch.setattr(get_settings(), "environment", "production")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(HTTPException) as refused:
         get_claude()
+    assert refused.value.status_code == 503
+    assert refused.value.detail == "AI_MODE=scripted is for development, not ENVIRONMENT=production."
+
+
+def test_a_refused_stand_in_leaves_routes_that_work_without_ai_working(monkeypatch):
+    monkeypatch.setattr(get_settings(), "ai_mode", "scripted")
+    monkeypatch.setattr(get_settings(), "mongodb_database", "trove")
+    request = SimpleNamespace(app=SimpleNamespace(dependency_overrides={}))
+    assert optional_claude(request) is None
+
+
+async def test_reading_the_interview_survives_a_refused_stand_in(client, headers, monkeypatch):
+    app.dependency_overrides.pop(get_claude, None)
+    monkeypatch.setattr(get_settings(), "ai_mode", "scripted")
+    monkeypatch.setattr(get_settings(), "environment", "production")
+    assert (await client.get("/interview", headers=headers)).status_code == 200
+    started = await client.post("/interview", json={}, headers=headers)
+    assert started.status_code == 503
+    assert "ENVIRONMENT=production" in started.json()["detail"]
+
+
+@pytest.mark.parametrize(
+    ("changes", "says"),
+    [
+        ({"ai_mode": "scripted"}, "AI: scripted"),
+        ({"ai_mode": "real", "anthropic_api_key": ""}, "AI: not set up. ANTHROPIC_API_KEY is empty"),
+        (
+            {"ai_mode": "real", "anthropic_api_key": "a-key", "anthropic_model": "claude-opus-5-5"},
+            "AI: real (claude-opus-5-5)",
+        ),
+    ],
+)
+def test_the_startup_line_names_the_ai(changes, says):
+    assert describe_ai(SimpleNamespace(**changes)).startswith(says)
 
 
 async def walk_answers(client, headers, answers: list[str]) -> dict:

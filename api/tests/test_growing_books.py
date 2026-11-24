@@ -130,6 +130,7 @@ async def test_a_round_keeps_the_old_turns_and_marks_where_it_starts(client, dat
         "text": "What did you do next?",
         "phase": "adding",
         "playback": None,
+        "builds_on": None,
     }
     assert state["can_finish"] is False
 

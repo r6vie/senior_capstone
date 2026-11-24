@@ -1,0 +1,1 @@
+That breaks these rules. Write the whole thing again with those fixed, and keep everything that was fine. If a mark or an entry can't be fixed, leave it out.

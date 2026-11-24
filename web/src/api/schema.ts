@@ -277,7 +277,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** My Book */
+        /**
+         * My Book
+         * @description The member's own book, or null before they have one: an answer, not an error, since the shelf
+         *     asks on every visit.
+         */
         get: operations["my_book_books_me_get"];
         put?: never;
         post?: never;
@@ -379,8 +383,8 @@ export interface paths {
         };
         /**
          * Current
-         * @description The member's interview, for resuming where they left off. If writing proposed changes failed,
-         *     a return tries once more on its own.
+         * @description The member's interview, for resuming where they left off, or null before they start. If writing
+         *     proposed changes failed, a return tries once more on its own.
          */
         get: operations["current_interview_get"];
         put?: never;
@@ -449,6 +453,29 @@ export interface paths {
          * @description Skip the waiting question and get the next one. Not on the Shape step (409).
          */
         post: operations["skip_interview_skip_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/interview/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Notes
+         * @description The Librarian reads the answer as it's typed: marks to keep and add, and notebook entries to
+         *     keep, add, revise and erase. Call on a pause, a finished sentence or about 7 new words, never per
+         *     keystroke, and drop a reply once the member has moved to another question. It never fails for
+         *     want of AI: it just adds nothing. 409 if `question_id` isn't the question waiting.
+         */
+        post: operations["notes_interview_notes_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -988,6 +1015,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/checkouts/{checkout_id}/met": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Did You Meet
+         * @description Answer "Did you meet?" for yourself. Your answer is never shown to the other person.
+         */
+        post: operations["did_you_meet_checkouts__checkout_id__met_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/checkouts/past-meets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Past Meets
+         * @description The people you've met through checkouts, newest first, with their contact details.
+         */
+        get: operations["past_meets_checkouts_past_meets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/meetings/{checkout_id}": {
         parameters: {
             query?: never;
@@ -1088,6 +1155,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/messages/{checkout_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Thread
+         * @description The conversation on an accepted checkout, oldest first, starting with the reader's checkout note.
+         */
+        get: operations["thread_messages__checkout_id__get"];
+        put?: never;
+        /**
+         * Send
+         * @description Write in the conversation. The other person is emailed, at most once every 10 minutes.
+         */
+        post: operations["send_messages__checkout_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/messages/{checkout_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Read
+         * @description You've seen this conversation up to `seen_up_to`. Only you ever know this.
+         */
+        post: operations["mark_read_messages__checkout_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/discovery/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search
+         * @description Available books matching public story text or the author's full name.
+         */
+        get: operations["search_discovery_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/discovery/recommendation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recommendation
+         * @description The Librarian's one current pick, based only on this member's own book.
+         */
+        get: operations["recommendation_discovery_recommendation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -1121,6 +1272,20 @@ export interface components {
              * @description The `question_id` of the question this answers.
              */
             question_id: string;
+        };
+        /**
+         * AnsweredTurn
+         * @description An answered or skipped question, with the marks the Librarian left on it, for going back.
+         */
+        AnsweredTurn: {
+            /** Question */
+            question: string;
+            /** Answer */
+            answer: string;
+            /** Marks */
+            marks: components["schemas"]["Mark"][];
+            /** Silent */
+            silent: boolean;
         };
         /** AuthorChapter */
         AuthorChapter: {
@@ -1289,6 +1454,49 @@ export interface components {
             /** Place Note */
             place_note?: string | null;
         };
+        /**
+         * DidYouMeet
+         * @description This member's own side of "Did you meet?". Never includes the other person's answer.
+         */
+        DidYouMeet: {
+            /** Can Answer */
+            can_answer: boolean;
+            /** My Answer */
+            my_answer: ("met" | "not_yet" | "no") | null;
+        };
+        /**
+         * Entry
+         * @description One line in the notebook. `anchors` are the member's words it was built on; when those words
+         *     leave the answer, the entry is rubbed out. `source_turns` are interview turn numbers, 1 first.
+         */
+        Entry: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "chapter" | "connection" | "saving" | "clip" | "note" | "bet";
+            /** Text */
+            text: string;
+            /** Anchors */
+            anchors: string[];
+            /** Source Turns */
+            source_turns: number[];
+            /**
+             * Status
+             * @default open
+             * @enum {string}
+             */
+            status: "open" | "circled" | "ticked" | "called" | "lost";
+            /**
+             * Struck
+             * @default []
+             */
+            struck: string[];
+            /** Outcome Note */
+            outcome_note?: string | null;
+        };
         /** FinishRequest */
         FinishRequest: {
             /**
@@ -1361,6 +1569,9 @@ export interface components {
             reading_answer: string | null;
             /** Dropped Words */
             dropped_words: string[] | null;
+            librarian?: components["schemas"]["LibrarianState"] | null;
+            /** Sign Off */
+            sign_off?: string | null;
         };
         /** InviteCheckRequest */
         InviteCheckRequest: {
@@ -1433,6 +1644,43 @@ export interface components {
             /** Expires At */
             expires_at: string | null;
             reader_contact?: components["schemas"]["Contact"] | null;
+            /**
+             * New Messages
+             * @default false
+             */
+            new_messages: boolean;
+            /** Meeting Start */
+            meeting_start?: string | null;
+            did_you_meet?: components["schemas"]["DidYouMeet"] | null;
+        };
+        /**
+         * LibrarianRecommendation
+         * @description What the shelf's Librarian cover shows for this signed-in member.
+         */
+        LibrarianRecommendation: {
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "create_book" | "continue_interview" | "finish_book" | "recommendation" | "empty_shelf" | "unavailable";
+            book?: components["schemas"]["BookCard"] | null;
+            /** Reason */
+            reason?: string | null;
+        };
+        /**
+         * LibrarianState
+         * @description Everything the Librarian left so far, so going back and resuming show exactly what was there.
+         *     Only while interviewing or adding: it's hidden after the reveal, never deleted.
+         */
+        LibrarianState: {
+            /** Turns */
+            turns: components["schemas"]["AnsweredTurn"][];
+            /** Current Marks */
+            current_marks: components["schemas"]["Mark"][];
+            /** Current Silent */
+            current_silent: boolean;
+            /** Notebook */
+            notebook: components["schemas"]["Entry"][];
         };
         /** LoginRequest */
         LoginRequest: {
@@ -1460,6 +1708,49 @@ export interface components {
             /** Expires In */
             expires_in: number;
         };
+        /**
+         * Mark
+         * @description A mark on the member's exact words: `anchor` is a substring of the answer, `occurrence` which
+         *     one (1 is the first). The client places it only while the anchor still matches.
+         */
+        Mark: {
+            /** Id */
+            id: string;
+            /**
+             * Move
+             * @enum {string}
+             */
+            move: "underline" | "strike" | "circle" | "note" | "back_cover";
+            /** Anchor */
+            anchor: string;
+            /** Occurrence */
+            occurrence: number;
+            /** Note */
+            note: string | null;
+            /** Count */
+            count?: number | null;
+            /** Struck Note */
+            struck_note?: string | null;
+        };
+        /** MarksDelta */
+        MarksDelta: {
+            /** Keep */
+            keep: string[];
+            /** Add */
+            add: components["schemas"]["Mark"][];
+            /** Revise */
+            revise: components["schemas"]["Mark"][];
+            /** Erase */
+            erase: string[];
+        };
+        /** MeetAnswerRequest */
+        MeetAnswerRequest: {
+            /**
+             * Answer
+             * @enum {string}
+             */
+            answer: "met" | "not_yet" | "no";
+        };
         /** MeetingView */
         MeetingView: {
             /** Checkout Id */
@@ -1485,6 +1776,32 @@ export interface components {
             video_link: string | null;
             /** Place Note */
             place_note: string | null;
+        };
+        /** Message */
+        Message: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "checkout_note" | "message" | "note";
+            /** From Me */
+            from_me: boolean;
+            /** Sender Name */
+            sender_name: string;
+            /** Text */
+            text: string;
+            /**
+             * Sent At
+             * Format: date-time
+             */
+            sent_at: string;
+        };
+        /** MessageRequest */
+        MessageRequest: {
+            /** Text */
+            text: string;
         };
         /**
          * MyBookResponse
@@ -1560,6 +1877,62 @@ export interface components {
             /** Last Name */
             last_name?: string | null;
         };
+        /** NotebookDelta */
+        NotebookDelta: {
+            /** Keep */
+            keep: string[];
+            /** Add */
+            add: components["schemas"]["Entry"][];
+            /** Revise */
+            revise: components["schemas"]["Entry"][];
+            /** Erase */
+            erase: string[];
+        };
+        /**
+         * NotesRequest
+         * @description One look at the answer while the member types. Earlier turns are already on the server.
+         */
+        NotesRequest: {
+            /**
+             * Question Id
+             * @description The `question_id` of the question being answered.
+             */
+            question_id: string;
+            /**
+             * Text
+             * @description The answer as it stands.
+             */
+            text: string;
+            /**
+             * Previous Text
+             * @description The answer at the last call.
+             * @default
+             */
+            previous_text: string;
+            /**
+             * Pasted
+             * @description Whether some of the text was pasted.
+             * @default false
+             */
+            pasted: boolean;
+            /**
+             * Shown
+             * @description Ids of the marks and entries on screen now.
+             */
+            shown?: string[];
+        };
+        /**
+         * NotesResponse
+         * @description What the Librarian does now. Place a mark only while its anchor and occurrence still match the
+         *     text: a late reply is then harmless. On `silent`, rub everything from this answer out and write
+         *     nothing more on it.
+         */
+        NotesResponse: {
+            /** Silent */
+            silent: boolean;
+            marks: components["schemas"]["MarksDelta"];
+            notebook: components["schemas"]["NotebookDelta"];
+        };
         /**
          * NotificationSettingsUpdate
          * @description The one email switch. Account emails, like the welcome message, are sent either way.
@@ -1567,6 +1940,31 @@ export interface components {
         NotificationSettingsUpdate: {
             /** Email Notifications */
             email_notifications: boolean;
+        };
+        /**
+         * PastMeet
+         * @description Someone you met through a checkout (docs/trove.md §8). Both people get one.
+         */
+        PastMeet: {
+            /** Checkout Id */
+            checkout_id: string;
+            /** Book Title */
+            book_title: string;
+            /**
+             * You Were
+             * @enum {string}
+             */
+            you_were: "reader" | "author";
+            /** Other Name */
+            other_name: string;
+            other_book: components["schemas"]["ReaderBook"] | null;
+            contact: components["schemas"]["Contact"] | null;
+            /**
+             * Met On
+             * Format: date-time
+             */
+            met_on: string;
+            did_you_meet: components["schemas"]["DidYouMeet"];
         };
         /**
          * PublicBookResponse
@@ -1602,6 +2000,16 @@ export interface components {
             phase: "sweep" | "dig" | "shape" | "adding" | "reading";
             /** Playback */
             playback: string | null;
+            /** Builds On */
+            builds_on?: string | null;
+        };
+        /** ReadRequest */
+        ReadRequest: {
+            /**
+             * Seen Up To
+             * Format: date-time
+             */
+            seen_up_to: string;
         };
         /** ReaderBook */
         ReaderBook: {
@@ -1634,7 +2042,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "waiting" | "accepted" | "cancelled" | "unavailable";
+            status: "waiting" | "accepted" | "cancelled" | "unavailable" | "returned";
             /**
              * Created At
              * Format: date-time
@@ -1643,6 +2051,14 @@ export interface components {
             /** Expires At */
             expires_at: string | null;
             author_contact?: components["schemas"]["Contact"] | null;
+            /**
+             * New Messages
+             * @default false
+             */
+            new_messages: boolean;
+            /** Meeting Start */
+            meeting_start?: string | null;
+            did_you_meet?: components["schemas"]["DidYouMeet"] | null;
         };
         /**
          * ReadingQuestionResponse
@@ -1696,6 +2112,17 @@ export interface components {
              * @enum {string}
              */
             blurb: "keep" | "use";
+        };
+        /** SearchResponse */
+        SearchResponse: {
+            /** Results */
+            results: components["schemas"]["SearchResult"][];
+        };
+        /** SearchResult */
+        SearchResult: {
+            book: components["schemas"]["BookCard"];
+            /** Excerpt */
+            excerpt: string;
         };
         /** ShapeRequest */
         ShapeRequest: {
@@ -1788,6 +2215,19 @@ export interface components {
              * @description An optional résumé PDF, base64-encoded. The file isn't kept. Its text is deleted when the interview ends, or 30 days after the last activity, and nothing from it goes into the book.
              */
             resume_pdf?: string | null;
+        };
+        /** Thread */
+        Thread: {
+            /** Checkout Id */
+            checkout_id: string;
+            /** Book Title */
+            book_title: string;
+            /** Other Name */
+            other_name: string;
+            /** Can Write */
+            can_write: boolean;
+            /** Messages */
+            messages: components["schemas"]["Message"][];
         };
         /** TimesUpdate */
         TimesUpdate: {
@@ -2396,7 +2836,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MyBookResponse"];
+                    "application/json": components["schemas"]["MyBookResponse"] | null;
                 };
             };
         };
@@ -2555,7 +2995,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["InterviewResponse"];
+                    "application/json": components["schemas"]["InterviewResponse"] | null;
                 };
             };
         };
@@ -2684,6 +3124,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StaleQuestionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    notes_interview_notes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotesResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3498,6 +3971,61 @@ export interface operations {
             };
         };
     };
+    did_you_meet_checkouts__checkout_id__met_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeetAnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DidYouMeet"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    past_meets_checkouts_past_meets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PastMeet"][];
+                };
+            };
+        };
+    };
     get_meeting_meetings__checkout_id__get: {
         parameters: {
             query?: never;
@@ -3659,6 +4187,156 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    thread_messages__checkout_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Thread"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_messages__checkout_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MessageRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_read_messages__checkout_id__read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_discovery_search_get: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recommendation_discovery_recommendation_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibrarianRecommendation"];
                 };
             };
         };

@@ -2,10 +2,12 @@ import { type FormEvent, useEffect, useState } from "react";
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
+import { PageLoading } from "../../ui/Loading";
 import { TextField } from "../../ui/TextField";
 import { useAuth } from "../auth/AuthProvider";
 import { InviteSection } from "./InviteSection";
 import "./SettingsPage.css";
+import { usePageTitle } from "../../ui/usePageTitle";
 
 // Account settings (plan item A1): what to share when an author says yes, the one email switch, and
 // deleting the account. Contact details never appear on a book (docs/trove.md §9.1).
@@ -63,6 +65,8 @@ function ContactSection({ email }: { email: string }) {
 
   return (
     <section aria-labelledby="contact-heading" className="settings-section">
+      {/* Settings appears once the contact details are in, so the fields don't fill in under the cursor. */}
+      {!loaded && !notice && <PageLoading />}
       <h2 id="contact-heading" className="settings-heading">
         Contact details
       </h2>
@@ -182,6 +186,7 @@ function DeleteSection({ email }: { email: string }) {
 }
 
 export function SettingsPage() {
+  usePageTitle("Settings");
   const { user, refreshUser } = useAuth();
   if (!user) return null;
 

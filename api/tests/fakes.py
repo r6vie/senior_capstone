@@ -40,7 +40,8 @@ class FakeClaude(Claude):
 
 
 async def waiting_question_id(client, headers) -> str:
-    state = (await client.get("/interview", headers=headers)).json()
+    # Null before the interview starts.
+    state = (await client.get("/interview", headers=headers)).json() or {}
     question = state.get("question")
     return question["question_id"] if question else "no-question-waiting"
 
