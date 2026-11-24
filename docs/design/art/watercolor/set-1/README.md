@@ -61,17 +61,16 @@ spreading from where the brush lands. Files in `anim/` (472 x 688, muted; MP4 an
 
 | Version | Where | Timing |
 |---|---|---|
-| `<key>-loop` | **The sign-in page only** (the blank book on Join, invite, confirm email, sign in), one cover after another | Paints in (all glazes by ~12.3 s), rests from 13.5 s, washes back to paper 18.5–23.5 s, 1.5 s of clean paper. 25 s, seamless. Pick the next cover at random each cycle. |
-| `<key>-reveal` | **The book reveal** and **your picks** (when a new book's design options appear) | The same painting at the same timing, played once, ending on the finished cover at 13.5 s. Keep this timing (Josef). |
-| `<key>-quick` | **The design studio**, when you choose a design | The same painting at 0.3 of the time, about 4 s, ending on the finished cover. Quicker so nobody waits to see the design (Josef). |
+| `<key>-loop` | **The sign-in intro only** (the blank book on Join, invite, confirm email, sign in), one cover after another | Paints in (all glazes by ~12.3 s), rests from 13.5 s, washes back to paper 18.5–23.5 s, 1.5 s of clean paper. 25 s, seamless. Pick the next cover at random each cycle. The only slow animation. |
+| `<key>-quick` | **The book reveal, your picks and the design studio** | The same painting at 0.3 of the time, about 4 s, ending on the finished cover (Josef, 2026-11-23: the fast version everywhere but the intro). |
 | `<key>-poster` | Reduced motion, and before a video loads | The finished cover. |
 
-- The last frame of `reveal` and `quick` is the cover image, so when the video ends, swap to the still (or leave
+- The last frame of `quick` is the cover image, so when the video ends, swap to the still (or leave
   the last frame) with no visible jump.
 - `prefers-reduced-motion`: show the poster, play nothing.
 - Play `muted`, `playsinline`, no controls; the video sits under the title and name exactly as the cover art does.
-- Strata covers will animate in the picks and the studio too (not on the sign-in page), on the same clock; their
-  animation is still being designed and is not in this set.
+- Strata covers animate in the reveal, the picks and the studio too, with the same fast timing (never on the
+  sign-in intro): `docs/design/art/strata/set-1/anim/`.
 - The screens these play on (the sign-in blank book, the reveal, the picks, the studio) may not be approved
   designs yet. Build the playback when each screen is.
 
