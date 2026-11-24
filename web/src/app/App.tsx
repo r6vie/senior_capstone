@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthPage } from "../features/auth/AuthPage";
 import { AuthProvider } from "../features/auth/AuthProvider";
 import { RequireAuth } from "../features/auth/RequireAuth";
+import { ResetPasswordPage } from "../features/auth/ResetPasswordPage";
 import { VerifyPage } from "../features/auth/VerifyPage";
 import { SparkPreviewPage } from "../features/book/SparkPreviewPage";
 import { AppShell } from "../ui/AppShell";
@@ -50,6 +51,7 @@ export function App() {
               <Route path="/sign-in" element={<AuthPage mode="sign-in" />} />
               <Route path="/sign-up" element={<AuthPage mode="sign-up" />} />
               <Route path="/verify" element={<VerifyPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route
                 element={
                   <RequireAuth>

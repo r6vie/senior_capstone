@@ -251,8 +251,18 @@
   color: var(--ink-2);
   font: 400 14px / 1.4 var(--font-sans);
 }
-.auth-foot a {
+.auth-foot a,
+.auth-textlink {
   color: var(--ink);
+}
+/* A link-looking button in a line of text ("Start over" on the reset page, which stays on the page). */
+.auth-textlink {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
 }
 
 /* The Show link sits inside the password field, at its right end. */

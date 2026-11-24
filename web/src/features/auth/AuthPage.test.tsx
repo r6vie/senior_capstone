@@ -46,6 +46,10 @@ function fillIn(email: string) {
 
 beforeEach(() => vi.resetAllMocks());
 
+function linkHref(name: string) {
+  return screen.getByRole("link", { name }).getAttribute("href");
+}
+
 describe("AuthPage", () => {
   it("asks for a first and last name when signing up", () => {
     renderPage("sign-up");
@@ -70,6 +74,11 @@ describe("AuthPage", () => {
     expect(show.getAttribute("aria-pressed")).toBe("true");
     fireEvent.click(show);
     expect(field.type).toBe("password");
+  });
+
+  it("offers a way back in for a forgotten password", () => {
+    renderPage("sign-in");
+    expect(linkHref("Forgot your password?")).toBe("/reset-password");
   });
 
   it("doesn't ask for a name when signing in", () => {

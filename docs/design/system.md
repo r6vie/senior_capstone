@@ -399,8 +399,15 @@ the next box, Backspace goes back, a pasted code fills all six. Then "Confirm" (
 (quiet), and at the foot "Wrong address? Start over" (Plex 14px `--ink-2`, the link in ink).
 
 **Sign in.** The same halves, the book closed and blank (no name). Email, Password with Show, then "Sign in" and
-the quiet "Forgot your password?" beside it. **There is no password reset in the API yet**: that needs a backend
-task and Josef's yes on the flow before the link ships. Until then leave the link out.
+the quiet "Forgot your password?" beside it.
+
+**Resetting a password** (approved by Josef 2026-11-24; `ResetPasswordPage.tsx`, at `/reset-password`, which the
+reset email links to with `?email=`). The same halves and line as sign in, caption "Sign in", title "Reset your
+password.": the email and "Send me a code"; then "If <email> has a Trove account, we sent it a 6-digit code. It works
+for 15 minutes." (the same whether or not it has one; from the email's link, "Enter the 6-digit code we emailed to
+<email>."), the six code boxes, "New password" with Show and "At least 12 characters.", "Reset password" (red) and
+"Send me a new code" (quiet), and "Wrong address? Start over" at the foot. A reset signs every session out, so the
+page signs in with the new password and goes to the shelf (an unconfirmed student goes to confirm their email).
 
 **Motion.** The intro's slow watercolour loop (`docs/design/art/watercolor/set-1/anim/<key>-loop.{webm,mp4}`, 25s, seamless, not in `web/` yet; decision
 2026-11-23 "watercolor animations for all ten, and where they play") is approved for the sign-in pages' book; the

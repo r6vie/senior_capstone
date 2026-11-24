@@ -80,11 +80,13 @@ export function AuthLayout({
 
 /** A password field with a Show link inside it, so the member can check what they typed. */
 export function PasswordField({
+  label = "Password",
   value,
   onChange,
   autoComplete,
   hint,
 }: {
+  label?: string;
   value: string;
   onChange: (value: string) => void;
   autoComplete: "new-password" | "current-password";
@@ -95,7 +97,7 @@ export function PasswordField({
   const [shown, setShown] = useState(false);
   return (
     <div className="field">
-      <label htmlFor={id}>Password</label>
+      <label htmlFor={id}>{label}</label>
       <span className="auth-pw">
         <input
           id={id}

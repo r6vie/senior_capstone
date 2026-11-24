@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { type Location, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, type Location, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
@@ -128,6 +128,11 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
           <Button type="submit" disabled={busy} aria-busy={busy || undefined}>
             {signingUp ? "Create account" : "Sign in"}
           </Button>
+          {!signingUp && (
+            <Link to="/reset-password" state={{ email: email.trim() }} className="button button-quiet">
+              Forgot your password?
+            </Link>
+          )}
         </div>
       </form>
     </AuthLayout>
