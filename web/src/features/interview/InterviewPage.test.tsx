@@ -926,6 +926,29 @@ describe("InterviewPage", () => {
     });
   });
 
+  describe("the book opens after the pick", () => {
+    it("opens the chosen book on review, once", async () => {
+      stillMotion();
+      const titles = [{ id: "0", title: bookWith(null).title, why: "Because." }];
+      const client = at({ id: "me", stage: "choosing", titles });
+      vi.spyOn(client, "chooseTitle").mockResolvedValue(reviewing());
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: new RegExp(bookWith(null).title) }));
+      fireEvent.click(screen.getByRole("button", { name: "Choose this title" }));
+      expect(await screen.findByDisplayValue(bookWith(null).title)).toBeTruthy();
+      expect(document.querySelector(".rv-open[data-opening]")).toBeTruthy();
+      await waitFor(() => expect(document.querySelector(".rv-open[data-opening]")).toBeNull(), {
+        timeout: 2000,
+      });
+    });
+
+    it("never opens a book that was already open after a reload", async () => {
+      renderWith(at(reviewing()));
+      await screen.findByDisplayValue(bookWith(null).title);
+      expect(document.querySelector(".rv-open[data-opening]")).toBeNull();
+    });
+  });
+
   describe("reviewing the book", () => {
     async function openChapter(index: number) {
       fireEvent.click(await screen.findByRole("button", { name: new RegExp(CHAPTER_TITLES[index] ?? "") }));

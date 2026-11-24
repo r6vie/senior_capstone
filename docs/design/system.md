@@ -265,6 +265,12 @@ Patterns added after v1. Each entry: name, the task it solves, date, owner, snip
   button). The pick lifts 26px in 0.25s, its outline thickens and its bookmark slides in, with "Your pick" over
   its reason. The other two sit back at 92%, half opacity, desaturated, as in the design picker. On a phone each
   book is a row with its reason beside it.
+- **The book opens (Josef, 2026-11-24):** after Choose, the other two books slide away (0.32s), then the chosen
+  book comes forward and opens as the reader's does: from about the shelf book's size, its right half where the
+  book stood, its cover swings open about the spine (850ms on the reader's open ease) while the board's left
+  half appears under it. It lands on review, or, if the book isn't written yet, on the open book with the
+  writing line until it is; never a blank page. It opens once per pick, never after a reload. Narrower screens
+  and reduced motion crossfade.
 - **Writing:** the chosen book stays open on screen for the whole wait: its title page, and a contents page of
   blank places.
 - **Review:** the same open book. The title is a field from the start, with the name and the Librarian's sign-off

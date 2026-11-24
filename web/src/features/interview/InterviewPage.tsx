@@ -142,6 +142,13 @@ export function InterviewPage({
   const [chosenTitle, setChosenTitle] = useState<string | null>(null);
   // Where the review's book stood when the member shelved it: the landing flies from there.
   const [landingFrom, setLandingFrom] = useState<DOMRect | null>(null);
+  // Just chosen: the book arrives closed and opens, once, on whichever open-book screen comes first.
+  const [bookOpens, setBookOpens] = useState(false);
+  useEffect(() => {
+    if (!bookOpens || (stageOf(state) !== "drafting" && stageOf(state) !== "reviewing")) return;
+    const timer = setTimeout(() => setBookOpens(false), OPEN_MS + 200);
+    return () => clearTimeout(timer);
+  }, [bookOpens, state]);
   const [leftAsIs, setLeftAsIs] = useState(false);
   // What the last send tried to save, when the reply never came, so nobody can tell if it arrived.
   const unsure = useRef<string | null>(null);
@@ -677,6 +684,7 @@ export function InterviewPage({
             onChoose={(titleId) => {
               const title = state.titles.find((option) => option.id === titleId)?.title ?? null;
               setChosenTitle(title);
+              setBookOpens(true);
               // Kept for a refresh during the writing, so the open book still shows its title.
               try {
                 if (title) sessionStorage.setItem(`trove_chosen:${state.id}`, title);
@@ -691,6 +699,7 @@ export function InterviewPage({
         return (
           <ReviewScreen
             book={state.book}
+            opening={bookOpens}
             signOff={state.signOff ?? null}
             onEditBook={async (edit) => {
               const book = await client.editBook(edit);
@@ -758,7 +767,11 @@ export function InterviewPage({
           >
             {/* While the book is written, the chosen book is open on screen, its contents still blank. */}
             {state.about === "book" && (
-              <WritingBook title={chosenTitle ?? storedTitle(state.id)} author={authorName} />
+              <WritingBook
+                title={chosenTitle ?? storedTitle(state.id)}
+                author={authorName}
+                opening={bookOpens}
+              />
             )}
             <p className="iv-note iv-note-big rv-saved">{savedLine}</p>
           </Frame>
@@ -990,10 +1003,18 @@ function RevealScreen({
         author={author}
         busy={Boolean(busy)}
         error={<ErrorMessage message={error} />}
+        failed={Boolean(error)}
         onChoose={onChoose}
       />
     </Frame>
   );
+}
+
+// The reader's open (BookReader.css --open-time).
+const OPEN_MS = 850;
+
+function stageOf(state: InterviewState | null): string | null {
+  return state?.stage ?? null;
 }
 
 function storedTitle(interviewId: string): string | null {
@@ -1011,6 +1032,7 @@ const MIN_CHAPTERS = 3;
 
 function ReviewScreen({
   book,
+  opening,
   signOff,
   onEditBook,
   onEditChapter,
@@ -1022,6 +1044,8 @@ function ReviewScreen({
   onShelve,
 }: {
   book: DraftBook;
+  /** Arriving straight from the pick: the book comes forward closed and opens. */
+  opening?: boolean;
   /** The Librarian's one line under the title, in its hand. */
   signOff: string | null;
   onEditBook: (edit: BookEdit) => Promise<void>;
@@ -1062,6 +1086,7 @@ function ReviewScreen({
       {/* Review is the shelf's open book (StartReveal): every word a field that saves itself. */}
       <ReviewBook
         book={book}
+        opening={opening}
         signOff={signOff ? <SignOff line={signOff} /> : null}
         canRemove={canRemove}
         onEditBook={onEditBook}
