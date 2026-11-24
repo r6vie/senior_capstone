@@ -58,7 +58,9 @@ export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
         });
       } else navigate(signingUp ? "/" : back);
     } catch (caught) {
-      if (caught instanceof NeedsVerification) navigate(`/verify?email=${encodeURIComponent(email)}`);
+      // Signed up earlier but never confirmed: that code may be long gone, so the confirm page sends a fresh one.
+      if (caught instanceof NeedsVerification)
+        navigate(`/verify?email=${encodeURIComponent(email)}`, { state: { sendCode: true } });
       else setError(caught instanceof Error ? caught.message : "Something went wrong.");
     } finally {
       setBusy(false);

@@ -177,6 +177,20 @@ describe("on the shelf", () => {
     expect(toggle.getAttribute("aria-checked")).toBe("false");
   });
 
+  it("queues a quick off-then-on, so the book ends where the switch shows", async () => {
+    let finish: (value: MyBook) => void = () => {};
+    const down = vi.fn(() => new Promise<MyBook>((resolve) => (finish = resolve)));
+    const back = vi.fn(async () => ({ ...book, status: "on_shelf" as const }));
+    show(client("shelf", { takeOffShelf: down, putBackOnShelf: back }));
+    const toggle = await screen.findByRole("switch", { name: "On the shelf" });
+    fireEvent.click(toggle);
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+    await act(async () => finish({ ...book, status: "off_shelf" }));
+    await waitFor(() => expect(back).toHaveBeenCalledTimes(1));
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+  });
+
   it("isn't there for a draft, which isn't on the shelf yet", async () => {
     show(client("draft"));
     expect(await titleField()).toBeTruthy();

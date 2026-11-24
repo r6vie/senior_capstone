@@ -88,11 +88,8 @@ function ShelfSwitch({
       className="mb-switch"
       aria-checked={on}
       aria-busy={busy || undefined}
-      // Never disabled, so the keyboard stays on it; a press while the last one is on its way waits for it.
-      aria-disabled={busy || undefined}
-      onClick={() => {
-        if (!busy) onChange(!on);
-      }}
+      // Never disabled, so the keyboard stays on it: presses while one is saving are queued, the latest winning.
+      onClick={() => onChange(!on)}
     >
       <span>On the shelf</span>
       <i aria-hidden="true" />
@@ -202,6 +199,11 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
   const [switching, setSwitching] = useState(false);
   // The switch moves at once; the server catches up, and if it refuses, the page shows what's true.
   const [wanted, setWanted] = useState<boolean | null>(null);
+  // The latest position asked for, and whether a save is under way: one save at a time, each for the latest ask,
+  // so a quick off-then-on ends on the shelf, as the switch shows.
+  const latest = useRef<boolean | null>(null);
+  const saving = useRef(false);
+  const onShelfNow = useRef(false);
   const [designing, setDesigning] = useState(false);
   // Leaving the picker hands the keyboard back to the pen that opened it.
   const backToPen = useRef(false);
@@ -343,12 +345,27 @@ export function MyBookPage({ client = apiInterviewClient }: { client?: Interview
             on={wanted ?? book.status === "on_shelf"}
             busy={switching}
             onChange={async (on) => {
+              latest.current = on;
               setWanted(on);
+              if (saving.current) return;
+              saving.current = true;
               setSwitching(true);
-              await attempt(
-                async () => setBook(await (on ? client.putBackOnShelf() : client.takeOffShelf())),
-                () => undefined,
-              );
+              onShelfNow.current = book.status === "on_shelf";
+              while (latest.current !== null && latest.current !== onShelfNow.current) {
+                const target = latest.current;
+                await attempt(
+                  async () => {
+                    const saved = await (target ? client.putBackOnShelf() : client.takeOffShelf());
+                    onShelfNow.current = saved.status === "on_shelf";
+                    setBook(saved);
+                  },
+                  () => undefined,
+                ).catch(() => undefined);
+                // attempt() reloads and says so when a save is refused; then the page shows what's true.
+                if (onShelfNow.current !== target) break;
+              }
+              latest.current = null;
+              saving.current = false;
               setWanted(null);
               setSwitching(false);
             }}

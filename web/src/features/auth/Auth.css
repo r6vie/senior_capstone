@@ -297,8 +297,8 @@
 /* Six boxes for the code. The real field lies over them, its own text and caret invisible. */
 .auth-code {
   position: relative;
-  display: inline-flex;
-  align-self: start;
+  display: flex;
+  max-width: 100%;
   margin-top: var(--s-1);
 }
 .field .auth-code-input {
@@ -325,12 +325,17 @@
 }
 .auth-digits {
   display: flex;
+  flex: 1;
+  min-width: 0;
   gap: 7px;
 }
+/* The boxes shrink to fit the narrowest phones; elsewhere they are their full size. */
 .auth-digits > span {
   display: grid;
+  flex: 1 1 0;
   place-items: center;
-  width: 46px;
+  min-width: 0;
+  max-width: 46px;
   height: 58px;
   border: var(--line) solid var(--ink);
   border-radius: var(--r);
@@ -412,7 +417,7 @@
     gap: 10px;
   }
   .auth-digits > span {
-    width: 58px;
+    max-width: 58px;
     height: 70px;
     font-size: 34px;
   }

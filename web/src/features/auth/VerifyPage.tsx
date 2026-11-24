@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
@@ -16,7 +16,8 @@ export function VerifyPage() {
   const [params] = useSearchParams();
   const knownEmail = params.get("email");
   // The name joining lettered onto the book, so the book keeps it here.
-  const name = (useLocation().state as { name?: string } | null)?.name || joiningName();
+  const arrival = useLocation().state as { name?: string; sendCode?: boolean } | null;
+  const name = arrival?.name || joiningName();
   const [email, setEmail] = useState(knownEmail ?? "");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,15 +38,23 @@ export function VerifyPage() {
     }
   }
 
-  async function resend() {
+  async function resend(quietly = false) {
     setError(null);
     setResent(false);
     const { response, error: problem } = await api.POST("/auth/verify/resend", {
       body: { email: email.trim() },
     });
-    if (response.ok) setResent(true);
+    if (response.ok) setResent(!quietly);
     else setError(errorMessage(problem));
   }
+
+  // Sent here from signing in or a reset, not from joining: no code was just sent, so one goes now, and the line
+  // above the boxes stays true.
+  const sendNow = Boolean(arrival?.sendCode && knownEmail);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once, on arrival
+  useEffect(() => {
+    if (sendNow) resend(true);
+  }, []);
 
   return (
     <AuthLayout
@@ -92,7 +101,7 @@ export function VerifyPage() {
           >
             Confirm
           </Button>
-          <Button variant="quiet" onClick={resend} disabled={!email.trim()}>
+          <Button variant="quiet" onClick={() => resend()} disabled={!email.trim()}>
             Send me a new code
           </Button>
         </div>

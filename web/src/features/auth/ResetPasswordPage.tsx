@@ -67,7 +67,7 @@ export function ResetPasswordPage() {
         navigate("/");
       } catch (caught) {
         if (caught instanceof NeedsVerification)
-          navigate(`/verify?email=${encodeURIComponent(email.trim())}`);
+          navigate(`/verify?email=${encodeURIComponent(email.trim())}`, { state: { sendCode: true } });
         else navigate("/sign-in");
       }
     } finally {
@@ -126,7 +126,7 @@ export function ResetPasswordPage() {
         It works for 15 minutes.
       </p>
       <form className="auth-form" onSubmit={reset}>
-        <CodeField value={code} onChange={setCode} />
+        <CodeField value={code} onChange={setCode} focusOnShow />
         <PasswordField
           label="New password"
           value={password}

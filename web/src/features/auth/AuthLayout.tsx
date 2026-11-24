@@ -1,4 +1,4 @@
-import { type ReactNode, useId, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "./Auth.css";
 
@@ -149,9 +149,23 @@ const DIGITS = 6;
 
 /** The emailed code as six boxes, three and three. One real field sits over them, so typing, pasting and the
  *  phone's one-time-code suggestion all work as they would in a plain field. */
-export function CodeField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+export function CodeField({
+  value,
+  onChange,
+  focusOnShow,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  /** Put the keyboard in the first box as soon as the field appears. */
+  focusOnShow?: boolean;
+}) {
   const id = useId();
   const [focused, setFocused] = useState(false);
+  const field = useRef<HTMLInputElement>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only when the field first appears
+  useEffect(() => {
+    if (focusOnShow) field.current?.focus();
+  }, []);
   const at = Math.min(value.length, DIGITS - 1);
   return (
     <div className="field">
@@ -159,6 +173,7 @@ export function CodeField({ value, onChange }: { value: string; onChange: (value
       <span className="auth-code">
         <input
           id={id}
+          ref={field}
           className="auth-code-input"
           value={value}
           inputMode="numeric"

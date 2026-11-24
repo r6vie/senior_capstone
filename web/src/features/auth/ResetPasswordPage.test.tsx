@@ -50,7 +50,7 @@ describe("ResetPasswordPage", () => {
     renderPage("/reset-password?email=sam%40case.edu");
     expect(screen.getByText("sam@case.edu")).toBeTruthy();
     expect(screen.getByText(/Enter the 6-digit code we emailed/)).toBeTruthy();
-    expect(screen.getByLabelText("Code")).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByLabelText("Code"));
   });
 
   it("resets the password and signs in with it", async () => {

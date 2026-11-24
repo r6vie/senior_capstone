@@ -43,6 +43,28 @@ describe("VerifyPage", () => {
     sessionStorage.clear();
   });
 
+  it("sends a fresh code when sent here from signing in", async () => {
+    api.POST.mockResolvedValue({ response: { ok: true } });
+    render(
+      <MemoryRouter
+        initialEntries={[{ pathname: "/verify", search: "?email=sam%40case.edu", state: { sendCode: true } }]}
+      >
+        <Routes>
+          <Route path="/verify" element={<VerifyPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await waitFor(() =>
+      expect(api.POST).toHaveBeenCalledWith("/auth/verify/resend", { body: { email: "sam@case.edu" } }),
+    );
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("doesn't send another code straight after joining", () => {
+    renderPage();
+    expect(api.POST).not.toHaveBeenCalled();
+  });
+
   it("asks for the email when the page is opened without one", () => {
     renderPage("/verify");
     expect(screen.getByLabelText("Email")).toBeTruthy();
