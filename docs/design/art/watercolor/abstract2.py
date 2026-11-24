@@ -215,37 +215,81 @@ def prairie():
 
 
 def beach():
-    """A beach at sunset: a coral and apricot sky, the sun half sunk on the horizon; the sea turquoise near and
+    """A beach at sunset (recoloured, Josef: "less all-orange and more gorgeous"): an indigo and mauve dusk melting
+    through pink to a peach glow on the horizon, the sun half sunk on the horizon; the sea turquoise near and
     deep blue far, a broad path of light on it; waves as pale lifted bands; warm sand in wide patches; two palms
     leaning in from the right, their fronds a few long dark strokes; dune grass in clumps."""
     p = Paper(seed=111)
     rng = np.random.default_rng(112)
     hz = 214
+    # the dusk palette below the horizon: the sea and sand take their light from the sky, the palms go dark
+    DEEP, DUSKBLUE, AQUA, BLUSHSEA = "#3E4F7A", "#5E7FA2", "#8FB3B8", "#C99AA8"
+    PEACH, ROSEGOLD, CORALG, CREAM, NIGHT, LAVSAND = ("#F6D2A8", "#F2B8A0", "#E99A8E", "#FBE3B8", "#3A3150",
+                                                      "#D8C4CC")
     sun = p.rough(p.ellipse(104, hz + 6, 24, 24), 0.3, 4, fine=0.2) * (Yw < hz)     # large, sinking
-    sky(p, [CORAL, APRICOT, ROSE, LEMON], [(0, 214, 0.9, 0.3, 0.9), (60, 214, 0.0, 1.0, 0.8), (0, 120, 1.0, 0.0, 0.45),
-                                          (170, 214, 0.0, 1.0, 0.5)], mask=np.clip(1 - sun, 0, 1))
-    p.wash(sun, LEMON, 0.7, rim=1.6)
+    # lighter (Josef: "a little less dark, a little more light and orange in the sky, keep some violet but less
+    # night"): a soft violet dusk at the top, warming through coral to a peach glow that climbs high
+    sky(p, [INDIGO, MAUVE, CORALG, PEACH], [(0, 120, 0.7, 0.0, 0.3), (0, 214, 1.0, 0.3, 0.6),
+                                           (40, 200, 0.0, 1.0, 0.7), (100, 214, 0.0, 1.0, 0.85)],
+        mask=np.clip(1 - sun, 0, 1) * p.soften(p.poly([(-20, -20), (260, -20), (260, hz + 1), (-20, hz + 1)]), 0.6))
+    # the sky stops at the horizon, so its pinks and peach don't muddy the sea and sand
+    p.wash(p.soften(p.ellipse(104, hz - 2, 40, 22), 10) * (1 - sun) * (Yw < hz), APRICOT, 0.45, rim=0)   # its halo
+    p.wash(sun, CREAM, 0.9, rim=1.4)
+    # sunset-lit clouds (Josef: "add some sunset illuminated clouds"): long low banks, violet bodies whose undersides
+    # catch the sun in coral and gold, brightest nearest it; under the title on the left, higher only at the right edge
+    for cx, by_, ln, th, glow in [(26, 190, 64, 15, 1.0), (176, 176, 80, 19, 0.9), (228, 138, 44, 17, 0.7),
+                                  (196, 200, 56, 8, 1.0), (236, 104, 30, 11, 0.5)]:
+        crng = np.random.default_rng(int(cx * 7 + by_))
+        c = np.zeros((H, W), np.float32)
+        for k in range(7):                                       # a bank of soft puffs on a flat base
+            px = cx + (k / 6 - 0.5) * ln * 1.6 + crng.uniform(-3, 3)
+            rx = ln * crng.uniform(0.2, 0.32)
+            ry = th * crng.uniform(0.45, 0.75) * (1 - abs(k / 6 - 0.5) * 0.8)
+            c = np.maximum(c, p.ellipse(px, by_ - ry * 0.7, rx, ry))
+        c = p.rough(c * (Yw < by_ + 1.5), th * 0.12, 8, fine=0.6)
+        y0, y1 = by_ - th, by_ + 1
+        p.wash(c, VIOLET, 0.55, rim=1.2, flow=0.5, blotch=0.08)
+        p.wash(c * ramp_y(y0, y1, 1.0, 0.0), MAUVE, 0.35, rim=0)                   # the tops in shade
+        lit = c * ramp_y(y0 + th * 0.2, y1 - th * 0.2, 0.0, 1.0)
+        p.lift(lit * glow, 0.85)
+        p.wash(lit, CORALG, 0.9 * glow, rim=0.7)                                     # the undersides alight
+        p.wash(lit * ramp_y(y0 + th * 0.55, y1, 0.0, 1.0), PEACH, 1.0 * glow, rim=0)
     bar = p.soften(p.rough(p.stroke([(40, hz - 10), (110, hz - 12), (190, hz - 9)], 4), 1.5, 12), 1.0)
-    p.wash(bar, MAUVE, 0.7, rim=0.6)                                     # a cloud bar across the sun
+    p.wash(bar, VIOLET, 0.8, rim=0.6)                                    # a cloud bar across the sun
+    p.wash(bar * ramp_y(hz - 14, hz - 6, 1.0, 0.0), PINK, 0.5, rim=0)        # its top lit pink
     sea = p.rough(p.poly([(-20, hz), (260, hz), (260, 276), (-20, 270)]), 0.2, 12, fine=0.1)
-    p.loose(sea, [VIOLET, CERUL, CERUL], 0.6, n=4, rough=0.5, patch=0.5, ground=0.9, vary=ramp_y(hz, 276, 1.2, 0.6))
-    p.wash(sea, ULTRA, 0.35, rim=0)
-    p.wash(sea * ramp_y(hz + 20, 276, 0.0, 1.0), TURQ, 0.45, rim=0)
+    p.loose(sea, [DUSKBLUE, DEEP, DUSKBLUE], 0.6, n=4, rough=0.5, patch=0.5, ground=0.9,
+            vary=ramp_y(hz, 276, 1.3, 0.5))
+    p.wash(sea * ramp_y(hz, hz + 22, 1.0, 0.0), DEEP, 0.7, rim=0)              # deep at the horizon
+    p.wash(sea * ramp_y(hz + 30, 276, 0.0, 1.0), AQUA, 0.5, rim=0)             # muted aqua only in the shallows
+    for cx, cy, rx in [(62, hz + 14, 22), (150, hz + 20, 26)]:                  # the sky's blush beside the path
+        p.wash(p.soften(p.rough(p.ellipse(cx, cy, rx, 4), 1, 8), 2) * sea, BLUSHSEA, 0.5, rim=0)
     path = p.soften(p.poly([(96, hz), (112, hz), (134, 276), (74, 276)]), 3) * sea      # under the sun at x 104
-    p.lift(path * ramp_y(hz, 276, 0.8, 0.3), 0.6)
-    p.wash(path, GOLDEN, 0.7, rim=0)
+    # the path as broken horizontal dashes of peach and rose gold, lifted to paper first so no yellow greens the blue
+    dashes = np.zeros((H, W), np.float32)
+    for k in range(14):
+        y = hz + 3 + k * 4.2 + rng.uniform(-1, 1)
+        half = 6 + (y - hz) * 0.45
+        for _ in range(2):
+            x0 = 104 + rng.uniform(-half, half * 0.3)
+            dashes = np.maximum(dashes, p.rough(p.ellipse(x0 + half * 0.35, y, half * rng.uniform(0.35, 0.7), 1.3),
+                                                0.4, 4, fine=0.3))
+    dashes = dashes * path * sea
+    p.lift(np.clip(dashes * 1.2, 0, 1), 0.9)
+    p.wash(dashes, PEACH, 0.8, rim=0.6)
+    p.wash(dashes * ramp_y(hz, 276, 0.0, 1.0), ROSEGOLD, 0.6, rim=0)
     for x0, x1, y0 in [(-20, 70, 244), (150, 260, 238), (20, 200, 258)]:    # swells, soft and lighter, broken
         wv = p.soften(p.rough(p.stroke([(x0, y0), ((x0 + x1) / 2, y0 + 1), (x1, y0 - 0.5)], 3.5), 1.0, 14), 1.2) * sea
-        p.wash(wv, CERUL, 0.5, rim=0)
+        p.wash(wv, DUSKBLUE, 0.4, rim=0)
     shore = ridge(-20, 260, 274, [(3, 140, 0.6)])
     for x0, x1 in [(-20, 40), (70, 150), (176, 220)]:          # foam in broken soft runs, not a ruled line
         seg = [(x, y - 1.5) for x, y in shore if x0 <= x <= x1]
         if len(seg) > 1:
             p.lift(p.soften(p.rough(p.stroke(seg, 2.4), 0.8, 8), 0.8), 0.5)
     sand = p.rough(p.poly(band(shore)), 0.6, 12, fine=0.3)
-    p.loose(sand, [APRICOT, RAW, RAW], 0.7, n=5, rough=0.8, patch=0.45, ground=0.75)
-    p.wash(sand * ramp_y(290, 344, 0.0, 1.0), SIENNA, 0.35, rim=0, flow=0.5)
-    p.wash(sand * ramp_y(300, 344, 0.0, 1.0), VIOLET, 0.4, rim=0, flow=0.5)          # the near sand cooler
+    p.loose(sand, [LEMON, BLUSH, PEACH], 0.4, n=5, rough=0.8, patch=0.45, ground=0.75)   # pale, pink-lit sand
+    p.wash(sand * ramp_y(296, 344, 0.0, 1.0), VIOLET, 0.5, rim=0, flow=0.5)          # the near sand cooler
+    p.wash(sand * ramp_y(310, 344, 0.0, 1.0), MAUVE, 0.35, rim=0, flow=0.5)
     # two palms leaning in from the right, the trunks curved, the fronds long tapered strokes
     # two palms: each trunk a strong bow, thick at the foot and tapering, each crown a fountain of long crescent
     # leaves, broad in the middle, arching up and over and drooping to a fine tip
@@ -272,10 +316,9 @@ def beach():
             ww = w0 * (1 - 0.6 * i / (len(pts) - 1))
             wood = np.maximum(wood, p.stroke([pts[i], pts[i + 1]], ww, taper=False))
         wood = p.rough(wood, 0.5, 6, fine=0.3)
-        p.loose(wood, [UMBER, SIENNA, UMBER], 1.1, n=3, rough=0.3, patch=0.5, ground=0.8)
-        p.wash(wood * ramp_x(pts[-1][0] - 6, pts[0][0] + 8, 0.2, 1.0), PAYNE, 0.5, rim=0)
+        p.loose(wood, [NIGHT, PAYNE, NIGHT], 1.5, n=3, rough=0.3, patch=0.5, ground=0.9)   # dark against the glow
         bx, by = pts[0]
-        p.wash(p.soften(p.ellipse(bx - 34 * s, by - 6, 40 * s, 4), 1.5) * sand, SIENNA, 0.6, rim=0)
+        p.wash(p.soften(p.ellipse(bx - 34 * s, by - 6, 40 * s, 4), 1.5) * sand, LAVSAND, 1.0, rim=0)
         tx, ty = pts[-1]
         # the crown: each leaf one tapered brushstroke that rises out of the top, arches and droops to a point;
         # the leaves are one dark wet silhouette with a little lighter green dropped into the upper ones
@@ -289,9 +332,9 @@ def beach():
             line = [(tx + sx * l * t, ty + sy * l * t * 0.85 + l * 0.6 * t ** 2) for t in np.linspace(0, 1, 9)]
             fr = np.maximum(fr, p.stroke(line, 5.2 * s, taper=True))
         fr = p.rough(fr, 0.5, 2.5, fine=0.7)
-        p.wash(fr, CYPRESS, 1.2, rim=1.4, flow=0.5, blotch=0.08)
-        p.wash(fr * ramp_y(ty - 20, ty + 6, 1.0, 0.0), SAGE, 0.6, rim=0)
-        p.wash(fr * ramp_y(ty, ty + 40, 0.0, 1.0), PAYNE, 0.7, rim=0)
+        p.wash(fr, NIGHT, 1.5, rim=1.4, flow=0.5, blotch=0.08)
+        p.wash(fr * ramp_y(ty - 20, ty + 6, 1.0, 0.0), CYPRESS, 0.5, rim=0)       # a hint of green on top
+        p.wash(fr * ramp_y(ty, ty + 40, 0.0, 1.0), PAYNE, 0.6, rim=0)
     p.finish()
     return p
 

@@ -8,9 +8,8 @@ import sys
 import numpy as np
 sys.path.insert(0, ".")
 from paint import Paper, ramp_y, ramp_x, blur, S
-BLUEGREY = "#8E9DB2"       # a weathered blue-grey hull
-OCHRE = "#CDB088"          # a faded ochre hull, cooler than the lantern
-from covers import ULTRA, CERUL, PAYNE, SIENNA, RAW, ROSE, SAP, OLIVE, UMBER, TERRA, SHADOW, GOLD, hull_mask, boat
+from covers import (ULTRA, CERUL, PAYNE, SIENNA, RAW, ROSE, SAP, OLIVE, UMBER, TERRA, SHADOW, GOLD, hull_mask, boat,
+                    house_masks)
 
 
 def lighthouse_boats():
@@ -35,9 +34,8 @@ def lighthouse_boats():
     face = p.rough(p.poly(under[::-1] + foot), 0.9, 5, fine=0.5)
     grass = p.rough(p.poly(top + under), 1.0, 4, fine=0.6)
     land = np.clip(np.maximum(face, grass) * 1.2, 0, 1)
-    # the harbor's two boats, smaller here and stepping back: the big one near on the left, the small one beyond it;
-    # hulls in solid weathered colours so they don't fade into the sea
-    boats = [(10, 300, 62, BLUEGREY, TERRA, 66), (46, 268, 32, OCHRE, CERUL, None)]
+    # the harbor's two boats at the harbor's size and colours (Josef preferred these to a smaller, recoloured pass)
+    boats = [(8, 300, 92, CERUL, TERRA, 104), (104, 318, 74, RAW, CERUL, None)]
     hulls = np.clip((np.maximum.reduce([blur(hull_mask(p, bx, by, bw), 0.6 * S) for bx, by, bw, *_ in boats]) - 0.7)
                     * 6, 0, 1)
     around = (1 - np.maximum(land, keep_white)) * (1 - hulls)
@@ -99,19 +97,25 @@ def lighthouse_boats():
            PAYNE, 0.8, rim=0.4)
     cx0 = 184
     gy = 254 - (cx0 - 104) * 0.29                                                # the grass line under the cottage
-    cottage = p.rough(p.poly([(cx0 - 10, gy + 2), (cx0 - 10, gy - 8), (cx0 + 6, gy - 8), (cx0 + 6, gy + 2)]), 0.3, 3)
-    cside = p.rough(p.poly([(cx0 + 6, gy + 2), (cx0 + 6, gy - 8), (cx0 + 12, gy - 10), (cx0 + 12, gy)]), 0.3, 3)
-    p.wash(cottage, RAW, 0.25, rim=1.0)
-    p.loose(cside, [SHADOW, ULTRA], 0.7, n=3, rough=0.2, patch=0.6)
-    p.loose(p.poly([(cx0 - 12, gy - 8), (cx0 + 6.5, gy - 8), (cx0 + 13, gy - 10), (cx0 + 8, gy - 15),
-                    (cx0 - 7, gy - 14)]), [SIENNA, TERRA, UMBER], 1.1, n=4, rough=0.25, patch=0.6)
-    p.wash(p.rough(p.poly([(cx0 - 6, gy + 2), (cx0 - 6, gy - 4), (cx0 - 3.4, gy - 4), (cx0 - 3.4, gy + 2)]), 0.15, 2),
-           PAYNE, 1.0, rim=0.3)
+    # the keeper's cottage, painted like the harbor's houses (Josef: "more like the harbor houses"): the lit front a
+    # whisper of warm glaze on paper, the side cool, a terracotta tile roof in patches, an eave shadow, small windows
+    hx, hb, hw, hh, hd = cx0 - 11, gy + 2, 17, 11, 5
+    front, side, roof = (p.rough(m, 0.4, 3, fine=0.3) for m in house_masks(p, hx, hb, hw, hh, hd, "tile"))
+    p.lift(np.clip(blur(np.maximum.reduce([front, side, roof]), 0.3 * S) * 1.4, 0, 1), 0.9)
+    p.wash(front, RAW, 0.16, rim=1.0, flow=0.4, blotch=0.04)
+    p.loose(side, [SHADOW, ULTRA, SHADOW], 0.7, n=3, rough=0.2, patch=0.7)
+    p.loose(roof, [TERRA, SIENNA, TERRA], 0.95, n=4, rough=0.2, patch=0.6)
+    eave = p.rough(p.poly([(hx, hb - hh), (hx + hw, hb - hh), (hx + hw, hb - hh + 2.2), (hx, hb - hh + 1.6)]), 0.3, 2,
+                   fine=0.2)
+    p.wash(eave * front, SHADOW, 0.55, rim=0.2, blotch=0.03)
+    for wx, wy in [(hx + 3, hb - 7), (hx + 11, hb - 7.5)]:
+        p.wash(p.rough(p.poly([(wx, wy), (wx + 1.8, wy), (wx + 1.8, wy + 2.8), (wx, wy + 2.8)]), 0.15, 1) * front,
+               PAYNE, 0.85, rim=0.3, blotch=0.02)
+    p.wash(p.rough(p.poly([(hx + 7, hb), (hx + 7, hb - 4.5), (hx + 9.2, hb - 4.5), (hx + 9.2, hb)]), 0.15, 1) * front,
+           UMBER, 0.9, rim=0.3)                                                  # the door
     # 7 the two boats, moored in the open water left of the headland; masts stay below the name line
-    for bx, by, bw, hull, trim, mast in boats[::-1]:
-        p.wash(p.soften(p.ellipse(bx + bw * 0.5, by + bw * 0.13, bw * 0.48, bw * 0.035), 1.2) * (1 - hulls), PAYNE,
-               0.6, rim=0)                                                        # a soft shadow at the waterline
-        boat(p, bx, by, bw, hull, trim, mast=mast, stay=False)
+    for bx, by, bw, hull, trim, mast in boats:
+        boat(p, bx, by, bw, hull, trim, mast=mast)
     # 8 two gulls
     for i, (x, y, k) in enumerate([(60, 196, 4.2), (80, 204, 3.2)]):
         left = [(x - k + k * u, y - k * 0.55 * math.sin(math.pi * u) * (1.2 - u)) for u in np.linspace(0, 1, 8)]

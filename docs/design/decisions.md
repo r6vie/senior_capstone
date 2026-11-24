@@ -491,6 +491,20 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   looked pasted in), they are smaller and step back into depth, the big one near with a shorter mast and no stay, the
   small one beyond it; the hulls are a solid weathered blue-grey and a faded ochre, each with a soft shadow at the
   waterline. Fixes not re-reviewed.
+  Then (Josef: "I think I liked the pre-critic pass on the boats"): the boats are back at the harbor's size and
+  colours, with the mast's stay; and (Josef: "refine the house ... to be more like the harbor houses") the keeper's
+  cottage is painted like the harbor's houses: a pale lit front, a cool shaded side, a terracotta tile roof in
+  patches, an eave shadow, two small windows and a door. Round 1's lighthouse board is unchanged.
+- **Beach recoloured (Josef: "less all-orange and more gorgeous", then "add some sunset illuminated clouds", then "a
+  little less dark, a little more light and orange in the sky ... keep some violet but less night").** The sky now
+  stops at the horizon (its washes had been running down over the sea and sand, which is what made everything
+  orange): a soft violet top warming through coral to a high peach glow, a cream sun with a peach halo, and five
+  long cloud banks of soft puffs, violet on top and lit coral and peach underneath, under the title on the left and
+  higher only at the right edge. Below the horizon the light comes from the sky: deep blue at the horizon, slate
+  blue, muted aqua only in the shallows, blush beside the sun's path, the path itself broken peach and rose-gold
+  dashes; pale cream and pink sand with lavender shadows; the palms (same shapes) dark violet silhouettes. The title
+  now takes the dark ink, 4.8:1. One Josef-eye critic round on the first recolour (the sea read as midday, the path
+  khaki, the palms translucent), all applied; the clouds and the lighter sky came after it and were not reviewed.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
