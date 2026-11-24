@@ -331,7 +331,8 @@ export interface paths {
         head?: never;
         /**
          * Edit My Chapter
-         * @description Change a chapter's title or summary. Its quotes stay.
+         * @description Change a chapter's title, summary or text. Its quotes stay. Text the member saves is theirs: the
+         *     Librarian never writes over it.
          */
         patch: operations["edit_my_chapter_books_me_chapters__chapter_id__patch"];
         trace?: never;
@@ -1237,6 +1238,8 @@ export interface components {
             title: string;
             /** Summary */
             summary: string;
+            /** Body */
+            body?: string | null;
             /** Quotes */
             quotes: string[];
         };
@@ -1303,16 +1306,20 @@ export interface components {
             title: string;
             /** Summary */
             summary: string;
+            /** Body */
+            body?: string | null;
         };
         /**
          * ChapterEdit
-         * @description The member's own words for a chapter's title or summary. Its quotes stay as they are.
+         * @description The member's own words for a chapter's title, summary or text. Its quotes stay as they are.
          */
         ChapterEdit: {
             /** Title */
             title?: string | null;
             /** Summary */
             summary?: string | null;
+            /** Body */
+            body?: string | null;
         };
         /** CheckoutRequest */
         CheckoutRequest: {

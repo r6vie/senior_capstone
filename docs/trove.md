@@ -68,6 +68,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **What a book holds** (B1):
   - A title, the author's full name, a cover style, an optional blurb, and the chapters in reading order.
   - Each chapter has a title, a short summary and the quotes from the interview it's grounded in. Readers see the title and summary; only the author sees the quotes.
+  - **Chapter text** (Josef, 2026-11-24): each chapter also has a medium-length text written by the AI, 150–250 words in 2–3 short paragraphs, in the member's first person and built from their own sentences near-verbatim. It tells the story and holds back the full how-to, which is what the call is for. It's grounded like everything else in the book, and the member can edit it; once they do, the AI never writes over it. A chapter without text shows its summary.
   - Copies default to 3 (1–10). Readers never see the number.
   - A book is a draft or on the shelf. Only books on the shelf are visible to readers, newest first.
   - Covers are plain white for now. Each book stores a cover style so covers can differ later.

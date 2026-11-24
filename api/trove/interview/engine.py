@@ -7,6 +7,7 @@ Errors: ClaudeRefused when Claude declines, Anthropic SDK errors as they come, a
 (pydantic's ValidationError is one) when a reply is unusable even after a retry.
 """
 
+import asyncio
 import json
 import re
 from collections.abc import Callable
@@ -180,6 +181,11 @@ NOT_NAMES = frozenset(
 MAX_BLURB = 600
 # The prompts ask for at most this, and real runs have come back a few characters over.
 MAX_SUMMARY = 300
+# A chapter's text: the prompt asks for 150-250 words. Outside these it's thin or padded, and dropped.
+BODY_WORDS = (90, 320)
+_FRAMING = re.compile(
+    r"\b(this chapter|the chapter|the reader|readers|this book|my book|the call|a call)\b", re.I
+)
 
 # Shape is 0-1 questions, and following a hedge can stretch it, so it gets a nudge to close here.
 MAX_SHAPE = 2
@@ -339,6 +345,10 @@ class _Finished(BaseModel):
 
 class _Blurb(BaseModel):
     blurb: str
+
+
+class _Body(BaseModel):
+    body: str = Field(description="The chapter's text: 2 or 3 short paragraphs, separated by a blank line.")
 
 
 class _Change(BaseModel):
@@ -537,6 +547,59 @@ async def write_blurb(
         if blurb and not leaks(blurb):
             return blurb
     raise ValueError("The blurb was empty, too long or carried a term the member never said.")
+
+
+def body_problems(body: str, turns: list[Turn], leaks: Callable[[str], bool] = _never) -> list[str]:
+    """What the code can check of a chapter's text. A number the member never said is the invented
+    claim that's easiest to catch."""
+    problems = []
+    words = len(body.split())
+    if not BODY_WORDS[0] <= words <= BODY_WORDS[1]:
+        problems.append(f"it's {words} words; write 150 to 250")
+    said = " ".join(turn.answer for turn in turns)
+    for number in sorted(
+        set(re.findall(r"\d+(?:[.,]\d+)?", body)) - set(re.findall(r"\d+(?:[.,]\d+)?", said))
+    ):
+        problems.append(f"the member never said the number {number}")
+    if found := _FRAMING.search(body):
+        problems.append(f"it talks about the book or the reader ({found.group(0)!r})")
+    if leaks(body):
+        problems.append("it uses a term the member never said")
+    return problems
+
+
+async def write_body(
+    claude: Claude, *, turns: list[Turn], chapter: DraftChapter, leaks: Callable[[str], bool] = _never
+) -> str | None:
+    """The text of one chapter, in the member's voice and from their answers. One retry with what broke,
+    then None: a chapter without text shows its summary, which is better than a line they never said."""
+    listing = json.dumps(
+        {"title": chapter.title, "summary": chapter.summary, "quotes": chapter.quotes}, indent=1
+    )
+    content = f"{_transcript(turns)}\n\n<chapter>\n{listing}\n</chapter>\n\nWrite this chapter's text."
+    for _ in range(2):
+        body = (await _ask(claude, "interview/body", content, _Body, BOOK_EFFORT)).body.strip()
+        body = re.sub(r"\n\s*\n+", "\n\n", body)
+        problems = body_problems(body, turns, leaks)
+        if not problems:
+            return body
+        content += "\n\nYour last text broke these rules. Write it again:\n- " + "\n- ".join(problems)
+    return None
+
+
+async def write_bodies(
+    claude: Claude, *, turns: list[Turn], chapters: list[DraftChapter], leaks: Callable[[str], bool] = _never
+) -> dict[str, str]:
+    """The text of each chapter, by chapter id, written at the same time. A chapter that fails is left out."""
+
+    async def one(chapter: DraftChapter) -> tuple[str, str | None]:
+        try:
+            return chapter.id, await write_body(claude, turns=turns, chapter=chapter, leaks=leaks)
+        except Exception:
+            return chapter.id, None
+
+    written = await asyncio.gather(*(one(chapter) for chapter in chapters))
+    return {chapter_id: body for chapter_id, body in written if body}
 
 
 async def next_adding_turn(

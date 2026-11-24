@@ -501,3 +501,47 @@ def test_a_long_summary_is_cut_at_a_sentence_that_fits():
 def test_one_long_sentence_stays_whole():
     long = "word " * 80 + "end."
     assert engine._fit_summary(long) == long
+
+
+# A chapter's text.
+
+BODY = " ".join([ANSWERS[1]] * 6) + "\n\n\n" + " ".join([ANSWERS[2]] * 3)
+
+
+def body(text: str):
+    return text_message(json.dumps({"body": text}))
+
+
+async def test_a_chapters_text_is_checked_and_retried_once():
+    chapter = a_draft().pool[1]
+    claude = FakeClaude([body(BODY)])
+    written = await engine.write_body(claude, turns=turns(), chapter=chapter)
+    # Paragraphs keep one blank line between them.
+    assert written == " ".join([ANSWERS[1]] * 6) + "\n\n" + " ".join([ANSWERS[2]] * 3)
+    assert claude.requests[0]["system"] == load_prompt("interview/body")
+    assert "Grounding" in load_prompt("interview/body")
+    assert '"title": "Pool 1"' in sent(claude) and ANSWERS[0] in sent(claude)
+
+    # A number the member never said, too short, or about the book: one retry, then no text at all.
+    invented = BODY + " By then I had 40 stores."
+    claude = FakeClaude([body(invented), body("Too short.")])
+    assert await engine.write_body(claude, turns=turns(), chapter=chapter) is None
+    assert "the member never said the number 40" in sent(claude)
+    assert engine.body_problems("In this chapter I explain. " + BODY, turns())
+    assert engine.body_problems(BODY, turns(), leaks=lambda text: "soy" in text)
+    assert engine.body_problems(BODY, turns()) == []
+
+
+async def test_each_chapter_gets_its_text_and_a_failure_loses_only_that_one():
+    pool = a_draft().pool[:3]
+    claude = FakeClaude([body(BODY), ClaudeRefused, body(BODY)])
+
+    async def create(**params):
+        reply = claude.responses.pop(0)
+        if reply is ClaudeRefused:
+            raise ClaudeRefused()
+        return reply
+
+    claude.create = create
+    bodies = await engine.write_bodies(claude, turns=turns(), chapters=pool)
+    assert len(bodies) == 2 and set(bodies) <= {"c0", "c1", "c2"}

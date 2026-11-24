@@ -374,6 +374,14 @@ def _blurb(_text: str) -> dict:
     return {"blurb": REMOVED_BLURB}
 
 
+def _body(text: str) -> dict:
+    """The chapter's own summary, then the whole answers its quotes come from: every word the member's."""
+    chapter = json.loads(re.search(r"<chapter>\n(.*?)\n</chapter>", text, re.DOTALL).group(1))
+    answers = re.findall(r"^A\d+: (.*)$", text, re.M)
+    sources = [a for a in answers if any(q in a for q in chapter["quotes"])] or answers[:1]
+    return {"body": "\n\n".join([chapter["summary"], *sources[:2]])}
+
+
 ADDING_QUESTIONS = [
     Asked(
         "The book has the fry stand line but not who ran it after you. When you left, what did the next person "
@@ -503,6 +511,7 @@ REPLIES = {
     "interview/draft": _draft,
     "interview/finish": _finish,
     "interview/blurb": _blurb,
+    "interview/body": _body,
 }
 
 

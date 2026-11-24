@@ -151,6 +151,8 @@ def packet(run: dict) -> str:
         lines += ["Back cover:", "", book["blurbs"]["finished"], ""]
     for n, chapter in enumerate(book["chapters"], start=1):
         lines += [f"Chapter {n}: {chapter['title']}", "", chapter["summary"], ""]
+        if chapter.get("body"):
+            lines += ["Text:", "", chapter["body"], ""]
         lines += [f"> {quote}" for quote in chapter["quotes"]]
         lines += [""]
     return "\n".join(lines)
@@ -165,6 +167,8 @@ def reader_packet(run: dict) -> str:
         lines += [book["blurbs"]["finished"], ""]
     for n, chapter in enumerate(book["chapters"], start=1):
         lines += [f"{n}. {chapter['title']}", "", chapter["summary"], ""]
+        if chapter.get("body"):
+            lines += [chapter["body"], ""]
     return "\n".join(lines)
 
 
@@ -186,6 +190,13 @@ def audit_packet(run: dict) -> str:
             number += 1
             lines += [f"[S{number}] {sentence}"]
         lines += [""]
+        if chapter.get("body"):
+            # Numbered with a B, so the chapter texts are counted apart from the rest.
+            lines += [f"## {label} text: {chapter['title']}"]
+            for sentence in _split_sentences(chapter["body"]):
+                number += 1
+                lines += [f"[B{number}] {sentence}"]
+            lines += [""]
     for name, blurb in (book.get("blurbs") or {}).items():
         if name != "draft":
             lines += [f"## Back cover ({name})"]
