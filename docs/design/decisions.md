@@ -962,3 +962,27 @@ Pending Josef's review of the new canvas.
   squared, but the system allows exactly those two pills; it wanted C's wordmark in Newsreader, kept in Barlow so the
   three directions differ in voice. Its pick was B, after a hand-drawn pass on the profiles.
 - Source: `docs/design/shelf/brand_boards.py`.
+
+## 2026-11-23: brand, round 2
+
+- **Josef:** none of round 1 ("all of them are too basic"); new fonts are welcome, and the site's fonts may switch to
+  move away from the AI-generated look. Round 2 sits under round 1 on the Brand page: `Brand2Think` (why round 1
+  was basic, the faces we'd leave: Inter, Space Grotesk, Fraunces, Instrument Serif, and today's Plex and Barlow)
+  and three identities, each with a made thing at the centre, its own typefaces, and the shelf retyped in them.
+  - **A · The Magpie:** Trove as the publisher of unwritten books, with a colophon: a linocut magpie (wedge tail,
+    gouge cuts) on a closed book, in an oval with TROVE and CLEVELAND · MMXXVI. On dark grounds the bird stays black
+    on a cream plate. Gloock, Literata, Hanken Grotesk; ink, warm paper, a blue-green tail sheen.
+  - **B · Overprint:** riso teal and yellow; two books leaning together overprint green, and the wordmark is printed
+    in both inks so the overlap shows. Big Shoulders Display (Chicago civic signage) and Libre Franklin. The
+    Librarian's band is newsprint so the red button sits on a calm ground.
+  - **C · Wet Ink:** an open book of two watercolour washes, painted with the cover engine
+    (`art/watercolor/brandmark.py`, transparent PNGs), the overlap a darker lens at the spine; a flat two-colour
+    version at 32px and below. Libre Caslon Display/Text and Schibsted Grotesk; blue-black ink. **Product question,
+    shown only as a proposal:** a mark painted per member from their own cover.
+- Every site mock keeps red only for "Ask to check out".
+- **Critic rounds:** two. Fixed a percentage-padding bug that stretched the shelf covers; bylines now match the
+  covers; the colophon's lettering got its own channel; the magpie was redrawn (wedge tail, cuts, chunkier book)
+  and small sizes cropped tight; B moved off Bricolage (itself a startup default) and off blue-and-yellow (a flag);
+  C's mark was repainted as a gull-wing open book; invented features and job titles were taken out of the copy.
+  The critics split: the first picked C, the second A.
+- Source: `docs/design/shelf/brand2_boards.py`.

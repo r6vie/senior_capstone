@@ -9,6 +9,38 @@
    "x": 1520,
    "y": 964
   },
+  "BrandA.dc.html": {
+   "h": 4300,
+   "page": "brand",
+   "title": "A \u00b7 Bookmark",
+   "w": 1760,
+   "x": 1880,
+   "y": 0
+  },
+  "BrandB.dc.html": {
+   "h": 4300,
+   "page": "brand",
+   "title": "B \u00b7 Facing pages",
+   "w": 1760,
+   "x": 3760,
+   "y": 0
+  },
+  "BrandC.dc.html": {
+   "h": 4300,
+   "page": "brand",
+   "title": "C \u00b7 The blank cover",
+   "w": 1760,
+   "x": 5640,
+   "y": 0
+  },
+  "BrandThink.dc.html": {
+   "h": 2580,
+   "page": "brand",
+   "title": "Brand \u00b7 the thinking",
+   "w": 1760,
+   "x": 0,
+   "y": 0
+  },
   "CoverDirections.dc.html": {
    "expand": "fill",
    "h": 3000,
@@ -666,6 +698,51 @@
    "x": 0,
    "y": 7000
   },
+  "MyBookD.dc.html": {
+   "expand": "fill",
+   "h": 6000,
+   "page": "mybook",
+   "title": "My book \u00b7 D, the open book",
+   "w": 1760,
+   "x": 1880,
+   "y": 0
+  },
+  "MyBookE.dc.html": {
+   "expand": "fill",
+   "h": 7440,
+   "page": "mybook",
+   "title": "My book \u00b7 E, the scene",
+   "w": 1760,
+   "x": 3760,
+   "y": 0
+  },
+  "MyBookNow.dc.html": {
+   "expand": "fill",
+   "h": 2290,
+   "page": "mybook",
+   "title": "My book \u00b7 how it is now",
+   "w": 1760,
+   "x": 0,
+   "y": 0
+  },
+  "MyBookStates.dc.html": {
+   "expand": "fill",
+   "h": 2450,
+   "page": "mybook",
+   "title": "My book \u00b7 every stage",
+   "w": 1760,
+   "x": 7520,
+   "y": 0
+  },
+  "MyBookStudio.dc.html": {
+   "expand": "fill",
+   "h": 5190,
+   "page": "mybook",
+   "title": "My book \u00b7 the design studio",
+   "w": 1760,
+   "x": 5640,
+   "y": 0
+  },
   "PaperCells.dc.html": {
    "h": 900,
    "page": "strata",
@@ -687,6 +764,86 @@
    "w": 390,
    "x": 1520,
    "y": 0
+  },
+  "STCoverFan.dc.html": {
+   "h": 1090,
+   "page": "stipple",
+   "title": "F \u00b7 Fan",
+   "w": 600,
+   "x": 1360,
+   "y": 1200
+  },
+  "STCoverChannel.dc.html": {
+   "x": 0,
+   "y": 2400,
+   "w": 600,
+   "h": 1090,
+   "title": "G \u00b7 Channel",
+   "page": "stipple"
+  },
+  "STCoverFields.dc.html": {
+   "x": 680,
+   "y": 2400,
+   "w": 600,
+   "h": 1090,
+   "title": "H \u00b7 Fields",
+   "page": "stipple"
+  },
+  "STCoverSweep.dc.html": {
+   "x": 1360,
+   "y": 2400,
+   "w": 600,
+   "h": 1090,
+   "title": "I \u00b7 Sweep",
+   "page": "stipple"
+  },
+  "STCoverPlume.dc.html": {
+   "x": 2040,
+   "y": 2400,
+   "w": 600,
+   "h": 1090,
+   "title": "J \u00b7 Plume",
+   "page": "stipple"
+  },
+  "STCoverLayers.dc.html": {
+   "h": 1090,
+   "page": "stipple",
+   "title": "A \u00b7 Layers",
+   "w": 600,
+   "x": 0,
+   "y": 0
+  },
+  "STCoverOrbit.dc.html": {
+   "h": 1090,
+   "page": "stipple",
+   "title": "B \u00b7 Orbit",
+   "w": 600,
+   "x": 680,
+   "y": 0
+  },
+  "STCoverRipples.dc.html": {
+   "h": 1090,
+   "page": "stipple",
+   "title": "C \u00b7 Ripples",
+   "w": 600,
+   "x": 1360,
+   "y": 0
+  },
+  "STCoverStream.dc.html": {
+   "h": 1090,
+   "page": "stipple",
+   "title": "D \u00b7 Stream",
+   "w": 600,
+   "x": 0,
+   "y": 1200
+  },
+  "STCoverTongues.dc.html": {
+   "h": 1090,
+   "page": "stipple",
+   "title": "E \u00b7 Tongues",
+   "w": 600,
+   "x": 680,
+   "y": 1200
   },
   "ScandiNotes.dc.html": {
    "h": 920,
@@ -856,6 +1013,30 @@
    "x": 0,
    "y": 0
   },
+  "WCBookAutumn.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen \u00b7 autumn river with a bridge",
+   "w": 1440,
+   "x": 680,
+   "y": 7200
+  },
+  "WCBookBlossom.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen \u00b7 blossom tree by a pond",
+   "w": 1440,
+   "x": 680,
+   "y": 6000
+  },
+  "WCBookCity.dc.html": {
+   "h": 1090,
+   "page": "watercolor",
+   "title": "Book screen \u00b7 city at night on the river",
+   "w": 1440,
+   "x": 680,
+   "y": 4800
+  },
   "WCBookHills.dc.html": {
    "h": 1090,
    "page": "watercolor",
@@ -1016,130 +1197,45 @@
    "x": 1520,
    "y": 1220
   },
-  "MyBookNow.dc.html": {
-   "x": 0,
-   "y": 0,
-   "w": 1760,
-   "h": 2290,
-   "title": "My book \u00b7 how it is now",
-   "page": "mybook",
-   "expand": "fill"
-  },
-  "MyBookStates.dc.html": {
-   "x": 7520,
-   "y": 0,
-   "w": 1760,
-   "h": 2450,
-   "title": "My book \u00b7 every stage",
-   "page": "mybook",
-   "expand": "fill"
-  },
-  "MyBookStudio.dc.html": {
-   "x": 5640,
-   "y": 0,
-   "w": 1760,
-   "h": 5190,
-   "title": "My book \u00b7 the design studio",
-   "page": "mybook",
-   "expand": "fill"
-  },
-  "STCoverLayers.dc.html": {
-   "x": 0,
-   "y": 0,
-   "w": 600,
-   "h": 1090,
-   "title": "Cover \u00b7 Layers",
-   "page": "stipple"
-  },
-  "STCoverOrbit.dc.html": {
-   "x": 680,
-   "y": 0,
-   "w": 600,
-   "h": 1090,
-   "title": "Cover \u00b7 Orbit",
-   "page": "stipple"
-  },
-  "STCoverRipples.dc.html": {
-   "x": 1360,
-   "y": 0,
-   "w": 600,
-   "h": 1090,
-   "title": "Cover \u00b7 Ripples",
-   "page": "stipple"
-  },
-  "WCBookCity.dc.html": {
+  "WCCoverLighthouse3.dc.html": {
    "h": 1090,
    "page": "watercolor",
-   "title": "Book screen \u00b7 city at night on the river",
-   "w": 1440,
-   "x": 680,
-   "y": 4800
+   "title": "Cover \u00b7 Lighthouse by day with the harbor boats",
+   "w": 600,
+   "x": 2040,
+   "y": 9600
   },
-  "WCBookBlossom.dc.html": {
-   "h": 1090,
-   "page": "watercolor",
-   "title": "Book screen \u00b7 blossom tree by a pond",
-   "w": 1440,
-   "x": 680,
-   "y": 6000
-  },
-  "WCBookAutumn.dc.html": {
-   "h": 1090,
-   "page": "watercolor",
-   "title": "Book screen \u00b7 autumn river with a bridge",
-   "w": 1440,
-   "x": 680,
-   "y": 7200
-  },
-  "MyBookD.dc.html": {
-   "x": 1880,
-   "y": 0,
-   "w": 1760,
-   "h": 4800,
-   "title": "My book \u00b7 D, the open book",
-   "page": "mybook",
-   "expand": "fill"
-  },
-  "MyBookE.dc.html": {
-   "x": 3760,
-   "y": 0,
-   "w": 1760,
-   "h": 7440,
-   "title": "My book \u00b7 E, the scene",
-   "page": "mybook",
-   "expand": "fill"
-  },
-  "BrandThink.dc.html": {
-   "h": 2580,
+  "Brand2Think.dc.html": {
+   "h": 1720,
    "page": "brand",
-   "title": "Brand \u00b7 the thinking",
+   "title": "Round 2 \u00b7 what changed",
    "w": 1760,
    "x": 0,
-   "y": 0
+   "y": 4720
   },
-  "BrandA.dc.html": {
-   "h": 4300,
+  "Brand2A.dc.html": {
+   "h": 5100,
    "page": "brand",
-   "title": "A \u00b7 Bookmark",
+   "title": "2A \u00b7 The Magpie",
    "w": 1760,
    "x": 1880,
-   "y": 0
+   "y": 4720
   },
-  "BrandB.dc.html": {
-   "h": 4300,
+  "Brand2B.dc.html": {
+   "h": 5100,
    "page": "brand",
-   "title": "B \u00b7 Facing pages",
+   "title": "2B \u00b7 Overprint",
    "w": 1760,
    "x": 3760,
-   "y": 0
+   "y": 4720
   },
-  "BrandC.dc.html": {
-   "h": 4300,
+  "Brand2C.dc.html": {
+   "h": 5100,
    "page": "brand",
-   "title": "C \u00b7 The blank cover",
+   "title": "2C \u00b7 Wet Ink",
    "w": 1760,
    "x": 5640,
-   "y": 0
+   "y": 4720
   }
  },
  "createdOnFiles": {
@@ -1151,6 +1247,15 @@
   "view": "canvas"
  },
  "notes": {
+  "brand": {
+   "kind": "title1",
+   "maxW": 2120,
+   "page": "brand",
+   "text": "Brand \u00b7 round 1: the thinking, then three identities (logo, product, marketing)",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
   "covers": {
    "kind": "title1",
    "maxW": 1440,
@@ -1245,6 +1350,15 @@
    "x": 0,
    "y": -300
   },
+  "mybook": {
+   "kind": "title1",
+   "maxW": 7400,
+   "page": "mybook",
+   "text": "My book \u00b7 as it is, a calmer page, the design studio, every stage",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
   "strata": {
    "kind": "title1",
    "maxW": 4480,
@@ -1308,22 +1422,14 @@
    "x": 0,
    "y": -300
   },
-  "mybook": {
-   "x": 0,
-   "y": -300,
-   "text": "My book \u00b7 as it is, a calmer page, the design studio, every stage",
+  "brand2": {
    "kind": "title1",
    "maxW": 7400,
-   "page": "mybook"
-  },
-  "brand": {
-   "kind": "title1",
-   "maxW": 2120,
    "page": "brand",
-   "text": "Brand \u00b7 round 1: the thinking, then three identities (logo, product, marketing)",
+   "text": "Brand \u00b7 round 2: a made thing at the centre, and new typefaces for the site",
    "w": 240,
    "x": 0,
-   "y": -300
+   "y": 4420
   }
  },
  "order": [
@@ -1459,13 +1565,25 @@
   "STCoverLayers.dc.html",
   "STCoverOrbit.dc.html",
   "STCoverRipples.dc.html",
+  "STCoverStream.dc.html",
+  "STCoverTongues.dc.html",
+  "STCoverFan.dc.html",
+  "STCoverChannel.dc.html",
+  "STCoverFields.dc.html",
+  "STCoverSweep.dc.html",
+  "STCoverPlume.dc.html",
   "WCBookCity.dc.html",
   "WCBookBlossom.dc.html",
   "WCBookAutumn.dc.html",
   "BrandThink.dc.html",
   "BrandA.dc.html",
   "BrandB.dc.html",
-  "BrandC.dc.html"
+  "BrandC.dc.html",
+  "WCCoverLighthouse3.dc.html",
+  "Brand2Think.dc.html",
+  "Brand2A.dc.html",
+  "Brand2B.dc.html",
+  "Brand2C.dc.html"
  ],
  "pages": [
   {
