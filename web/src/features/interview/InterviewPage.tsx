@@ -51,6 +51,8 @@ import { UndoChanges } from "./UndoChanges";
 const GIVE_UP_AFTER_MS = 120_000;
 // "Welcome back" is for coming back, not for a refresh seconds later.
 const WELCOME_BACK_AFTER_MS = 60 * 60 * 1000;
+// The longest the first question's place waits empty while the welcome starts.
+const OPENING_BEAT_MS = 700;
 const LOST_DEFAULT = "That didn't reach the Librarian. Try again.";
 const LOST_ANSWER = "That didn't reach the Librarian. Your answer is still here.";
 // How often to look while changes are written in the background.
@@ -277,13 +279,16 @@ export function InterviewPage({
   const openingWrites = Boolean(opening?.writing && opening.place === place);
   // The typed question stays in place once typed, so the heading's words don't change and aren't read twice.
   const openingHere = Boolean(opening && opening.place === place);
-  // On a wide screen the question types in while the welcome's last two lines are written. On a phone
-  // only the hello shows, in the notebook's peek, so the question types in once that is written.
+  // The question types in once the hello is written, or after a beat at most, and the rest of the welcome
+  // is written beside it, so the question's place is never empty for long.
   const openingDelay = useMemo(() => {
     const times = welcomeTimes(welcomeLines);
-    const narrow = window.matchMedia?.("(max-width: 1099px)").matches;
-    return (narrow ? (times.starts[1] ?? times.end) : (times.starts[2] ?? times.end)) * 1000;
+    return Math.min((times.starts[1] ?? times.end) * 1000, OPENING_BEAT_MS);
   }, [welcomeLines]);
+  // Whether the opening is about to write or is writing, read by the focus below without re-running it when
+  // the opening ends: by then the member may be somewhere else, and TypedQuestion's onDone moves the keyboard.
+  const openingPending = useRef(false);
+  openingPending.current = Boolean(opening?.writing && (opening.place === null || opening.place === place));
 
   // A new question or screen starts at the top with the Librarian's words in view. Where there's a real
   // keyboard the member can start typing at once; on a phone that would cover the question.
@@ -291,14 +296,14 @@ export function InterviewPage({
     if (!loaded || loadFailed) return;
     document.documentElement.scrollTop = 0;
     // While the opening writes, the keyboard waits at the question; it moves to the answer once typed.
-    const asking = place.startsWith("asking:") && !welcomedBack && !openingWrites;
+    const asking = place.startsWith("asking:") && !welcomedBack && !openingPending.current;
     const hasKeyboard = window.matchMedia?.("(hover: hover)").matches;
     const field =
       asking && hasKeyboard
         ? document.querySelector<HTMLElement>(".iv-answer textarea, .iv-answer [role=textbox]")
         : null;
     (field ?? document.querySelector<HTMLElement>(".iv-say"))?.focus({ preventScroll: true });
-  }, [place, loaded, loadFailed, welcomedBack, openingWrites]);
+  }, [place, loaded, loadFailed, welcomedBack]);
 
   // Runs one call with a calm waiting line on the band; the screen stays put until it answers.
   const run = useCallback(

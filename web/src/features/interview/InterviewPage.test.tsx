@@ -153,6 +153,19 @@ describe("InterviewPage", () => {
       await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText("Your answer")));
     });
 
+    it("leaves the keyboard where the member put it when the question finishes typing", async () => {
+      signIn();
+      stubMotion(false);
+      renderWith(fake());
+      await chooseAndStart();
+      const skip = await screen.findByRole("button", { name: "Skip" });
+      skip.focus();
+      await waitFor(() => expect(document.querySelector(".iv-q")?.hasAttribute("data-typing")).toBe(false), {
+        timeout: 6000,
+      });
+      expect(document.activeElement).toBe(skip);
+    });
+
     it("skips the welcome when the member comes back to an interview under way", async () => {
       signIn();
       stubMotion(false);
