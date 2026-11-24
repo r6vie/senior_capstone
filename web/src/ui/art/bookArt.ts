@@ -19,6 +19,19 @@ const pages = import.meta.glob<string>(["./strata/pages/*.webp", "./watercolor/p
   import: "default",
 });
 
+// The quick paint-in clip of each cover (about 4 seconds, 472x688 like the cover; Josef, 2026-11-23), played once when a
+// member's book first lands on the shelf. Its first frame is the white cover and its last is the cover itself.
+// URLs only: a clip is downloaded when a <video> asks for it.
+const clips = import.meta.glob<string>(
+  [
+    "./strata/anim/*-quick.webm",
+    "./strata/anim/*-quick.mp4",
+    "./watercolor/anim/*-quick.webm",
+    "./watercolor/anim/*-quick.mp4",
+  ],
+  { eager: true, query: "?url", import: "default" },
+);
+
 export type ArtCategory = "strata" | "watercolor";
 
 export type BookArt = {
@@ -35,7 +48,15 @@ export type BookArt = {
   knockout: boolean;
   cover: string;
   page: string;
+  /** The cover painting itself in, as WebM and MP4 (the browser picks one). Null if this art has no clip. */
+  anim: { webm: string; mp4: string } | null;
 };
+
+function clipOf(category: ArtCategory, key: string): BookArt["anim"] {
+  const webm = clips[`./${category}/anim/${key}-quick.webm`];
+  const mp4 = clips[`./${category}/anim/${key}-quick.mp4`];
+  return webm && mp4 ? { webm, mp4 } : null;
+}
 
 type Entry = { key: string; name: string; cover: string; page: string };
 
@@ -56,6 +77,7 @@ function arts<T extends Entry>(
       knockout: category === "strata",
       cover: covers[`./${category}/${art.cover}`] ?? "",
       page: pages[`./${category}/${art.page}`] ?? "",
+      anim: clipOf(category, art.key),
     };
   });
 }
