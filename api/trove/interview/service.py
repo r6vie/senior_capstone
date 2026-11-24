@@ -304,7 +304,9 @@ async def ask_engine(call):
         # Not a failure to retry: the caller asks for more answers instead.
         raise
     # ValueError covers pydantic's ValidationError.
-    except (ClaudeRefused, BudgetExceeded, anthropic.APIError, ValueError):
+    except (ClaudeRefused, BudgetExceeded, anthropic.APIError, ValueError) as error:
+        # The member only sees "try again", so the log is the one place the real cause shows up.
+        logger.warning("Interview AI call failed: %s: %s", type(error).__name__, str(error)[:300])
         raise HTTPException(
             status_code=502, detail="The Librarian couldn't answer just now. Please try again."
         ) from None
