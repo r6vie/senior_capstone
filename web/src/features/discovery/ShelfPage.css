@@ -309,9 +309,10 @@ button.book {
     --gutter: var(--s-4);
     padding-bottom: calc(var(--s-8) + var(--s-6));
   }
+  /* The top bar sits outside .shelf-page, where --gutter isn't set: its own token, the page's phone gutter. */
   .top-bar {
     height: 56px;
-    padding: 0 var(--gutter);
+    padding: 0 var(--s-4);
   }
   .top-bar .wordmark {
     font-size: 22px;

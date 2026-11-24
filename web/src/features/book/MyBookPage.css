@@ -496,6 +496,10 @@
   }
   .mb-lib-go .button-primary {
     flex: 1 1 100%;
+    /* A long label wraps on the narrowest phones rather than pushing past the screen. */
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
   }
   .mb-designs {
     grid-template-columns: repeat(3, minmax(0, 1fr));
