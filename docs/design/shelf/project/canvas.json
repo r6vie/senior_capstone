@@ -624,7 +624,7 @@
       "expand": "fill"
     },
     "MyBookStates.dc.html": {
-      "x": 5640,
+      "x": 7520,
       "y": 0,
       "w": 1760,
       "h": 2450,
@@ -632,17 +632,26 @@
       "page": "mybook",
       "expand": "fill"
     },
-    "MyBookC.dc.html": {
+    "MyBookD.dc.html": {
       "x": 1880,
       "y": 0,
       "w": 1760,
-      "h": 7760,
-      "title": "My book · a calmer page",
+      "h": 4800,
+      "title": "My book \u00b7 D, the open book",
+      "page": "mybook",
+      "expand": "fill"
+    },
+    "MyBookE.dc.html": {
+      "x": 3760,
+      "y": 0,
+      "w": 1760,
+      "h": 7440,
+      "title": "My book \u00b7 E, the scene",
       "page": "mybook",
       "expand": "fill"
     },
     "MyBookStudio.dc.html": {
-      "x": 3760,
+      "x": 5640,
       "y": 0,
       "w": 1760,
       "h": 5190,
@@ -720,7 +729,8 @@
     "LogoOptions.dc.html",
     "MyBookNow.dc.html",
     "MyBookStates.dc.html",
-    "MyBookC.dc.html",
+    "MyBookD.dc.html",
+  "MyBookE.dc.html",
     "MyBookStudio.dc.html"
   ],
   "notes": {
