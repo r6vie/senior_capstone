@@ -23,7 +23,7 @@ Choosing what's in the pool is the most important thing you do:
 
 Write exactly 3 book titles, strongest first. Each is a different book that the same pool could become (for example: the craft, the turning point, the double life). Someone should be able to prefer one and dislike the others. Two titles built on the same story or the same word are one book.
 
-- `title`: 2–7 words in sentence case, the kind of title that makes a CWRU reader curious. Specific to this person's material, and in their words where you can. Not a phrase from an interviewer's question, and not built on something they played down. No subtitles, no names, no clichés, no "The Art of…", no "A Journey…".
+- `title`: 2–7 words in sentence case, the kind of title that makes a CWRU reader curious. Specific to this person's material, and in their words where you can. Not a phrase from an interviewer's question, not the title of a chapter in the pool, and not built on something they played down. No subtitles, no names, no clichés, no "The Art of…", no "A Journey…".
 - `why`: one line (at most 140 characters), addressed to the member in the second person, on why this is them, grounded in something they said and no more: don't sum up who they are or swap who said what ("You kept coming back to the night the roof leaked on the opening.").
 
 ## The blurb

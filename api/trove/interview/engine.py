@@ -486,13 +486,21 @@ async def finish_book(
     raw = await _ask(claude, "interview/finish", content, _Finished, BOOK_EFFORT)
     if any(leaks(f"{c.title} {c.summary}") for c in raw.chapters) or leaks(raw.blurb):
         raw = await _ask(claude, "interview/finish", content, _Finished, BOOK_EFFORT)
+    elif any(_echoes_title(c.title, title) for c in raw.chapters):
+        again = (
+            f"{content}\n\nNo chapter may be titled the same as the book, or nearly: retitle that chapter."
+        )
+        raw = await _ask(claude, "interview/finish", again, _Finished, BOOK_EFFORT)
 
     chapters: list[DraftChapter] = []
     for chosen in raw.chapters:
         source = pool.get(chosen.pool_id)
         if source and all(c.id != source.id for c in chapters):
-            unusable = leaks(f"{chosen.title} {chosen.summary}") or _too_close_to_a_spark(
-                chosen.title, spark_titles
+            unusable = (
+                leaks(f"{chosen.title} {chosen.summary}")
+                or _too_close_to_a_spark(chosen.title, spark_titles)
+                # The pool's own title, unless that one is the book's title too.
+                or (_echoes_title(chosen.title, title) and not _echoes_title(source.title, title))
             )
             chapters.append(
                 source
@@ -706,6 +714,20 @@ def _too_close_to_a_spark(title: str, spark_titles: list[str] | None) -> bool:
         SequenceMatcher(None, title.casefold(), spark.casefold()).ratio() >= SPARK_TITLE_TOO_CLOSE
         for spark in spark_titles or []
     )
+
+
+def _echoes_title(chapter_title: str, book_title: str) -> bool:
+    """A chapter titled the same as its book, or with one title inside the other ("Almost nothing is
+    really lost" in a book of that name): the contents page would read like a misprint."""
+    chapter = " ".join(re.findall(r"[a-z0-9']+", _normalize(chapter_title)))
+    book = " ".join(re.findall(r"[a-z0-9']+", _normalize(book_title)))
+    if not chapter or not book:
+        return False
+    # Containment counts only for 3 words or more: "The line" in "Stuck with the line" is fine.
+    inside = (len(book.split()) >= 3 and f" {book} " in f" {chapter} ") or (
+        len(chapter.split()) >= 3 and f" {chapter} " in f" {book} "
+    )
+    return chapter == book or inside
 
 
 def _off_limits_block(off_limits: list[dict] | None) -> str:

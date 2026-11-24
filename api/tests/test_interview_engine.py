@@ -181,6 +181,32 @@ async def test_finish_tops_up_a_short_pick_from_the_pool():
     assert finished.blurb == "I know the pool."
 
 
+async def test_no_chapter_keeps_the_books_title():
+    # Quality's real run: the book and its chapter 1 were both "Almost nothing is really lost".
+    title = "Almost nothing is really lost"
+    echo = [{"pool_id": "c0", "title": "Almost nothing is really lost.", "summary": "S."}]
+    rest = [{"pool_id": f"c{n}", "title": f"T{n}", "summary": "S."} for n in (1, 2)]
+    fixed = [{"pool_id": "c0", "title": "The bin under the bench", "summary": "S."}]
+    claude = FakeClaude(
+        [reply({"chapters": echo + rest, "blurb": BLURB}), reply({"chapters": fixed + rest, "blurb": BLURB})]
+    )
+    finished = await engine.finish_book(claude, turns=turns(), draft=a_draft(), title=title)
+    assert [c.title for c in finished.chapters] == ["The bin under the bench", "T1", "T2"]
+    assert "No chapter may be titled the same as the book" in sent(claude)
+
+    # Echoed twice over: the chapter falls back to its pool title.
+    claude = FakeClaude([reply({"chapters": echo + rest, "blurb": BLURB})] * 2)
+    finished = await engine.finish_book(claude, turns=turns(), draft=a_draft(), title=title)
+    assert finished.chapters[0].title == "Pool 0"
+
+
+def test_a_title_inside_another_is_an_echo():
+    assert engine._echoes_title("Why almost nothing is really lost", "Almost nothing is really lost")
+    assert engine._echoes_title("The fryer only cooks", "the fryer only cooks!")
+    assert not engine._echoes_title("The fryer line", "The fryer only cooks")
+    assert not engine._echoes_title("The line", "Stuck with the line")
+
+
 async def test_write_blurb_sees_only_the_chapters_left_and_retries_once():
     book = a_draft().pool[:3]
     claude = FakeClaude([reply({"blurb": "x" * 601}), reply({"blurb": BLURB})])

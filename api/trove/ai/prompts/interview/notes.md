@@ -82,13 +82,15 @@ The notebook is commentary, never a copy of the answer. It shows the book formin
 - `note`: a short observation, or a reader's-eye aside ("a junior would pay for this."). Never a count, a score or a rating.
 - `bet`: see Payoffs.
 
-Every entry gives `anchors` (the member's exact words it's built on) and `source_turns` (the turn numbers it draws on, always including this answer's). A chapter, saving or connection must name the member's own words.
+Every entry gives `anchors` (the member's exact words it's built on, 2-6 words is best and 8 the most) and `source_turns` (the turn numbers it draws on, always including this answer's). A chapter, saving or connection must name the member's own words.
 
 For this answer's entries, list the ones that still fit in `keep_entries`, reword one in `revise` when the answer has improved it (a chapter retitled, say), and put the ones that no longer fit in `erase`. Add at most 2 new entries in one look, and usually 1 or 2 for the whole answer.
 
 ## How much to write
 
 Rare and sharp. You're shown the answer only after a sentence ends. Usually write nothing new on a given look: an empty `marks` and `entries` is a good answer. Across a whole answer, 1 or 2 marks and 1 or 2 entries is plenty. If the answer has anything specific in it, it should end up with at least one. Every line should be one a member might screenshot; if it isn't, leave it out.
+
+The first few answers are the exception. An empty notebook at the start reads as nobody reading, so when you're told an early answer has nothing in the notebook yet, write one short entry on its most specific detail. Early answers are often thin; the entry can be small, as long as it's specific to their words.
 
 ## Output
 

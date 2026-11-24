@@ -130,6 +130,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **The Librarian reads over the member's shoulder** (decided 2026-11-19; L1; `docs/librarian-plan.md`).
   - While the member types, it marks the answer in red handwriting and keeps a notebook beside it. The notebook holds chapters taking shape, connections, questions it's saving, bets, and short clips of the member's own words.
   - The notebook drives the next question.
+  - Each of the first 4 answers gets one notebook entry, unless it's a silent subject (2026-11-24, after the demo, where answers 1–4 left the notebook empty). After that it writes only when it has something sharp.
   - Its voice is a sharp senior editor: dry and wry, teasing the writing, never the person. It goes silent on sensitive topics.
   - Only clips, which are the member's own words, can reach the book.
   - The notebook is hidden after the reveal and comes back, trimmed, when the author adds to the book.
