@@ -43,7 +43,7 @@ removing the `/api` prefix. The frontend never talks to MongoDB or Claude direct
 | `messages` | messaging | One per message or app note (`sender_id` null for a note), with the checkout id and both people. The checkout note isn't copied here |
 | `message_threads` | messaging | One per checkout (`_id` = checkout id): each person's last read, latest incoming message and last email, for the private marker and the 10-minute email gap |
 | `recommendations` | discovery | One seven-day Librarian pick per member; invalidated when either public book changes or the recommended book leaves the shelf |
-| `match_profiles` | discovery | One grounded, versioned set of matching signals per book, extracted only from its author-approved public text and refreshed when that text changes |
+| `match_profiles` | discovery | Legacy D3 extraction cache; no longer written after direct Librarian selection, retained for account-deletion cleanup |
 
 Each new feature adds its rows here in the PR that creates its collections.
 
