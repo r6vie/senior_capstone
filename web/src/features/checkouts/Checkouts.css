@@ -37,6 +37,32 @@
   padding-top: var(--s-5);
   border-top: var(--line-heavy) solid var(--ink);
 }
+/* The book itself, under the head in the rail: only beside the form on a wide screen. */
+.checkout-book {
+  display: none;
+}
+@media (min-width: 1100px) {
+  .checkouts-page.page-rail {
+    max-width: 1320px;
+  }
+  .checkout-blurb {
+    margin-bottom: 0;
+  }
+  .checkout-book {
+    display: block;
+    margin-top: var(--s-6);
+  }
+  /* Beside the rail, the note is written on a sunk panel that starts on the rail's top rule. */
+  .page-rail > .checkout-form {
+    padding: var(--s-5) var(--s-6) var(--s-6);
+    border-top: 0;
+    border-radius: var(--r);
+    background: var(--paper-sunk);
+  }
+  .page-rail > .checkout-form textarea {
+    min-height: calc(3 * var(--s-8));
+  }
+}
 .checkout-submit {
   display: flex;
   flex-wrap: wrap;
@@ -53,6 +79,13 @@
   /* A long email address wraps instead of running off a phone. */
   overflow-wrap: anywhere;
   font-size: 15px;
+}
+/* Links in a card or an empty state are ink, as everywhere else, never the browser's blue. */
+.co-page a:not(.button),
+.checkout-contact a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .checkout-contact-label {
   font: 700 13px / 1.6 var(--font-display);
@@ -120,7 +153,7 @@
 
 /* ---------- The Checkouts page (design C, 2026-11-22): grouped by what each checkout needs from you. ---------- */
 .co-page {
-  max-width: 1120px;
+  max-width: 1320px;
 }
 .co-page > .message {
   margin: 0 0 var(--s-5);

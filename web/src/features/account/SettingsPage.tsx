@@ -65,34 +65,29 @@ function ContactSection({ email }: { email: string }) {
   }
 
   return (
-    <section aria-labelledby="contact-heading" className="settings-section">
+    <section aria-labelledby="contact-heading" className="page-row">
       {/* Settings appears once the contact details are in, so the fields don't fill in under the cursor. */}
       {!loaded && !notice && <PageLoading />}
-      <h2 id="contact-heading" className="settings-heading">
-        Contact details
-      </h2>
-      <p className="muted">
-        Shared only with someone whose checkout you accept, or the author who accepts yours. Never on your
-        book.
-      </p>
-      <form onSubmit={save} className="stack">
+      <div className="page-row-head">
+        <h2 id="contact-heading">Contact details</h2>
+        <p>
+          Shared only with someone whose checkout you accept, or the author who accepts yours. Never on your
+          book.
+        </p>
+      </div>
+      <form onSubmit={save} className="page-row-body">
         <p className="settings-fixed">
           <span className="caption">Always shared</span> {email}
         </p>
-        <TextField
-          label="LinkedIn profile (optional)"
-          value={linkedin}
-          onChange={setLinkedin}
-          autoComplete="url"
-          hint="Like https://www.linkedin.com/in/your-name"
-        />
-        <TextField
-          label="Phone (optional)"
-          value={phone}
-          onChange={setPhone}
-          autoComplete="tel"
-          hint="Only shown to someone whose checkout you accept."
-        />
+        <div className="settings-pair">
+          <TextField
+            label="LinkedIn profile (optional)"
+            value={linkedin}
+            onChange={setLinkedin}
+            autoComplete="url"
+          />
+          <TextField label="Phone (optional)" value={phone} onChange={setPhone} autoComplete="tel" />
+        </div>
         <Feedback notice={notice} />
         <div>
           <Button type="submit" disabled={busy || !loaded} aria-busy={busy}>
@@ -121,16 +116,18 @@ function EmailSection({ initial, onChanged }: { initial: boolean; onChanged: () 
   }
 
   return (
-    <section aria-labelledby="email-heading" className="settings-section">
-      <h2 id="email-heading" className="settings-heading">
-        Email
-      </h2>
-      <label className="choice">
-        <input type="checkbox" checked={enabled} onChange={(event) => change(event.target.checked)} />
-        <span>Email me about checkouts and messages</span>
-      </label>
-      <p className="muted">Account emails, like your welcome message, are sent either way.</p>
-      <Feedback notice={notice} />
+    <section aria-labelledby="email-heading" className="page-row">
+      <div className="page-row-head">
+        <h2 id="email-heading">Email</h2>
+        <p>Account emails, like your welcome message, are sent either way.</p>
+      </div>
+      <div className="page-row-body page-row-bare">
+        <label className="choice">
+          <input type="checkbox" checked={enabled} onChange={(event) => change(event.target.checked)} />
+          <span>Email me about checkouts and messages</span>
+        </label>
+        <Feedback notice={notice} />
+      </div>
     </section>
   );
 }
@@ -163,11 +160,11 @@ function MemberContextSection({
   }
 
   return (
-    <section aria-labelledby="context-heading" className="settings-section">
-      <h2 id="context-heading" className="settings-heading">
-        About you
-      </h2>
-      <form onSubmit={save} className="stack">
+    <section aria-labelledby="context-heading" className="page-row">
+      <div className="page-row-head">
+        <h2 id="context-heading">About you</h2>
+      </div>
+      <form onSubmit={save} className="page-row-body">
         <MemberContextFields
           affiliations={affiliations}
           founder={founder}
@@ -209,15 +206,15 @@ function DeleteSection({ email }: { email: string }) {
   }
 
   return (
-    <section aria-labelledby="delete-heading" className="settings-section">
-      <h2 id="delete-heading" className="settings-heading">
-        Delete your account
-      </h2>
-      <p className="muted">
-        This removes your account, your book, and your checkouts and meetings, for the other person too. It
-        can't be undone. To confirm, type your email address: <strong>{email}</strong>
-      </p>
-      <form onSubmit={remove} className="stack">
+    <section aria-labelledby="delete-heading" className="page-row">
+      <div className="page-row-head">
+        <h2 id="delete-heading">Delete your account</h2>
+        <p>
+          This removes your account, your book, and your checkouts and meetings, for the other person too. It
+          can't be undone. To confirm, type your email address: <strong>{email}</strong>
+        </p>
+      </div>
+      <form onSubmit={remove} className="page-row-body">
         <TextField
           label="Your email address"
           type="email"
@@ -247,7 +244,7 @@ export function SettingsPage() {
   if (!user) return null;
 
   return (
-    <main className="settings-page">
+    <main className="shell-page page-wide settings-page">
       <h1 className="page-title">Settings</h1>
       <MemberContextSection
         initialAffiliations={user.affiliations ?? []}

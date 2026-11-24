@@ -59,53 +59,58 @@ export function InviteSection() {
   }
 
   return (
-    <section aria-labelledby="invite-heading" className="settings-section">
-      <h2 id="invite-heading" className="settings-heading">
-        Invite an alum
-      </h2>
-      <p className="muted">
-        Alumni join with a link from a member. Each link works once and lasts 14 days. You can have 5 open at
-        a time.
-      </p>
-      {link && (
-        <div className="stack" role="status">
-          <label className="field">
-            <span>Your new link (shown only now)</span>
-            <input readOnly value={link} onFocus={(event) => event.currentTarget.select()} />
-          </label>
-          <div>
-            <Button variant="secondary" onClick={copy}>
-              {copied ? "Copied" : "Copy link"}
-            </Button>
-          </div>
-        </div>
-      )}
-      {error && (
-        <p role="alert" className="message message-error settings-error">
-          <span>!</span>
-          <span>{error}</span>
+    <section aria-labelledby="invite-heading" className="page-row">
+      <div className="page-row-head">
+        <h2 id="invite-heading">Invite an alum</h2>
+        <p>
+          Alumni join with a link from a member. Each link works once and lasts 14 days. You can have 5 open
+          at a time.
         </p>
-      )}
-      <div>
-        <Button variant="secondary" onClick={make} disabled={busy} aria-busy={busy}>
-          Make an invite link
-        </Button>
       </div>
-      {open.length > 0 && (
-        <ul className="settings-invites">
-          {open.map((invite) => (
-            <li key={invite.id}>
-              <span>
-                Open until{" "}
-                {new Date(invite.expires_at).toLocaleDateString(undefined, { month: "long", day: "numeric" })}
-              </span>
-              <Button variant="quiet" onClick={() => cancel(invite.id)}>
-                Cancel
+      <div className="page-row-body">
+        {link && (
+          <div className="stack" role="status">
+            <label className="field">
+              <span>Your new link (shown only now)</span>
+              <input readOnly value={link} onFocus={(event) => event.currentTarget.select()} />
+            </label>
+            <div>
+              <Button variant="secondary" onClick={copy}>
+                {copied ? "Copied" : "Copy link"}
               </Button>
-            </li>
-          ))}
-        </ul>
-      )}
+            </div>
+          </div>
+        )}
+        {error && (
+          <p role="alert" className="message message-error settings-error">
+            <span>!</span>
+            <span>{error}</span>
+          </p>
+        )}
+        <div>
+          <Button variant="secondary" onClick={make} disabled={busy} aria-busy={busy}>
+            Make an invite link
+          </Button>
+        </div>
+        {open.length > 0 && (
+          <ul className="settings-invites">
+            {open.map((invite) => (
+              <li key={invite.id}>
+                <span>
+                  Open until{" "}
+                  {new Date(invite.expires_at).toLocaleDateString(undefined, {
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
+                <Button variant="quiet" onClick={() => cancel(invite.id)}>
+                  Cancel
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }
