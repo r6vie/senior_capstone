@@ -21,7 +21,9 @@ before starting an item.
   the exceptions).
 - **This file is the source of truth** for who is doing what. Update an item's status in the
   same PR that changes it.
-- **Review:** any teammate approves, CI is green, and the author squash-merges.
+- **Review and merging:** your own work merges on green CI. Another owner's folder needs that owner's approval,
+  a shared file any teammate's, and a Decided rule its feature owner's. Always squash-merge. The full table is in
+  [CONTRIBUTING.md](../CONTRIBUTING.md#review-and-merging).
 - **Product questions:** the feature's owner decides and records the decision in `trove.md`.
   Questions that cross features go to the next sync.
 - **Sync twice a week.** Walk this file top to bottom: what merged, what's blocked, and which
@@ -35,7 +37,7 @@ before starting an item.
 |---|---|---|---|
 | **Josef** | @BrozJosef | The book and the interview: the AI heart, prompts, evals, sample books | `api/trove/books`, `api/trove/interview`, `api/trove/ai/prompts`, `api/evals`, `web/src/features/{book,interview}` |
 | **Alvisa** | @alvisakrasniqi | Discovery: shelves, search, "the Librarian recommends", recommending a book | `api/trove/discovery`, `web/src/features/discovery` |
-| **Ellie** | @ecolvin22 | Checkouts and messaging: checkouts, copies, reveal, threads, "Did you meet?", past meets | `api/trove/checkouts`, `api/trove/messaging`, `web/src/features/{checkouts,messaging}` |
+| **Ellie** | @ell13-c | Checkouts and messaging: checkouts, copies, reveal, threads, "Did you meet?", past meets | `api/trove/checkouts`, `api/trove/messaging`, `web/src/features/{checkouts,messaging}` |
 | **Daniel** | @r6vie | Accounts, meetings and the app shell: account and contact details, settings, CWRU verification, arranging the meeting, navigation | `api/trove/auth`, `api/trove/meetings`, `web/src/features/{auth,account,meetings}`, `web/src/app`, `web/src/ui` |
 
 Review requests go to the folder's owner automatically (`.github/CODEOWNERS`). `api/trove/notifications` is shared: each owner adds the templates and `notify_*` functions for
