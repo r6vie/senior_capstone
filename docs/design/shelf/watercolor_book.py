@@ -4,8 +4,8 @@ art (art/watercolor/pages.py) and the book's dark ink. The text sits on the page
 dark one, never the cream a dark cover top takes. Sample books only: the titles and names match the cover boards.
 
 python3 watercolor_book.py <root> mesa_title=<blob> hills_title=<blob> lake_title=<blob> winter_title=<blob>
-  city_title=<blob> blossom_title=<blob> autumn_title=<blob>
--> <root>/project/WCBook{Mesa,Hills,Lake,Winter,City,Blossom,Autumn}.dc.html"""
+  city_title=<blob> blossom_title=<blob> autumn_title=<blob> beach_title=<blob> lighthouse_title=<blob>
+-> <root>/project/WCBook{Mesa,Hills,Lake,Winter,City,Blossom,Autumn,Beach,Lighthouse}.dc.html"""
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -75,6 +75,22 @@ BOOKS = [
              ("The store as a crossroads", "How a hardware counter became where the town talks."),
              ("Competing with the big box", "What a small shop can do that a warehouse can't."),
              ("Staying", "Planning for the next ten years in a place that changes slowly.")]),
+    dict(key="beach", file="WCBookBeach", label="Watercolor · beach at sunset", title="Off the Clock",
+         author="Leilani Cruz", ink="#5a2f2a",
+         blurb="I burned out at a startup and spent a year running a small surf school instead. What rest actually "
+               "takes, teaching beginners to wait for the right wave, and how I came back to work differently.",
+         ch=[("The week I stopped", "The signs she ignored, and the conversation that finally made her leave."),
+             ("Running a surf school", "Bookings, weather, insurance and a team of four, on very little money."),
+             ("Waiting for the wave", "What teaching beginners taught her about pace and patience."),
+             ("Going back", "The rules she set for her next job, and the ones she has kept.")]),
+    dict(key="lighthouse", file="WCBookLighthouse", label="Watercolor · lighthouse by day with the harbor boats",
+         title="Keeping the Light", author="Maren Holt", ink="#2c3e5c",
+         blurb="Eight years restoring and running a lighthouse museum on a small island. Raising money for an old "
+               "building, keeping volunteers for years, and telling a place's story to people who come by boat.",
+         ch=[("Inheriting a ruin", "The survey, the leaking lantern, and the first grant she almost missed."),
+             ("Volunteers who stay", "How a crew of retirees and students kept coming back every summer."),
+             ("The ferry schedule decides", "Planning everything around the boats and the weather."),
+             ("Telling the story", "What visitors remember, and what she cut from the tour.")]),
 ]
 
 W, H = 1440, 1090

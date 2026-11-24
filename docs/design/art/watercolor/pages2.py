@@ -3,7 +3,7 @@ blossom, city and autumn"). Same principles as pages.py: the same place as the c
 world units at 2 px; the text corner (x 0-470, y 0-350) left as paper, the sky a wet wash bleeding out into it, the
 art climbing on the right. Same abstraction as the covers: big wet patches, simple silhouettes, no fussy detail.
 
-python3 pages2.py [city|blossom|autumn ...] -> out/page-<name>.png (1140 x 1368) and out/page-<name>-sm.png"""
+python3 pages2.py [city|blossom|autumn|beach|lighthouse ...] -> out/page-<name>.png (1140 x 1368) and out/page-<name>-sm.png"""
 import math
 import sys
 import numpy as np
@@ -13,9 +13,9 @@ from pages import (Paper, blur, smooth, ramp_x, ramp_y, ridge, band, y_at, bleed
                    Yw)
 from abstract import (ULTRA, CERUL, PAYNE, SIENNA, RAW, ROSE, SAP, OLIVE, UMBER, TERRA, VIOLET, APRICOT, SAGE, TEAL,
                       CYPRESS, MAUVE, LEMON)
-from abstract2 import INDIGO, BLUSH, PINK, GOLDEN
+from abstract2 import INDIGO, BLUSH, PINK, GOLDEN, TURQ
 import covers
-from covers import GOLD, SHADOW, crown, spline
+from covers import GOLD, SHADOW, crown, spline, boat, hull_mask, house_masks
 
 
 def city():
@@ -307,7 +307,252 @@ def autumn():
     return p
 
 
-SCENES = {"city": city, "blossom": blossom, "autumn": autumn}
+# the beach's dusk palette (abstract2.beach)
+DEEP, DUSKBLUE, AQUA, BLUSHSEA = "#3E4F7A", "#5E7FA2", "#8FB3B8", "#C99AA8"
+PEACH, ROSEGOLD, CORALG, CREAM, NIGHT, LAVSAND = "#F6D2A8", "#F2B8A0", "#E99A8E", "#FBE3B8", "#3A3150", "#D8C4CC"
+
+
+def cloud_bank(p, cx, by_, ln, th, glow):
+    """A sunset cloud bank: soft puffs on a flat base, violet on top, the underside lit coral and peach."""
+    crng = np.random.default_rng(int(cx * 7 + by_))
+    c = np.zeros((H, W), np.float32)
+    for k in range(9):
+        px = cx + (k / 8 - 0.5) * ln * 1.6 + crng.uniform(-4, 4)
+        rx = ln * crng.uniform(0.16, 0.26)
+        ry = th * crng.uniform(0.45, 0.75) * (1 - abs(k / 8 - 0.5) * 0.8)
+        c = np.maximum(c, p.ellipse(px, by_ - ry * 0.7, rx, ry))
+    c = p.rough(c * (Yw < by_ + 2), th * 0.12, 10, fine=0.6)
+    y0, y1 = by_ - th, by_ + 1
+    p.wash(c, VIOLET, 0.55, rim=1.2, flow=0.5, blotch=0.08)
+    p.wash(c * ramp_y(y0, y1, 1.0, 0.0), MAUVE, 0.35, rim=0)
+    lit = c * ramp_y(y0 + th * 0.2, y1 - th * 0.2, 0.0, 1.0)
+    p.lift(lit * glow, 0.85)
+    p.wash(lit, CORALG, 0.9 * glow, rim=0.7)
+    p.wash(lit * ramp_y(y0 + th * 0.55, y1, 0.0, 1.0), PEACH, 1.0 * glow, rim=0)
+
+
+def palm(p, pts, w0, s, seed, ground):
+    """The beach cover's palm: a tapering bowed trunk, a crown of single tapered leaves that arch and droop, all a
+    dark violet silhouette against the glow, a hint of green on the upper leaves, a lavender shadow on the sand."""
+    wood = np.zeros((H, W), np.float32)
+    for i in range(len(pts) - 1):
+        ww = w0 * (1 - 0.6 * i / (len(pts) - 1))
+        wood = np.maximum(wood, p.stroke([pts[i], pts[i + 1]], ww, taper=False))
+    wood = p.rough(wood, 0.8, 8, fine=0.3)
+    p.loose(wood, [NIGHT, PAYNE, NIGHT], 1.5, n=3, rough=0.3, patch=0.5, ground=0.9)
+    bx, by = pts[0]
+    p.wash(p.soften(p.ellipse(bx - 34 * s, by - 8, 40 * s, 5), 2) * ground, LAVSAND, 1.0, rim=0)
+    tx, ty = pts[-1]
+    lr = np.random.default_rng(300 + seed)
+    fr = np.zeros((H, W), np.float32)
+    for ang, ln in [(-172, 44), (-146, 38), (-118, 26), (-90, 16), (-62, 26), (-34, 38), (-8, 44), (160, 34), (20, 34)]:
+        a = math.radians(ang + lr.uniform(-5, 5))
+        l = ln * s * lr.uniform(0.9, 1.1)
+        sx, sy = math.cos(a), math.sin(a)
+        line = [(tx + sx * l * t, ty + sy * l * t * 0.85 + l * 0.6 * t ** 2) for t in np.linspace(0, 1, 11)]
+        fr = np.maximum(fr, p.stroke(line, 5.2 * s, taper=True))
+    fr = p.rough(fr, 0.8, 4, fine=0.7)
+    p.wash(fr, NIGHT, 1.5, rim=1.4, flow=0.5, blotch=0.08)
+    p.wash(fr * ramp_y(ty - 40, ty + 10, 1.0, 0.0), CYPRESS, 0.5, rim=0)
+    p.wash(fr * ramp_y(ty, ty + 80, 0.0, 1.0), PAYNE, 0.6, rim=0)
+
+
+def beach():
+    """Off the clock, wider: a soft violet dusk bleeding into the paper and warming through coral to a peach glow,
+    banks of cloud lit coral underneath, climbing the right side; the sun half sunk, a far headland on the horizon,
+    a small sailboat; the sea deep at the horizon, slate in the middle, aqua in the shallows, the sun's path broken
+    peach dashes; foam in broken runs; pale pink-lit sand with lavender shadows; three palms on the right."""
+    p = Paper(seed=211)
+    rng = np.random.default_rng(212)
+    fade = bleed(300, 440, 170)
+    hz = 476
+    sun = p.rough(p.ellipse(250, hz + 12, 46, 46), 0.4, 6, fine=0.2) * (Yw < hz)
+    sky(p, [INDIGO, MAUVE, CORALG, PEACH], [(150, 400, 0.8, 0.0, 0.3), (150, 476, 1.0, 0.3, 0.6),
+                                           (250, 470, 0.0, 1.0, 0.7), (330, 476, 0.0, 1.0, 0.85)],
+        fade * np.clip(1 - sun, 0, 1) * p.soften(p.poly([(-20, -20), (600, -20), (600, hz + 1), (-20, hz + 1)]), 0.8))
+    p.wash(p.soften(p.ellipse(250, hz - 4, 70, 36), 18) * (1 - sun) * (Yw < hz) * fade, APRICOT, 0.45, rim=0)
+    p.wash(sun, CREAM, 0.9, rim=1.4)
+    # cloud banks: low across the page under the text, higher only on the right
+    for cx, by_, ln, th, glow in [(90, 448, 110, 18, 1.0), (330, 426, 150, 26, 0.9), (520, 372, 80, 22, 0.75)]:
+        cloud_bank(p, cx, by_, ln, th, glow)
+    bar = p.soften(p.rough(p.stroke([(150, hz - 16), (250, hz - 19), (360, hz - 15)], 6), 2, 16), 1.5)
+    p.wash(bar, VIOLET, 0.8, rim=0.6)
+    p.wash(bar * ramp_y(hz - 24, hz - 12, 1.0, 0.0), PINK, 0.5, rim=0)
+    # a far headland on the right of the horizon
+    # a far point of land running in from the right edge
+    head = p.rough(p.poly([(360, hz + 1), (392, hz - 6), (430, hz - 14), (480, hz - 26), (530, hz - 34),
+                           (600, hz - 36), (600, hz + 1)]), 1.2, 12, fine=0.4)
+    p.loose(head, [MAUVE, VIOLET, MAUVE], 0.9, n=4, rough=0.6, patch=0.5)
+    p.wash(head * ramp_y(hz - 36, hz, 0.0, 1.0), DUSKBLUE, 0.5, rim=0)
+    # the sea
+    shore = ridge(-20, 600, 580, [(5, 260, 0.6), (3, 90, 1.4)])
+    sea = p.rough(p.poly([(-20, hz), (600, hz)] + shore[::-1]), 0.3, 14, fine=0.1)
+    p.loose(sea, [DUSKBLUE, DUSKBLUE, DEEP], 0.45, n=4, rough=0.4, patch=0.6, ground=0.9,
+            vary=ramp_y(hz, 590, 1.2, 0.5))
+    p.wash(sea * ramp_y(hz, hz + 34, 1.0, 0.0), DEEP, 0.5, rim=0)
+    p.wash(sea * ramp_y(hz + 60, 590, 0.0, 1.0), AQUA, 0.5, rim=0)
+    for cx, cy, rx in [(140, hz + 26, 50), (370, hz + 36, 60)]:
+        p.wash(p.soften(p.rough(p.ellipse(cx, cy, rx, 7), 1.5, 12), 3) * sea, BLUSHSEA, 0.5, rim=0)
+    path = p.soften(p.poly([(236, hz), (264, hz), (320, 590), (180, 590)]), 5) * sea
+    dashes = np.zeros((H, W), np.float32)
+    for k in range(22):
+        y = hz + 5 + k * 5 + rng.uniform(-1.5, 1.5)
+        half = 12 + (y - hz) * 0.5
+        for _ in range(2):
+            x0 = 250 + rng.uniform(-half, half * 0.3)
+            dashes = np.maximum(dashes, p.rough(p.ellipse(x0 + half * 0.35, y, half * rng.uniform(0.3, 0.65), 2.0),
+                                                0.6, 6, fine=0.3))
+    dashes = dashes * path * sea
+    p.lift(np.clip(dashes * 1.2, 0, 1), 0.9)
+    p.wash(dashes, PEACH, 0.8, rim=0.6)
+    p.wash(dashes * ramp_y(hz, 590, 0.0, 1.0), ROSEGOLD, 0.6, rim=0)
+    for x0, x1, y0 in [(-20, 140, 524), (330, 560, 516), (60, 420, 552)]:
+        wv = p.soften(p.rough(p.stroke([(x0, y0), ((x0 + x1) / 2, y0 + 2), (x1, y0 - 1)], 6), 1.5, 18), 2) * sea
+        p.wash(wv, DUSKBLUE, 0.4, rim=0)
+    # a small sailboat far out on the left
+    hull = p.rough(p.poly([(96, hz + 22), (132, hz + 22), (126, hz + 28), (102, hz + 28)]), 0.3, 3)
+    sail = p.rough(p.poly([(112, hz + 21), (113, hz - 14), (128, hz + 19)]), 0.3, 3)
+    p.wash(np.maximum(hull, sail), NIGHT, 1.0, rim=1.0)
+    p.lift(sail * ramp_x(112, 128, 0.0, 0.6), 0.4)
+    p.wash(sail * ramp_x(112, 128, 0.0, 1.0), CORALG, 0.5, rim=0)               # its sail catching the glow
+    p.wash(p.soften(p.ellipse(114, hz + 34, 18, 3), 1.5) * sea, NIGHT, 0.4, rim=0)
+    for x0, x1 in [(-20, 90), (150, 330), (380, 470)]:
+        seg = [(x, y - 3) for x, y in shore if x0 <= x <= x1]
+        if len(seg) > 1:
+            p.lift(p.soften(p.rough(p.stroke(seg, 4.5), 1.2, 10), 1.2), 0.5)
+    sand = p.rough(p.poly(band(shore, 704)), 0.8, 14, fine=0.3)
+    p.loose(sand, [LEMON, BLUSH, PEACH], 0.4, n=7, rough=0.8, patch=0.45, ground=0.75)
+    p.wash(sand * ramp_y(600, 684, 0.0, 1.0), VIOLET, 0.5, rim=0, flow=0.5)
+    p.wash(sand * ramp_y(630, 684, 0.0, 1.0), MAUVE, 0.35, rim=0, flow=0.5)
+    # three palms on the right: the tall one bowing over the beach, one leaning back, a small one in front
+    palm(p, [(560, 710), (566, 640), (556, 560), (530, 480), (500, 400), (478, 360)], 18, 2.2, 0, sand)
+    palm(p, [(470, 710), (462, 660), (468, 610), (484, 570), (502, 540)], 12, 1.5, 1, sand)
+    for cx, cy, rx, ry in [(430, 680, 110, 22), (560, 660, 70, 16)]:              # the palms' ground in shade
+        p.wash(p.soften(p.rough(p.ellipse(cx, cy, rx, ry), ry * 0.4, rx * 0.3), ry * 0.4) * sand, LAVSAND, 0.9,
+               rim=0.6, flow=0.5)
+        p.wash(p.soften(p.ellipse(cx + 10, cy + 4, rx * 0.6, ry * 0.5), ry * 0.4) * sand, VIOLET, 0.5, rim=0)
+    p.finish()
+    return p
+
+
+def lighthouse():
+    """Keeping the light, by day, wider: a pale cerulean sky bleeding into the paper with clouds left as bare
+    paper; the headland on the right climbing high, its grass in loose patches, its cliff warm on the left and
+    deep umber on the right; the white tower with its lantern, the keeper's cottage and a shed painted like the
+    harbor's houses; surf round rock groups at its foot; a far headland on the left; the harbor's two wooden
+    fishing boats moored in the open water; gulls."""
+    p = Paper(seed=221)
+    rng = np.random.default_rng(222)
+    fade = bleed(300, 440, 190)
+    hz = 500
+    # the headland: a grassy shoulder rising to the right, a cliff face under it
+    top = [(300, 532), (330, 516), (370, 500), (410, 486), (450, 474), (490, 462), (530, 452), (570, 446), (600, 444)]
+    under = [(600, 520), (560, 526), (520, 532), (480, 540), (440, 548), (400, 556), (360, 560), (320, 560), (296, 552)]
+    foot = [(600, 600), (560, 596), (510, 594), (460, 592), (410, 590), (370, 588), (330, 584), (306, 574),
+            (290, 560)]
+    face = p.rough(p.poly(under[::-1] + foot), 1.4, 9, fine=0.5)
+    grass = p.rough(p.poly(top + under), 1.6, 8, fine=0.6)
+    land = np.clip(np.maximum(face, grass) * 1.2, 0, 1)
+    tx, tb, k = 500, y_at(top, 500) + 6, 2.2
+    ty = tb - 106 * k
+    tower = p.rough(p.poly([(tx - 9 * k, tb), (tx - 6.5 * k, ty + 16 * k), (tx + 6.5 * k, ty + 16 * k), (tx + 9 * k, tb)]),
+                    0.4, 5, fine=0.2)
+    # only the lantern's own shape is kept from the sky: the gallery, the lamp room and the roof, never a box
+    lantern = np.maximum.reduce([p.poly([(tx - 22, ty + 18 * k), (tx + 22, ty + 18 * k), (tx + 22, ty + 15 * k),
+                                         (tx - 22, ty + 15 * k)]),
+                                 p.poly([(tx - 11, ty + 15 * k), (tx + 11, ty + 15 * k), (tx + 11, ty + 7 * k),
+                                         (tx - 11, ty + 7 * k)]),
+                                 p.poly([(tx - 15, ty + 7.5 * k), (tx + 15, ty + 7.5 * k), (tx, ty - 1 * k)])])
+    keep = np.clip(np.maximum(tower, lantern), 0, 1)
+    boats = [(30, 606, 200, CERUL, TERRA, 220), (236, 640, 160, RAW, CERUL, None)]
+    hulls = np.clip((np.maximum.reduce([blur(hull_mask(p, bx, by, bw), 0.6 * S) for bx, by, bw, *_ in boats]) - 0.7)
+                    * 6, 0, 1)
+    around = (1 - np.maximum(land, keep)) * (1 - hulls)
+    # 1 the sky: pale cerulean bleeding into the paper, clouds left as paper, rose low on the left
+    skym = fade * p.soften(p.poly([(-20, -20), (600, -20), (600, hz + 2), (-20, hz + 2)]), 1)
+    clouds = np.maximum.reduce([p.soften(p.rough(p.ellipse(x, y, rx, ry), ry * 0.4, rx * 0.3), 10) for x, y, rx, ry in
+                                [(90, 450, 80, 14), (300, 440, 70, 12), (420, 400, 50, 16), (560, 330, 50, 22),
+                                 (200, 470, 60, 6)]])
+    p.wash(skym * (1 - clouds * 0.95) * around, CERUL, 0.65, rim=1.4, flow=0.35, blotch=0.06,
+           vary=ramp_y(300, 490, 1.0, 0.6))
+    p.wash(p.soften(p.poly([(-20, 450), (240, 460), (300, 504), (-20, 504)]), 16) * skym * around, ROSE, 0.5, rim=0,
+           flow=0.3)
+    p.wash(p.soften(p.poly([(400, 200), (600, 180), (600, 380), (440, 400)]), 20) * skym * around, ULTRA, 0.3, rim=0,
+           flow=0.4)
+    # 2 a far headland on the left
+    p.wash(p.rough(p.poly([(-10, hz + 1), (20, hz - 12), (70, hz - 20), (120, hz - 16), (170, hz - 6),
+                           (200, hz + 1)]), 1.0, 8), ULTRA, 0.5, rim=1.4, flow=0.25)
+    # 3 the sea, darkening toward us, ripples lifted dry
+    sea = p.rough(p.poly([(-20, hz), (600, hz), (600, 704), (-20, 704)]), 0.4, 12)
+    p.wash(sea * around, CERUL, 0.8, rim=1.0, flow=0.3, blotch=0.06, vary=ramp_y(hz, 684, 0.7, 1.2))
+    p.wash(p.soften(p.poly([(-20, 580), (600, 572), (600, 704), (-20, 704)]), 20) * around, ULTRA, 0.45, rim=0,
+           flow=0.35, vary=ramp_y(572, 684, 0.3, 1.0))
+    for x, y, w in [(20, 514, 110), (150, 526, 80)]:                                 # a few long soft ripples
+        p.lift(p.soften(p.rough(p.poly([(x, y), (x + w, y - 0.6), (x + w, y + 2), (x, y + 2.6)]), 0.8, 8), 1.2)
+               * around, 0.45)
+    # 4 the cliff and the grass in loose wet patches, the rock deepening to umber on the right
+    p.loose(face, [RAW, SIENNA, RAW, UMBER], 1.0, n=12, rough=0.6, patch=0.35)
+    p.wash(face * ramp_x(440, 580, 0.0, 1.0), UMBER, 0.6, rim=0.6, flow=0.5, blotch=0.07)
+    p.wash(face * ramp_y(560, 596, 0.0, 1.0), PAYNE, 0.45, rim=0, flow=0.4)
+    p.loose(grass, [SAP, OLIVE, RAW, SAP], 0.95, n=14, rough=0.6, patch=0.3)
+    p.wash(grass * ramp_x(380, 600, 0.0, 1.0), OLIVE, 0.4, rim=0.2, flow=0.4)
+    p.wash(p.soften(p.stroke(under[::-1], 10, taper=False), 4) * np.maximum(face, grass), OLIVE, 0.45, rim=0, flow=0.5)
+    # 5 rocks at the waterline and the surf lifted round them
+    for x, y, rx, ry in [(470, 600, 26, 9), (360, 594, 12, 5), (296, 572, 6, 3), (560, 610, 18, 6)]:
+        r = p.rough(p.ellipse(x, y, rx, ry), rx * 0.15, 3, fine=0.4)
+        p.wash(r, UMBER, 1.0, rim=1.0, gran=0.4)
+        p.wash(r * ramp_y(y - ry * 0.2, y + ry, 0.0, 1.0), PAYNE, 1.1, rim=0.4)
+    for pts, w in [([(286, 566), (320, 586), (380, 594), (440, 600), (510, 606), (600, 608)], 10),
+                   ([(450, 626), (520, 632), (600, 634)], 6)]:              # soft wet surf hugging the cliff's foot
+        p.lift(p.soften(p.rough(p.stroke(pts, w), 2.0, 14, fine=0.5), 2.5) * (1 - face), 0.75)
+    near = p.rough(p.poly([(-20, 660), (150, 652), (330, 664), (600, 650), (600, 704), (-20, 704)]), 4, 30, fine=0.5)
+    p.wash(near * around, ULTRA, 0.6, rim=1.2, flow=0.5, blotch=0.08)                 # the near water, deeper
+    p.wash(p.soften(p.rough(p.poly([(300, 600), (600, 610), (600, 650), (360, 640)]), 4, 20), 6) * around, ULTRA,
+           0.45, rim=0)                                                                 # the headland's shadow
+    # 6 the lighthouse: the left face bare paper, the right a soft cool shadow, two bands, the lantern lit
+    shade = p.soften(p.poly([(tx + 1, tb), (tx + 1, ty + 16 * k), (tx + 7.5 * k, ty + 16 * k), (tx + 10 * k, tb)]), 3)
+    p.loose(shade * np.clip(tower * 1.15, 0, 1), [ULTRA, SHADOW, ULTRA], 0.55, n=5, rough=0.2, patch=0.5,
+            vary=ramp_x(tx - 4, tx + 20, 0.2, 1.0))
+    for yb in (ty + 46 * k, ty + 76 * k):
+        p.wash(p.rough(p.poly([(tx - 20, yb), (tx + 20, yb), (tx + 20, yb + 9), (tx - 20, yb + 9)]), 0.5, 4) * tower,
+               SHADOW, 0.3, rim=0.8, flow=0.4)
+    p.wash(p.rough(p.poly([(tx - 22, ty + 18 * k), (tx + 22, ty + 18 * k), (tx + 22, ty + 15 * k), (tx - 22, ty + 15 * k)]),
+                   0.4, 3), PAYNE, 1.2, rim=0.5)                                          # the gallery
+    p.wash(p.rough(p.poly([(tx - 11, ty + 15 * k), (tx + 11, ty + 15 * k), (tx + 11, ty + 7 * k), (tx - 11, ty + 7 * k)]),
+                   0.4, 3), GOLD, 1.0, rim=1.2, flow=0.4)                                 # the lamp room
+    p.wash(p.rough(p.poly([(tx - 15, ty + 7.5 * k), (tx + 15, ty + 7.5 * k), (tx, ty - 1 * k)]), 0.4, 3), PAYNE, 1.4,
+           rim=0.6)
+    p.wash(p.rough(p.poly([(tx - 6, tb - 2), (tx - 6, tb - 14), (tx - 1, tb - 14), (tx - 1, tb - 2)]), 0.3, 2), PAYNE,
+           0.8, rim=0.4)
+    # 7 the keeper's cottage and a shed, painted like the harbor's houses
+    for hx, hw, hh, hd in [(400, 36, 22, 10), (448, 20, 14, 6)]:
+        hb = y_at(top, hx + hw / 2) + 5
+        front, side, roof = (p.rough(m, 0.6, 4, fine=0.3) for m in house_masks(p, hx, hb, hw, hh, hd, "tile"))
+        p.lift(np.clip(blur(np.maximum.reduce([front, side, roof]), 0.4 * S) * 1.4, 0, 1), 0.9)
+        p.wash(front, RAW, 0.16, rim=1.0, flow=0.4, blotch=0.04)
+        p.loose(side, [SHADOW, ULTRA, SHADOW], 0.7, n=3, rough=0.2, patch=0.7)
+        p.loose(roof, [TERRA, SIENNA, TERRA], 0.95, n=4, rough=0.2, patch=0.6)
+        eave = p.rough(p.poly([(hx, hb - hh), (hx + hw, hb - hh), (hx + hw, hb - hh + 4), (hx, hb - hh + 3)]), 0.4, 3)
+        p.wash(eave * front, SHADOW, 0.55, rim=0.2)
+        for wx in ([hx + 6, hx + 24] if hw > 30 else [hx + 7]):
+            p.wash(p.rough(p.poly([(wx, hb - 15), (wx + 4, hb - 15), (wx + 4, hb - 9), (wx, hb - 9)]), 0.2, 1) * front,
+                   PAYNE, 0.85, rim=0.3)
+        if hw > 30:
+            p.wash(p.rough(p.poly([(hx + 15, hb), (hx + 15, hb - 10), (hx + 20, hb - 10), (hx + 20, hb)]), 0.2, 1)
+                   * front, UMBER, 0.9, rim=0.3)
+    # 8 the harbor's two boats, moored in the open water
+    for bx, by, bw, hull, trim, mast in boats:
+        boat(p, bx, by, bw, hull, trim, mast=mast)
+    # 9 gulls
+    for x, y, g in [(140, 420, 7), (176, 432, 5.5), (330, 390, 6)]:
+        left = [(x - g + g * u, y - g * 0.55 * math.sin(math.pi * u) * (1.2 - u)) for u in np.linspace(0, 1, 8)]
+        right = [(x + g * u, y - g * 0.55 * math.sin(math.pi * u) * (0.2 + u)) for u in np.linspace(0, 1, 8)]
+        p.wash(np.maximum(p.stroke(left, 1.3), p.stroke(right, 1.3)), PAYNE, 1.4, rim=0, gran=0)
+    p.finish()
+    return p
+
+
+SCENES = {"city": city, "blossom": blossom, "autumn": autumn, "beach": beach, "lighthouse": lighthouse}
 
 if __name__ == "__main__":
     for name in sys.argv[1:] or SCENES:

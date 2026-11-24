@@ -505,6 +505,19 @@ Decisions Josef has made about Trove's look and feel. Newest first.
   dashes; pale cream and pink sand with lavender shadows; the palms (same shapes) dark violet silhouettes. The title
   now takes the dark ink, 4.8:1. One Josef-eye critic round on the first recolour (the sea read as midday, the path
   khaki, the palms translucent), all applied; the clouds and the lighter sky came after it and were not reviewed.
+- **Book screens for the beach and the daytime lighthouse (Josef: "now make the book screen for the beach and the
+  updated lighthouse").** Boards `WCBookBeach` and `WCBookLighthouse`, each beside its cover in a paired row under the
+  autumn row; the prairie cover (no book screen) one row below, the round 1, harbor and dusk lighthouse covers in the
+  last row. Page art in `art/watercolor/pages2.py`. Beach: the soft violet dusk warming to coral and peach, two long
+  cloud banks lit coral underneath and one higher on the right, a big half-sunk sun, a far mauve point of land, a
+  small sailboat, the sea in slate-blue patches with the sun's path broken peach dashes, foam in broken runs, pale
+  sand with lavender shade under two palms. Lighthouse: the cover's day scene wider, a pale cerulean sky with clouds
+  left as paper, the headland climbing on the right with the white tower and its lantern (only its own shape kept
+  from the sky, no paper box), the keeper's cottage and a shed painted like the harbor's houses, rocks and soft surf
+  at the cliff's foot, the harbor's two boats at the cover's proportions, gulls, deeper water in front. One Josef-eye
+  critic round, the boats and palms held as Josef set them; its fixes are applied (the far point made clearly land,
+  the grass tufts replaced by soft shade, one cloud strip dropped; the surf soft and wet and clear of the small
+  boat's bow, fewer ripples, a deeper near plane) and not re-reviewed.
 
 ## 2026-11-19: the book screen is B, the book opens (approved)
 
