@@ -53,8 +53,30 @@ the bottom with `object-fit: cover; object-position: bottom`. Its upper left (ab
 as paper for the text; the sky bleeds into it. The canvas boards `WCBook*.dc.html` in docs/design/shelf/project show
 the layout.
 
+## Animations (approved 2026-11-23)
+
+Every watercolour cover paints itself in: the cover's own glazes laid back down in the order they were painted, each
+spreading from where the brush lands. Files in `anim/` (472 x 688, muted; MP4 and WebM), listed per art in
+`manifest.json` under `anim`:
+
+| Version | Where | Timing |
+|---|---|---|
+| `<key>-loop` | **The sign-in page only** (the blank book on Join, invite, confirm email, sign in), one cover after another | Paints in (all glazes by ~12.3 s), rests from 13.5 s, washes back to paper 18.5–23.5 s, 1.5 s of clean paper. 25 s, seamless. Pick the next cover at random each cycle. |
+| `<key>-reveal` | **The book reveal** and **your picks** (when a new book's design options appear) | The same painting at the same timing, played once, ending on the finished cover at 13.5 s. Keep this timing (Josef). |
+| `<key>-quick` | **The design studio**, when you choose a design | The same painting at 0.3 of the time, about 4 s, ending on the finished cover. Quicker so nobody waits to see the design (Josef). |
+| `<key>-poster` | Reduced motion, and before a video loads | The finished cover. |
+
+- The last frame of `reveal` and `quick` is the cover image, so when the video ends, swap to the still (or leave
+  the last frame) with no visible jump.
+- `prefers-reduced-motion`: show the poster, play nothing.
+- Play `muted`, `playsinline`, no controls; the video sits under the title and name exactly as the cover art does.
+- Strata covers will animate in the picks and the studio too (not on the sign-in page), on the same clock; their
+  animation is still being designed and is not in this set.
+- The screens these play on (the sign-in blank book, the reveal, the picks, the studio) may not be approved
+  designs yet. Build the playback when each screen is.
+
 ## Source
 
-Rendered by the scripts in `docs/design/art/watercolor/` (`covers.py`, `lighthouse_boats.py`, `abstract.py`,
+Rendered by the scripts in `docs/design/art/watercolor/` (animations: `paint_anim.py` and `encode_anim.sh`; `covers.py`, `lighthouse_boats.py`, `abstract.py`,
 `abstract2.py`, `pages.py`, `pages2.py`, all seeded) and packaged by `package_set1.py`. The record of every change is
 in docs/design/decisions.md.

@@ -1226,3 +1226,15 @@ Pending Josef's review of the new canvas.
   far range) are pulled to the front so no stretch of paper waits empty; the rest keep painting order, lifts after
   what they lift; starts packed into 10 s (was ~19 s) with the same spread durations, so several glazes spread at
   once. All land by ~12.3 s; rest 13.5–18.5 s, wash back to 23.5 s, loop at 25 s. MP4 0.44 MB, WebM 0.43 MB.
+
+## 2026-11-23: watercolor animations for all ten, and where they play
+
+- **Josef:** "do it for all the watercolor." Only watercolour animates on the sign-in page; covers also paint in
+  when a new book's picks appear and in the book reveal (the same timing as the test), and in the design studio
+  "it should animate in quicker because you don't want to wait to see the design".
+- `paint_anim.py` now renders every set 1 cover (it also records `fade_top`), in three versions: `loop` (sign-in,
+  25 s, seamless), `reveal` (picks and the reveal, 13.5 s, ends on the cover) and `quick` (the studio, 0.3 of the
+  time, ~4 s at 24 fps). Fixed on the way: the last frame was not quite the cover (the far corners of big washes were
+  never reached, the last glazes were still wet, and the paper grain was another seed's); now each finished frame
+  matches its cover to under 0.1 levels on average. `encode_anim.sh` writes `set-1/anim/` (MP4 + WebM + poster,
+  0.12–0.63 MB each, 19 MB in all) and the manifest and README say which plays where.
