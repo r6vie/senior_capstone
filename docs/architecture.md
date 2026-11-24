@@ -35,7 +35,7 @@ removing the `/api` prefix. The frontend never talks to MongoDB or Claude direct
 
 | Collection | Owner | Notes |
 |---|---|---|
-| `users` | auth | Unique on `email` (stored lowercase) |
+| `users` | auth | Unique on `email` (stored lowercase); optional member-supplied current-student/alumni affiliations and founder status |
 | `sessions` | auth | Token hash, expiry via TTL index |
 | `auth_attempts` | auth | Rate-limit counters, TTL index |
 | `notifications` | notifications | One document per email sent, `_id` = dedupe key |

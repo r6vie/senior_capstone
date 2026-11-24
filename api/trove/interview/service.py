@@ -46,7 +46,6 @@ from trove.interview.models import (
 
 # After this many answers the member may say "I've said enough" (docs/trove.md §4).
 EXIT_AFTER_ANSWERS = 10
-SHAPE_CONFIRMED = "Yes, that's me."
 # The stages with a question waiting for an answer.
 ASKING_STAGES = ("interviewing", "adding")
 MAX_RESUME_PAGES = 20
@@ -161,9 +160,8 @@ def interview_view(interview: dict, book: dict | None = None) -> InterviewRespon
         stage=stage,
         question=Question(
             question_id=current.get("question_id", ""),
-            text=current["question"],
+            text=_question_text(current),
             phase=current["phase"],
-            playback=current.get("playback"),
             builds_on=current.get("builds_on"),
         )
         if current
@@ -226,6 +224,13 @@ def selection_blurb_state(proposal: dict | None) -> tuple[str | None, str | None
     if status == "writing" and _timed_out(selection["started_at"]):
         return "failed", None
     return status, selection["blurb"] if status == "ready" else None
+
+
+def _question_text(current: dict) -> str:
+    """The waiting question as shown. Interviews saved before the playback was removed may still be
+    waiting on "Is this you?" with a playback beside it: shown together, it reads as one question."""
+    playback = current.get("playback")
+    return f"{playback} {current['question']}" if playback else current["question"]
 
 
 def nearly_done(interview: dict, answered: int) -> bool:
@@ -304,7 +309,9 @@ async def ask_engine(call):
         # Not a failure to retry: the caller asks for more answers instead.
         raise
     # ValueError covers pydantic's ValidationError.
-    except (ClaudeRefused, BudgetExceeded, anthropic.APIError, ValueError):
+    except (ClaudeRefused, BudgetExceeded, anthropic.APIError, ValueError) as error:
+        # The member only sees "try again", so the log is the one place the real cause shows up.
+        logger.warning("Interview AI call failed: %s: %s", type(error).__name__, str(error)[:300])
         raise HTTPException(
             status_code=502, detail="The Librarian couldn't answer just now. Please try again."
         ) from None
@@ -401,7 +408,7 @@ async def write_question(
                 notebook=notebook,
             )
         )
-        question = {"question": turn.question, "phase": "adding", "playback": None}
+        question = {"question": turn.question, "phase": "adding"}
         if question and not turn.done:
             question["builds_on"] = _checked_builds_on(turn.builds_on, notebook)
         return None if turn.done else question, turn.topic, turn.done, turn.spark_id, None
@@ -416,7 +423,7 @@ async def write_question(
         )
     )
     ready = turn.ready_for_reveal
-    question = None if ready else turn.model_dump(include={"question", "phase", "playback"})
+    question = None if ready else turn.model_dump(include={"question", "phase"})
     if question:
         question["builds_on"] = _checked_builds_on(turn.builds_on, notebook)
     return question, turn.topic, ready, turn.spark_id, closing_line_of(turn) if ready else None
@@ -531,7 +538,6 @@ async def answer(
     user: dict,
     text: str,
     *,
-    shape: bool,
     question_id: str | None = None,
 ) -> dict:
     """Save the answer to the waiting question, then ask the next one. `question_id` is the question
@@ -541,8 +547,6 @@ async def answer(
     current = interview["current"]
     if interview["stage"] not in ASKING_STAGES or current is None:
         raise conflict("There's no question waiting for an answer.")
-    if (current["phase"] == "shape") != shape:
-        raise conflict("This step is the Shape step." if not shape else "This isn't the Shape step.")
     turn, notebook = final_notes(interview, text)
     # Saved before the next question is written, so a failure there never loses the answer.
     saved = await database.interviews.find_one_and_update(
@@ -565,9 +569,8 @@ async def answer(
 
 
 async def skip(database: AsyncDatabase, claude: Claude, user: dict, question_id: str) -> dict:
-    """Move past the waiting question, saved with an empty answer. Not on the Shape step, which
-    needs a confirmation or a correction (docs/review/decisions.md, row 6)."""
-    return await answer(database, claude, user, "", shape=False, question_id=question_id)
+    """Move past the waiting question, saved with an empty answer."""
+    return await answer(database, claude, user, "", question_id=question_id)
 
 
 async def save_last_answer(database: AsyncDatabase, interview: dict, text: str) -> dict:
@@ -1765,7 +1768,7 @@ def final_notes(interview: dict, text: str) -> tuple[dict, list[dict]]:
     mine = [Entry.model_validate(entry) for entry in notebook if entry.get("turn") == number]
     held = set() if silent or not text.strip() else {e.id for e in librarian.entries_that_hold(mine, text)}
     notebook = [entry for entry in notebook if entry.get("turn") != number or entry["id"] in held]
-    turn = {"question": current["question"], "answer": text, "phase": current["phase"]}
+    turn = {"question": _question_text(current), "answer": text, "phase": current["phase"]}
     # Only what's there is stored, so a turn with no Librarian on it looks as it always did.
     if marks:
         turn["marks"] = marks

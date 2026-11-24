@@ -60,7 +60,7 @@ async def probe(claude, point: dict) -> str:
     plan = await engine.plan_turn(claude, turns=seen, resume_text=persona_of(run).get("resume"))
     last = seen[-1]
     was = turns[point["after"]].question if point["after"] < len(turns) else "(the interview ended here)"
-    flags = [f"{f.level}: {f.rule}" for f in lint_question(plan.question, plan.phase)]
+    flags = [f"{f.level}: {f.rule}" for f in lint_question(plan.question)]
     return "\n\n".join(
         [
             f"## {point['slug']} after {point['after']} turns [{point['kind']}]",

@@ -234,16 +234,12 @@ async function toState(response: InterviewResponse, retried = false): Promise<In
         }
         return toState(unwrap<InterviewResponse>(await api.POST("/interview/question")), true);
       }
-      if (question.phase === "shape") {
-        const playback = question.playback ? `${question.playback} ${question.text}` : question.text;
-        return { id: ID, stage: "shaping", phase: "shape", playback, questionId: question.question_id };
-      }
       return {
         id: ID,
         stage: "asking",
         round: response.stage === "adding" ? "adding" : "first",
         // Only a round of adding has other phases, and those aren't shown.
-        phase: question.phase === "dig" ? "dig" : "sweep",
+        phase: question.phase === "dig" || question.phase === "shape" ? question.phase : "sweep",
         question: question.text,
         questionId: question.question_id,
         canFinish: response.can_finish,
@@ -365,14 +361,6 @@ export const apiInterviewClient: InterviewClient = {
   async finish(_id, answer) {
     const init = answer ? { body: { answer, question_id: waitingQuestionId } } : {};
     return toState(unwrap<InterviewResponse>(await api.POST("/interview/finish", init)));
-  },
-  async confirmShape() {
-    const body = { question_id: waitingQuestionId || undefined };
-    return toState(unwrap<InterviewResponse>(await api.POST("/interview/shape", { body })));
-  },
-  async correctShape(_id, correction) {
-    const body = { correction, question_id: waitingQuestionId || undefined };
-    return toState(unwrap<InterviewResponse>(await api.POST("/interview/shape", { body })));
   },
   async chooseTitle(_id, titleId) {
     const body = { title: Number(titleId) };

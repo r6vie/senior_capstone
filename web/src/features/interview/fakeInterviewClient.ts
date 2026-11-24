@@ -83,9 +83,6 @@ const QUESTIONS: { phase: Phase; text: string; topic: string }[] = [
   },
 ];
 
-const PLAYBACK =
-  "Here is what I heard. You walked away from graduate school twice, and both times it was because the work in front of you taught you faster. Is this you?";
-
 const TITLES = [
   {
     id: "title-1",
@@ -155,7 +152,6 @@ interface Stored {
   id: string;
   answers: string[];
   stage: InterviewState["stage"] | "adding";
-  corrected: boolean;
   book: DraftBook | null;
   addingAnswers?: number;
   canUndo?: boolean;
@@ -242,15 +238,6 @@ function view(stored: Stored, authorName: string): InterviewState {
         },
       };
     }
-    case "shaping":
-      return {
-        id,
-        stage: "shaping",
-        phase: "shape",
-        playback: stored.corrected
-          ? "Here is what I heard, with your correction. You left graduate school twice to keep learning from the work itself, and you'd do it again. Is this you?"
-          : PLAYBACK,
-      };
     case "choosing":
       return { id, stage: "choosing", titles: TITLES };
     case "drafting":
@@ -287,7 +274,6 @@ function stageOf(stored: Stored | null): BookStage {
     case undefined:
       return "none";
     case "asking":
-    case "shaping":
       return "interviewing";
     case "choosing":
       return "titles";
@@ -394,7 +380,6 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
         id: crypto.randomUUID(),
         answers: [],
         stage: "asking",
-        corrected: false,
         book: null,
       };
       save(stored);
@@ -408,7 +393,7 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
           return;
         }
         stored.answers.push(text);
-        if (stored.answers.length >= QUESTIONS.length) stored.stage = "shaping";
+        if (stored.answers.length >= QUESTIONS.length) stored.stage = "choosing";
       }),
     async notes(look) {
       await wait(delay);
@@ -427,7 +412,7 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
         stored.marks = [];
         if (stored.stage === "adding") return;
         stored.answers.push("");
-        if (stored.answers.length >= QUESTIONS.length) stored.stage = "shaping";
+        if (stored.answers.length >= QUESTIONS.length) stored.stage = "choosing";
       }),
     askAgain: (id) => mutate(id, () => {}),
     finish: (id, answer) =>
@@ -438,15 +423,7 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
         }
         if (answer) stored.answers.push(answer);
         if (answered(stored) < CAN_FINISH_AFTER) throw new Error("Answer a few more questions first.");
-        stored.stage = "shaping";
-      }),
-    confirmShape: (id) =>
-      mutate(id, (stored) => {
         stored.stage = "choosing";
-      }),
-    correctShape: (id) =>
-      mutate(id, (stored) => {
-        stored.corrected = true;
       }),
     chooseTitle: (id, titleId) =>
       mutate(id, (stored) => {

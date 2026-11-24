@@ -1,9 +1,12 @@
-import { type ReactNode, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { api } from "../../api/client";
+import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
 import { usePageTitle } from "../../ui/usePageTitle";
+import { type Affiliation, type MemberContext, MemberContextFields } from "../account/MemberContextFields";
 import { useAuth } from "../auth/AuthProvider";
-import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, readDraft, takeOrphanDrafts } from "./AnswerPanel";
+import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, takeOrphanDrafts } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
 import { EditForm, editKeyFor, hasEditDraft } from "./EditInPlace";
 import { AskFrame, ErrorMessage, Frame, RetryContext, SmallBook, Waiting } from "./InterviewFrame";
@@ -76,13 +79,23 @@ function writeSeen(key: string) {
 function placeOf(state: InterviewState | null): string {
   if (!state) return "";
   if (state.stage === "asking") return `asking:${state.questionId ?? state.question}`;
-  if (state.stage === "shaping") return `shaping:${state.questionId ?? state.playback}`;
   return state.stage === "drafting" && state.failed ? "draftingFailed" : state.stage;
 }
 
-export function InterviewPage({ client = apiInterviewClient }: { client?: InterviewClient }) {
+async function saveContext(context: MemberContext): Promise<void> {
+  const { data, error } = await api.PUT("/auth/me/context", { body: context });
+  if (!data) throw new InterviewError(errorMessage(error));
+}
+
+export function InterviewPage({
+  client = apiInterviewClient,
+  saveMemberContext,
+}: {
+  client?: InterviewClient;
+  saveMemberContext?: (context: MemberContext) => Promise<void>;
+}) {
   usePageTitle("Your interview");
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   // Books carry the full name; it falls back to the first name for accounts made before last names.
   const authorName = user?.full_name ?? "";
 
@@ -184,11 +197,7 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
 
   // Words typed here that were never sent, because another screen moved the interview on.
   const placeForDrafts =
-    state?.stage === "asking"
-      ? draftKeyFor(userId, state.questionId ?? state.question)
-      : state?.stage === "shaping"
-        ? draftKeyFor(userId, `shape:${state.questionId ?? state.playback}`)
-        : null;
+    state?.stage === "asking" ? draftKeyFor(userId, state.questionId ?? state.question) : null;
   useEffect(() => {
     if (!loaded || !placeForDrafts) return;
     for (const text of takeOrphanDrafts(userId, placeForDrafts))
@@ -389,23 +398,33 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
     }
 
     if (!state) {
+      const persistContext =
+        saveMemberContext ??
+        (async (context: MemberContext) => {
+          await saveContext(context);
+          await refreshUser().catch(() => undefined);
+        });
       return (
         <StartScreen
           hasSparks={hasSparks}
           busy={busy}
           error={error}
           started={Boolean(retry)}
-          onStart={(resume) =>
+          initialAffiliations={user?.affiliations ?? []}
+          initialFounder={user?.founder ?? false}
+          onStart={(resume, context) =>
             run(
               resume ? "The Librarian is reading your résumé…" : "The Librarian is getting ready…",
               // "Already started" means an earlier press got through: load that interview rather than refuse.
               () =>
-                client.start(resume).catch(async (reason) => {
-                  if (!(reason instanceof InterviewError && reason.conflict)) throw reason;
-                  const now = await client.current();
-                  if (!now) throw reason;
-                  return now;
-                }),
+                persistContext(context)
+                  .then(() => client.start(resume))
+                  .catch(async (reason) => {
+                    if (!(reason instanceof InterviewError && reason.conflict)) throw reason;
+                    const now = await client.current();
+                    if (!now) throw reason;
+                    return now;
+                  }),
               // A 502 here means the interview exists but its first question failed.
               { retryWith: () => client.askAgain("") },
             )
@@ -550,45 +569,6 @@ export function InterviewPage({ client = apiInterviewClient }: { client?: Interv
             />
             {announcer.region}
           </AskFrame>
-        );
-      }
-      case "shaping": {
-        const draftKey = draftKeyFor(userId, `shape:${state.questionId ?? state.playback}`);
-        const options = (words: string | undefined) => ({
-          lost: words ? LOST_ANSWER : LOST_DEFAULT,
-          noRetry: true,
-          retryWith: () => client.askAgain(state.id),
-          onLost: () => {
-            unsure.current = words ?? "";
-          },
-          onSuccess: () => {
-            unsure.current = null;
-            clearDraft(draftKey);
-          },
-          onMoved: onMoved(words),
-        });
-        return (
-          <ShapeScreen
-            key={draftKey}
-            draftKey={draftKey}
-            playback={say(state.playback)}
-            busy={busy}
-            error={error}
-            onConfirm={() =>
-              run(
-                "The Librarian is finding your titles…",
-                () => lookThenSend(undefined, () => client.confirmShape(state.id)),
-                options(undefined),
-              )
-            }
-            onCorrect={(correction) =>
-              run(
-                "The Librarian is listening again…",
-                () => lookThenSend(correction, () => client.correctShape(state.id, correction)),
-                options(correction),
-              )
-            }
-          />
         );
       }
       case "choosing":
@@ -855,6 +835,8 @@ function StartScreen({
   busy,
   error,
   started,
+  initialAffiliations,
+  initialFounder,
   onStart,
 }: {
   hasSparks: boolean;
@@ -862,12 +844,16 @@ function StartScreen({
   error: string | null;
   /** The interview exists and only its first question failed, so Try again is the one way on. */
   started: boolean;
-  onStart: (resume: File | null) => void;
+  initialAffiliations: Affiliation[];
+  initialFounder: boolean;
+  onStart: (resume: File | null, context: MemberContext) => void;
 }) {
   const [resume, setResume] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [addingResume, setAddingResume] = useState(false);
+  const [affiliations, setAffiliations] = useState(initialAffiliations);
+  const [founder, setFounder] = useState(initialFounder);
   const input = useRef<HTMLInputElement>(null);
   const inputId = useId();
   // Stays set through the retry's wait, so Start doesn't flash back while Try again is working.
@@ -904,12 +890,26 @@ function StartScreen({
     <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={START_SAY}>{busy}</Waiting> : START_SAY}>
       <ErrorMessage message={error} />
       {error && resume && (
-        <button type="button" className="iv-textlink" onClick={() => onStart(null)}>
+        <button
+          type="button"
+          className="iv-textlink"
+          onClick={() => onStart(null, { affiliations, founder })}
+        >
           Start without it
         </button>
       )}
+      <MemberContextFields
+        affiliations={affiliations}
+        founder={founder}
+        onAffiliationsChange={setAffiliations}
+        onFounderChange={setFounder}
+      />
       <div className="iv-row">
-        <Button onClick={() => onStart(resume)} aria-busy={Boolean(busy)}>
+        <Button
+          onClick={() => onStart(resume, { affiliations, founder })}
+          aria-busy={Boolean(busy)}
+          disabled={affiliations.length === 0}
+        >
           Start the interview
         </Button>
         <span className="iv-quiet-note">
@@ -986,76 +986,6 @@ function StartScreen({
             Optional. I read it for places to dig. The file isn't kept, its text is deleted when the interview
             ends, and nothing from it goes into your book.
           </p>
-        </div>
-      )}
-    </Frame>
-  );
-}
-
-// ---------- Shape ----------
-
-function ShapeScreen({
-  draftKey,
-  playback,
-  busy,
-  error,
-  onConfirm,
-  onCorrect,
-}: {
-  draftKey: string;
-  playback: ReactNode;
-  busy: string | null;
-  error: string | null;
-  onConfirm: () => void;
-  onCorrect: (correction: string) => Promise<boolean>;
-}) {
-  // Saved like an answer: this is the most personal thing typed in the interview.
-  const [correction, setCorrection] = useState(() => readDraft(draftKey));
-  const fieldId = useId();
-  const words = correction.trim();
-
-  useEffect(() => {
-    const timer = setTimeout(() => keepDraft(draftKey, correction), 600);
-    return () => clearTimeout(timer);
-  }, [draftKey, correction]);
-
-  async function correct() {
-    await onCorrect(words);
-  }
-
-  return (
-    <Frame phase="shape" say={playback} busy={Boolean(busy)}>
-      <div className="field iv-answer iv-answer-short">
-        <label htmlFor={fieldId}>Yes, or tell me what's different</label>
-        <textarea
-          id={fieldId}
-          value={correction}
-          placeholder="It's close, but…"
-          onChange={(event) => setCorrection(event.target.value)}
-          onKeyDown={(event) => {
-            if (words && event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-              event.preventDefault();
-              correct();
-            }
-          }}
-        />
-      </div>
-      <ErrorMessage message={error} />
-      {/* The red button always does what the field says, so a typed correction can't be lost to it. */}
-      {words ? (
-        <div className="iv-row">
-          <Button onClick={correct} aria-busy={Boolean(busy)} aria-keyshortcuts="Meta+Enter Control+Enter">
-            Send my correction
-          </Button>
-          <button type="button" className="iv-textlink" onClick={onConfirm}>
-            Yes, that's me, ignore this
-          </button>
-        </div>
-      ) : (
-        <div className="iv-row">
-          <Button onClick={onConfirm} aria-busy={Boolean(busy)}>
-            Yes, that's me
-          </Button>
         </div>
       )}
     </Frame>

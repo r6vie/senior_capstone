@@ -1,0 +1,21 @@
+.member-context {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.member-context legend {
+  margin-bottom: var(--s-2);
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+}
+.member-context p {
+  margin: 0;
+}
+.member-context-choices {
+  display: grid;
+  gap: var(--s-2);
+}

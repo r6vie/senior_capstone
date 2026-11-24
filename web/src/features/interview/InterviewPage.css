@@ -186,9 +186,6 @@
 .field.iv-answer-edit textarea {
   min-height: 210px;
 }
-.field.iv-answer-short textarea {
-  min-height: 84px;
-}
 .iv-exit {
   margin-top: var(--s-1);
   padding-top: var(--s-3);

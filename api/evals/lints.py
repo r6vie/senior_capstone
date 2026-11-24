@@ -255,11 +255,11 @@ class Finding:
         return f"{self.level:5} {self.rule:22} {self.where:18} {self.detail}"
 
 
-def lint_question(question: str, phase: str = "dig", where: str = "question") -> list[Finding]:
+def lint_question(question: str, where: str = "question") -> list[Finding]:
     findings = [
         Finding("warn" if name == "yes/no opener" else "error", name, where, question[:90])
         for name, pattern in BANNED.items()
-        if re.search(pattern, question, re.I | re.S) and not (phase == "shape" and name == "yes/no opener")
+        if re.search(pattern, question, re.I | re.S)
     ]
     if question.count("?") > 1 and not any(f.rule == "two questions" for f in findings):
         findings.append(Finding("error", "two questions", where, question[:90]))
@@ -279,7 +279,7 @@ def lint_answers(turns: list[Turn]) -> list[Finding]:
 def lint_questions(turns: list[Turn]) -> list[Finding]:
     findings = []
     for n, turn in enumerate(turns, start=1):
-        findings += lint_question(turn.question, turn.phase, f"Q{n}")
+        findings += lint_question(turn.question, f"Q{n}")
     return findings + _repeated_shapes(turns) + _interview_flags(turns)
 
 
@@ -389,7 +389,7 @@ def lint_book(book: dict, turns: list[Turn], *, resume: str | None = None, autho
 
 
 def _lint_disowned(book: dict, turns: list[Turn]) -> list[Finding]:
-    """A title or opening chapter built on what the member played down when asked "Is this you?"."""
+    """A title or opening chapter built on what the member played down in their last Shape answer."""
     shape = [t for t in turns if t.phase == "shape" and t.answer.strip()]
     if not shape:
         return []
@@ -611,16 +611,8 @@ def _generic(phrase: str) -> bool:
     return len(set(phrase.split()) - _STOP - _COMMON_ASKS) < 2
 
 
-def lint_playbacks(run: dict) -> list[Finding]:
-    return [
-        Finding("error", "long playback", f"Q{n}", f"{len(t['playback'].split())} words")
-        for n, t in enumerate(run["turns"], start=1)
-        if t.get("playback") and len(t["playback"].split()) > engine.MAX_PLAYBACK_WORDS
-    ]
-
-
 def lint_run(run: dict, *, resume: str | None = None) -> list[Finding]:
     turns = [Turn(question=t["question"], answer=t["answer"], phase=t["phase"]) for t in run["turns"]]
     author = run.get("persona", "").split(" ")[0]
     book = lint_book(run["book"], turns, resume=resume, author=author)
-    return lint_playbacks(run) + lint_answers(turns) + lint_questions(turns) + book
+    return lint_answers(turns) + lint_questions(turns) + book

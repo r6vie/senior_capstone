@@ -182,9 +182,7 @@ MAX_BLURB = 600
 # The prompts ask for at most this, and real runs have come back a few characters over.
 MAX_SUMMARY = 300
 
-# "Is this you?" is the most personal moment of the interview, on a phone (R1-14 in the quality notes).
-MAX_PLAYBACK_WORDS = 30
-# Shape is 1-3 questions, and following a hedge can stretch it, so it gets a nudge to close here.
+# Shape is 1-2 questions, and following a hedge can stretch it, so it gets a nudge to close here.
 MAX_SHAPE = 4
 
 # Questions are on the member's critical path, so they think less than the one-off book steps.
@@ -207,8 +205,6 @@ class Turn(BaseModel):
 class NextTurn(BaseModel):
     question: str
     phase: Phase
-    # Set only in Shape: the one-or-two-line "Is this you?" summary in the member's own words.
-    playback: str | None
     ready_for_reveal: bool
     # A few words for "Last time you were telling me about {topic}." Display only, never the book.
     topic: str
@@ -298,7 +294,6 @@ class TurnPlan(BaseModel):
     threads: list[Thread] = Field(description="Private ranking, strongest first.")
     phase: Phase
     question: str
-    playback: str | None
     topic: str
     ready_for_reveal: bool
     spark_id: str | None = Field(None, description="The id of the spark this question works from, if any.")
@@ -389,7 +384,6 @@ async def next_turn(
     return NextTurn(
         question=plan.question,
         phase=plan.phase,
-        playback=plan.playback,
         ready_for_reveal=plan.ready_for_reveal,
         topic=plan.topic,
         spark_id=plan.spark_id,
@@ -409,10 +403,6 @@ async def plan_turn(
     """next_turn plus the private thread ranking, which the evals read."""
     blocks = _turn_blocks(turns, resume_text, sparks, more_material, notebook)
     plan = await _ask(claude, "interview/interviewer", blocks, TurnPlan, QUESTION_EFFORT)
-    if plan.phase == "shape" and len((plan.playback or "").split()) > MAX_PLAYBACK_WORDS:
-        limit = "\n\n" + load_prompt("interview/retry_playback")
-        retry = [*blocks[:-1], {**blocks[-1], "text": blocks[-1]["text"] + limit}]
-        plan = await _ask(claude, "interview/interviewer", retry, TurnPlan, QUESTION_EFFORT)
 
     answered = sum(1 for turn in turns if turn.answer.strip())
     if not turns:
@@ -425,8 +415,6 @@ async def plan_turn(
     if more_material:
         plan.ready_for_reveal = False
         plan.phase = "dig"
-    if plan.phase != "shape":
-        plan.playback = None
     return plan
 
 

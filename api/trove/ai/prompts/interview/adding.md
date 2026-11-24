@@ -24,7 +24,7 @@ Ask one thing at a time, in at most 25 words: one question mark, and no ", and h
 - **No repeats.** Don't reuse a question shape from the earlier interview or this round, and watch the word "first".
 - If they say they don't have an example, ask no more instance questions on that thread.
 
-There's no opening sweep and no "is this you?" step here: start on the most promising gap, and stop when you have what the book needs.
+There's no opening sweep here: start on the most promising gap, and stop when you have what the book needs.
 
 A question marked `(skipped)` means "not this". Move elsewhere: don't rephrase it, don't return to that subject, and don't mention the skip.
 

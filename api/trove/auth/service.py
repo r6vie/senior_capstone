@@ -12,7 +12,7 @@ from pymongo import ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.errors import DuplicateKeyError
 
-from trove.auth.models import ContactDetailsResponse, ContactDetailsUpdate, UserResponse
+from trove.auth.models import ContactDetailsResponse, ContactDetailsUpdate, MemberContextUpdate, UserResponse
 from trove.core.config import get_settings
 from trove.core.database import get_database
 
@@ -27,6 +27,8 @@ USER_FIELDS = {
     "last_name": 1,
     "email": 1,
     "email_notifications": 1,
+    "affiliations": 1,
+    "founder": 1,
     "created_at": 1,
 }
 
@@ -61,6 +63,8 @@ def public_user(user: dict) -> UserResponse:
         full_name=full_name(user),
         email=user["email"],
         email_notifications=user.get("email_notifications", True),
+        affiliations=user.get("affiliations"),
+        founder=user.get("founder"),
         verified=user.get("verified", True),
         created_at=user["created_at"],
     )
@@ -188,6 +192,13 @@ async def email_recipient(database: AsyncDatabase, user_id: str) -> dict | None:
 
 async def set_email_notifications(database: AsyncDatabase, user_id: str, enabled: bool) -> None:
     await database.users.update_one({"_id": user_id}, {"$set": {"email_notifications": enabled}})
+
+
+async def set_member_context(database: AsyncDatabase, user_id: str, context: MemberContextUpdate) -> dict:
+    """Save member-supplied context without inferring it from email or invite history."""
+    changes = context.model_dump()
+    await database.users.update_one({"_id": user_id}, {"$set": changes})
+    return changes
 
 
 async def first_name_of(database: AsyncDatabase, user_id: str) -> str | None:

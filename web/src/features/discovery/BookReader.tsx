@@ -11,7 +11,7 @@ import { createPortal, flushSync } from "react-dom";
 import { Link } from "react-router-dom";
 import { errorMessage } from "../../api/errors";
 import type { components } from "../../api/schema";
-import { artFor, artReady, coverInk, loadArt } from "../../ui/art/bookArt";
+import { artFor, artReady, coverInk, loadArt, pageInk } from "../../ui/art/bookArt";
 import { Button } from "../../ui/Button";
 import "./BookReader.css";
 import { loadBook, loadedBook, loadedOwnBook, loadOwnBook } from "./bookPreload";
@@ -640,6 +640,7 @@ export function BookReader({
     <dialog
       ref={dialog}
       className="book-reader"
+      style={pageInk(art)}
       aria-label={title}
       onCancel={(event) => {
         event.preventDefault();

@@ -111,6 +111,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/me/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update My Context
+         * @description Record student, alumni and founder context. It never restricts who the member can meet.
+         */
+        put: operations["update_my_context_auth_me_context_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/logout": {
         parameters: {
             query?: never;
@@ -476,26 +496,6 @@ export interface paths {
          *     want of AI: it just adds nothing. 409 if `question_id` isn't the question waiting.
          */
         post: operations["notes_interview_notes_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/interview/shape": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Shape
-         * @description Confirm the Librarian's playback ("Yes, that's me"), or correct it.
-         */
-        post: operations["shape_interview_shape_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1777,6 +1777,16 @@ export interface components {
             /** Place Note */
             place_note: string | null;
         };
+        /**
+         * MemberContextUpdate
+         * @description How the member relates to CWRU, plus founder status. Neither limits who they can meet.
+         */
+        MemberContextUpdate: {
+            /** Affiliations */
+            affiliations: ("current_student" | "alumni")[];
+            /** Founder */
+            founder: boolean;
+        };
         /** Message */
         Message: {
             /** Id */
@@ -1998,8 +2008,6 @@ export interface components {
              * @enum {string}
              */
             phase: "sweep" | "dig" | "shape" | "adding" | "reading";
-            /** Playback */
-            playback: string | null;
             /** Builds On */
             builds_on?: string | null;
         };
@@ -2123,19 +2131,6 @@ export interface components {
             book: components["schemas"]["BookCard"];
             /** Excerpt */
             excerpt: string;
-        };
-        /** ShapeRequest */
-        ShapeRequest: {
-            /**
-             * Question Id
-             * @description The `question_id` of the playback being answered.
-             */
-            question_id?: string | null;
-            /**
-             * Correction
-             * @description What's different. Leave out to confirm: "Yes, that's me".
-             */
-            correction?: string | null;
         };
         /** ShelfPage */
         ShelfPage: {
@@ -2266,6 +2261,10 @@ export interface components {
             email: string;
             /** Email Notifications */
             email_notifications: boolean;
+            /** Affiliations */
+            affiliations: ("current_student" | "alumni")[] | null;
+            /** Founder */
+            founder: boolean | null;
             /** Verified */
             verified: boolean;
             /**
@@ -2519,6 +2518,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["NotificationSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_my_context_auth_me_context_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberContextUpdate"];
             };
         };
         responses: {
@@ -3157,48 +3189,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NotesResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    shape_interview_shape_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ShapeRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InterviewResponse"];
-                };
-            };
-            /** @description Conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StaleQuestionResponse"];
                 };
             };
             /** @description Validation Error */

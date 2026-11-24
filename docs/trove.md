@@ -104,7 +104,7 @@ The concept comes from Overdue, where every person *is* a book about themselves.
   - **Format:** a conversation, one question at a time. The member types or speaks each answer. The Librarian speaks only through its questions: calm, curious and plain.
   - **Asks for moments, not summaries.** Questions ask for a specific time or scene, then climb from what happened, to what you decided, to what you know now, to what you'd tell someone facing it. There are no "tell me about yourself", "what is the importance of", "how do you balance", yes/no or leading questions.
   - **Contrast questions** surface knowledge people take for granted: what people get wrong, what you learned the hard way, what people come to you for.
-  - **Three phases:** Sweep (wide and light across school, work, turning points, side pursuits), Dig (the 2–3 strongest threads, in depth), Shape (the Librarian plays back what it heard: "Is this you?"). Internally the interviewer keeps a light ranking of threads to decide where to dig. It is not shown.
+  - **Three phases:** Sweep (wide and light across school, work, turning points, side pursuits), Dig (the 2–3 strongest threads, in depth), Shape (the last 1–2 questions: when two threads from different parts of their life look like the same move, the Librarian asks the member about the link, then closes). Shape never plays back what the member said and never asks them to confirm it ("Is this you?"). Josef removed that step on 2026-11-23: the member knows what they told the Librarian, so asking them to confirm it adds nothing. Hedges, refusals and credit given to others anywhere in the interview still bind the book. Internally the interviewer keeps a light ranking of threads to decide where to dig. It is not shown.
   - **Reader lens, built into the question generator:** every next question is chosen with "what would a CWRU reader give 30 minutes for?" in mind. There is no separate critic pass.
   - **Length:** about 20–25 minutes, roughly 15–25 questions. The Librarian decides when it has enough. After about 10 answers, the member may also say "I've said enough. Show me my book."
   - **Saved after every answer, silently.** The member can leave and resume at any time ("Last time you were telling me about…").
@@ -268,9 +268,13 @@ The concept comes from Overdue, where every person *is* a book about themselves.
 - **Contact details still wait for a yes.** Nobody can reach an author outside Trove until the author accepts, which keeps "no cold messages" meaningful.
 - **Pen names would mostly end up as real names anyway**, so there are none.
 
-### 9.2 Branches and affiliation (decided: none for now)
+### 9.2 Membership and affiliation (revised 2026-11-23)
 
-Everyone at launch is CWRU, so community branches and affiliation badges would carry no information. We can revisit them if Trove expands beyond CWRU.
+There are no public affiliation badges. Before a member begins their first book interview, they
+record whether they are a current student, alumni, or both, and independently whether they are a
+founder. Existing members can supply or change the same context in Settings. It is not shown on the
+book and does not restrict or prioritize who may match with whom. The values are member-supplied;
+email and invite history never infer them.
 
 Membership verification (decided 2026-11-16, A2, Daniel):
 

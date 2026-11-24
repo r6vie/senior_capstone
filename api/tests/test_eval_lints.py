@@ -12,7 +12,6 @@ from evals.lints import (
     lint_answers,
     lint_book,
     lint_change,
-    lint_playbacks,
     lint_question,
     lint_questions,
     lint_run,
@@ -81,9 +80,8 @@ def test_question_rules(question, rule):
     assert rule in rules(lint_question(question))
 
 
-def test_a_shape_playback_may_ask_yes_or_no():
-    assert lint_question("Is this you?", "shape") == []
-    assert "yes/no opener" not in rules(lint_question("Is this you?", "shape"))
+def test_shape_questions_get_no_yes_or_no_pass():
+    assert "yes/no opener" in rules(lint_question("Are you the same person in both stories?"))
 
 
 def test_repeated_question_shapes_are_flagged():
@@ -381,12 +379,6 @@ def test_book_flags_from_the_quality_round():
         summary="I turn it off, then I pull the filament, then I heat it again, and my nozzle jammed."
     )
     assert "steps in summary" in rules(lint_book(book(chapters=[steps] * 3), [turn()]))
-    long = {
-        "persona": "x",
-        "turns": [{"question": "Is this you?", "answer": "Yes.", "phase": "shape", "playback": "word " * 31}],
-        "book": {},
-    }
-    assert "long playback" in rules(lint_playbacks(long))
 
 
 def test_evals_run_the_product_on_opus_and_the_member_on_the_cheap_model():

@@ -316,6 +316,53 @@
         ]
       }
     },
+    "/auth/me/context": {
+      "put": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Update My Context",
+        "description": "Record student, alumni and founder context. It never restricts who the member can meet.",
+        "operationId": "update_my_context_auth_me_context_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberContextUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/auth/logout": {
       "post": {
         "tags": [
@@ -1190,63 +1237,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NotesResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/interview/shape": {
-      "post": {
-        "tags": [
-          "Interview"
-        ],
-        "summary": "Shape",
-        "description": "Confirm the Librarian's playback (\"Yes, that's me\"), or correct it.",
-        "operationId": "shape_interview_shape_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ShapeRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InterviewResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StaleQuestionResponse"
                 }
               }
             }
@@ -4508,6 +4498,35 @@
         ],
         "title": "MeetingView"
       },
+      "MemberContextUpdate": {
+        "properties": {
+          "affiliations": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "current_student",
+                "alumni"
+              ]
+            },
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Affiliations"
+          },
+          "founder": {
+            "type": "boolean",
+            "title": "Founder"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "affiliations",
+          "founder"
+        ],
+        "title": "MemberContextUpdate",
+        "description": "How the member relates to CWRU, plus founder status. Neither limits who they can meet."
+      },
       "Message": {
         "properties": {
           "id": {
@@ -5019,17 +5038,6 @@
             ],
             "title": "Phase"
           },
-          "playback": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Playback"
-          },
           "builds_on": {
             "anyOf": [
               {
@@ -5046,8 +5054,7 @@
         "required": [
           "question_id",
           "text",
-          "phase",
-          "playback"
+          "phase"
         ],
         "title": "Question"
       },
@@ -5346,39 +5353,6 @@
           "excerpt"
         ],
         "title": "SearchResult"
-      },
-      "ShapeRequest": {
-        "properties": {
-          "question_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Question Id",
-            "description": "The `question_id` of the playback being answered."
-          },
-          "correction": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 5000,
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Correction",
-            "description": "What's different. Leave out to confirm: \"Yes, that's me\"."
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "ShapeRequest"
       },
       "ShelfPage": {
         "properties": {
@@ -5695,6 +5669,35 @@
             "type": "boolean",
             "title": "Email Notifications"
           },
+          "affiliations": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "current_student",
+                    "alumni"
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Affiliations"
+          },
+          "founder": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Founder"
+          },
           "verified": {
             "type": "boolean",
             "title": "Verified"
@@ -5713,6 +5716,8 @@
           "full_name",
           "email",
           "email_notifications",
+          "affiliations",
+          "founder",
           "verified",
           "created_at"
         ],

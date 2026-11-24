@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { api, session } from "../../api/client";
+import type { MemberContext } from "../account/MemberContextFields";
 import { AuthProvider } from "../auth/AuthProvider";
 import { clearAllDrafts, draftKeyFor } from "./AnswerPanel";
 import { answerOf, setAnswer } from "./answerField.testing";
@@ -14,14 +15,21 @@ import {
   type InterviewState,
 } from "./interviewClient";
 
-function renderWith(client: InterviewClient) {
+function renderWith(
+  client: InterviewClient,
+  saveMemberContext: (context: MemberContext) => Promise<void> = async () => undefined,
+) {
   render(
     <AuthProvider>
       <MemoryRouter>
-        <InterviewPage client={client} />
+        <InterviewPage client={client} saveMemberContext={saveMemberContext} />
       </MemoryRouter>
     </AuthProvider>,
   );
+}
+
+async function chooseStudent() {
+  fireEvent.click(await screen.findByLabelText("Current student"));
 }
 
 function fake() {
@@ -94,8 +102,13 @@ describe("InterviewPage", () => {
 
   describe("start", () => {
     it("leads with Start and keeps the résumé behind one quiet line", async () => {
-      renderWith(fake());
+      const saveContext = vi.fn(async () => undefined);
+      renderWith(fake(), saveContext);
       const start = await screen.findByRole("button", { name: "Start the interview" });
+      expect((start as HTMLButtonElement).disabled).toBe(true);
+      fireEvent.click(screen.getByLabelText("Current student"));
+      fireEvent.click(screen.getByLabelText("Alumni"));
+      fireEvent.click(screen.getByLabelText("I am a founder"));
       expect(screen.getByText(/Nobody sees it until you put it on the shelf/)).toBeTruthy();
       expect(screen.getByText(/About twenty minutes/)).toBeTruthy();
       expect(screen.queryByText(/A résumé, if you like/)).toBeNull();
@@ -105,6 +118,10 @@ describe("InterviewPage", () => {
       expect(document.body.textContent).not.toMatch(/never stored/);
       fireEvent.click(start);
       expect(await screen.findByText(/spent years getting good at/)).toBeTruthy();
+      expect(saveContext).toHaveBeenCalledWith({
+        affiliations: ["current_student", "alumni"],
+        founder: true,
+      });
     });
 
     it("clears a file's error when another is picked", async () => {
@@ -126,6 +143,7 @@ describe("InterviewPage", () => {
         .mockRejectedValueOnce(new InterviewError("That PDF couldn't be read."))
         .mockResolvedValue(asking);
       renderWith(client);
+      await chooseStudent();
       fireEvent.click(await screen.findByRole("button", { name: /Have a résumé\?/ }));
       const cv = new File(["x"], "cv.pdf", { type: "application/pdf" });
       fireEvent.change(screen.getByLabelText("Choose a PDF"), { target: { files: [cv] } });
@@ -142,6 +160,7 @@ describe("InterviewPage", () => {
       );
       const askAgain = vi.spyOn(client, "askAgain").mockResolvedValue(asking);
       renderWith(client);
+      await chooseStudent();
       fireEvent.click(await screen.findByRole("button", { name: "Start the interview" }));
       const retry = await screen.findByRole("button", { name: "Try again" });
       expect(screen.queryByRole("button", { name: "Start the interview" })).toBeNull();
@@ -158,6 +177,7 @@ describe("InterviewPage", () => {
       );
       vi.spyOn(client, "current").mockResolvedValueOnce(null).mockResolvedValue(asking);
       renderWith(client);
+      await chooseStudent();
       fireEvent.click(await screen.findByRole("button", { name: "Start the interview" }));
       expect(await screen.findByText(asking.question)).toBeTruthy();
       expect(document.body.textContent).not.toMatch(/already started/);
@@ -308,48 +328,19 @@ describe("InterviewPage", () => {
       }
       expect(screen.queryByRole("button", { name: /I've said enough/ })).toBeNull();
     });
-
-    it("isn't offered on the Shape step", async () => {
-      renderWith(at({ id: "me", stage: "shaping", phase: "shape", playback: "Is this you?" }));
-      await screen.findByText("Is this you?");
-      expect(screen.queryByRole("button", { name: "Skip" })).toBeNull();
-    });
   });
 
   describe("Shape", () => {
-    const shaping: InterviewState = { id: "me", stage: "shaping", phase: "shape", playback: "Is this you?" };
-
-    it("with nothing typed, offers only Yes", async () => {
-      renderWith(at(shaping));
-      await screen.findByText("Is this you?");
-      expect(screen.getByRole("button", { name: "Yes, that's me" })).toBeTruthy();
-      expect(screen.queryByRole("button", { name: "Not quite" })).toBeNull();
-      expect(screen.queryByRole("button", { name: "Send my correction" })).toBeNull();
-    });
-
-    it("with a correction typed, the red button sends it", async () => {
-      const client = at(shaping);
-      const correct = vi.spyOn(client, "correctShape").mockResolvedValue(shaping);
-      const confirm = vi.spyOn(client, "confirmShape");
+    it("is an ordinary question, with nothing played back to confirm", async () => {
+      const question = "What do the two offers have in common, if anything?";
+      const client = at({ ...asking, phase: "shape", question });
+      const send = vi.spyOn(client, "answer");
       renderWith(client);
-      fireEvent.change(await screen.findByLabelText(/tell me what's different/), {
-        target: { value: "It was three times" },
-      });
+      await screen.findByText(question);
       expect(screen.queryByRole("button", { name: "Yes, that's me" })).toBeNull();
-      fireEvent.click(screen.getByRole("button", { name: "Send my correction" }));
-      expect(correct).toHaveBeenCalledWith("me", "It was three times");
-      expect(confirm).not.toHaveBeenCalled();
-    });
-
-    it("confirming past a typed correction has to be chosen by name", async () => {
-      const client = at(shaping);
-      const confirm = vi.spyOn(client, "confirmShape").mockResolvedValue(shaping);
-      renderWith(client);
-      fireEvent.change(await screen.findByLabelText(/tell me what's different/), {
-        target: { value: "Actually, never mind" },
-      });
-      fireEvent.click(screen.getByRole("button", { name: "Yes, that's me, ignore this" }));
-      expect(confirm).toHaveBeenCalledTimes(1);
+      await type("Both paid more than they taught");
+      fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+      expect(send).toHaveBeenCalledWith("me", "Both paid more than they taught");
     });
   });
 
