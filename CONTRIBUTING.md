@@ -292,7 +292,7 @@ them from colliding with each other and with teammates.
 - **Separate local copies.** Each running copy of the app gets its own database and ports, for example
   `MONGODB_DATABASE=trove_dev_<name>_qa python3 scripts/dev.py --api-port 8100 --web-port 5273 --scripted-ai`.
 - **Tests on the local MongoDB** ([Tests](#tests)). Several suites against the shared dev Atlas cluster slow each
-  other down, and slow the live site with them.
+  other down.
 - **A checker that didn't write the code.** Before a UI change merges, have a separate agent walk through it
   in the running app at desktop and phone width, judging both bugs and how it feels. The author's own check
   doesn't count.
