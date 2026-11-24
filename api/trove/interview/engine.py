@@ -186,8 +186,10 @@ MAX_SUMMARY = 300
 # Shape is 0-1 questions, and following a hedge can stretch it, so it gets a nudge to close here.
 MAX_SHAPE = 2
 
-# Questions are on the member's critical path, so they think less than the one-off book steps.
-QUESTION_EFFORT = "medium"
+# Questions are on the member's critical path, so they think less than the one-off book steps. Low
+# answers in about 3 s against medium's 5-6 s, and the 8-question evals found the questions as good
+# (2026-11-23).
+QUESTION_EFFORT = "low"
 BOOK_EFFORT = "high"
 MAX_TOKENS = 16000
 

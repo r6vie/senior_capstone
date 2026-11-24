@@ -697,6 +697,8 @@ async def test_a_failed_book_can_be_tried_again_with_any_title(
     await client.post("/interview", json={}, headers=headers)
     await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
     await client.post("/interview/finish", headers=headers)
+    # Without the books prepared while choosing, so the pick has to write its own.
+    await database.interviews.update_one({}, {"$set": {"prepared": {}}})
     good = engine.finish_book
 
     async def failing(claude, *, turns, draft, title, **_):
@@ -952,3 +954,44 @@ async def test_an_interview_is_open_until_it_has_made_the_book(database):
     await database.interviews.update_one({"_id": "iv"}, {"$set": {"stage": "reviewing"}})
     assert not await service.has_open_interview(database, "member")
 
+
+async def test_the_book_for_each_title_is_ready_before_the_pick(client, database, headers, fake_engine):
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    await finish_and_wait(client, headers)
+    finished = [call["title"] for name, call in fake_engine.calls if name == "finish_book"]
+    assert sorted(finished) == ["Title 0", "Title 1", "Title 2"]
+    interview = await database.interviews.find_one({})
+    assert interview["prepare_status"] == "done"
+
+    # The pick uses the book already written, so it doesn't wait on another call.
+    calls = len(fake_engine.calls)
+    book = await choose_and_wait(client, headers, 1)
+    assert book["title"] == "Title 1" and book["blurb"] == "I know Title 1."
+    assert not [name for name, _ in fake_engine.calls[calls:] if name == "finish_book"]
+
+    # Changing to another title in review uses its prepared book too, while nothing was removed.
+    changed = (await client.post("/interview/book/title", json={"title": 2}, headers=headers)).json()
+    assert changed["blurb"] == "I know Title 2."
+    assert not [name for name, _ in fake_engine.calls[calls:] if name == "finish_book"]
+
+
+async def test_a_title_whose_book_failed_to_prepare_is_written_on_the_pick(
+    client, database, headers, monkeypatch, fake_engine
+):
+    original = fake_engine.finish_book
+
+    async def flaky(claude, *, title, **kwargs):
+        if title == "Title 1" and not flaky.failed:
+            flaky.failed = True
+            raise ValueError("unusable")
+        return await original(claude, title=title, **kwargs)
+
+    flaky.failed = False
+    monkeypatch.setattr(engine, "finish_book", flaky)
+    await client.post("/interview", json={}, headers=headers)
+    await answer_questions(client, headers, service.EXIT_AFTER_ANSWERS)
+    await finish_and_wait(client, headers)
+    assert set((await database.interviews.find_one({}))["prepared"]) == {"0", "2"}
+    book = await choose_and_wait(client, headers, 1)
+    assert book["blurb"] == "I know Title 1."

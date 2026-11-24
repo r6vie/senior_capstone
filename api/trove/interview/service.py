@@ -700,15 +700,88 @@ async def write_draft(database: AsyncDatabase, claude: Claude, interview_id: str
                 "draft": draft.model_dump(),
                 "current": None,
                 "write_status": None,
+                "prepared": {},
+                "prepare_status": "running",
+                "prepare_started_at": datetime.now(UTC),
                 "updated_at": datetime.now(UTC),
             },
             # Interviews from before résumé text had its own collection held it here.
             "$unset": {"resume_text": ""},
         },
+        return_document=ReturnDocument.AFTER,
     )
     if updated is not None:
         # The interview has ended, so the résumé text goes (docs/trove.md §4).
         await database.resume_texts.delete_one({"_id": interview_id})
+        await prepare_books(database, claude, updated)
+
+
+# While the member reads the three titles, the book for each is finished in the background, so the one
+# they pick is waiting (docs/trove.md §4). A pick waits this long for its book before writing its own.
+PREPARE_WAIT_SECONDS = 90.0
+PREPARE_POLL_SECONDS = 0.5
+
+
+async def prepare_books(database: AsyncDatabase, claude: Claude, interview: dict) -> None:
+    """Finish the book for each of the three titles, at the same time. A title that fails is simply
+    written when it's picked, as before."""
+    draft = Draft.model_validate(interview["draft"])
+
+    async def prepare(index: int, title: str) -> None:
+        try:
+            finished = await engine.finish_book(
+                claude,
+                turns=book_turns(interview),
+                draft=draft,
+                title=title,
+                leaks=leak_check(interview),
+                spark_titles=spark_titles_of(interview),
+            )
+        except Exception:
+            logger.warning("Preparing title %s failed for interview %s", index, interview["_id"])
+            return
+        sign_off = await sign_off_for(claude, interview, title, finished)
+        await database.interviews.update_one(
+            {"_id": interview["_id"]},
+            {
+                "$set": {
+                    f"prepared.{index}": {"title": title, "book": finished.model_dump(), "sign_off": sign_off}
+                }
+            },
+        )
+
+    await asyncio.gather(*(prepare(index, option.title) for index, option in enumerate(draft.titles)))
+    await database.interviews.update_one({"_id": interview["_id"]}, {"$set": {"prepare_status": "done"}})
+
+
+def _prepared(interview: dict, title: str) -> tuple[engine.FinishedBook, str | None] | None:
+    for entry in (interview.get("prepared") or {}).values():
+        if entry and entry.get("title") == title:
+            return engine.FinishedBook.model_validate(entry["book"]), entry.get("sign_off")
+    return None
+
+
+async def _wait_for_prepared(
+    database: AsyncDatabase, interview_id: str, title: str
+) -> tuple[engine.FinishedBook, str | None] | None:
+    """The book prepared for `title`, waiting for it while the preparing is still under way."""
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + PREPARE_WAIT_SECONDS
+    while True:
+        interview = await database.interviews.find_one({"_id": interview_id})
+        if interview is None:
+            return None
+        if (found := _prepared(interview, title)) is not None:
+            return found
+        started = interview.get("prepare_started_at")
+        if started is not None and started.tzinfo is None:
+            started = started.replace(tzinfo=UTC)
+        running = interview.get("prepare_status") == "running" and (
+            started is not None and datetime.now(UTC) - started < timedelta(seconds=PREPARE_WAIT_SECONDS)
+        )
+        if not running or loop.time() >= deadline:
+            return None
+        await asyncio.sleep(PREPARE_POLL_SECONDS)
 
 
 async def ask_for_more_material(database: AsyncDatabase, claude: Claude, interview: dict) -> dict:
@@ -776,18 +849,23 @@ async def write_book(database: AsyncDatabase, claude: Claude, interview_id: str)
     interview = await database.interviews.find_one({"_id": interview_id, "stage": "finishing"})
     if interview is None:
         return
-    try:
-        finished = await engine.finish_book(
-            claude,
-            turns=book_turns(interview),
-            draft=Draft.model_validate(interview["draft"]),
-            title=interview["chosen_title"],
-            leaks=leak_check(interview),
-            spark_titles=spark_titles_of(interview),
-        )
-    except Exception:
-        await _write_failed(database, interview_id, "finishing")
-        return
+    prepared = await _wait_for_prepared(database, interview_id, interview["chosen_title"])
+    if prepared is not None:
+        finished, sign_off = prepared
+    else:
+        try:
+            finished = await engine.finish_book(
+                claude,
+                turns=book_turns(interview),
+                draft=Draft.model_validate(interview["draft"]),
+                title=interview["chosen_title"],
+                leaks=leak_check(interview),
+                spark_titles=spark_titles_of(interview),
+            )
+        except Exception:
+            await _write_failed(database, interview_id, "finishing")
+            return
+        sign_off = await sign_off_for(claude, interview, interview["chosen_title"], finished)
     # A book that already exists was made by an earlier write of this same step.
     with contextlib.suppress(books.BookExists):
         await books.create_draft_book(
@@ -803,7 +881,7 @@ async def write_book(database: AsyncDatabase, claude: Claude, interview_id: str)
             "$set": {
                 "stage": "reviewing",
                 "write_status": None,
-                "sign_off": await sign_off_for(claude, interview, interview["chosen_title"], finished),
+                "sign_off": sign_off,
                 "updated_at": datetime.now(UTC),
             }
         },
@@ -929,16 +1007,22 @@ async def change_title(database: AsyncDatabase, claude: Claude, user: dict, inde
     pool = [chapter for chapter in draft.pool if chapter.id not in removed]
     if len(pool) < books.MIN_CHAPTERS:
         raise conflict(f"A book needs at least {books.MIN_CHAPTERS} chapters.")
-    finished = await ask_engine(
-        engine.finish_book(
-            claude,
-            turns=book_turns(interview),
-            draft=draft.model_copy(update={"pool": pool}),
-            title=title,
-            leaks=leak_check(interview),
-            spark_titles=spark_titles_of(interview),
+    # With nothing removed, the book prepared for that title while the member chose is still right.
+    prepared = None if removed else _prepared(interview, title)
+    if prepared is not None:
+        finished, sign_off = prepared
+    else:
+        finished = await ask_engine(
+            engine.finish_book(
+                claude,
+                turns=book_turns(interview),
+                draft=draft.model_copy(update={"pool": pool}),
+                title=title,
+                leaks=leak_check(interview),
+                spark_titles=spark_titles_of(interview),
+            )
         )
-    )
+        sign_off = None
     book = await books.retitle_draft(
         database,
         user["_id"],
@@ -950,7 +1034,7 @@ async def change_title(database: AsyncDatabase, claude: Claude, user: dict, inde
         raise conflict("Your book is already on the shelf.")
     await database.interviews.update_one(
         {"_id": interview["_id"]},
-        {"$set": {"sign_off": await sign_off_for(claude, interview, title, finished)}},
+        {"$set": {"sign_off": sign_off or await sign_off_for(claude, interview, title, finished)}},
     )
     return books.my_book_view(book)
 
