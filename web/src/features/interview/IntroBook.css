@@ -1,0 +1,330 @@
+/* The interview's first screen (StartInterview): the shelf's open book, empty, introducing the interview.
+   Sizes are the shelf's open book (BookReader.css): 1180 x 724, pages 570 x 684. Tokens only, apart from the
+   book's own measures. */
+
+.iv-intro-act {
+  width: min(1180px, 100% - 2 * var(--gutter));
+  margin: 0 auto;
+  padding: var(--s-6) 0 var(--s-8);
+}
+.ib-book {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 20px;
+}
+/* The board, its spine, and the page edge under the two pages. */
+.ib-book::before {
+  content: "";
+  position: absolute;
+  inset: 8px 6px;
+  border-radius: 4px;
+  background: var(--ink);
+}
+.ib-book::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 12px);
+  width: 24px;
+  border-radius: 3px;
+  background: var(--ink);
+}
+.ib-edge {
+  position: absolute;
+  inset: 16px 14px;
+  border: 1.5px solid var(--ink);
+  background: var(--white);
+}
+.ib-page {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 684px;
+  overflow: hidden;
+  border: var(--line) solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+}
+.ib-left {
+  border-right-width: 1px;
+  padding: 84px 56px var(--s-6) 64px;
+}
+.ib-right {
+  border-left-width: 1px;
+  padding: 84px 64px var(--s-6) 56px;
+}
+/* The gutter's shade, in dots, on each page's spine side. */
+.ib-left::after,
+.ib-right::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 18px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.ib-left::after {
+  right: 0;
+  background: radial-gradient(circle, var(--ink) 0.9px, transparent 1.3px) 0 0 / 4px 4px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000);
+  mask-image: linear-gradient(90deg, transparent, #000);
+}
+.ib-right::after {
+  left: 0;
+  background: radial-gradient(circle, var(--ink) 0.9px, transparent 1.3px) 1px 0 / 4px 4px;
+  -webkit-mask-image: linear-gradient(90deg, #000, transparent);
+  mask-image: linear-gradient(90deg, #000, transparent);
+}
+.ib-head {
+  position: absolute;
+  top: 22px;
+  left: 56px;
+  right: 56px;
+  display: flex;
+  align-items: center;
+  height: var(--tap);
+}
+.ib-head-right {
+  justify-content: flex-end;
+}
+/* Skip sits where Close sits on the shelf's book. */
+.ib-skip {
+  margin-left: calc(-1 * var(--s-3));
+}
+.ib-tab {
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  height: 40px;
+  padding: 0 9px;
+  border-bottom: var(--line-heavy) solid var(--ink);
+  font: 600 14px / 1 var(--font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* The three lines: typed in the book's serif, then settled smaller once the questions come. */
+.ib-says {
+  display: grid;
+  gap: 18px;
+  margin: 6px 0 0;
+  font: 600 30px / 1.18 var(--font-serif);
+  letter-spacing: -0.012em;
+  transition: font-size 240ms ease;
+}
+.ib-says[data-done] {
+  gap: 10px;
+  font-size: 22px;
+  line-height: 1.22;
+}
+.ib-line {
+  display: grid;
+  text-wrap: pretty;
+}
+.ib-line > * {
+  grid-area: 1 / 1;
+}
+.ib-full {
+  color: transparent;
+}
+@media (forced-colors: active) {
+  .ib-full {
+    color: CanvasText;
+  }
+  .ib-typed {
+    display: none;
+  }
+}
+
+/* Under the lines: the member's place at CWRU, the résumé, and Start. */
+.ib-after {
+  display: grid;
+  justify-items: start;
+}
+.ib-after .member-context {
+  margin-top: 28px;
+}
+.ib-after .member-context legend,
+.ib-resume legend {
+  margin: 0 0 var(--s-1);
+  padding: 0;
+  font: 600 13px / 1.3 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.ib-after .member-context-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) 28px;
+}
+/* The founder question sits on its own line, under the two affiliations. */
+.ib-after .member-context-choices > :last-child {
+  flex-basis: 100%;
+}
+.ib-resume {
+  min-width: 0;
+  margin: 14px 0 0;
+  padding: 0;
+  border: 0;
+}
+.ib-drop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-4);
+  min-height: var(--tap);
+}
+.ib-drop[data-dragging] {
+  outline: var(--line) dashed var(--ink);
+  outline-offset: 4px;
+}
+.ib-drop-text {
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.ib-file {
+  font: 600 15px / 1.3 var(--font-sans);
+}
+.ib-choose {
+  min-height: 40px;
+}
+.ib-resume .message {
+  margin: var(--s-2) 0 0;
+}
+.ib-after .iv-error,
+.ib-after .iv-textlink {
+  margin-top: var(--s-4);
+}
+.ib-start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) 18px;
+  margin-top: 34px;
+}
+/* After Start, while the Librarian gets ready: italic and grey, as every wait in the interview. */
+.ib-wait {
+  font: italic 500 17px / 1.3 var(--font-serif);
+  color: var(--ink-2);
+}
+.ib-minutes {
+  font: 700 13px / 1.3 var(--font-display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* The contents page: three empty places that draw in, a number and two blank lines each. */
+.ib-pname {
+  margin: 0;
+  font: 800 24px / 1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ib-places {
+  margin: 20px -10px 0 -12px;
+  padding: 0;
+  list-style: none;
+}
+.ib-places li {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 0 6px;
+  align-items: baseline;
+  padding: 16px 10px 16px 12px;
+  opacity: 0.35;
+  transition: opacity 240ms ease;
+}
+.ib-places li[data-drawn] {
+  opacity: 1;
+}
+.ib-places b {
+  font: 700 22px / 1 var(--font-display);
+}
+.ib-bar {
+  display: block;
+  width: var(--w);
+  height: 14px;
+  margin-top: 4px;
+  border-bottom: var(--line) dashed var(--rule);
+}
+.ib-places li[data-drawn] .ib-bar {
+  border-bottom-style: solid;
+  background: var(--paper-sunk);
+}
+.ib-bar-s {
+  width: 70%;
+  height: 10px;
+  margin-top: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ib-says,
+  .ib-places li {
+    transition: none;
+  }
+}
+
+/* A narrower screen: the title page, then the contents, one above the other, as the shelf's book on a phone. */
+@media (max-width: 1099px) {
+  .ib-book {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-4);
+    padding: 0;
+  }
+  .ib-book::before,
+  .ib-book::after,
+  .ib-edge,
+  .ib-page::after {
+    display: none;
+  }
+  .ib-page {
+    min-height: 0;
+    border-width: var(--line);
+  }
+  .ib-left {
+    padding: 68px 18px 26px;
+  }
+  .ib-right {
+    padding: 66px 18px 12px;
+  }
+  .ib-head {
+    top: 14px;
+    left: 18px;
+    right: 18px;
+  }
+  .ib-head-right {
+    justify-content: flex-start;
+  }
+  .ib-pname {
+    display: none;
+  }
+  .ib-places {
+    margin: 0;
+  }
+  .ib-places li {
+    grid-template-columns: 24px 1fr;
+    gap: 0 10px;
+    padding: 13px 0;
+  }
+}
+@media (max-width: 719px) {
+  .iv-intro-act {
+    padding-top: var(--s-4);
+  }
+  .ib-says {
+    font-size: 24px;
+  }
+  .ib-says[data-done] {
+    font-size: 20px;
+  }
+  .ib-start > .button {
+    flex: 1 1 100%;
+  }
+}

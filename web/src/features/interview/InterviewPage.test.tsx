@@ -22,7 +22,16 @@ function renderWith(
   );
 }
 
+/** The intro book (StartInterview) types its lines first; Skip goes straight to its questions and Start. */
+async function skipIntro() {
+  await screen.findByText("I’ll ask you one question at a time.");
+  // With reduced motion the book opens on its end, with nothing to skip.
+  const skip = screen.queryByRole("button", { name: "Skip" });
+  if (skip) fireEvent.click(skip);
+}
+
 async function chooseStudent() {
+  await skipIntro();
   fireEvent.click(await screen.findByLabelText("Current student"));
 }
 
@@ -110,9 +119,8 @@ describe("InterviewPage", () => {
       } as never);
     }
     async function chooseAndStart() {
-      const start = await screen.findByRole("button", { name: "Start the interview" });
-      fireEvent.click(screen.getByLabelText("Current student"));
-      fireEvent.click(start);
+      await chooseStudent();
+      fireEvent.click(screen.getByRole("button", { name: "Start the interview" }));
     }
     function stubMotion(reduce: boolean) {
       vi.stubGlobal("matchMedia", (query: string) => ({
@@ -172,21 +180,26 @@ describe("InterviewPage", () => {
   });
 
   describe("start", () => {
-    it("leads with Start and keeps the résumé behind one quiet line", async () => {
+    it("opens as the empty book, then asks the member's place at CWRU before Start", async () => {
       const saveContext = vi.fn(async () => undefined);
       renderWith(fake(), saveContext);
+      // The three lines are in the book from the start, for screen readers; the questions wait for them.
+      expect(await screen.findByText("I’ll ask you one question at a time.")).toBeTruthy();
+      expect(screen.getByText(/Nobody sees it until you put it on the shelf/)).toBeTruthy();
+      expect(screen.queryByRole("button", { name: "Start the interview" })).toBeNull();
+      await skipIntro();
       const start = await screen.findByRole("button", { name: "Start the interview" });
       expect((start as HTMLButtonElement).disabled).toBe(true);
+      expect(screen.getByText("About 20 minutes")).toBeTruthy();
+      // Josef dropped both helper lines.
+      expect(screen.queryByText(/Choose both when both apply/)).toBeNull();
+      expect(screen.queryByText(/not shown on your book/)).toBeNull();
+      // The résumé is one optional line in the book, sent with Start.
+      expect(screen.getByText("A résumé, if you like")).toBeTruthy();
+      expect(screen.getByText("Drop a PDF here")).toBeTruthy();
       fireEvent.click(screen.getByLabelText("Current student"));
       fireEvent.click(screen.getByLabelText("Alumni"));
       fireEvent.click(screen.getByLabelText("I am a founder"));
-      expect(screen.getByText(/Nobody sees it until you put it on the shelf/)).toBeTruthy();
-      expect(screen.getByText(/About twenty minutes/)).toBeTruthy();
-      expect(screen.queryByText(/A résumé, if you like/)).toBeNull();
-      fireEvent.click(screen.getByRole("button", { name: /Have a résumé\?/ }));
-      expect(screen.getByText(/A résumé, if you like/)).toBeTruthy();
-      expect(screen.getByText(/its text is deleted when the interview ends/)).toBeTruthy();
-      expect(document.body.textContent).not.toMatch(/never stored/);
       fireEvent.click(start);
       expect(await screen.findByText(/spent years getting good at/)).toBeTruthy();
       expect(saveContext).toHaveBeenCalledWith({
@@ -197,7 +210,7 @@ describe("InterviewPage", () => {
 
     it("clears a file's error when another is picked", async () => {
       renderWith(fake());
-      fireEvent.click(await screen.findByRole("button", { name: /Have a résumé\?/ }));
+      await skipIntro();
       const picker = screen.getByLabelText("Choose a PDF");
       fireEvent.change(picker, { target: { files: [new File(["x"], "notes.txt", { type: "text/plain" })] } });
       expect(screen.getByText(/isn't a PDF/)).toBeTruthy();
@@ -215,7 +228,6 @@ describe("InterviewPage", () => {
         .mockResolvedValue(asking);
       renderWith(client);
       await chooseStudent();
-      fireEvent.click(await screen.findByRole("button", { name: /Have a résumé\?/ }));
       const cv = new File(["x"], "cv.pdf", { type: "application/pdf" });
       fireEvent.change(screen.getByLabelText("Choose a PDF"), { target: { files: [cv] } });
       fireEvent.click(screen.getByRole("button", { name: "Start the interview" }));
@@ -235,7 +247,7 @@ describe("InterviewPage", () => {
       fireEvent.click(await screen.findByRole("button", { name: "Start the interview" }));
       const retry = await screen.findByRole("button", { name: "Try again" });
       expect(screen.queryByRole("button", { name: "Start the interview" })).toBeNull();
-      expect(screen.queryByRole("button", { name: /Have a résumé\?/ })).toBeNull();
+      expect(screen.queryByText("Choose a PDF")).toBeNull();
       fireEvent.click(retry);
       expect(await screen.findByText(asking.question)).toBeTruthy();
       expect(askAgain).toHaveBeenCalledTimes(1);
@@ -256,7 +268,7 @@ describe("InterviewPage", () => {
 
     it("turns down a résumé over the size limit in a plain sentence", async () => {
       renderWith(fake());
-      fireEvent.click(await screen.findByRole("button", { name: /Have a résumé\?/ }));
+      await skipIntro();
       const big = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "big.pdf", { type: "application/pdf" });
       fireEvent.change(screen.getByLabelText("Choose a PDF"), { target: { files: [big] } });
       expect(screen.getByText(/over 5 MB/)).toBeTruthy();
@@ -649,6 +661,7 @@ describe("InterviewPage", () => {
       expect(document.body.textContent).not.toMatch(/Failed to fetch/);
       expect(screen.queryByRole("button", { name: "Start the interview" })).toBeNull();
       fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+      await skipIntro();
       expect(await screen.findByRole("button", { name: "Start the interview" })).toBeTruthy();
     });
   });

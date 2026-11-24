@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../../api/client";
 import { errorMessage } from "../../api/errors";
 import { Button } from "../../ui/Button";
 import { usePageTitle } from "../../ui/usePageTitle";
-import { type Affiliation, type MemberContext, MemberContextFields } from "../account/MemberContextFields";
+import type { Affiliation, MemberContext } from "../account/MemberContextFields";
 import { useAuth } from "../auth/AuthProvider";
 import { AnswerPanel, clearDraft, draftKeyFor, keepDraft, takeOrphanDrafts } from "./AnswerPanel";
 import { apiInterviewClient } from "./apiInterviewClient";
@@ -19,6 +19,7 @@ import {
   WAIT_SHOWS_AFTER_MS,
   Waiting,
 } from "./InterviewFrame";
+import { IntroBook } from "./IntroBook";
 import {
   type BookEdit,
   type ChapterEdit,
@@ -459,7 +460,6 @@ export function InterviewPage({
         });
       return (
         <StartScreen
-          hasSparks={hasSparks}
           busy={busy}
           error={error}
           started={Boolean(retry)}
@@ -906,11 +906,7 @@ function messageOf(reason: unknown): string {
 const START_SAY =
   "I'll ask you one question at a time, to find the book you haven't written yet. Nobody sees it until you put it on the shelf.";
 
-// The API's limit on a résumé.
-const MAX_RESUME_BYTES = 5 * 1024 * 1024;
-
 function StartScreen({
-  hasSparks,
   busy,
   error,
   started,
@@ -918,7 +914,6 @@ function StartScreen({
   initialFounder,
   onStart,
 }: {
-  hasSparks: boolean;
   busy: string | null;
   error: string | null;
   /** The interview exists and only its first question failed, so Try again is the one way on. */
@@ -927,34 +922,11 @@ function StartScreen({
   initialFounder: boolean;
   onStart: (resume: File | null, context: MemberContext) => void;
 }) {
-  const [resume, setResume] = useState<File | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
-  const [dragging, setDragging] = useState(false);
-  const [addingResume, setAddingResume] = useState(false);
-  const [affiliations, setAffiliations] = useState(initialAffiliations);
-  const [founder, setFounder] = useState(initialFounder);
-  const input = useRef<HTMLInputElement>(null);
-  const inputId = useId();
   // Stays set through the retry's wait, so Start doesn't flash back while Try again is working.
   const [exists, setExists] = useState(started);
   useEffect(() => {
     if (started) setExists(true);
   }, [started]);
-
-  function pick(file: File | undefined) {
-    if (!file) return;
-    setFileError(null);
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      setFileError("That isn't a PDF. Choose a PDF, or start without one.");
-      return;
-    }
-    if (file.size > MAX_RESUME_BYTES) {
-      setFileError("That PDF is over 5 MB. Choose a smaller one, or start without it.");
-      return;
-    }
-    setFileError(null);
-    setResume(file);
-  }
 
   // Starting again would only be refused: the interview is there, waiting for its first question.
   if (exists || started) {
@@ -966,108 +938,13 @@ function StartScreen({
   }
 
   return (
-    <Frame busy={Boolean(busy)} say={busy ? <Waiting holding={START_SAY}>{busy}</Waiting> : START_SAY}>
-      <ErrorMessage message={error} />
-      {error && resume && (
-        <button
-          type="button"
-          className="iv-textlink"
-          onClick={() => onStart(null, { affiliations, founder })}
-        >
-          Start without it
-        </button>
-      )}
-      <MemberContextFields
-        affiliations={affiliations}
-        founder={founder}
-        onAffiliationsChange={setAffiliations}
-        onFounderChange={setFounder}
-      />
-      <div className="iv-row">
-        <Button
-          onClick={() => onStart(resume, { affiliations, founder })}
-          aria-busy={Boolean(busy)}
-          disabled={affiliations.length === 0}
-        >
-          Start the interview
-        </Button>
-        <span className="iv-quiet-note">
-          About twenty minutes. You can stop sooner, and leave and come back at any time.
-        </span>
-      </div>
-      {hasSparks && (
-        <p className="iv-note">I'll use the chapters you marked to shape some of the questions.</p>
-      )}
-      {!addingResume && (
-        <button type="button" className="iv-textlink" onClick={() => setAddingResume(true)}>
-          Have a résumé? Add a PDF so my first questions fit you.
-        </button>
-      )}
-      {addingResume && (
-        <div className="panel iv-resume">
-          <h2>A résumé, if you like</h2>
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: a drop target for the mouse; "Choose a PDF" is the keyboard path */}
-          <div
-            className="iv-drop"
-            data-dragging={dragging}
-            onDragOver={(event) => {
-              event.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={(event) => {
-              event.preventDefault();
-              setDragging(false);
-              pick(event.dataTransfer.files[0]);
-            }}
-          >
-            {resume ? (
-              <>
-                <span className="iv-file">{resume.name}</span>
-                <button
-                  type="button"
-                  className="button button-quiet"
-                  onClick={() => {
-                    setResume(null);
-                    input.current?.focus();
-                  }}
-                >
-                  Remove
-                </button>
-              </>
-            ) : (
-              <>
-                <span className="iv-drop-text">Drop a PDF here</span>
-                <label htmlFor={inputId} className="button button-secondary iv-sm">
-                  Choose a PDF
-                </label>
-              </>
-            )}
-            <input
-              id={inputId}
-              ref={input}
-              type="file"
-              accept="application/pdf,.pdf"
-              className="iv-visually-hidden"
-              tabIndex={resume ? -1 : undefined}
-              onChange={(event) => {
-                pick(event.target.files?.[0]);
-                event.target.value = "";
-              }}
-            />
-          </div>
-          {fileError && (
-            <p className="message" role="status">
-              {fileError}
-            </p>
-          )}
-          <p className="iv-note">
-            Optional. I read it for places to dig. The file isn't kept, its text is deleted when the interview
-            ends, and nothing from it goes into your book.
-          </p>
-        </div>
-      )}
-    </Frame>
+    <IntroBook
+      error={error}
+      busy={busy}
+      initialAffiliations={initialAffiliations}
+      initialFounder={initialFounder}
+      onStart={onStart}
+    />
   );
 }
 

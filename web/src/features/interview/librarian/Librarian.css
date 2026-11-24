@@ -112,7 +112,16 @@
 }
 
 /* ---------- The question page (LibDesktop): no band; the question is words on the page ---------- */
-.iv-ask .iv-top .avatar {
+/* A phone keeps the plain bar on one line: the wordmark, "Leave" and the avatar. */
+@media (max-width: 719px) {
+  .iv-top.iv-top-plain {
+    flex-wrap: nowrap;
+  }
+  .iv-wide-only {
+    display: none;
+  }
+}
+.iv-top-plain .avatar {
   text-decoration: none;
 }
 .iv-ask .iv-act {

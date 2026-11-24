@@ -256,6 +256,20 @@ so leave the art layer out (keep a place for one image under each page's content
 
 Patterns added after v1. Each entry: name, the task it solves, date, owner, snippet or link.
 
+### The interview's first screen: the book introduces it (StartInterview, 2026-11-23, Trove UI; approved by Josef)
+
+The task: say what the interview is before it starts, without a band or a form. `IntroBook.tsx`.
+
+- The shelf's open book, empty, under the plain top bar (`IvTop`).
+- **The title page:** three lines type in, in Newsreader 600 30px, one letter per 30ms with a breath between lines.
+  Skip sits where Close sits on the shelf's book. When the lines are done they settle to 22px.
+- **The contents page:** three chapter places draw in, a number and two blank lines each, as the second line types.
+- **Under the lines:** the member's place at CWRU (Current student, Alumni, I am a founder; no helper lines) and
+  one optional résumé line ("A résumé, if you like", Drop a PDF here, Choose a PDF; then the file's name and
+  Remove). The résumé goes with Start. Start stays greyed until an affiliation is ticked, with "About 20
+  minutes" beside it, and the wait's line takes that place after Start.
+- Skip, and reduced motion, open on the end. On a narrower screen the two pages stack.
+
 ### The interview opens on question one (StartOpen, 2026-11-23, Trove UI; approved by Josef)
 
 The task: a new interview should feel like the Librarian greeting you, not a form. After Start, the question

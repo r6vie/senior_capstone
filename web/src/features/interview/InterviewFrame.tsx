@@ -120,6 +120,28 @@ export function Frame({
   );
 }
 
+/** The plain top bar of the question screens and the intro book: the wordmark, Leave for now, the avatar. */
+export function IvTop() {
+  const { user } = useAuth();
+  return (
+    <header className="iv-top iv-top-plain">
+      <Link className="wordmark" to="/" aria-label="Trove home">
+        Trove
+      </Link>
+      <span className="iv-grow" />
+      <Link to="/my-book" className="button button-quiet">
+        Leave<span className="iv-wide-only"> for now</span>
+      </Link>
+      {user && (
+        <Link to="/settings" className="avatar" aria-label="Settings">
+          {user.first_name.charAt(0)}
+          {user.last_name?.charAt(0)}
+        </Link>
+      )}
+    </header>
+  );
+}
+
 /** The question screen with the Librarian (LibDesktop, LibPhone): a plain header, the question as words
  * on the page, the answer card under it, and the Librarian's notebook beside them. */
 export function AskFrame({
@@ -140,7 +162,6 @@ export function AskFrame({
   aside?: ReactNode;
   children?: ReactNode;
 }) {
-  const { user } = useAuth();
   const [slow, setSlow] = useState(false);
   useEffect(() => {
     setSlow(false);
@@ -151,21 +172,7 @@ export function AskFrame({
 
   return (
     <div className="interview iv-ask">
-      <header className="iv-top">
-        <Link className="wordmark" to="/" aria-label="Trove home">
-          Trove
-        </Link>
-        <span className="iv-grow" />
-        <Link to="/my-book" className="button button-quiet">
-          Leave for now
-        </Link>
-        {user && (
-          <Link to="/settings" className="avatar" aria-label="Settings">
-            {user.first_name.charAt(0)}
-            {user.last_name?.charAt(0)}
-          </Link>
-        )}
-      </header>
+      <IvTop />
       {/* Outside the part that goes inert during a wait: these words have to stay selectable. */}
       <LeftoverWords />
       <main className="iv-act" tabIndex={-1} inert={busy} aria-busy={busy}>

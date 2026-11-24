@@ -31,7 +31,6 @@ export function MemberContextFields({
   return (
     <fieldset className="member-context">
       <legend>Your place in the CWRU community</legend>
-      <p className="muted">Choose both when both apply.</p>
       <div className="member-context-choices">
         {AFFILIATIONS.map(({ value, label }) => (
           <label className="choice" key={value}>
@@ -52,7 +51,6 @@ export function MemberContextFields({
           <span>I am a founder</span>
         </label>
       </div>
-      <p className="muted">This is not shown on your book and does not limit who you can meet.</p>
     </fieldset>
   );
 }
