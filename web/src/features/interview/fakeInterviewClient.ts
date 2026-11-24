@@ -400,7 +400,8 @@ export function createFakeInterviewClient(authorName: string, delay = 1200): Int
       }),
     // The final look at the answer just sent: a little after the answer is saved, as the API's arrives.
     async finalNotes(questionId) {
-      await wait(delay + 50);
+      // Ready during the wait for the next question, as the API's is.
+      await wait(delay * 0.6);
       const stored = load();
       const sent = stored?.lastSent;
       const none = {

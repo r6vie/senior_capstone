@@ -59,6 +59,14 @@ export function Frame({
     const timer = setTimeout(() => setSlow(true), SLOW_AFTER_MS);
     return () => clearTimeout(timer);
   }, [busy]);
+  // The label steps aside with the line: only once the waiting line shows (Waiting), never for a quick reply.
+  const [waitShows, setWaitShows] = useState(false);
+  useEffect(() => {
+    setWaitShows(false);
+    if (!busy) return;
+    const timer = setTimeout(() => setWaitShows(true), WAIT_SHOWS_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, [busy]);
 
   return (
     <div className="interview">
@@ -84,7 +92,11 @@ export function Frame({
           doesn't move when the wait starts or ends. */}
       <section className="iv-line">
         {(eyebrow || !namesLibrarian(say)) && (
-          <span className="iv-eyebrow" data-hidden={busy || undefined} aria-hidden={busy || undefined}>
+          <span
+            className="iv-eyebrow"
+            data-hidden={waitShows || undefined}
+            aria-hidden={waitShows || undefined}
+          >
             {eyebrow ?? "The Librarian"}
           </span>
         )}

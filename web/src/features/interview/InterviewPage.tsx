@@ -298,6 +298,13 @@ export function InterviewPage({
   }, [place, loaded, loadFailed, welcomedBack]);
 
   const calling = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   // Runs one call with a calm waiting line at the top; the screen stays put until it answers.
   const run = useCallback(
     async (
@@ -512,10 +519,14 @@ export function InterviewPage({
           if (calling.current) return Promise.resolve(false);
           // While the next question is prepared, the Librarian's last look at this answer is written into
           // the notebook, so the wait shows it reading what was sent. Anything missed comes with the question.
+          // A reply that lands once the next question is here, or after leaving, is dropped: the next
+          // question's own notebook already carries it.
+          const sentAt = placeOf(state);
           client
             .finalNotes(state.questionId ?? state.question)
             .then((reply) => {
-              if (reply.status === "done") notebook.apply(reply.notebook);
+              if (reply.status !== "done" || !mounted.current || placeOf(latest.current) !== sentAt) return;
+              notebook.apply(reply.notebook);
             })
             .catch(() => undefined);
           return run("The Librarian is thinking…", () => lookThenSend(words, call), {

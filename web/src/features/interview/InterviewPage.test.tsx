@@ -697,6 +697,55 @@ describe("InterviewPage", () => {
       expect(await screen.findAllByText("reads the room before the chart")).not.toHaveLength(0);
     });
 
+    it("shows a returning member's notebook at rest, not written out again", async () => {
+      const entry = {
+        id: "n1",
+        kind: "note" as const,
+        text: "fixes what others won't touch",
+        anchors: [],
+        sourceTurns: [1],
+        status: "open" as const,
+        struck: [],
+      };
+      renderWith(at({ ...asking, librarian: { answered: 1, marks: [], silent: false, notebook: [entry] } }));
+      expect(await screen.findAllByText(entry.text)).not.toHaveLength(0);
+      expect(document.querySelector('.lib-en[data-life="writing"]')).toBeNull();
+    });
+
+    it("drops a late look at an answer once the next question is here", async () => {
+      const client = at(asking);
+      vi.spyOn(client, "skip").mockResolvedValue({ ...asking, question: "The next question?" });
+      let land: (reply: Awaited<ReturnType<InterviewClient["finalNotes"]>>) => void = () => undefined;
+      vi.spyOn(client, "finalNotes").mockReturnValue(new Promise((done) => (land = done)));
+      renderWith(client);
+      fireEvent.click(await screen.findByRole("button", { name: "Skip" }));
+      expect(await screen.findByText("The next question?")).toBeTruthy();
+      await act(async () =>
+        land({
+          status: "done",
+          silent: false,
+          marks: { keep: [], add: [], revise: [], erase: [] },
+          notebook: {
+            keep: [],
+            add: [
+              {
+                id: "late",
+                kind: "note",
+                text: "too late",
+                anchors: [],
+                sourceTurns: [1],
+                status: "open",
+                struck: [],
+              },
+            ],
+            revise: [],
+            erase: [],
+          },
+        }),
+      );
+      expect(screen.queryByText("too late")).toBeNull();
+    });
+
     it("sends once on a double press", async () => {
       const client = at(asking);
       const skip = vi.spyOn(client, "skip").mockReturnValue(new Promise(() => {}));
