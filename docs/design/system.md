@@ -263,17 +263,13 @@ screen itself is the welcome.
 
 - **Layout, every question:** the question runs the content's width across the top, at most 980px. The answer
   card and the notebook sit under it, side by side, their tops level.
-- **The welcome:** page one of the notebook writes four lines in the Librarian's hand (`Notebook` `welcome`):
-  - "hello, <first name>."
-  - "one question at a time. type or speak."
-  - "about 20 minutes. stop whenever you like."
-  - "nobody sees any of it till you shelve it."
-
-  It is written at 0.35 of the notebook's pen pace (Hand `pace`), with each line's lean as drawn on the board.
-- **The question:** it types in at the top once the hello is written, or after 0.7s at most, one letter per 28ms
-  (`TypedQuestion`), while the rest of the welcome is written beside it. Its
-  place is held at its final size from the first letter, so nothing under it moves. Then the keyboard goes to
-  the answer, unless the member has already gone somewhere.
+- **The welcome (option A, Josef 2026-11-23):** page one of the notebook writes only "hello, <first name>." in the
+  Librarian's hand (`Notebook` `welcome`), at 0.35 of the notebook's pen pace (Hand `pace`).
+- **The question:** it types in at the top at once, beside the hello, one letter per 28ms (`TypedQuestion`). Its
+  place is held at its final size from the first letter, so nothing under it moves. Then the keyboard goes to the
+  answer, unless the member has already gone somewhere.
+- **The notebook is a fixed sheet:** its height comes from the screen, never its content: from where it starts down
+  to 44px above the window's foot. The phone's sheet is unchanged.
 - **Reduced motion:** everything is there at once. An interview already under way opens without the welcome.
 
 ### Searching the library (D2, 2026-11-22, Alvisa)

@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useId, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { NotebookEntry } from "../interviewClient";
 import { fold } from "./anchors";
 import { Hand, writeTime } from "./Hand";
@@ -224,6 +224,20 @@ export function Notebook({ entries, welcome }: { entries: ShownEntry[]; welcome?
   const opener = useRef<HTMLButtonElement>(null);
   const newest = [...entries].reverse().find((shown) => shown.life !== "erasing");
 
+  // A fixed sheet (Josef, 2026-11-23): its height comes from the screen, never from what's written on it,
+  // from where it starts on the page down to just above the window's foot.
+  const page = useRef<HTMLElement>(null);
+  const [top, setTop] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const box = page.current;
+      if (box) setTop(box.getBoundingClientRect().top + window.scrollY);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
   // The sheet opens at whatever the question was built on, or else at the newest line.
   useEffect(() => {
     if (!open) return;
@@ -249,7 +263,12 @@ export function Notebook({ entries, welcome }: { entries: ShownEntry[]; welcome?
 
   return (
     <>
-      <section className="lib-nbook surf surf-spine" aria-labelledby={heading}>
+      <section
+        ref={page}
+        className="lib-nbook surf surf-spine"
+        aria-labelledby={heading}
+        style={top === null ? undefined : ({ "--nb-top": `${top}px` } as CSSProperties)}
+      >
         <h2 id={heading} className="lib-nbh">
           The Librarian’s notebook
         </h2>

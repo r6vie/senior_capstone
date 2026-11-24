@@ -126,13 +126,14 @@ describe("InterviewPage", () => {
       }));
     }
 
-    it("writes the welcome in the notebook, then types the first question in", async () => {
+    it("writes the hello in the notebook while the first question types in", async () => {
       signIn();
       stubMotion(false);
       renderWith(fake());
       await chooseAndStart();
       expect(await screen.findAllByText("hello, ingrid.")).not.toHaveLength(0);
-      expect(screen.getAllByText("nobody sees any of it till you shelve it.")).not.toHaveLength(0);
+      // Option A (Josef): the hello alone, no other welcome lines.
+      expect(screen.queryByText("nobody sees any of it till you shelve it.")).toBeNull();
       // The question's place keeps two lines while its letters type in; readers get it whole at once.
       const question = document.querySelector(".iv-q");
       expect(question?.hasAttribute("data-typing")).toBe(true);
@@ -140,7 +141,7 @@ describe("InterviewPage", () => {
       expect(screen.getByText(/spent years getting good at/)).toBeTruthy();
     });
 
-    it("with reduced motion, shows the welcome and the whole question at once", async () => {
+    it("with reduced motion, shows the hello and the whole question at once", async () => {
       signIn();
       stubMotion(true);
       renderWith(fake());

@@ -37,7 +37,7 @@ import {
   useSavedLine,
 } from "./LeftoverWords";
 import { Hand } from "./librarian/Hand";
-import { Notebook, welcomeTimes } from "./librarian/Notebook";
+import { Notebook } from "./librarian/Notebook";
 import { reducedMotion } from "./librarian/pen";
 import { useAnnouncer } from "./librarian/useAnnouncer";
 import { useNotebook } from "./librarian/useNotebook";
@@ -51,8 +51,6 @@ import { UndoChanges } from "./UndoChanges";
 const GIVE_UP_AFTER_MS = 120_000;
 // "Welcome back" is for coming back, not for a refresh seconds later.
 const WELCOME_BACK_AFTER_MS = 60 * 60 * 1000;
-// The longest the first question's place waits empty while the welcome starts.
-const OPENING_BEAT_MS = 700;
 const LOST_DEFAULT = "That didn't reach the Librarian. Try again.";
 const LOST_ANSWER = "That didn't reach the Librarian. Your answer is still here.";
 // How often to look while changes are written in the background.
@@ -177,13 +175,9 @@ export function InterviewPage({
   // The opening (StartOpen): an interview started on this visit opens with the Librarian's welcome
   // written in its notebook, then the first question typing in. One already under way skips it.
   const [opening, setOpening] = useState<{ place: string | null; writing: boolean } | null>(null);
+  // Josef, 2026-11-23 (option A): the welcome is only the hello; the question types in at once beside it.
   const welcomeLines = useMemo(
-    () => [
-      `hello, ${(user?.first_name ?? "").toLowerCase()}.`,
-      "one question at a time. type or speak.",
-      "about 20 minutes. stop whenever you like.",
-      "nobody sees any of it till you shelve it.",
-    ],
+    () => [`hello, ${(user?.first_name ?? "").toLowerCase()}.`],
     [user?.first_name],
   );
   const [hasSparks, setHasSparks] = useState(false);
@@ -279,12 +273,7 @@ export function InterviewPage({
   const openingWrites = Boolean(opening?.writing && opening.place === place);
   // The typed question stays in place once typed, so the heading's words don't change and aren't read twice.
   const openingHere = Boolean(opening && opening.place === place);
-  // The question types in once the hello is written, or after a beat at most, and the rest of the welcome
-  // is written beside it, so the question's place is never empty for long.
-  const openingDelay = useMemo(() => {
-    const times = welcomeTimes(welcomeLines);
-    return Math.min((times.starts[1] ?? times.end) * 1000, OPENING_BEAT_MS);
-  }, [welcomeLines]);
+
   // Whether the opening is about to write or is writing, read by the focus below without re-running it when
   // the opening ends: by then the member may be somewhere else, and TypedQuestion's onDone moves the keyboard.
   const openingPending = useRef(false);
@@ -556,7 +545,7 @@ export function InterviewPage({
               openingHere && !busy ? (
                 <TypedQuestion
                   text={state.question}
-                  after={openingDelay}
+                  after={0}
                   onDone={() => {
                     setOpening((now) => (now ? { ...now, writing: false } : now));
                     // Only if the member hasn't gone somewhere themselves in the meantime.
